@@ -10,6 +10,7 @@ experimental-json-interface=yes
 experimental-api-key=your-powerdns-api-key
 webserver=yes
 ```
+It will help to enable API access feature in PowerDNS so our PowerDNS-Admin can intergrate with backend services.
 
 ### Create Database
 We will create a database which used by this web application. Please note that this database is difference from pdns database itself.
@@ -18,8 +19,6 @@ MariaDB [(none)]> CREATE DATABASE powerdnsadmin;
 
 MariaDB [(none)]> GRANT ALL PRIVIELGES ON powerdnsadmin.* TO powerdnsadmin@'%' IDENTIFIED BY 'your-password';
 ```
-
-It will help to enable API access feature in PowerDNS so our PowerDNS-Admin can intergrate with backend services.
 
 ### PowerDNS-Admin
 
