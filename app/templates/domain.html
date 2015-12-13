@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block head %}
+        {{ super() }}
+        <!-- BEGIN PAGE LEVEL PLUGIN STYLES -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/select2/select2.css') }}"/>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.css') }}"/>
+        <!-- END PAGE LEVEL PLUGIN STYLES -->
+
+        <!-- BEGIN THEME STYLES -->
+        <!-- DOC: To use 'rounded corners' style just load 'components-rounded.css' stylesheet instead of 'components.css' in the below style tag -->
+        <link href="{{ url_for('static', filename='global/css/components-md.css') }}" id="style_components" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='global/css/plugins-md.css') }}" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/layout.css') }}" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/themes/grey.css') }}" rel="stylesheet" type="text/css" id="style_color"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+        <!-- END THEME STYLES -->
+{% endblock %}
+{% block title %}<title>DNS Control Panel - DOMAIN</title>{% endblock %}
+
+{% block dashboard_stat %}
+                <!-- BEGIN PAGE HEADER-->
+                <h3 class="page-title">
+                Domain</h3>
+                <div class="page-bar">
+                    <ul class="page-breadcrumb">
+                        <li>
+                            <i class="fa fa-home"></i>
+                            <a href="/">Home</a>
+                            <i class="fa fa-angle-right"></i>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('dashboard') }}">Domain</a>
+                            <i class="fa fa-angle-right"></i>
+                        </li>
+                        <li>
+                            <a href="">{{ domain.name }}</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- END PAGE HEADER-->
+{% endblock %}
+
+{% block content %}
+                 <div class="clearfix">
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- BEGIN RECORD TABLE-->
+                        <div class="portlet box blue">
+                            <div class="portlet-title">
+                                <div class="caption">
+                                    <i class="fa fa-globe"></i> {{ domain.name }}
+                                    <input type="hidden" id="domainname" value="{{ domain.name }}">
+                                </div>
+                                <div class="tools">
+                                    <a href="javascript:;" class="collapse">
+                                    </a>
+                                    <a href="javascript:;" class="reload">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="portlet-body">
+                                {% if domain.type != 'Slave' %}
+                                <div class="table-toolbar">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="btn-group">
+                                                <button id="tbl_record_manage_new" class="btn green">
+                                                Add Record <i class="fa fa-plus"></i>
+                                                </button>                                                
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="btn-group pull-right">
+                                                <button id="tbl_record_manage_apply" class="btn green">
+                                                <i class="fa fa-save"></i>Apply Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="table-toolbar">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="btn-group">
+                                                <button id="tbl_record_update_from_master" class="btn green">
+                                                Update from Master <i class="fa fa-download"></i>
+                                                </button>                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <table class="table table-striped table-hover table-bordered" id="tbl_record_manage">
+                                <thead>
+                                <tr>
+                                    <th>
+                                         Name
+                                    </th>
+                                    <th>
+                                         Type
+                                    </th>
+                                    <th>
+                                         Status
+                                    </th>
+                                    <th>
+                                         TTL
+                                    </th>
+                                    <th>
+                                         Data
+                                    </th>
+                                    <th>
+                                         Edit
+                                    </th>
+                                    <th>
+                                         Delete
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for record in records %}
+                                <tr class="odd gradeX">
+                                    <td>
+                                        {{ (record.name,domain.name)|display_record_name }}
+                                    </td>
+                                    <td>
+                                        {{ record.type }}
+                                    </td>
+                                    <td>
+                                         {{ record.status }}
+                                    </td>
+                                    <td>
+                                         {{ record.ttl }}
+                                    </td>
+                                    <td>
+                                         {{ record.data }}
+                                    </td>
+                                {% if domain.type != 'Slave' %}
+                                    <td width="6%">
+                                    {% if record.is_allowed() %}
+                                        <a class="btn default btn-xs purple edit" href="javascript:;"> <i class="fa fa-edit"></i></a>
+                                       {% else %}
+                                        <a href="#" class="btn default btn-xs purple"> <i class="fa fa-exclamation-circle"></i></a>
+                                    {% endif %}
+                                    </td>
+                                    <td width="6%">
+                                    {% if record.is_allowed() %}
+                                        <a class="btn default btn-xs red delete" href="javascript:;"> <i class="fa fa-trash"></i></a>
+                                    {% else %}
+                                        <a href="#" class="btn default btn-xs red"> <i class="fa fa-exclamation-circle"></i></a>
+                                    {% endif %}
+                                {% else %}
+                                    <td width="6%">
+                                        <a href="#" class="btn default btn-xs purple"> <i class="fa fa-exclamation-circle"></i></a>
+                                    </td>
+                                    <td width="6%">
+                                        <a href="#" class="btn default btn-xs purple"> <i class="fa fa-exclamation-circle"></i></a>
+                                    </td> 
+                                {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- END RECORD TABLE-->
+                    </div>
+                </div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+<script src="{{ url_for('static', filename='global/scripts/metronic.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='admin/layout2/scripts/layout.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='global/plugins/bootbox/bootbox.min.js') }}" type="text/javascript"></script>
+<!-- END PAGE LEVEL SCRIPTS -->
+<!-- TABLE PLUGINS -->
+<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/select2/select2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/pages/scripts/table-editable.js') }}"></script>
+<!-- END TABLE PLUGINS -->
+<script>
+jQuery(document).ready(function() {    
+   Metronic.init(); // init metronic core componets
+   Layout.init(); // init layout
+   TableEditable.init();
+});
+</script>
+<!-- END JAVASCRIPTS -->
+{% endblock %}

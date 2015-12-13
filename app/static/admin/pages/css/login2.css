@@ -1,0 +1,249 @@
+/***
+Login page
+***/
+/* bg color */
+.login {
+  background-color: #5c97bd;
+}
+.login a {
+  color: #edf4f8 !important;
+}
+
+.login .logo {
+  margin: 0 auto;
+  margin-top: 100px;
+  padding: 15px;
+  text-align: center;
+}
+
+.login .content {
+  width: 400px;
+  margin: 40px auto 40px auto;
+}
+
+.login .form-title {
+  margin-bottom: 20px;
+}
+
+.login .form-title {
+  color: #edf4f8;
+  font-size: 19px;
+  font-weight: 400 !important;
+}
+
+.login .form-subtitle {
+  color: #c9dce9;
+  font-size: 17px;
+  font-weight: 300 !important;
+  padding-left: 10px;
+}
+
+.login .content h4 {
+  color: #555;
+}
+
+.login .content .hint {
+  color: #b7d1e2;
+  padding: 0;
+  font-size: 14px;
+  margin: 15px 0 7px 0;
+}
+
+.login .content .login-form,
+.login .content .forget-form {
+  padding: 0px;
+  margin: 0px;
+}
+
+.login .content .form-control {
+  border: none;
+  background-color: #6ba3c8;
+  border: 1px solid #6ba3c8;
+  height: 43px;
+  color: #d9ecf9;
+}
+.login .content .form-control:focus, .login .content .form-control:active {
+  border: 1px solid #83b8db;
+}
+.login .content .form-control::-moz-placeholder {
+  color: #d9ecf9;
+  opacity: 1;
+}
+.login .content .form-control:-ms-input-placeholder {
+  color: #d9ecf9;
+}
+.login .content .form-control::-webkit-input-placeholder {
+  color: #d9ecf9;
+}
+
+.login .content select.form-control {
+  padding-left: 9px;
+  padding-right: 9px;
+}
+
+.login .content .forget-form {
+  display: none;
+}
+
+.login .content .register-form {
+  display: none;
+}
+
+.login .content .form-title {
+  font-weight: 300;
+  margin-bottom: 25px;
+}
+
+.login .content .form-actions {
+  clear: both;
+  border: 0px;
+  padding: 0px 30px 25px 30px;
+  margin-left: -30px;
+  margin-right: -30px;
+}
+
+.form-actions .forget-password-block {
+  padding-top: 7px;
+}
+
+.login-options {
+  margin-top: 30px;
+  padding-top: 20px;
+  padding-bottom: 50px;
+  border-top: 1px solid #69a0c4;
+  border-bottom: 1px solid #69a0c4;
+}
+
+.login-options h4 {
+  margin-top: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #b7d1e2 !important;
+}
+
+.login .forget-password {
+  font-size: 14px;
+}
+
+.login-options .social-icons {
+  float: right;
+  padding-top: 3px;
+}
+
+.login-options .social-icons li a {
+  border-radius: 15px 15px 15px 15px !important;
+  -moz-border-radius: 15px 15px 15px 15px !important;
+  -webkit-border-radius: 15px 15px 15px 15px !important;
+}
+
+.login .content .forget-form .form-actions {
+  border: 0;
+  margin-bottom: 0;
+  padding-bottom: 20px;
+}
+
+.login .content .register-form .form-actions {
+  border: 0;
+  margin-bottom: 0;
+  padding-bottom: 0px;
+}
+
+.login .content .form-actions .checkbox {
+  margin-top: 8px;
+  display: inline-block;
+}
+
+.login .content .form-actions .btn {
+  margin-top: 1px;
+}
+
+.login .btn-primary {
+  background-color: #5995bb;
+  border: 1px solid #72a9cc;
+  color: #8fc4e5;
+  font-weight: 600;
+  padding: 10px 25px !important;
+}
+.login .btn-primary:hover {
+  border: 1px solid #90bbd7;
+  background-color: #5995bb;
+  color: #8fc4e5;
+}
+
+.login .btn-default {
+  background-color: #5995bb;
+  border: 1px solid #72a9cc;
+  color: #8fc4e5;
+  font-weight: 600;
+  padding: 10px 25px !important;
+}
+.login .btn-default:hover {
+  border: 1px solid #90bbd7;
+  background-color: #5995bb;
+  color: #8fc4e5;
+}
+
+.login .content .forget-password {
+  color: #d7eaf7;
+  font-size: 15px;
+}
+
+.login .content .rememberme {
+  margin-top: 8px;
+}
+
+.login .content .check {
+  color: #c9dce9 !important;
+}
+
+.login .content .create-account {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.login .content .create-account p a {
+  font-weight: 300;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.login .content .create-account a {
+  display: inline-block;
+  margin-top: 5px;
+}
+
+/* footer copyright */
+.login .copyright {
+  text-align: center;
+  margin: 10px auto 30px 0;
+  padding: 10px;
+  color: #c9dce9;
+  font-size: 13px;
+}
+
+@media (max-width: 1400px) {
+  .login .logo {
+    margin-top: 100px;
+  }
+}
+@media (max-width: 480px) {
+  /***
+  Login page
+  ***/
+  .login .logo {
+    margin-top: 30px;
+    padding: 0px;
+  }
+
+  .login .content {
+    width: 245px;
+  }
+
+  .login .content h3 {
+    font-size: 22px;
+  }
+
+  .login .checkbox {
+    font-size: 13px;
+  }
+}

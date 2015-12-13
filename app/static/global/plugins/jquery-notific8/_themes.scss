@@ -1,0 +1,18 @@
+/**
+ * @author Will Steinmetz
+ * 
+ * Themes for the notific8 plug-in for jQuery
+ * 
+ * Copyright (c)2013, Will Steinmetz
+ * Licensed under the BSD license.
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+@include theme(teal, #09c, #069);
+@include theme(amethyst, #915faa, #5D2D77);
+@include theme(ruby, #d10, #a10);
+@include theme(tangerine, #ffb23f, #e88f00);
+@include theme(lemon, #ffde00, #ffcc00, #ffde00, #333);
+@include theme(lime, #38d315, #32b512);
+@include theme(ebony, #666, #121212);
+@include theme(smoke, #ababab, #efefef, #ababab, #333, #fff);

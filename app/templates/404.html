@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block head %}
+        {{ super() }}
+        <!-- BEGIN PAGE LEVEL PLUGIN STYLES -->        
+        <link href="{{ url_for('static', filename='admin/pages/css/error.css') }}" rel="stylesheet" type="text/css"/>
+        <!-- END PAGE LEVEL PLUGIN STYLES -->
+
+        <!-- BEGIN THEME STYLES -->
+        <!-- DOC: To use 'rounded corners' style just load 'components-rounded.css' stylesheet instead of 'components.css' in the below style tag -->
+        <link href="{{ url_for('static', filename='global/css/components-md.css') }}" id="style_components" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='global/css/plugins-md.css') }}" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/layout.css') }}" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/themes/grey.css') }}" rel="stylesheet" type="text/css" id="style_color"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+        <!-- END THEME STYLES -->
+{% endblock %}
+{% block title %}<title>DNS Control Panel - 404 Error</title>{% endblock %}
+
+{% block dashboard_stat %}
+ 
+{% endblock %}
+
+{% block content %}
+                <div class="clearfix">
+                </div>
+
+                <!-- BEGIN PAGE CONTENT-->
+                <div class="row">
+                    <div class="col-md-12 page-500">
+                        <div class=" number">
+                             404
+                        </div>
+                        <div class=" details">
+                            <h3>Oops! You're lost.</h3>
+                            <p>
+                                We can not find the page you're looking for.<br/>
+                                <a href="{{ url_for('index')}}"><strong>Click here</strong></a> to go home<br/><br/>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- END PAGE CONTENT-->
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+<script src="{{ url_for('static', filename='global/scripts/metronic.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='admin/layout2/scripts/layout.js') }}" type="text/javascript"></script>
+<script>
+jQuery(document).ready(function() {    
+   Metronic.init(); // init metronic core componets
+   Layout.init(); // init layout
+});
+</script>
+<!-- END JAVASCRIPTS -->
+{% endblock %}

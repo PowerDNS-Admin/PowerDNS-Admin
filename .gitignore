@@ -1,0 +1,28 @@
+# gedit
+*~
+
+# eclipse
+.settings
+
+# pycharm
+.idea
+
+*.py[cod]
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# tmp files
+.~*
+
+flask
+config.py
+logfile.log
+
+db_repository/*
+tmp/*

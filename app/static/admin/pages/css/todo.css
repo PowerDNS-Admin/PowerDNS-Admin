@@ -1,0 +1,305 @@
+/***
+TODO Page
+***/
+.todo-ui {
+  margin-top: 20px;
+}
+
+.todo-sidebar {
+  float: left;
+  width: 230px;
+  margin-right: 20px;
+}
+
+.todo-content {
+  overflow: hidden;
+}
+
+.todo-tasklist-item-border-green {
+  border-left: #3faba4 2px solid;
+}
+
+.todo-tasklist-item-border-blue {
+  border-left: #4c87b9 2px solid;
+}
+
+.todo-tasklist-item-border-purple {
+  border-left: #8877a9 2px solid;
+}
+
+.todo-tasklist-item-border-red {
+  border-left: #d05454 2px solid;
+}
+
+.todo-tasklist-item-border-yellow {
+  border-left: #d4ad38 2px solid;
+}
+
+.padding-top-10px {
+  padding-top: 15px;
+}
+
+.todo-userpic {
+  -webkit-border-radius: 50% !important;
+  -moz-border-radius: 50% !important;
+  border-radius: 50% !important;
+  border: 1px #cedae1 solid;
+}
+
+.todo-text-color {
+  color: #45535b;
+}
+
+/* PROJECT LIST */
+.todo-projects-config {
+  padding: 6px 9px 3px 9px !important;
+}
+.todo-projects-config > i {
+  font-size: 14px !important;
+}
+.todo-projects-config > .fa-angle-down {
+  position: relative;
+  display: inline-block;
+  top: -1px;
+  font-size: 13px !important;
+  color: #f2f2f2;
+}
+
+.todo-tasklist {
+  padding: 0;
+}
+
+.todo-project-list ul li a {
+  font-size: 14px !important;
+  padding: 8px 10px;
+}
+
+.todo-project-list .nav li a .badge {
+  float: right;
+  background-color: #b4c4cd !important;
+  margin-top: 1px !important;
+}
+
+.todo-project-list .nav li a .badge-active {
+  background-color: #ffffff !important;
+  color: #637b89 !important;
+}
+
+.todo-project-list .nav .active {
+  background-color: #ffffff !important;
+}
+
+.todo-project-list .nav-pills > li.active > a {
+  background-color: #87a9c7 !important;
+}
+
+/* END PROJECT LIST */
+/* TASK HISTORY */
+.todo-task-history {
+  padding: 0;
+  margin: 0;
+}
+.todo-task-history > li {
+  padding: 5px 0;
+}
+.todo-task-history > li > .todo-task-history-desc {
+  overflow: hidden;
+}
+.todo-task-history > li > .todo-task-history-date {
+  font-size: 12px;
+  float: right;
+  width: 150px;
+  margin-left: 10px;
+  text-align: right;
+  color: #999;
+}
+
+/* TASKS LIST */
+.todo-tasklist-item {
+  background: #f6fbfc;
+  padding: 10px;
+  margin-bottom: 10px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+.todo-tasklist-item:last-child {
+  margin-bottom: 0;
+}
+
+div .todo-tasklist-item:hover {
+  cursor: pointer;
+  background-color: #edf7f9;
+}
+
+.todo-tasklist-item img {
+  margin: 0 10px 10px 0;
+}
+
+.todo-tasklist-item-title {
+  font-size: 15px;
+  color: #2b4a5c;
+  font-weight: 600;
+  padding-top: 3px;
+  padding-bottom: 13px;
+}
+
+.todo-tasklist-item-text {
+  font-size: 13px;
+  color: #577688;
+  padding-bottom: 5px;
+}
+
+.todo-tasklist-item ul {
+  margin: 5px 0 0 0px;
+}
+
+.todo-tasklist-item li {
+  color: #577688;
+  font-size: 13px;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  padding: 0 !important;
+}
+
+.todo-tasklist-item li i {
+  color: #b3bfcb;
+  font-size: 15px;
+}
+
+.todo-tasklist-controls {
+  margin-top: 5px;
+}
+
+.todo-tasklist-date {
+  color: #637b89 !important;
+  margin-right: 12px;
+}
+
+.todo-tasklist-date i {
+  color: #abbfca !important;
+  margin-right: 5px;
+}
+
+.todo-tasklist-badge {
+  background-color: #b3bfcb;
+}
+
+/* END TASKS LIST */
+/* TASK BODY */
+.todo-taskbody-tasktitle {
+  font-size: 18px;
+  color: #778d96;
+}
+
+.todo-taskbody-taskdesc {
+  font-size: 14px;
+  color: #778d96;
+}
+
+.todo-username {
+  font-size: 16px;
+  color: #2b4a5c;
+  font-weight: 600;
+  padding: 15px 0 0 15px;
+}
+
+.todo-comment-head {
+  padding-top: 3px;
+}
+
+.todo-comment {
+  position: relative;
+}
+
+.todo-comment:hover > .todo-comment-btn {
+  display: block;
+}
+
+.todo-comment-btn {
+  display: none;
+  position: absolute;
+  top: 1px;
+  right: 0px;
+  font-size: 12px;
+  color: #566e7c;
+  border-color: #a2aeb5;
+}
+
+.todo-comment-btn:hover {
+  color: #fff;
+  background-color: #a1b6c2;
+  border-color: #a1b6c2;
+}
+
+.todo-comment-username {
+  font-size: 14px;
+  color: #2b4a5c;
+  font-weight: 600;
+}
+
+.todo-comment-date {
+  font-size: 12px;
+  color: #2b4a5c;
+  font-weight: 400;
+}
+
+.todo-username-btn {
+  margin: 14px 0 0 15px;
+  color: #566e7c;
+  border-color: #a2aeb5;
+}
+
+.todo-username-btn:hover {
+  color: #fff;
+  background-color: #a1b6c2;
+  border-color: #a1b6c2;
+}
+
+.form .form-actions.todo-form-actions {
+  padding-top: 10px;
+  border: 0;
+  margin: 0 0 20px 0;
+}
+
+/* END TASK BODY */
+/* RESPONSIVE MODE */
+@media (max-width: 991px) {
+  /* 991px */
+  .todo-sidebar {
+    float: none;
+    width: 100%;
+    margin: 0;
+  }
+  .todo-sidebar > .portlet {
+    margin-bottom: 20px;
+  }
+  .todo-sidebar > .portlet .portlet-title .tools {
+    margin-left: 5px;
+  }
+
+  .todo-content {
+    overflow: visible;
+  }
+}
+.todo-tasklist-devider {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* 767px */
+  .todo-tasklist-devider {
+    display: block;
+    height: 20px;
+    margin: 20px -10px;
+    background: #F1F3FA;
+  }
+
+  /* TASK HISTORY */
+  .todo-task-history > li {
+    padding: 9px 0;
+  }
+  .todo-task-history > li > .todo-task-history-date {
+    width: 100px;
+    font-size: 11px;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "jquery-minicolors",
+  "version": "2.1.10",
+  "homepage": "https://github.com/claviska/jquery-minicolors",
+  "authors": [
+    "Cory LaViska"
+  ],
+  "description": "jQuery MiniColors Plugin",
+  "main": [
+    "./jquery.minicolors.js",
+    "./jquery.minicolors.css"
+  ],
+  "keywords": [
+    "jquery",
+    "colorpicker"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

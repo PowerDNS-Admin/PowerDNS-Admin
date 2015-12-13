@@ -1,0 +1,21 @@
+/***
+Anout Us Page
+***/
+.meet-our-team h3 {
+  margin-bottom: 0;
+  padding: 10px;
+  background: #f9f9f9;
+}
+
+.meet-our-team small {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.meet-our-team .team-info {
+  padding: 10px;
+  overflow: hidden;
+  background: #f5f5f5;
+}

@@ -1,0 +1,81 @@
+/***
+Tasks Widget
+***/
+.tasks-widget:after {
+  clear: both;
+}
+.tasks-widget .task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tasks-widget .task-list > li {
+  position: relative;
+  padding: 10px 0;
+  border-bottom: 1px solid #F4F6F9;
+}
+.tasks-widget .task-list > li:hover {
+  background: #F4F6F9;
+}
+.tasks-widget .task-list > li.last-line {
+  border-bottom: none;
+}
+.tasks-widget .task-list > li.task-done {
+  background: #f6f6f6;
+}
+.tasks-widget .task-list > li.task-done:hover {
+  background: #f4f4f4;
+}
+.tasks-widget .task-list > li.task-done .task-title-sp {
+  text-decoration: line-through;
+}
+.tasks-widget .task-list > li > .task-bell {
+  margin-left: 10px;
+}
+.tasks-widget .task-list > li > .task-checkbox {
+  float: left;
+  width: 30px;
+}
+.tasks-widget .task-list > li > .task-checkbox input[type="checkbox"] {
+  cursor: pointer;
+}
+.tasks-widget .task-list > li > .task-title {
+  color: #838FA1;
+  margin-right: 10px;
+}
+.tasks-widget .task-list > li > .task-title .task-title-sp {
+  margin-right: 5px;
+}
+.tasks-widget .task-list > li .task-config-btn {
+  margin-top: -1px;
+}
+.tasks-widget .task-list > li > .task-config {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.tasks-widget .task-list > li:hover > .task-config {
+  display: block;
+  margin-bottom: 0 !important;
+}
+.tasks-widget .task-footer {
+  margin-top: 5px;
+}
+.tasks-widget .task-footer:before, .tasks-widget .task-footer:after {
+  content: " ";
+  display: table;
+}
+.tasks-widget .task-footer:after {
+  clear: both;
+}
+
+@media only screen and (max-width: 480px) {
+  .tasks-widget .task-config-btn {
+    float: inherit;
+    display: block;
+  }
+  .tasks-widget .task-list-projects li > .label {
+    margin-bottom: 5px;
+  }
+}

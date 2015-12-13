@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block head %}
+        {{ super() }}
+        <!-- BEGIN PAGE LEVEL PLUGIN STYLES -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/select2/select2.css') }}"/>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.css') }}"/>
+        <!-- END PAGE LEVEL PLUGIN STYLES -->
+
+        <!-- BEGIN THEME STYLES -->
+        <!-- DOC: To use 'rounded corners' style just load 'components-rounded.css' stylesheet instead of 'components.css' in the below style tag -->
+        <link href="{{ url_for('static', filename='global/css/components-md.css') }}" id="style_components" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='global/css/plugins-md.css') }}" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/layout.css') }}" rel="stylesheet" type="text/css"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/themes/grey.css') }}" rel="stylesheet" type="text/css" id="style_color"/>
+        <link href="{{ url_for('static', filename='admin/layout2/css/custom.css') }}" rel="stylesheet" type="text/css"/>
+        <!-- END THEME STYLES -->
+{% endblock %}
+{% block title %}<title>DNS Control Panel - Admin Console</title>{% endblock %}
+
+{% block dashboard_stat %}
+                <!-- BEGIN PAGE HEADER-->
+                <h3 class="page-title">
+                Admin Console</h3>
+                <div class="page-bar">
+                    <ul class="page-breadcrumb">
+                        <li>
+                            <i class="fa fa-home"></i>
+                            <a href="/">Home</a>
+                            <i class="fa fa-angle-right"></i>
+                        </li>
+                        <li>
+                            <a href="#">Admin Console</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- END PAGE HEADER-->
+                <!-- BEGIN DASHBOARD STATS -->
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <a class="dashboard-stat dashboard-stat-light blue-soft" href="javascript:;">
+                        <div class="visual">
+                            <i class="fa fa-cloud"></i>
+                        </div>
+                        <div class="details">
+                            <div class="number">
+                                 {{ domains|length }}
+                            </div>
+                            <div class="desc">
+                                {% if domains|length > 1 %}Domains{% else %}Domain{% endif %}
+                            </div>
+                        </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <a class="dashboard-stat dashboard-stat-light green-soft" href="javascript:;">
+                        <div class="visual">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="details">
+                            <div class="number">
+                                 {{ users|length }}
+                            </div>
+                            <div class="desc">
+                                {% if users|length > 1 %}Users{% else %}User{% endif %}
+                            </div>
+                        </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <a class="dashboard-stat dashboard-stat-light purple-soft" href="javascript:;">
+                        <div class="visual">
+                            <i class="fa fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="details">
+                            <div class="number">
+                                {{ history_number }}
+                            </div>
+                            <div class="desc">
+                                {% if history_number > 1 %}Histories{% else %}History{% endif %}
+                            </div>
+                        </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <a class="dashboard-stat dashboard-stat-light red-soft" href="javascript:;">
+                        <div class="visual">
+                            <i class="fa fa-star"></i>
+                        </div>
+                        <div class="details">
+                            <div class="number">
+                                {{ uptime|display_second_to_time }}
+                            </div>
+                            <div class="desc">
+                                Uptime
+                            </div>
+                        </div>
+                        </a>
+                    </div>
+                </div>
+                <!-- END DASHBOARD STATS -->
+{% endblock %}
+
+{% block content %}
+                <div class="clearfix">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- BEGIN SERVER STATISTICS -->
+                        <div class="portlet box grey-cascade">
+                            <div class="portlet-title">
+                                <div class="caption">
+                                    <i class="fa fa-sliders"></i>Server Statistics
+                                </div>
+                                <div class="tools">
+                                    <a href="javascript:;" class="reload">
+                                    </a>
+                                    <a href="javascript:;" class="collapse">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="portlet-body">
+                                <table class="table table-striped table-bordered table-hover" id="tb_stastic_list">
+                                <thead>
+                                <tr>
+                                    <th width="6%">
+                                         Docs
+                                    </th>
+                                    <th>
+                                         Statistic
+                                    </th>
+                                    <th>
+                                         Value
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for statistic in statistics %}
+                                <tr class="odd gradeX">
+                                    <td>
+                                        <a href="https://google.com/search?q=site:doc.powerdns.com+{{ statistic['name'] }}" target="_blank" class="btn btn-xs blue"><i class="fa fa-search"></i></a>
+                                    </td>
+                                    <td>
+                                        {{ statistic['name'] }}
+                                    </td>
+                                    <td>
+                                        {{ statistic['value'] }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                </table>
+                              </div>
+                        </div>
+                        <!-- END SERVER STATISTICS -->
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- BEGIN SERVER CONFIGURATION TABLE -->
+                        <div class="portlet box grey-cascade">
+                            <div class="portlet-title">
+                                <div class="caption">
+                                    <i class="fa fa-gears"></i>Server Configuration
+                                </div>
+                                <div class="tools">
+                                    <a href="javascript:;" class="reload">
+                                    </a>
+                                    <a href="javascript:;" class="collapse">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="portlet-body">
+                                <table class="table table-striped table-bordered table-hover" id="tb_config_list">
+                                <thead>
+                                <tr>
+                                    <th width="6%">
+                                         Docs
+                                    </th>
+                                    <th>
+                                         Name
+                                    </th>
+                                    <th>
+                                         Value
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for config in configs %}
+                                <tr class="odd gradeX">
+                                    <td>
+                                        <a href="https://google.com/search?q=site:doc.powerdns.com+{{ config['name'] }}" target="_blank" class="btn btn-xs blue"><i class="fa fa-search"></i></a>
+                                    </td>
+                                    <td>
+                                        {{ config['name'] }}
+                                    </td>
+                                    <td>
+                                        {{ config['value'] }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                </table>
+                              </div>
+                        </div>
+                        <!-- END SERVER CONFIGURATION TABLE -->
+                    </div>
+                </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+<script src="{{ url_for('static', filename='global/scripts/metronic.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='admin/layout2/scripts/layout.js') }}" type="text/javascript"></script>
+<!-- END PAGE LEVEL SCRIPTS -->
+<!-- TABLE PLUGINS -->
+<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/select2/select2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/pages/scripts/table-managed.js') }}"></script>
+<!-- END TABLE PLUGINS -->
+<script>
+jQuery(document).ready(function() {    
+   Metronic.init(); // init metronic core componets
+   Layout.init(); // init layout
+   TableManaged.init();
+});
+</script>
+<!-- END JAVASCRIPTS -->
+{% endblock %}

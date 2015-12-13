@@ -1,0 +1,12 @@
+Clockface changelog
+=============================
+
+
+Version 1.0.1  Aug 27, 2013
+-----------------------------
+[enh] show '12' instead of '00' in 12h format (vitalets)
+
+
+Version 1.0.0  Dec 18, 2012
+-----------------------------
+Initial release.

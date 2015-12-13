@@ -1,0 +1,232 @@
+
+
+/**********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+
+
+
+
+      YOU DONT NEED THIS CSS FILE FOR YOUR ENDPRODUCT !
+
+	USED ONLY FOR THE DEMOS AND TOOLS HERE IN THIS FOLDER
+
+				TO SHOW THE EXAMPLES.
+
+
+
+
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**********************************************************
+					-	RESET	-
+***********************************************************/
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td {
+    margin: 0; padding: 0; border: 0; outline: 0; font-size: 100%; vertical-align: baseline; background: transparent;
+}
+
+ * {
+/*	 -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-select: none;
+*/
+}
+
+.toolpad * {
+	 -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-select: none;
+}
+
+
+/***********************
+	-	BASICS 	-
+***********************/
+
+ body			{	font-family: 'Open Sans', sans-serif; color:#888; font-weight:400;}
+ p				{	font-size:13px; font-weight: 400; line-height:22px;}
+ h2 			{	color:#000; font-size:17px; font-weight:700; margin-bottom:20px;}
+ h2.redtitle	{	padding:9px 20px; width:100%; background:#e33a0c; color:#fff;  box-sizing:border-box;-moz-box-sizing:border-box; -webkit-box-sizing:border-box;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;
+ 					margin-bottom:40px;
+ }
+
+ h2.nobottommargin	{	margin-bottom:0px;}
+ .container		{	max-width:1170px;margin:auto;	}
+ .clear			{	clear:both;}
+ .float-left	{	float:left;}
+ .float-right	{	float:right;}
+ .divide40		{	width:100%; height:40px;}
+ .mb30			{	margin-bottom:30px;}
+ .mlb30			{	margin-left:30px; margin-bottom:30px;}
+ .mrb30			{	margin-right:30px; margin-bottom:30px;}
+
+ .table			{	display:table; padding-bottom:35px;}
+ .table.nbp		{	padding-bottom:0px;}
+ .table-cell	{	display: table-cell; vertical-align: top; }
+ .table-cell img{	width: 220px; }
+
+ .lp30			{	padding-left:30px;}
+ .rp30			{	padding-right:30px;}
+
+ hr				{	border:none; border-top:2px solid #eee; margin:0px 0px 40px;}
+ .boxed-content hr {	border:none; border-top:2px solid #eee; margin:0px -40px 40px;}
+ hr.nohormargin	{	margin: -1px -1px 40px 0px}
+ .one_third		{	width:32%; margin-right:1%; float:left;}
+ .one_third.last{	margin-right:0;}
+
+ a,a:visited	{	color:#e33a0c}
+ a:hover		{	text-decoration: none;}
+
+.prevnext		{	width:615px;height:23px;position: fixed; left:50%; margin-left:-272px;top:-2px;z-index:1000;
+
+}
+
+.prevnext a		{	background:#e33a0c;font-size:10px; text-decoration: none !important;  color:#fff !important;
+					margin-right:2px;padding:3px 8px; border-radius:0px 0px 5px 5px; -moz-border-radius:0px 0px 5px 5px;-webkit-border-radius:0px 0px 5px 5px;
+					-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+					filter: alpha(opacity=50);
+					-moz-opacity: 0.5;
+					-khtml-opacity: 0.5;
+					opacity: 0.5;
+}
+.prevnext a.active,
+.prevnext a:hover,
+.prevnext a:hover *	{	color:#fff !important;
+						-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+					  filter: alpha(opacity=100);
+					  -moz-opacity: 1;
+					  -khtml-opacity: 1;
+					  opacity: 1;
+					 }
+
+input[type="button"] { background-color:#3498db; border:none; color:#fff; padding:7px 10px; cursor:pointer; display: inline-block; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; }
+input[type="button"]:hover  { background-color:#2980b9; border:none; color:#fff; padding:7px 10px;}
+
+h2.changecolor	{	color:#E33A0C;}
+
+h2.results		{	-webkit-transition: all 0.2s ease-out;
+					-moz-transition: all 0.2s ease-out;
+					-o-transition: all 0.2s ease-out;
+					-ms-transition: all 0.2s ease-out; }
+/******************************
+	-	HEADER	-
+********************************/
+
+
+
+  header		{	width:100%; padding:20px 0px 17px 0px;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;}
+  .content		{	width:100%; padding:0px 30px 0px 30px;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;}
+
+
+ .logo-container	{	float:left; width:50%;}
+ .logo				{	background:url(../images/logo.png); background-size:100%; background-position: center center; background-repeat:no-repeat;max-width:406px; min-width:340px;height:60px; }
+
+  .button-holder .button,
+  .button-holder .button:hover,
+  .button-holder .button:visited {
+	float: right;
+	background-color: #E33A0C;
+	color: #FFF;
+	text-decoration: none;
+	font-weight: 300;
+	font-size: 14px;
+	padding: 8px 15px;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	}
+
+/******************************
+	-	CONTAINER	-
+********************************/
+.container		{	max-width:1170px; padding:30px;}
+/******************************
+	-	PRE	-
+********************************/
+
+
+pre				{	font-size:12px; font-family: 'Open Sans', sans-serif; color:#888; line-height:16px; background:url(../images/prebg.png) repeat; padding:16px; padding-bottom:15px;}
+pre .linedark	{	background:#888}
+pre span		{	font-weight:700}
+pre strong		{	color:#555;font-weight:800}
+
+h3				{	font-size:14px; color:#e33a0c; line-height:20px;}
+
+/******************************
+	-	SPECIALS	-
+********************************/
+
+.step { float: left; margin-right: 20px; margin-top: -10px; width: 40px; height: 40px; text-align: center; font-size: 15px; line-height: 40px; border-radius:50px; -moz-border-radius:50px; -webkit-border-radius:50px; /*border: 2px solid #e33a0c;*/ color: #fff; background: #e33a0c; }

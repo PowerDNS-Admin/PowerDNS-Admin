@@ -1,0 +1,11 @@
+Flask>=0.10
+Flask-WTF>=0.11
+Flask-Login>=0.2.11
+configobj==5.0.5
+MySQL-python==1.2.5
+py-bcrypt==0.4
+requests==2.7.0
+python-ldap==2.4.21
+Flask-SQLAlchemy==2.1
+SQLAlchemy==1.0.9
+sqlalchemy-migrate==0.10.0

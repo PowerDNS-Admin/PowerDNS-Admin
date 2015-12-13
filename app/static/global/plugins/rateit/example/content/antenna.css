@@ -1,0 +1,16 @@
+﻿div.antenna div.rateit-range
+{
+    background: url(antenna-black.png) no-repeat;
+    height: 25px;
+}
+
+div.antenna div.rateit-hover
+{
+    background: url(antenna-yellow.png) no-repeat;
+}
+
+div.antenna div.rateit-selected
+{
+    background: url(antenna-red.png) no-repeat;
+}
+
