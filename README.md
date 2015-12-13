@@ -54,7 +54,9 @@ Web application configuration is stored in `config.py` file. Let's clone it from
 ```
 
 Create database after having proper configs
+```
 (flask)% ./createdb.py
+```
 
 Manually add some data into our `powerdnsadmin` database
 ```
