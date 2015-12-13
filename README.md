@@ -2,7 +2,7 @@
 PowerDNS Web-GUI - Built by Flask
 
 #### Features:
-- Multiple domain managemnet
+- Multiple domain management
 - Local / LDAP user authentication
 - User management
 - User access management base on domain
