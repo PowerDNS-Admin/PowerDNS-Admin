@@ -69,3 +69,6 @@ Run the application and enjoy!
 ```
 (flask)$ ./run.py
 ```
+
+### Screenshot
+![Alt text](http://i.imgur.com/wA5qy2d.png)
