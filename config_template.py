@@ -4,6 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 # BASIC APP CONFIG
 WTF_CSRF_ENABLED = True
 SECRET_KEY = 'We are the world'
+PORT = 9393
 
 # LOG CONFIG 
 LOG_LEVEL = 'DEBUG'

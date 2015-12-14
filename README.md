@@ -30,7 +30,7 @@ MariaDB [(none)]> GRANT ALL PRIVIELGES ON powerdnsadmin.* TO powerdnsadmin@'%' I
 
 ### PowerDNS-Admin
 
-In this installation guide, I am using CentOS 7 and run my pythong stuffs with *virtualenv*. If you don't have it, let install:
+In this installation guide, I am using CentOS 7 and run my python stuffs with *virtualenv*. If you don't have it, let install:
 ```
 $ sudo yum install python-pip
 $ sudo pip install virtualenv
