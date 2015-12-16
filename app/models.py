@@ -37,7 +37,7 @@ class User(db.Model):
     email = db.Column(db.String(128))
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
-    def __init__(self, id=None, username=None, password=None, plain_text_password=None, firstname=None, lastname=None, role_id=None, email=None):
+    def __init__(self, id=None, username=None, password=None, plain_text_password=None, firstname=None, lastname=None, role_id=None, email=None, reload_info=True):
         self.id = id
         self.username = username
         self.password = password
@@ -47,14 +47,16 @@ class User(db.Model):
         self.role_id = role_id
         self.email = email
 
-        user_info = self.get_user_info_by_id() if id else self.get_user_info_by_username()
+        if reload_info:
+            user_info = self.get_user_info_by_id() if id else self.get_user_info_by_username()
 
-        if user_info:
-            self.id = user_info.id
-            self.username = user_info.username
-            self.firstname = user_info.firstname
-            self.lastname = user_info.lastname
-            self.role_id = user_info.role_id
+            if user_info:
+                self.id = user_info.id
+                self.username = user_info.username
+                self.firstname = user_info.firstname
+                self.lastname = user_info.lastname
+                self.email = user_info.email
+                self.role_id = user_info.role_id
 
     def is_authenticated(self):
         return True
@@ -221,6 +223,28 @@ class User(db.Model):
             return True
         except Exception, e:
             raise
+
+    def update_profile(self):
+        """
+        Update user profile
+        """
+        user = User.query.filter(User.username == self.username).first()
+        if user:
+            if self.firstname:
+                user.firstname = self.firstname
+            if self.lastname:
+                user.lastname = self.lastname
+            if self.email:
+                user.email = self.email
+            if self.plain_text_password:
+                user.password = self.get_hashed_password(self.plain_text_password)
+
+            try:
+                db.session.commit()
+                return True
+            except:
+                db.session.rollback()
+                return False
 
     def get_domain(self):
         """

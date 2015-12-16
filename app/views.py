@@ -397,6 +397,21 @@ def admin_history():
         return render_template('admin_history.html', histories=histories)
 
 
+@app.route('/user/profile', methods=['GET', 'POST'])
+@login_required
+def user_profile():
+    if request.method == 'GET':
+        return render_template('user_profile.html')
+    if request.method == 'POST':
+        firstname = request.form['firstname'] if 'firstname' in request.form else ''
+        lastname = request.form['lastname'] if 'lastname' in request.form else ''
+        email = request.form['email'] if 'email' in request.form else ''
+        new_password = request.form['newpassword'] if 'newpassword' in request.form else ''
+
+        user = User(username=current_user.username, plain_text_password=new_password, firstname=firstname, lastname=lastname, email=email, reload_info=False)
+        user.update_profile()
+        return render_template('user_profile.html')
+
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
