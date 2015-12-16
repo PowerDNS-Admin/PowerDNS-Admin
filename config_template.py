@@ -10,6 +10,9 @@ PORT = 9393
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
 
+# Upload
+UPLOAD_DIR = os.path.join(basedir, 'upload')
+
 # DATABASE CONFIG
 SQLALCHEMY_DATABASE_URI = 'mysql://root:123456@192.168.59.103/pdns'
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')

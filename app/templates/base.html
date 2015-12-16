@@ -98,7 +98,11 @@
                     <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
                     <li class="dropdown dropdown-user">
                         <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
+                        {% if current_user.avatar %}
+                        <img alt="" class="img-circle" src="{{ url_for('user_avatar', filename=current_user.avatar) }}"/>
+                        {% else %}
                         <img alt="" class="img-circle" src="{{ url_for('static', filename='admin/layout2/img/avatar.png') }}"/>
+                        {% endif %}
                         <span class="username username-hide-on-mobile">
                         {% if current_user.is_authenticated() %} {{ current_user.firstname }} {% endif %}</span>
                         <i class="fa fa-angle-down"></i>

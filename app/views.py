@@ -1,10 +1,12 @@
+import os
 import json
 import jinja2
 import traceback
 
 from functools import wraps
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from flask import Flask, g, request, make_response, jsonify, render_template, session, redirect, url_for, flash
+from flask import Flask, g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory
+from werkzeug import secure_filename
 
 from lib import utils
 from app import app, login_manager
@@ -403,14 +405,36 @@ def user_profile():
     if request.method == 'GET':
         return render_template('user_profile.html')
     if request.method == 'POST':
+        # get new profile info
         firstname = request.form['firstname'] if 'firstname' in request.form else ''
         lastname = request.form['lastname'] if 'lastname' in request.form else ''
         email = request.form['email'] if 'email' in request.form else ''
-        new_password = request.form['newpassword'] if 'newpassword' in request.form else ''
+        new_password = request.form['password'] if 'password' in request.form else ''
 
-        user = User(username=current_user.username, plain_text_password=new_password, firstname=firstname, lastname=lastname, email=email, reload_info=False)
+        # get new avatar
+        save_file_name = None
+        if 'file' in request.files:
+            file = request.files['file']
+            if file:
+                filename = secure_filename(file.filename)
+                file_extension = filename.rsplit('.', 1)[1]
+
+                if file_extension.lower() in ['jpg', 'jpeg', 'png']:   
+                    save_file_name = current_user.username + '.' + file_extension             
+                    file.save(os.path.join(app.config['UPLOAD_DIR'], 'avatar', save_file_name))
+
+
+        # update user profile
+        user = User(username=current_user.username, plain_text_password=new_password, firstname=firstname, lastname=lastname, email=email, avatar=save_file_name, reload_info=False)
         user.update_profile()
+
         return render_template('user_profile.html')
+
+
+@app.route('/user/avatar/<string:filename>')
+def user_avatar(filename):
+    return send_from_directory(os.path.join(app.config['UPLOAD_DIR'], 'avatar'), filename)
+
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required

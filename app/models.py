@@ -35,9 +35,10 @@ class User(db.Model):
     firstname = db.Column(db.String(64))
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
+    avatar = db.Column(db.String(128))
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
-    def __init__(self, id=None, username=None, password=None, plain_text_password=None, firstname=None, lastname=None, role_id=None, email=None, reload_info=True):
+    def __init__(self, id=None, username=None, password=None, plain_text_password=None, firstname=None, lastname=None, role_id=None, email=None, avatar=None, reload_info=True):
         self.id = id
         self.username = username
         self.password = password
@@ -46,6 +47,7 @@ class User(db.Model):
         self.lastname = lastname
         self.role_id = role_id
         self.email = email
+        self.avatar = avatar
 
         if reload_info:
             user_info = self.get_user_info_by_id() if id else self.get_user_info_by_username()
@@ -238,6 +240,8 @@ class User(db.Model):
                 user.email = self.email
             if self.plain_text_password:
                 user.password = self.get_hashed_password(self.plain_text_password)
+            if self.avatar:
+                user.avatar = self.avatar
 
             try:
                 db.session.commit()
