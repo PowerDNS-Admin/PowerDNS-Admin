@@ -72,6 +72,12 @@
             <label class="control-label visible-ie8 visible-ie9">Password</label>
             <input class="form-control form-control-solid placeholder-no-fix" type="password" autocomplete="off" placeholder="Password" name="password" value="{{ request.form.password }}"/>
         </div>
+        <div class="form-group">
+            <select class="form-control" name="auth_method">
+                <option value="LOCAL">Default Authentication</option>
+                <option value="LDAP">LDAP Authentication</option>
+            </select>
+        </div>
         <div class="form-actions">
             <button type="submit" class="btn btn-success uppercase">Login</button>
             <label class="rememberme check">
