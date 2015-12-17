@@ -180,7 +180,12 @@ class User(db.Model):
                             self.firstname = self.username
                             self.lastname = ''
 
-                        self.role_id = 2
+                        # first register user will be in Administrator role
+                        if User.query.count() == 0:
+                            self.role_id = 1
+                        else:
+                            self.role_id = 2
+
                         self.create_user()
                         logging.info('Created user "%s" in the DB' % self.username)
                     return True
@@ -218,7 +223,12 @@ class User(db.Model):
             return 'Email already existed'
 
         try:
-            self.role_id = 2
+            # first register user will be in Administrator role
+            if User.query.count() == 0:
+                self.role_id = 1
+            else:
+                self.role_id = 2
+
             user = User(username=self.username, firstname=self.firstname, lastname=self.lastname, role_id=self.role_id, email=self.email, password=self.get_hashed_password(self.plain_text_password))
             db.session.add(user)
             db.session.commit()
