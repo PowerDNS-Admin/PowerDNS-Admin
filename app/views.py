@@ -159,6 +159,10 @@ def domain_add():
         try:
             domain_name = request.form.getlist('domain_name')[0]
             domain_type = request.form.getlist('radio_type')[0]
+
+            if ' ' in domain_name or not domain_name or not domain_type:
+                return render_template('400.html', msg="Please correct your input"), 400
+
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
                     domain_master_string = request.form.getlist('domain_master_address')[0]
