@@ -694,6 +694,7 @@ class Record(object):
                                 "name": r['name'],
                                 "ttl": r['ttl'],
                                 "type": r['type'],
+                                "priority": 10, # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
                             }
                         ]
                     }
