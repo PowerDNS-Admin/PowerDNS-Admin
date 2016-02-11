@@ -683,21 +683,36 @@ class Record(object):
 
         records = []
         for r in new_records:
-            record = {
-                        "name": r['name'],
-                        "type": r['type'],
-                        "changetype": "REPLACE",
-                        "records": [
-                            {
-                                "content": r['content'],
-                                "disabled": r['disabled'],
-                                "name": r['name'],
-                                "ttl": r['ttl'],
-                                "type": r['type'],
-                            }
-                        ]
-                    }
-            records.append(record)
+            duplicate_id = -1
+            for index in range(len(records)):
+                search = records[index]
+                if search['name'] == r['name'] and search['type'] == r['type']:
+                    duplicate_id = index
+                    break
+            if duplicate_id > -1:
+                records[duplicate_id]["records"].append({
+                    "content": r['content'],
+                    "disabled": r['disabled'],
+                    "name": r['name'],
+                    "ttl": r['ttl'],
+                    "type": r['type'],
+                })
+            else:
+                record = {
+                            "name": r['name'],
+                            "type": r['type'],
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": r['content'],
+                                    "disabled": r['disabled'],
+                                    "name": r['name'],
+                                    "ttl": r['ttl'],
+                                    "type": r['type'],
+                                }
+                            ]
+                        }
+                records.append(record)
         postdata_for_new = {"rrsets": records}
 
         try:
