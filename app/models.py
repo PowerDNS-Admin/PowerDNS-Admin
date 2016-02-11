@@ -3,6 +3,7 @@ import ldap
 import time
 import bcrypt
 import urlparse
+import itertools
 import traceback
 
 from datetime import datetime
@@ -699,7 +700,28 @@ class Record(object):
                         ]
                     }
             records.append(record)
-        postdata_for_new = {"rrsets": records}
+
+        # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
+        final_records = []
+        records = sorted(records, key = lambda item: (item["name"], item["type"]))
+        for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+            final_records.append({
+                    "name": key[0],
+                    "type": key[1],
+                    "changetype": "REPLACE",
+                    "records": [
+                        {
+                            "content": item['records'][0]['content'],
+                            "disabled": item['records'][0]['disabled'],
+                            "name": key[0],
+                            "ttl": item['records'][0]['ttl'],
+                            "type": key[1],
+                            "priority": 10,
+                        } for item in group
+                    ]
+                })
+
+        postdata_for_new = {"rrsets": final_records}
 
         try:
             headers = {}
