@@ -25,7 +25,7 @@ We will create a database which used by this web application. Please note that t
 ```
 MariaDB [(none)]> CREATE DATABASE powerdnsadmin;
 
-MariaDB [(none)]> GRANT ALL PRIVIELGES ON powerdnsadmin.* TO powerdnsadmin@'%' IDENTIFIED BY 'your-password';
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON powerdnsadmin.* TO powerdnsadmin@'%' IDENTIFIED BY 'your-password';
 ```
 
 ### PowerDNS-Admin
