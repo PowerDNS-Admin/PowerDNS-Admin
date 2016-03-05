@@ -159,6 +159,7 @@ def domain_add():
         try:
             domain_name = request.form.getlist('domain_name')[0]
             domain_type = request.form.getlist('radio_type')[0]
+            soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
                 return render_template('400.html', msg="Please correct your input"), 400
@@ -171,7 +172,7 @@ def domain_add():
             else:
                 domain_master_ips = []
             d = Domain()
-            result = d.add(domain_name=domain_name, domain_type=domain_type, domain_master_ips=domain_master_ips)
+            result = d.add(domain_name=domain_name, domain_type=domain_type, soa_edit_api=soa_edit_api, domain_master_ips=domain_master_ips)
             if result['status'] == 'ok':
                 history = History(msg='Add domain %s' % domain_name, detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips}), created_by=current_user.username)
                 history.add()
@@ -231,6 +232,7 @@ def domain_management(domain_name):
 
         return redirect(url_for('domain_management', domain_name=domain_name))
 
+
 @app.route('/domain/<string:domain_name>/apply', methods=['POST'], strict_slashes=False)
 @login_required
 def record_apply(domain_name):
@@ -289,7 +291,6 @@ def record_update(domain_name):
     except:
         print traceback.format_exc()
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
-
 
 
 @app.route('/domain/<string:domain_name>/record/<string:record_name>/type/<string:record_type>/delete', methods=['GET'])
@@ -444,7 +445,6 @@ def user_avatar(filename):
 @login_required
 def index():
     return redirect(url_for('dashboard')) 
-	#return make_response(jsonify( { 'status': 'ok', 'msg': 'This is a test page' } ), 200)
 
 # END VIEWS
 

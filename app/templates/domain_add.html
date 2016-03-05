@@ -68,7 +68,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group form-md-radios">
-                                        <label>Type</label>
+                                        <label><strong>Type</strong></label>
                                         <div class="md-radio-inline">
                                             <div class="md-radio">
                                                 <input type="radio" id="radio_type_native" name="radio_type" class="md-radiobtn" value="native" checked="" onclick="javascript:zoneTypeSelection();">
@@ -99,6 +99,73 @@
                                             <div class="form-group form-md-line-input form-md-floating-label has-success">
                                                 <input type="text" class="form-control" id="domain_master_address" name="domain_master_address">
                                                 <label for="domain_master_address">Enter valid master ip addresses (separated by commas)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-md-radios">
+                                        <label><strong>SOA-EDIT-API</strong></label>
+                                        <div class="md-radio-inline">
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_off" name="radio_type_soa_edit_api" class="md-radiobtn" value="OFF" checked="">
+                                                <label for="radio_off">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                (OFF)</label>
+                                            </div>
+                                            <br/>
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_inception_increment" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCEPTION-INCREMENT" checked="">
+                                                <label for="radio_inception_increment">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                INCEPTION-INCREMENT</label>
+                                            </div>
+                                            <br/>
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_inception" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCEPTION">
+                                                <label for="radio_inception">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                INCEPTION</label>
+                                            </div>
+                                            <br/>
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_increment_week" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCREMENT-WEEK">
+                                                <label for="radio_increment_week">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                INCREMENT-WEEK</label>
+                                            </div>
+                                            <br/>
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_increment_weeks" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCREMENT-WEEKS">
+                                                <label for="radio_increment_weeks">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                INCREMENT-WEEKS</label>
+                                            </div>
+                                            <br/>
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_epoch" name="radio_type_soa_edit_api" class="md-radiobtn" value="EPOCH">
+                                                <label for="radio_epoch">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                EPOCH</label>
+                                            </div>
+                                            <br/>
+                                            <div class="md-radio">
+                                                <input type="radio" id="radio_inception_epoch" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCEPTION-EPOCH">
+                                                <label for="radio_inception_epoch">
+                                                <span class="inc"></span>
+                                                <span class="check"></span>
+                                                <span class="box"></span>
+                                                INCEPTION-EPOCH</label>
                                             </div>
                                         </div>
                                     </div>

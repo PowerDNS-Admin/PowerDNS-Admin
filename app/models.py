@@ -458,18 +458,29 @@ class Domain(db.Model):
             logging.error('Can not update domain table.' + str(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
-    def add(self, domain_name, domain_type, domain_ns=[], domain_master_ips=[]):
+    def add(self, domain_name, domain_type, soa_edit_api, domain_ns=[], domain_master_ips=[]):
         """
         Add a domain to power dns
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        post_data = {
-                        "name": domain_name,
-                        "kind": domain_type,
-                        "masters": domain_master_ips,
-                        "nameservers": domain_ns
-                    }
+
+        if soa_edit_api == 'OFF':
+            post_data = {
+                            "name": domain_name,
+                            "kind": domain_type,
+                            "masters": domain_master_ips,
+                            "nameservers": domain_ns,
+                        }
+        else:
+            post_data = {
+                                "name": domain_name,
+                                "kind": domain_type,
+                                "masters": domain_master_ips,
+                                "nameservers": domain_ns,
+                                "soa_edit_api": soa_edit_api
+                            }
+
         try:
             jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
             if 'error' in jdata.keys():
