@@ -185,7 +185,8 @@
 <script src="{{ url_for('static', filename='admin/pages/scripts/table-editable.js') }}"></script>
 <!-- END TABLE PLUGINS -->
 <script>
-jQuery(document).ready(function() {    
+jQuery(document).ready(function() {
+   window.records_allow_edit = {{ editable_records|tojson }};
    Metronic.init(); // init metronic core componets
    Layout.init(); // init layout
    TableEditable.init();
