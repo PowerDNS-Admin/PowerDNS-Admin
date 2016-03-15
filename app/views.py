@@ -146,7 +146,7 @@ def domain(domain_name):
             if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
                 record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                 records.append(record)
-        return render_template('domain.html', domain=domain, records=records)
+        return render_template('domain.html', domain=domain, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
     else:
         return redirect(url_for('error', code=404))
 
