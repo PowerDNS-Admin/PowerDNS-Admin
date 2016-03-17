@@ -6,6 +6,9 @@ WTF_CSRF_ENABLED = True
 SECRET_KEY = 'We are the world'
 PORT = 9393
 
+# TIMEOUT - for large zones
+TIMEOUT = 10
+
 # LOG CONFIG 
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
