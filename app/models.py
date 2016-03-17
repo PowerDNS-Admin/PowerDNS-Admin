@@ -18,6 +18,7 @@ LDAP_URI = app.config['LDAP_URI']
 LDAP_USERNAME = app.config['LDAP_USERNAME']
 LDAP_PASSWORD = app.config['LDAP_PASSWORD']
 LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
+LDAP_TYPE = app.config['LDAP_TYPE']
 
 PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
@@ -146,7 +147,10 @@ class User(db.Model):
                 return False
 
         elif method == 'LDAP':
-            searchFilter = "cn=%s" % self.username
+            if LDAP_TYPE == 'ldap':
+              searchFilter = "cn=%s" % self.username
+            else:
+              searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
             try:
                 result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             except Exception, e:
