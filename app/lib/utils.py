@@ -3,6 +3,9 @@ import sys
 import json
 import requests
 import urlparse
+from app import app
+
+TIMEOUT = app.config['TIMEOUT']
 
 def auth_from_url(url):
     auth = None
@@ -18,7 +21,7 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
         data = json.dumps(data)
 
     if timeout is None:
-        timeout = 1.5
+        timeout = TIMEOUT
 
     verify = False
 
