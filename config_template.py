@@ -23,6 +23,7 @@ LDAP_URI = 'ldaps://your-ldap-server:636'
 LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
 LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
+LDAP_TYPE = 'ldap' // or 'ad'
 
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://172.16.214.131:8081/'
