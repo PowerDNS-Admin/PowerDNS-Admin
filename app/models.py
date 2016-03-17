@@ -150,7 +150,7 @@ class User(db.Model):
             if LDAP_TYPE == 'ldap':
               searchFilter = "cn=%s" % self.username
             else:
-              searchFilter = "sammaaccount=%s" % self.username
+              searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
             try:
                 result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             except Exception, e:
