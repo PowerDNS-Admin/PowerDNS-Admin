@@ -43,6 +43,8 @@ var TableManaged = function () {
             }, {
                 "orderable": true
             }, {
+                "orderable": true
+            }, {
                 "orderable": false
             }],
             "lengthMenu": [
@@ -50,10 +52,10 @@ var TableManaged = function () {
                 [5, 15, 20, "All"] // change per page values here
             ],
             // set the initial value
-            "pageLength": 5,            
+            "pageLength": 10,
             "pagingType": "bootstrap_full_number",
             "language": {
-                "search": "My search: ",
+                "search": "Search: ",
                 "lengthMenu": "  _MENU_ records",
                 "paginate": {
                     "previous":"Prev",
@@ -64,10 +66,10 @@ var TableManaged = function () {
             },
             "columnDefs": [{  // set default column settings
                 'orderable': false,
-                'targets': [0]
+                'targets': [5]
             }, {
                 "searchable": false,
-                "targets": [0]
+                "targets": [5]
             }],
             "order": [
                 [1, "asc"]
@@ -96,6 +98,50 @@ var TableManaged = function () {
         });
 
         tableWrapper.find('.dataTables_length select').addClass("form-control input-xsmall input-inline"); // modify table per page dropdown
+
+        function getdnssec(url){
+            $.getJSON(url, function(data) {
+                if (data['status'] == 'error'){
+                    bootbox.alert({
+                        title: 'DNSSEC',
+                        message: 'DNSSEC is not enabled for this domain.'
+                    });
+                }
+                else {
+                    var dnssec_msg = '';
+                    var dnssec = data['dnssec'];
+                    for (var i = 0; i < dnssec.length; i++) {
+                        if (dnssec[i]['active']){
+                            dnssec_msg += '<form class="bootbox-form">'+
+                            '<h3><strong>'+dnssec[i]['keytype']+'</strong></h3>'+
+                            '<strong>DNSKEY</strong>'+
+                            '<input class="bootbox-input bootbox-input-text form-control" autocomplete="off" type="text" readonly="true" value="'+dnssec[i]['dnskey']+'">'+
+                            '</form>'+
+                            '<br/>';
+                            if(dnssec[i]['ds']){
+                                var dsList = dnssec[i]['ds'];
+                                dnssec_msg += '<strong>DS</strong>';
+                                for (var j = 0; j < dsList.length; j++){
+                                    dnssec_msg += '<input class="bootbox-input bootbox-input-text form-control" autocomplete="off" type="text" readonly="true" value="'+dsList[j]+'">';
+                                }
+                            }
+                        }
+                    }
+                    bootbox.alert({
+                        title: 'DNSSEC',
+                        message: dnssec_msg
+                    });
+                }
+            });
+        }
+
+        table.on('click', '.dnssec', function (e) {
+            e.preventDefault();
+            var nRow = $(this).parents('tr')[0];
+            var domain_name = nRow.cells[0].innerText;
+            getdnssec('/domain/'+ domain_name +'/dnssec');
+        });
+
     }
 
     var initTableConfig = function () {

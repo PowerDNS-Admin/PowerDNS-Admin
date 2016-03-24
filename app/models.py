@@ -357,8 +357,9 @@ class Domain(db.Model):
     serial = db.Column(db.Integer)
     notified_serial = db.Column(db.Integer)
     last_check = db.Column(db.Integer)
+    dnssec = db.Column(db.Integer)
 
-    def __int__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None):
+    def __int__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None, dnssec=None):
         self.id = id
         self.name = name
         self.master = master
@@ -366,6 +367,7 @@ class Domain(db.Model):
         self.serial = serial
         self.notified_serial = notified_serial
         self.last_check = last_check
+        self.dnssec = dnssec
 
     def __repr__(self):
         return '<Domain %r>' % (self.name)
@@ -443,6 +445,7 @@ class Domain(db.Model):
                     d.serial = data['serial']
                     d.notified_serial = data['notified_serial']
                     d.last_check = data['last_check']
+                    d.dnssec = data['dnssec']
                 else:
                     # add new domain
                     d = Domain()
@@ -452,6 +455,7 @@ class Domain(db.Model):
                     d.serial = data['serial']
                     d.notified_serial = data['notified_serial']
                     d.last_check = data['last_check']
+                    d.dnssec = data['dnssec']
                     db.session.add(d)
                 try:
                     db.session.commit()
@@ -572,6 +576,26 @@ class Domain(db.Model):
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
+
+    def get_domain_dnssec(self, domain_name):
+        """
+        Get domain DNSSEC information
+        """
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if domain:
+            headers = {}
+            headers['X-API-Key'] = PDNS_API_KEY
+            try:
+                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s/cryptokeys' % domain.name), headers=headers, method='GET')
+                if 'error' in jdata:
+                    return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain'}
+                else:
+                    return {'status': 'ok', 'dnssec': jdata}
+            except:
+                return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+        else:
+            return {'status': 'error', 'msg': 'This domain doesnot exist'}
+
 
 class DomainUser(db.Model):
     __tablename__ = 'domain_user'

@@ -308,6 +308,14 @@ def record_delete(domain_name, record_name, record_type):
     return redirect(url_for('domain', domain_name=domain_name))
 
 
+@app.route('/domain/<string:domain_name>/dnssec', methods=['GET'])
+@login_required
+def domain_dnssec(domain_name):
+    domain = Domain()
+    dnssec = domain.get_domain_dnssec(domain_name)
+    return make_response(jsonify(dnssec), 200)
+
+
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
