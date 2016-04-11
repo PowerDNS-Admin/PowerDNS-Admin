@@ -58,21 +58,6 @@ Create database after having proper configs
 (flask)% ./createdb.py
 ```
 
-Manually add some data into our `powerdnsadmin` database
-```
-$ mysql
-
-MariaDB [(none)]> use powerdnsadmin;
-
-MariaDB [powerdnsadmin]> INSERT INTO role(name, description) VALUES ('Administrator', 'Administrator');
-Query OK, 1 row affected (0.00 sec)
-
-MariaDB [powerdnsadmin]> INSERT INTO role(name, description) VALUES ('User', 'User');
-Query OK, 1 row affected (0.01 sec)
-
-MariaDB [powerdnsadmin]> INSERT INTO setting(name, value) VALUES('maintenance', 'False');
-Query OK, 1 row affected (0.00 sec)
-```
 
 Run the application and enjoy!
 ```

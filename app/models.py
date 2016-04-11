@@ -187,9 +187,9 @@ class User(db.Model):
 
                         # first register user will be in Administrator role
                         if User.query.count() == 0:
-                            self.role_id = 1
+                            self.role_id = Role.query.filter_by(name='Administrator').first().id
                         else:
-                            self.role_id = 2
+                            self.role_id = Role.query.filter_by(name='User').first().id    
 
                         self.create_user()
                         logging.info('Created user "%s" in the DB' % self.username)
@@ -230,9 +230,9 @@ class User(db.Model):
         try:
             # first register user will be in Administrator role
             if User.query.count() == 0:
-                self.role_id = 1
+                self.role_id = Role.query.filter_by(name='Administrator').first().id
             else:
-                self.role_id = 2
+                self.role_id = Role.query.filter_by(name='User').first().id
 
             user = User(username=self.username, firstname=self.firstname, lastname=self.lastname, role_id=self.role_id, email=self.email, password=self.get_hashed_password(self.plain_text_password))
             db.session.add(user)
@@ -340,8 +340,14 @@ class Role(db.Model):
     description = db.Column(db.String(128))
     users = db.relationship('User', backref='role', lazy='dynamic')
 
-    def __int__(self, id=None, name=None, description=None):
+    def __init__(self, id=None, name=None, description=None):
         self.id = id
+        self.name = name
+        self.description = description
+        
+    # allow database autoincrement to do its own ID assignments    
+    def __init__(self, name=None, description=None):
+        self.id = None
         self.name = name
         self.description = description
 
@@ -910,6 +916,12 @@ class Setting(db.Model):
         self.id = id
         self.name = name
         self.value = value
+        
+    # allow database autoincrement to do its own ID assignments
+    def __init__(self, name=None, value=None):
+        self.id = None
+        self.name = name
+        self.value = value    
 
     def set_mainteance(self, mode):
         """
