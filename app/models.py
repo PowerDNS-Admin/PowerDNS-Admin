@@ -19,6 +19,9 @@ LDAP_USERNAME = app.config['LDAP_USERNAME']
 LDAP_PASSWORD = app.config['LDAP_PASSWORD']
 LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
 LDAP_TYPE = app.config['LDAP_TYPE']
+LDAP_GROUP_SECURITY = app.config['LDAP_GROUP_SECURITY']
+LDAP_ADMIN_GROUP = app.config['LDAP_ADMIN_GROUP']
+LDAP_USER_GROUP = app.config['LDAP_USER_GROUP']
 
 PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
@@ -172,6 +175,25 @@ class User(db.Model):
                 try:
                     ldap_username = result[0][0][0]
                     l.simple_bind_s(ldap_username, self.password)
+                    if LDAP_GROUP_SECURITY:
+                        try:
+                            groupSearchFilter =  "(&(objectcategory=group)(member=%s))" % ldap_username
+                            groups = self.ldap_search(groupSearchFilter, LDAP_SEARCH_BASE)
+                            allowedlogin = False
+                            isadmin = False
+                            for group in groups:
+                                if (group[0][0] == LDAP_ADMIN_GROUP):
+                                    allowedlogin = True
+                                    isadmin = True
+                                    logging.info('User %s is part of the "%s" group that allows admin access to PowerDNS-Admin' % (self.username,LDAP_ADMIN_GROUP))
+                                if (group[0][0] == LDAP_USER_GROUP):
+                                    allowedlogin = True
+                                    logging.info('User %s is part of the "%s" group that allows user access to PowerDNS-Admin' % (self.username,LDAP_USER_GROUP))
+                            if allowedlogin == False:
+                                logging.error('User %s is not part of the "%s" or "%s" groups that allow access to PowerDNS-Admin' % (self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
+                                return False
+                        except:
+                            logging.error('LDAP group lookup for user %s has failed' % self.username)
                     logging.info('User "%s" logged in successfully' % self.username)
                     
                     # create user if not exist in the db
@@ -185,17 +207,26 @@ class User(db.Model):
                             self.firstname = self.username
                             self.lastname = ''
 
-                        # first register user will be in Administrator role
-                        if User.query.count() == 0:
+                        # first registered user will be in Administrator role or if part of LDAP Admin group
+                        if (User.query.count() == 0):
                             self.role_id = Role.query.filter_by(name='Administrator').first().id
                         else:
-                            self.role_id = Role.query.filter_by(name='User').first().id    
+                            self.role_id = Role.query.filter_by(name='User').first().id
+                            
+                        # 
+                        if LDAP_GROUP_SECURITY:
+                            if isadmin == True:
+                                self.role_id = Role.query.filter_by(name='Administrator').first().id
 
                         self.create_user()
                         logging.info('Created user "%s" in the DB' % self.username)
+                    else:
+                        # user already exists in database, set their admin status based on group membership (if enabled)
+                        if LDAP_GROUP_SECURITY:
+                            self.set_admin(isadmin)
                     return True
                 except:
-                    logging.error('User "%s" input a wrong password' % self.username)
+                    logging.error('User "%s" input a wrong password(stage2)' % self.username)
                     return False
         else:
             logging.error('Unsupported authentication method')

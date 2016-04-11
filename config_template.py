@@ -27,6 +27,9 @@ LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
 LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
 LDAP_TYPE = 'ldap' // or 'ad'
+LDAP_GROUP_SECURITY = False // or True
+LDAP_ADMIN_GROUP = 'CN=PowerDNS-Admin Admin,OU=Custom,DC=ivan,DC=local'
+LDAP_USER_GROUP = 'CN=PowerDNS-Admin User,OU=Custom,DC=ivan,DC=local'
 
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://172.16.214.131:8081/'
