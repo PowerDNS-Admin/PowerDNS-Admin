@@ -14,11 +14,14 @@ from lib import utils
 from lib.log import logger
 logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
 
-LDAP_URI = app.config['LDAP_URI']
-LDAP_USERNAME = app.config['LDAP_USERNAME']
-LDAP_PASSWORD = app.config['LDAP_PASSWORD']
-LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
-LDAP_TYPE = app.config['LDAP_TYPE']
+if 'LDAP_TYPE' in app.config.keys():
+    LDAP_URI = app.config['LDAP_URI']
+    LDAP_USERNAME = app.config['LDAP_USERNAME']
+    LDAP_PASSWORD = app.config['LDAP_PASSWORD']
+    LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
+    LDAP_TYPE = app.config['LDAP_TYPE']
+else:
+    LDAP_TYPE = False
 
 PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
@@ -147,6 +150,10 @@ class User(db.Model):
                 return False
 
         elif method == 'LDAP':
+            if not LDAP_TYPE:
+                logging.error('LDAP authentication is disabled')
+                return False
+
             if LDAP_TYPE == 'ldap':
               searchFilter = "cn=%s" % self.username
             else:

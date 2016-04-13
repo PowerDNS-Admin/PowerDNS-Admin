@@ -5,7 +5,10 @@ import requests
 import urlparse
 from app import app
 
-TIMEOUT = app.config['TIMEOUT']
+if 'TIMEOUT' in app.config.keys():
+    TIMEOUT = app.config['TIMEOUT']
+else:
+    TIMEOUT = 10
 
 def auth_from_url(url):
     auth = None
