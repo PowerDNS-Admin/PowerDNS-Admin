@@ -178,11 +178,16 @@ class User(db.Model):
                     l.simple_bind_s(ldap_username, self.password)
                     if LDAP_GROUP_SECURITY:
                         try:
-                            groupSearchFilter =  "(&(objectcategory=group)(member=%s))" % ldap_username
+                            if LDAP_TYPE == 'ldap':
+                                uid = result[0][0][1]['uid'][0]
+                                groupSearchFilter =  "(&(objectClass=posixGroup)(memberUid=%s))" % uid
+                            else:
+                                groupSearchFilter =  "(&(objectcategory=group)(member=%s))" % ldap_username
                             groups = self.ldap_search(groupSearchFilter, LDAP_SEARCH_BASE)
                             allowedlogin = False
                             isadmin = False
                             for group in groups:
+                                logging.debug(group)
                                 if (group[0][0] == LDAP_ADMIN_GROUP):
                                     allowedlogin = True
                                     isadmin = True
@@ -194,7 +199,7 @@ class User(db.Model):
                                 logging.error('User %s is not part of the "%s" or "%s" groups that allow access to PowerDNS-Admin' % (self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
                                 return False
                         except:
-                            logging.error('LDAP group lookup for user %s has failed' % self.username)
+                            logging.error('LDAP group lookup for user "%s" has failed' % self.username)
                     logging.info('User "%s" logged in successfully' % self.username)
                     
                     # create user if not exist in the db
@@ -227,7 +232,7 @@ class User(db.Model):
                             self.set_admin(isadmin)
                     return True
                 except:
-                    logging.error('User "%s" input a wrong password(stage2)' % self.username)
+                    logging.error('User "%s" input a wrong password' % self.username)
                     return False
         else:
             logging.error('Unsupported authentication method')
