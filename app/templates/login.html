@@ -75,7 +75,9 @@
         <div class="form-group">
             <select class="form-control" name="auth_method">
                 <option value="LOCAL">Default Authentication</option>
+                {% if ldap_enabled %}
                 <option value="LDAP">LDAP Authentication</option>
+                {% endif %}
             </select>
         </div>
         <div class="form-actions">

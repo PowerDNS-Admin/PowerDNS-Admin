@@ -19,10 +19,18 @@ LDAP_USERNAME = app.config['LDAP_USERNAME']
 LDAP_PASSWORD = app.config['LDAP_PASSWORD']
 LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
 LDAP_TYPE = app.config['LDAP_TYPE']
-LDAP_GROUP_SECURITY = app.config['LDAP_GROUP_SECURITY']
-if LDAP_GROUP_SECURITY == True:
-    LDAP_ADMIN_GROUP = app.config['LDAP_ADMIN_GROUP']
-    LDAP_USER_GROUP = app.config['LDAP_USER_GROUP']
+if 'LDAP_TYPE' in app.config.keys():
+    LDAP_URI = app.config['LDAP_URI']
+    LDAP_USERNAME = app.config['LDAP_USERNAME']
+    LDAP_PASSWORD = app.config['LDAP_PASSWORD']
+    LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
+    LDAP_TYPE = app.config['LDAP_TYPE']
+    LDAP_GROUP_SECURITY = app.config['LDAP_GROUP_SECURITY']
+    if LDAP_GROUP_SECURITY == True:
+        LDAP_ADMIN_GROUP = app.config['LDAP_ADMIN_GROUP']
+        LDAP_USER_GROUP = app.config['LDAP_USER_GROUP']
+else:
+    LDAP_TYPE = False
 
 PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
@@ -151,6 +159,10 @@ class User(db.Model):
                 return False
 
         elif method == 'LDAP':
+            if not LDAP_TYPE:
+                logging.error('LDAP authentication is disabled')
+                return False
+
             if LDAP_TYPE == 'ldap':
               searchFilter = "cn=%s" % self.username
             else:

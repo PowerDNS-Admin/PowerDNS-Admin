@@ -65,7 +65,8 @@ def login():
         return redirect(url_for('dashboard'))
 
     if request.method == 'GET':
-        return render_template('login.html')
+        LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
+        return render_template('login.html', ldap_enabled=LDAP_ENABLED)
     
     # process login
     username = request.form['username']
