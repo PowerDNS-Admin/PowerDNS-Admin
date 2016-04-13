@@ -49,7 +49,7 @@ $ source ./flask/bin/activate
 
 Web application configuration is stored in `config.py` file. Let's clone it from `config_template.py` file and then edit it
 ```
-(flask)$ copy config_template.py config.py 
+(flask)$ cp config_template.py config.py 
 (flask)$ vim config.py
 ```
 
