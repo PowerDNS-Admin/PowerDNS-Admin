@@ -372,7 +372,7 @@ class Domain(db.Model):
     last_check = db.Column(db.Integer)
     dnssec = db.Column(db.Integer)
 
-    def __int__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None, dnssec=None):
+    def __init__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None, dnssec=None):
         self.id = id
         self.name = name
         self.master = master
@@ -457,7 +457,7 @@ class Domain(db.Model):
                     d.type = data['kind']
                     d.serial = data['serial']
                     d.notified_serial = data['notified_serial']
-                    d.last_check = data['last_check']
+                    d.last_check = 1 if data['last_check'] else 0
                     d.dnssec = data['dnssec']
                 else:
                     # add new domain
@@ -468,7 +468,7 @@ class Domain(db.Model):
                     d.serial = data['serial']
                     d.notified_serial = data['notified_serial']
                     d.last_check = data['last_check']
-                    d.dnssec = data['dnssec']
+                    d.dnssec = 1 if data['dnssec'] else 0
                     db.session.add(d)
                 try:
                     db.session.commit()
