@@ -160,6 +160,9 @@ var TableEditable = function () {
             }, {
                 "searchable": true,
                 "targets": [0]
+            }, {
+            	"className": "length-break",
+            	targets: [4]
             }],
             "order": [
                 [0, "asc"]
