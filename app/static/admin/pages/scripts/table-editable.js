@@ -32,7 +32,7 @@ var TableEditable = function () {
             jqTds[1].innerHTML = '<select class="form-control" id="record_type" name="record_type" value="' + aData[1]  + '"' + '>' + record_types + '</select>';
             jqTds[2].innerHTML = '<select class="form-control" id="record_status" name="record_status" value="' + aData[2]  + '"' + '><option value="false">Active</option><option value="true">Disabled</option></select>';
             jqTds[3].innerHTML = '<select class="form-control" id="record_ttl" name="record_ttl" value="' + aData[3]  + '"' + '><option value="60">1 minute</option><option value="300">5 minutes</option><option value="1800">30 minutes</option><option value="3600">60 minutes</option><option value="86400">24 hours</option></select>';
-            jqTds[4].innerHTML = '<input type="text" class="form-control input-small advance-data" value="' + aData[4] + '">';
+            jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" class="form-control input-small advance-data" value="' + aData[4].replace(/\"/g,"&quot;") + '">';
             jqTds[5].innerHTML = '<a class="btn default btn-xs green edit" href="">Save</i></a>';
             jqTds[6].innerHTML = '<a class="btn default btn-xs green cancel" href="">Cancel</i></a>';
 
@@ -160,6 +160,9 @@ var TableEditable = function () {
             }, {
                 "searchable": true,
                 "targets": [0]
+            }, {
+            	"className": "length-break",
+            	targets: [4]
             }],
             "order": [
                 [0, "asc"]
