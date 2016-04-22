@@ -1,188 +1,154 @@
 {% extends "base.html" %}
-{% block head %}
-        {{ super() }}
-        <!-- BEGIN PAGE LEVEL PLUGIN STYLES -->
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/select2/select2.css') }}"/>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap.css') }}"/>
-        <!-- END PAGE LEVEL PLUGIN STYLES -->
-
-        <!-- BEGIN THEME STYLES -->
-        <!-- DOC: To use 'rounded corners' style just load 'components-rounded.css' stylesheet instead of 'components.css' in the below style tag -->
-        <link href="{{ url_for('static', filename='global/css/components-md.css') }}" id="style_components" rel="stylesheet" type="text/css"/>
-        <link href="{{ url_for('static', filename='global/css/plugins-md.css') }}" rel="stylesheet" type="text/css"/>
-        <link href="{{ url_for('static', filename='admin/layout2/css/layout.css') }}" rel="stylesheet" type="text/css"/>
-        <link href="{{ url_for('static', filename='admin/layout2/css/themes/grey.css') }}" rel="stylesheet" type="text/css" id="style_color"/>
-        <link href="{{ url_for('static', filename='admin/layout2/css/custom.css') }}" rel="stylesheet" type="text/css"/>
-        <!-- END THEME STYLES -->
-{% endblock %}
 {% block title %}<title>DNS Control Panel - Add Domain</title>{% endblock %}
 
 {% block dashboard_stat %}
-                <!-- BEGIN PAGE HEADER-->
-                <h3 class="page-title">
-                Add Domain</h3>
-                <div class="page-bar">
-                    <ul class="page-breadcrumb">
-                        <li>
-                            <i class="fa fa-home"></i>
-                            <a href="{{ url_for('dashboard') }}">Home</a>
-                            <i class="fa fa-angle-right"></i>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('dashboard') }}">Domain</a>
-                            <i class="fa fa-angle-right"></i>
-                        </li>
-                        <li>
-                            Add
-                        </li>
-                    </ul>
-                </div>
-                <!-- END PAGE HEADER-->
+	<!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Domain
+        <small>Create new</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('dashboard') }}">Domain</a></li>
+        <li class="active">Add Domain</li>
+      </ol>
+    </section>
 {% endblock %}
 
 {% block content %}
-                <div class="clearfix">
-                </div>
+<div class="row">
+	<div class="col-md-4">
+		<div class="box box-primary">
+			<div class="box-header with-border">
+				<h3 class="box-title">Create new domain</h3>
+			</div>
+			<!-- /.box-header -->
+			<!-- form start -->
+			<form role="form">
+				<div class="box-body">
+					<div class="form-group">
+						<input type="email" class="form-control" id="domain_name" placeholder="Enter a valid domain name (required)">
+					</div>
+					<div class="form-group">
+						<label>Type</label>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type" id="radio_type_native" value="native" checked> Native
+							</label>
+							&nbsp;&nbsp;&nbsp;
+							<label>
+								<input type="radio" name="radio_type"id="radio_type_master" value="master"> Master
+							</label>
+							&nbsp;&nbsp;&nbsp;
+							<label>
+								<input type="radio" name="radio_type" id="radio_type_slave" value="slave" disabled>Slave
+							</label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label>SOA-EDIT-API</label>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_off" value="OFF" checked> (OFF)
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api"id="radio_inception_increment" value="INCEPTION-INCREMENT"> INCEPTION-INCREMENT
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception" value="INCEPTION" disabled> INCEPTION
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_week" value="INCREMENT-WEEK" disabled> INCREMENT-WEEK
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_weeks" value="INCREMENT-WEEKS" disabled> INCREMENT-WEEKS
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_epoch" value="EPOCH" disabled> EPOCH
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception_epoch" value="INCEPTION-EPOCH" disabled> INCEPTION-EPOCH
+							</label>
+						</div>
+					</div>
+				</div>
+				<!-- /.box-body -->
 
-                <div class="row">
-                    <div class="col-md-12">
-                        <!-- BEGIN ADD RECORD FORM-->
-                        <div class="portlet light">
-                            <div class="portlet-title">
-                                <div class="caption font-green-haze">
-                                    <i class="icon-settings font-green-haze"></i>
-                                    <span class="caption-subject bold uppercase"> New Zone Information</span>
-                                </div>
-                                <div class="actions">
-                                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title="">
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="portlet-body form">
-                                 <form role="form" action="{{ url_for('domain_add') }}" method="post">
-                                    <div class="form-body">
-                                        <div class="form-group form-md-line-input form-md-floating-label has-success">
-                                            <input type="text" class="form-control" id="domain_name" name="domain_name">
-                                            <label for="domain_name">Enter a valid domain name (required)</label>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-md-radios">
-                                        <label><strong>Type</strong></label>
-                                        <div class="md-radio-inline">
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_type_native" name="radio_type" class="md-radiobtn" value="native" checked="" onclick="javascript:zoneTypeSelection();">
-                                                <label for="radio_type_native">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                Native</label>
-                                            </div>
-                                            <div class="md-radio has-error">
-                                                <input type="radio" id="radio_type_master" name="radio_type" class="md-radiobtn" value="master" onclick="javascript:zoneTypeSelection();">
-                                                <label for="radio_type_master">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                Master</label>
-                                            </div>
-                                            <div class="md-radio has-info">
-                                                <input type="radio" id="radio_type_slave" name="radio_type" class="md-radiobtn" value="slave" onclick="javascript:zoneTypeSelection();">
-                                                <label for="radio_type_slave">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                Slave</label>
-                                            </div>
-                                        </div>
-                                        <div class="form-body" id="form_master_ip" style="display:none">
-                                            <div class="form-group form-md-line-input form-md-floating-label has-success">
-                                                <input type="text" class="form-control" id="domain_master_address" name="domain_master_address">
-                                                <label for="domain_master_address">Enter valid master ip addresses (separated by commas)</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-md-radios">
-                                        <label><strong>SOA-EDIT-API</strong></label>
-                                        <div class="md-radio-inline">
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_off" name="radio_type_soa_edit_api" class="md-radiobtn" value="OFF" checked="">
-                                                <label for="radio_off">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                (OFF)</label>
-                                            </div>
-                                            <br/>
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_inception_increment" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCEPTION-INCREMENT" checked="">
-                                                <label for="radio_inception_increment">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                INCEPTION-INCREMENT</label>
-                                            </div>
-                                            <br/>
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_inception" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCEPTION">
-                                                <label for="radio_inception">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                INCEPTION</label>
-                                            </div>
-                                            <br/>
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_increment_week" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCREMENT-WEEK">
-                                                <label for="radio_increment_week">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                INCREMENT-WEEK</label>
-                                            </div>
-                                            <br/>
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_increment_weeks" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCREMENT-WEEKS">
-                                                <label for="radio_increment_weeks">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                INCREMENT-WEEKS</label>
-                                            </div>
-                                            <br/>
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_epoch" name="radio_type_soa_edit_api" class="md-radiobtn" value="EPOCH">
-                                                <label for="radio_epoch">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                EPOCH</label>
-                                            </div>
-                                            <br/>
-                                            <div class="md-radio">
-                                                <input type="radio" id="radio_inception_epoch" name="radio_type_soa_edit_api" class="md-radiobtn" value="INCEPTION-EPOCH">
-                                                <label for="radio_inception_epoch">
-                                                <span class="inc"></span>
-                                                <span class="check"></span>
-                                                <span class="box"></span>
-                                                INCEPTION-EPOCH</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-actions">
-                                        <div class="row">
-                                            <div class="col-md-offset-1">                                                
-                                                <button type="submit" class="btn blue">Submit</button>
-                                                <button type="button" class="btn grey" onclick="window.location.href='{{ url_for('dashboard') }}'">Cancel</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                        <!-- END ADD RECORD FORM-->
-                </div>
+				<div class="box-footer">
+					<button type="submit" class="btn btn-primary">Submit</button>
+					<button type="submit" class="btn btn-default" onclick="window.location.href='{{ url_for('dashboard') }}'">Cancel</button>
+				</div>
+			</form>
+		</div>
+		<!-- /.box -->
+	</div>
+	<div class="col-md-8">
+		<div class="box box-primary">
+			<div class="box-header with-border">
+				<h3 class="box-title">Help with creating a new domain</h3>
+			</div>
+			<div class="box-body">
+				<dl class="dl-horizontal">
+					<dt>Domain name</dt>
+					<dd>Enter your domain name in the format of name.tld (eg. powerdns-admin.com). You can also enter sub-domains to create a sub-root zone (eg. sub.powerdns-admin.com) in case you want to delegate sub-domain management to specific users.</dd>
+					<dt>Type</dt>
+					<dd>The type decides how the domain will be replicated across multiple DNS servers.
+						<ul>
+							<li>
+								Native - PowerDNS will not perform any replication. Use this if you only have one PowerDNS server or you handle replication via your backend (MySQL).
+							</li>
+							<li>
+								Master - This PowerDNS server will serve as the master and will send zone transfers (AXFRs) to other servers configured as slaves.
+							</li>
+							<li>
+								Slave - This PowerDNS server will serve as the slave and will request and receive zone transfers (AXFRs) from other servers configured as masters.
+							</li>
+						</ul>
+					</dd>
+					<dt>SOA-EDIT-API</dt>
+					<dd>The SOA-EDIT-API setting defines when and how the SOA serial number will be updated after a change is made to the domain.
+						<ul>
+							<li>
+								(OFF) - Not set
+							</li>
+							<li>
+								INCEPTION-INCREMENT - 
+							</li>
+							<li>
+								INCEPTION - 
+							</li>
+							<li>
+								INCREMENT-WEEK - 
+							</li>
+							<li>
+								INCREMENT-WEEKS - 
+							</li>
+							<li>
+								EPOCH - 
+							</li>
+							<li>
+								INCEPTION-EPOCH - 
+							</li>
+						</ul>
+					</dd>
+				</dl>
+			</div>
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 {% block scripts %}
