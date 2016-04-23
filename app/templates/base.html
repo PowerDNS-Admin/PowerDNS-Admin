@@ -24,7 +24,7 @@
        folder instead of downloading all of them to reduce the load. -->
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/dist/css/skins/_all-skins.min.css') }}">
   <!-- iCheck -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/plugins/iCheck/flat/blue.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/plugins/iCheck/all.css') }}">
   <!-- Morris chart -->
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/plugins/morris/morris.css') }}">
   <!-- jvectormap -->
@@ -296,6 +296,8 @@
 <script src="{{ url_for('static', filename='adminlte2/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js') }}"></script>
 <!-- Slimscroll -->
 <script src="{{ url_for('static', filename='adminlte2/plugins/slimScroll/jquery.slimscroll.min.js') }}"></script>
+<!-- iCheck 1.0.1 -->
+<script src="{{ url_for('static', filename='adminlte2/plugins/iCheck/icheck.min.js') }}"></script>
 <!-- FastClick -->
 <script src="{{ url_for('static', filename='adminlte2/plugins/fastclick/fastclick.js') }}"></script>
 <!-- AdminLTE App -->
@@ -308,6 +310,54 @@
 <script src="{{ url_for('static', filename='custom/js/custom.js') }}"></script>
 {% endblock %}
 {% block extrascripts %}
+{% endblock %}
+{% block defaultmodals %}
+<div class="modal fade modal-danger" id="modal_error">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title">Error</h4>
+			</div>
+			<div class="modal-body">
+				<p></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default pull-right"
+					data-dismiss="modal">Close</button>
+			</div>
+		</div>
+		<!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal fade modal-success" id="modal_success">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title">Success</h4>
+			</div>
+			<div class="modal-body">
+				<p></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default pull-right"
+					data-dismiss="modal">Close</button>
+			</div>
+		</div>
+		<!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
 {% endblock %}
 {% block modals %}
 {% endblock %}
