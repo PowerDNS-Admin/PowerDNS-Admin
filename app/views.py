@@ -56,6 +56,9 @@ def error(code, msg=None):
     else:
         return render_template('404.html'), 404
 
+@app.route('/register', methods=['GET'])
+def register():
+    return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
@@ -77,6 +80,7 @@ def login():
     firstname = request.form['firstname'] if 'firstname' in request.form else None
     lastname = request.form['lastname'] if 'lastname' in request.form else None
     email = request.form['email'] if 'email' in request.form else None
+    rpassword = request.form['rpassword'] if 'rpassword' in request.form else None
     
     if None in [firstname, lastname, email]:
         #login case
@@ -99,15 +103,22 @@ def login():
     else:
         # registration case
         user = User(username=username, plain_text_password=password, firstname=firstname, lastname=lastname, email=email)
+        
+        # TODO: Move this into the JavaScript
+        # validate password and password confirmation
+        if password != rpassword:
+            error = "Passsword and confirmation do not match"
+            return render_template('register.html', error=error)
+        
         try:
             result = user.create_local_user()
             if result == True:
-                return render_template('login.html')
+                return render_template('login.html', username=username, password=password)
             else:
-                return render_template('login.html', error=result)
+                return render_template('register.html', error=result)
         except Exception, e:
             error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('login.html', error=error)
+            return render_template('register.html', error=error)
 
 @app.route('/logout')
 def logout():
