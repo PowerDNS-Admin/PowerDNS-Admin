@@ -130,8 +130,8 @@
       <ul class="sidebar-menu">
         <li class="header">USER ACTIONS</li>
         <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
-        <li><a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a></li>
         {% if current_user.role.name == 'Administrator' %}
+        <li><a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a></li>
         <li class="header">ADMINISTRATION</li>
         <li><a href="{{ url_for('admin') }}"><i class="fa fa-circle-o"></i> <span>Admin Console</span></a></li>
         <li><a href="{{ url_for('admin_manageuser') }}"><i class="fa fa-circle-o"></i> <span>Manager Users</span></a></li>
