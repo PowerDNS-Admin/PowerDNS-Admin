@@ -78,25 +78,6 @@
 		modal.find('.modal-body p').text(info);
 		modal.modal('show');
 	});
-
-	// ajax call to clear history table
-	function clearHistoryTable() {
-		$.ajax({
-			type : "POST",
-			url : '/admin/history',
-			data : '',
-			contentType : "application/json; charset=utf-8",
-			crossDomain : true,
-			dataType : "json",
-			success : function(data, status, jqXHR) {
-
-			},
-
-			error : function(jqXHR, status) {
-
-			}
-		});
-	}
 </script>
 {% endblock %} 
 {% block modals %}
@@ -117,7 +98,7 @@
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default pull-left"
 					data-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-danger" onclick="clearHistoryTable();location.reload();">Clear
+				<button type="button" class="btn btn-danger" onclick="applyChanges('', '/admin/history');location.reload();">Clear
 					History</button>
 			</div>
 		</div>
