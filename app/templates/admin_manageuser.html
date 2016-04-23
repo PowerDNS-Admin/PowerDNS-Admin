@@ -20,7 +20,7 @@
 					<h3 class="box-title">Manage Users</h3>
 				</div>
 				<div class="box-body">
-					<table id="tbl_history" class="table table-bordered table-striped">
+					<table id="tbl_users" class="table table-bordered table-striped">
 						<thead>
 							<tr>
 								<th>Username</th>
@@ -66,6 +66,16 @@
 {% endblock %} 
 {% block extrascripts %}
 <script>
+	// set up user data table
+	$("#tbl_users").DataTable({
+		"paging" : true,
+		"lengthChange" : false,
+		"searching" : true,
+		"ordering" : true,
+		"info" : true,
+		"autoWidth" : false
+	});
+	
 	// handle revocation of privileges
 	$('.button_revoke').click(function() {
 		var modal = $("#modal_revoke");
