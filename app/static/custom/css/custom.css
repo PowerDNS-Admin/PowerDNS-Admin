@@ -2,10 +2,6 @@
 	word-break: break-all !important;
 }
 
-#tbl_domain_list td {
-	font-family:'Roboto Mono' !important;
-}
-
-#tbl_record_manage td {
+table td {
 	font-family:'Roboto Mono' !important;
 }
