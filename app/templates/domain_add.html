@@ -26,10 +26,10 @@
 			</div>
 			<!-- /.box-header -->
 			<!-- form start -->
-			<form role="form">
+			<form role="form" method="post" action="{{ url_for('domain_add') }}">
 				<div class="box-body">
 					<div class="form-group">
-						<input type="email" class="form-control" id="domain_name" placeholder="Enter a valid domain name (required)">
+						<input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter a valid domain name (required)">
 					</div>
 					<div class="form-group">
 						<label>Type</label>
@@ -56,32 +56,32 @@
 						</div>
 						<div class="radio">
 							<label>
-								<input type="radio" name="radio_type_soa_edit_api"id="radio_inception_increment" value="INCEPTION-INCREMENT"> INCEPTION-INCREMENT
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception_increment" value="INCEPTION-INCREMENT"> INCEPTION-INCREMENT
 							</label>
 						</div>
 						<div class="radio">
 							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception" value="INCEPTION" disabled> INCEPTION
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception" value="INCEPTION"> INCEPTION
 							</label>
 						</div>
 						<div class="radio">
 							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_week" value="INCREMENT-WEEK" disabled> INCREMENT-WEEK
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_week" value="INCREMENT-WEEK"> INCREMENT-WEEK
 							</label>
 						</div>
 						<div class="radio">
 							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_weeks" value="INCREMENT-WEEKS" disabled> INCREMENT-WEEKS
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_weeks" value="INCREMENT-WEEKS"> INCREMENT-WEEKS
 							</label>
 						</div>
 						<div class="radio">
 							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_epoch" value="EPOCH" disabled> EPOCH
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_epoch" value="EPOCH"> EPOCH
 							</label>
 						</div>
 						<div class="radio">
 							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception_epoch" value="INCEPTION-EPOCH" disabled> INCEPTION-EPOCH
+								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception_epoch" value="INCEPTION-EPOCH"> INCEPTION-EPOCH
 							</label>
 						</div>
 					</div>
@@ -151,28 +151,4 @@
 	</div>
 </div>
 </section>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<!-- BEGIN PAGE LEVEL SCRIPTS -->
-<script src="{{ url_for('static', filename='global/scripts/metronic.js') }}" type="text/javascript"></script>
-<script src="{{ url_for('static', filename='admin/layout2/scripts/layout.js') }}" type="text/javascript"></script>
-<!-- END PAGE LEVEL SCRIPTS -->
-<script>
-jQuery(document).ready(function() {    
-   Metronic.init(); // init metronic core componets
-   Layout.init(); // init layout
-});
-</script>
-
-<script type="text/javascript">
-function zoneTypeSelection() {
-    if (document.getElementById('radio_type_slave').checked) {
-        document.getElementById('form_master_ip').style.display = 'block';
-    }
-    else document.getElementById('form_master_ip').style.display = 'none';
-}
-</script>
-<!-- END JAVASCRIPTS -->
 {% endblock %}
