@@ -29,6 +29,10 @@ LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
 LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
 
+#Default Auth
+BASIC_ENABLED = True
+SIGNUP_ENABLED = True
+
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://172.16.214.131:8081/'
 PDNS_API_KEY = 'you never know'
