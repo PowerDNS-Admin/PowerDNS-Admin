@@ -47,6 +47,9 @@
 							</label>
 						</div>
 					</div>
+					<div class="form-group" style="display: none;" id="domain_master_address_div">
+						<input type="text" class="form-control" name="domain_master_address" id="domain_master_address" placeholder="Enter valid master ip addresses (separated by commas)">
+					</div>
 					<div class="form-group">
 						<label>SOA-EDIT-API</label>
 						<div class="radio">
@@ -151,4 +154,16 @@
 	</div>
 </div>
 </section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+	$("input[name=radio_type]").change(function() {
+		var type = $(this).val();
+		if (type == "slave") {
+			$("#domain_master_address_div").show();
+		} else {
+			$("#domain_master_address_div").hide();
+		}
+	});
+</script>
 {% endblock %}
