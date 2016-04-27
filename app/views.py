@@ -135,7 +135,17 @@ def dashboard():
     else:
         domains = User(id=current_user.id).get_domain()
 
-    return render_template('dashboard.html', domains=domains)
+    # stats for dashboard
+    domains = Domain.query.all()
+    users = User.query.all()
+    history_number = History.query.count()
+    server = Server(server_id='localhost')
+    statistics = server.get_statistic()
+    if statistics:
+        uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
+    else:
+        uptime = 0
+    return render_template('dashboard.html', domains=domains, users=users, history_number=history_number, uptime=uptime)
 
 
 @app.route('/domain/<string:domain_name>', methods=['GET', 'POST'])

@@ -31,8 +31,8 @@
 			          <!-- small box -->
 			          <div class="small-box bg-aqua">
 			            <div class="inner">
-			              <h3>###</h3>
-			              <p>Domains</p>
+			              <h3>{{ domains|length }}</h3>
+			              <p>{% if domains|length > 1 %}Domains{% else %}Domain{% endif %}</p>
 			            </div>
 			            <div class="icon">
 			              <i class="fa fa-book"></i>
@@ -43,8 +43,8 @@
 			          <!-- small box -->
 			          <div class="small-box bg-green">
 			            <div class="inner">
-			              <h3>###</h3>
-			              <p>Users</p>
+			              <h3>{{ users|length }}</h3>
+			              <p>{% if users|length > 1 %}Users{% else %}User{% endif %}</p>
 			            </div>
 			            <div class="icon">
 			              <i class="fa fa-users"></i>
@@ -57,8 +57,8 @@
 			          <!-- small box -->
 			          <div class="small-box bg-green">
 			            <div class="inner">
-			              <h3>###</h3>
-			              <p>Histories</p>
+			              <h3>{{ history_number }}</h3>
+			              <p>{% if history_number > 1 %}Histories{% else %}History{% endif %}</p>
 			            </div>
 			            <div class="icon">
 			              <i class="fa fa-calendar"></i>
@@ -69,7 +69,7 @@
 			          <!-- small box -->
 			          <div class="small-box bg-green">
 			            <div class="inner">
-			              <h3><span style="font-size: 20px">2W 2D 14h 13m</span></h3>
+			              <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
 			              <p>Uptime</p>
 			            </div>
 			            <div class="icon">
