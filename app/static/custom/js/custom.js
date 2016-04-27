@@ -25,3 +25,21 @@ function applyChanges(data, url, showResult) {
 	});
 
 }
+
+function getTableData(table) {
+	var rData = []
+
+	// reformat - pretty format
+	var records = []
+	table.rows().every(function() {
+		var r = this.data();
+		var record = {}
+		record["record_name"] = r[0].trim();
+		record["record_type"] = r[1].trim();
+		record["record_status"] = r[2].trim();
+		record["record_ttl"] = r[3].trim();
+		record["record_data"] = r[4].trim();
+		records.push(record);
+	});
+	return records
+}
