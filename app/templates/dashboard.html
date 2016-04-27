@@ -84,10 +84,10 @@
         <div class="col-xs-9">
         	<div class="box">
         		<div class="box-header">
-        			<h3 class="box-title">Recent Logs</h3>
+        			<h3 class="box-title">Recent History</h3>
         		</div>
         		<div class="box-body">
-	        		<table id="tbl_domain_list" class="table table-bordered table-striped">
+	        		<table id="tbl_history" class="table table-bordered table-striped">
 	                <thead>
 	                <tr>
 	                  <th>Changed By</th>
@@ -97,20 +97,18 @@
 	                </tr>
 	                </thead>
 	                <tbody>
-	                <tr>
-	                  <td>
-						ivan
-					  </td>
-	                  <td>
-						log log log
-					  </td>
-	                  <td>
-						5:52pm 21/4/2016
-					  </td>
-	                  <td>
-						Detail button
-					  </td>
-	                </tr>
+	                {% for history in histories %}
+							<tr class="odd">
+								<td>{{ history.created_by }}</td>
+								<td>{{ history.msg }}</td>
+								<td>{{ history.created_on }}</td>
+								<td width="6%">
+									<button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail|replace("[]","None") }}'>
+										Info&nbsp;<i class="fa fa-info"></i>
+									</button>
+								</td>
+							</tr>
+							{% endfor %}
 	                </tbody>
 	              </table>
         		</div>
@@ -202,4 +200,49 @@
       <!-- /.row -->
     </section>
     <!-- /.content -->
+{% endblock %}
+{% block extrascripts %}
+<script>
+	// set up history data table
+	$("#tbl_history").DataTable({
+		"paging" : false,
+		"lengthChange" : false,
+		"searching" : false,
+		"ordering" : false,
+		"info" : false,
+		"autoWidth" : false
+	});
+
+	$(".history-info-button").click(function() {
+		var modal = $("#modal_history_info");
+		var info = $(this).val();
+		modal.find('.modal-body p').text(info);
+		modal.modal('show');
+	});
+</script>
+{% endblock %}
+{% block modals %}
+<div class="modal fade" id="modal_history_info">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title">History Details</h4>
+			</div>
+			<div class="modal-body">
+				<p></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default pull-right"
+					data-dismiss="modal">Close</button>
+			</div>
+		</div>
+		<!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
 {% endblock %}
