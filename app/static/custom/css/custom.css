@@ -1,7 +1,16 @@
 .length-break {
-	word-break: break-all !important;
+    word-break: break-all !important;
 }
 
 table td {
-	font-family:'Roboto Mono' !important;
+    font-family:'Roboto Mono' !important;
+}
+
+/*Fit default macbook screen*/
+.small-box .icon {
+    font-size: 70px !important;
+}
+
+.btn {
+    padding: 5px 4px !important;
 }
