@@ -52,7 +52,7 @@
 						</thead>
 						<tbody>
                                 {% for record in records %}
-                                <tr class="odd">
+                                <tr class="odd row_record" id="{{ domain.name }}">
                                     <td>
                                         {{ (record.name,domain.name)|display_record_name }}
                                     </td>
@@ -137,7 +137,8 @@
 	});
 	
 	// handle delete button
-	$(document).on("click", ".button_delete", function() {
+	$(document).on("click", ".button_delete", function(e) {
+		e.stopPropagation();
 		var modal = $("#modal_delete");
 		var table = $("#tbl_records").DataTable();
 		var record = $(this).prop('id');
@@ -151,11 +152,18 @@
 		
 	});
 	// handle edit button
-	$(document).on("click", ".button_edit", function() {
-		 var nRow = $(this).parents('tr')[0];
+	$(document).on("click", ".button_edit, .row_record", function(e) {
+		 e.stopPropagation();
+		 if ($(this).is('tr')) {
+			var nRow = $(this)[0]; 
+		 } else {
+		 	var nRow = $(this).parents('tr')[0];
+		 }
 		 var table = $("#tbl_records").DataTable();
-		 
-		 if (nEditing !== null && nEditing != nRow && nNew == false) {
+		
+		if (nEditing == nRow) {
+			/* click on row already being edited, do nothing */
+		} else if (nEditing !== null && nEditing != nRow && nNew == false) {
              /* Currently editing - but not this row - restore the old before continuing to edit mode */
              restoreRow(table, nEditing);
              editRow(table, nRow);
@@ -207,6 +215,7 @@
 	
 	//handle cancel button
 	$(document).on("click", ".button_cancel", function (e) {
+			e.stopPropagation();
 			var oTable = $("#tbl_records").DataTable();
             if (nNew) {
                 oTable.row(nEditing).remove().draw();
@@ -220,6 +229,7 @@
 	
 	//handle save button
 	$(document).on("click", ".button_save", function (e) {
+			e.stopPropagation();
 			var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
             nEditing = null;
