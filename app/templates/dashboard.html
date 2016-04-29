@@ -40,7 +40,7 @@
 			          </div>
 			        </div>
 			        <div class="col-lg-6">
-			          <!-- small box -->
+			          <a href="{{ url_for('admin_manageuser') }}">
 			          <div class="small-box bg-green">
 			            <div class="inner">
 			              <h3>{{ users|length }}</h3>
@@ -50,11 +50,12 @@
 			              <i class="fa fa-users"></i>
 			            </div>
 			          </div>
+			          </a>
 			        </div>
 			        </div>
 			        <div class="row">
 			        <div class="col-lg-6">
-			          <!-- small box -->
+			          <a href="{{ url_for('admin_history') }}">
 			          <div class="small-box bg-green">
 			            <div class="inner">
 			              <h3>{{ history_number }}</h3>
@@ -64,9 +65,10 @@
 			              <i class="fa fa-calendar"></i>
 			            </div>
 			          </div>
+			          </a>
 			        </div>
 			        <div class="col-lg-6">
-			          <!-- small box -->
+			          <a href="{{ url_for('admin') }}">
 			          <div class="small-box bg-green">
 			            <div class="inner">
 			              <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
@@ -76,6 +78,7 @@
 			              <i class="fa fa-clock-o"></i>
 			            </div>
 			          </div>
+			          </a>
 			        </div>
 			        </div>
         		</div>
