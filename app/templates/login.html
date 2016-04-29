@@ -50,7 +50,7 @@
 <div class="content">
     <!-- BEGIN LOGIN FORM -->
     <form class="login-form" action="" method="post">
-        <h3 class="form-title">Sign In</h3>
+        <h3 class="form-title">Sign In {{ login_title }}</h3>
         {% if error %}
         <div class="alert alert-danger">
             <button class="close" data-close="alert"></button>
@@ -74,7 +74,9 @@
         </div>
         <div class="form-group">
             <select class="form-control" name="auth_method">
+                {% if basic_enabled %}
                 <option value="LOCAL">Default Authentication</option>
+                {% endif %}
                 {% if ldap_enabled %}
                 <option value="LDAP">LDAP Authentication</option>
                 {% endif %}
@@ -86,11 +88,13 @@
             <input type="checkbox" name="remember" value="1"/>Remember </label>
             <a href="javascript:;" id="forget-password" class="forget-password">Forgot Password?</a>
         </div>
+        {% if signup_enabled %}
         <div class="create-account">
             <p>
                 <a href="javascript:;" id="register-btn" class="uppercase">Create an account</a>
             </p>
         </div>
+        {% endif %}
     </form>
     <!-- END LOGIN FORM -->
     <!-- BEGIN FORGOT PASSWORD FORM -->

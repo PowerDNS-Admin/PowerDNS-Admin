@@ -66,7 +66,10 @@ def login():
 
     if request.method == 'GET':
         LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
-        return render_template('login.html', ldap_enabled=LDAP_ENABLED)
+        LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
+        BASIC_ENABLED = app.config['BASIC_ENABLED']
+        SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
+        return render_template('login.html', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
     
     # process login
     username = request.form['username']

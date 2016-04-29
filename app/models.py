@@ -20,6 +20,8 @@ if 'LDAP_TYPE' in app.config.keys():
     LDAP_PASSWORD = app.config['LDAP_PASSWORD']
     LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
     LDAP_TYPE = app.config['LDAP_TYPE']
+    LDAP_FILTER = app.config['LDAP_FILTER']
+    LDAP_USERNAMEFIELD = app.config['LDAP_USERNAMEFIELD']
 else:
     LDAP_TYPE = False
 
@@ -155,7 +157,8 @@ class User(db.Model):
                 return False
 
             if LDAP_TYPE == 'ldap':
-              searchFilter = "cn=%s" % self.username
+              searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+              logging.info('Ldap searchFilter "%s"' % searchFilter)
             else:
               searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
             try:
@@ -188,6 +191,7 @@ class User(db.Model):
                             # this might be changed in the future
                             self.firstname = result[0][0][1]['givenName'][0]
                             self.lastname = result[0][0][1]['sn'][0]
+                            self.email = result[0][0][1]['mail'][0]
                         except:
                             self.firstname = self.username
                             self.lastname = ''
@@ -214,7 +218,7 @@ class User(db.Model):
         We will create a local user (in DB) in order to manage user
         profile such as name, roles,...
         """
-        user = User(username=self.username, firstname=self.firstname, lastname=self.lastname, role_id=self.role_id)
+        user = User(username=self.username, firstname=self.firstname, lastname=self.lastname, role_id=self.role_id, email=self.email)
         db.session.add(user)
         db.session.commit()
         # assgine user_id to current_user after create in the DB
