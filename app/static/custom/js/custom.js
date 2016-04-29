@@ -113,3 +113,40 @@ function SelectElement(elementID, valueToSelect)
     var element = document.getElementById(elementID);
     element.value = valueToSelect;
 }
+
+function getdnssec(url){
+	
+    $.getJSON(url, function(data) {
+    	var modal = $("#modal_dnssec_info");
+		
+        if (data['status'] == 'error'){
+    		modal.find('.modal-body p').text(data['msg']);
+    		
+        }
+        else {
+        	dnssec_msg = '';
+            var dnssec = data['dnssec'];
+            for (var i = 0; i < dnssec.length; i++) {
+                if (dnssec[i]['active']){
+                    dnssec_msg += '<form>'+
+                    '<h3><strong>'+dnssec[i]['keytype']+'</strong></h3>'+
+                    '<strong>DNSKEY</strong>'+
+                    '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dnssec[i]['dnskey']+'">'+
+                    '</form>'+
+                    '<br/>';
+                    if(dnssec[i]['ds']){
+                        var dsList = dnssec[i]['ds'];
+                        dnssec_msg += '<strong>DS</strong>';
+                        for (var j = 0; j < dsList.length; j++){
+                            dnssec_msg += '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dsList[j]+'">';
+                        }
+                    }
+                    dnssec_msg += '</form>';
+                }
+            }
+    		modal.find('.modal-body p').replaceWith(dnssec_msg);
+
+        }
+        modal.modal('show');
+    });
+}
