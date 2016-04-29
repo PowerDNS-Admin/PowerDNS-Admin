@@ -38,7 +38,7 @@
   <![endif]-->
   {% endblock %}
 </head>
-<body class="hold-transition skin-blue sidebar-mini">
+<body class="hold-transition skin-blue sidebar-mini {% if not fullscreen_layout_setting %}layout-boxed{% endif %}">
 <div class="wrapper">
   {% block pageheader %}
   <header class="main-header">
@@ -128,6 +128,7 @@
         <li><a href="{{ url_for('admin') }}"><i class="fa fa-circle-o"></i> <span>Admin Console</span></a></li>
         <li><a href="{{ url_for('admin_manageuser') }}"><i class="fa fa-circle-o"></i> <span>User</span></a></li>
         <li><a href="{{ url_for('admin_history') }}"><i class="fa fa-circle-o"></i> <span>History</span></a></li>
+        <li><a href="{{ url_for('admin_settings') }}"><i class="fa fa-circle-o"></i> <span>Settings</span></a></li>
         {% endif %}
     </section>
     <!-- /.sidebar -->

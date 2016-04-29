@@ -957,3 +957,22 @@ class Setting(db.Model):
             db.session.rollback()
             return False
 
+    def toggle(self, setting):
+        setting = str(setting)
+        current_setting = Setting.query.filter(Setting.name==setting).first()
+        try:
+            if current_setting:
+                if current_setting.value == "True":
+                    current_setting.value = "False"
+                else:
+                    current_setting.value = "True"
+                db.session.commit()
+                return True
+            else:
+                logging.error('Setting %s does not exist' % setting)
+                return False
+        except:
+            logging.error('Cannot toggle setting %s' % setting)
+            logging.debug(traceback.format_exec())
+            db.session.rollback()
+            return False
