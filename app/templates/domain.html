@@ -24,12 +24,18 @@
 					<h3 class="box-title">Manage Records for {{ domain.name }}</h3>
 				</div>
 				<div class="box-body">
+					{% if domain.type != 'Slave' %}
 					<button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
 						Add Record&nbsp;<i class="fa fa-plus"></i>
 					</button>
 					<button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}">
 						Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
 					</button>
+					{% else %}
+					<button type="button" class="btn btn-flat btn-primary pull-left button_update_from_master" id="{{ domain.name }}">
+						Update from Master&nbsp;<i class="fa fa-download"></i>
+					</button>
+					{% endif %}
 				</div>
 				<div class="box-body">
 					<table id="tbl_records" class="table table-bordered table-striped">
@@ -219,7 +225,12 @@
             nEditing = null;
             nNew = false;
         });
-
+	
+	//handle update_from_master button
+	$(document).on("click", ".button_update_from_master", function (e) {
+			var domain = $(this).prop('id');
+            applyChanges({'domain': domain}, '/domain/' + domain + '/update');
+    });
 </script>
 {% endblock %}
 {% block modals %}
