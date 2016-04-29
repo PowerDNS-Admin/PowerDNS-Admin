@@ -27,7 +27,7 @@
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href="{{ url_for('index') }}"><b>PowerDNS</b>-Admin</a>
+    <a href="{{ url_for('index') }}">Sign In {{ login_title }}</a>
   </div>
   <!-- /.login-logo -->
   <div class="login-box-body">
@@ -56,18 +56,26 @@
         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
       </div>
 				
-                		{% if ldap_enabled %}
+						{% if ldap_enabled and basic_enabled %}
                 		<div class="form-group">
 							<select class="form-control" name="auth_method">
-								<option value="LOCAL">Local Authentication</option>
+                				<option value="LOCAL">LOCAL Authentication</option>
                 				<option value="LDAP">LDAP Authentication</option>
                 			</select>
 						</div>			
-                		{% else %}
-                		<div class="form-group">
-                			<input type="hidden" name="auth_method" value="LOCAL">
+						{% elif ldap_enabled and not basic_enabled %}
+						<div class="form-group">
+                			<input type="hidden" name="auth_method" value="LDAP">                			
 						</div>
-                		{% endif %}
+                		{% elif basic_enabled and not ldap_enabled %}
+                		<div class="form-group">
+                			<input type="hidden" name="auth_method" value="LOCAL">                			
+						</div>
+						{% else %}
+						<div class="form-group">
+                			<input type="hidden" name="auth_method" value="LOCAL">                			
+						</div>
+						{% endif %}
 					
      <div class="row">
         <div class="col-xs-8">

@@ -63,13 +63,17 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
+    # these parameters will be needed in multiple paths
+    LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
+    LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
+    BASIC_ENABLED = app.config['BASIC_ENABLED']
+    SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard'))
 
     if request.method == 'GET':
-        LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
-        return render_template('login.html', ldap_enabled=LDAP_ENABLED)
+        return render_template('login.html', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
     
     # process login
     username = request.form['username']
@@ -93,10 +97,10 @@ def login():
         try:
             auth = user.is_validate(method=auth_method)
             if auth == False:
-                return render_template('login.html', error='Invalid credentials')
+                return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
         except Exception, e:
             error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('login.html', error=error)
+            return render_template('login.html', error=error, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
@@ -113,7 +117,7 @@ def login():
         try:
             result = user.create_local_user()
             if result == True:
-                return render_template('login.html', username=username, password=password)
+                return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
             else:
                 return render_template('register.html', error=result)
         except Exception, e:
