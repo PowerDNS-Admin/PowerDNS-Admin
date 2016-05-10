@@ -129,26 +129,27 @@
 								(OFF) - Not set
 							</li>
 							<li>
-								INCEPTION-INCREMENT - 
+								INCEPTION-INCREMENT - Uses YYYYMMDDSS format for SOA serial numbers. If the SOA serial from the backend is within two days after inception, it gets incremented by two (the backend should keep SS below 98).
 							</li>
 							<li>
-								INCEPTION - 
+								INCEPTION - Sets the SOA serial to the last inception time in YYYYMMDD01 format. Uses localtime to find the day for inception time. <strong>Not recomended.</strong>
 							</li>
 							<li>
-								INCREMENT-WEEK - 
+								INCREMENT-WEEK - Sets the SOA serial to the number of weeks since the epoch, which is the last inception time in weeks. <strong>Not recomended.</strong>
 							</li>
 							<li>
-								INCREMENT-WEEKS - 
+								INCREMENT-WEEKS - Increments the serial with the number of weeks since the UNIX epoch. This should work in every setup; but the result won't look like YYYYMMDDSS anymore.
 							</li>
 							<li>
-								EPOCH - 
+								EPOCH - Sets the SOA serial to the number of seconds since the epoch.
 							</li>
 							<li>
-								INCEPTION-EPOCH - 
+								INCEPTION-EPOCH - Sets the new SOA serial number to the maximum of the old SOA serial number, and age in seconds of the last inception. 
 							</li>
 						</ul>
 					</dd>
 				</dl>
+				<p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a></p>
 			</div>
 		</div>
 	</div>
