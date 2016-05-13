@@ -121,7 +121,6 @@ function getdnssec(url){
 		
         if (data['status'] == 'error'){
     		modal.find('.modal-body p').text(data['msg']);
-    		
         }
         else {
         	dnssec_msg = '';
@@ -144,8 +143,7 @@ function getdnssec(url){
                     dnssec_msg += '</form>';
                 }
             }
-    		modal.find('.modal-body p').replaceWith(dnssec_msg);
-
+    		modal.find('.modal-body p').html(dnssec_msg);
         }
         modal.modal('show');
     });

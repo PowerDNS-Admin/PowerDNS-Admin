@@ -24,12 +24,18 @@
 					<h3 class="box-title">Manage Records for {{ domain.name }}</h3>
 				</div>
 				<div class="box-body">
+					{% if domain.type != 'Slave' %}
 					<button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
 						Add Record&nbsp;<i class="fa fa-plus"></i>
 					</button>
 					<button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}">
 						Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
 					</button>
+					{% else %}
+					<button type="button" class="btn btn-flat btn-primary pull-left button_update_from_master" id="{{ domain.name }}">
+						Update from Master&nbsp;<i class="fa fa-download"></i>
+					</button>
+					{% endif %}
 				</div>
 				<div class="box-body">
 					<table id="tbl_records" class="table table-bordered table-striped">
@@ -46,7 +52,7 @@
 						</thead>
 						<tbody>
                                 {% for record in records %}
-                                <tr class="odd">
+                                <tr class="odd row_record" id="{{ domain.name }}">
                                     <td>
                                         {{ (record.name,domain.name)|display_record_name }}
                                     </td>
@@ -69,8 +75,9 @@
 											Edit&nbsp;<i class="fa fa-edit"></i>
 										</button>
                                        {% else %}
-                                       <!-- TODO: replace this link for slave records -->
-                                       <a href="#" class="btn default btn-xs purple"> <i class="fa fa-exclamation-circle"></i></a>
+                                       <button type="button" class="btn btn-flat btn-warning"">
+											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+										</button>
                                     {% endif %}
                                     </td>
                                     <td width="6%">
@@ -79,16 +86,20 @@
 											Delete&nbsp;<i class="fa fa-trash"></i>
 										</button>
                                     {% else %}
-                                    	<!-- TODO: replace this link for slave records -->
-                                        <a href="#" class="btn default btn-xs red"> <i class="fa fa-exclamation-circle"></i></a>
+                                    	<button type="button" class="btn btn-flat btn-warning"">
+											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+										</button>
                                     {% endif %}
                                 {% else %}
-                                	<!-- TODO: replace these links for slave records -->
                                     <td width="6%">
-                                        <a href="#" class="btn default btn-xs purple"> <i class="fa fa-exclamation-circle"></i></a>
+                                        <button type="button" class="btn btn-flat btn-warning"">
+											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+										</button>
                                     </td>
                                     <td width="6%">
-                                        <a href="#" class="btn default btn-xs purple"> <i class="fa fa-exclamation-circle"></i></a>
+                                        <button type="button" class="btn btn-flat btn-warning"">
+											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+										</button>
                                     </td> 
                                 {% endif %}
                                     </td>
@@ -131,7 +142,8 @@
 	});
 	
 	// handle delete button
-	$(document).on("click", ".button_delete", function() {
+	$(document).on("click", ".button_delete", function(e) {
+		e.stopPropagation();
 		var modal = $("#modal_delete");
 		var table = $("#tbl_records").DataTable();
 		var record = $(this).prop('id');
@@ -145,11 +157,18 @@
 		
 	});
 	// handle edit button
-	$(document).on("click", ".button_edit", function() {
-		 var nRow = $(this).parents('tr')[0];
+	$(document).on("click", ".button_edit, .row_record", function(e) {
+		 e.stopPropagation();
+		 if ($(this).is('tr')) {
+			var nRow = $(this)[0]; 
+		 } else {
+		 	var nRow = $(this).parents('tr')[0];
+		 }
 		 var table = $("#tbl_records").DataTable();
-		 
-		 if (nEditing !== null && nEditing != nRow && nNew == false) {
+		
+		if (nEditing == nRow) {
+			/* click on row already being edited, do nothing */
+		} else if (nEditing !== null && nEditing != nRow && nNew == false) {
              /* Currently editing - but not this row - restore the old before continuing to edit mode */
              restoreRow(table, nEditing);
              editRow(table, nRow);
@@ -201,6 +220,7 @@
 	
 	//handle cancel button
 	$(document).on("click", ".button_cancel", function (e) {
+			e.stopPropagation();
 			var oTable = $("#tbl_records").DataTable();
             if (nNew) {
                 oTable.row(nEditing).remove().draw();
@@ -214,12 +234,18 @@
 	
 	//handle save button
 	$(document).on("click", ".button_save", function (e) {
+			e.stopPropagation();
 			var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
             nEditing = null;
             nNew = false;
         });
-
+	
+	//handle update_from_master button
+	$(document).on("click", ".button_update_from_master", function (e) {
+			var domain = $(this).prop('id');
+            applyChanges({'domain': domain}, '/domain/' + domain + '/update');
+    });
 </script>
 {% endblock %}
 {% block modals %}
@@ -237,9 +263,9 @@
 				<p></p>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-default pull-left"
+				<button type="button" class="btn btn-flat btn-default pull-left"
 					data-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-danger" id="button_delete_confirm">Delete</button>
+				<button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
 			</div>
 		</div>
 		<!-- /.modal-content -->

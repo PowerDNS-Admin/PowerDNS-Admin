@@ -1,177 +1,120 @@
 {% extends "base.html" %}
-{% block head %}
-        {{ super() }}
-
-        <!-- BEGIN PAGE LEVEL STYLES -->
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global/plugins/jquery-multi-select/css/multi-select.css') }}"/>
-        <!-- BEGIN THEME STYLES -->
-
-        <!-- BEGIN THEME STYLES -->
-        <!-- DOC: To use 'rounded corners' style just load 'components-rounded.css' stylesheet instead of 'components.css' in the below style tag -->
-        <link href="{{ url_for('static', filename='global/css/components-md.css') }}" id="style_components" rel="stylesheet" type="text/css"/>
-        <link href="{{ url_for('static', filename='global/css/plugins-md.css') }}" rel="stylesheet" type="text/css"/>
-        <link href="{{ url_for('static', filename='admin/layout2/css/layout.css') }}" rel="stylesheet" type="text/css"/>
-        <link href="{{ url_for('static', filename='admin/layout2/css/themes/grey.css') }}" rel="stylesheet" type="text/css" id="style_color"/>
-        <link href="{{ url_for('static', filename='admin/layout2/css/custom.css') }}" rel="stylesheet" type="text/css"/>
-        <!-- END THEME STYLES -->
-{% endblock %}
-{% block title %}<title>DNS Control Panel - User Profile</title>{% endblock %}
-
+{% block title %}<title>DNS Control Panel - My Profile</title>{% endblock %}
 {% block dashboard_stat %}
-                <!-- BEGIN PAGE HEADER-->
-                <h3 class="page-title">
-                User Profile</h3>
-                <div class="page-bar">
-                    <ul class="page-breadcrumb">
-                        <li>
-                            <i class="fa fa-home"></i>
-                            <a href="{{ url_for('dashboard') }}">Home</a>
-                            <i class="fa fa-angle-right"></i>
-                        </li>
-                        <li>
-                            <a href="#">User Profile</a>
-                        </li>
-                    </ul>
-                </div>
-                <!-- END PAGE HEADER-->
+	<!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Profile
+        <small>Edit my profile</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li class="active">My Profile</li>
+      </ol>
+    </section>
 {% endblock %}
-
 {% block content %}
-                <div class="clearfix">
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <!-- BEGIN PROFILE CONTENT -->
-                        <div class="profile-content">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="portlet light">
-                                        <div class="portlet-title tabbable-line">
-                                            <div class="caption caption-md">
-                                                <i class="icon-globe theme-font hide"></i>
-                                                <span class="caption-subject font-blue-madison bold uppercase">Profile Account</span>
-                                            </div>
-                                            <ul class="nav nav-tabs">
-                                                <li class="active">
-                                                    <a href="#tab_1_1" data-toggle="tab">Personal Info</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#tab_1_2" data-toggle="tab">Change Avatar</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#tab_1_3" data-toggle="tab">Change Password</a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="portlet-body">
-                                            <div class="tab-content">
-                                                <!-- PERSONAL INFO TAB -->
-                                                <div class="tab-pane active" id="tab_1_1">
-                                                    <form role="form" action="{{ user_profile }}" method="POST">
-                                                        <div class="form-group">
-                                                            <label class="control-label">First Name</label>
-                                                            <input name="firstname" type="text" placeholder="{{ current_user.firstname }}" class="form-control"/>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label class="control-label">Last Name</label>
-                                                            <input name="lastname" type="text" placeholder="{{ current_user.lastname }}" class="form-control"/>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label class="control-label">Email</label>
-                                                            <input name="email" type="text" placeholder="{{ current_user.email }}" class="form-control"/>
-                                                        </div>
-                                                        <div class="margiv-top-10">
-                                                            <button type="submit" class="btn green-haze"> Save Changes</button>
-                                                            <a href="javascript:;" class="btn default">
-                                                            Cancel </a>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                                <!-- END PERSONAL INFO TAB -->
-                                                <!-- CHANGE AVATAR TAB -->
-                                                <div class="tab-pane" id="tab_1_2">
-                                                    <form action="{{ user_profile }}" method="POST" enctype="multipart/form-data">
-                                                        <div class="form-group">
-                                                            <div class="fileinput fileinput-new" data-provides="fileinput">
-                                                                <div class="fileinput-new thumbnail" style="width: 200px; height: 210px;">
-                                                                    {% if current_user.avatar %}
-                                                                    <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" alt=""/ style="width:200px;height:200px;">
-                                                                    {% else %}
-                                                                    <img src="http://www.placehold.it/200x200/EFEFEF/AAAAAA&amp;text=no+image" alt=""/>
-                                                                    {% endif %}
-                                                                </div>
-                                                                <div>
-                                                                    <span class="btn default btn-file">
-                                                                    <span class="fileinput-new">
-                                                                    Select image </span>
-                                                                    <span class="fileinput-exists">
-                                                                    Change </span>
-                                                                    <input type="file" name="file">
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="clearfix margin-top-10">
-                                                                <span class="label label-danger">NOTE! </span>
-                                                                <span>&nbsp;Only support <strong>.PNG, .JPG, .JPEG</strong>. Best size is <strong>200x200</strong>. </span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="margin-top-10">
-                                                            <button type="submit" class="btn green-haze"> Submit</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                                <!-- END CHANGE AVATAR TAB -->
-                                                <!-- CHANGE PASSWORD TAB -->
-                                                <div class="tab-pane" id="tab_1_3">
-                                                {% if not current_user.password %}
-                                                Your account password is managed via LDAP which isn't supported to change here.
-                                                {% else %}
-                                                    <form class="password-form" action="{{ user_profile }}" method="POST">
-                                                        <div class="form-group">
-                                                            <label class="control-label">New Password</label>
-                                                            <input name="password" id="newpassword" type="password" class="form-control"/>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label class="control-label">Re-type New Password</label>
-                                                            <input name="rpassword" type="password" class="form-control"/>
-                                                        </div>
-                                                        <div class="margin-top-10">
-                                                            <button type="submit" class="btn green-haze"> Change Password</button>
-                                                        </div>
-                                                    </form>
-                                                {% endif %}
-                                                </div>
-                                                <!-- END CHANGE PASSWORD TAB -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- END PROFILE CONTENT -->
-                    </div>
-                </div>
+<section class="content">
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="box box-primary">
+				<div class="box-header with-border">
+					<h3 class="box-title">Edit my profile</h3>
+				</div>
+				<div class="box-body">
+					<!-- Custom Tabs -->
+					<div class="nav-tabs-custom">
+						<ul class="nav nav-tabs">
+							<li class="active"><a href="#personal_tab" data-toggle="tab">Personal
+									Info</a></li>
+							<li><a href="#avatar_tab" data-toggle="tab">Change
+									Avatar</a></li>
+							<li><a href="#password_tab" data-toggle="tab">Change
+									Password</a></li>
+						</ul>
+						<div class="tab-content">
+							<div class="tab-pane active" id="personal_tab">
+								<form role="form" method="post" action="{{ user_profile }}">
+									<div class="form-group">
+										<label for="firstname">First Name</label> <input type="text"
+											class="form-control" name="firstname" id="firstname"
+											placeholder="{{ current_user.firstname }}">
+									</div>
+									<div class="form-group">
+										<label for="lastname">Last Name</label> <input type="text"
+											class="form-control" name="lastname" id="lastname"
+											placeholder="{{ current_user.lastname }}">
+									</div>
+									<div class="form-group">
+										<label for="email">E-mail</label> <input type="text"
+											class="form-control" name="email" id="email"
+											placeholder="{{ current_user.email }}">
+									</div>
+									<div class="form-group">
+										<button type="submit" class="btn btn-flat btn-primary">Submit</button>
+									</div>
+								</form>
+							</div>
+							<div class="tab-pane" id="avatar_tab">
+								<form action="{{ user_profile }}" method="post"
+									enctype="multipart/form-data">
+									<div class="form-group">
+										<div class="form-group">
+											<div class="thumbnail" style="width: 200px; height: 210px;">
+												{% if current_user.avatar %} <img
+													src="{{ url_for('user_avatar', filename=current_user.avatar) }}"
+													alt="" / style="width: 200px; height: 200px;"> {%
+												else %} <img
+													src="http://www.placehold.it/200x200/EFEFEF/AAAAAA&amp;text=no+image"
+													alt="" /> {% endif %}
+											</div>
+											<div>
+												<label for="file">Select image</label> <input type="file"
+													id="file" name="file">
+											</div>
+										</div>
+										<div>
+											<span class="label label-danger">NOTE! </span> <span>&nbsp;Only
+												supports <strong>.PNG, .JPG, .JPEG</strong>. The best size
+												to use is <strong>200x200</strong>.
+											</span>
+										</div>
+									</div>
+									<div class="form-group">
+										<button type="submit" class="btn btn-flat btn-primary">Submit</button>
+									</div>
+								</form>
+							</div>
+							<div class="tab-pane" id="password_tab">
+								{% if not current_user.password %} Your account password is
+								managed via LDAP which isn't supported to change here. {% else
+								%}
+								<form action="{{ user_profile }}" method="post">
+									<div class="form-group">
+										<label for="password">New Password</label> <input
+											type="password" class="form-control" name="password"
+											id="newpassword" />
+									</div>
+									<div class="form-group">
+										<label for="rpassword">Re-type New Password</label> <input
+											type="password" class="form-control" name="rpassword"
+											id="rpassword" />
+									</div>
+									<div class="form-group">
+										<button type="submit" class="btn btn-flat btn-primary">Change
+											password</button>
+									</div>
+								</form>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
 {% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<!-- BEGIN PAGE LEVEL PLUGINS -->
-<script type="text/javascript" src="{{ url_for('static', filename='global/plugins/bootstrap-select/bootstrap-select.min.js') }}"></script>
-<script src="{{ url_for('static', filename='global/plugins/jquery-validation/js/jquery.validate.min.js') }}" type="text/javascript"></script>
-<!-- END PAGE LEVEL PLUGINS -->
-
-<!-- BEGIN PAGE LEVEL SCRIPTS -->
-<script src="{{ url_for('static', filename='global/scripts/metronic.js') }}" type="text/javascript"></script>
-<script src="{{ url_for('static', filename='admin/layout2/scripts/layout.js') }}" type="text/javascript"></script>
-<script src="{{ url_for('static', filename='admin/pages/scripts/user_profile.js') }}" type="text/javascript"></script>
-<!-- END PAGE LEVEL SCRIPTS -->
-<script>
-jQuery(document).ready(function() {    
-   Metronic.init(); // init metronic core componets
-   Layout.init(); // init layout
-   UserProfile.init();
-});
-</script>
-<!-- END JAVASCRIPTS -->
+{% block extrascripts %}
+<!-- TODO: add password and password confirmation comparisson check -->
 {% endblock %}

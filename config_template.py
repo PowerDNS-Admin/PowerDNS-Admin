@@ -6,6 +6,7 @@ WTF_CSRF_ENABLED = True
 SECRET_KEY = 'We are the world'
 BIND_ADDRESS = '127.0.0.1'
 PORT = 9393
+LOGIN_TITLE = "PDNS"
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
@@ -28,6 +29,13 @@ LDAP_URI = 'ldaps://your-ldap-server:636'
 LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
 LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
+# Additional options only if LDAP_TYPE=ldap
+LDAP_USERNAMEFIELD = 'uid'
+LDAP_FILTER = '(objectClass=inetorgperson)'
+
+#Default Auth
+BASIC_ENABLED = True
+SIGNUP_ENABLED = True
 
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://172.16.214.131:8081/'

@@ -38,7 +38,7 @@
   <![endif]-->
   {% endblock %}
 </head>
-<body class="hold-transition skin-blue sidebar-mini">
+<body class="hold-transition skin-blue sidebar-mini {% if not fullscreen_layout_setting %}layout-boxed{% endif %}">
 <div class="wrapper">
   {% block pageheader %}
   <header class="main-header">
@@ -86,10 +86,10 @@
               <!-- Menu Footer-->
               <li class="user-footer">
                 <div class="pull-left">
-                  <a href="#" class="btn btn-default btn-flat">Change password</a>
+                  <a href="{{ url_for('user_profile') }}" class="btn btn-flat btn-default">My Profile</a>
                 </div>
                 <div class="pull-right">
-                  <a href="{{ url_for('logout') }}" class="btn btn-default btn-flat">Log out</a>
+                  <a href="{{ url_for('logout') }}" class="btn btn-flat btn-default">Log out</a>
                 </div>
               </li>
             </ul>
@@ -125,9 +125,10 @@
         {% if current_user.role.name == 'Administrator' %}
         <li><a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a></li>
         <li class="header">ADMINISTRATION</li>
-        <li><a href="{{ url_for('admin') }}"><i class="fa fa-circle-o"></i> <span>Admin Console</span></a></li>
-        <li><a href="{{ url_for('admin_manageuser') }}"><i class="fa fa-circle-o"></i> <span>User</span></a></li>
-        <li><a href="{{ url_for('admin_history') }}"><i class="fa fa-circle-o"></i> <span>History</span></a></li>
+        <li><a href="{{ url_for('admin') }}"><i class="fa fa-wrench"></i> <span>Admin Console</span></a></li>
+        <li><a href="{{ url_for('admin_manageuser') }}"><i class="fa fa-users"></i> <span>Users</span></a></li>
+        <li><a href="{{ url_for('admin_history') }}"><i class="fa fa-calendar"></i> <span>History</span></a></li>
+        <li><a href="{{ url_for('admin_settings') }}"><i class="fa fa-cog"></i> <span>Settings</span></a></li>
         {% endif %}
     </section>
     <!-- /.sidebar -->
@@ -301,7 +302,7 @@
         <p></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default pull-right"
+        <button type="button" class="btn btn-flat btn-default pull-right"
           data-dismiss="modal">Close</button>
       </div>
     </div>
@@ -324,7 +325,7 @@
         <p></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default pull-right"
+        <button type="button" class="btn btn-flat btn-default pull-right"
           data-dismiss="modal">Close</button>
       </div>
     </div>

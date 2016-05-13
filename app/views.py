@@ -11,10 +11,16 @@ from werkzeug import secure_filename
 from lib import utils
 from app import app, login_manager
 from .models import User, Role, Domain, DomainUser, Record, Server, History, Anonymous, Setting
+from distutils.util import strtobool
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
 jinja2.filters.FILTERS['display_second_to_time'] = utils.display_time
+
+@app.context_processor
+def inject_fullscreen_layout_setting():
+    fullscreen_layout_setting = Setting.query.filter(Setting.name == 'fullscreen_layout').first()
+    return dict(fullscreen_layout_setting=strtobool(fullscreen_layout_setting.value))
 
 # START USER AUTHENTICATION HANDLER
 @app.before_request
@@ -63,13 +69,17 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
+    # these parameters will be needed in multiple paths
+    LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
+    LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
+    BASIC_ENABLED = app.config['BASIC_ENABLED']
+    SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard'))
 
     if request.method == 'GET':
-        LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
-        return render_template('login.html', ldap_enabled=LDAP_ENABLED)
+        return render_template('login.html', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
     
     # process login
     username = request.form['username']
@@ -93,10 +103,10 @@ def login():
         try:
             auth = user.is_validate(method=auth_method)
             if auth == False:
-                return render_template('login.html', error='Invalid credentials')
+                return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
         except Exception, e:
             error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('login.html', error=error)
+            return render_template('login.html', error=error, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
@@ -113,7 +123,7 @@ def login():
         try:
             result = user.create_local_user()
             if result == True:
-                return render_template('login.html', username=username, password=password)
+                return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
             else:
                 return render_template('register.html', error=result)
         except Exception, e:
@@ -434,6 +444,23 @@ def admin_history():
         histories = History.query.all()
         return render_template('admin_history.html', histories=histories)
 
+@app.route('/admin/settings', methods=['GET'])
+@login_required
+@admin_role_required
+def admin_settings():
+    if request.method == 'GET':        
+        settings = Setting.query.filter(Setting.name != 'maintenance')
+        return render_template('admin_settings.html', settings=settings)
+    
+@app.route('/admin/setting/<string:setting>/toggle', methods=['POST'])
+@login_required
+@admin_role_required
+def admin_settings_toggle(setting):
+    result = Setting().toggle(setting)
+    if (result):
+        return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
+    else:
+        return make_response(jsonify( { 'status': 'error', 'msg': 'Can toggle setting.' } ), 500)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
