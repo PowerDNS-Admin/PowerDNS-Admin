@@ -73,15 +73,13 @@
 
 	$(".setting-toggle-button").click(function() {
 		var setting = $(this).prop('id');
-		applyChanges('','/admin/setting/' + setting + '/toggle')
-		location.reload();
+		applyChanges('','/admin/setting/' + setting + '/toggle', false, true)
 	});
 	
 	// TODO: allow editing of value field
 	$(".setting-edit-button").click(function() {
 		var setting = $(this).prop('id');
-		applyChanges('','/admin/setting/' + setting + '/edit')
-		location.reload();
+		applyChanges('','/admin/setting/' + setting + '/edit', false, true)
 	});
 </script>
 {% endblock %} 

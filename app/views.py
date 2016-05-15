@@ -22,6 +22,11 @@ def inject_fullscreen_layout_setting():
     fullscreen_layout_setting = Setting.query.filter(Setting.name == 'fullscreen_layout').first()
     return dict(fullscreen_layout_setting=strtobool(fullscreen_layout_setting.value))
 
+@app.context_processor
+def inject_record_helper_setting():
+    record_helper_setting = Setting.query.filter(Setting.name == 'record_helper').first()
+    return dict(record_helper_setting=strtobool(record_helper_setting.value))
+
 # START USER AUTHENTICATION HANDLER
 @app.before_request
 def before_request():
@@ -460,7 +465,7 @@ def admin_settings_toggle(setting):
     if (result):
         return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
     else:
-        return make_response(jsonify( { 'status': 'error', 'msg': 'Can toggle setting.' } ), 500)
+        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
