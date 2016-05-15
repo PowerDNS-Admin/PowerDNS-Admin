@@ -373,13 +373,37 @@ def admin():
 
     return render_template('admin.html', domains=domains, users=users, configs=configs, statistics=statistics, uptime=uptime, history_number=history_number)
 
+@app.route('/admin/user/create', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_createuser():
+    if request.method == 'GET':
+        return render_template('admin_createuser.html')
+    
+    if request.method == 'POST':
+        fdata = request.form
+        
+        user = User(username=fdata['username'], plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'])
+        
+        if fdata['password'] == "":
+            return render_template('admin_createuser.html', user=user, blank_password=True)
+        
+        result = user.create_local_user();
+        
+        if result == 'Email already existed':
+            return render_template('admin_createuser.html', user=user, duplicate_email=True)
+        
+        if result == 'Username already existed':
+            return render_template('admin_createuser.html', user=user, duplicate_username=True)
+
+        return redirect(url_for('admin_manageuser'))
 
 @app.route('/admin/manageuser', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def admin_manageuser():
     if request.method == 'GET':
-        users = User.query.all()
+        users = User.query.order_by(User.username).all()
         return render_template('admin_manageuser.html', users=users)
 
     if request.method == 'POST':

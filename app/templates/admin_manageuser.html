@@ -20,6 +20,13 @@
 					<h3 class="box-title">User Management</h3>
 				</div>
 				<div class="box-body">
+					<a href="{{ url_for('admin_createuser') }}">
+						<button type="button" class="btn btn-flat btn-primary pull-left button_add_user">
+							Add User&nbsp;<i class="fa fa-plus"></i>
+						</button>
+					</a>
+				</div>
+				<div class="box-body">
 					<table id="tbl_users" class="table table-bordered table-striped">
 						<thead>
 							<tr>
@@ -97,9 +104,8 @@
 		modal.find('.modal-body p').text(info);
 		modal.find('#button_delete_confirm').click(function() {
 			var postdata = {'action': 'delete_user', 'data': username}
-            applyChanges(postdata, '/admin/manageuser');
+            applyChanges(postdata, '/admin/manageuser', false, true);
 			modal.modal('hide');
-			location.reload();
 		})
 		modal.modal('show');
 		
