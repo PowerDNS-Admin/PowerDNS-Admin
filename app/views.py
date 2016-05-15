@@ -59,13 +59,29 @@ def admin_role_required(f):
 # END CUSTOMIZE DECORATOR
 
 # START VIEWS
+@app.errorhandler(400)
+def http_bad_request(e):
+    return redirect(url_for('error', code=400))
+
+@app.errorhandler(401)
+def http_unauthorized(e):
+    return redirect(url_for('error', code=401))
+
+@app.errorhandler(404)
+def http_internal_server_error(e):
+    return redirect(url_for('error', code=404))
+
+@app.errorhandler(500)
+def http_page_not_found(e):
+    return redirect(url_for('error', code=500))
+
 @app.route('/error/<string:code>')
 def error(code, msg=None):
     supported_code = ('400', '401', '404', '500')
     if code in supported_code:
-        return render_template('%s.html' % code, msg=msg), int(code)
+        return render_template('errors/%s.html' % code, msg=msg), int(code)
     else:
-        return render_template('404.html'), 404
+        return render_template('errors/404.html'), 404
 
 @app.route('/register', methods=['GET'])
 def register():
@@ -200,7 +216,7 @@ def domain_add():
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
-                return render_template('400.html', msg="Please correct your input"), 400
+                return render_template('errors/400.html', msg="Please correct your input"), 400
 
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
@@ -216,7 +232,7 @@ def domain_add():
                 history.add()
                 return redirect(url_for('dashboard'))
             else:
-                return render_template('400.html', msg=result['msg']), 400
+                return render_template('errors/400.html', msg=result['msg']), 400
         except:
             return redirect(url_for('error', code=500))
     return render_template('domain_add.html')
