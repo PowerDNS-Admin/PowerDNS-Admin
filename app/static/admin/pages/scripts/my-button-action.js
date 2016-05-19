@@ -29,8 +29,10 @@ var MyButtonAction = function () {
             bootbox.confirm("Are you sure you want to delete this domain?", function(result) {
                 if (result == true){
                     var domain = document.getElementById('delete_domain').value;
-                    $.get("/admin/domain/"+ domain +"/delete");
-                    window.location.href = '/';
+                    $.get("/admin/domain/"+ domain +"/delete").always(function() {
+                    	window.location.href = '/';
+                    });
+                    
                 }
             }); 
         });
