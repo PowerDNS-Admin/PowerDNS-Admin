@@ -5,11 +5,14 @@ PowerDNS Web-GUI - Built by Flask
 - Multiple domain management
 - Local / LDAP user authentication
 - User management
-- User access management base on domain
+- User access management based on domain
 - User activity logging
 - Dashboard and pdns service statistics
 
 ## Setup
+
+### PowerDNS Version Support:
+PowerDNS-Admin supports PowerDNS autoritative server versions **3.4.2** and higher but does **not** yet support PowerDNS 4.0.0 
 
 ### pdns Service
 I assume that you have already installed powerdns service. Make sure that your `/etc/pdns/pdns.conf` has these contents
@@ -30,7 +33,7 @@ MariaDB [(none)]> GRANT ALL PRIVILEGES ON powerdnsadmin.* TO powerdnsadmin@'%' I
 
 ### PowerDNS-Admin
 
-In this installation guide, I am using CentOS 7 and run my python stuffs with *virtualenv*. If you don't have it, let install:
+In this installation guide, I am using CentOS 7 and run my python stuffs with *virtualenv*. If you don't have it, lets install it:
 ```
 $ sudo yum install python-pip
 $ sudo pip install virtualenv
@@ -55,7 +58,7 @@ Web application configuration is stored in `config.py` file. Let's clone it from
 
 Create database after having proper configs
 ```
-(flask)% ./createdb.py
+(flask)% ./create_db.py
 ```
 
 
@@ -64,5 +67,9 @@ Run the application and enjoy!
 (flask)$ ./run.py
 ```
 
-### Screenshot
-![Alt text](http://i.imgur.com/wA5qy2d.png)
+### Screenshots
+![login page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-login.png?raw=true)
+![dashboard](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-dashboard.png?raw=true)
+![create domain page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-domaincreate.png?raw=true)
+![manage domain page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-domainmanage.png?raw=true)
+

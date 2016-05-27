@@ -57,6 +57,7 @@
       </a>
 
       <div class="navbar-custom-menu">
+      	{% if current_user.id is defined %}
         <ul class="nav navbar-nav">
           <!-- User Account: style can be found in dropdown.less -->
           <li class="dropdown user user-menu">
@@ -71,18 +72,18 @@
               </span>
             </a>
             <ul class="dropdown-menu">
-              <!-- User image -->
-              <li class="user-header">
-                {% if current_user.avatar %}
-                <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="img-circle" alt="User Image"/>
-                {% else %}
-                <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="img-circle" alt="User Image"/>
-                {% endif %}
-                <p>
-                  {{ current_user.firstname }} {{ current_user.lastname }}
-                  <small>{{ current_user.role.name }}</small>
-                </p>
-              </li>
+	              <li class="user-header">
+	                {% if current_user.avatar %}
+	                <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="img-circle" alt="User Image"/>
+	                {% else %}
+	                <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="img-circle" alt="User Image"/>
+	                {% endif %}
+	                <p>
+	                  {{ current_user.firstname }} {{ current_user.lastname }}
+	                  <small>{{ current_user.role.name }}</small>
+	                </p>
+	              </li>
+	          
               <!-- Menu Footer-->
               <li class="user-footer">
                 <div class="pull-left">
@@ -95,6 +96,7 @@
             </ul>
           </li>
         </ul>
+        {% endif %}
       </div>
     </nav>
   </header>
@@ -103,7 +105,7 @@
   <aside class="main-sidebar">
     <!-- sidebar: style can be found in sidebar.less -->
     <section class="sidebar">
-      <!-- Sidebar user panel -->
+    {% if current_user.id is defined %}
       <div class="user-panel">
         <div class="pull-left image">
           {% if current_user.avatar %}
@@ -117,7 +119,6 @@
           <a href="#"><i class="fa fa-circle text-success"></i> Logged In</a>
         </div>
       </div>
-      <!-- /.search form -->
       <!-- sidebar menu: : style can be found in sidebar.less -->
       <ul class="sidebar-menu">
         <li class="header">USER ACTIONS</li>
@@ -130,6 +131,7 @@
         <li><a href="{{ url_for('admin_history') }}"><i class="fa fa-calendar"></i> <span>History</span></a></li>
         <li><a href="{{ url_for('admin_settings') }}"><i class="fa fa-cog"></i> <span>Settings</span></a></li>
         {% endif %}
+    {% endif %}
     </section>
     <!-- /.sidebar -->
   </aside>
@@ -149,102 +151,8 @@
       </ol>
     </section>
     {% endblock %}
-
-    <!-- Main content -->
     {% block content %}
-    <section class="content">
-      <!-- Small boxes (Stat box) -->
-      <div class="row">
-        <div class="col-lg-3 col-xs-6">
-          <!-- small box -->
-          <div class="small-box bg-aqua">
-            <div class="inner">
-              <h3>150</h3>
-              <p>Domains</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-bag"></i>
-            </div>
-            <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
-          </div>
-        </div>
-        <!-- ./col -->
-        <div class="col-lg-3 col-xs-6">
-          <!-- small box -->
-          <div class="small-box bg-green">
-            <div class="inner">
-              <h3>53<sup style="font-size: 20px">%</sup></h3>
-              <p>Users</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
-          </div>
-        </div>
-        <!-- ./col -->
-        <div class="col-lg-3 col-xs-6">
-          <!-- small box -->
-          <div class="small-box bg-yellow">
-            <div class="inner">
-              <h3>44</h3>
-              <p>Histories</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-person-add"></i>
-            </div>
-            <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
-          </div>
-        </div>
-        <!-- ./col -->
-        <div class="col-lg-3 col-xs-6">
-          <!-- small box -->
-          <div class="small-box bg-red">
-            <div class="inner">
-              <h3>65</h3>
-              <p>Uptime</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-pie-graph"></i>
-            </div>
-            <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
-          </div>
-        </div>
-        <!-- ./col -->
-      </div>
-      <!-- /.row -->
-      <!-- Main row -->
-      <div class="row">
-        <!-- Left col -->
-        <section class="col-lg-7 connectedSortable">
-          <!-- Custom tabs (Charts with tabs)-->
-          <div class="nav-tabs-custom">
-            <!-- Tabs within a box -->
-            <ul class="nav nav-tabs pull-right">
-              <li class="active"><a href="#revenue-chart" data-toggle="tab">Area</a></li>
-              <li><a href="#sales-chart" data-toggle="tab">Donut</a></li>
-              <li class="pull-left header"><i class="fa fa-inbox"></i> Sales</li>
-            </ul>
-            <div class="tab-content no-padding">
-              <!-- Morris chart - Sales -->
-              <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 300px;"></div>
-              <div class="chart tab-pane" id="sales-chart" style="position: relative; height: 300px;"></div>
-            </div>
-          </div>
-          <!-- /.nav-tabs-custom -->
-        </section>
-        <!-- /.Left col -->
-        <!-- right col (We are only adding the ID to make the widgets sortable)-->
-        <section class="col-lg-5 connectedSortable">
-
-        </section>
-        <!-- right col -->
-      </div>
-      <!-- /.row (main row) -->
-
-    </section>
     {% endblock %}
-    <!-- /.content -->
   </div>
   <!-- /.content-wrapper -->
   <footer class="main-footer">

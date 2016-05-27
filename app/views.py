@@ -22,6 +22,11 @@ def inject_fullscreen_layout_setting():
     fullscreen_layout_setting = Setting.query.filter(Setting.name == 'fullscreen_layout').first()
     return dict(fullscreen_layout_setting=strtobool(fullscreen_layout_setting.value))
 
+@app.context_processor
+def inject_record_helper_setting():
+    record_helper_setting = Setting.query.filter(Setting.name == 'record_helper').first()
+    return dict(record_helper_setting=strtobool(record_helper_setting.value))
+
 # START USER AUTHENTICATION HANDLER
 @app.before_request
 def before_request():
@@ -54,13 +59,29 @@ def admin_role_required(f):
 # END CUSTOMIZE DECORATOR
 
 # START VIEWS
+@app.errorhandler(400)
+def http_bad_request(e):
+    return redirect(url_for('error', code=400))
+
+@app.errorhandler(401)
+def http_unauthorized(e):
+    return redirect(url_for('error', code=401))
+
+@app.errorhandler(404)
+def http_internal_server_error(e):
+    return redirect(url_for('error', code=404))
+
+@app.errorhandler(500)
+def http_page_not_found(e):
+    return redirect(url_for('error', code=500))
+
 @app.route('/error/<string:code>')
 def error(code, msg=None):
     supported_code = ('400', '401', '404', '500')
     if code in supported_code:
-        return render_template('%s.html' % code, msg=msg), int(code)
+        return render_template('errors/%s.html' % code, msg=msg), int(code)
     else:
-        return render_template('404.html'), 404
+        return render_template('errors/404.html'), 404
 
 @app.route('/register', methods=['GET'])
 def register():
@@ -195,7 +216,7 @@ def domain_add():
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
-                return render_template('400.html', msg="Please correct your input"), 400
+                return render_template('errors/400.html', msg="Please correct your input"), 400
 
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
@@ -211,7 +232,7 @@ def domain_add():
                 history.add()
                 return redirect(url_for('dashboard'))
             else:
-                return render_template('400.html', msg=result['msg']), 400
+                return render_template('errors/400.html', msg=result['msg']), 400
         except:
             return redirect(url_for('error', code=500))
     return render_template('domain_add.html')
@@ -368,13 +389,37 @@ def admin():
 
     return render_template('admin.html', domains=domains, users=users, configs=configs, statistics=statistics, uptime=uptime, history_number=history_number)
 
+@app.route('/admin/user/create', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_createuser():
+    if request.method == 'GET':
+        return render_template('admin_createuser.html')
+    
+    if request.method == 'POST':
+        fdata = request.form
+        
+        user = User(username=fdata['username'], plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'])
+        
+        if fdata['password'] == "":
+            return render_template('admin_createuser.html', user=user, blank_password=True)
+        
+        result = user.create_local_user();
+        
+        if result == 'Email already existed':
+            return render_template('admin_createuser.html', user=user, duplicate_email=True)
+        
+        if result == 'Username already existed':
+            return render_template('admin_createuser.html', user=user, duplicate_username=True)
+
+        return redirect(url_for('admin_manageuser'))
 
 @app.route('/admin/manageuser', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def admin_manageuser():
     if request.method == 'GET':
-        users = User.query.all()
+        users = User.query.order_by(User.username).all()
         return render_template('admin_manageuser.html', users=users)
 
     if request.method == 'POST':
@@ -460,7 +505,7 @@ def admin_settings_toggle(setting):
     if (result):
         return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
     else:
-        return make_response(jsonify( { 'status': 'error', 'msg': 'Can toggle setting.' } ), 500)
+        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
