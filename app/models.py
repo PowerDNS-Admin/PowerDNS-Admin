@@ -7,6 +7,7 @@ import itertools
 import traceback
 
 from datetime import datetime
+from distutils.version import StrictVersion
 from flask.ext.login import AnonymousUserMixin
 
 from app import app, db
@@ -29,6 +30,11 @@ PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
 PDNS_VERSION = app.config['PDNS_VERSION']
 API_EXTENDED_URL = utils.pdns_api_extended_uri(PDNS_VERSION)
+
+# Flag for pdns v4.x.x
+# TODO: Find another way to do this
+if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
+    NEW_SCHEMA = True
 
 
 class Anonymous(AnonymousUserMixin):
@@ -433,8 +439,7 @@ class Domain(db.Model):
         headers['X-API-Key'] = PDNS_API_KEY
         try:
             jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
-            list_jdomain = [d['name'] for d in jdata]
-
+            list_jdomain = [d['name'].rstrip('.') for d in jdata]
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
                 should_removed_db_domain = list(set(list_db_domain).difference(list_jdomain))
@@ -468,7 +473,7 @@ class Domain(db.Model):
                 else:
                     # add new domain
                     d = Domain()
-                    d.name = data['name']
+                    d.name = data['name'].rstrip('.')
                     d.master = str(data['masters'])
                     d.type = data['kind']
                     d.serial = data['serial']
@@ -491,6 +496,10 @@ class Domain(db.Model):
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
+
+        if NEW_SCHEMA:
+            domain_name = domain_name + '.'
+            domain_ns = [ns + '.' for ns in domain_ns]
 
         if soa_edit_api == 'OFF':
             post_data = {
@@ -654,6 +663,14 @@ class Record(object):
         except:
             logging.error("Cannot fetch domain's record data from remote powerdns api")
             return False
+
+        if NEW_SCHEMA:
+            rrsets = jdata['rrsets']
+            for rrset in rrsets:
+                rrset['content'] = rrset['records'][0]['content']
+                rrset['disabled'] = rrset['records'][0]['disabled']
+            return {'records': rrsets}
+
         return jdata
 
     def add(self, domain):
