@@ -667,6 +667,7 @@ class Record(object):
         if NEW_SCHEMA:
             rrsets = jdata['rrsets']
             for rrset in rrsets:
+                rrset['name'] = rrset['name'].rstrip('.')
                 rrset['content'] = rrset['records'][0]['content']
                 rrset['disabled'] = rrset['records'][0]['disabled']
             return {'records': rrsets}
@@ -689,23 +690,42 @@ class Record(object):
         # continue if the record is ready to be added
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        data = {"rrsets": [
-                    {
-                        "name": self.name,
-                        "type": self.type,
-                        "changetype": "REPLACE",
-                        "records": [ 
-                            {
-                                "content": self.data,
-                                "disabled": self.status,
-                                "name": self.name,
-                                "ttl": self.ttl,
-                                "type": self.type
-                            } 
-                        ]
-                    }
-                ]
-            }
+
+        if NEW_SCHEMA:
+            data = {"rrsets": [
+                        {
+                            "name": self.name + '.',
+                            "type": self.type,
+                            "changetype": "REPLACE",
+                            "ttl": self.ttl,
+                            "records": [
+                                {
+                                    "content": self.data,
+                                    "disabled": self.status,
+                                }
+                            ]
+                        }
+                    ]
+                }
+        else:
+            data = {"rrsets": [
+                        {
+                            "name": self.name,
+                            "type": self.type,
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": self.data,
+                                    "disabled": self.status,
+                                    "name": self.name,
+                                    "ttl": self.ttl,
+                                    "type": self.type
+                                }
+                            ]
+                        }
+                    ]
+                }
+
         try:
             jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
@@ -759,42 +779,60 @@ class Record(object):
 
         records = []
         for r in new_records:
-            record = {
-                        "name": r['name'],
-                        "type": r['type'],
-                        "changetype": "REPLACE",
-                        "records": [
-                            {
-                                "content": r['content'],
-                                "disabled": r['disabled'],
-                                "name": r['name'],
-                                "ttl": r['ttl'],
-                                "type": r['type'],
-                                "priority": 10, # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
-                            }
-                        ]
-                    }
+            if NEW_SCHEMA:
+                record = {
+                            "name": r['name'] + '.',
+                            "type": r['type'],
+                            "ttl": r['ttl'],
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": r['content'],
+                                    "disabled": r['disabled'],
+                                }
+                            ]
+                        }
+            else:
+                record = {
+                            "name": r['name'],
+                            "type": r['type'],
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": r['content'],
+                                    "disabled": r['disabled'],
+                                    "name": r['name'],
+                                    "ttl": r['ttl'],
+                                    "type": r['type'],
+                                    "priority": 10, # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
+                                }
+                            ]
+                        }
+
             records.append(record)
 
         # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
         final_records = []
-        records = sorted(records, key = lambda item: (item["name"], item["type"]))
-        for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
-            final_records.append({
-                    "name": key[0],
-                    "type": key[1],
-                    "changetype": "REPLACE",
-                    "records": [
-                        {
-                            "content": item['records'][0]['content'],
-                            "disabled": item['records'][0]['disabled'],
-                            "name": key[0],
-                            "ttl": item['records'][0]['ttl'],
-                            "type": key[1],
-                            "priority": 10,
-                        } for item in group
-                    ]
-                })
+        if NEW_SCHEMA:
+            final_records = records
+        else:
+            records = sorted(records, key = lambda item: (item["name"], item["type"]))
+            for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+                final_records.append({
+                        "name": key[0],
+                        "type": key[1],
+                        "changetype": "REPLACE",
+                        "records": [
+                            {
+                                "content": item['records'][0]['content'],
+                                "disabled": item['records'][0]['disabled'],
+                                "name": key[0],
+                                "ttl": item['records'][0]['ttl'],
+                                "type": key[1],
+                                "priority": 10,
+                            } for item in group
+                        ]
+                    })
 
         postdata_for_new = {"rrsets": final_records}
 
