@@ -12,16 +12,26 @@ PowerDNS Web-GUI - Built by Flask
 ## Setup
 
 ### PowerDNS Version Support:
-PowerDNS-Admin supports PowerDNS autoritative server versions **3.4.2** and higher but does **not** yet support PowerDNS 4.0.0 
+PowerDNS-Admin supports PowerDNS autoritative server versions **3.4.2** and higher. 
 
 ### pdns Service
 I assume that you have already installed powerdns service. Make sure that your `/etc/pdns/pdns.conf` has these contents
+
+PowerDNS 4.0.0 and later
+```
+api=yes
+api-key=your-powerdns-api-key
+webserver=yes
+```
+
+PowerDNS before 4.0.0
 ```
 experimental-json-interface=yes
 experimental-api-key=your-powerdns-api-key
 webserver=yes
 ```
-It will help to enable API access feature in PowerDNS so our PowerDNS-Admin can intergrate with backend services.
+
+This will enable API access in PowerDNS so PowerDNS-Admin can intergrate with PowerDNS.
 
 ### Create Database
 We will create a database which used by this web application. Please note that this database is difference from pdns database itself.
