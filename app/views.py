@@ -198,8 +198,9 @@ def domain(domain_name):
         records = []
         for jr in jrecords:
             if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
-                record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
-                records.append(record)
+                for subrecord in jr['records']:
+                    record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
+                    records.append(record)
         return render_template('domain.html', domain=domain, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
     else:
         return redirect(url_for('error', code=404))
@@ -550,4 +551,3 @@ def index():
     return redirect(url_for('dashboard')) 
 
 # END VIEWS
-
