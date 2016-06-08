@@ -311,6 +311,56 @@
 				record_data.val(data);
 				modal.modal('hide');
 			})
+			} else if (record_type == "SOA") {
+				var modal = $("#modal_custom_record");
+				if (record_data.val() == "") {
+					var form = "	<label for=\"soa_primaryns\">Primary Name Server</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
+									<label for=\"soa_adminemail\">Primary Contact</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" placeholder=\"admin.example.com\"> \
+									<label for=\"soa_serial\">Serial</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" placeholder=\"2016010101\"> \
+									<label for=\"soa_zonerefresh\">Zone refresh timer</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" placeholder=\"86400\"> \
+									<label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" placeholder=\"7200\"> \
+									<label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" placeholder=\"604800\"> \
+									<label for=\"soa_minimumttl\">Minimum TTL</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
+								";
+				} else {
+					var parts = record_data.val().split(" "); 
+					var form = "	<label for=\"soa_primaryns\">Primary Name Server</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
+									<label for=\"soa_adminemail\">Primary Contact</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" value=\"" + parts[1] + "\"> \
+									<label for=\"soa_serial\">Serial</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" value=\"" + parts[2] + "\"> \
+									<label for=\"soa_zonerefresh\">Zone refresh timer</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" value=\"" + parts[3] + "\"> \
+									<label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" value=\"" + parts[4] + "\"> \
+									<label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" value=\"" + parts[5] + "\"> \
+									<label for=\"soa_minimumttl\">Minimum TTL</label> \
+									<input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" value=\"" + parts[6] + "\"> \
+					";
+				}
+				modal.find('.modal-body p').html(form);
+				modal.find('#button_save').click(function() {					
+					soa_primaryns = modal.find('#soa_primaryns').val();
+					soa_adminemail = modal.find('#soa_adminemail').val();
+					soa_serial = modal.find('#soa_serial').val();
+					soa_zonerefresh = modal.find('#soa_zonerefresh').val();
+					soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
+					soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
+					soa_minimumttl = modal.find('#soa_minimumttl').val();
+					
+					data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
+					record_data.val(data);
+					modal.modal('hide');
+				})
 			modal.modal('show');
 		}
 	});
