@@ -814,7 +814,27 @@ class Record(object):
         # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
         final_records = []
         if NEW_SCHEMA:
-            final_records = records
+            records = sorted(records, key = lambda item: (item["name"], item["type"]))
+            for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+                new_record = {
+                        "name": key[0],
+                        "type": key[1],
+                        "ttl": records[0]['ttl'],
+                        "changetype": "REPLACE",
+                        "records": []
+                    }
+                for item in group:
+                    temp_content = item['records'][0]['content']
+                    temp_disabled = item['records'][0]['disabled']
+                    if key[1] in ['MX', 'CNAME', 'SRV', 'NS']:
+                        if temp_content.strip()[-1:] != '.':
+                            temp_content += '.'
+
+                    new_record['records'].append({
+                        "content": temp_content,
+                        "disabled": temp_disabled
+                    })
+                final_records.append(new_record)
         else:
             records = sorted(records, key = lambda item: (item["name"], item["type"]))
             for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
