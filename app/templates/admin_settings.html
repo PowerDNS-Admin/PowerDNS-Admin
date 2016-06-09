@@ -33,15 +33,19 @@
 							{% for setting in settings %}
 							<tr class="odd ">
 								<td>{{ setting.name }}</td>
+								{% if setting.value == "True" or setting.value == "False" %}
 								<td>{{ setting.value }}</td>
+								{% else %}
+								<td><input name="value" id="value" value="{{ setting.value }}"></td>
+								{% endif %}
 								<td width="6%">
 									{% if setting.value == "True" or setting.value == "False" %}
 									<button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting.name }}">
 										Toggle&nbsp;<i class="fa fa-info"></i>
 									</button>
 									{% else %}
-									<button type="button" class="btn btn-flat btn-warning setting-edit-button" id="{{ setting.name }}">
-										Edit&nbsp;<i class="fa fa-info"></i>
+									<button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting.name }}">
+										Save&nbsp;<i class="fa fa-info"></i>
 									</button>
 									{% endif %}
 								</td>
@@ -76,10 +80,11 @@
 		applyChanges('','/admin/setting/' + setting + '/toggle', false, true)
 	});
 	
-	// TODO: allow editing of value field
-	$(".setting-edit-button").click(function() {
+	$(".setting-save-button").click(function() {
 		var setting = $(this).prop('id');
-		applyChanges('','/admin/setting/' + setting + '/edit', false, true)
+		var value = $(this).parents('tr').find('#value')[0].value;
+		var postdata = {'value': value};
+		applyChanges(postdata, '/admin/setting/' + setting + '/edit', false, true)
 	});
 </script>
 {% endblock %} 

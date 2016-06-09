@@ -132,9 +132,14 @@
 		"ordering" : true,
 		"info" : true,
 		"autoWidth" : false,
+		{% if default_record_table_size_setting in ['5','15','20'] %}
 		"lengthMenu": [	[5, 15, 20, -1],
 		                [5, 15, 20, "All"]],
-		"pageLength": 15,
+		{% else %}
+		"lengthMenu": [	[5, 15, 20, {{ default_record_table_size_setting }}, -1],
+		                [5, 15, 20, {{ default_record_table_size_setting }}, "All"]],
+		{% endif %}
+		"pageLength": {{ default_record_table_size_setting }},
 		"language": {
 		    "lengthMenu": " _MENU_ records"
 		},

@@ -27,6 +27,11 @@ def inject_record_helper_setting():
     record_helper_setting = Setting.query.filter(Setting.name == 'record_helper').first()
     return dict(record_helper_setting=strtobool(record_helper_setting.value))
 
+@app.context_processor
+def inject_default_record_table_size_setting():
+    default_record_table_size_setting = Setting.query.filter(Setting.name == 'default_record_table_size').first()
+    return dict(default_record_table_size_setting=default_record_table_size_setting.value)
+
 # START USER AUTHENTICATION HANDLER
 @app.before_request
 def before_request():
@@ -503,6 +508,19 @@ def admin_settings():
 @admin_role_required
 def admin_settings_toggle(setting):
     result = Setting().toggle(setting)
+    if (result):
+        return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
+    else:
+        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
+
+@app.route('/admin/setting/<string:setting>/edit', methods=['POST'])
+@login_required
+@admin_role_required
+def admin_settings_edit(setting):
+    pdata = request.data
+    jdata = json.loads(pdata)
+    new_value = jdata['value']
+    result = Setting().set(setting, new_value)
     if (result):
         return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
     else:
