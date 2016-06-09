@@ -1053,3 +1053,21 @@ class Setting(db.Model):
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
+        
+    def set(self, setting, value):
+        setting = str(setting)
+        new_value = str(value)
+        current_setting = Setting.query.filter(Setting.name==setting).first()
+        try:
+            if current_setting:
+                current_setting.value = new_value
+                db.session.commit()
+                return True
+            else:
+                logging.error('Setting %s does not exist' % setting)
+                return False
+        except:
+            logging.error('Cannot edit setting %s' % setting)
+            logging.debug(traceback.format_exec())
+            db.session.rollback()
+            return False
