@@ -90,7 +90,11 @@ def error(code, msg=None):
 
 @app.route('/register', methods=['GET'])
 def register():
-    return render_template('register.html')
+    SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
+    if SIGNUP_ENABLED:
+        return render_template('register.html')
+    else:
+        return render_template('errors/404.html'), 404
 
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
