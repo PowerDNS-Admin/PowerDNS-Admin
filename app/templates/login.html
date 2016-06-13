@@ -92,7 +92,9 @@
         <!-- /.col -->
       </div>
     </form>
+    {% if signup_enabled %}
     <a href="{{ url_for('register') }}" class="text-center">Create an account </a>
+    {% endif %}
   </div>
   <!-- /.login-box-body -->
   <div class="login-box-footer">
