@@ -426,6 +426,7 @@ class Domain(db.Model):
         """
         db_domain = Domain.query.all()
         list_db_domain = [d.name for d in db_domain]
+        dict_db_domain = dict((x.name,x) for x in db_domain)
 
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
@@ -454,15 +455,25 @@ class Domain(db.Model):
 
             # update/add new domain
             for data in jdata:
-                d = Domain.query.filter(Domain.name == data['name']).first()
+                d = dict_db_domain.get(data['name'], None)
+                changed = False
                 if d:
-                    #update exist domain
-                    d.master = str(data['masters'])
-                    d.type = data['kind']
-                    d.serial = data['serial']
-                    d.notified_serial = data['notified_serial']
-                    d.last_check = 1 if data['last_check'] else 0
-                    d.dnssec = data['dnssec']
+                    # existing domain, only update if something actually has changed
+                    if ( d.master != str(data['masters'])
+                        or d.type != data['kind']
+                        or d.serial != data['serial']
+                        or d.notified_serial != data['notified_serial']
+                        or d.last_check != ( 1 if data['last_check'] else 0 )
+                        or d.dnssec != data['dnssec'] ):
+
+                            d.master = str(data['masters'])
+                            d.type = data['kind']
+                            d.serial = data['serial']
+                            d.notified_serial = data['notified_serial']
+                            d.last_check = 1 if data['last_check'] else 0
+                            d.dnssec = data['dnssec']
+                            changed = True
+
                 else:
                     # add new domain
                     d = Domain()
@@ -474,10 +485,12 @@ class Domain(db.Model):
                     d.last_check = data['last_check']
                     d.dnssec = 1 if data['dnssec'] else 0
                     db.session.add(d)
-                try:
-                    db.session.commit()
-                except:
-                    db.session.rollback()
+                    changed = True
+                if changed:
+                    try:
+                        db.session.commit()
+                    except:
+                        db.session.rollback()
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
         except Exception, e:
             logging.error('Can not update domain table.' + str(e))
