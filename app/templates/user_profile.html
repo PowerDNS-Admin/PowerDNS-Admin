@@ -31,6 +31,8 @@
 									Avatar</a></li>
 							<li><a href="#password_tab" data-toggle="tab">Change
 									Password</a></li>
+							<li><a href="#authentication_tab" data-toggle="tab">Authentication
+									</a></li>
 						</ul>
 						<div class="tab-content">
 							<div class="tab-pane active" id="personal_tab">
@@ -107,6 +109,20 @@
 								</form>
 								{% endif %}
 							</div>
+							<div class="tab-pane" id="authentication_tab">
+								<form action="{{ user_profile }}" method="post">
+									<div class="form-group">
+										<input type="checkbox" id="{{ current_user.username }}" class="otp_toggle" {% if current_user.otp_secret %}checked{% endif %}>
+										<label for="otp_toggle">Enable Two Factor Authentication</label>
+										{% if current_user.otp_secret %}
+											<p><img id="qrcode" src="{{ url_for('qrcode') }}"></p>
+											Please start FreeOTP (<a target="_blank" href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en">Android</a> -  <a target="_blank" href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>) on your smartphone and scan the above QR Code with it.
+											<br/>
+											<font color="red"><strong><i>Make sure only you can see this QR Code and nobodoy can capture it.</i></strong></font>
+										{% endif %}
+									</div>
+								</form>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -117,4 +133,25 @@
 {% endblock %}
 {% block extrascripts %}
 <!-- TODO: add password and password confirmation comparisson check -->
+<script>
+	// initialize pretty checkboxes
+	$('.otp_toggle').iCheck({
+		checkboxClass : 'icheckbox_square-blue',
+		increaseArea : '20%'
+	});
+
+	// handle checkbox toggling
+	$('.otp_toggle').on('ifToggled', function(event) {
+		var enable_otp = $(this).prop('checked');
+		var username = $(this).prop('id');
+		postdata = {
+			'action' : 'enable_otp',
+			'data' : {
+				'username' : username,
+				'enable_otp' : enable_otp
+			}
+		};
+		applyChanges(postdata, '/user/profile');
+	});
+</script>
 {% endblock %}
