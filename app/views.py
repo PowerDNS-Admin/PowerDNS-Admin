@@ -2,6 +2,7 @@ import os
 import json
 import jinja2
 import traceback
+import pyqrcode
 
 from functools import wraps
 from flask.ext.login import login_user, logout_user, current_user, login_required
@@ -11,6 +12,8 @@ from werkzeug import secure_filename
 from lib import utils
 from app import app, login_manager
 from .models import User, Role, Domain, DomainUser, Record, Server, History, Anonymous, Setting
+
+from io import BytesIO
 from distutils.util import strtobool
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
@@ -114,6 +117,7 @@ def login():
     # process login
     username = request.form['username']
     password = request.form['password']
+    otp_token = request.form['otptoken'] if 'otptoken' in request.form else None
     auth_method = request.form['auth_method'] if 'auth_method' in request.form else 'LOCAL'
 
     # addition fields for registration case
@@ -137,6 +141,15 @@ def login():
         except Exception, e:
             error = e.message['desc'] if 'desc' in e.message else e
             return render_template('login.html', error=error, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+
+        # check if user enabled OPT authentication
+        if user.otp_secret:
+            if otp_token:
+                good_token = user.verify_totp(otp_token)
+                if not good_token:
+                    return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+            else:
+                return render_template('login.html', error='Token required', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
@@ -542,6 +555,16 @@ def user_profile():
         email = request.form['email'] if 'email' in request.form else ''
         new_password = request.form['password'] if 'password' in request.form else ''
 
+        # json data
+        if request.data:
+            jdata = json.loads(request.data)
+            data = jdata['data']
+            if jdata['action'] == 'enable_otp':
+                enable_otp = data['enable_otp']
+                user = User(username=current_user.username)
+                user.update_profile(enable_otp=enable_otp)
+                return make_response(jsonify( { 'status': 'ok', 'msg': 'Change OTP Authentication successfully. Status: %s' % enable_otp } ), 200)
+
         # get new avatar
         save_file_name = None
         if 'file' in request.files:
@@ -565,6 +588,23 @@ def user_profile():
 @app.route('/user/avatar/<string:filename>')
 def user_avatar(filename):
     return send_from_directory(os.path.join(app.config['UPLOAD_DIR'], 'avatar'), filename)
+
+
+@app.route('/qrcode')
+@login_required
+def qrcode():
+    if not current_user:
+        return redirect(url_for('index'))
+
+    # render qrcode for FreeTOTP
+    url = pyqrcode.create(current_user.get_totp_uri())
+    stream = BytesIO()
+    url.svg(stream, scale=3)
+    return stream.getvalue(), 200, {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
 
 
 @app.route('/', methods=['GET', 'POST'])
