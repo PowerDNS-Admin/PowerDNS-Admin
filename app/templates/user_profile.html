@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}<title>DNS Control Panel - My Profile</title>{% endblock %}
 {% block dashboard_stat %}
-	<!-- Content Header (Page header) -->
+    <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1>
         Profile
@@ -15,158 +15,158 @@
 {% endblock %}
 {% block content %}
 <section class="content">
-	<div class="row">
-		<div class="col-lg-12">
-			<div class="box box-primary">
-				<div class="box-header with-border">
-					<h3 class="box-title">Edit my profile</h3>
-				</div>
-				<div class="box-body">
-					<!-- Custom Tabs -->
-					<div class="nav-tabs-custom" id="tabs">
-						<ul class="nav nav-tabs">
-							<li class="active"><a href="#tabs-personal" data-toggle="tab">Personal
-									Info</a></li>
-							<li><a href="#tabs-avatar" data-toggle="tab">Change
-									Avatar</a></li>
-							<li><a href="#tabs-password" data-toggle="tab">Change
-									Password</a></li>
-							<li><a href="#tabs-authentication" data-toggle="tab">Authentication
-									</a></li>
-						</ul>
-						<div class="tab-content">
-							<div class="tab-pane active" id="tabs-personal">
-								<form role="form" method="post" action="{{ user_profile }}">
-									<div class="form-group">
-										<label for="firstname">First Name</label> <input type="text"
-											class="form-control" name="firstname" id="firstname"
-											placeholder="{{ current_user.firstname }}">
-									</div>
-									<div class="form-group">
-										<label for="lastname">Last Name</label> <input type="text"
-											class="form-control" name="lastname" id="lastname"
-											placeholder="{{ current_user.lastname }}">
-									</div>
-									<div class="form-group">
-										<label for="email">E-mail</label> <input type="text"
-											class="form-control" name="email" id="email"
-											placeholder="{{ current_user.email }}">
-									</div>
-									<div class="form-group">
-										<button type="submit" class="btn btn-flat btn-primary">Submit</button>
-									</div>
-								</form>
-							</div>
-							<div class="tab-pane" id="tabs-avatar">
-								<form action="{{ user_profile }}" method="post"
-									enctype="multipart/form-data">
-									<div class="form-group">
-										<div class="form-group">
-											<div class="thumbnail" style="width: 200px; height: 210px;">
-												{% if current_user.avatar %} <img
-													src="{{ url_for('user_avatar', filename=current_user.avatar) }}"
-													alt="" / style="width: 200px; height: 200px;"> {%
-												else %} <img
-													src="http://www.placehold.it/200x200/EFEFEF/AAAAAA&amp;text=no+image"
-													alt="" /> {% endif %}
-											</div>
-											<div>
-												<label for="file">Select image</label> <input type="file"
-													id="file" name="file">
-											</div>
-										</div>
-										<div>
-											<span class="label label-danger">NOTE! </span> <span>&nbsp;Only
-												supports <strong>.PNG, .JPG, .JPEG</strong>. The best size
-												to use is <strong>200x200</strong>.
-											</span>
-										</div>
-									</div>
-									<div class="form-group">
-										<button type="submit" class="btn btn-flat btn-primary">Submit</button>
-									</div>
-								</form>
-							</div>
-							<div class="tab-pane" id="tabs-password">
-								{% if not current_user.password %} Your account password is
-								managed via LDAP which isn't supported to change here. {% else
-								%}
-								<form action="{{ user_profile }}" method="post">
-									<div class="form-group">
-										<label for="password">New Password</label> <input
-											type="password" class="form-control" name="password"
-											id="newpassword" />
-									</div>
-									<div class="form-group">
-										<label for="rpassword">Re-type New Password</label> <input
-											type="password" class="form-control" name="rpassword"
-											id="rpassword" />
-									</div>
-									<div class="form-group">
-										<button type="submit" class="btn btn-flat btn-primary">Change
-											password</button>
-									</div>
-								</form>
-								{% endif %}
-							</div>
-							<div class="tab-pane" id="tabs-authentication">
-								<form action="{{ user_profile }}" method="post">
-									<div class="form-group">
-										<input type="checkbox" id="otp_toggle" class="otp_toggle" {% if current_user.otp_secret %}checked{% endif %}>
-										<label for="otp_toggle">Enable Two Factor Authentication</label>
-										{% if current_user.otp_secret %}
-										<div id="token_information">
-											<p><img id="qrcode" src="{{ url_for('qrcode') }}"></p>
-											Please start FreeOTP (<a target="_blank" href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en">Android</a> -  <a target="_blank" href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>) on your smartphone and scan the above QR Code with it.
-											<br/>
-											<font color="red"><strong><i>Make sure only you can see this QR Code and nobodoy can capture it.</i></strong></font>
-										</div>
-										{% endif %}
-									</div>
-								</form>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Edit my profile</h3>
+                </div>
+                <div class="box-body">
+                    <!-- Custom Tabs -->
+                    <div class="nav-tabs-custom" id="tabs">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tabs-personal" data-toggle="tab">Personal
+                                    Info</a></li>
+                            <li><a href="#tabs-avatar" data-toggle="tab">Change
+                                    Avatar</a></li>
+                            <li><a href="#tabs-password" data-toggle="tab">Change
+                                    Password</a></li>
+                            <li><a href="#tabs-authentication" data-toggle="tab">Authentication
+                                    </a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tabs-personal">
+                                <form role="form" method="post" action="{{ user_profile }}">
+                                    <div class="form-group">
+                                        <label for="firstname">First Name</label> <input type="text"
+                                            class="form-control" name="firstname" id="firstname"
+                                            placeholder="{{ current_user.firstname }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastname">Last Name</label> <input type="text"
+                                            class="form-control" name="lastname" id="lastname"
+                                            placeholder="{{ current_user.lastname }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">E-mail</label> <input type="text"
+                                            class="form-control" name="email" id="email"
+                                            placeholder="{{ current_user.email }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-flat btn-primary">Submit</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="tab-pane" id="tabs-avatar">
+                                <form action="{{ user_profile }}" method="post"
+                                    enctype="multipart/form-data">
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            <div class="thumbnail" style="width: 200px; height: 210px;">
+                                                {% if current_user.avatar %} <img
+                                                    src="{{ url_for('user_avatar', filename=current_user.avatar) }}"
+                                                    alt="" / style="width: 200px; height: 200px;"> {%
+                                                else %} <img
+                                                    src="http://www.placehold.it/200x200/EFEFEF/AAAAAA&amp;text=no+image"
+                                                    alt="" /> {% endif %}
+                                            </div>
+                                            <div>
+                                                <label for="file">Select image</label> <input type="file"
+                                                    id="file" name="file">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="label label-danger">NOTE! </span> <span>&nbsp;Only
+                                                supports <strong>.PNG, .JPG, .JPEG</strong>. The best size
+                                                to use is <strong>200x200</strong>.
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-flat btn-primary">Submit</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="tab-pane" id="tabs-password">
+                                {% if not current_user.password %} Your account password is
+                                managed via LDAP which isn't supported to change here. {% else
+                                %}
+                                <form action="{{ user_profile }}" method="post">
+                                    <div class="form-group">
+                                        <label for="password">New Password</label> <input
+                                            type="password" class="form-control" name="password"
+                                            id="newpassword" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="rpassword">Re-type New Password</label> <input
+                                            type="password" class="form-control" name="rpassword"
+                                            id="rpassword" />
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-flat btn-primary">Change
+                                            password</button>
+                                    </div>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tabs-authentication">
+                                <form action="{{ user_profile }}" method="post">
+                                    <div class="form-group">
+                                        <input type="checkbox" id="otp_toggle" class="otp_toggle" {% if current_user.otp_secret %}checked{% endif %}>
+                                        <label for="otp_toggle">Enable Two Factor Authentication</label>
+                                        {% if current_user.otp_secret %}
+                                        <div id="token_information">
+                                            <p><img id="qrcode" src="{{ url_for('qrcode') }}"></p>
+                                            Please start FreeOTP (<a target="_blank" href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en">Android</a> -  <a target="_blank" href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>) on your smartphone and scan the above QR Code with it.
+                                            <br/>
+                                            <font color="red"><strong><i>Make sure only you can see this QR Code and nobodoy can capture it.</i></strong></font>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}
 {% block extrascripts %}
 <!-- TODO: add password and password confirmation comparisson check -->
 <script>
 
-	$(function() {
-		$('#tabs').tabs({
-			// add url anchor tags
-        	activate: function(event, ui) {
-            	window.location.hash = ui.newPanel.attr('id');
-        	}
-    	});
-		// re-set active tab (ui)
-		var activeTabIdx = $('#tabs').tabs('option','active');
-		$('#tabs li:eq('+activeTabIdx+')').tab('show')
-	});
+    $(function() {
+        $('#tabs').tabs({
+            // add url anchor tags
+            activate: function(event, ui) {
+                window.location.hash = ui.newPanel.attr('id');
+            }
+        });
+        // re-set active tab (ui)
+        var activeTabIdx = $('#tabs').tabs('option','active');
+        $('#tabs li:eq('+activeTabIdx+')').tab('show')
+    });
 
-	// initialize pretty checkboxes
-	$('.otp_toggle').iCheck({
-		checkboxClass : 'icheckbox_square-blue',
-		increaseArea : '20%'
-	});
+    // initialize pretty checkboxes
+    $('.otp_toggle').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    });
 
-	// handle checkbox toggling
-	$('.otp_toggle').on('ifToggled', function(event) {
-		var enable_otp = $(this).prop('checked');
-		var username = $(this).prop('id');
-		postdata = {
-			'action' : 'enable_otp',
-			'data' : {
-				'enable_otp' : enable_otp
-			}
-		};
-		applyChanges(postdata, '/user/profile');
-		location.reload();
-	});
+    // handle checkbox toggling
+    $('.otp_toggle').on('ifToggled', function(event) {
+        var enable_otp = $(this).prop('checked');
+        var username = $(this).prop('id');
+        postdata = {
+            'action' : 'enable_otp',
+            'data' : {
+                'enable_otp' : enable_otp
+            }
+        };
+        applyChanges(postdata, '/user/profile');
+        location.reload();
+    });
 </script>
 {% endblock %}

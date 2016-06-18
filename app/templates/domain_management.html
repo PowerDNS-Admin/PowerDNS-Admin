@@ -2,74 +2,74 @@
 {% block title %}<title>DNS Control Panel - Domain Management</title>{% endblock %}
 {% block dashboard_stat %}
 <section class="content-header">
-	<h1>
-		Manage domain <small>{{ domain.name }}</small>
-	</h1>
-	<ol class="breadcrumb">
-		<li><a href="{{ url_for('dashboard') }}"><i
-				class="fa fa-dashboard"></i> Home</a></li>
-		<li class="active">Domain Management</li>
-	</ol>
+    <h1>
+        Manage domain <small>{{ domain.name }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i
+                class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Domain Management</li>
+    </ol>
 </section>
 {% endblock %}
 
 {% block content %}
 <section class="content">
-	<div class="row">
-		<div class="col-xs-12">
-			<div class="box">
-				<form method="post" action="{{ url_for('domain_management', domain_name=domain.name) }}">
-				<div class="box-header">
-					<h3 class="box-title">Domain Access Control</h3>
-				</div>
-				<div class="box-body">
-					<div class="row">
-						<div class="col-xs-2">
-							<p>Users on the right have access to manage the records in
-								the {{ domain.name }} domain.</p>
-							<p>Click on users to move from between columns.</p>
-							<p>
-								Users in <font style="color: red;">red</font> are Administrators
-								and already have access to <b>ALL</b> domains.
-							</p>
-						</div>
-						<div class="form-group col-xs-2">
-							<select multiple="multiple" class="form-control" id="domain_multi_user" name="domain_multi_user[]">
-								{% for user in users %}
-								<option {% if user.id in
-									domain_user_ids %}selected{% endif %} value="{{ user.username }}"
-									{% if user.role.name== 'Administrator' %}style="color: red"{% endif %}>{{
-									user.username}}</option> {% endfor %}
-							</select>
-						</div>
-					</div>
-					<div class="box-body">
-						<div class="col-xs-offset-2">
-							<div class="form-group">
-								<button type="submit" class="btn btn-flat btn-primary"><i class="fa fa-check"></i> Save</button>
-							</div>
-						</div>
-					</div>
-				</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-xs-12">
-			<div class="box">
-				<div class="box-header">
-					<h3 class="box-title">Domain Deletion</h3>
-				</div>
-				<div class="box-body">
-					<p>This function is used to remove a domain from PowerDNS-Admin <b>AND</b> PowerDNS. All records and user privileges which associated to this domain will also be removed. This change cannot be reverted.</p>
-					<button type="button" class="btn btn-flat btn-danger pull-left delete_domain" id="{{ domain.name }}">
-						<i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name }}
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <form method="post" action="{{ url_for('domain_management', domain_name=domain.name) }}">
+                <div class="box-header">
+                    <h3 class="box-title">Domain Access Control</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-xs-2">
+                            <p>Users on the right have access to manage the records in
+                                the {{ domain.name }} domain.</p>
+                            <p>Click on users to move from between columns.</p>
+                            <p>
+                                Users in <font style="color: red;">red</font> are Administrators
+                                and already have access to <b>ALL</b> domains.
+                            </p>
+                        </div>
+                        <div class="form-group col-xs-2">
+                            <select multiple="multiple" class="form-control" id="domain_multi_user" name="domain_multi_user[]">
+                                {% for user in users %}
+                                <option {% if user.id in
+                                    domain_user_ids %}selected{% endif %} value="{{ user.username }}"
+                                    {% if user.role.name== 'Administrator' %}style="color: red"{% endif %}>{{
+                                    user.username}}</option> {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <div class="col-xs-offset-2">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-flat btn-primary"><i class="fa fa-check"></i> Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Domain Deletion</h3>
+                </div>
+                <div class="box-body">
+                    <p>This function is used to remove a domain from PowerDNS-Admin <b>AND</b> PowerDNS. All records and user privileges which associated to this domain will also be removed. This change cannot be reverted.</p>
+                    <button type="button" class="btn btn-flat btn-danger pull-left delete_domain" id="{{ domain.name }}">
+                        <i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}
 {% block extrascripts %}
@@ -78,43 +78,43 @@ $("#domain_multi_user").multiSelect();
 
 // handle deletion of user
 $('.delete_domain').click(function() {
-	var modal = $("#modal_delete_domain");
-	var domain = $(this).prop('id');
-	var info = "Are you sure you want to delete " + domain + "?";
-	modal.find('.modal-body p').text(info);
-	modal.find('#button_delete_confirm').click(function() {
+    var modal = $("#modal_delete_domain");
+    var domain = $(this).prop('id');
+    var info = "Are you sure you want to delete " + domain + "?";
+    modal.find('.modal-body p').text(info);
+    modal.find('#button_delete_confirm').click(function() {
         $.get('/admin/domain/' + domain + '/delete');
-		modal.modal('hide');
-		window.location.href = '{{ url_for('dashboard') }}';
-	})
-	modal.modal('show');
-	
+        modal.modal('hide');
+        window.location.href = '{{ url_for('dashboard') }}';
+    })
+    modal.modal('show');
+    
 });
 </script>
 {% endblock %}
 {% block modals %}
 <div class="modal fade modal-warning" id="modal_delete_domain">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal"
-					aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<h4 class="modal-title">Confirmation</h4>
-			</div>
-			<div class="modal-body">
-				<p></p>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-flat btn-default pull-left"
-					data-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">
-					Delete</button>
-			</div>
-		</div>
-		<!-- /.modal-content -->
-	</div>
-	<!-- /.modal-dialog -->
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">
+                    Delete</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div>
 {% endblock %}

@@ -32,13 +32,13 @@
   <!-- /.login-logo -->
   <div class="login-box-body">
     {% if error %}
-			<div class="alert alert-danger alert-dismissible">
-				<button type="button" class="close" data-dismiss="alert"
-					aria-hidden="true">&times;</button>
-				{{ error }}
-			</div>
-	{% endif %}
-			<form action="" method="post">
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert"
+          aria-hidden="true">&times;</button>
+        {{ error }}
+      </div>
+  {% endif %}
+      <form action="" method="post">
       <div class="form-group">
         {% if username %}
         <input type="text" class="form-control" placeholder="Username" name="username" value="{{ username }}">
@@ -48,7 +48,7 @@
         <span class="glyphicon glyphicon-user form-control-feedback"></span>
       </div>
       <div class="form-group">
-      	{% if password %}
+        {% if password %}
         <input type="password" class="form-control" placeholder="Password" name="password" value="{{ password }}">
         {% else %}
         <input type="password" class="form-control" placeholder="Password" name="password">
@@ -58,28 +58,28 @@
       <div class="form-group">
         <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
       </div>
-				
-						{% if ldap_enabled and basic_enabled %}
-                		<div class="form-group">
-							<select class="form-control" name="auth_method">
-                				<option value="LOCAL">LOCAL Authentication</option>
-                				<option value="LDAP">LDAP Authentication</option>
-                			</select>
-						</div>			
-						{% elif ldap_enabled and not basic_enabled %}
-						<div class="form-group">
-                			<input type="hidden" name="auth_method" value="LDAP">                			
-						</div>
-                		{% elif basic_enabled and not ldap_enabled %}
-                		<div class="form-group">
-                			<input type="hidden" name="auth_method" value="LOCAL">                			
-						</div>
-						{% else %}
-						<div class="form-group">
-                			<input type="hidden" name="auth_method" value="LOCAL">                			
-						</div>
-						{% endif %}
-					
+        
+            {% if ldap_enabled and basic_enabled %}
+                    <div class="form-group">
+              <select class="form-control" name="auth_method">
+                        <option value="LOCAL">LOCAL Authentication</option>
+                        <option value="LDAP">LDAP Authentication</option>
+                      </select>
+            </div>      
+            {% elif ldap_enabled and not basic_enabled %}
+            <div class="form-group">
+                      <input type="hidden" name="auth_method" value="LDAP">                     
+            </div>
+                    {% elif basic_enabled and not ldap_enabled %}
+                    <div class="form-group">
+                      <input type="hidden" name="auth_method" value="LOCAL">                      
+            </div>
+            {% else %}
+            <div class="form-group">
+                      <input type="hidden" name="auth_method" value="LOCAL">                      
+            </div>
+            {% endif %}
+          
      <div class="row">
         <div class="col-xs-8">
           <div class="checkbox icheck">
@@ -101,7 +101,7 @@
   </div>
   <!-- /.login-box-body -->
   <div class="login-box-footer">
-  	<center><p>2016 &copy; Khanh Ngo</p></center>
+    <center><p>2016 &copy; Khanh Ngo</p></center>
   </div>
 </div>
 <!-- /.login-box -->
