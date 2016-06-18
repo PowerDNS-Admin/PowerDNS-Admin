@@ -57,7 +57,7 @@
       </a>
 
       <div class="navbar-custom-menu">
-      	{% if current_user.id is defined %}
+        {% if current_user.id is defined %}
         <ul class="nav navbar-nav">
           <!-- User Account: style can be found in dropdown.less -->
           <li class="dropdown user user-menu">
@@ -72,18 +72,18 @@
               </span>
             </a>
             <ul class="dropdown-menu">
-	              <li class="user-header">
-	                {% if current_user.avatar %}
-	                <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="img-circle" alt="User Image"/>
-	                {% else %}
-	                <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="img-circle" alt="User Image"/>
-	                {% endif %}
-	                <p>
-	                  {{ current_user.firstname }} {{ current_user.lastname }}
-	                  <small>{{ current_user.role.name }}</small>
-	                </p>
-	              </li>
-	          
+                <li class="user-header">
+                  {% if current_user.avatar %}
+                  <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="img-circle" alt="User Image"/>
+                  {% else %}
+                  <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="img-circle" alt="User Image"/>
+                  {% endif %}
+                  <p>
+                    {{ current_user.firstname }} {{ current_user.lastname }}
+                    <small>{{ current_user.role.name }}</small>
+                  </p>
+                </li>
+            
               <!-- Menu Footer-->
               <li class="user-footer">
                 <div class="pull-left">

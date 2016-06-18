@@ -2,7 +2,7 @@
 {% block title %}<title>DNS Control Panel - Add Domain</title>{% endblock %}
 
 {% block dashboard_stat %}
-	<!-- Content Header (Page header) -->
+    <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1>
         Domain
@@ -19,152 +19,152 @@
 {% block content %}
 <section class="content">
 <div class="row">
-	<div class="col-md-4">
-		<div class="box box-primary">
-			<div class="box-header with-border">
-				<h3 class="box-title">Create new domain</h3>
-			</div>
-			<!-- /.box-header -->
-			<!-- form start -->
-			<form role="form" method="post" action="{{ url_for('domain_add') }}">
-				<div class="box-body">
-					<div class="form-group">
-						<input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter a valid domain name (required)">
-					</div>
-					<div class="form-group">
-						<label>Type</label>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type" id="radio_type_native" value="native" checked> Native
-							</label>
-							&nbsp;&nbsp;&nbsp;
-							<label>
-								<input type="radio" name="radio_type"id="radio_type_master" value="master"> Master
-							</label>
-							&nbsp;&nbsp;&nbsp;
-							<label>
-								<input type="radio" name="radio_type" id="radio_type_slave" value="slave">Slave
-							</label>
-						</div>
-					</div>
-					<div class="form-group" style="display: none;" id="domain_master_address_div">
-						<input type="text" class="form-control" name="domain_master_address" id="domain_master_address" placeholder="Enter valid master ip addresses (separated by commas)">
-					</div>
-					<div class="form-group">
-						<label>SOA-EDIT-API</label>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_off" value="OFF" checked> (OFF)
-							</label>
-						</div>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception_increment" value="INCEPTION-INCREMENT"> INCEPTION-INCREMENT
-							</label>
-						</div>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception" value="INCEPTION"> INCEPTION
-							</label>
-						</div>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_week" value="INCREMENT-WEEK"> INCREMENT-WEEK
-							</label>
-						</div>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_increment_weeks" value="INCREMENT-WEEKS"> INCREMENT-WEEKS
-							</label>
-						</div>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_epoch" value="EPOCH"> EPOCH
-							</label>
-						</div>
-						<div class="radio">
-							<label>
-								<input type="radio" name="radio_type_soa_edit_api" id="radio_inception_epoch" value="INCEPTION-EPOCH"> INCEPTION-EPOCH
-							</label>
-						</div>
-					</div>
-				</div>
-				<!-- /.box-body -->
+    <div class="col-md-4">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Create new domain</h3>
+            </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+            <form role="form" method="post" action="{{ url_for('domain_add') }}">
+                <div class="box-body">
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter a valid domain name (required)">
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type" id="radio_type_native" value="native" checked> Native
+                            </label>
+                            &nbsp;&nbsp;&nbsp;
+                            <label>
+                                <input type="radio" name="radio_type"id="radio_type_master" value="master"> Master
+                            </label>
+                            &nbsp;&nbsp;&nbsp;
+                            <label>
+                                <input type="radio" name="radio_type" id="radio_type_slave" value="slave">Slave
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none;" id="domain_master_address_div">
+                        <input type="text" class="form-control" name="domain_master_address" id="domain_master_address" placeholder="Enter valid master ip addresses (separated by commas)">
+                    </div>
+                    <div class="form-group">
+                        <label>SOA-EDIT-API</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_off" value="OFF" checked> (OFF)
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_inception_increment" value="INCEPTION-INCREMENT"> INCEPTION-INCREMENT
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_inception" value="INCEPTION"> INCEPTION
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_increment_week" value="INCREMENT-WEEK"> INCREMENT-WEEK
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_increment_weeks" value="INCREMENT-WEEKS"> INCREMENT-WEEKS
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_epoch" value="EPOCH"> EPOCH
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_inception_epoch" value="INCEPTION-EPOCH"> INCEPTION-EPOCH
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box-body -->
 
-				<div class="box-footer">
-					<button type="submit" class="btn btn-flat btn-primary">Submit</button>
-					<button type="submit" class="btn btn-flat btn-default" onclick="window.location.href='{{ url_for('dashboard') }}'">Cancel</button>
-				</div>
-			</form>
-		</div>
-		<!-- /.box -->
-	</div>
-	<div class="col-md-8">
-		<div class="box box-primary">
-			<div class="box-header with-border">
-				<h3 class="box-title">Help with creating a new domain</h3>
-			</div>
-			<div class="box-body">
-				<dl class="dl-horizontal">
-					<dt>Domain name</dt>
-					<dd>Enter your domain name in the format of name.tld (eg. powerdns-admin.com). You can also enter sub-domains to create a sub-root zone (eg. sub.powerdns-admin.com) in case you want to delegate sub-domain management to specific users.</dd>
-					<dt>Type</dt>
-					<dd>The type decides how the domain will be replicated across multiple DNS servers.
-						<ul>
-							<li>
-								Native - PowerDNS will not perform any replication. Use this if you only have one PowerDNS server or you handle replication via your backend (MySQL).
-							</li>
-							<li>
-								Master - This PowerDNS server will serve as the master and will send zone transfers (AXFRs) to other servers configured as slaves.
-							</li>
-							<li>
-								Slave - This PowerDNS server will serve as the slave and will request and receive zone transfers (AXFRs) from other servers configured as masters.
-							</li>
-						</ul>
-					</dd>
-					<dt>SOA-EDIT-API</dt>
-					<dd>The SOA-EDIT-API setting defines when and how the SOA serial number will be updated after a change is made to the domain.
-						<ul>
-							<li>
-								(OFF) - Not set
-							</li>
-							<li>
-								INCEPTION-INCREMENT - Uses YYYYMMDDSS format for SOA serial numbers. If the SOA serial from the backend is within two days after inception, it gets incremented by two (the backend should keep SS below 98).
-							</li>
-							<li>
-								INCEPTION - Sets the SOA serial to the last inception time in YYYYMMDD01 format. Uses localtime to find the day for inception time. <strong>Not recomended.</strong>
-							</li>
-							<li>
-								INCREMENT-WEEK - Sets the SOA serial to the number of weeks since the epoch, which is the last inception time in weeks. <strong>Not recomended.</strong>
-							</li>
-							<li>
-								INCREMENT-WEEKS - Increments the serial with the number of weeks since the UNIX epoch. This should work in every setup; but the result won't look like YYYYMMDDSS anymore.
-							</li>
-							<li>
-								EPOCH - Sets the SOA serial to the number of seconds since the epoch.
-							</li>
-							<li>
-								INCEPTION-EPOCH - Sets the new SOA serial number to the maximum of the old SOA serial number, and age in seconds of the last inception. 
-							</li>
-						</ul>
-					</dd>
-				</dl>
-				<p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a></p>
-			</div>
-		</div>
-	</div>
+                <div class="box-footer">
+                    <button type="submit" class="btn btn-flat btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-flat btn-default" onclick="window.location.href='{{ url_for('dashboard') }}'">Cancel</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.box -->
+    </div>
+    <div class="col-md-8">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Help with creating a new domain</h3>
+            </div>
+            <div class="box-body">
+                <dl class="dl-horizontal">
+                    <dt>Domain name</dt>
+                    <dd>Enter your domain name in the format of name.tld (eg. powerdns-admin.com). You can also enter sub-domains to create a sub-root zone (eg. sub.powerdns-admin.com) in case you want to delegate sub-domain management to specific users.</dd>
+                    <dt>Type</dt>
+                    <dd>The type decides how the domain will be replicated across multiple DNS servers.
+                        <ul>
+                            <li>
+                                Native - PowerDNS will not perform any replication. Use this if you only have one PowerDNS server or you handle replication via your backend (MySQL).
+                            </li>
+                            <li>
+                                Master - This PowerDNS server will serve as the master and will send zone transfers (AXFRs) to other servers configured as slaves.
+                            </li>
+                            <li>
+                                Slave - This PowerDNS server will serve as the slave and will request and receive zone transfers (AXFRs) from other servers configured as masters.
+                            </li>
+                        </ul>
+                    </dd>
+                    <dt>SOA-EDIT-API</dt>
+                    <dd>The SOA-EDIT-API setting defines when and how the SOA serial number will be updated after a change is made to the domain.
+                        <ul>
+                            <li>
+                                (OFF) - Not set
+                            </li>
+                            <li>
+                                INCEPTION-INCREMENT - Uses YYYYMMDDSS format for SOA serial numbers. If the SOA serial from the backend is within two days after inception, it gets incremented by two (the backend should keep SS below 98).
+                            </li>
+                            <li>
+                                INCEPTION - Sets the SOA serial to the last inception time in YYYYMMDD01 format. Uses localtime to find the day for inception time. <strong>Not recomended.</strong>
+                            </li>
+                            <li>
+                                INCREMENT-WEEK - Sets the SOA serial to the number of weeks since the epoch, which is the last inception time in weeks. <strong>Not recomended.</strong>
+                            </li>
+                            <li>
+                                INCREMENT-WEEKS - Increments the serial with the number of weeks since the UNIX epoch. This should work in every setup; but the result won't look like YYYYMMDDSS anymore.
+                            </li>
+                            <li>
+                                EPOCH - Sets the SOA serial to the number of seconds since the epoch.
+                            </li>
+                            <li>
+                                INCEPTION-EPOCH - Sets the new SOA serial number to the maximum of the old SOA serial number, and age in seconds of the last inception. 
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+                <p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a></p>
+            </div>
+        </div>
+    </div>
 </div>
 </section>
 {% endblock %}
 {% block extrascripts %}
 <script>
-	$("input[name=radio_type]").change(function() {
-		var type = $(this).val();
-		if (type == "slave") {
-			$("#domain_master_address_div").show();
-		} else {
-			$("#domain_master_address_div").hide();
-		}
-	});
+    $("input[name=radio_type]").change(function() {
+        var type = $(this).val();
+        if (type == "slave") {
+            $("#domain_master_address_div").show();
+        } else {
+            $("#domain_master_address_div").hide();
+        }
+    });
 </script>
 {% endblock %}

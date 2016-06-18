@@ -3,54 +3,54 @@
 
 {% block dashboard_stat %}
 <section class="content-header">
-	<h1>
-		Manage domain <small>{{ domain.name }}</small>
-	</h1>
-	<ol class="breadcrumb">
-		<li><a href="{{ url_for('dashboard') }}"><i
-				class="fa fa-dashboard"></i> Home</a></li>
-		<li>Domain</li>
-		<li class="active">{{ domain.name }}</li>
-	</ol>
+    <h1>
+        Manage domain <small>{{ domain.name }}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i
+                class="fa fa-dashboard"></i> Home</a></li>
+        <li>Domain</li>
+        <li class="active">{{ domain.name }}</li>
+    </ol>
 </section>
 {% endblock %}
 
 {% block content %}
 <section class="content">
-	<div class="row">
-		<div class="col-xs-12">
-			<div class="box">
-				<div class="box-header">
-					<h3 class="box-title">Manage Records for {{ domain.name }}</h3>
-				</div>
-				<div class="box-body">
-					{% if domain.type != 'Slave' %}
-					<button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
-						Add Record&nbsp;<i class="fa fa-plus"></i>
-					</button>
-					<button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}">
-						Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
-					</button>
-					{% else %}
-					<button type="button" class="btn btn-flat btn-primary pull-left button_update_from_master" id="{{ domain.name }}">
-						Update from Master&nbsp;<i class="fa fa-download"></i>
-					</button>
-					{% endif %}
-				</div>
-				<div class="box-body">
-					<table id="tbl_records" class="table table-bordered table-striped">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Type</th>
-								<th>Status</th>
-								<th>TTL</th>
-								<th>Data</th>
-								<th>Edit</th>
-								<th>Delete</th>
-							</tr>
-						</thead>
-						<tbody>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Manage Records for {{ domain.name }}</h3>
+                </div>
+                <div class="box-body">
+                    {% if domain.type != 'Slave' %}
+                    <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
+                        Add Record&nbsp;<i class="fa fa-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}">
+                        Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-flat btn-primary pull-left button_update_from_master" id="{{ domain.name }}">
+                        Update from Master&nbsp;<i class="fa fa-download"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="box-body">
+                    <table id="tbl_records" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>TTL</th>
+                                <th>Data</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                                 {% for record in records %}
                                 <tr class="odd row_record" id="{{ domain.name }}">
                                     <td>
@@ -71,115 +71,115 @@
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
                                     {% if record.is_allowed() %}
-	                                    <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">
-											Edit&nbsp;<i class="fa fa-edit"></i>
-										</button>
+                                        <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">
+                                            Edit&nbsp;<i class="fa fa-edit"></i>
+                                        </button>
                                        {% else %}
                                        <button type="button" class="btn btn-flat btn-warning"">
-											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-										</button>
+                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+                                        </button>
                                     {% endif %}
                                     </td>
                                     <td width="6%">
                                     {% if record.is_allowed() %}
-                                    	<button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">
-											Delete&nbsp;<i class="fa fa-trash"></i>
-										</button>
+                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">
+                                            Delete&nbsp;<i class="fa fa-trash"></i>
+                                        </button>
                                     {% else %}
-                                    	<button type="button" class="btn btn-flat btn-warning"">
-											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-										</button>
+                                        <button type="button" class="btn btn-flat btn-warning"">
+                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+                                        </button>
                                     {% endif %}
                                 {% else %}
                                     <td width="6%">
                                         <button type="button" class="btn btn-flat btn-warning"">
-											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-										</button>
+                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+                                        </button>
                                     </td>
                                     <td width="6%">
                                         <button type="button" class="btn btn-flat btn-warning"">
-											&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-										</button>
+                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
+                                        </button>
                                     </td> 
                                 {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
-						</tbody>
-					</table>
-				</div>
-				<!-- /.box-body -->
-			</div>
-			<!-- /.box -->
-		</div>
-		<!-- /.col -->
-	</div>
-	<!-- /.row -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
 </section>
 {% endblock %}
 {% block extrascripts %}
 <script>
-	// superglobals
-	window.records_allow_edit = {{ editable_records|tojson }};
-	window.nEditing = null;
-	window.nNew = false;
+    // superglobals
+    window.records_allow_edit = {{ editable_records|tojson }};
+    window.nEditing = null;
+    window.nNew = false;
 
-	// set up user data table
-	$("#tbl_records").DataTable({
-		"paging" : true,
-		"lengthChange" : true,
-		"searching" : true,
-		"ordering" : true,
-		"info" : true,
-		"autoWidth" : false,
-		{% if default_record_table_size_setting in ['5','15','20'] %}
-		"lengthMenu": [	[5, 15, 20, -1],
-		                [5, 15, 20, "All"]],
-		{% else %}
-		"lengthMenu": [	[5, 15, 20, {{ default_record_table_size_setting }}, -1],
-		                [5, 15, 20, {{ default_record_table_size_setting }}, "All"]],
-		{% endif %}
-		"pageLength": {{ default_record_table_size_setting }},
-		"language": {
-		    "lengthMenu": " _MENU_ records"
-		},
-		"retrieve" : true
-	});
-	
-	// handle delete button
-	$(document).on("click", ".button_delete", function(e) {
-		e.stopPropagation();
-		var modal = $("#modal_delete");
-		var table = $("#tbl_records").DataTable();
-		var record = $(this).prop('id');
-		var info = "Are you sure you want to delete " + record + "?"; 
-		modal.find('.modal-body p').text(info);
-		modal.find('#button_delete_confirm').click(function() {
-			table.row($(this).parents('tr')[0]).remove().draw();
-			modal.modal('hide');
-		})
-		modal.modal('show');
-		
-	});
-	// handle edit button
-	$(document).on("click", ".button_edit, .row_record", function(e) {
-		 e.stopPropagation();
-		 if ($(this).is('tr')) {
-			var nRow = $(this)[0]; 
-		 } else {
-		 	var nRow = $(this).parents('tr')[0];
-		 }
-		 var table = $("#tbl_records").DataTable();
-		
-		if (nEditing == nRow) {
-			/* click on row already being edited, do nothing */
-		} else if (nEditing !== null && nEditing != nRow && nNew == false) {
+    // set up user data table
+    $("#tbl_records").DataTable({
+        "paging" : true,
+        "lengthChange" : true,
+        "searching" : true,
+        "ordering" : true,
+        "info" : true,
+        "autoWidth" : false,
+        {% if default_record_table_size_setting in ['5','15','20'] %}
+        "lengthMenu": [ [5, 15, 20, -1],
+                        [5, 15, 20, "All"]],
+        {% else %}
+        "lengthMenu": [ [5, 15, 20, {{ default_record_table_size_setting }}, -1],
+                        [5, 15, 20, {{ default_record_table_size_setting }}, "All"]],
+        {% endif %}
+        "pageLength": {{ default_record_table_size_setting }},
+        "language": {
+            "lengthMenu": " _MENU_ records"
+        },
+        "retrieve" : true
+    });
+    
+    // handle delete button
+    $(document).on("click", ".button_delete", function(e) {
+        e.stopPropagation();
+        var modal = $("#modal_delete");
+        var table = $("#tbl_records").DataTable();
+        var record = $(this).prop('id');
+        var info = "Are you sure you want to delete " + record + "?"; 
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_delete_confirm').click(function() {
+            table.row($(this).parents('tr')[0]).remove().draw();
+            modal.modal('hide');
+        })
+        modal.modal('show');
+        
+    });
+    // handle edit button
+    $(document).on("click", ".button_edit, .row_record", function(e) {
+         e.stopPropagation();
+         if ($(this).is('tr')) {
+            var nRow = $(this)[0]; 
+         } else {
+            var nRow = $(this).parents('tr')[0];
+         }
+         var table = $("#tbl_records").DataTable();
+        
+        if (nEditing == nRow) {
+            /* click on row already being edited, do nothing */
+        } else if (nEditing !== null && nEditing != nRow && nNew == false) {
              /* Currently editing - but not this row - restore the old before continuing to edit mode */
              restoreRow(table, nEditing);
              editRow(table, nRow);
              nEditing = nRow;
-		 } else if (nNew == true) {
-			 /* adding a new row, delete it and start editing */
+         } else if (nNew == true) {
+             /* adding a new row, delete it and start editing */
              table.row(nEditing).remove().draw();
              nNew = false;
              editRow(table, nRow);
@@ -189,28 +189,28 @@
              editRow(table, nRow);
              nEditing = nRow;
          }
-	});
-	
-	// handle apply changes button
-	$(document).on("click",".button_apply_changes", function() {
-		var modal = $("#modal_apply_changes");
-		var table = $("#tbl_records").DataTable();
-		var domain = $(this).prop('id');
-		var info = "Are you sure you want to apply your changes?"; 
-		modal.find('.modal-body p').text(info);
-		modal.find('#button_apply_confirm').click(function() {
-			var data = getTableData(table);
-			applyChanges(data, '/domain/' + domain + '/apply', true);
-			modal.modal('hide');
-		})
-		modal.modal('show');
-		
-	});
-	
-	// handle add record button
-	$(document).on("click", ".button_add_record", function (e) {
+    });
+    
+    // handle apply changes button
+    $(document).on("click",".button_apply_changes", function() {
+        var modal = $("#modal_apply_changes");
+        var table = $("#tbl_records").DataTable();
+        var domain = $(this).prop('id');
+        var info = "Are you sure you want to apply your changes?"; 
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_apply_confirm').click(function() {
+            var data = getTableData(table);
+            applyChanges(data, '/domain/' + domain + '/apply', true);
+            modal.modal('hide');
+        })
+        modal.modal('show');
+        
+    });
+    
+    // handle add record button
+    $(document).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
-            	// TODO: replace this alert with modal
+                // TODO: replace this alert with modal
                 alert("Previous record not saved. Please save it before adding more record.")
                 return;
             }
@@ -222,11 +222,11 @@
             nEditing = nRow;
             nNew = true;
         });
-	
-	//handle cancel button
-	$(document).on("click", ".button_cancel", function (e) {
-			e.stopPropagation();
-			var oTable = $("#tbl_records").DataTable();
+    
+    //handle cancel button
+    $(document).on("click", ".button_cancel", function (e) {
+            e.stopPropagation();
+            var oTable = $("#tbl_records").DataTable();
             if (nNew) {
                 oTable.row(nEditing).remove().draw();
                 nEditing = null;
@@ -236,208 +236,208 @@
                 nEditing = null;
             }
         });
-	
-	//handle save button
-	$(document).on("click", ".button_save", function (e) {
-			e.stopPropagation();
-			var table = $("#tbl_records").DataTable();
+    
+    //handle save button
+    $(document).on("click", ".button_save", function (e) {
+            e.stopPropagation();
+            var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
             nEditing = null;
             nNew = false;
         });
-	
-	//handle update_from_master button
-	$(document).on("click", ".button_update_from_master", function (e) {
-			var domain = $(this).prop('id');
+    
+    //handle update_from_master button
+    $(document).on("click", ".button_update_from_master", function (e) {
+            var domain = $(this).prop('id');
             applyChanges({'domain': domain}, '/domain/' + domain + '/update');
     });
-	
-	{% if record_helper_setting %}
-	//handle wacky record types
-	$(document).on("focus", "#current_edit_record_data", function (e) {
-		var record_type = $(this).parents("tr").find('#record_type').val();
-		var record_data = $(this);
-		if (record_type == "MX") {
-			var modal = $("#modal_custom_record");
-			if (record_data.val() == "") {
-				var form = "	<label for=\"mx_priority\">MX Priority</label> \
-								<input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\"> \
-								<label for=\"mx_server\">MX Server</label> \
-								<input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\"> \
-							";
-			} else {
-				var parts = record_data.val().split(" ");
-				var form = "	<label for=\"mx_priority\">MX Priority</label> \
-								<input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\" value=\"" + parts[0] + "\"> \
-								<label for=\"mx_server\">MX Server</label> \
-								<input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\" value=\"" + parts[1] + "\"> \
-							";
-			}
-			modal.find('.modal-body p').html(form);
-			modal.find('#button_save').click(function() {
-				mx_server = modal.find('#mx_server').val();
-				mx_priority = modal.find('#mx_priority').val();
-				data = mx_priority + " " + mx_server;
-				record_data.val(data);
-				modal.modal('hide');
-			})
-			modal.modal('show');
-		} else if (record_type == "SRV") {
-			var modal = $("#modal_custom_record");
-			if (record_data.val() == "") {
-				var form = "	<label for=\"srv_priority\">SRV Priority</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\"> \
-								<label for=\"srv_weight\">SRV Weight</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_weight\" id=\"srv_weight\" placeholder=\"10\"> \
-								<label for=\"srv_port\">SRV Port</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_port\" id=\"srv_port\" placeholder=\"5060\"> \
-								<label for=\"srv_target\">SRV Target</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\"> \
-							";
-			} else {
-				var parts = record_data.val().split(" "); 
-				var form = "	<label for=\"srv_priority\">SRV Priority</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
-								<label for=\"srv_weight\">SRV Weight</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_weight\" id=\"srv_weight\" placeholder=\"10\" value=\"" + parts[1] + "\"> \
-								<label for=\"srv_port\">SRV Port</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_port\" id=\"srv_port\" placeholder=\"5060\" value=\"" + parts[2] + "\"> \
-								<label for=\"srv_target\">SRV Target</label> \
-								<input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\" value=\"" + parts[3] + "\"> \
-				";
-			}
-			modal.find('.modal-body p').html(form);
-			modal.find('#button_save').click(function() {
-				srv_priority = modal.find('#srv_priority').val();
-				srv_weight = modal.find('#srv_weight').val();
-				srv_port = modal.find('#srv_port').val();
-				srv_target = modal.find('#srv_target').val();
-				data = srv_priority + " " + srv_weight + " " + srv_port + " " + srv_target;
-				record_data.val(data);
-				modal.modal('hide');
-			})
-			} else if (record_type == "SOA") {
-				var modal = $("#modal_custom_record");
-				if (record_data.val() == "") {
-					var form = "	<label for=\"soa_primaryns\">Primary Name Server</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
-									<label for=\"soa_adminemail\">Primary Contact</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" placeholder=\"admin.example.com\"> \
-									<label for=\"soa_serial\">Serial</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" placeholder=\"2016010101\"> \
-									<label for=\"soa_zonerefresh\">Zone refresh timer</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" placeholder=\"86400\"> \
-									<label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" placeholder=\"7200\"> \
-									<label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" placeholder=\"604800\"> \
-									<label for=\"soa_minimumttl\">Minimum TTL</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
-								";
-				} else {
-					var parts = record_data.val().split(" "); 
-					var form = "	<label for=\"soa_primaryns\">Primary Name Server</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
-									<label for=\"soa_adminemail\">Primary Contact</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" value=\"" + parts[1] + "\"> \
-									<label for=\"soa_serial\">Serial</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" value=\"" + parts[2] + "\"> \
-									<label for=\"soa_zonerefresh\">Zone refresh timer</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" value=\"" + parts[3] + "\"> \
-									<label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" value=\"" + parts[4] + "\"> \
-									<label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" value=\"" + parts[5] + "\"> \
-									<label for=\"soa_minimumttl\">Minimum TTL</label> \
-									<input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" value=\"" + parts[6] + "\"> \
-					";
-				}
-				modal.find('.modal-body p').html(form);
-				modal.find('#button_save').click(function() {					
-					soa_primaryns = modal.find('#soa_primaryns').val();
-					soa_adminemail = modal.find('#soa_adminemail').val();
-					soa_serial = modal.find('#soa_serial').val();
-					soa_zonerefresh = modal.find('#soa_zonerefresh').val();
-					soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
-					soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
-					soa_minimumttl = modal.find('#soa_minimumttl').val();
-					
-					data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
-					record_data.val(data);
-					modal.modal('hide');
-				})
-			modal.modal('show');
-		}
-	});
-	{% endif %}
+    
+    {% if record_helper_setting %}
+    //handle wacky record types
+    $(document).on("focus", "#current_edit_record_data", function (e) {
+        var record_type = $(this).parents("tr").find('#record_type').val();
+        var record_data = $(this);
+        if (record_type == "MX") {
+            var modal = $("#modal_custom_record");
+            if (record_data.val() == "") {
+                var form = "    <label for=\"mx_priority\">MX Priority</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\"> \
+                                <label for=\"mx_server\">MX Server</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\"> \
+                            ";
+            } else {
+                var parts = record_data.val().split(" ");
+                var form = "    <label for=\"mx_priority\">MX Priority</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\" value=\"" + parts[0] + "\"> \
+                                <label for=\"mx_server\">MX Server</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\" value=\"" + parts[1] + "\"> \
+                            ";
+            }
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                mx_server = modal.find('#mx_server').val();
+                mx_priority = modal.find('#mx_priority').val();
+                data = mx_priority + " " + mx_server;
+                record_data.val(data);
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        } else if (record_type == "SRV") {
+            var modal = $("#modal_custom_record");
+            if (record_data.val() == "") {
+                var form = "    <label for=\"srv_priority\">SRV Priority</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\"> \
+                                <label for=\"srv_weight\">SRV Weight</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_weight\" id=\"srv_weight\" placeholder=\"10\"> \
+                                <label for=\"srv_port\">SRV Port</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_port\" id=\"srv_port\" placeholder=\"5060\"> \
+                                <label for=\"srv_target\">SRV Target</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\"> \
+                            ";
+            } else {
+                var parts = record_data.val().split(" "); 
+                var form = "    <label for=\"srv_priority\">SRV Priority</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
+                                <label for=\"srv_weight\">SRV Weight</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_weight\" id=\"srv_weight\" placeholder=\"10\" value=\"" + parts[1] + "\"> \
+                                <label for=\"srv_port\">SRV Port</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_port\" id=\"srv_port\" placeholder=\"5060\" value=\"" + parts[2] + "\"> \
+                                <label for=\"srv_target\">SRV Target</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\" value=\"" + parts[3] + "\"> \
+                ";
+            }
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                srv_priority = modal.find('#srv_priority').val();
+                srv_weight = modal.find('#srv_weight').val();
+                srv_port = modal.find('#srv_port').val();
+                srv_target = modal.find('#srv_target').val();
+                data = srv_priority + " " + srv_weight + " " + srv_port + " " + srv_target;
+                record_data.val(data);
+                modal.modal('hide');
+            })
+            } else if (record_type == "SOA") {
+                var modal = $("#modal_custom_record");
+                if (record_data.val() == "") {
+                    var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
+                                    <label for=\"soa_adminemail\">Primary Contact</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" placeholder=\"admin.example.com\"> \
+                                    <label for=\"soa_serial\">Serial</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" placeholder=\"2016010101\"> \
+                                    <label for=\"soa_zonerefresh\">Zone refresh timer</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" placeholder=\"86400\"> \
+                                    <label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" placeholder=\"7200\"> \
+                                    <label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" placeholder=\"604800\"> \
+                                    <label for=\"soa_minimumttl\">Minimum TTL</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
+                                ";
+                } else {
+                    var parts = record_data.val().split(" "); 
+                    var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
+                                    <label for=\"soa_adminemail\">Primary Contact</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" value=\"" + parts[1] + "\"> \
+                                    <label for=\"soa_serial\">Serial</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" value=\"" + parts[2] + "\"> \
+                                    <label for=\"soa_zonerefresh\">Zone refresh timer</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" value=\"" + parts[3] + "\"> \
+                                    <label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" value=\"" + parts[4] + "\"> \
+                                    <label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" value=\"" + parts[5] + "\"> \
+                                    <label for=\"soa_minimumttl\">Minimum TTL</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" value=\"" + parts[6] + "\"> \
+                    ";
+                }
+                modal.find('.modal-body p').html(form);
+                modal.find('#button_save').click(function() {                   
+                    soa_primaryns = modal.find('#soa_primaryns').val();
+                    soa_adminemail = modal.find('#soa_adminemail').val();
+                    soa_serial = modal.find('#soa_serial').val();
+                    soa_zonerefresh = modal.find('#soa_zonerefresh').val();
+                    soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
+                    soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
+                    soa_minimumttl = modal.find('#soa_minimumttl').val();
+                    
+                    data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
+                    record_data.val(data);
+                    modal.modal('hide');
+                })
+            modal.modal('show');
+        }
+    });
+    {% endif %}
 </script>
 {% endblock %}
 {% block modals %}
 <div class="modal fade modal-warning" id="modal_delete">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal"
-					aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<h4 class="modal-title">Confirmation</h4>
-			</div>
-			<div class="modal-body">
-				<p></p>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-flat btn-default pull-left"
-					data-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
-			</div>
-		</div>
-		<!-- /.modal-content -->
-	</div>
-	<!-- /.modal-dialog -->
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div>
 <div class="modal fade modal-primary" id="modal_apply_changes">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal"
-					aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<h4 class="modal-title">Confirmation</h4>
-			</div>
-			<div class="modal-body">
-				<p></p>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-flat btn-default pull-left"
-					data-dismiss="modal">Close</button>
-				<button type="button" class="btn btn-flat btn-primary" id="button_apply_confirm">Apply</button>
-			</div>
-		</div>
-		<!-- /.modal-content -->
-	</div>
-	<!-- /.modal-dialog -->
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-primary" id="button_apply_confirm">Apply</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div>
 <div class="modal fade modal-primary" id="modal_custom_record">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal"
-					aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<h4 class="modal-title">Custom Record</h4>
-			</div>
-			<div class="modal-body">
-				<p></p>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
-			</div>
-		</div>
-		<!-- /.modal-content -->
-	</div>
-	<!-- /.modal-dialog -->
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Custom Record</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div>
 {% endblock %}
