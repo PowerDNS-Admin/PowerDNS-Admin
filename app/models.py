@@ -945,6 +945,74 @@ class Record(object):
         """
         return self.type in app.config['RECORDS_ALLOW_EDIT']
 
+    def exists(self, domain):
+        """
+        Check if record is present within domain records, and if it's present set self to found record
+        """
+        jdata = self.get_record_data(domain)
+        jrecords = jdata['records']
+
+        for jr in jrecords:
+            if jr['name'] == self.name:
+                self.name = jr['name']
+                self.type = jr['type']
+                self.status = jr['disabled']
+                self.ttl = jr['ttl']
+                self.data = jr['content']
+                self.priority = 10
+                return True
+        return False
+
+    def update(self, domain, content):
+        """
+        Update single record
+        """
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+
+        if NEW_SCHEMA:
+            data = {"rrsets": [
+                        {
+                            "name": self.name + '.',
+                            "type": self.type,
+                            "ttl": self.ttl,
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": content,
+                                    "disabled": self.status,
+                                }
+                            ]
+                        }
+                    ]
+                }
+        else:
+            data = {"rrsets": [
+                        {
+                            "name": self.name,
+                            "type": self.type,
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": content,
+                                    "disabled": self.status,
+                                    "name": self.name,
+                                    "ttl": self.ttl,
+                                    "type": self.type,
+                                    "priority": 10
+                                }
+                            ]
+                        }
+                    ]
+                }
+        try:
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            logging.debug("dyndns data: " % data)
+            return {'status': 'ok', 'msg': 'Record was updated successfully'}
+        except Exception, e:
+            logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
+            return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+
 
 class Server(object):
     """

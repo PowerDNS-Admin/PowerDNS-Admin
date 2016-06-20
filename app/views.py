@@ -3,6 +3,7 @@ import json
 import jinja2
 import traceback
 import pyqrcode
+import base64
 
 from functools import wraps
 from flask.ext.login import login_user, logout_user, current_user, login_required
@@ -53,6 +54,37 @@ def load_user(id):
     This will be current_user
     """
     return User.query.get(int(id))
+
+def dyndns_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated is False:
+            return render_template('dyndns.html', response='badauth'), 200
+        return f(*args, **kwargs)
+    return decorated_function
+
+@login_manager.request_loader
+def login_via_authorization_header(request):
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_header = auth_header.replace('Basic ', '', 1)
+        try:
+            auth_header = base64.b64decode(auth_header)
+            username,password = auth_header.split(":")
+        except TypeError, e:
+            error = e.message['desc'] if 'desc' in e.message else e
+            return None
+        user = User(username=username, password=password, plain_text_password=password)
+        try:
+            auth = user.is_validate(method='LOCAL')
+            if auth == False:
+                return None
+            else:
+                login_user(user, remember = False)
+                return user
+        except Exception, e:
+            return None
+    return None
 
 # END USER AUTHENTICATION HANDLER
 
@@ -605,6 +637,55 @@ def qrcode():
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'}
+
+
+@app.route('/nic/checkip.html', methods=['GET', 'POST'])
+def dyndns_checkip():
+    # route covers the default ddclient 'web' setting for the checkip service
+    return render_template('dyndns.html', response=request.headers.get('X-Real-IP'))
+
+@app.route('/nic/update', methods=['GET', 'POST'])
+@dyndns_login_required
+def dyndns_update():
+    # dyndns protocol response codes in use are:
+    # good: update successful
+    # nochg: IP address already set to update address
+    # nohost: hostname does not exist for this user account
+    # 911: server error
+    # have to use 200 HTTP return codes because ddclient does not read the return string if the code is other than 200
+    # reference: https://help.dyn.com/remote-access-api/perform-update/
+    # reference: https://help.dyn.com/remote-access-api/return-codes/
+    hostname = request.args.get('hostname')
+    myip = request.args.get('myip')
+
+    try:
+        # get all domains owned by the current user
+        domains = User(id=current_user.id).get_domain()
+    except:
+        return render_template('dyndns.html', response='911'), 200
+    for domain in domains:
+        # create new record object to use for searching and updating
+        r = Record()
+        r.name = hostname
+        # check if the user requested record exists within this domain
+        if r.exists(domain.name) and r.is_allowed:
+            if r.data == myip:
+                # record content did not change, return 'nochg'
+                history = History(msg="DynDNS update: attempted update of %s but record did not change" % hostname, created_by=current_user.username)
+                history.add()
+                return render_template('dyndns.html', response='nochg'), 200
+            else:
+                oldip = r.data
+                result = r.update(domain.name, myip)
+                if result['status'] == 'ok':
+                    history = History(msg='DynDNS update: updated record %s in zone %s, it changed from %s to %s' % (hostname,domain.name,oldip,myip), detail=str(result), created_by=current_user.username)
+                    history.add()
+                    return render_template('dyndns.html', response='good'), 200
+                else:
+                    return render_template('dyndns.html', response='911'), 200
+    history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
+    history.add()
+    return render_template('dyndns.html', response='nohost'), 200
 
 
 @app.route('/', methods=['GET', 'POST'])
