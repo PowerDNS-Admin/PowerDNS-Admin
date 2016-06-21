@@ -9,6 +9,7 @@ PowerDNS Web-GUI - Built by Flask
 - User access management based on domain
 - User activity logging
 - Dashboard and pdns service statistics
+- DynDNS 2 protocol support
 
 ## Setup
 
