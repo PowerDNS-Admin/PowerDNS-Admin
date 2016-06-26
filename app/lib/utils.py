@@ -4,6 +4,7 @@ import json
 import requests
 import urlparse
 from app import app
+from distutils.version import StrictVersion
 
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
@@ -132,3 +133,12 @@ def display_time(amount, units='s', remove_seconds=True):
         return final_string[:final_string.rfind(' ')]
 
     return final_string
+
+def pdns_api_extended_uri(version):
+    """
+    Check the pdns version
+    """
+    if StrictVersion(version) >= StrictVersion('4.0.0'):
+        return "/api/v1"
+    else:
+        return ""

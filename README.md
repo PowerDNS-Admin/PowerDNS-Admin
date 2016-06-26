@@ -4,24 +4,36 @@ PowerDNS Web-GUI - Built by Flask
 #### Features:
 - Multiple domain management
 - Local / LDAP user authentication
+- Support Two-factor authentication (TOTP)
 - User management
 - User access management based on domain
 - User activity logging
 - Dashboard and pdns service statistics
+- DynDNS 2 protocol support
 
 ## Setup
 
 ### PowerDNS Version Support:
-PowerDNS-Admin supports PowerDNS autoritative server versions **3.4.2** and higher but does **not** yet support PowerDNS 4.0.0 
+PowerDNS-Admin supports PowerDNS autoritative server versions **3.4.2** and higher. 
 
 ### pdns Service
 I assume that you have already installed powerdns service. Make sure that your `/etc/pdns/pdns.conf` has these contents
+
+PowerDNS 4.0.0 and later
+```
+api=yes
+api-key=your-powerdns-api-key
+webserver=yes
+```
+
+PowerDNS before 4.0.0
 ```
 experimental-json-interface=yes
 experimental-api-key=your-powerdns-api-key
 webserver=yes
 ```
-It will help to enable API access feature in PowerDNS so our PowerDNS-Admin can intergrate with backend services.
+
+This will enable API access in PowerDNS so PowerDNS-Admin can intergrate with PowerDNS.
 
 ### Create Database
 We will create a database which used by this web application. Please note that this database is difference from pdns database itself.
@@ -67,5 +79,10 @@ Run the application and enjoy!
 (flask)$ ./run.py
 ```
 
-### Screenshot
-![Alt text](http://i.imgur.com/wA5qy2d.png)
+### Screenshots
+![login page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-login.png?raw=true)
+![dashboard](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-dashboard.png?raw=true)
+![create domain page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-domaincreate.png?raw=true)
+![manage domain page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-domainmanage.png?raw=true)
+![two-factor authentication config](https://cloud.githubusercontent.com/assets/6447444/16111111/467f2226-33db-11e6-926a-01b4d15035d2.png)
+
