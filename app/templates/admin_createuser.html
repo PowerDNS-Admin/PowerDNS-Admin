@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}<title>DNS Control Panel - Create User</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        User
+        <small>Create new</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('dashboard') }}">Admin</a></li>
+        <li class="active">Create user</li>
+      </ol>
+    </section>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+<div class="row">
+    <div class="col-md-4">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Create new user</h3>
+            </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+            <form role="form" method="post" action="{{ url_for('admin_createuser') }}">
+                <div class="box-body">
+                    <div class="form-group has-feedback">
+                        <label class="control-label" for="firstname">First Name</label>
+                        <input type="text" class="form-control" placeholder="First Name"
+                            name="firstname" {% if user %}value={{ user.firstname }}{% endif %}> <span
+                            class="glyphicon glyphicon-user form-control-feedback"></span>
+                    </div>
+                    <div class="form-group has-feedback">
+                        <label class="control-label" for="lastname">Last Name</label>
+                        <input type="text" class="form-control" placeholder="Last name"
+                            name="lastname" {% if user %}value={{ user.lastname }}{% endif %}> <span
+                            class="glyphicon glyphicon-user form-control-feedback"></span>
+                    </div>
+                    <div class="form-group has-feedback {% if duplicate_email %}has-error{% endif %}">
+                        <label class="control-label" for="email">E-mail address</label>
+                        <input type="email" class="form-control" placeholder="Email"
+                            name="email" id="email" {% if user %}value={{ user.email }}{% endif %}> <span
+                            class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                        {% if duplicate_email %}
+                        <span class="help-block">This e-mail address is already in use.</span>
+                        {% endif %}
+                    </div>
+                    <p class="login-box-msg">Enter the account details below</p>
+                    <div class="form-group has-feedback {% if duplicate_username %}has-error{% endif %}">
+                        <label class="control-label" for="username">Username</label>
+                        <input type="text" class="form-control" placeholder="Username"
+                            name="username" {% if user %}value={{ user.username }}{% endif %}> <span
+                            class="glyphicon glyphicon-user form-control-feedback"></span>
+                        {% if duplicate_username %}
+                        <span class="help-block">This username is already in use.</span>
+                        {% endif %}
+                    </div>
+                    <div class="form-group has-feedback {% if blank_password %}has-error{% endif %}">
+                        <label class="control-label" for="username">Password</label>
+                        <input type="password" class="form-control" placeholder="Password"
+                            name="password"> <span
+                            class="glyphicon glyphicon-lock form-control-feedback"></span>
+                        {% if blank_password %}
+                            <span class="help-block">The password cannot be blank.</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <button type="submit" class="btn btn-flat btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Help with creating a new user</h3>
+            </div>
+            <div class="box-body">
+                <p>Fill in all the fields to the in the form to the left.</p>
+                <p><strong>Newly created users do not have access to any domains.</strong> You will need to grant access to the user once it is created via the domain management buttons on the dashboard.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}

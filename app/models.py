@@ -1,12 +1,15 @@
-import os 
+import os
 import ldap
 import time
+import base64
 import bcrypt
 import urlparse
 import itertools
 import traceback
+import onetimepass
 
 from datetime import datetime
+from distutils.version import StrictVersion
 from flask.ext.login import AnonymousUserMixin
 
 from app import app, db
@@ -27,6 +30,13 @@ else:
 
 PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
+PDNS_VERSION = app.config['PDNS_VERSION']
+API_EXTENDED_URL = utils.pdns_api_extended_uri(PDNS_VERSION)
+
+# Flag for pdns v4.x.x
+# TODO: Find another way to do this
+if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
+    NEW_SCHEMA = True
 
 
 class Anonymous(AnonymousUserMixin):
@@ -43,9 +53,10 @@ class User(db.Model):
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
     avatar = db.Column(db.String(128))
+    otp_secret = db.Column(db.String(16))
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
-    def __init__(self, id=None, username=None, password=None, plain_text_password=None, firstname=None, lastname=None, role_id=None, email=None, avatar=None, reload_info=True):
+    def __init__(self, id=None, username=None, password=None, plain_text_password=None, firstname=None, lastname=None, role_id=None, email=None, avatar=None, otp_secret=None, reload_info=True):
         self.id = id
         self.username = username
         self.password = password
@@ -55,6 +66,7 @@ class User(db.Model):
         self.role_id = role_id
         self.email = email
         self.avatar = avatar
+        self.otp_secret = otp_secret
 
         if reload_info:
             user_info = self.get_user_info_by_id() if id else self.get_user_info_by_username()
@@ -66,6 +78,7 @@ class User(db.Model):
                 self.lastname = user_info.lastname
                 self.email = user_info.email
                 self.role_id = user_info.role_id
+                self.otp_secret = user_info.otp_secret
 
     def is_authenticated(self):
         return True
@@ -84,6 +97,12 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % (self.username)
+
+    def get_totp_uri(self):
+        return 'otpauth://totp/PowerDNS-Admin:%s?secret=%s&issuer=PowerDNS-Admin' % (self.username, self.otp_secret)
+
+    def verify_totp(self, token):
+        return onetimepass.valid_totp(token, self.otp_secret)
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
@@ -252,7 +271,7 @@ class User(db.Model):
         except Exception, e:
             raise
 
-    def update_profile(self):
+    def update_profile(self, enable_otp=None):
         """
         Update user profile
         """
@@ -268,6 +287,16 @@ class User(db.Model):
                 user.password = self.get_hashed_password(self.plain_text_password)
             if self.avatar:
                 user.avatar = self.avatar
+
+            if enable_otp == True:
+                # generate the opt secret key
+                user.otp_secret = base64.b32encode(os.urandom(10)).decode('utf-8')
+            elif enable_otp == False:
+                # set otp_secret="" means we want disable the otp authenticaion.
+                user.otp_secret = ""
+            else:
+                # do nothing.
+                pass
 
             try:
                 db.session.commit()
@@ -410,7 +439,7 @@ class Domain(db.Model):
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones'), headers=headers)
+        jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
         return jdata
 
     def get_id_by_name(self, name):
@@ -431,9 +460,8 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones'), headers=headers)
-            list_jdomain = [d['name'] for d in jdata]
-
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+            list_jdomain = [d['name'].rstrip('.') for d in jdata]
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
                 should_removed_db_domain = list(set(list_db_domain).difference(list_jdomain))
@@ -455,7 +483,7 @@ class Domain(db.Model):
 
             # update/add new domain
             for data in jdata:
-                d = dict_db_domain.get(data['name'], None)
+                d = dict_db_domain.get(data['name'].rstrip('.'), None)
                 changed = False
                 if d:
                     # existing domain, only update if something actually has changed
@@ -477,7 +505,7 @@ class Domain(db.Model):
                 else:
                     # add new domain
                     d = Domain()
-                    d.name = data['name']
+                    d.name = data['name'].rstrip('.')
                     d.master = str(data['masters'])
                     d.type = data['kind']
                     d.serial = data['serial']
@@ -503,6 +531,10 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
 
+        if NEW_SCHEMA:
+            domain_name = domain_name + '.'
+            domain_ns = [ns + '.' for ns in domain_ns]
+
         if soa_edit_api == 'OFF':
             post_data = {
                             "name": domain_name,
@@ -520,7 +552,7 @@ class Domain(db.Model):
                             }
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
             if 'error' in jdata.keys():
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
@@ -541,7 +573,7 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s' % domain_name), headers=headers, method='DELETE')
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain_name), headers=headers, method='DELETE')
             logging.info('Delete domain %s successfully' % domain_name)
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
         except Exception, e:
@@ -600,7 +632,7 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s/axfr-retrieve' % domain), headers=headers, method='PUT')
+                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/axfr-retrieve' % domain), headers=headers, method='PUT')
                 return {'status': 'ok', 'msg': 'Update from Master successfully'}
             except:
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
@@ -616,7 +648,7 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s/cryptokeys' % domain.name), headers=headers, method='GET')
+                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/cryptokeys' % domain.name), headers=headers, method='GET')
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain'}
                 else:
@@ -661,10 +693,19 @@ class Record(object):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s' % domain), headers=headers)
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers)
         except:
             logging.error("Cannot fetch domain's record data from remote powerdns api")
             return False
+
+        if NEW_SCHEMA:
+            rrsets = jdata['rrsets']
+            for rrset in rrsets:
+                rrset['name'] = rrset['name'].rstrip('.')
+                rrset['content'] = rrset['records'][0]['content']
+                rrset['disabled'] = rrset['records'][0]['disabled']
+            return {'records': rrsets}
+
         return jdata
 
     def add(self, domain):
@@ -683,25 +724,44 @@ class Record(object):
         # continue if the record is ready to be added
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        data = {"rrsets": [
-                    {
-                        "name": self.name,
-                        "type": self.type,
-                        "changetype": "REPLACE",
-                        "records": [ 
-                            {
-                                "content": self.data,
-                                "disabled": self.status,
-                                "name": self.name,
-                                "ttl": self.ttl,
-                                "type": self.type
-                            } 
-                        ]
-                    }
-                ]
-            }
+
+        if NEW_SCHEMA:
+            data = {"rrsets": [
+                        {
+                            "name": self.name + '.',
+                            "type": self.type,
+                            "changetype": "REPLACE",
+                            "ttl": self.ttl,
+                            "records": [
+                                {
+                                    "content": self.data,
+                                    "disabled": self.status,
+                                }
+                            ]
+                        }
+                    ]
+                }
+        else:
+            data = {"rrsets": [
+                        {
+                            "name": self.name,
+                            "type": self.type,
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": self.data,
+                                    "disabled": self.status,
+                                    "name": self.name,
+                                    "ttl": self.ttl,
+                                    "type": self.type
+                                }
+                            ]
+                        }
+                    ]
+                }
+
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
         except Exception, e:
@@ -753,52 +813,90 @@ class Record(object):
 
         records = []
         for r in new_records:
-            record = {
-                        "name": r['name'],
-                        "type": r['type'],
-                        "changetype": "REPLACE",
-                        "records": [
-                            {
-                                "content": r['content'],
-                                "disabled": r['disabled'],
-                                "name": r['name'],
-                                "ttl": r['ttl'],
-                                "type": r['type'],
-                                "priority": 10, # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
-                            }
-                        ]
-                    }
+            if NEW_SCHEMA:
+                record = {
+                            "name": r['name'] + '.',
+                            "type": r['type'],
+                            "ttl": r['ttl'],
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": r['content'],
+                                    "disabled": r['disabled'],
+                                }
+                            ]
+                        }
+            else:
+                record = {
+                            "name": r['name'],
+                            "type": r['type'],
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": r['content'],
+                                    "disabled": r['disabled'],
+                                    "name": r['name'],
+                                    "ttl": r['ttl'],
+                                    "type": r['type'],
+                                    "priority": 10, # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
+                                }
+                            ]
+                        }
+
             records.append(record)
 
         # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
         final_records = []
-        records = sorted(records, key = lambda item: (item["name"], item["type"]))
-        for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
-            final_records.append({
-                    "name": key[0],
-                    "type": key[1],
-                    "changetype": "REPLACE",
-                    "records": [
-                        {
-                            "content": item['records'][0]['content'],
-                            "disabled": item['records'][0]['disabled'],
-                            "name": key[0],
-                            "ttl": item['records'][0]['ttl'],
-                            "type": key[1],
-                            "priority": 10,
-                        } for item in group
-                    ]
-                })
+        if NEW_SCHEMA:
+            records = sorted(records, key = lambda item: (item["name"], item["type"]))
+            for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+                new_record = {
+                        "name": key[0],
+                        "type": key[1],
+                        "ttl": records[0]['ttl'],
+                        "changetype": "REPLACE",
+                        "records": []
+                    }
+                for item in group:
+                    temp_content = item['records'][0]['content']
+                    temp_disabled = item['records'][0]['disabled']
+                    if key[1] in ['MX', 'CNAME', 'SRV', 'NS']:
+                        if temp_content.strip()[-1:] != '.':
+                            temp_content += '.'
+
+                    new_record['records'].append({
+                        "content": temp_content,
+                        "disabled": temp_disabled
+                    })
+                final_records.append(new_record)
+        else:
+            records = sorted(records, key = lambda item: (item["name"], item["type"]))
+            for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+                final_records.append({
+                        "name": key[0],
+                        "type": key[1],
+                        "changetype": "REPLACE",
+                        "records": [
+                            {
+                                "content": item['records'][0]['content'],
+                                "disabled": item['records'][0]['disabled'],
+                                "name": key[0],
+                                "ttl": item['records'][0]['ttl'],
+                                "type": key[1],
+                                "priority": 10,
+                            } for item in group
+                        ]
+                    })
 
         postdata_for_new = {"rrsets": final_records}
 
         try:
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
-            jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
+            jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
             #logging.debug(jdata1)
 
-            jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
+            jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
             #logging.debug(jdata2)
 
             if 'error' in jdata2.keys():
@@ -834,7 +932,7 @@ class Record(object):
                 ]
             }
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
         except:
@@ -846,6 +944,74 @@ class Record(object):
         Check if record is allowed to edit/removed
         """
         return self.type in app.config['RECORDS_ALLOW_EDIT']
+
+    def exists(self, domain):
+        """
+        Check if record is present within domain records, and if it's present set self to found record
+        """
+        jdata = self.get_record_data(domain)
+        jrecords = jdata['records']
+
+        for jr in jrecords:
+            if jr['name'] == self.name:
+                self.name = jr['name']
+                self.type = jr['type']
+                self.status = jr['disabled']
+                self.ttl = jr['ttl']
+                self.data = jr['content']
+                self.priority = 10
+                return True
+        return False
+
+    def update(self, domain, content):
+        """
+        Update single record
+        """
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+
+        if NEW_SCHEMA:
+            data = {"rrsets": [
+                        {
+                            "name": self.name + '.',
+                            "type": self.type,
+                            "ttl": self.ttl,
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": content,
+                                    "disabled": self.status,
+                                }
+                            ]
+                        }
+                    ]
+                }
+        else:
+            data = {"rrsets": [
+                        {
+                            "name": self.name,
+                            "type": self.type,
+                            "changetype": "REPLACE",
+                            "records": [
+                                {
+                                    "content": content,
+                                    "disabled": self.status,
+                                    "name": self.name,
+                                    "ttl": self.ttl,
+                                    "type": self.type,
+                                    "priority": 10
+                                }
+                            ]
+                        }
+                    ]
+                }
+        try:
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            logging.debug("dyndns data: " % data)
+            return {'status': 'ok', 'msg': 'Record was updated successfully'}
+        except Exception, e:
+            logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
+            return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
 
 class Server(object):
@@ -866,7 +1032,7 @@ class Server(object):
         headers['X-API-Key'] = PDNS_API_KEY
         
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/%s/config' % self.server_id), headers=headers, method='GET')
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/config' % self.server_id), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server configuration.")
@@ -879,9 +1045,9 @@ class Server(object):
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        
+
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, '/servers/%s/statistics' % self.server_id), headers=headers, method='GET')
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/statistics' % self.server_id), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server statistics.")
@@ -970,3 +1136,40 @@ class Setting(db.Model):
             db.session.rollback()
             return False
 
+    def toggle(self, setting):
+        setting = str(setting)
+        current_setting = Setting.query.filter(Setting.name==setting).first()
+        try:
+            if current_setting:
+                if current_setting.value == "True":
+                    current_setting.value = "False"
+                else:
+                    current_setting.value = "True"
+                db.session.commit()
+                return True
+            else:
+                logging.error('Setting %s does not exist' % setting)
+                return False
+        except:
+            logging.error('Cannot toggle setting %s' % setting)
+            logging.debug(traceback.format_exec())
+            db.session.rollback()
+            return False
+        
+    def set(self, setting, value):
+        setting = str(setting)
+        new_value = str(value)
+        current_setting = Setting.query.filter(Setting.name==setting).first()
+        try:
+            if current_setting:
+                current_setting.value = new_value
+                db.session.commit()
+                return True
+            else:
+                logging.error('Setting %s does not exist' % setting)
+                return False
+        except:
+            logging.error('Cannot edit setting %s' % setting)
+            logging.debug(traceback.format_exec())
+            db.session.rollback()
+            return False
