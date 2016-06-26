@@ -37,7 +37,8 @@ API_EXTENDED_URL = utils.pdns_api_extended_uri(PDNS_VERSION)
 # TODO: Find another way to do this
 if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
     NEW_SCHEMA = True
-
+else:
+    NEW_SCHEMA = False
 
 class Anonymous(AnonymousUserMixin):
   def __init__(self):
