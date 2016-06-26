@@ -16,10 +16,19 @@ from .models import User, Role, Domain, DomainUser, Record, Server, History, Ano
 
 from io import BytesIO
 from distutils.util import strtobool
+from distutils.version import StrictVersion
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
 jinja2.filters.FILTERS['display_second_to_time'] = utils.display_time
+
+# Flag for pdns v4.x.x
+# TODO: Find another way to do this
+PDNS_VERSION = app.config['PDNS_VERSION']
+if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
+    NEW_SCHEMA = True
+else:
+    NEW_SCHEMA = False
 
 @app.context_processor
 def inject_fullscreen_layout_setting():
@@ -250,10 +259,17 @@ def domain(domain_name):
             return redirect(url_for('error', code=500))
 
         records = []
-        for jr in jrecords:
-            if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
-                for subrecord in jr['records']:
-                    record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
+        #TODO: This should be done in the "model" instead of "view"
+        if NEW_SCHEMA:
+            for jr in jrecords:
+                if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                    for subrecord in jr['records']:
+                        record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
+                        records.append(record)
+        else:
+            for jr in jrecords:
+                if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                    record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                     records.append(record)
         return render_template('domain.html', domain=domain, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
     else:
