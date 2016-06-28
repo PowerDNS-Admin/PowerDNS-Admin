@@ -811,7 +811,6 @@ class Record(object):
                     }
             records.append(record)
 
-        print records
         postdata_for_delete = {"rrsets": records}
 
         records = []
