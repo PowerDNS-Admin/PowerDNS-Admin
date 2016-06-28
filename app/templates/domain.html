@@ -152,10 +152,11 @@
         var modal = $("#modal_delete");
         var table = $("#tbl_records").DataTable();
         var record = $(this).prop('id');
+        var nRow = $(this).parents('tr')[0];
         var info = "Are you sure you want to delete " + record + "?"; 
         modal.find('.modal-body p').text(info);
         modal.find('#button_delete_confirm').click(function() {
-            table.row($(this).parents('tr')[0]).remove().draw();
+            table.row(nRow).remove().draw();
             modal.modal('hide');
         })
         modal.modal('show');
