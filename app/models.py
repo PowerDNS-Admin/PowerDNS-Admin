@@ -803,13 +803,15 @@ class Record(object):
         records = []
         for r in deleted_records:
             record = {
-                        "name": r['name'],
+                        "name": r['name'] + '.' if NEW_SCHEMA else r['name'],
                         "type": r['type'],
                         "changetype": "DELETE",
                         "records": [
                         ]
                     }
             records.append(record)
+
+        print records
         postdata_for_delete = {"rrsets": records}
 
         records = []
@@ -895,10 +897,10 @@ class Record(object):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
-            #logging.debug(jdata1)
+            logging.debug('jdata1: ', jdata1)
 
             jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
-            #logging.debug(jdata2)
+            logging.debug('jdata2: ', jdata2)
 
             if 'error' in jdata2.keys():
                 logging.error('Cannot apply record changes.')
