@@ -10,7 +10,7 @@ import onetimepass
 
 from datetime import datetime
 from distutils.version import StrictVersion
-from flask.ext.login import AnonymousUserMixin
+from flask_login import AnonymousUserMixin
 
 from app import app, db
 from lib import utils
@@ -720,7 +720,7 @@ class Record(object):
         if check:
             r = check[0]
             if r['type'] in ('A', 'AAAA' ,'CNAME'):
-                return {'status': 'error', 'msg': 'Record might was already exist with type "A", "AAAA", "CNAME"'}
+                return {'status': 'error', 'msg': 'Record already exists with type "A", "AAAA" or "CNAME"'}
 
         # continue if the record is ready to be added
         headers = {}
@@ -896,10 +896,10 @@ class Record(object):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
-            logging.debug('jdata1: ', jdata1)
+#            logging.debug('jdata1: ', jdata1)
 
             jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
-            logging.debug('jdata2: ', jdata2)
+#            logging.debug('jdata2: ', jdata2)
 
             if 'error' in jdata2.keys():
                 logging.error('Cannot apply record changes.')
