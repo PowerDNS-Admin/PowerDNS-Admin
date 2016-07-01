@@ -6,7 +6,7 @@ import pyqrcode
 import base64
 
 from functools import wraps
-from flask.ext.login import login_user, logout_user, current_user, login_required
+from flask_login import login_user, logout_user, current_user, login_required
 from flask import Flask, g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory
 from werkzeug import secure_filename
 

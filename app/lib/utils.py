@@ -64,6 +64,9 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
     if method == "DELETE":
         return True
 
+    if r.status_code == 204:
+        return {}
+
     try:
         assert('json' in r.headers['content-type'])
     except Exception as e:
