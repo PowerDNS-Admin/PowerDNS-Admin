@@ -84,7 +84,7 @@
     });
     
     // handle revocation of privileges
-    $('.button_revoke').click(function() {
+    $(document.body).on('click', '.button_revoke', function() {
         var modal = $("#modal_revoke");
         var username = $(this).prop('id');
         var info = "Are you sure you want to revoke all privileges for " + username + ". They will not able to access any domain."; 
@@ -97,7 +97,7 @@
         modal.modal('show');
     });
     // handle deletion of user
-    $('.button_delete').click(function() {
+    $(document.body).on('click', '.button_delete', function() {
         var modal = $("#modal_delete");
         var username = $(this).prop('id');
         var info = "Are you sure you want to delete " + username + "?"; 
@@ -118,7 +118,7 @@
     });
     
     // handle checkbox toggling
-    $('.admin_toggle').on('ifToggled', function(event) {
+    $(document.body).on('ifToggled', '.admin_toggle', function() {
         var is_admin = $(this).prop('checked');
         var username = $(this).prop('id');
         postdata = {

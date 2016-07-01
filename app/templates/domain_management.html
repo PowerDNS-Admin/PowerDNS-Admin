@@ -77,7 +77,7 @@
 $("#domain_multi_user").multiSelect();
 
 // handle deletion of user
-$('.delete_domain').click(function() {
+$(document.body).on('click', '.delete_domain', function() {
     var modal = $("#modal_delete_domain");
     var domain = $(this).prop('id');
     var info = "Are you sure you want to delete " + domain + "?";
