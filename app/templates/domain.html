@@ -204,7 +204,7 @@
         modal.find('.modal-body p').text(info);
         modal.find('#button_apply_confirm').click(function() {
             var data = getTableData(table);
-            applyChanges(data, '/domain/' + domain + '/apply', true);
+            applyChanges(data, $SCRIPT_ROOT + '/domain/' + domain + '/apply', true);
             modal.modal('hide');
         })
         modal.modal('show');
@@ -253,7 +253,7 @@
     //handle update_from_master button
     $(document.body).on("click", ".button_update_from_master", function (e) {
             var domain = $(this).prop('id');
-            applyChanges({'domain': domain}, '/domain/' + domain + '/update');
+            applyChanges({'domain': domain}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
     });
     
     {% if record_helper_setting %}
