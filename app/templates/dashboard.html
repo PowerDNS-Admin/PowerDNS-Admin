@@ -223,14 +223,13 @@
         "info" : false,
         "autoWidth" : false
     });
-
-    $(".history-info-button").click(function() {
+    $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
         var info = $(this).val();
         modal.find('.modal-body p').text(info);
         modal.modal('show');
     });
-    $(document).on("click", ".button_dnssec", function() {
+    $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec('/domain/' + domain + '/dnssec');
     });

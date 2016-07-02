@@ -147,7 +147,7 @@
     });
     
     // handle delete button
-    $(document).on("click", ".button_delete", function(e) {
+    $(document.body).on("click", ".button_delete", function(e) {
         e.stopPropagation();
         var modal = $("#modal_delete");
         var table = $("#tbl_records").DataTable();
@@ -163,7 +163,7 @@
         
     });
     // handle edit button
-    $(document).on("click", ".button_edit, .row_record", function(e) {
+    $(document.body).on("click", ".button_edit, .row_record", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
             var nRow = $(this)[0]; 
@@ -193,7 +193,7 @@
     });
     
     // handle apply changes button
-    $(document).on("click",".button_apply_changes", function() {
+    $(document.body).on("click",".button_apply_changes", function() {
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var domain = $(this).prop('id');
@@ -209,7 +209,7 @@
     });
     
     // handle add record button
-    $(document).on("click", ".button_add_record", function (e) {
+    $(document.body).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
                 // TODO: replace this alert with modal
                 alert("Previous record not saved. Please save it before adding more record.")
@@ -225,7 +225,7 @@
         });
     
     //handle cancel button
-    $(document).on("click", ".button_cancel", function (e) {
+    $(document.body).on("click", ".button_cancel", function (e) {
             e.stopPropagation();
             var oTable = $("#tbl_records").DataTable();
             if (nNew) {
@@ -239,7 +239,7 @@
         });
     
     //handle save button
-    $(document).on("click", ".button_save", function (e) {
+    $(document.body).on("click", ".button_save", function (e) {
             e.stopPropagation();
             var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
@@ -248,14 +248,14 @@
         });
     
     //handle update_from_master button
-    $(document).on("click", ".button_update_from_master", function (e) {
+    $(document.body).on("click", ".button_update_from_master", function (e) {
             var domain = $(this).prop('id');
             applyChanges({'domain': domain}, '/domain/' + domain + '/update');
     });
     
     {% if record_helper_setting %}
     //handle wacky record types
-    $(document).on("focus", "#current_edit_record_data", function (e) {
+    $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();
         var record_data = $(this);
         if (record_type == "MX") {
