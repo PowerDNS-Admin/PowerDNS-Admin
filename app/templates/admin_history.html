@@ -71,8 +71,7 @@
         "info" : true,
         "autoWidth" : false
     });
-
-    $(".history-info-button").click(function() {
+    $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
         var info = $(this).val();
         modal.find('.modal-body p').text(info);
