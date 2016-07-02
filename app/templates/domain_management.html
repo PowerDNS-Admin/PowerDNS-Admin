@@ -59,6 +59,21 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
+                    <h3 class="box-title">DynDNS 2 Settings</h3>
+                </div>
+                <div class="box-body">
+                    <p><input type="checkbox" id="{{ domain.name }}" class="dyndns_on_demand_toggle"
+                    	 {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='1' %}checked{% endif %}{% endfor %}>
+                    	 &nbsp;Allow on-demand creation of records via DynDNS updates?</p>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
                     <h3 class="box-title">Domain Deletion</h3>
                 </div>
                 <div class="box-body">
@@ -74,7 +89,27 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
+//initialize pretty checkboxes
+$('.dyndns_on_demand_toggle').iCheck({
+    checkboxClass : 'icheckbox_square-blue',
+    increaseArea : '20%' // optional
+});
+
 $("#domain_multi_user").multiSelect();
+
+//handle checkbox toggling
+$('.dyndns_on_demand_toggle').on('ifToggled', function(event) {
+    var is_checked = $(this).prop('checked');
+    var domain = $(this).prop('id');
+    postdata = {
+        'action' : 'set_setting',
+        'data' : {
+            'setting' : 'create_via_dyndns',
+            'value' : is_checked
+        }
+    };
+    applyChanges(postdata, '/domain/' + domain + '/managesetting', true);
+});
 
 // handle deletion of user
 $(document.body).on('click', '.delete_domain', function() {
