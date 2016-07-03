@@ -756,7 +756,7 @@ def dyndns_update():
     elif r.is_allowed:
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
         if bool(int(ondemand_creation.value)) == True:
-            record = Record(name=hostname,type='A',data=myip,status=True,ttl=3600)
+            record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
             result = record.add(domain.name)
             if result['status'] == 'ok':
                 history = History(msg='DynDNS update: created record %s in zone %s, it now represents %s' % (hostname,domain.name,myip), detail=str(result), created_by=current_user.username)
