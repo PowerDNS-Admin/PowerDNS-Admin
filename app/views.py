@@ -755,7 +755,7 @@ def dyndns_update():
                 return render_template('dyndns.html', response='911'), 200
     elif r.is_allowed:
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
-        if strtobool(ondemand_creation.value) == True:
+        if (ondemand_creation != None) and (strtobool(ondemand_creation.value) == True):
             record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
             result = record.add(domain.name)
             if result['status'] == 'ok':
