@@ -456,7 +456,7 @@ def admin_setdomainsetting(domain_name):
             data = jdata['data']
             if jdata['action'] == 'set_setting':
                 new_setting = data['setting']
-                new_value = data['value']
+                new_value = str(data['value'])
                 domain = Domain.query.filter(Domain.name == domain_name).first()
                 setting = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == new_setting).first()
                 
@@ -755,7 +755,7 @@ def dyndns_update():
                 return render_template('dyndns.html', response='911'), 200
     elif r.is_allowed:
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
-        if bool(int(ondemand_creation.value)) == True:
+        if strtobool(ondemand_creation.value) == True:
             record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
             result = record.add(domain.name)
             if result['status'] == 'ok':
