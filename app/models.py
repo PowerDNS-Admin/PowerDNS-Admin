@@ -500,7 +500,7 @@ class Domain(db.Model):
                             d.serial = data['serial']
                             d.notified_serial = data['notified_serial']
                             d.last_check = 1 if data['last_check'] else 0
-                            d.dnssec = data['dnssec']
+                            d.dnssec = 1 if data['dnssec'] else 0
                             changed = True
 
                 else:
