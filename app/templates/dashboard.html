@@ -155,11 +155,11 @@
                   </td>
                   <td>
                     {% if domain.dnssec %}
-                    <button type="button" class="btn btn-flat dnssec btn-success button_dnssec col-md-6" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat dnssec btn-success button_dnssec" id="{{ domain.name }}" style="width:100%;">
                         <i class="fa fa-lock"></i>&nbsp;Enabled
                     </button>
                     {% else %}
-                    <button type="button" class="btn btn-flat dnssec button_dnssec col-md-6" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat dnssec button_dnssec" id="{{ domain.name }}" style="width:100%;">
                         <i class="fa fa-unlock-alt"></i>&nbsp;Disabled
                     </button>
                     {% endif %}
