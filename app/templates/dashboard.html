@@ -155,11 +155,11 @@
                   </td>
                   <td>
                     {% if domain.dnssec %}
-                    <button type="button" class="btn btn-flat dnssec button_dnssec" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat dnssec btn-success button_dnssec" id="{{ domain.name }}" style="width:100%;">
                         <i class="fa fa-lock"></i>&nbsp;Enabled
                     </button>
                     {% else %}
-                    <button type="button" class="btn btn-flat dnssec button_dnssec" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat dnssec button_dnssec" id="{{ domain.name }}" style="width:100%;">
                         <i class="fa fa-unlock-alt"></i>&nbsp;Disabled
                     </button>
                     {% endif %}
@@ -223,14 +223,13 @@
         "info" : false,
         "autoWidth" : false
     });
-
-    $(".history-info-button").click(function() {
+    $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
         var info = $(this).val();
         modal.find('.modal-body p').text(info);
         modal.modal('show');
     });
-    $(document).on("click", ".button_dnssec", function() {
+    $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec('/domain/' + domain + '/dnssec');
     });

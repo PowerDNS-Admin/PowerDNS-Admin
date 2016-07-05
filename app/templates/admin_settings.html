@@ -74,13 +74,12 @@
         "info" : true,
         "autoWidth" : false
     });
-
-    $(".setting-toggle-button").click(function() {
+    $(document.body).on('click', '.setting-toggle-button', function() {
         var setting = $(this).prop('id');
         applyChanges('','/admin/setting/' + setting + '/toggle', false, true)
     });
     
-    $(".setting-save-button").click(function() {
+    $(document.body).on('click', '.setting-save-button', function() {
         var setting = $(this).prop('id');
         var value = $(this).parents('tr').find('#value')[0].value;
         var postdata = {'value': value};

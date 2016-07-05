@@ -658,7 +658,7 @@ def qrcode():
 @app.route('/nic/checkip.html', methods=['GET', 'POST'])
 def dyndns_checkip():
     # route covers the default ddclient 'web' setting for the checkip service
-    return render_template('dyndns.html', response=request.headers.get('X-Real-IP'))
+    return render_template('dyndns.html', response=request.environ.get('HTTP_X_REAL_IP', request.remote_addr))
 
 @app.route('/nic/update', methods=['GET', 'POST'])
 @dyndns_login_required
