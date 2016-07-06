@@ -395,6 +395,35 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % (self.name)
 
+class DomainSetting(db.Model):
+    __tablename__ = 'domain_setting'
+    id = db.Column(db.Integer, primary_key = True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domain.id'))
+    domain = db.relationship('Domain', back_populates='settings')
+    setting = db.Column(db.String(255), nullable = False)
+    value = db.Column(db.String(255))
+    
+    def __init__(self, id=None, setting=None, value=None):
+        self.id = id
+        self.setting = setting
+        self.value = value
+    
+    def __repr__(self):
+        return '<DomainSetting %r for $d>' % (setting, self.domain.name)
+    
+    def __eq__(self, other):
+        return self.setting == other.setting
+    
+    def set(self, value):
+        try:
+            self.value = value
+            db.session.commit()
+            return True
+        except:
+            logging.error('Unable to set DomainSetting value')
+            logging.debug(traceback.format_exc())
+            db.session.rollback()
+            return False
 
 class Domain(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -405,6 +434,7 @@ class Domain(db.Model):
     notified_serial = db.Column(db.Integer)
     last_check = db.Column(db.Integer)
     dnssec = db.Column(db.Integer)
+    settings = db.relationship('DomainSetting', back_populates='domain')
 
     def __init__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None, dnssec=None):
         self.id = id
@@ -418,6 +448,15 @@ class Domain(db.Model):
 
     def __repr__(self):
         return '<Domain %r>' % (self.name)
+    
+    def add_setting(self, setting, value):
+        try:
+            self.settings.append(DomainSetting(setting=setting, value=value))
+            db.session.commit()
+            return True
+        except Exception, e:
+            logging.error('Can not create settting %s for domain %s. %s' % (setting, self.name, str(e)))
+            return False
 
     def get_domains(self):
         """
