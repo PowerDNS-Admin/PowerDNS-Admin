@@ -143,7 +143,10 @@
         "language": {
             "lengthMenu": " _MENU_ records"
         },
-        "retrieve" : true
+        "retrieve" : true,
+        "columnDefs": [
+	       { type: 'natural', targets: [0, 4] }
+        ]
     });
     
     // handle delete button
