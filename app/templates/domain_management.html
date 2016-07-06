@@ -108,7 +108,7 @@ $('.dyndns_on_demand_toggle').on('ifToggled', function(event) {
             'value' : is_checked
         }
     };
-    applyChanges(postdata, '/domain/' + domain + '/managesetting', true);
+    applyChanges(postdata,  $SCRIPT_ROOT + '/domain/' + domain + '/managesetting', true);
 });
 
 // handle deletion of user
