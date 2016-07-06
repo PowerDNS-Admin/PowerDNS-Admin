@@ -42,9 +42,19 @@ def inject_record_helper_setting():
     return dict(record_helper_setting=strtobool(record_helper_setting.value))
 
 @app.context_processor
+def inject_login_ldap_first_setting():
+    login_ldap_first_setting = Setting.query.filter(Setting.name == 'login_ldap_first').first()
+    return dict(login_ldap_first_setting=strtobool(login_ldap_first_setting.value))
+
+@app.context_processor
 def inject_default_record_table_size_setting():
     default_record_table_size_setting = Setting.query.filter(Setting.name == 'default_record_table_size').first()
     return dict(default_record_table_size_setting=default_record_table_size_setting.value)
+
+@app.context_processor
+def inject_default_domain_table_size_setting():
+    default_domain_table_size_setting = Setting.query.filter(Setting.name == 'default_domain_table_size').first()
+    return dict(default_domain_table_size_setting=default_domain_table_size_setting.value)
 
 # START USER AUTHENTICATION HANDLER
 @app.before_request
