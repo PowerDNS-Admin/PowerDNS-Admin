@@ -63,7 +63,7 @@
                 </div>
                 <div class="box-body">
                     <p><input type="checkbox" id="{{ domain.name }}" class="dyndns_on_demand_toggle"
-                    	 {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='1' %}checked{% endif %}{% endfor %}>
+                    	 {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked{% endif %}{% endfor %}>
                     	 &nbsp;Allow on-demand creation of records via DynDNS updates?</p>
                     
                 </div>
