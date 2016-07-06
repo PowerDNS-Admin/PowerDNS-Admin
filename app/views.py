@@ -12,11 +12,12 @@ from werkzeug import secure_filename
 
 from lib import utils
 from app import app, login_manager
-from .models import User, Role, Domain, DomainUser, Record, Server, History, Anonymous, Setting
+from .models import User, Role, Domain, DomainUser, Record, Server, History, Anonymous, Setting, DomainSetting
 
 from io import BytesIO
 from distutils.util import strtobool
 from distutils.version import StrictVersion
+from optparse import Values
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
@@ -440,6 +441,45 @@ def domain_dnssec(domain_name):
     dnssec = domain.get_domain_dnssec(domain_name)
     return make_response(jsonify(dnssec), 200)
 
+@app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_setdomainsetting(domain_name):
+    if request.method == 'POST':
+        #
+        # post data should in format
+        # {'action': 'set_setting', 'setting': 'default_action, 'value': 'True'}
+        #
+        try:
+            pdata = request.data
+            jdata = json.loads(pdata)
+            data = jdata['data']
+            if jdata['action'] == 'set_setting':
+                new_setting = data['setting']
+                new_value = str(data['value'])
+                domain = Domain.query.filter(Domain.name == domain_name).first()
+                setting = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == new_setting).first()
+                
+                if setting:
+                    if setting.set(new_value):
+                        history = History(msg='Setting %s changed value to %s for %s' % (new_setting, new_value, domain.name), created_by=current_user.username)
+                        history.add()
+                        return make_response(jsonify( { 'status': 'ok', 'msg': 'Setting updated.' } ))
+                    else:
+                        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to set value of setting.' } ))
+                else:
+                    if domain.add_setting(new_setting, new_value):
+                        history = History(msg='New setting %s with value %s for %s has been created' % (new_setting, new_value, domain.name), created_by=current_user.username)
+                        history.add()
+                        return make_response(jsonify( { 'status': 'ok', 'msg': 'New setting created and updated.' } ))
+                    else:
+                        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to create new setting.' } )) 
+            else:
+                return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
+        except:
+            print traceback.format_exc()
+            return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
+
 
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
@@ -679,26 +719,50 @@ def dyndns_update():
         domains = User(id=current_user.id).get_domain()
     except:
         return render_template('dyndns.html', response='911'), 200
-    for domain in domains:
-        # create new record object to use for searching and updating
-        r = Record()
-        r.name = hostname
-        # check if the user requested record exists within this domain
-        if r.exists(domain.name) and r.is_allowed:
-            if r.data == myip:
-                # record content did not change, return 'nochg'
-                history = History(msg="DynDNS update: attempted update of %s but record did not change" % hostname, created_by=current_user.username)
+    
+    domain = None
+    domain_segments = hostname.split('.')
+    for index in range(len(domain_segments)):
+        domain_segments.pop(0)
+        full_domain = '.'.join(domain_segments)
+        potential_domain = Domain.query.filter(Domain.name == full_domain).first()
+        if potential_domain in domains:
+            domain = potential_domain
+            break
+    
+    if not domain:
+        history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
+        history.add()
+        return render_template('dyndns.html', response='nohost'), 200
+        
+    r = Record()
+    r.name = hostname
+    # check if the user requested record exists within this domain
+    if r.exists(domain.name) and r.is_allowed:
+        if r.data == myip:
+            # record content did not change, return 'nochg'
+            history = History(msg="DynDNS update: attempted update of %s but record did not change" % hostname, created_by=current_user.username)
+            history.add()
+            return render_template('dyndns.html', response='nochg'), 200
+        else:
+            oldip = r.data
+            result = r.update(domain.name, myip)
+            if result['status'] == 'ok':
+                history = History(msg='DynDNS update: updated record %s in zone %s, it changed from %s to %s' % (hostname,domain.name,oldip,myip), detail=str(result), created_by=current_user.username)
                 history.add()
-                return render_template('dyndns.html', response='nochg'), 200
+                return render_template('dyndns.html', response='good'), 200
             else:
-                oldip = r.data
-                result = r.update(domain.name, myip)
-                if result['status'] == 'ok':
-                    history = History(msg='DynDNS update: updated record %s in zone %s, it changed from %s to %s' % (hostname,domain.name,oldip,myip), detail=str(result), created_by=current_user.username)
-                    history.add()
-                    return render_template('dyndns.html', response='good'), 200
-                else:
-                    return render_template('dyndns.html', response='911'), 200
+                return render_template('dyndns.html', response='911'), 200
+    elif r.is_allowed:
+        ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
+        if (ondemand_creation != None) and (strtobool(ondemand_creation.value) == True):
+            record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
+            result = record.add(domain.name)
+            if result['status'] == 'ok':
+                history = History(msg='DynDNS update: created record %s in zone %s, it now represents %s' % (hostname,domain.name,myip), detail=str(result), created_by=current_user.username)
+                history.add()
+                return render_template('dyndns.html', response='good'), 200
+            
     history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
     history.add()
     return render_template('dyndns.html', response='nohost'), 200
