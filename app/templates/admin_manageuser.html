@@ -91,7 +91,7 @@
         modal.find('.modal-body p').text(info);
         modal.find('#button_revoke_confirm').click(function() {
             var postdata = {'action': 'revoke_user_privielges', 'data': username}
-            applyChanges(postdata, '/admin/manageuser');
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser');
             modal.modal('hide');
         })
         modal.modal('show');
@@ -104,7 +104,7 @@
         modal.find('.modal-body p').text(info);
         modal.find('#button_delete_confirm').click(function() {
             var postdata = {'action': 'delete_user', 'data': username}
-            applyChanges(postdata, '/admin/manageuser', false, true);
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser', false, true);
             modal.modal('hide');
         })
         modal.modal('show');
@@ -128,7 +128,7 @@
                 'is_admin' : is_admin
             }
         };
-        applyChanges(postdata, '/admin/manageuser');
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser');
     });
 </script>
 {% endblock %}

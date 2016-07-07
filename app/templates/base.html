@@ -163,7 +163,9 @@
   </footer>
 </div>
 <!-- ./wrapper -->
-
+<script type="text/javascript">
+	$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
 {% block scripts %}
 <!-- jQuery 2.2.0 -->
 <script src="{{ url_for('static', filename='adminlte2/plugins/jQuery/jQuery-2.2.0.min.js') }}"></script>

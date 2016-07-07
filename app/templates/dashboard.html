@@ -240,7 +240,7 @@
     });
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
-        getdnssec('/domain/' + domain + '/dnssec');
+        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
     });
 </script>
 {% endblock %}
