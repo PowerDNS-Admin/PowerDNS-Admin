@@ -1,4 +1,5 @@
 #!flask/bin/python
+
 from migrate.versioning import api
 from config import SQLALCHEMY_DATABASE_URI
 from config import SQLALCHEMY_MIGRATE_REPO
@@ -91,4 +92,3 @@ def commit_version_control(db_commit):
 
 if __name__ == '__main__':
     start()
->>>>>>> docker
