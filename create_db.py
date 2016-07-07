@@ -65,14 +65,16 @@ def init_settings(db, setting_names):
         db.session.add(setting)
 
 def init_records():
-    
+
     # Create initial user roles and turn off maintenance mode
     admin_role = Role('Administrator', 'Administrator')
     user_role = Role('User', 'User')
     maintenance_setting = Setting('maintenance', 'False')
     fullscreen_layout_setting = Setting('fullscreen_layout', 'True')
     record_helper_setting = Setting('record_helper', 'True')
+    login_ldap_first_setting = Setting('login_ldap_first', 'True')
     default_table_size_setting = Setting('default_record_table_size', '15')
+    default_domain_table_size_setting = Setting('default_domain_table_size', '10')
 
     # Check if record already exists
     init_roles(db, [admin_role, user_role])
