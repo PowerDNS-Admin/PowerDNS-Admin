@@ -33,26 +33,40 @@ def connect_db(wait_time):
     return False
 
 def init_roles(db, role_names):
+
+    # Get key name of data
     name_of_roles = map(lambda r: r.name, role_names)
+
+    # Query to get current data
     rows = db.session.query(Role).filter(Role.name.in_(name_of_roles)).all()
     name_of_rows = map(lambda r: r.name, rows)
-    roles = filter(lambda r: r.name not in rows, role_names)
 
+    # Check which data that need to insert
+    roles = filter(lambda r: r.name not in name_of_rows, role_names)
+
+    # Insert data
     for role in roles:
         db.session.add(role)
 
 def init_settings(db, setting_names):
+
+    # Get key name of data
     name_of_settings = map(lambda r: r.name, setting_names)
+
+    # Query to get current data
     rows = db.session.query(Setting).filter(Setting.name.in_(name_of_settings)).all()
+
+    # Check which data that need to insert
     name_of_rows = map(lambda r: r.name, rows)
+    settings = filter(lambda r: r.name not in name_of_rows, setting_names)
 
-    settings = filter(lambda r: r.name not in rows, setting_names)
-
+    # Insert data
     for setting in settings:
         db.session.add(setting)
 
 def init_records():
-    # create initial user roles and turn off maintenance mode
+    
+    # Create initial user roles and turn off maintenance mode
     admin_role = Role('Administrator', 'Administrator')
     user_role = Role('User', 'User')
     maintenance_setting = Setting('maintenance', 'False')
