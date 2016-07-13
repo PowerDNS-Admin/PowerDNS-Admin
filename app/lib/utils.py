@@ -150,5 +150,4 @@ def pdns_api_extended_uri(version):
 
 def email_to_gravatar_url(email, size=100):
     hash_string = hashlib.md5(email).hexdigest()
-    schema = 'https' if app.config['SSL'] else 'http'
-    return "%s://s.gravatar.com/avatar/%s?s=%s" % (schema, hash_string, size)
+    return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
