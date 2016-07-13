@@ -69,9 +69,6 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
-    # set website SSL status
-    app.config['SSL'] = True if request.is_secure else False
-
 
 @login_manager.user_loader
 def load_user(id):
