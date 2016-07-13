@@ -67,7 +67,7 @@
                                                     src="{{ url_for('user_avatar', filename=current_user.avatar) }}"
                                                     alt="" / style="width: 200px; height: 200px;"> {%
                                                 else %} <img
-                                                    src="http://www.placehold.it/200x200/EFEFEF/AAAAAA&amp;text=no+image"
+                                                    src="{{ current_user.email|email_to_gravatar_url(size=200) }}"
                                                     alt="" /> {% endif %}
                                             </div>
                                             <div>

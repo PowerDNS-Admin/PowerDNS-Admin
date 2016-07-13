@@ -3,6 +3,8 @@ import sys
 import json
 import requests
 import urlparse
+import hashlib
+
 from app import app
 from distutils.version import StrictVersion
 
@@ -145,3 +147,7 @@ def pdns_api_extended_uri(version):
         return "/api/v1"
     else:
         return ""
+
+def email_to_gravatar_url(email, size=100):
+    hash_string = hashlib.md5(email).hexdigest()
+    return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)

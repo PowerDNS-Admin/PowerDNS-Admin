@@ -22,6 +22,7 @@ from optparse import Values
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
 jinja2.filters.FILTERS['display_second_to_time'] = utils.display_time
+jinja2.filters.FILTERS['email_to_gravatar_url'] = utils.email_to_gravatar_url
 
 # Flag for pdns v4.x.x
 # TODO: Find another way to do this
@@ -67,6 +68,7 @@ def before_request():
     # check if user is anonymous
     g.user = current_user
     login_manager.anonymous_user = Anonymous
+
 
 @login_manager.user_loader
 def load_user(id):
