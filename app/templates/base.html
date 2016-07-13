@@ -65,7 +65,7 @@
               {% if current_user.avatar %}
               <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="user-image" alt="User Image"/>
               {% else %}
-              <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="user-image" alt="User Image"/>
+              <img src="{{ current_user.email|email_to_gravatar_url(size=80) }}" class="user-image" alt="User Image"/>
               {% endif %}
               <span class="hidden-xs">
                 {{ current_user.firstname }}
@@ -76,7 +76,7 @@
                   {% if current_user.avatar %}
                   <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="img-circle" alt="User Image"/>
                   {% else %}
-                  <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="img-circle" alt="User Image"/>
+                  <img src="{{ current_user.email|email_to_gravatar_url(size=160) }}" class="img-circle" alt="User Image"/>
                   {% endif %}
                   <p>
                     {{ current_user.firstname }} {{ current_user.lastname }}
@@ -111,7 +111,7 @@
           {% if current_user.avatar %}
           <img src="{{ url_for('user_avatar', filename=current_user.avatar) }}" class="img-circle" alt="User Image"/>
           {% else %}
-          <img src="{{ url_for('static', filename='adminlte2/dist/img/avatar.png') }}" class="img-circle" alt="User Image"/>
+          <img src="{{ current_user.email|email_to_gravatar_url(size=100) }}" class="img-circle" alt="User Image"/>
           {% endif %}
         </div>
         <div class="pull-left info">
