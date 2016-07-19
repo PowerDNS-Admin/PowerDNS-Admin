@@ -67,7 +67,7 @@ function saveRow(oTable, nRow) {
 
 	var record = jqInputs[0].value;
 	var button_edit = "<button type=\"button\" class=\"btn btn-flat btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
-	var button_delete = "<button type=\"button\" class=\"btn btn-flat btn-danger button_edit\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
+	var button_delete = "<button type=\"button\" class=\"btn btn-flat btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
 
 	oTable.cell(nRow,5).data(button_edit);
 	oTable.cell(nRow,6).data(button_delete);
