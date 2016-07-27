@@ -858,8 +858,8 @@ class Record(object):
                 record = {
                             "name": r['name'] + '.',
                             "type": r['type'],
-                            "ttl": r['ttl'],
                             "changetype": "REPLACE",
+                            "ttl": r['ttl'],
                             "records": [
                                 {
                                     "content": r['content'],
@@ -888,14 +888,14 @@ class Record(object):
 
         # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
         final_records = []
-        records = sorted(records, key = lambda item: (item["name"], item["type"]))
-        for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"], item["changetype"], item["ttl"])):
+        records = sorted(records, key = lambda item: (item["name"], item["type"], item["changetype"]))
+        for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"], item["changetype"])):
             if NEW_SCHEMA:
                 new_record = {
                         "name": key[0],
                         "type": key[1],
                         "changetype": key[2],
-                        "ttl": key[3],
+                        "ttl": None,
                         "records": []
                     }
                 for item in group:
@@ -905,6 +905,8 @@ class Record(object):
                         if temp_content.strip()[-1:] != '.':
                             temp_content += '.'
 
+                    if new_record['ttl'] is None:
+                        new_record['ttl'] = item['ttl']
                     new_record['records'].append({
                         "content": temp_content,
                         "disabled": temp_disabled
