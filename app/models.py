@@ -858,8 +858,8 @@ class Record(object):
                 record = {
                             "name": r['name'] + '.',
                             "type": r['type'],
-                            "ttl": r['ttl'],
                             "changetype": "REPLACE",
+                            "ttl": r['ttl'],
                             "records": [
                                 {
                                     "content": r['content'],
@@ -888,14 +888,14 @@ class Record(object):
 
         # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
         final_records = []
-        if NEW_SCHEMA:
-            records = sorted(records, key = lambda item: (item["name"], item["type"]))
-            for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+        records = sorted(records, key = lambda item: (item["name"], item["type"], item["changetype"]))
+        for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"], item["changetype"])):
+            if NEW_SCHEMA:
                 new_record = {
                         "name": key[0],
                         "type": key[1],
-                        "ttl": records[0]['ttl'],
-                        "changetype": "REPLACE",
+                        "changetype": key[2],
+                        "ttl": None,
                         "records": []
                     }
                 for item in group:
@@ -905,18 +905,20 @@ class Record(object):
                         if temp_content.strip()[-1:] != '.':
                             temp_content += '.'
 
+                    if new_record['ttl'] is None:
+                        new_record['ttl'] = item['ttl']
                     new_record['records'].append({
                         "content": temp_content,
                         "disabled": temp_disabled
                     })
                 final_records.append(new_record)
-        else:
-            records = sorted(records, key = lambda item: (item["name"], item["type"]))
-            for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"])):
+                
+            else:
+                
                 final_records.append({
                         "name": key[0],
                         "type": key[1],
-                        "changetype": "REPLACE",
+                        "changetype": key[2],
                         "records": [
                             {
                                 "content": item['records'][0]['content'],
@@ -935,10 +937,7 @@ class Record(object):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
-#            logging.debug('jdata1: ', jdata1)
-
             jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
-#            logging.debug('jdata2: ', jdata2)
 
             if 'error' in jdata2.keys():
                 logging.error('Cannot apply record changes.')
