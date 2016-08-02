@@ -256,7 +256,7 @@ def dashboard():
     return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
 
 
-@app.route('/domain/<string:domain_name>', methods=['GET', 'POST'])
+@app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
 @app.route('/domain', methods=['GET', 'POST'])
 @login_required
 def domain(domain_name):
