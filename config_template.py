@@ -11,7 +11,7 @@ LOGIN_TITLE = "PDNS"
 # TIMEOUT - for large zones
 TIMEOUT = 10
 
-# LOG CONFIG 
+# LOG CONFIG
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
 
@@ -32,6 +32,15 @@ LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
 # Additional options only if LDAP_TYPE=ldap
 LDAP_USERNAMEFIELD = 'uid'
 LDAP_FILTER = '(objectClass=inetorgperson)'
+
+# Github Oauth
+GITHUB_OAUTH_ENABLE = False
+GITHUB_OAUTH_KEY = 'G0j1Q15aRsn36B3aD6nwKLiYbeirrUPU8nDd1wOC'
+GITHUB_OAUTH_SECRET = '0WYrKWePeBDkxlezzhFbDn1PBnCwEa0vCwVFvy6iLtgePlpT7WfUlAa9sZgm'
+GITHUB_OAUTH_SCOPE = 'email'
+GITHUB_OAUTH_URL = 'http://127.0.0.1:5000/api/v3/'
+GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:5000/oauth/token'
+GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
 
 #Default Auth
 BASIC_ENABLED = True

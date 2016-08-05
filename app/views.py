@@ -4,14 +4,16 @@ import jinja2
 import traceback
 import pyqrcode
 import base64
+import random
+import string
 
 from functools import wraps
 from flask_login import login_user, logout_user, current_user, login_required
-from flask import Flask, g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory
+from flask import Flask, g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort
 from werkzeug import secure_filename
 
 from lib import utils
-from app import app, login_manager
+from app import app, login_manager, github
 from .models import User, Role, Domain, DomainUser, Record, Server, History, Anonymous, Setting, DomainSetting
 
 from io import BytesIO
@@ -31,6 +33,9 @@ if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
     NEW_SCHEMA = True
 else:
     NEW_SCHEMA = False
+
+def random_password(n):
+    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(n))
 
 @app.context_processor
 def inject_fullscreen_layout_setting():
@@ -153,6 +158,12 @@ def register():
     else:
         return render_template('errors/404.html'), 404
 
+@app.route('/github/login')
+def github_login():
+    if not app.config.get('GITHUB_OAUTH_ENABLE'):
+        return abort(400)
+    return github.authorize(callback=url_for('authorized', _external=True))
+
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
@@ -161,13 +172,32 @@ def login():
     LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
     BASIC_ENABLED = app.config['BASIC_ENABLED']
     SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
+    GITHUB_ENABLE = app.config.get('GITHUB_OAUTH_ENABLE')
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard'))
 
+    if 'github_token' in session:
+        me = github.get('user')
+        user_info = me.data
+        user = User.query.filter_by(username=user_info['name']).first()
+        if not user:
+            # create user
+            user = User(username=user_info['name'],
+                        plain_text_password=random_password(7),
+                        email=user_info['email'])
+            user.create_local_user()
+
+        session['user_id'] = user.id
+        login_user(user, remember = False)
+        return redirect(url_for('index'))
+
     if request.method == 'GET':
-        return render_template('login.html', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
-    
+        return render_template('login.html',
+            github_enabled=GITHUB_ENABLE,
+            ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
+            basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+
     # process login
     username = request.form['username']
     password = request.form['password']
@@ -179,7 +209,7 @@ def login():
     lastname = request.form['lastname'] if 'lastname' in request.form else None
     email = request.form['email'] if 'email' in request.form else None
     rpassword = request.form['rpassword'] if 'rpassword' in request.form else None
-    
+
     if None in [firstname, lastname, email]:
         #login case
         remember_me = False
@@ -210,13 +240,13 @@ def login():
     else:
         # registration case
         user = User(username=username, plain_text_password=password, firstname=firstname, lastname=lastname, email=email)
-        
+
         # TODO: Move this into the JavaScript
         # validate password and password confirmation
         if password != rpassword:
             error = "Passsword and confirmation do not match"
             return render_template('register.html', error=error)
-        
+
         try:
             result = user.create_local_user()
             if result == True:
@@ -229,8 +259,10 @@ def login():
 
 @app.route('/logout')
 def logout():
+    session.pop('user_id')
+    session.pop('github_token')
     logout_user()
-    return redirect(url_for('login')) 
+    return redirect(url_for('login'))
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -328,7 +360,7 @@ def domain_add():
 def domain_delete(domain_name):
     d = Domain()
     result = d.delete(domain_name)
-    
+
     if result['status'] == 'error':
         return redirect(url_for('error', code=500))
 
@@ -362,7 +394,7 @@ def domain_management(domain_name):
         d = Domain(name=domain_name)
         domain_user_ids = d.get_user()
 
-        # grant/revoke user privielges 
+        # grant/revoke user privielges
         d.grant_privielges(new_user_list)
 
         history = History(msg='Change domain %s access control' % domain_name, detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
@@ -442,7 +474,7 @@ def record_delete(domain_name, record_name, record_type):
             print result['msg']
     except:
         print traceback.format_exc()
-        return redirect(url_for('error', code=500)), 500 
+        return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
 
@@ -471,7 +503,7 @@ def admin_setdomainsetting(domain_name):
                 new_value = str(data['value'])
                 domain = Domain.query.filter(Domain.name == domain_name).first()
                 setting = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == new_setting).first()
-                
+
                 if setting:
                     if setting.set(new_value):
                         history = History(msg='Setting %s changed value to %s for %s' % (new_setting, new_value, domain.name), created_by=current_user.username)
@@ -485,7 +517,7 @@ def admin_setdomainsetting(domain_name):
                         history.add()
                         return make_response(jsonify( { 'status': 'ok', 'msg': 'New setting created and updated.' } ))
                     else:
-                        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to create new setting.' } )) 
+                        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to create new setting.' } ))
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
@@ -499,12 +531,12 @@ def admin_setdomainsetting(domain_name):
 def admin():
     domains = Domain.query.all()
     users = User.query.all()
-    
+
     server = Server(server_id='localhost')
     configs = server.get_config()
     statistics = server.get_statistic()
     history_number = History.query.count()
-    
+
     if statistics:
         uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
     else:
@@ -518,20 +550,20 @@ def admin():
 def admin_createuser():
     if request.method == 'GET':
         return render_template('admin_createuser.html')
-    
+
     if request.method == 'POST':
         fdata = request.form
-        
+
         user = User(username=fdata['username'], plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'])
-        
+
         if fdata['password'] == "":
             return render_template('admin_createuser.html', user=user, blank_password=True)
-        
+
         result = user.create_local_user();
-        
+
         if result == 'Email already existed':
             return render_template('admin_createuser.html', user=user, duplicate_email=True)
-        
+
         if result == 'Username already existed':
             return render_template('admin_createuser.html', user=user, duplicate_username=True)
 
@@ -564,7 +596,7 @@ def admin_manageuser():
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'User has been removed.' } ), 200)
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot remove user.' } ), 500)
-            
+
             elif jdata['action'] == 'revoke_user_privielges':
                 user = User(username=data)
                 result = user.revoke_privilege()
@@ -573,8 +605,8 @@ def admin_manageuser():
                     history.add()
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Revoked user privielges.' } ), 200)
                 else:
-                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot revoke user privilege.' } ), 500)    
-            
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot revoke user privilege.' } ), 500)
+
             elif jdata['action'] == 'set_admin':
                 username = data['username']
                 is_admin = data['is_admin']
@@ -608,7 +640,7 @@ def admin_history():
         else:
             return make_response(jsonify( { 'status': 'error', 'msg': 'Can not remove histories.' } ), 500)
 
-    if request.method == 'GET':        
+    if request.method == 'GET':
         histories = History.query.all()
         return render_template('admin_history.html', histories=histories)
 
@@ -616,10 +648,10 @@ def admin_history():
 @login_required
 @admin_role_required
 def admin_settings():
-    if request.method == 'GET':        
+    if request.method == 'GET':
         settings = Setting.query.filter(Setting.name != 'maintenance')
         return render_template('admin_settings.html', settings=settings)
-    
+
 @app.route('/admin/setting/<string:setting>/toggle', methods=['POST'])
 @login_required
 @admin_role_required
@@ -673,8 +705,8 @@ def user_profile():
                 filename = secure_filename(file.filename)
                 file_extension = filename.rsplit('.', 1)[1]
 
-                if file_extension.lower() in ['jpg', 'jpeg', 'png']:   
-                    save_file_name = current_user.username + '.' + file_extension             
+                if file_extension.lower() in ['jpg', 'jpeg', 'png']:
+                    save_file_name = current_user.username + '.' + file_extension
                     file.save(os.path.join(app.config['UPLOAD_DIR'], 'avatar', save_file_name))
 
 
@@ -731,7 +763,7 @@ def dyndns_update():
         domains = User(id=current_user.id).get_domain()
     except:
         return render_template('dyndns.html', response='911'), 200
-    
+
     domain = None
     domain_segments = hostname.split('.')
     for index in range(len(domain_segments)):
@@ -741,12 +773,12 @@ def dyndns_update():
         if potential_domain in domains:
             domain = potential_domain
             break
-    
+
     if not domain:
         history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
         history.add()
         return render_template('dyndns.html', response='nohost'), 200
-        
+
     r = Record()
     r.name = hostname
     # check if the user requested record exists within this domain
@@ -774,7 +806,7 @@ def dyndns_update():
                 history = History(msg='DynDNS update: created record %s in zone %s, it now represents %s' % (hostname,domain.name,myip), detail=str(result), created_by=current_user.username)
                 history.add()
                 return render_template('dyndns.html', response='good'), 200
-            
+
     history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
     history.add()
     return render_template('dyndns.html', response='nohost'), 200
@@ -783,6 +815,6 @@ def dyndns_update():
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    return redirect(url_for('dashboard')) 
+    return redirect(url_for('dashboard'))
 
 # END VIEWS
