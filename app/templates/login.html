@@ -58,7 +58,6 @@
       <div class="form-group">
         <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
       </div>
-        
             {% if ldap_enabled and basic_enabled %}
                     <div class="form-group">
               <select class="form-control" name="auth_method">
@@ -69,21 +68,21 @@
 						<option value="LDAP">LDAP Authentication</option>
 						{% endif %}
               </select>
-            </div>      
+            </div>
             {% elif ldap_enabled and not basic_enabled %}
             <div class="form-group">
-                      <input type="hidden" name="auth_method" value="LDAP">                     
+                      <input type="hidden" name="auth_method" value="LDAP">
             </div>
                     {% elif basic_enabled and not ldap_enabled %}
                     <div class="form-group">
-                      <input type="hidden" name="auth_method" value="LOCAL">                      
+                      <input type="hidden" name="auth_method" value="LOCAL">
             </div>
             {% else %}
             <div class="form-group">
-                      <input type="hidden" name="auth_method" value="LOCAL">                      
+                      <input type="hidden" name="auth_method" value="LOCAL">
             </div>
             {% endif %}
-          
+
      <div class="row">
         <div class="col-xs-8">
           <div class="checkbox icheck">
@@ -99,6 +98,10 @@
         <!-- /.col -->
       </div>
     </form>
+    {% if github_enabled %}
+    <a href="{{ url_for('github_login') }}">Github oauth login</a>
+    {% endif %}
+    <br>
     {% if signup_enabled %}
     <a href="{{ url_for('register') }}" class="text-center">Create an account </a>
     {% endif %}
