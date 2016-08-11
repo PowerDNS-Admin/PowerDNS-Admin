@@ -1,5 +1,7 @@
 function applyChanges(data, url, showResult, refreshPage) {
 	var success = false;
+	console.log(url);
+	console.log(data);
 	$.ajax({
 		type : "POST",
 		url : url,
@@ -41,7 +43,9 @@ function getTableData(table) {
 		record["record_type"] = r[1].trim();
 		record["record_status"] = r[2].trim();
 		record["record_ttl"] = r[3].trim();
-		record["record_data"] = r[4].trim();
+		var rrdata = r[4].trim().split(";");
+		record["record_data"] = rrdata[0];
+		record["record_auto_ptr"] = rrdata[1];
 		records.push(record);
 	});
 	return records
@@ -58,12 +62,12 @@ function saveRow(oTable, nRow) {
 		status = 'Disabled';
 	}
 
-
-	oTable.cell(nRow,0).data(jqInputs[0].value);
-	oTable.cell(nRow,1).data(jqSelect[0].value);
-	oTable.cell(nRow,2).data(status);
-	oTable.cell(nRow,3).data(jqSelect[2].value);
-	oTable.cell(nRow,4).data(jqInputs[1].value);
+	console.log(jqInputs);
+	oTable.cell(nRow,0).data(jqInputs[0].value);//Name
+	oTable.cell(nRow,1).data(jqSelect[0].value);//Type
+	oTable.cell(nRow,2).data(status);           //Status
+	oTable.cell(nRow,3).data(jqSelect[2].value);//TTL
+    oTable.cell(nRow, 4).data(jqInputs[1].value);//Data
 
 	var record = jqInputs[0].value;
 	var button_edit = "<button type=\"button\" class=\"btn btn-flat btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
@@ -94,7 +98,7 @@ function editRow(oTable, nRow) {
     jqTds[1].innerHTML = '<select class="form-control" id="record_type" name="record_type" value="' + aData[1]  + '"' + '>' + record_types + '</select>';
     jqTds[2].innerHTML = '<select class="form-control" id="record_status" name="record_status" value="' + aData[2]  + '"' + '><option value="false">Active</option><option value="true">Disabled</option></select>';
     jqTds[3].innerHTML = '<select class="form-control" id="record_ttl" name="record_ttl" value="' + aData[3]  + '"' + '><option value="60">1 minute</option><option value="300">5 minutes</option><option value="1800">30 minutes</option><option value="3600">60 minutes</option><option value="86400">24 hours</option></select>';
-    jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].replace(/\"/g,"&quot;") + '">';
+	jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].split(";")[0].replace(/\"/g,"&quot;") + '">';
     jqTds[5].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_save">Save</button>';
     jqTds[6].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_cancel">Cancel</button>';
 
@@ -105,6 +109,7 @@ function editRow(oTable, nRow) {
     else {
         isDisabled = 'true';
     }
+
 
     SelectElement('record_type', aData[1]);
     SelectElement('record_status', isDisabled);
