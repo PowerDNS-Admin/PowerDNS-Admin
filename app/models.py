@@ -793,7 +793,8 @@ class Record(object):
                                     "disabled": self.status,
                                     "name": self.name,
                                     "ttl": self.ttl,
-                                    "type": self.type
+                                    "type": self.type,
+                                    "set-ptr": self.auto_ptr
                                 }
                             ]
                         }
@@ -864,6 +865,7 @@ class Record(object):
                                 {
                                     "content": r['content'],
                                     "disabled": r['disabled'],
+                                    "set-ptr": r['set-ptr']
                                 }
                             ]
                         }
@@ -879,11 +881,11 @@ class Record(object):
                                     "name": r['name'],
                                     "ttl": r['ttl'],
                                     "type": r['type'],
+                                    "set-ptr": r['set-ptr'],
                                     "priority": 10, # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
                                 }
                             ]
                         }
-
             records.append(record)
 
         # Adjustment to add multiple records which described in https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
@@ -901,6 +903,7 @@ class Record(object):
                 for item in group:
                     temp_content = item['records'][0]['content']
                     temp_disabled = item['records'][0]['disabled']
+                    temp_ptr = item['records'][0]['set-ptr']
                     if key[1] in ['MX', 'CNAME', 'SRV', 'NS']:
                         if temp_content.strip()[-1:] != '.':
                             temp_content += '.'
@@ -909,7 +912,8 @@ class Record(object):
                         new_record['ttl'] = item['ttl']
                     new_record['records'].append({
                         "content": temp_content,
-                        "disabled": temp_disabled
+                        "disabled": temp_disabled,
+                        "set-ptr": temp_ptr
                     })
                 final_records.append(new_record)
                 
@@ -923,6 +927,7 @@ class Record(object):
                             {
                                 "content": item['records'][0]['content'],
                                 "disabled": item['records'][0]['disabled'],
+                                "set-ptr": item['records'][0]['set-ptr'],
                                 "name": key[0],
                                 "ttl": item['records'][0]['ttl'],
                                 "type": key[1],
@@ -931,6 +936,7 @@ class Record(object):
                         ]
                     })
 
+        print(final_records)
         postdata_for_new = {"rrsets": final_records}
 
         try:
