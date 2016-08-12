@@ -1,25 +1,23 @@
-import os
-import json
-import jinja2
-import traceback
-import pyqrcode
 import base64
-import random
-import string
-
-from functools import wraps
-from flask_login import login_user, logout_user, current_user, login_required
-from flask import Flask, g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort
-from werkzeug import secure_filename
-
-from lib import utils
-from app import app, login_manager, github
-from .models import User, Role, Domain, DomainUser, Record, Server, History, Anonymous, Setting, DomainSetting
-
-from io import BytesIO
+import json
+import os
+import traceback
 from distutils.util import strtobool
 from distutils.version import StrictVersion
-from optparse import Values
+from functools import wraps
+from io import BytesIO
+
+import jinja2
+import pyqrcode
+from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort
+from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug import secure_filename
+from werkzeug.security import gen_salt
+
+from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
+from app import app, login_manager, github
+from lib import utils
+
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
@@ -33,9 +31,6 @@ if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
     NEW_SCHEMA = True
 else:
     NEW_SCHEMA = False
-
-def random_password(n):
-    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(n))
 
 @app.context_processor
 def inject_fullscreen_layout_setting():
@@ -184,7 +179,7 @@ def login():
         if not user:
             # create user
             user = User(username=user_info['name'],
-                        plain_text_password=random_password(7),
+                        plain_text_password=gen_salt(7),
                         email=user_info['email'])
             user.create_local_user()
 
@@ -194,21 +189,21 @@ def login():
 
     if request.method == 'GET':
         return render_template('login.html',
-            github_enabled=GITHUB_ENABLE,
-            ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
-            basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+                               github_enabled=GITHUB_ENABLE,
+                               ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
+                               basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
     # process login
     username = request.form['username']
     password = request.form['password']
-    otp_token = request.form['otptoken'] if 'otptoken' in request.form else None
-    auth_method = request.form['auth_method'] if 'auth_method' in request.form else 'LOCAL'
+    otp_token = request.form.get('otptoken')
+    auth_method = request.form.get('auth_method', 'LOCAL')
 
     # addition fields for registration case
-    firstname = request.form['firstname'] if 'firstname' in request.form else None
-    lastname = request.form['lastname'] if 'lastname' in request.form else None
-    email = request.form['email'] if 'email' in request.form else None
-    rpassword = request.form['rpassword'] if 'rpassword' in request.form else None
+    firstname = request.form.get('firstname')
+    lastname = request.form.get('lastname')
+    email = request.form.get('email')
+    rpassword = request.form.get('rpassword')
 
     if None in [firstname, lastname, email]:
         #login case
@@ -259,8 +254,8 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('user_id')
-    session.pop('github_token')
+    session.pop('user_id', None)
+    session.pop('github_token', None)
     logout_user()
     return redirect(url_for('login'))
 
