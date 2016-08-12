@@ -11,7 +11,7 @@ LOGIN_TITLE = "PDNS"
 # TIMEOUT - for large zones
 TIMEOUT = 10
 
-# LOG CONFIG 
+# LOG CONFIG
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
 
@@ -19,12 +19,13 @@ LOG_FILE = 'logfile.log'
 UPLOAD_DIR = os.path.join(basedir, 'upload')
 
 # DATABASE CONFIG
-SQLALCHEMY_DATABASE_URI = 'mysql://root:123456@192.168.59.103/pdns'
+SQLALCHEMY_DATABASE_URI = 'mysql://root:123456@192.168.59.103/pdns'  # You'll need MySQL-python
+#SQLALCHEMY_DATABASE_URI = 'sqlite:////path/to/your/pdns.db'
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 # LDAP CONFIG
-LDAP_TYPE = 'ldap' # use 'ad' for MS Active Directory
+LDAP_TYPE = 'ldap'  # use 'ad' for MS Active Directory
 LDAP_URI = 'ldaps://your-ldap-server:636'
 LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
