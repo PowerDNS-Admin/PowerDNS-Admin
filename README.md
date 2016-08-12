@@ -37,11 +37,15 @@ This will enable API access in PowerDNS so PowerDNS-Admin can intergrate with Po
 
 ### Create Database
 We will create a database which used by this web application. Please note that this database is difference from pdns database itself.
+
+You could use any database that SQLAlchemy supports. For example MySQL (you will need to `pip install MySQL-python` to use MySQL backend):
 ```
 MariaDB [(none)]> CREATE DATABASE powerdnsadmin;
 
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON powerdnsadmin.* TO powerdnsadmin@'%' IDENTIFIED BY 'your-password';
 ```
+For testing purpose, you could also use SQLite as backend. This way you do not have to install `MySQL-python` dependency.
+
 
 ### PowerDNS-Admin
 
