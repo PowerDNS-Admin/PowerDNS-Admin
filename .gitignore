@@ -27,3 +27,4 @@ logfile.log
 db_repository/*
 upload/avatar/*
 tmp/*
+.ropeproject
