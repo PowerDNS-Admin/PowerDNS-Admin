@@ -19,7 +19,17 @@ LOG_FILE = '/dev/stdout'
 UPLOAD_DIR = os.path.join(basedir, 'upload')
 
 # DATABASE CONFIG
-SQLALCHEMY_DATABASE_URI = 'mysql://root:PowerDNSAdminPassword@mysqldb/powerdns-admin'
+#You'll need MySQL-python
+SQLA_DB_USER = 'powerdnsadmin'
+SQLA_DB_PASSWORD = 'powerdnsadminpassword'
+SQLA_DB_HOST = 'mysqlhostorip'
+SQLA_DB_NAME = 'powerdnsadmin'
+
+#MySQL
+SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
+    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
+#SQLite
+#SQLALCHEMY_DATABASE_URI = 'sqlite:////path/to/your/pdns.db'
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
