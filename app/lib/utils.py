@@ -149,5 +149,13 @@ def pdns_api_extended_uri(version):
         return ""
 
 def email_to_gravatar_url(email, size=100):
+    """
+    AD doesn't necessarily have email
+    """
+
+    if not email:
+        email=""
+
+
     hash_string = hashlib.md5(email).hexdigest()
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
