@@ -111,14 +111,14 @@ $('.dyndns_on_demand_toggle').on('ifToggled', function(event) {
     applyChanges(postdata,  $SCRIPT_ROOT + '/domain/' + domain + '/managesetting', true);
 });
 
-// handle deletion of user
+// handle deletion of domain
 $(document.body).on('click', '.delete_domain', function() {
     var modal = $("#modal_delete_domain");
     var domain = $(this).prop('id');
     var info = "Are you sure you want to delete " + domain + "?";
     modal.find('.modal-body p').text(info);
     modal.find('#button_delete_confirm').click(function() {
-        $.get('/admin/domain/' + domain + '/delete');
+        $.get($SCRIPT_ROOT + '/admin/domain/' + domain + '/delete');
         modal.modal('hide');
         window.location.href = '{{ url_for('dashboard') }}';
     })
