@@ -749,8 +749,7 @@ class Record(object):
                 if PRETTY_IPV6_PTR: # only if activated
                     if rrset['type'] == 'PTR': # only ptr
                         if 'ip6.arpa' in r_name: # only if v6-ptr
-                            v6_addr = dns.reversename.to_address(dns.name.from_text(r_name))
-                            r_name = v6_addr
+                            r_name = dns.reversename.to_address(dns.name.from_text(r_name))
 
                 rrset['name'] = r_name
                 rrset['content'] = rrset['records'][0]['content']
