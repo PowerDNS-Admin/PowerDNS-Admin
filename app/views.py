@@ -311,6 +311,7 @@ def domain(domain_name):
                 if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
                     record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                     records.append(record)
+                
         return render_template('domain.html', domain=domain, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
     else:
         return redirect(url_for('error', code=404))
@@ -408,24 +409,11 @@ def record_apply(domain_name):
     try:
         pdata = request.data
         jdata = json.loads(pdata)
-        records = []
-
-        for j in jdata:
-            record = {
-                        "name": domain_name if j['record_name'] in ['@', ''] else j['record_name'] + '.' + domain_name,
-                        "type": j['record_type'],
-                        "content": j['record_data'],
-                        "disabled": True if j['record_status'] == 'Disabled' else False,
-                        "name": domain_name if j['record_name'] in ['@', ''] else j['record_name'] + '.' + domain_name,
-                        "ttl": int(j['record_ttl']) if j['record_ttl'] else 3600,
-                         "type": j['record_type'],
-                    }
-            records.append(record)
 
         r = Record()
-        result = r.apply(domain_name, records)
+        result = r.apply(domain_name, jdata)
         if result['status'] == 'ok':
-            history = History(msg='Apply record changes to domain %s' % domain_name, detail=str(records), created_by=current_user.username)
+            history = History(msg='Apply record changes to domain %s' % domain_name, detail=str(jdata), created_by=current_user.username)
             history.add()
             return make_response(jsonify( result ), 200)
         else:
