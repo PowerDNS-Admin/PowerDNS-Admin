@@ -225,6 +225,7 @@
             // add new row
             var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', 'A', 'Active', 3600, '', '', '', '0']);
             editRow($("#tbl_records").DataTable(), nRow);
+            document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
             nNew = true;
         });
