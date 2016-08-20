@@ -71,38 +71,28 @@
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
                                     {% if record.is_allowed() %}
-                                        <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">
-                                            Edit&nbsp;<i class="fa fa-edit"></i>
-                                        </button>
+                                        <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">Edit&nbsp;<i class="fa fa-edit"></i></button>
                                        {% else %}
-                                       <button type="button" class="btn btn-flat btn-warning"">
-                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-                                        </button>
+                                       <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     {% endif %}
                                     </td>
                                     <td width="6%">
                                     {% if record.is_allowed() %}
-                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">
-                                            Delete&nbsp;<i class="fa fa-trash"></i>
-                                        </button>
+                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">Delete&nbsp;<i class="fa fa-trash"></i></button>
                                     {% else %}
-                                        <button type="button" class="btn btn-flat btn-warning"">
-                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-                                        </button>
+                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     {% endif %}
                                 {% else %}
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning"">
-                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-                                        </button>
+                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     </td>
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning"">
-                                            &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
-                                        </button>
+                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     </td> 
                                 {% endif %}
                                     </td>
+                                    <!-- hidden column that we can sort on -->
+                                    <td>1</td>
                                 </tr>
                                 {% endfor %}
                         </tbody>
@@ -145,8 +135,18 @@
         },
         "retrieve" : true,
         "columnDefs": [
-	       { type: 'natural', targets: [0, 4] }
-        ]
+            {
+                type: 'natural',
+                targets: [0, 4]
+            },
+            {
+                // hidden column so that we can add new records on top
+                // regardless of whatever sorting is done
+                visible: false,
+                targets: [ 7 ]
+            }
+        ],
+        "orderFixed": [[7, 'asc']]
     });
     
     // handle delete button
@@ -214,15 +214,18 @@
     // handle add record button
     $(document.body).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
-                // TODO: replace this alert with modal
-                alert("Previous record not saved. Please save it before adding more record.")
+                var modal = $("#modal_error");
+                modal.find('.modal-body p').text("Previous record not saved. Please save it before adding more record.");
+                modal.modal('show');
                 return;
             }
-            var table = $("#tbl_records").DataTable();
-
-            var aiNew = table.row.add(['', 'A', 'Active', 3600, '', '', '']).draw();
-            var nRow = aiNew.index();
-            editRow(table, nRow);
+            // clear search first
+            $("#tbl_records").DataTable().search('').columns().search('').draw();
+            
+            // add new row
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', 'A', 'Active', 3600, '', '', '', '0']);
+            editRow($("#tbl_records").DataTable(), nRow);
+            document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
             nNew = true;
         });
