@@ -83,10 +83,10 @@ class User(db.Model):
 
     def is_authenticated(self):
         return True
- 
+
     def is_active(self):
         return True
- 
+
     def is_anonymous(self):
         return False
 
@@ -111,7 +111,7 @@ class User(db.Model):
         pw = plain_text_password if plain_text_password else self.plain_text_password
         return bcrypt.hashpw(pw, bcrypt.gensalt())
 
-    def check_password(self, hashed_password):        
+    def check_password(self, hashed_password):
         # Check hased password. Useing bcrypt, the salt is saved into the hash itself
         return bcrypt.checkpw(self.plain_text_password, hashed_password)
 
@@ -203,7 +203,7 @@ class User(db.Model):
                     ldap_username = result[0][0][0]
                     l.simple_bind_s(ldap_username, self.password)
                     logging.info('User "%s" logged in successfully' % self.username)
-                    
+
                     # create user if not exist in the db
                     if User.query.filter(User.username == self.username).first() == None:
                         try:
@@ -220,7 +220,7 @@ class User(db.Model):
                         if User.query.count() == 0:
                             self.role_id = Role.query.filter_by(name='Administrator').first().id
                         else:
-                            self.role_id = Role.query.filter_by(name='User').first().id    
+                            self.role_id = Role.query.filter_by(name='User').first().id
 
                         self.create_user()
                         logging.info('Created user "%s" in the DB' % self.username)
@@ -268,6 +268,7 @@ class User(db.Model):
             user = User(username=self.username, firstname=self.firstname, lastname=self.lastname, role_id=self.role_id, email=self.email, password=self.get_hashed_password(self.plain_text_password))
             db.session.add(user)
             db.session.commit()
+            self.id = user.id
             return True
         except Exception, e:
             raise
@@ -338,7 +339,7 @@ class User(db.Model):
         Revoke all privielges from a user
         """
         user = User.query.filter(User.username == self.username).first()
-        
+
         if user:
             user_id = user.id
             try:
@@ -385,8 +386,8 @@ class Role(db.Model):
         self.id = id
         self.name = name
         self.description = description
-        
-    # allow database autoincrement to do its own ID assignments    
+
+    # allow database autoincrement to do its own ID assignments
     def __init__(self, name=None, description=None):
         self.id = None
         self.name = name
@@ -402,18 +403,18 @@ class DomainSetting(db.Model):
     domain = db.relationship('Domain', back_populates='settings')
     setting = db.Column(db.String(255), nullable = False)
     value = db.Column(db.String(255))
-    
+
     def __init__(self, id=None, setting=None, value=None):
         self.id = id
         self.setting = setting
         self.value = value
-    
+
     def __repr__(self):
         return '<DomainSetting %r for $d>' % (setting, self.domain.name)
-    
+
     def __eq__(self, other):
         return self.setting == other.setting
-    
+
     def set(self, value):
         try:
             self.value = value
@@ -448,7 +449,7 @@ class Domain(db.Model):
 
     def __repr__(self):
         return '<Domain %r>' % (self.name)
-    
+
     def add_setting(self, setting, value):
         try:
             self.settings.append(DomainSetting(setting=setting, value=value))
@@ -487,7 +488,7 @@ class Domain(db.Model):
         Return domain id
         """
         domain = Domain.query.filter(Domain.name==name).first()
-        return domain.id 
+        return domain.id
 
     def update(self):
         """
@@ -638,10 +639,10 @@ class Domain(db.Model):
         """
 
         domain_id = self.get_id_by_name(self.name)
-        
+
         domain_user_ids = self.get_user()
         new_user_ids = [u.id for u in User.query.filter(User.username.in_(new_user_list)).all()] if new_user_list else []
-        
+
         removed_ids = list(set(domain_user_ids).difference(new_user_ids))
         added_ids = list(set(new_user_ids).difference(domain_user_ids))
 
@@ -816,7 +817,7 @@ class Record(object):
         """
         # get list of current records we have in powerdns
         current_records = self.get_record_data(domain_name)['records']
-        
+
         # convert them to list of list (just has [name, type]) instead of list of hash
         # to compare easier
         list_current_records = [[x['name'],x['type']] for x in current_records]
@@ -912,9 +913,9 @@ class Record(object):
                         "disabled": temp_disabled
                     })
                 final_records.append(new_record)
-                
+
             else:
-                
+
                 final_records.append({
                         "name": key[0],
                         "type": key[1],
@@ -962,11 +963,11 @@ class Record(object):
                         "name": self.name,
                         "type": self.type,
                         "changetype": "DELETE",
-                        "records": [ 
+                        "records": [
                             {
                                 "name": self.name,
                                 "type": self.type
-                            } 
+                            }
                         ]
                     }
                 ]
@@ -1070,7 +1071,7 @@ class Server(object):
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        
+
         try:
             jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/config' % self.server_id), headers=headers, method='GET')
             return jdata
@@ -1146,12 +1147,12 @@ class Setting(db.Model):
         self.id = id
         self.name = name
         self.value = value
-        
+
     # allow database autoincrement to do its own ID assignments
     def __init__(self, name=None, value=None):
         self.id = None
         self.name = name
-        self.value = value    
+        self.value = value
 
     def set_mainteance(self, mode):
         """
@@ -1195,7 +1196,7 @@ class Setting(db.Model):
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
-        
+
     def set(self, setting, value):
         setting = str(setting)
         new_value = str(value)
