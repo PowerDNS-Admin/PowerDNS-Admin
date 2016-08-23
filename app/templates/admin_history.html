@@ -42,8 +42,7 @@
                                 <td>{{ history.msg }}</td>
                                 <td>{{ history.created_on }}</td>
                                 <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail|replace("[]","None") }}'>
-                                        Info&nbsp;<i class="fa fa-info"></i>
+                                    <button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail }}'>Info&nbsp;<i class="fa fa-info"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -74,7 +73,7 @@
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
         var info = $(this).val();
-        modal.find('.modal-body p').text(info);
+        $('#modal-code-content').html(json_library.prettyPrint(info));
         modal.modal('show');
     });
 </script>
@@ -97,8 +96,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-flat btn-default pull-left"
                     data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" onclick="applyChanges('', $SCRIPT_ROOT + '/admin/history');location.reload();">Clear
-                    History</button>
+                <button type="button" class="btn btn-flat btn-danger" onclick="applyChanges('', $SCRIPT_ROOT + '/admin/history');location.reload();">Clear History</button>
             </div>
         </div>
         <!-- /.modal-content -->
@@ -116,7 +114,7 @@
                 <h4 class="modal-title">History Details</h4>
             </div>
             <div class="modal-body">
-                <p></p>
+                <pre><code id="modal-code-content"></code></pre>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-flat btn-default pull-right"

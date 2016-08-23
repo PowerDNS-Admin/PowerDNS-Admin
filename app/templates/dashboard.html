@@ -235,7 +235,7 @@
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
         var info = $(this).val();
-        modal.find('.modal-body p').text(info);
+        $('#modal-code-content').html(json_library.prettyPrint(info));
         modal.modal('show');
     });
     $(document.body).on("click", ".button_dnssec", function() {
@@ -256,7 +256,7 @@
                 <h4 class="modal-title">History Details</h4>
             </div>
             <div class="modal-body">
-                <p></p>
+                <pre><code id="modal-code-content"></code></pre>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-flat btn-default pull-right"
