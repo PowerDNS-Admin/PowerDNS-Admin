@@ -7,6 +7,9 @@ import urlparse
 import itertools
 import traceback
 import onetimepass
+import dns.inet
+import dns.name
+import dns.reversename
 
 from datetime import datetime
 from distutils.version import StrictVersion
@@ -32,6 +35,7 @@ PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
 PDNS_VERSION = app.config['PDNS_VERSION']
 API_EXTENDED_URL = utils.pdns_api_extended_uri(PDNS_VERSION)
+PRETTY_IPV6_PTR = app.config['PRETTY_IPV6_PTR']
 
 # Flag for pdns v4.x.x
 # TODO: Find another way to do this
@@ -742,7 +746,13 @@ class Record(object):
         if NEW_SCHEMA:
             rrsets = jdata['rrsets']
             for rrset in rrsets:
-                rrset['name'] = rrset['name'].rstrip('.')
+                r_name = rrset['name'].rstrip('.')
+                if PRETTY_IPV6_PTR: # only if activated
+                    if rrset['type'] == 'PTR': # only ptr
+                        if 'ip6.arpa' in r_name: # only if v6-ptr
+                            r_name = dns.reversename.to_address(dns.name.from_text(r_name))
+
+                rrset['name'] = r_name
                 rrset['content'] = rrset['records'][0]['content']
                 rrset['disabled'] = rrset['records'][0]['disabled']
             return {'records': rrsets}
@@ -838,13 +848,40 @@ class Record(object):
         """
         Apply record changes to domain
         """
-        deleted_records, new_records = self.compare(domain, post_records)
+        records = []
+        for r in post_records:
+            r_name = domain if r['record_name'] in ['@', ''] else r['record_name'] + '.' + domain
+            r_type = r['record_type']
+            if PRETTY_IPV6_PTR: # only if activated
+                if NEW_SCHEMA: # only if new schema
+                    if r_type == 'PTR': # only ptr
+                        if ':' in r['record_name']: # dirty ipv6 check
+                            r_name = r['record_name']
+            
+            record = {
+                        "name": r_name,
+                        "type": r_type,
+                        "content": r['record_data'],
+                        "disabled": True if r['record_status'] == 'Disabled' else False,
+                        "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
+                    }
+            records.append(record)
+        
+        deleted_records, new_records = self.compare(domain, records)
 
         records = []
         for r in deleted_records:
+            r_name = r['name'] + '.' if NEW_SCHEMA else r['name']
+            r_type = r['type']
+            if PRETTY_IPV6_PTR: # only if activated
+                if NEW_SCHEMA: # only if new schema
+                    if r_type == 'PTR': # only ptr
+                        if ':' in r['name']: # dirty ipv6 check
+                            r_name = dns.reversename.from_address(r['name']).to_text()
+                            
             record = {
-                        "name": r['name'] + '.' if NEW_SCHEMA else r['name'],
-                        "type": r['type'],
+                        "name": r_name,
+                        "type": r_type,
                         "changetype": "DELETE",
                         "records": [
                         ]
@@ -856,9 +893,16 @@ class Record(object):
         records = []
         for r in new_records:
             if NEW_SCHEMA:
+                r_name = r['name'] + '.'
+                r_type = r['type']
+                if PRETTY_IPV6_PTR: # only if activated
+                    if r_type == 'PTR': # only ptr
+                        if ':' in r['name']: # dirty ipv6 check
+                            r_name = r['name']
+
                 record = {
-                            "name": r['name'] + '.',
-                            "type": r['type'],
+                            "name": r_name,
+                            "type": r_type,
                             "changetype": "REPLACE",
                             "ttl": r['ttl'],
                             "records": [
@@ -892,10 +936,19 @@ class Record(object):
         records = sorted(records, key = lambda item: (item["name"], item["type"], item["changetype"]))
         for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"], item["changetype"])):
             if NEW_SCHEMA:
+                r_name = key[0]
+                r_type = key[1]
+                r_changetype = key[2]
+                
+                if PRETTY_IPV6_PTR: # only if activated
+                    if r_type == 'PTR': # only ptr
+                        if ':' in r_name: # dirty ipv6 check
+                            r_name = dns.reversename.from_address(r_name).to_text()
+                
                 new_record = {
-                        "name": key[0],
-                        "type": key[1],
-                        "changetype": key[2],
+                        "name": r_name,
+                        "type": r_type,
+                        "changetype": r_changetype,
                         "ttl": None,
                         "records": []
                     }

@@ -10,6 +10,7 @@ PowerDNS Web-GUI - Built by Flask
 - User activity logging
 - Dashboard and pdns service statistics
 - DynDNS 2 protocol support
+- Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
 
 ## Setup
 
