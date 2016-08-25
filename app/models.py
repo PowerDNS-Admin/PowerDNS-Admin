@@ -7,9 +7,6 @@ import urlparse
 import itertools
 import traceback
 import onetimepass
-import dns.inet
-import dns.name
-import dns.reversename
 
 from datetime import datetime
 from distutils.version import StrictVersion
@@ -31,11 +28,18 @@ if 'LDAP_TYPE' in app.config.keys():
 else:
     LDAP_TYPE = False
 
+if 'PRETTY_IPV6_PTR' in app.config.keys():
+    import dns.inet
+    import dns.name
+    import dns.reversename
+    PRETTY_IPV6_PTR = app.config['PRETTY_IPV6_PTR']
+else:
+    PRETTY_IPV6_PTR = False
+
 PDNS_STATS_URL = app.config['PDNS_STATS_URL']
 PDNS_API_KEY = app.config['PDNS_API_KEY']
 PDNS_VERSION = app.config['PDNS_VERSION']
 API_EXTENDED_URL = utils.pdns_api_extended_uri(PDNS_VERSION)
-PRETTY_IPV6_PTR = app.config['PRETTY_IPV6_PTR']
 
 # Flag for pdns v4.x.x
 # TODO: Find another way to do this
