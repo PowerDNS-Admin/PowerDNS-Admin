@@ -14,8 +14,8 @@ TIMEOUT = 10
 # LOG CONFIG
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
-# For Docker, set the following
-#LOG_FILE = '/dev/stdout'
+# For Docker, leave empty string
+#LOG_FILE = ''
 
 # Upload
 UPLOAD_DIR = os.path.join(basedir, 'upload')
