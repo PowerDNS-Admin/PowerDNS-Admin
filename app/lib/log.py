@@ -27,7 +27,7 @@ class logger(object):
         # set request requests module log level
         logging.getLogger("requests").setLevel(logging.CRITICAL)
 
-        if self.logfile and os.path.isfile(self.logfile):
+        if self.logfile:
             # define handler to log into file
             file_log_handler = logging.FileHandler(self.logfile)
             logger.addHandler(file_log_handler)
