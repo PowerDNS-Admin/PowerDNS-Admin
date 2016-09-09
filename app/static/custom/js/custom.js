@@ -8,7 +8,6 @@ function applyChanges(data, url, showResult, refreshPage) {
 		crossDomain : true,
 		dataType : "json",
 		success : function(data, status, jqXHR) {
-			console.log("Applied changes successfully.")
 			if (showResult) {
 				var modal = $("#modal_success");
 				modal.find('.modal-body p').text("Applied changes successfully");
@@ -20,7 +19,6 @@ function applyChanges(data, url, showResult, refreshPage) {
 		},
 
 		error : function(jqXHR, status) {
-			console.log(jqXHR);
 			var modal = $("#modal_error");
 			modal.find('.modal-body p').text(jqXHR["responseText"]);
 			modal.modal('show');
@@ -52,12 +50,12 @@ function saveRow(oTable, nRow) {
 	var jqInputs = $(oTable.row(nRow).node()).find("input");
 	var jqSelect = $(oTable.row(nRow).node()).find("select");
 
+	var status = '';
 	if (jqSelect[1].value == 'false') {
 		status = 'Active';
 	} else {
 		status = 'Disabled';
 	}
-
 
 	oTable.cell(nRow,0).data(jqInputs[0].value);
 	oTable.cell(nRow,1).data(jqSelect[0].value);
@@ -98,12 +96,11 @@ function editRow(oTable, nRow) {
     jqTds[5].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_save">Save</button>';
     jqTds[6].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_cancel">Cancel</button>';
 
-    // set current value of dropdows column
+    // set current value of dropdown column
+	var isDisabled = 'true';
+
     if (aData[2] == 'Active'){
         isDisabled = 'false';
-    }
-    else {
-        isDisabled = 'true';
     }
 
     SelectElement('record_type', aData[1]);
@@ -126,7 +123,7 @@ function getdnssec(url){
     		modal.find('.modal-body p').text(data['msg']);
         }
         else {
-        	dnssec_msg = '';
+        	var dnssec_msg = '';
             var dnssec = data['dnssec'];
             for (var i = 0; i < dnssec.length; i++) {
                 if (dnssec[i]['active']){
