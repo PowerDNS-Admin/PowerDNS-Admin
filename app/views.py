@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import jinja2
 import traceback
@@ -388,6 +389,7 @@ def record_apply(domain_name):
                         "name": domain_name if j['record_name'] in ['@', ''] else j['record_name'] + '.' + domain_name,
                         "type": j['record_type'],
                         "content": j['record_data'],
+                        "set-ptr": True if 'record_auto_ptr' in j else False,
                         "disabled": True if j['record_status'] == 'Disabled' else False,
                         "name": domain_name if j['record_name'] in ['@', ''] else j['record_name'] + '.' + domain_name,
                         "ttl": int(j['record_ttl']) if j['record_ttl'] else 3600,

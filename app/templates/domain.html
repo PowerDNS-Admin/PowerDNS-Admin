@@ -100,7 +100,7 @@
                                         <button type="button" class="btn btn-flat btn-warning"">
                                             &nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;
                                         </button>
-                                    </td> 
+                                    </td>
                                 {% endif %}
                                     </td>
                                 </tr>
@@ -148,7 +148,7 @@
 	       { type: 'natural', targets: [0, 4] }
         ]
     });
-    
+
     // handle delete button
     $(document.body).on("click", ".button_delete", function(e) {
         e.stopPropagation();
@@ -156,25 +156,25 @@
         var table = $("#tbl_records").DataTable();
         var record = $(this).prop('id');
         var nRow = $(this).parents('tr')[0];
-        var info = "Are you sure you want to delete " + record + "?"; 
+        var info = "Are you sure you want to delete " + record + "?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_delete_confirm').click(function() {
             table.row(nRow).remove().draw();
             modal.modal('hide');
         })
         modal.modal('show');
-        
+
     });
     // handle edit button
     $(document.body).on("click", ".button_edit, .row_record", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
-            var nRow = $(this)[0]; 
+            var nRow = $(this)[0];
          } else {
             var nRow = $(this).parents('tr')[0];
          }
          var table = $("#tbl_records").DataTable();
-        
+
         if (nEditing == nRow) {
             /* click on row already being edited, do nothing */
         } else if (nEditing !== null && nEditing != nRow && nNew == false) {
@@ -194,13 +194,13 @@
              nEditing = nRow;
          }
     });
-    
+
     // handle apply changes button
     $(document.body).on("click",".button_apply_changes", function() {
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var domain = $(this).prop('id');
-        var info = "Are you sure you want to apply your changes?"; 
+        var info = "Are you sure you want to apply your changes?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_apply_confirm').click(function() {
             var data = getTableData(table);
@@ -208,9 +208,9 @@
             modal.modal('hide');
         })
         modal.modal('show');
-        
+
     });
-    
+
     // handle add record button
     $(document.body).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
@@ -226,7 +226,7 @@
             nEditing = nRow;
             nNew = true;
         });
-    
+
     //handle cancel button
     $(document.body).on("click", ".button_cancel", function (e) {
             e.stopPropagation();
@@ -240,7 +240,7 @@
                 nEditing = null;
             }
         });
-    
+
     //handle save button
     $(document.body).on("click", ".button_save", function (e) {
             e.stopPropagation();
@@ -249,27 +249,29 @@
             nEditing = null;
             nNew = false;
         });
-    
+
     //handle update_from_master button
     $(document.body).on("click", ".button_update_from_master", function (e) {
             var domain = $(this).prop('id');
             applyChanges({'domain': domain}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
     });
-    
+
     {% if record_helper_setting %}
     //handle wacky record types
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();
         var record_data = $(this);
+        var modal = $("#modal_custom_record");
+
         if (record_type == "MX") {
-            var modal = $("#modal_custom_record");
             if (record_data.val() == "") {
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\"> \
                                 <label for=\"mx_server\">MX Server</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\"> \
                             ";
-            } else {
+            }
+            else {
                 var parts = record_data.val().split(" ");
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\" value=\"" + parts[0] + "\"> \
@@ -286,8 +288,8 @@
                 modal.modal('hide');
             })
             modal.modal('show');
-        } else if (record_type == "SRV") {
-            var modal = $("#modal_custom_record");
+        }
+        else if (record_type == "SRV") {
             if (record_data.val() == "") {
                 var form = "    <label for=\"srv_priority\">SRV Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\"> \
@@ -298,8 +300,9 @@
                                 <label for=\"srv_target\">SRV Target</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\"> \
                             ";
-            } else {
-                var parts = record_data.val().split(" "); 
+            }
+            else {
+                var parts = record_data.val().split(" ");
                 var form = "    <label for=\"srv_priority\">SRV Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
                                 <label for=\"srv_weight\">SRV Weight</label> \
@@ -320,8 +323,8 @@
                 record_data.val(data);
                 modal.modal('hide');
             })
-            } else if (record_type == "SOA") {
-                var modal = $("#modal_custom_record");
+            }
+        else if (record_type == "SOA") {
                 if (record_data.val() == "") {
                     var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
@@ -339,7 +342,7 @@
                                     <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
                                 ";
                 } else {
-                    var parts = record_data.val().split(" "); 
+                    var parts = record_data.val().split(" ");
                     var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
                                     <label for=\"soa_adminemail\">Primary Contact</label> \
@@ -357,7 +360,7 @@
                     ";
                 }
                 modal.find('.modal-body p').html(form);
-                modal.find('#button_save').click(function() {                   
+                modal.find('#button_save').click(function() {
                     soa_primaryns = modal.find('#soa_primaryns').val();
                     soa_adminemail = modal.find('#soa_adminemail').val();
                     soa_serial = modal.find('#soa_serial').val();
@@ -365,11 +368,81 @@
                     soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
                     soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
                     soa_minimumttl = modal.find('#soa_minimumttl').val();
-                    
+
                     data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
                     record_data.val(data);
                     modal.modal('hide');
                 })
+            modal.modal('show');
+        }
+        else if (record_type == "A") {
+            var checked = '';
+            var value = '';
+            var parts = record_data.val().split(";");
+
+            if (record_data.val() == "") {
+                value = ' placeholder="10.10.10.1"';
+            } else {
+                value = ' value="' + parts[0] + '"';
+                if (parts[1] == 'Auto PTR!') {
+                    checked = 'checked';
+                }
+            }
+
+            var form = "<label for=\"a_name\">A record</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"a_name\" id=\"a_name\" " + value + "> \
+                        <label for=\"a_auto_ptr\">Auto PTR</label> \
+                        <input type=\"checkbox\" name=\"a_auto_ptr\" id=\"a_auto_ptr\" " + checked + ">";
+
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function () {
+                var a_name = modal.find('#a_name').val();
+                var a_auto_ptr = '';
+
+                if (modal.find('#a_auto_ptr')[0].checked) {
+                    a_auto_ptr = ';Auto PTR!';
+                }
+
+                var data = a_name + a_auto_ptr;
+                record_data.val(data);
+                modal.modal('hide');
+            });
+
+            modal.modal('show');
+        }
+        else if (record_type == "AAAA") {
+            var checked = '';
+            var value = '';
+            var parts = record_data.val().split(";");
+
+            if (record_data.val() == "") {
+                value = ' placeholder="fd80:3172:e89f:7fb3::"';
+            } else {
+                value = ' value="' + parts[0] + '"';
+                if (parts[1] == 'Auto PTR!') {
+                    checked = 'checked';
+                }
+            }
+
+            var form = "<label for=\"aaaa_name\">AAAA record</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"aaaa_name\" id=\"aaaa_name\" " + value + "> \
+                        <label for=\"aaaa_auto_ptr\">Auto PTR</label> \
+                        <input type=\"checkbox\" name=\"aaaa_auto_ptr\" id=\"aaaa_auto_ptr\" " + checked + ">";
+
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function () {
+                var aaaa_name = modal.find('#aaaa_name').val();
+                var aaaa_auto_ptr = '';
+
+                if (modal.find('#aaaa_auto_ptr')[0].checked) {
+                    aaaa_auto_ptr = ';Auto PTR!';
+                }
+
+                var data = aaaa_name + aaaa_auto_ptr;
+                record_data.val(data);
+                modal.modal('hide');
+            });
+
             modal.modal('show');
         }
     });

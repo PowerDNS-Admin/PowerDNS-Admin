@@ -1,5 +1,4 @@
 function applyChanges(data, url, showResult, refreshPage) {
-	var success = false;
 	$.ajax({
 		type : "POST",
 		url : url,
@@ -28,54 +27,53 @@ function applyChanges(data, url, showResult, refreshPage) {
 }
 
 function getTableData(table) {
-	var rData = []
+    // reformat - pretty format
+    var records = [];
+    table.rows().every(function() {
+        var r = this.data();
+        var record = {};
+        var record_data = r[4].trim().split(";");
 
-	// reformat - pretty format
-	var records = []
-	table.rows().every(function() {
-		var r = this.data();
-		var record = {}
-		record["record_name"] = r[0].trim();
-		record["record_type"] = r[1].trim();
-		record["record_status"] = r[2].trim();
-		record["record_ttl"] = r[3].trim();
-		record["record_data"] = r[4].trim();
-		records.push(record);
-	});
-	return records
+        record["record_name"] = r[0].trim();
+        record["record_type"] = r[1].trim();
+        record["record_status"] = r[2].trim();
+        record["record_ttl"] = r[3].trim();
+        record["record_data"] = record_data[0];
+        record["record_auto_ptr"] = record_data[1];
+        records.push(record);
+    });
+
+    return records
 }
 
 function saveRow(oTable, nRow) {
-	
-	var jqInputs = $(oTable.row(nRow).node()).find("input");
-	var jqSelect = $(oTable.row(nRow).node()).find("select");
 
-	var status = '';
-	if (jqSelect[1].value == 'false') {
-		status = 'Active';
-	} else {
-		status = 'Disabled';
-	}
+    var jqInputs = $(oTable.row(nRow).node()).find("input");
+    var jqSelect = $(oTable.row(nRow).node()).find("select");
+    var status = 'Disabled';
 
-	oTable.cell(nRow,0).data(jqInputs[0].value);
-	oTable.cell(nRow,1).data(jqSelect[0].value);
-	oTable.cell(nRow,2).data(status);
-	oTable.cell(nRow,3).data(jqSelect[2].value);
-	oTable.cell(nRow,4).data(jqInputs[1].value);
+    if (jqSelect[1].value == 'false') {
+        status = 'Active';
+    }
 
-	var record = jqInputs[0].value;
-	var button_edit = "<button type=\"button\" class=\"btn btn-flat btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
-	var button_delete = "<button type=\"button\" class=\"btn btn-flat btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
+    oTable.cell(nRow,0).data(jqInputs[0].value);//Name
+    oTable.cell(nRow,1).data(jqSelect[0].value);//Type
+    oTable.cell(nRow,2).data(status);           //Status
+    oTable.cell(nRow,3).data(jqSelect[2].value);//TTL
+    oTable.cell(nRow, 4).data(jqInputs[1].value);//Data
 
-	oTable.cell(nRow,5).data(button_edit);
-	oTable.cell(nRow,6).data(button_delete);
-	
-	oTable.draw();
+    var record = jqInputs[0].value;
+    var button_edit = "<button type=\"button\" class=\"btn btn-flat btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>";
+    var button_delete = "<button type=\"button\" class=\"btn btn-flat btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>";
+
+    oTable.cell(nRow,5).data(button_edit);
+    oTable.cell(nRow,6).data(button_delete);
+
+    oTable.draw();
 }
 
 function restoreRow(oTable, nRow) {
     var aData = oTable.row(nRow).data();
-    var jqTds = $('>td', nRow);
 	oTable.row(nRow).data(aData);
 	oTable.draw();
 }
@@ -83,21 +81,23 @@ function restoreRow(oTable, nRow) {
 function editRow(oTable, nRow) {
     var aData = oTable.row(nRow).data();
     var jqTds = oTable.cells(nRow,'').nodes();
-    var record_types = "";
+    var record_types = '';
+
     for(var i = 0; i < records_allow_edit.length; i++) {
-       var record_type = records_allow_edit[i];
-       record_types += "<option value=\"" + record_type + "\">" + record_type + "</option>";
+        var record_type = records_allow_edit[i];
+        record_types += "<option value=\"" + record_type + "\">" + record_type + "</option>";
     }
+
     jqTds[0].innerHTML = '<input type="text" class="form-control input-small" value="' + aData[0] + '">';
     jqTds[1].innerHTML = '<select class="form-control" id="record_type" name="record_type" value="' + aData[1]  + '"' + '>' + record_types + '</select>';
     jqTds[2].innerHTML = '<select class="form-control" id="record_status" name="record_status" value="' + aData[2]  + '"' + '><option value="false">Active</option><option value="true">Disabled</option></select>';
     jqTds[3].innerHTML = '<select class="form-control" id="record_ttl" name="record_ttl" value="' + aData[3]  + '"' + '><option value="60">1 minute</option><option value="300">5 minutes</option><option value="1800">30 minutes</option><option value="3600">60 minutes</option><option value="86400">24 hours</option></select>';
-    jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].replace(/\"/g,"&quot;") + '">';
+    jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].split(";")[0].replace(/\"/g,"&quot;") + '">';
     jqTds[5].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_save">Save</button>';
     jqTds[6].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_cancel">Cancel</button>';
 
     // set current value of dropdown column
-	var isDisabled = 'true';
+    var isDisabled = 'true';
 
     if (aData[2] == 'Active'){
         isDisabled = 'false';
@@ -108,14 +108,12 @@ function editRow(oTable, nRow) {
     SelectElement('record_ttl', aData[3]);
 }
 
-function SelectElement(elementID, valueToSelect)
-{    
+function SelectElement(elementID, valueToSelect) {
     var element = document.getElementById(elementID);
     element.value = valueToSelect;
 }
 
-function getdnssec(url){
-	
+function getDNSSec(url){
     $.getJSON(url, function(data) {
     	var modal = $("#modal_dnssec_info");
 		
@@ -123,27 +121,27 @@ function getdnssec(url){
     		modal.find('.modal-body p').text(data['msg']);
         }
         else {
-        	var dnssec_msg = '';
-            var dnssec = data['dnssec'];
-            for (var i = 0; i < dnssec.length; i++) {
-                if (dnssec[i]['active']){
-                    dnssec_msg += '<form>'+
-                    '<h3><strong>'+dnssec[i]['keytype']+'</strong></h3>'+
+        	var dnsSecMsg = '';
+            var dnsSec = data['dnssec'];
+            for (var i = 0; i < dnsSec.length; i++) {
+                if (dnsSec[i]['active']){
+                    dnsSecMsg += '<form>'+
+                    '<h3><strong>'+dnsSec[i]['keytype']+'</strong></h3>'+
                     '<strong>DNSKEY</strong>'+
-                    '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dnssec[i]['dnskey']+'">'+
+                    '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dnsSec[i]['dnskey']+'">'+
                     '</form>'+
                     '<br/>';
-                    if(dnssec[i]['ds']){
-                        var dsList = dnssec[i]['ds'];
-                        dnssec_msg += '<strong>DS</strong>';
+                    if(dnsSec[i]['ds']){
+                        var dsList = dnsSec[i]['ds'];
+                        dnsSecMsg += '<strong>DS</strong>';
                         for (var j = 0; j < dsList.length; j++){
-                            dnssec_msg += '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dsList[j]+'">';
+                            dnsSecMsg += '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dsList[j]+'">';
                         }
                     }
-                    dnssec_msg += '</form>';
+                    dnsSecMsg += '</form>';
                 }
             }
-    		modal.find('.modal-body p').html(dnssec_msg);
+    		modal.find('.modal-body p').html(dnsSecMsg);
         }
         modal.modal('show');
     });
