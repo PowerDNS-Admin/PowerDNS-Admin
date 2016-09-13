@@ -118,9 +118,10 @@ $(document.body).on('click', '.delete_domain', function() {
     var info = "Are you sure you want to delete " + domain + "?";
     modal.find('.modal-body p').text(info);
     modal.find('#button_delete_confirm').click(function() {
-        $.get($SCRIPT_ROOT + '/admin/domain/' + domain + '/delete');
+        $.get($SCRIPT_ROOT + '/admin/domain/' + domain + '/delete', function() {
+            window.location.href = '{{ url_for('dashboard') }}';
+        });
         modal.modal('hide');
-        window.location.href = '{{ url_for('dashboard') }}';
     })
     modal.modal('show');
     
