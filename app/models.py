@@ -1,5 +1,5 @@
 import os
-import ldap
+import ldap3
 import time
 import base64
 import bcrypt
@@ -135,33 +135,16 @@ class User(db.Model):
         user_info = User.query.filter(User.username == self.username).first()
         return user_info
 
-    def ldap_search(self, searchFilter, baseDN):
-        searchScope = ldap.SCOPE_SUBTREE
-        retrieveAttributes = None
-
+    def ldap_search(self, searchFilter, baseDN, attributes=None):
         try:
-            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-            l = ldap.initialize(LDAP_URI)
-            l.set_option(ldap.OPT_REFERRALS, 0)
-            l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-            l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
-            l.set_option( ldap.OPT_X_TLS_DEMAND, True )
-            l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
-            l.protocol_version = ldap.VERSION3
+            server = ldap3.Server(LDAP_URI)
+            conn = ldap3.Connection(server, LDAP_USERNAME, LDAP_PASSWORD, auto_bind=True)
+            results = conn.search(baseDN, searchFilter, attributes=attributes)
+            if results:
+                return conn.entries
+            return False
 
-            l.simple_bind_s(LDAP_USERNAME, LDAP_PASSWORD)
-            ldap_result_id = l.search(baseDN, searchScope, searchFilter, retrieveAttributes)
-            result_set = []
-            while 1:
-                result_type, result_data = l.result(ldap_result_id, 0)
-                if (result_data == []):
-                    break
-                else:
-                    if result_type == ldap.RES_SEARCH_ENTRY:
-                        result_set.append(result_data)
-            return result_set
-
-        except ldap.LDAPError as e:
+        except ldap3.LDAPException as e:
             logging.error(e)
             raise
 
@@ -192,23 +175,17 @@ class User(db.Model):
               searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
               logging.info('Ldap searchFilter "%s"' % searchFilter)
 
-            result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
+            attributes = ['dn', 'sn', 'givenName', 'mail']
+            result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE, attributes=attributes)
             if not result:
                 logging.warning('User "%s" does not exist' % self.username)
                 return False
 
-            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-            l = ldap.initialize(LDAP_URI)
-            l.set_option(ldap.OPT_REFERRALS, 0)
-            l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-            l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
-            l.set_option( ldap.OPT_X_TLS_DEMAND, True )
-            l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
-            l.protocol_version = ldap.VERSION3
+            server = ldap3.Server(LDAP_URI)
 
             try:
-                ldap_username = result[0][0][0]
-                l.simple_bind_s(ldap_username, self.password)
+                ldap_username = result[1]._dn
+                ldap3.Connection(server, ldap_username, self.password, auto_bind=True)
                 logging.info('User "%s" logged in successfully' % self.username)
             except Exception:
                 logging.error('User "%s" input a wrong password' % self.username)
@@ -219,9 +196,9 @@ class User(db.Model):
                 try:
                     # try to get user's firstname & lastname from LDAP
                     # this might be changed in the future
-                    self.firstname = result[0][0][1]['givenName'][0]
-                    self.lastname = result[0][0][1]['sn'][0]
-                    self.email = result[0][0][1]['mail'][0]
+                    self.firstname = str(result[1].givenName)
+                    self.lastname = str(result[1].sn)
+                    self.email = str(result[1].mail)
                 except Exception:
                     self.firstname = self.username
                     self.lastname = ''

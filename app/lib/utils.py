@@ -77,14 +77,7 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
     except Exception as e:
         raise Exception("While fetching %s: %s" % (remote_url, str(e)))
 
-    # don't use r.json here, as it will read from r.text, which will trigger
-    # content encoding auto-detection in almost all cases, WHICH IS EXTREMELY
-    # SLOOOOOOOOOOOOOOOOOOOOOOW. just don't.
-    data = None
-    try:
-        data = json.loads(r.content)
-    except UnicodeDecodeError:
-        data = json.loads(r.content, 'iso-8859-1')
+    data = r.json()
     return data
 
 
@@ -160,5 +153,5 @@ def email_to_gravatar_url(email, size=100):
         email=""
 
 
-    hash_string = hashlib.md5(email).hexdigest()
+    hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)

@@ -408,8 +408,7 @@ def record_apply(domain_name):
     """
     #TODO: filter removed records / name modified records.
     try:
-        pdata = request.data
-        jdata = json.loads(pdata)
+        jdata = request.json
 
         r = Record()
         result = r.apply(domain_name, jdata)
@@ -432,8 +431,7 @@ def record_update(domain_name):
     Pulling the records update from its Master
     """
     try:
-        pdata = request.data
-        jdata = json.loads(pdata)
+        jdata = request.json
 
         domain_name = jdata['domain']
         d = Domain()
@@ -479,8 +477,7 @@ def admin_setdomainsetting(domain_name):
         # {'action': 'set_setting', 'setting': 'default_action, 'value': 'True'}
         #
         try:
-            pdata = request.data
-            jdata = json.loads(pdata)
+            jdata = request.json
             data = jdata['data']
             if jdata['action'] == 'set_setting':
                 new_setting = data['setting']
@@ -567,8 +564,7 @@ def admin_manageuser():
         # {'action': 'delete_user', 'data': 'username'}
         #
         try:
-            pdata = request.data
-            jdata = json.loads(pdata)
+            jdata = request.json
             data = jdata['data']
 
             if jdata['action'] == 'delete_user':
@@ -650,8 +646,7 @@ def admin_settings_toggle(setting):
 @login_required
 @admin_role_required
 def admin_settings_edit(setting):
-    pdata = request.data
-    jdata = json.loads(pdata)
+    jdata = request.json
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
     if (result):
@@ -672,8 +667,8 @@ def user_profile():
         new_password = request.form['password'] if 'password' in request.form else ''
 
         # json data
-        if request.data:
-            jdata = json.loads(request.data)
+        if request.json:
+            jdata = request.json
             data = jdata['data']
             if jdata['action'] == 'enable_otp':
                 enable_otp = data['enable_otp']
