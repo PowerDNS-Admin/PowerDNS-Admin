@@ -6,7 +6,7 @@ import bcrypt
 import urlparse
 import itertools
 import traceback
-import onetimepass
+import pyotp
 
 from datetime import datetime
 from distutils.version import StrictVersion
@@ -111,7 +111,8 @@ class User(db.Model):
         return 'otpauth://totp/PowerDNS-Admin:%s?secret=%s&issuer=PowerDNS-Admin' % (self.username, self.otp_secret)
 
     def verify_totp(self, token):
-        return onetimepass.valid_totp(token, self.otp_secret)
+        totp = pyotp.TOTP(self.otp_secret)
+        return totp.verify(int(token))
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
