@@ -2,11 +2,14 @@ import re
 import sys
 import json
 import requests
-import urlparse
 import hashlib
 
 from app import app
 from distutils.version import StrictVersion
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
@@ -15,7 +18,7 @@ else:
 
 def auth_from_url(url):
     auth = None
-    parsed_url = urlparse.urlparse(url).netloc
+    parsed_url = urlparse(url).netloc
     if '@' in parsed_url:
         auth = parsed_url.split('@')[0].split(':')
         auth = requests.auth.HTTPBasicAuth(auth[0], auth[1])
