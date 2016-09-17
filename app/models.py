@@ -118,11 +118,11 @@ class User(db.Model):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
         pw = plain_text_password if plain_text_password else self.plain_text_password
-        return bcrypt.hashpw(pw, bcrypt.gensalt())
+        return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
     def check_password(self, hashed_password):
         # Check hased password. Useing bcrypt, the salt is saved into the hash itself
-        return bcrypt.checkpw(self.plain_text_password, hashed_password)
+        return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
     def get_user_info_by_id(self):
         user_info = User.query.get(int(self.id))
