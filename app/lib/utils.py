@@ -11,7 +11,7 @@ try:
 except ImportError:
     from urlparse import urlparse
 
-if 'TIMEOUT' in app.config.keys():
+if 'TIMEOUT' in list(app.config.keys()):
     TIMEOUT = app.config['TIMEOUT']
 else:
     TIMEOUT = 10
@@ -58,7 +58,7 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
         if r.status_code not in (200, 400, 422):
             r.raise_for_status()
     except Exception as e:
-        raise RuntimeError("While fetching " + remote_url + ": " + str(e)), None, sys.exc_info()[2]
+        raise RuntimeError("While fetching %s: %s" % (remote_url, str(e)))
 
     return r
 
@@ -75,7 +75,7 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
     try:
         assert('json' in r.headers['content-type'])
     except Exception as e:
-        raise Exception("While fetching " + remote_url + ": " + str(e)), None, sys.exc_info()[2]
+        raise Exception("While fetching %s: %s" % (remote_url, str(e)))
 
     # don't use r.json here, as it will read from r.text, which will trigger
     # content encoding auto-detection in almost all cases, WHICH IS EXTREMELY

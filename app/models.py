@@ -17,11 +17,11 @@ except ImportError:
 from flask_login import AnonymousUserMixin
 
 from app import app, db
-from lib import utils
-from lib.log import logger
+from app.lib import utils
+from app.lib.log import logger
 logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
 
-if 'LDAP_TYPE' in app.config.keys():
+if 'LDAP_TYPE' in list(app.config.keys()):
     LDAP_URI = app.config['LDAP_URI']
     LDAP_USERNAME = app.config['LDAP_USERNAME']
     LDAP_PASSWORD = app.config['LDAP_PASSWORD']
@@ -31,8 +31,7 @@ if 'LDAP_TYPE' in app.config.keys():
     LDAP_USERNAMEFIELD = app.config['LDAP_USERNAMEFIELD']
 else:
     LDAP_TYPE = False
-
-if 'PRETTY_IPV6_PTR' in app.config.keys():
+if 'PRETTY_IPV6_PTR' in list(app.config.keys()):
     import dns.inet
     import dns.name
     import dns.reversename
@@ -162,7 +161,7 @@ class User(db.Model):
                         result_set.append(result_data)
             return result_set
 
-        except ldap.LDAPError, e:
+        except ldap.LDAPError as e:
             logging.error(e)
             raise
 
@@ -449,7 +448,7 @@ class Domain(db.Model):
             self.settings.append(DomainSetting(setting=setting, value=value))
             db.session.commit()
             return True
-        except Exception, e:
+        except Exception as e:
             logging.error('Can not create settting %s for domain %s. %s' % (setting, self.name, str(e)))
             return False
 
@@ -555,7 +554,7 @@ class Domain(db.Model):
                     except:
                         db.session.rollback()
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error('Can not update domain table.' + str(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
@@ -588,14 +587,14 @@ class Domain(db.Model):
 
         try:
             jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
-            if 'error' in jdata.keys():
+            if 'error' in list(jdata.keys()):
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 logging.info('Added domain %s successfully' % domain_name)
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
-        except Exception, e:
-            print traceback.format_exc()
+        except Exception as e:
+            traceback.print_exc()
             logging.error('Cannot add domain %s' % domain_name)
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
@@ -611,8 +610,8 @@ class Domain(db.Model):
             jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain_name), headers=headers, method='DELETE')
             logging.info('Delete domain %s successfully' % domain_name)
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
-        except Exception, e:
-            print traceback.format_exc()
+        except Exception as e:
+            traceback.print_exc()
             logging.error('Cannot delete domain %s' % domain_name)
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot delete domain'}
@@ -756,7 +755,7 @@ class Record(object):
         # validate record first
         r = self.get_record_data(domain)
         records = r['records']
-        check = filter(lambda check: check['name'] == self.name, records)
+        check = [check for check in records if check['name'] == self.name]
         if check:
             r = check[0]
             if r['type'] in ('A', 'AAAA' ,'CNAME'):
@@ -805,7 +804,7 @@ class Record(object):
             jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
@@ -983,14 +982,14 @@ class Record(object):
             jdata1 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
             jdata2 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
 
-            if 'error' in jdata2.keys():
+            if 'error' in list(jdata2.keys()):
                 logging.error('Cannot apply record changes.')
                 logging.debug(jdata2['error'])
                 return {'status': 'error', 'msg': jdata2['error']}
             else:
                 logging.info('Record was applied successfully.')
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
@@ -1093,7 +1092,7 @@ class Record(object):
             jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug("dyndns data: " % data)
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
