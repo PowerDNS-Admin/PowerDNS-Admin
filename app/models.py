@@ -6,7 +6,7 @@ import bcrypt
 import urlparse
 import itertools
 import traceback
-import onetimepass
+import pyotp
 
 from datetime import datetime
 from distutils.version import StrictVersion
@@ -111,17 +111,18 @@ class User(db.Model):
         return 'otpauth://totp/PowerDNS-Admin:%s?secret=%s&issuer=PowerDNS-Admin' % (self.username, self.otp_secret)
 
     def verify_totp(self, token):
-        return onetimepass.valid_totp(token, self.otp_secret)
+        totp = pyotp.TOTP(self.otp_secret)
+        return totp.verify(int(token))
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
         pw = plain_text_password if plain_text_password else self.plain_text_password
-        return bcrypt.hashpw(pw, bcrypt.gensalt())
+        return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
     def check_password(self, hashed_password):
         # Check hased password. Useing bcrypt, the salt is saved into the hash itself
-        return bcrypt.checkpw(self.plain_text_password, hashed_password)
+        return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
     def get_user_info_by_id(self):
         user_info = User.query.get(int(self.id))
