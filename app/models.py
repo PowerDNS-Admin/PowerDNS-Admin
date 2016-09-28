@@ -242,6 +242,10 @@ class User(db.Model):
         We will create a local user (in DB) in order to manage user
         profile such as name, roles,...
         """
+        
+        # Set an invalid password hash for non local users
+        self.password = '*'
+        
         db.session.add(self)
         db.session.commit()
 
