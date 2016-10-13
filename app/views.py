@@ -762,19 +762,19 @@ def dyndns_update():
     domain = None
     domain_segments = hostname.split('.')
     for index in range(len(domain_segments)):
+        domain_segments.pop(0)
         full_domain = '.'.join(domain_segments)
         potential_domain = Domain.query.filter(Domain.name == full_domain).first()
         if potential_domain in domains:
             domain = potential_domain
             break
-        domain_segments.pop(0)
 
     if not domain:
         history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
         history.add()
         return render_template('dyndns.html', response='nohost'), 200
 
-    r = Record(type='A')
+    r = Record()
     r.name = hostname
     # check if the user requested record exists within this domain
     if r.exists(domain.name) and r.is_allowed:

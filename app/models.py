@@ -992,6 +992,12 @@ class Record(object):
         jdata = self.get_record_data(domain)
         jrecords = jdata['records']
 
+        if self.name.startswith('@'):
+            self.name = '.'.join(self.name.split('.')[1:])
+            allowed = ['A', 'AAAA']
+        else:
+            allowed = app.config['RECORDS_ALLOW_EDIT']
+
         for jr in jrecords:
             if jr['name'] == self.name and jr['type'] == self.type:
                 self.name = jr['name']
