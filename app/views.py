@@ -95,7 +95,6 @@ def login_via_authorization_header(request):
             auth_header = base64.b64decode(auth_header)
             username,password = auth_header.split(":")
         except TypeError as e:
-            error = e.message['desc'] if 'desc' in e.message else e
             return None
         user = User(username=username, password=password, plain_text_password=password)
         try:
@@ -219,8 +218,7 @@ def login():
             if auth == False:
                 return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
         except Exception as e:
-            error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('login.html', error=error, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+            return render_template('login.html', error=e, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         # check if user enabled OPT authentication
         if user.otp_secret:
@@ -250,8 +248,7 @@ def login():
             else:
                 return render_template('register.html', error=result)
         except Exception as e:
-            error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('register.html', error=error)
+            return render_template('register.html', error=e)
 
 @app.route('/logout')
 def logout():
