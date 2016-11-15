@@ -79,3 +79,7 @@ RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CNAME', 'SPF', 'PTR', 'MX', 'TXT']
 
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = False
+
+# Create reverse lookup domain if not exists and PTR record from
+# A and AAAA records
+AUTOMATIC_REVERSE_PTR = False
