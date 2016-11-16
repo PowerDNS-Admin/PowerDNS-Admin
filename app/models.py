@@ -477,8 +477,11 @@ class Domain(db.Model):
         """
         Return domain id
         """
-        domain = Domain.query.filter(Domain.name==name).first()
-        return domain.id
+        try:
+            domain = Domain.query.filter(Domain.name==name).first()
+            return domain.id
+        except:
+            return None
 
     def update(self):
         """
