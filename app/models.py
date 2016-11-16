@@ -8,6 +8,7 @@ import itertools
 import traceback
 import pyotp
 import re
+import dns.reversename
 
 from datetime import datetime
 from distutils.version import StrictVersion
@@ -32,7 +33,6 @@ else:
 if 'PRETTY_IPV6_PTR' in app.config.keys():
     import dns.inet
     import dns.name
-    import dns.reversename
     PRETTY_IPV6_PTR = app.config['PRETTY_IPV6_PTR']
 else:
     PRETTY_IPV6_PTR = False
