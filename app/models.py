@@ -1017,6 +1017,14 @@ class Record(object):
                 return {'status': 'error', 'msg': jdata2['error']}
             else:
                 logging.info('Record was applied successfully.')
+                for r in new_records:
+                    r_name = r['name'] + '.'
+                    if r['type'] in ['A', 'AAAA']:
+                        r_content = r['content']
+                        temp = re.search('^(([a-f0-9]\.){4}(?P<ipv6name>.+6.arpa)\.?)|(\.(?P<ipv4name>.+r.arpa)\.?)', dns.reversename.from_address(r_content).to_text())
+                        domain_reverse_name = temp.group('ipv6name') if temp.group('ipv6name') != None else temp.group('ipv4name')
+                        d = Domain()
+                        d.create_reverse_domain(domain, domain_reverse_name)
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
         except Exception, e:
             logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
