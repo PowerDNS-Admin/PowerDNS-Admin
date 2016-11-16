@@ -7,6 +7,7 @@ import urlparse
 import itertools
 import traceback
 import pyotp
+import re
 
 from datetime import datetime
 from distutils.version import StrictVersion
@@ -599,6 +600,34 @@ class Domain(db.Model):
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
+    def create_reverse_domain(self, domain_name, domain_reverse_name):
+        """
+        Check the existing reverse lookup domain, 
+        if not exists create a new one automatically
+        """
+        self.name = domain_name
+        domain_id = self.get_id_by_name(domain_reverse_name)
+        if None == domain_id and app.config['AUTOMATIC_REVERSE_PTR']:
+            result = self.add(domain_reverse_name, 'Master', 'INCEPTION_INCREMENT', '', '')
+            self.update()
+            if result['status'] == 'ok':
+                history = History(msg='Add reverse lookup domain %s' % domain_reverse_name, detail=str({'domain_type': 'Master', 'domain_master_ips': ''}), created_by='System')
+                history.add()
+            else:
+                return {'status': 'error', 'msg': 'Adding reverse lookup domain failed'}
+            domain_user_ids = self.get_user()
+            domain_users = []
+            u = User()
+            for uid in domain_user_ids:
+                u.id = uid
+                tmp = u.get_user_info_by_id()
+                domain_users.append(tmp.username)
+            if 0 != len(domain_users):
+                self.name = domain_reverse_name
+                self.grant_privielges(domain_users)
+                return {'status': 'ok', 'msg': 'New reverse lookup domain created with granted privilages'}
+            return {'status': 'ok', 'msg': 'New reverse lookup domain created without users'}
+        return {'status': 'ok', 'msg': 'Reverse lookup domain already exists'}
 
     def delete(self, domain_name):
         """
