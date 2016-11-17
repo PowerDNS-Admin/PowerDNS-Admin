@@ -1049,10 +1049,6 @@ class Record(object):
                         "type": self.type,
                         "changetype": "DELETE",
                         "records": [
-                            {
-                                "name": self.name,
-                                "type": self.type
-                            }
                         ]
                     }
                 ]
