@@ -797,7 +797,7 @@ class Record(object):
         if NEW_SCHEMA:
             data = {"rrsets": [
                         {
-                            "name": self.name + '.',
+                            "name": self.name.rstrip('.') + '.',
                             "type": self.type,
                             "changetype": "REPLACE",
                             "ttl": self.ttl,
@@ -889,7 +889,7 @@ class Record(object):
 
         records = []
         for r in deleted_records:
-            r_name = r['name'] + '.' if NEW_SCHEMA else r['name']
+            r_name = r['name'].rstrip('.') + '.' if NEW_SCHEMA else r['name']
             r_type = r['type']
             if PRETTY_IPV6_PTR: # only if activated
                 if NEW_SCHEMA: # only if new schema
@@ -911,7 +911,7 @@ class Record(object):
         records = []
         for r in new_records:
             if NEW_SCHEMA:
-                r_name = r['name'] + '.'
+                r_name = r['name'].rstrip('.') + '.'
                 r_type = r['type']
                 if PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
@@ -1034,7 +1034,7 @@ class Record(object):
                         temp = re.search('^(([a-f0-9]\.){4}(?P<ipv6name>.+6.arpa)\.?)|(\.(?P<ipv4name>.+r.arpa)\.?)', dns.reversename.from_address(r_content).to_text())
                         domain_reverse_name = temp.group('ipv6name') if temp.group('ipv6name') != None else temp.group('ipv4name')  
                         d.create_reverse_domain(domain, domain_reverse_name)
-                        self.name = dns.reversename.from_address(r_content).to_text()
+                        self.name = dns.reversename.from_address(r_content).to_text().rstrip('.')
                         self.type = 'PTR'
                         self.status = r['disabled']
                         self.ttl = r['ttl']
@@ -1063,7 +1063,7 @@ class Record(object):
         headers['X-API-Key'] = PDNS_API_KEY
         data = {"rrsets": [
                     {
-                        "name": self.name,
+                        "name": self.name.rstrip('.') + '.',
                         "type": self.type,
                         "changetype": "DELETE",
                         "records": [
