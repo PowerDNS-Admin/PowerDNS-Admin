@@ -1016,7 +1016,16 @@ class Record(object):
                 logging.debug(jdata2['error'])
                 return {'status': 'error', 'msg': jdata2['error']}
             else:
+                self.auto_ptr(domain, new_records, deleted_records)
                 logging.info('Record was applied successfully.')
+                return {'status': 'ok', 'msg': 'Record was applied successfully'}
+        except Exception, e:
+            logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
+            return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+
+    def auto_ptr(self, domain, new_records, deleted_records):
+        if app.config['AUTOMATIC_REVERSE_PTR']:
+            try:
                 d = Domain()
                 for r in new_records:
                     if r['type'] in ['A', 'AAAA']:
@@ -1025,7 +1034,7 @@ class Record(object):
                         temp = re.search('^(([a-f0-9]\.){4}(?P<ipv6name>.+6.arpa)\.?)|(\.(?P<ipv4name>.+r.arpa)\.?)', dns.reversename.from_address(r_content).to_text())
                         domain_reverse_name = temp.group('ipv6name') if temp.group('ipv6name') != None else temp.group('ipv4name')  
                         d.create_reverse_domain(domain, domain_reverse_name)
-                        self.name = dns.reversename.from_address(r_content).to_text().rstrip('.')
+                        self.name = dns.reversename.from_address(r_content).to_text()
                         self.type = 'PTR'
                         self.status = r['disabled']
                         self.ttl = r['ttl']
