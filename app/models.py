@@ -1040,11 +1040,20 @@ class Record(object):
                         self.ttl = r['ttl']
                         self.data = r_name
                         self.add(domain_reverse_name)
-                return {'status': 'ok', 'msg': 'Record was applied successfully'}
-        except Exception, e:
-            logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
-            return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
-
+                for r in deleted_records:
+                    if r['type'] in ['A', 'AAAA']:
+                        r_name = r['name'] + '.'
+                        r_content = r['content']
+                        temp = re.search('^(([a-f0-9]\.){4}(?P<ipv6name>.+6.arpa)\.?)|(\.(?P<ipv4name>.+r.arpa)\.?)', dns.reversename.from_address(r_content).to_text())
+                        domain_reverse_name = temp.group('ipv6name') if temp.group('ipv6name') != None else temp.group('ipv4name')  
+                        self.name = dns.reversename.from_address(r_content).to_text()
+                        self.type = 'PTR'
+                        self.data = r_content
+                        self.delete(domain_reverse_name)
+                return {'status': 'ok', 'msg': 'Auto-PTR record was updated successfully'}
+            except Exception as e:
+                logging.error("Cannot update auto-ptr record changes to domain %s. DETAIL: %s" % (str(e), domain))
+                return {'status': 'error', 'msg': 'Auto-PTR creation failed. There was something wrong, please contact administrator.'}
 
     def delete(self, domain):
         """
