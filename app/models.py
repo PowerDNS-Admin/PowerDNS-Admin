@@ -447,7 +447,7 @@ class Domain(db.Model):
             db.session.commit()
             return True
         except Exception, e:
-            logging.error('Can not create settting %s for domain %s. %s' % (setting, self.name, str(e)))
+            logging.error('Can not create setting %s for domain %s. %s' % (setting, self.name, str(e)))
             return False
 
     def get_domains(self):
