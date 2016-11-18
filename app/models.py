@@ -609,6 +609,7 @@ class Domain(db.Model):
         domain_id = self.get_id_by_name(domain_reverse_name)
         if None == domain_id and app.config['AUTOMATIC_REVERSE_PTR']:
             result = self.add(domain_reverse_name, 'Master', 'INCEPTION_INCREMENT', '', '')
+            result = self.add(domain_reverse_name, 'Master', 'INCEPTION-INCREMENT', '', '')
             self.update()
             if result['status'] == 'ok':
                 history = History(msg='Add reverse lookup domain %s' % domain_reverse_name, detail=str({'domain_type': 'Master', 'domain_master_ips': ''}), created_by='System')
