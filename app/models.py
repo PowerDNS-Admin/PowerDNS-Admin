@@ -1038,7 +1038,15 @@ class Record(object):
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
     def auto_ptr(self, domain, new_records, deleted_records):
-        if app.config['AUTOMATIC_REVERSE_PTR']:
+        """
+        Add auto-ptr records
+        """
+        domain_obj = Domain.query.filter(Domain.name == domain).first()
+        domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
+        domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
+        system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
+        system_auto_ptr = strtobool(system_auto_ptr.value)
+        if system_auto_ptr or domain_auto_ptr:
             try:
                 d = Domain()
                 for r in new_records:
