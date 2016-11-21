@@ -643,6 +643,19 @@ class Domain(db.Model):
             return {'status': 'ok', 'msg': 'New reverse lookup domain created without users'}
         return {'status': 'ok', 'msg': 'Reverse lookup domain already exists'}
 
+    def get_reverse_domain_name(self, reverse_host_address):
+        if re.search('ip6.arpa', reverse_host_address):
+            for i in range(31,3,-1):
+                address = re.search('((([a-f0-9]\.){'+ str(i) +'})(?P<ipname>.+6.arpa)\.?)', reverse_host_address)
+                if None != self.get_id_by_name(address.group('ipname')):
+                    break
+        else:
+            for i in range(3,0,-1):
+                address = re.search('((([0-9]+\.){'+ str(i) +'})(?P<ipname>.+r.arpa)\.?)', reverse_host_address)
+                if None != self.get_id_by_name(address.group('ipname')):
+                    break
+        return address.group('ipname')
+
     def delete(self, domain_name):
         """
         Delete a single domain name from powerdns
