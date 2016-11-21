@@ -1060,7 +1060,7 @@ class Record(object):
 
         system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
         system_auto_ptr = strtobool(system_auto_ptr.value)
-        
+
         if system_auto_ptr or domain_auto_ptr:
             try:
                 d = Domain()
@@ -1068,8 +1068,8 @@ class Record(object):
                     if r['type'] in ['A', 'AAAA']:
                         r_name = r['name'] + '.'
                         r_content = r['content']
-                        temp = re.search('^((([a-f0-9]\.){4})(?P<ipv6name>.+6.arpa)\.?)|((([0-9]+\.){1})(?P<ipv4name>.+r.arpa)\.?)', dns.reversename.from_address(r_content).to_text())
-                        domain_reverse_name = temp.group('ipv6name') if temp.group('ipv6name') != None else temp.group('ipv4name')  
+                        reverse_host_address = dns.reversename.from_address(r_content).to_text()
+                        domain_reverse_name = d.get_reverse_domain_name(reverse_host_address)
                         d.create_reverse_domain(domain, domain_reverse_name)
                         self.name = dns.reversename.from_address(r_content).to_text().rstrip('.')
                         self.type = 'PTR'
@@ -1081,9 +1081,9 @@ class Record(object):
                     if r['type'] in ['A', 'AAAA']:
                         r_name = r['name'] + '.'
                         r_content = r['content']
-                        temp = re.search('^((([a-f0-9]\.){4})(?P<ipv6name>.+6.arpa)\.?)|((([0-9]+\.){1})(?P<ipv4name>.+r.arpa)\.?)', dns.reversename.from_address(r_content).to_text())
-                        domain_reverse_name = temp.group('ipv6name') if temp.group('ipv6name') != None else temp.group('ipv4name')  
-                        self.name = dns.reversename.from_address(r_content).to_text()
+                        reverse_host_address = dns.reversename.from_address(r_content).to_text()
+                        domain_reverse_name = d.get_reverse_domain_name(reverse_host_address)
+                        self.name = reverse_host_address
                         self.type = 'PTR'
                         self.data = r_content
                         self.delete(domain_reverse_name)
