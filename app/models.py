@@ -11,6 +11,7 @@ import re
 import dns.reversename
 
 from datetime import datetime
+from distutils.util import strtobool
 from distutils.version import StrictVersion
 from flask_login import AnonymousUserMixin
 
@@ -609,10 +610,18 @@ class Domain(db.Model):
         Check the existing reverse lookup domain, 
         if not exists create a new one automatically
         """
+        domain_obj = Domain.query.filter(Domain.name == domain).first()
+        domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
+        domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
+        system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
+        system_auto_ptr = strtobool(system_auto_ptr.value)
         self.name = domain_name
         domain_id = self.get_id_by_name(domain_reverse_name)
-        if None == domain_id and app.config['AUTOMATIC_REVERSE_PTR']:
-            result = self.add(domain_reverse_name, 'Master', 'INCEPTION_INCREMENT', '', '')
+        if None == domain_id and \
+            (
+                system_auto_ptr or \
+                domain_auto_ptr
+            ):
             result = self.add(domain_reverse_name, 'Master', 'INCEPTION-INCREMENT', '', '')
             self.update()
             if result['status'] == 'ok':
