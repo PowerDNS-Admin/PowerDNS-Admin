@@ -58,6 +58,11 @@ def inject_default_domain_table_size_setting():
     default_domain_table_size_setting = Setting.query.filter(Setting.name == 'default_domain_table_size').first()
     return dict(default_domain_table_size_setting=default_domain_table_size_setting.value)
 
+@app.context_processor
+def inject_auto_ptr_setting():
+    auto_ptr_setting = Setting.query.filter(Setting.name == 'auto_ptr').first()
+    return dict(auto_ptr_setting=strtobool(auto_ptr_setting.value))
+
 # START USER AUTHENTICATION HANDLER
 @app.before_request
 def before_request():
