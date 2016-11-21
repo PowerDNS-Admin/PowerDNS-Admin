@@ -507,6 +507,10 @@ class Domain(db.Model):
                     if domain_user:
                         domain_user.delete()
                         db.session.commit()
+                    domain_setting = DomainSetting.query.filter(DomainSetting.domain_id==domain.id)
+                    if domain_setting:
+                        domain_setting.delete()
+                        db.session.commit()
 
                     # then remove domain
                     Domain.query.filter(Domain.name == d).delete()
