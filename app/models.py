@@ -610,7 +610,7 @@ class Domain(db.Model):
         Check the existing reverse lookup domain, 
         if not exists create a new one automatically
         """
-        domain_obj = Domain.query.filter(Domain.name == domain).first()
+        domain_obj = Domain.query.filter(Domain.name == domain_name).first()
         domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
         domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
         system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
