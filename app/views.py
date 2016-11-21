@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import traceback
+import re
 from distutils.util import strtobool
 from distutils.version import StrictVersion
 from functools import wraps
@@ -317,8 +318,11 @@ def domain(domain_name):
                 if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
                     record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                     records.append(record)
-                
-        return render_template('domain.html', domain=domain, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
+        if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
+            editable_records = app.config['RECORDS_ALLOW_EDIT']
+        else:
+            editable_records = ['PTR']
+        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
     else:
         return redirect(url_for('error', code=404))
 
