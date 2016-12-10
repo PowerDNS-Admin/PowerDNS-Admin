@@ -7,8 +7,11 @@ import urlparse
 import itertools
 import traceback
 import pyotp
+import re
+import dns.reversename
 
 from datetime import datetime
+from distutils.util import strtobool
 from distutils.version import StrictVersion
 from flask_login import AnonymousUserMixin
 
@@ -31,7 +34,6 @@ else:
 if 'PRETTY_IPV6_PTR' in app.config.keys():
     import dns.inet
     import dns.name
-    import dns.reversename
     PRETTY_IPV6_PTR = app.config['PRETTY_IPV6_PTR']
 else:
     PRETTY_IPV6_PTR = False
@@ -450,7 +452,7 @@ class Domain(db.Model):
             db.session.commit()
             return True
         except Exception, e:
-            logging.error('Can not create settting %s for domain %s. %s' % (setting, self.name, str(e)))
+            logging.error('Can not create setting %s for domain %s. %s' % (setting, self.name, str(e)))
             return False
 
     def get_domains(self):
@@ -481,8 +483,11 @@ class Domain(db.Model):
         """
         Return domain id
         """
-        domain = Domain.query.filter(Domain.name==name).first()
-        return domain.id
+        try:
+            domain = Domain.query.filter(Domain.name==name).first()
+            return domain.id
+        except:
+            return None
 
     def update(self):
         """
@@ -506,6 +511,10 @@ class Domain(db.Model):
                     domain_user = DomainUser.query.filter(DomainUser.domain_id==domain.id)
                     if domain_user:
                         domain_user.delete()
+                        db.session.commit()
+                    domain_setting = DomainSetting.query.filter(DomainSetting.domain_id==domain.id)
+                    if domain_setting:
+                        domain_setting.delete()
                         db.session.commit()
 
                     # then remove domain
@@ -600,6 +609,60 @@ class Domain(db.Model):
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
+    def create_reverse_domain(self, domain_name, domain_reverse_name):
+        """
+        Check the existing reverse lookup domain, 
+        if not exists create a new one automatically
+        """
+        domain_obj = Domain.query.filter(Domain.name == domain_name).first()
+        domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
+        domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
+        system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
+        system_auto_ptr = strtobool(system_auto_ptr.value)
+        self.name = domain_name
+        domain_id = self.get_id_by_name(domain_reverse_name)
+        if None == domain_id and \
+            (
+                system_auto_ptr or \
+                domain_auto_ptr
+            ):
+            result = self.add(domain_reverse_name, 'Master', 'INCEPTION-INCREMENT', '', '')
+            self.update()
+            if result['status'] == 'ok':
+                history = History(msg='Add reverse lookup domain %s' % domain_reverse_name, detail=str({'domain_type': 'Master', 'domain_master_ips': ''}), created_by='System')
+                history.add()
+            else:
+                return {'status': 'error', 'msg': 'Adding reverse lookup domain failed'}
+            domain_user_ids = self.get_user()
+            domain_users = []
+            u = User()
+            for uid in domain_user_ids:
+                u.id = uid
+                tmp = u.get_user_info_by_id()
+                domain_users.append(tmp.username)
+            if 0 != len(domain_users):
+                self.name = domain_reverse_name
+                self.grant_privielges(domain_users)
+                return {'status': 'ok', 'msg': 'New reverse lookup domain created with granted privilages'}
+            return {'status': 'ok', 'msg': 'New reverse lookup domain created without users'}
+        return {'status': 'ok', 'msg': 'Reverse lookup domain already exists'}
+
+    def get_reverse_domain_name(self, reverse_host_address):
+        c = 1
+        if re.search('ip6.arpa', reverse_host_address):
+            for i in range(1,32,1):
+                address = re.search('((([a-f0-9]\.){'+ str(i) +'})(?P<ipname>.+6.arpa)\.?)', reverse_host_address)
+                if None != self.get_id_by_name(address.group('ipname')):
+                    c = i
+                    break
+            return re.search('((([a-f0-9]\.){'+ str(c) +'})(?P<ipname>.+6.arpa)\.?)', reverse_host_address).group('ipname')
+        else:
+            for i in range(1,4,1):
+                address = re.search('((([0-9]+\.){'+ str(i) +'})(?P<ipname>.+r.arpa)\.?)', reverse_host_address)
+                if None != self.get_id_by_name(address.group('ipname')):
+                    c = i
+                    break
+            return re.search('((([0-9]+\.){'+ str(c) +'})(?P<ipname>.+r.arpa)\.?)', reverse_host_address).group('ipname')
 
     def delete(self, domain_name):
         """
@@ -769,7 +832,7 @@ class Record(object):
         if NEW_SCHEMA:
             data = {"rrsets": [
                         {
-                            "name": self.name + '.',
+                            "name": self.name.rstrip('.') + '.',
                             "type": self.type,
                             "changetype": "REPLACE",
                             "ttl": self.ttl,
@@ -861,7 +924,7 @@ class Record(object):
 
         records = []
         for r in deleted_records:
-            r_name = r['name'] + '.' if NEW_SCHEMA else r['name']
+            r_name = r['name'].rstrip('.') + '.' if NEW_SCHEMA else r['name']
             r_type = r['type']
             if PRETTY_IPV6_PTR: # only if activated
                 if NEW_SCHEMA: # only if new schema
@@ -883,7 +946,7 @@ class Record(object):
         records = []
         for r in new_records:
             if NEW_SCHEMA:
-                r_name = r['name'] + '.'
+                r_name = r['name'].rstrip('.') + '.'
                 r_type = r['type']
                 if PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
@@ -988,12 +1051,54 @@ class Record(object):
                 logging.debug(jdata2['error'])
                 return {'status': 'error', 'msg': jdata2['error']}
             else:
+                self.auto_ptr(domain, new_records, deleted_records)
                 logging.info('Record was applied successfully.')
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
         except Exception, e:
             logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
+    def auto_ptr(self, domain, new_records, deleted_records):
+        """
+        Add auto-ptr records
+        """
+        domain_obj = Domain.query.filter(Domain.name == domain).first()
+        domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
+        domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
+
+        system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
+        system_auto_ptr = strtobool(system_auto_ptr.value)
+
+        if system_auto_ptr or domain_auto_ptr:
+            try:
+                d = Domain()
+                for r in new_records:
+                    if r['type'] in ['A', 'AAAA']:
+                        r_name = r['name'] + '.'
+                        r_content = r['content']
+                        reverse_host_address = dns.reversename.from_address(r_content).to_text()
+                        domain_reverse_name = d.get_reverse_domain_name(reverse_host_address)
+                        d.create_reverse_domain(domain, domain_reverse_name)
+                        self.name = dns.reversename.from_address(r_content).to_text().rstrip('.')
+                        self.type = 'PTR'
+                        self.status = r['disabled']
+                        self.ttl = r['ttl']
+                        self.data = r_name
+                        self.add(domain_reverse_name)
+                for r in deleted_records:
+                    if r['type'] in ['A', 'AAAA']:
+                        r_name = r['name'] + '.'
+                        r_content = r['content']
+                        reverse_host_address = dns.reversename.from_address(r_content).to_text()
+                        domain_reverse_name = d.get_reverse_domain_name(reverse_host_address)
+                        self.name = reverse_host_address
+                        self.type = 'PTR'
+                        self.data = r_content
+                        self.delete(domain_reverse_name)
+                return {'status': 'ok', 'msg': 'Auto-PTR record was updated successfully'}
+            except Exception as e:
+                logging.error("Cannot update auto-ptr record changes to domain %s. DETAIL: %s" % (str(e), domain))
+                return {'status': 'error', 'msg': 'Auto-PTR creation failed. There was something wrong, please contact administrator.'}
 
     def delete(self, domain):
         """
@@ -1003,14 +1108,10 @@ class Record(object):
         headers['X-API-Key'] = PDNS_API_KEY
         data = {"rrsets": [
                     {
-                        "name": self.name,
+                        "name": self.name.rstrip('.') + '.',
                         "type": self.type,
                         "changetype": "DELETE",
                         "records": [
-                            {
-                                "name": self.name,
-                                "type": self.type
-                            }
                         ]
                     }
                 ]

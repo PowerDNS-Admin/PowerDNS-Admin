@@ -77,7 +77,8 @@ def init_records():
         Setting('record_helper', 'True'),
         Setting('login_ldap_first', 'True'),
         Setting('default_record_table_size', '15'),
-        Setting('default_domain_table_size', '10')
+        Setting('default_domain_table_size', '10'),
+        Setting('auto_ptr','False')
     ])
 
     db_commit = db.session.commit()
