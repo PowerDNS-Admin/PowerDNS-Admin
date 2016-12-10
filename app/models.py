@@ -1,23 +1,27 @@
 import os
-import ldap
+import ldap3
 import time
 import base64
 import bcrypt
-import urlparse
 import itertools
 import traceback
 import pyotp
 
 from datetime import datetime
 from distutils.version import StrictVersion
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
+
 from flask_login import AnonymousUserMixin
 
 from app import app, db
-from lib import utils
-from lib.log import logger
+from app.lib import utils
+from app.lib.log import logger
 logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
 
-if 'LDAP_TYPE' in app.config.keys():
+if 'LDAP_TYPE' in list(app.config.keys()):
     LDAP_URI = app.config['LDAP_URI']
     LDAP_USERNAME = app.config['LDAP_USERNAME']
     LDAP_PASSWORD = app.config['LDAP_PASSWORD']
@@ -27,8 +31,7 @@ if 'LDAP_TYPE' in app.config.keys():
     LDAP_USERNAMEFIELD = app.config['LDAP_USERNAMEFIELD']
 else:
     LDAP_TYPE = False
-
-if 'PRETTY_IPV6_PTR' in app.config.keys():
+if 'PRETTY_IPV6_PTR' in list(app.config.keys()):
     import dns.inet
     import dns.name
     import dns.reversename
@@ -118,11 +121,11 @@ class User(db.Model):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
         pw = plain_text_password if plain_text_password else self.plain_text_password
-        return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
+        return bcrypt.hashpw(pw, bcrypt.gensalt())
 
     def check_password(self, hashed_password):
         # Check hased password. Useing bcrypt, the salt is saved into the hash itself
-        return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password)
 
     def get_user_info_by_id(self):
         user_info = User.query.get(int(self.id))
@@ -132,33 +135,16 @@ class User(db.Model):
         user_info = User.query.filter(User.username == self.username).first()
         return user_info
 
-    def ldap_search(self, searchFilter, baseDN):
-        searchScope = ldap.SCOPE_SUBTREE
-        retrieveAttributes = None
-
+    def ldap_search(self, searchFilter, baseDN, attributes=None):
         try:
-            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-            l = ldap.initialize(LDAP_URI)
-            l.set_option(ldap.OPT_REFERRALS, 0)
-            l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-            l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
-            l.set_option( ldap.OPT_X_TLS_DEMAND, True )
-            l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
-            l.protocol_version = ldap.VERSION3
+            server = ldap3.Server(LDAP_URI)
+            conn = ldap3.Connection(server, LDAP_USERNAME, LDAP_PASSWORD, auto_bind=True)
+            results = conn.search(baseDN, searchFilter, attributes=attributes)
+            if results:
+                return conn.entries
+            return False
 
-            l.simple_bind_s(LDAP_USERNAME, LDAP_PASSWORD)
-            ldap_result_id = l.search(baseDN, searchScope, searchFilter, retrieveAttributes)
-            result_set = []
-            while 1:
-                result_type, result_data = l.result(ldap_result_id, 0)
-                if (result_data == []):
-                    break
-                else:
-                    if result_type == ldap.RES_SEARCH_ENTRY:
-                        result_set.append(result_data)
-            return result_set
-
-        except ldap.LDAPError, e:
+        except ldap3.LDAPException as e:
             logging.error(e)
             raise
 
@@ -189,23 +175,17 @@ class User(db.Model):
               searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
               logging.info('Ldap searchFilter "%s"' % searchFilter)
 
-            result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
+            attributes = ['dn', 'sn', 'givenName', 'mail']
+            result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE, attributes=attributes)
             if not result:
                 logging.warning('User "%s" does not exist' % self.username)
                 return False
 
-            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-            l = ldap.initialize(LDAP_URI)
-            l.set_option(ldap.OPT_REFERRALS, 0)
-            l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-            l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
-            l.set_option( ldap.OPT_X_TLS_DEMAND, True )
-            l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
-            l.protocol_version = ldap.VERSION3
+            server = ldap3.Server(LDAP_URI)
 
             try:
-                ldap_username = result[0][0][0]
-                l.simple_bind_s(ldap_username, self.password)
+                ldap_username = result[1]._dn
+                ldap3.Connection(server, ldap_username, self.password, auto_bind=True)
                 logging.info('User "%s" logged in successfully' % self.username)
             except Exception:
                 logging.error('User "%s" input a wrong password' % self.username)
@@ -216,9 +196,9 @@ class User(db.Model):
                 try:
                     # try to get user's firstname & lastname from LDAP
                     # this might be changed in the future
-                    self.firstname = result[0][0][1]['givenName'][0]
-                    self.lastname = result[0][0][1]['sn'][0]
-                    self.email = result[0][0][1]['mail'][0]
+                    self.firstname = str(result[1].givenName)
+                    self.lastname = str(result[1].sn)
+                    self.email = str(result[1].mail)
                 except Exception:
                     self.firstname = self.username
                     self.lastname = ''
@@ -449,7 +429,7 @@ class Domain(db.Model):
             self.settings.append(DomainSetting(setting=setting, value=value))
             db.session.commit()
             return True
-        except Exception, e:
+        except Exception as e:
             logging.error('Can not create settting %s for domain %s. %s' % (setting, self.name, str(e)))
             return False
 
@@ -474,7 +454,7 @@ class Domain(db.Model):
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
         return jdata
 
     def get_id_by_name(self, name):
@@ -495,7 +475,7 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
@@ -555,7 +535,7 @@ class Domain(db.Model):
                     except:
                         db.session.rollback()
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error('Can not update domain table.' + str(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
@@ -587,15 +567,15 @@ class Domain(db.Model):
                             }
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
-            if 'error' in jdata.keys():
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
+            if 'error' in list(jdata.keys()):
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 logging.info('Added domain %s successfully' % domain_name)
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
-        except Exception, e:
-            print traceback.format_exc()
+        except Exception as e:
+            traceback.print_exc()
             logging.error('Cannot add domain %s' % domain_name)
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
@@ -608,11 +588,11 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain_name), headers=headers, method='DELETE')
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain_name), headers=headers, method='DELETE')
             logging.info('Delete domain %s successfully' % domain_name)
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
-        except Exception, e:
-            print traceback.format_exc()
+        except Exception as e:
+            traceback.print_exc()
             logging.error('Cannot delete domain %s' % domain_name)
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot delete domain'}
@@ -667,7 +647,7 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/axfr-retrieve' % domain), headers=headers, method='PUT')
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/axfr-retrieve' % domain), headers=headers, method='PUT')
                 return {'status': 'ok', 'msg': 'Update from Master successfully'}
             except:
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
@@ -683,7 +663,7 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/cryptokeys' % domain.name), headers=headers, method='GET')
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/cryptokeys' % domain.name), headers=headers, method='GET')
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain'}
                 else:
@@ -728,7 +708,7 @@ class Record(object):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers)
         except:
             logging.error("Cannot fetch domain's record data from remote powerdns api")
             return False
@@ -756,7 +736,7 @@ class Record(object):
         # validate record first
         r = self.get_record_data(domain)
         records = r['records']
-        check = filter(lambda check: check['name'] == self.name, records)
+        check = [check for check in records if check['name'] == self.name]
         if check:
             r = check[0]
             if r['type'] in ('A', 'AAAA' ,'CNAME'):
@@ -802,10 +782,10 @@ class Record(object):
                 }
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
@@ -980,17 +960,17 @@ class Record(object):
         try:
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
-            jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
-            jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
+            jdata1 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
+            jdata2 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
 
-            if 'error' in jdata2.keys():
+            if 'error' in list(jdata2.keys()):
                 logging.error('Cannot apply record changes.')
                 logging.debug(jdata2['error'])
                 return {'status': 'error', 'msg': jdata2['error']}
             else:
                 logging.info('Record was applied successfully.')
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
@@ -1016,7 +996,7 @@ class Record(object):
                 ]
             }
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
         except:
@@ -1090,10 +1070,10 @@ class Record(object):
                     ]
                 }
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
             logging.debug("dyndns data: " % data)
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
-        except Exception, e:
+        except Exception as e:
             logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
@@ -1116,7 +1096,7 @@ class Server(object):
         headers['X-API-Key'] = PDNS_API_KEY
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/config' % self.server_id), headers=headers, method='GET')
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/config' % self.server_id), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server configuration.")
@@ -1131,7 +1111,7 @@ class Server(object):
         headers['X-API-Key'] = PDNS_API_KEY
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/statistics' % self.server_id), headers=headers, method='GET')
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/statistics' % self.server_id), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server statistics.")

@@ -17,7 +17,7 @@ from werkzeug.security import gen_salt
 
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
 from app import app, login_manager, github
-from lib import utils
+from app.lib import utils
 
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
@@ -94,8 +94,7 @@ def login_via_authorization_header(request):
         try:
             auth_header = base64.b64decode(auth_header)
             username,password = auth_header.split(":")
-        except TypeError, e:
-            error = e.message['desc'] if 'desc' in e.message else e
+        except TypeError as e:
             return None
         user = User(username=username, password=password, plain_text_password=password)
         try:
@@ -105,7 +104,7 @@ def login_via_authorization_header(request):
             else:
                 login_user(user, remember = False)
                 return user
-        except Exception, e:
+        except:
             return None
     return None
 
@@ -164,8 +163,8 @@ def github_login():
 @login_manager.unauthorized_handler
 def login():
     # these parameters will be needed in multiple paths
-    LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
-    LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
+    LDAP_ENABLED = True if 'LDAP_TYPE' in list(app.config.keys()) else False
+    LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in list(app.config.keys()) else ''
     BASIC_ENABLED = app.config['BASIC_ENABLED']
     SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
     GITHUB_ENABLE = app.config.get('GITHUB_OAUTH_ENABLE')
@@ -218,9 +217,8 @@ def login():
             auth = user.is_validate(method=auth_method)
             if auth == False:
                 return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
-        except Exception, e:
-            error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('login.html', error=error, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+        except Exception as e:
+            return render_template('login.html', error=e, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         # check if user enabled OPT authentication
         if user.otp_secret:
@@ -249,9 +247,8 @@ def login():
                 return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
             else:
                 return render_template('register.html', error=result)
-        except Exception, e:
-            error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('register.html', error=error)
+        except Exception as e:
+            return render_template('register.html', error=e)
 
 @app.route('/logout')
 def logout():
@@ -278,7 +275,7 @@ def dashboard():
     server = Server(server_id='localhost')
     statistics = server.get_statistic()
     if statistics:
-        uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
+        uptime = list([uptime for uptime in statistics if uptime['name'] == 'uptime'])[0]['value']
     else:
         uptime = 0
     return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
@@ -408,8 +405,7 @@ def record_apply(domain_name):
     """
     #TODO: filter removed records / name modified records.
     try:
-        pdata = request.data
-        jdata = json.loads(pdata)
+        jdata = request.json
 
         r = Record()
         result = r.apply(domain_name, jdata)
@@ -420,7 +416,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except:
-        print traceback.format_exc()
+        traceback.print_exc()
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -432,8 +428,7 @@ def record_update(domain_name):
     Pulling the records update from its Master
     """
     try:
-        pdata = request.data
-        jdata = json.loads(pdata)
+        jdata = request.json
 
         domain_name = jdata['domain']
         d = Domain()
@@ -443,7 +438,7 @@ def record_update(domain_name):
         else:
             return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
     except:
-        print traceback.format_exc()
+        traceback.print_exc()
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -455,9 +450,9 @@ def record_delete(domain_name, record_name, record_type):
         r = Record(name=record_name, type=record_type)
         result = r.delete(domain=domain_name)
         if result['status'] == 'error':
-            print result['msg']
+            print((result['msg']))
     except:
-        print traceback.format_exc()
+        traceback.print_exc()
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
@@ -479,8 +474,7 @@ def admin_setdomainsetting(domain_name):
         # {'action': 'set_setting', 'setting': 'default_action, 'value': 'True'}
         #
         try:
-            pdata = request.data
-            jdata = json.loads(pdata)
+            jdata = request.json
             data = jdata['data']
             if jdata['action'] == 'set_setting':
                 new_setting = data['setting']
@@ -505,7 +499,7 @@ def admin_setdomainsetting(domain_name):
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            print traceback.format_exc()
+            traceback.print_exc()
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -522,7 +516,7 @@ def admin():
     history_number = History.query.count()
 
     if statistics:
-        uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
+        uptime = list([uptime for uptime in statistics if uptime['name'] == 'uptime'])[0]['value']
     else:
         uptime = 0
 
@@ -567,8 +561,7 @@ def admin_manageuser():
         # {'action': 'delete_user', 'data': 'username'}
         #
         try:
-            pdata = request.data
-            jdata = json.loads(pdata)
+            jdata = request.json
             data = jdata['data']
 
             if jdata['action'] == 'delete_user':
@@ -605,7 +598,7 @@ def admin_manageuser():
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            print traceback.format_exc()
+            traceback.print_exc()
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -650,8 +643,7 @@ def admin_settings_toggle(setting):
 @login_required
 @admin_role_required
 def admin_settings_edit(setting):
-    pdata = request.data
-    jdata = json.loads(pdata)
+    jdata = request.json
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
     if (result):
@@ -672,8 +664,8 @@ def user_profile():
         new_password = request.form['password'] if 'password' in request.form else ''
 
         # json data
-        if request.data:
-            jdata = json.loads(request.data)
+        if request.json:
+            jdata = request.json
             data = jdata['data']
             if jdata['action'] == 'enable_otp':
                 enable_otp = data['enable_otp']

@@ -2,20 +2,23 @@ import re
 import sys
 import json
 import requests
-import urlparse
 import hashlib
 
 from app import app
 from distutils.version import StrictVersion
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
-if 'TIMEOUT' in app.config.keys():
+if 'TIMEOUT' in list(app.config.keys()):
     TIMEOUT = app.config['TIMEOUT']
 else:
     TIMEOUT = 10
 
 def auth_from_url(url):
     auth = None
-    parsed_url = urlparse.urlparse(url).netloc
+    parsed_url = urlparse(url).netloc
     if '@' in parsed_url:
         auth = parsed_url.split('@')[0].split(':')
         auth = requests.auth.HTTPBasicAuth(auth[0], auth[1])
@@ -55,7 +58,7 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
         if r.status_code not in (200, 400, 422):
             r.raise_for_status()
     except Exception as e:
-        raise RuntimeError("While fetching " + remote_url + ": " + str(e)), None, sys.exc_info()[2]
+        raise RuntimeError("While fetching %s: %s" % (remote_url, str(e)))
 
     return r
 
@@ -72,16 +75,9 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
     try:
         assert('json' in r.headers['content-type'])
     except Exception as e:
-        raise Exception("While fetching " + remote_url + ": " + str(e)), None, sys.exc_info()[2]
+        raise Exception("While fetching %s: %s" % (remote_url, str(e)))
 
-    # don't use r.json here, as it will read from r.text, which will trigger
-    # content encoding auto-detection in almost all cases, WHICH IS EXTREMELY
-    # SLOOOOOOOOOOOOOOOOOOOOOOW. just don't.
-    data = None
-    try:
-        data = json.loads(r.content)
-    except UnicodeDecodeError:
-        data = json.loads(r.content, 'iso-8859-1')
+    data = r.json()
     return data
 
 
@@ -157,5 +153,5 @@ def email_to_gravatar_url(email, size=100):
         email=""
 
 
-    hash_string = hashlib.md5(email).hexdigest()
+    hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
