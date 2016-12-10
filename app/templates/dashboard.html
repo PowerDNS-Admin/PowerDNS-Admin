@@ -168,7 +168,7 @@
                     {{ domain.type }}
                   </td>
                   <td>
-                    {{ domain.serial }}
+                  {% if domain.serial == 0 %}{{ domain.notified_serial }}{% else %}{{domain.serial}}{% endif %}
                   </td>
                   <td>
                     {% if domain.master == '[]'%}N/A {% else %}{{ domain.master|display_master_name }}{% endif %}

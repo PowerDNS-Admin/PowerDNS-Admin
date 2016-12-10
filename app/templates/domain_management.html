@@ -59,6 +59,22 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
+                    <h3 class="box-title">Auto PTR creation</h3>
+                </div>
+                <div class="box-body">
+                    <p><input type="checkbox" id="{{ domain.name }}" class="auto_ptr_toggle"
+                         {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %} {% if auto_ptr_setting %}disabled="True"{% endif %}>
+                         &nbsp;Allow automatic reverse pointer creation on record updates?{% if
+                         auto_ptr_setting %}</br><code>Auto-ptr is enabled globally on the PDA system!</code>{% endif %}</p>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
                     <h3 class="box-title">DynDNS 2 Settings</h3>
                 </div>
                 <div class="box-body">
@@ -94,6 +110,10 @@ $('.dyndns_on_demand_toggle').iCheck({
     checkboxClass : 'icheckbox_square-blue',
     increaseArea : '20%' // optional
 });
+$('.auto_ptr_toggle').iCheck({
+    checkboxClass : 'icheckbox_square-blue',
+    increaseArea : '20%' // optional
+});
 
 $("#domain_multi_user").multiSelect();
 
@@ -105,6 +125,18 @@ $('.dyndns_on_demand_toggle').on('ifToggled', function(event) {
         'action' : 'set_setting',
         'data' : {
             'setting' : 'create_via_dyndns',
+            'value' : is_checked
+        }
+    };
+    applyChanges(postdata,  $SCRIPT_ROOT + '/domain/' + domain + '/managesetting', true);
+});
+$('.auto_ptr_toggle').on('ifToggled', function(event) {
+    var is_checked = $(this).prop('checked');
+    var domain = $(this).prop('id');
+    postdata = {
+        'action' : 'set_setting',
+        'data' : {
+            'setting' : 'auto_ptr',
             'value' : is_checked
         }
     };

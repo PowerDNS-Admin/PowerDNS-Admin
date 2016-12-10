@@ -223,7 +223,8 @@
             $("#tbl_records").DataTable().search('').columns().search('').draw();
             
             // add new row
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', 'A', 'Active', 3600, '', '', '', '0']);
+            var default_type = records_allow_edit[0]
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '0']);
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
@@ -268,16 +269,16 @@
             var modal = $("#modal_custom_record");
             if (record_data.val() == "") {
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\"> \
                                 <label for=\"mx_server\">MX Server</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\"> \
                             ";
             } else {
                 var parts = record_data.val().split(" ");
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\" value=\"" + parts[0] + "\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\" value=\"" + parts[0] + "\"> \
                                 <label for=\"mx_server\">MX Server</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\" value=\"" + parts[1] + "\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\" value=\"" + parts[1] + "\"> \
                             ";
             }
             modal.find('.modal-body p').html(form);
