@@ -3,6 +3,7 @@ import json
 import os
 import traceback
 import re
+import socket
 from distutils.util import strtobool
 from distutils.version import StrictVersion
 from functools import wraps
@@ -793,7 +794,23 @@ def dyndns_update():
     elif r.is_allowed:
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
         if (ondemand_creation != None) and (strtobool(ondemand_creation.value) == True):
-            record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
+            def record_type(myip):
+                # Is myip of type IPv4?
+                try:
+                    socket.inet_pton(socket.AF_INET, myip)
+                    return 'A'
+                except socket.error: pass
+
+                # Is myip of type IPv6?
+                try:
+                    socket.inet_pton(socket.AF_INET6, myip)
+                    return 'AAAA'
+                except socket.error: pass
+
+                app.logger.error("Unknown ip address format %s" % myip)
+                return 'unkown'
+
+            record = Record(name=hostname,type=record_type(myip),data=myip,status=False,ttl=3600)
             result = record.add(domain.name)
             if result['status'] == 'ok':
                 history = History(msg='DynDNS update: created record %s in zone %s, it now represents %s' % (hostname,domain.name,myip), detail=str(result), created_by=current_user.username)
