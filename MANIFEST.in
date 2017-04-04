@@ -1,0 +1,2 @@
+recursive-include powerDNSAdmin/static *
+recursive-include powerDNSAdmin/templates *
