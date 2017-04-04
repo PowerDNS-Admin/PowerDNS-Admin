@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-from app import app
-from config import PORT
+from powerDNSAdmin import app
 
-try:
-	from config import BIND_ADDRESS 
-except:
-	BIND_ADDRESS = '127.0.0.1'
 
 if __name__ == '__main__':
-    app.run(debug = True, host=BIND_ADDRESS, port=PORT)
+    app.run(debug =True,
+            host=app.config.get('BIND_ADDRESS',
+                                '127.0.0.1'),
+            port=app.config['PORT'])

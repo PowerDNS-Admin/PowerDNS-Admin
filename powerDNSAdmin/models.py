@@ -15,10 +15,13 @@ from distutils.util import strtobool
 from distutils.version import StrictVersion
 from flask_login import AnonymousUserMixin
 
-from app import app, db
-from lib import utils
-from lib.log import logger
+from powerDNSAdmin import app, db
+from powerDNSAdmin.lib import utils
+from powerDNSAdmin.lib.log import logger
+
+
 logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
+
 
 if 'LDAP_TYPE' in app.config.keys():
     LDAP_URI = app.config['LDAP_URI']
@@ -244,10 +247,10 @@ class User(db.Model):
         We will create a local user (in DB) in order to manage user
         profile such as name, roles,...
         """
-        
+
         # Set an invalid password hash for non local users
         self.password = '*'
-        
+
         db.session.add(self)
         db.session.commit()
 
@@ -611,7 +614,7 @@ class Domain(db.Model):
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
-        Check the existing reverse lookup domain, 
+        Check the existing reverse lookup domain,
         if not exists create a new one automatically
         """
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
@@ -910,7 +913,7 @@ class Record(object):
                     if r_type == 'PTR': # only ptr
                         if ':' in r['record_name']: # dirty ipv6 check
                             r_name = r['record_name']
-            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -919,7 +922,7 @@ class Record(object):
                         "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
                     }
             records.append(record)
-        
+
         deleted_records, new_records = self.compare(domain, records)
 
         records = []
@@ -931,7 +934,7 @@ class Record(object):
                     if r_type == 'PTR': # only ptr
                         if ':' in r['name']: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r['name']).to_text()
-                            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -992,12 +995,12 @@ class Record(object):
                 r_name = key[0]
                 r_type = key[1]
                 r_changetype = key[2]
-                
+
                 if PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
                         if ':' in r_name: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r_name).to_text()
-                
+
                 new_record = {
                         "name": r_name,
                         "type": r_type,

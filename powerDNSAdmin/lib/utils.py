@@ -5,7 +5,7 @@ import requests
 import urlparse
 import hashlib
 
-from app import app
+from powerDNSAdmin import app
 from distutils.version import StrictVersion
 
 if 'TIMEOUT' in app.config.keys():

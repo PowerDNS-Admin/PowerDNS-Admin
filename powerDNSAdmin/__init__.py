@@ -1,10 +1,16 @@
+import os
+
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, session, redirect, url_for
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
+
+__version__ = '1.0.0'
+
+
 app = Flask(__name__)
-app.config.from_object('config')
+app.config.from_object(os.environ.get('APP_SETTINGS', 'config'))
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
 login_manager = LoginManager()
@@ -48,5 +54,4 @@ def enable_github_oauth(GITHUB_ENABLE):
 
 oauth, github = enable_github_oauth(app.config.get('GITHUB_OAUTH_ENABLE'))
 
-
-from app import views, models
+from powerDNSAdmin import views

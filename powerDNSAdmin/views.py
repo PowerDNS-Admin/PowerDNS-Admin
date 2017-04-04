@@ -16,9 +16,9 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 from werkzeug.security import gen_salt
 
-from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
-from app import app, login_manager, github
-from lib import utils
+from powerDNSAdmin import app, login_manager, github
+from powerDNSAdmin.models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
+from powerDNSAdmin.lib import utils
 
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
