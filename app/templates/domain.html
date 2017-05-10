@@ -290,10 +290,11 @@
                 caa_flag = modal.find('#caa_flag').val();
                 caa_tag = modal.find('#caa_tag').val();
                 caa_value = modal.find('#caa_value').val();
-                data = caa_flag + " " + caa_tag + " " + caa_value;
+                data = caa_flag + " " + caa_tag + " " + '"' + caa_value + '"';
                 record_data.val(data);
                 modal.modal('hide');
             })
+            modal.modal('show');
         } else if (record_type == "MX") {
             var modal = $("#modal_custom_record");
             if (record_data.val() == "") {
