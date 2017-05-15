@@ -426,6 +426,7 @@ class Domain(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(255), index=True, unique=True)
     master = db.Column(db.String(128))
+    account = db.Column(db.String(32))
     type = db.Column(db.String(6), nullable = False)
     serial = db.Column(db.Integer)
     notified_serial = db.Column(db.Integer)
@@ -532,6 +533,7 @@ class Domain(db.Model):
                 if d:
                     # existing domain, only update if something actually has changed
                     if ( d.master != str(data['masters'])
+                        or d.account != data['account']
                         or d.type != data['kind']
                         or d.serial != data['serial']
                         or d.notified_serial != data['notified_serial']
@@ -539,6 +541,7 @@ class Domain(db.Model):
                         or d.dnssec != data['dnssec'] ):
 
                             d.master = str(data['masters'])
+                            d.account = str(data['account'])
                             d.type = data['kind']
                             d.serial = data['serial']
                             d.notified_serial = data['notified_serial']
@@ -551,6 +554,7 @@ class Domain(db.Model):
                     d = Domain()
                     d.name = data['name'].rstrip('.')
                     d.master = str(data['masters'])
+                    d.account = str(data['account'])
                     d.type = data['kind']
                     d.serial = data['serial']
                     d.notified_serial = data['notified_serial']
@@ -608,6 +612,44 @@ class Domain(db.Model):
             logging.error('Cannot add domain %s' % domain_name)
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
+
+    def reverse_update_account(self, new_account):
+        """
+        Update the Zone (domain) in PowerDNS
+        """
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+
+        try:
+            zone_data = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % self.name), headers=headers, method='GET')
+
+            put_data = {
+                "account": new_account,
+                "masters": zone_data.get('masters'),
+                "name": zone_data.get('name'),
+                "dnssec": zone_data.get('dnssec'),
+                "kind": zone_data.get('kind'),
+                "last_check": zone_data.get('last_check'),
+                "soa_edit": zone_data.get('soa_edit'),
+                "notified_serial": zone_data.get('notified_serial'),
+                "soa_edit_api": zone_data.get('soa_edit_api'),
+                "serial": zone_data.get('serial'),
+            }
+
+            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % self.name), headers=headers, method='PUT', data=put_data)
+
+            if 'error' in jdata.keys():
+                logging.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+            else:
+                self.update()
+                logging.info('Updated domain %s successfully' % self.name)
+                return {'status': 'ok', 'msg': 'Updated domain %s successfully' % self.name}
+        except Exception, e:
+            print traceback.format_exc()
+            logging.error('Cannot update domain %s' % self.name)
+            logging.debug(str(e))
+            return {'status': 'error', 'msg': 'Cannot update this domain.'}
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """

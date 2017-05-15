@@ -11,7 +11,7 @@ from io import BytesIO
 import jinja2
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
-from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort
+from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 from werkzeug.security import gen_salt
@@ -393,18 +393,29 @@ def domain_management(domain_name):
         return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids)
 
     if request.method == 'POST':
-        # username in right column
-        new_user_list = request.form.getlist('domain_multi_user[]')
+        if request.form.get('account'):
+            new_account = request.form.get('account')
+            d = Domain(name=domain_name)
+            result = d.reverse_update_account(new_account)
+            if 'status' in result and result['status'] == 'ok':
+                flash(result['msg'], 'info')
+            else:
+                flash(result['msg'], 'error')
+            history = History(msg='Change domain %s account' % domain_name, detail=str({'New account': new_account}), created_by=current_user.username)
+            history.add()
+        else:
+            # username in right column
+            new_user_list = request.form.getlist('domain_multi_user[]')
 
-        # get list of user ids to compare
-        d = Domain(name=domain_name)
-        domain_user_ids = d.get_user()
+            # get list of user ids to compare
+            d = Domain(name=domain_name)
+            domain_user_ids = d.get_user()
 
-        # grant/revoke user privielges
-        d.grant_privielges(new_user_list)
+            # grant/revoke user privielges
+            d.grant_privielges(new_user_list)
 
-        history = History(msg='Change domain %s access control' % domain_name, detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
-        history.add()
+            history = History(msg='Change domain %s access control' % domain_name, detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
+            history.add()
 
         return redirect(url_for('domain_management', domain_name=domain_name))
 

@@ -14,7 +14,43 @@
 {% endblock %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
 <section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <form method="post" action="{{ url_for('domain_management', domain_name=domain.name) }}">
+                <div class="box-header">
+                    <h3 class="box-title">Update Account</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-xs-2">
+                            <label for="account">Account
+                                <input type="text" name="account" value="{{ domain.account }}">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <div class="col-xs-offset-2">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-flat btn-primary"><i class="fa fa-check"></i> Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xs-12">
             <div class="box">
