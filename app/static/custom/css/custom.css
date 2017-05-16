@@ -32,3 +32,16 @@ table td {
    color: olive;
 }
 
+.flashes {
+  margin-top: 15px;
+  list-style: none;
+  padding-left: 15px;
+}
+
+.flashes .info {
+  color: green;
+}
+
+.flashes .error {
+  color: red;
+}

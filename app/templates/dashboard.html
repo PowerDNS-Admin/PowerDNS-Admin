@@ -144,6 +144,7 @@
                   <th>Type</th>
                   <th>Serial</th>
                   <th>Master</th>
+                  <th>Account</th>
                   <th>Action</th>
                 </tr>
                 </thead>
@@ -172,6 +173,9 @@
                   </td>
                   <td>
                     {% if domain.master == '[]'%}N/A {% else %}{{ domain.master|display_master_name }}{% endif %}
+                  </td>
+                  <td>
+                    {{ domain.account }}
                   </td>
                   {% if current_user.role.name !='Administrator' %}
                   <td width="6%">
