@@ -244,10 +244,10 @@ class User(db.Model):
         We will create a local user (in DB) in order to manage user
         profile such as name, roles,...
         """
-        
+
         # Set an invalid password hash for non local users
         self.password = '*'
-        
+
         db.session.add(self)
         db.session.commit()
 
@@ -611,7 +611,7 @@ class Domain(db.Model):
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
-        Check the existing reverse lookup domain, 
+        Check the existing reverse lookup domain,
         if not exists create a new one automatically
         """
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
@@ -910,7 +910,7 @@ class Record(object):
                     if r_type == 'PTR': # only ptr
                         if ':' in r['record_name']: # dirty ipv6 check
                             r_name = r['record_name']
-            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -919,7 +919,7 @@ class Record(object):
                         "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
                     }
             records.append(record)
-        
+
         deleted_records, new_records = self.compare(domain, records)
 
         records = []
@@ -931,7 +931,7 @@ class Record(object):
                     if r_type == 'PTR': # only ptr
                         if ':' in r['name']: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r['name']).to_text()
-                            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -992,12 +992,12 @@ class Record(object):
                 r_name = key[0]
                 r_type = key[1]
                 r_changetype = key[2]
-                
+
                 if PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
                         if ':' in r_name: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r_name).to_text()
-                
+
                 new_record = {
                         "name": r_name,
                         "type": r_type,
