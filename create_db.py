@@ -9,6 +9,11 @@ import os.path
 import time
 import sys
 
+import migrate
+import sqlalchemy
+
+import config
+
 def start():
     wait_time = get_waittime_from_env()
 
@@ -19,7 +24,7 @@ def start():
     init_records()
 
 def get_waittime_from_env():
-    return int(os.environ.get('WAITFOR_DB', 1))
+    return config.WAITFOR_DB
 
 def connect_db(wait_time):
     for i in xrange(0, wait_time):
@@ -28,7 +33,10 @@ def connect_db(wait_time):
         try:
             db.create_all()
             return True
-        except:
+        except migrate.exceptions.DatabaseAlreadyControlledError as e:
+            print("INFO: Db already created")
+            return True
+        except sqlalchemy.exc.OperationalError as e:
             time.sleep(1)
 
     return False
