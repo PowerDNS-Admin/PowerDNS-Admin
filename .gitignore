@@ -20,6 +20,9 @@ nosetests.xml
 # tmp files
 .~*
 
+# vi files
+.*.sw*
+
 flask
 config.py
 logfile.log
