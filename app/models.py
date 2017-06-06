@@ -20,7 +20,7 @@ from lib import utils
 from lib.log import logger
 logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
 
-if 'LDAP_TYPE' in app.config.keys():
+if 'LDAP_TYPE' in app.config.keys() and app.config['LDAP_TYPE'] is not None:
     LDAP_URI = app.config['LDAP_URI']
     LDAP_USERNAME = app.config['LDAP_USERNAME']
     LDAP_PASSWORD = app.config['LDAP_PASSWORD']
