@@ -88,7 +88,12 @@ PDNS_API_KEY = os.getenv('PDNS_API_KEY', 'you never know')
 PDNS_VERSION = os.getenv('PDNS_VERSION', '3.4.7')
 
 # RECORDS ALLOWED TO EDIT
-RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CNAME', 'SPF', 'PTR', 'MX', 'TXT']
+
+_DEFAULT_RAE = ','.join(['A', 'AAAA', 'CNAME', 'SPF', 'PTR',
+                                        'MX', 'TXT'])
+
+RECORDS_ALLOW_EDIT = [x.strip() for x in os.getenv('RECORDS_ALLOW_EDIT',
+                                                   _DEFAULT_RAE).split(',')]
 
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = bool(os.getenv('PRETTY_IPV6_PTR', 'False'))
