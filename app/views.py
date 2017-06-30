@@ -289,6 +289,13 @@ def dashboard():
     return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
 
 
+@app.route('/update-domains', methods=['POST'])
+@login_required
+def update_domains():
+    result = Domain().update()
+    return jsonify(result)
+
+
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
 @app.route('/domain', methods=['GET', 'POST'])
 @login_required

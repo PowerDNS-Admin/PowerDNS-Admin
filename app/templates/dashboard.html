@@ -124,6 +124,9 @@
           <div class="box">
             <div class="box-header">
               <h3 class="box-title">Hosted Domains</h3>
+              <button type="button" class="btn btn-flat btn-primary update-domains-button pull-right">
+                Refresh Domains&nbsp;<i class="fa fa-refresh"></i>
+              </button>
             </div>
             <!-- /.box-header -->
             <!--
@@ -241,6 +244,13 @@
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
+    });
+    $(document.body).on("click", ".update-domains-button", function() {
+        var icon = $(".fa", this).addClass("fa-spin");
+        $.post("/update-domains", {}, function () {
+            icon.removeClass("fa-spin");
+            window.location.reload();
+        });
     });
 </script>
 {% endblock %}
