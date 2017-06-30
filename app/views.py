@@ -321,7 +321,7 @@ def domain(domain_name):
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
             editable_records = app.config['RECORDS_ALLOW_EDIT']
         else:
-            editable_records = ['PTR']
+            editable_records = ['PTR', 'NS']
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
     else:
         return redirect(url_for('error', code=404))
