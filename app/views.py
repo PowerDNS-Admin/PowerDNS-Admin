@@ -270,7 +270,6 @@ def logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    d = Domain().update()
     if current_user.role.name == 'Administrator':
         domains = Domain.query.all()
     else:
@@ -288,6 +287,13 @@ def dashboard():
     else:
         uptime = 0
     return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
+
+
+@app.route('/update-domains', methods=['POST'])
+@login_required
+def update_domains():
+    result = Domain().update()
+    return jsonify(result)
 
 
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
