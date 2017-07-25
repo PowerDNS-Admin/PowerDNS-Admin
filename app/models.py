@@ -148,7 +148,8 @@ class User(db.Model):
             l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
             l.protocol_version = ldap.VERSION3
 
-            l.simple_bind_s(LDAP_USERNAME, LDAP_PASSWORD)
+            #l.simple_bind_s(LDAP_USERNAME, LDAP_PASSWORD)
+            l.simple_bind_s(self.username,self.password)
             ldap_result_id = l.search(baseDN, searchScope, searchFilter, retrieveAttributes)
             result_set = []
             while 1:
