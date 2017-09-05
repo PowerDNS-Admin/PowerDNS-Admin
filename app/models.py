@@ -819,7 +819,7 @@ class Record(object):
         # validate record first
         r = self.get_record_data(domain)
         records = r['records']
-        check = filter(lambda check: check['name'] == self.name, records)
+        check = filter(lambda check: check['name'] == self.name and check['type'] == self.type, records)
         if check:
             r = check[0]
             if r['type'] in ('A', 'AAAA' ,'CNAME'):
@@ -1138,7 +1138,7 @@ class Record(object):
         jrecords = jdata['records']
 
         for jr in jrecords:
-            if jr['name'] == self.name:
+            if jr['name'] == self.name and jr['type'] == self.type:
                 self.name = jr['name']
                 self.type = jr['type']
                 self.status = jr['disabled']

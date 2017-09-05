@@ -773,8 +773,25 @@ def dyndns_update():
         history.add()
         return render_template('dyndns.html', response='nohost'), 200
 
+    def record_type(myip):
+        # Is myip of type IPv4?
+        try:
+            socket.inet_pton(socket.AF_INET, myip)
+            return 'A'
+        except socket.error: pass
+
+        # Is myip of type IPv6?
+        try:
+            socket.inet_pton(socket.AF_INET6, myip)
+            return 'AAAA'
+        except socket.error: pass
+
+        app.logger.error("Unknown ip address format %s" % myip)
+        return 'unkown'
+
     r = Record()
     r.name = hostname
+    r.type = record_type(myip)
     # check if the user requested record exists within this domain
     if r.exists(domain.name) and r.is_allowed:
         if r.data == myip:
@@ -794,22 +811,6 @@ def dyndns_update():
     elif r.is_allowed:
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
         if (ondemand_creation != None) and (strtobool(ondemand_creation.value) == True):
-            def record_type(myip):
-                # Is myip of type IPv4?
-                try:
-                    socket.inet_pton(socket.AF_INET, myip)
-                    return 'A'
-                except socket.error: pass
-
-                # Is myip of type IPv6?
-                try:
-                    socket.inet_pton(socket.AF_INET6, myip)
-                    return 'AAAA'
-                except socket.error: pass
-
-                app.logger.error("Unknown ip address format %s" % myip)
-                return 'unkown'
-
             record = Record(name=hostname,type=record_type(myip),data=myip,status=False,ttl=3600)
             result = record.add(domain.name)
             if result['status'] == 'ok':
