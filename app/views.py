@@ -292,7 +292,7 @@ def dashboard_domains():
     if current_user.role.name == 'Administrator':
         domains = Domain.query
     else:
-        domains = User(id=current_user.id).get_domain()
+        domains = User(id=current_user.id).get_domain_query()
 
     template = app.jinja_env.get_template("dashboard_domain.html")
     render = template.make_module(vars={"current_user": current_user})
@@ -327,6 +327,9 @@ def dashboard_domains():
     start = int(request.args.get("start", 0))
     length = min(int(request.args.get("length", 0)), 100)
     domains = domains[start:start + length]
+
+    if current_user.role.name != 'Administrator':
+        domains = [d[2] for d in domains]
 
     data = []
     for domain in domains:
