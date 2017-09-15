@@ -303,16 +303,18 @@ class User(db.Model):
             db.session.rollback()
             return False
 
+    def get_domain_query(self):
+        return db.session.query(User, DomainUser, Domain) \
+            .filter(User.id == self.id) \
+            .filter(User.id == DomainUser.user_id) \
+            .filter(Domain.id == DomainUser.domain_id)
+
     def get_domain(self):
         """
         Get domains which user has permission to
         access
         """
-        user_domains = []
-        query = db.session.query(User, DomainUser, Domain).filter(User.id==self.id).filter(User.id==DomainUser.user_id).filter(Domain.id==DomainUser.domain_id).all()
-        for q in query:
-            user_domains.append(q[2])
-        return user_domains
+        return [q[2] for q in self.get_domain_query()]
 
     def delete(self):
         """
