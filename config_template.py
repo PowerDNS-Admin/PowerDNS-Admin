@@ -69,7 +69,7 @@ GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
 GOOGLE_OAUTH_ENABLE = False
 GOOGLE_OAUTH_CLIENT_ID = ' '
 GOOGLE_OAUTH_CLIENT_SECRET = ' '
-GOOGLE_REDIRECT_URI = '/Callback'
+GOOGLE_REDIRECT_URI = '/user/authorized'
 GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
 GOOGLE_TOKEN_PARAMS = {
     'scope': 'email profile'
