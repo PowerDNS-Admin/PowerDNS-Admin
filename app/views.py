@@ -17,7 +17,7 @@ from werkzeug import secure_filename
 from werkzeug.security import gen_salt
 
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
-from app import app, login_manager, github
+from app import app, login_manager, github, google
 from lib import utils
 
 
@@ -160,6 +160,14 @@ def register():
     else:
         return render_template('errors/404.html'), 404
 
+
+@app.route('/google/login')
+def google_login():
+    if not app.config.get('GOOGLE_OAUTH_ENABLE'):
+        return abort(400)
+    return google.authorize(callback=url_for('authorized', _external=True))
+
+
 @app.route('/github/login')
 def github_login():
     if not app.config.get('GITHUB_OAUTH_ENABLE'):
@@ -175,9 +183,29 @@ def login():
     BASIC_ENABLED = app.config['BASIC_ENABLED']
     SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
     GITHUB_ENABLE = app.config.get('GITHUB_OAUTH_ENABLE')
+    GOOGLE_ENABLE = app.config.get('GOOGLE_OAUTH_ENABLE')
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard'))
+
+    if 'google_token' in session:
+        user_data = google.get('userinfo').data
+        first_name = user_data['given_name']
+        surname = user_data['family_name']
+        email = user_data['email']
+        user = User.query.filter_by(username=email).first()
+        if not user:
+            # create user
+            user = User(username=email,
+                        firstname=first_name,
+                        lastname=surname,
+                        plain_text_password=gen_salt(7),
+                        email=email)
+            user.create_local_user()
+
+        session['user_id'] = user.id
+        login_user(user, remember = False)
+        return redirect(url_for('index'))
 
     if 'github_token' in session:
         me = github.get('user')
@@ -197,6 +225,7 @@ def login():
     if request.method == 'GET':
         return render_template('login.html',
                                github_enabled=GITHUB_ENABLE,
+                               google_enabled=GOOGLE_ENABLE,
                                ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
                                basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
@@ -263,6 +292,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('github_token', None)
+    session.pop('google_token', None)
     logout_user()
     return redirect(url_for('login'))
 
