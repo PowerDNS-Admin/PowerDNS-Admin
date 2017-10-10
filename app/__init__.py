@@ -11,6 +11,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 db = SQLAlchemy(app)
 
+
 def enable_github_oauth(GITHUB_ENABLE):
     if not GITHUB_ENABLE:
         return None, None
@@ -46,7 +47,47 @@ def enable_github_oauth(GITHUB_ENABLE):
 
     return oauth, github
 
+
 oauth, github = enable_github_oauth(app.config.get('GITHUB_OAUTH_ENABLE'))
+
+
+def enable_google_oauth(GOOGLE_ENABLE):
+    if not GOOGLE_ENABLE:
+        return None
+    from flask_oauthlib.client import OAuth
+    oauth = OAuth(app)
+
+    google = oauth.remote_app(
+        'google',
+        consumer_key=app.config['GOOGLE_OAUTH_CLIENT_ID'],
+        consumer_secret=app.config['GOOGLE_OAUTH_CLIENT_SECRET'],
+        request_token_params=app.config['GOOGLE_TOKEN_PARAMS'],
+        base_url=app.config['GOOGLE_BASE_URL'],
+        request_token_url=None,
+        access_token_method='POST',
+        access_token_url=app.config['GOOGLE_TOKEN_URL'],
+        authorize_url=app.config['GOOGLE_AUTHORIZE_URL'],
+    )
+
+    @app.route('/user/authorized')
+    def authorized():
+        resp = google.authorized_response()
+        if resp is None:
+            return 'Access denied: reason=%s error=%s' % (
+                request.args['error_reason'],
+                request.args['error_description']
+            )
+        session['google_token'] = (resp['access_token'], '')
+        return redirect(url_for('.login'))
+
+    @google.tokengetter
+    def get_google_oauth_token():
+        return session.get('google_token')
+
+    return google
+
+
+google = enable_google_oauth(app.config.get('GOOGLE_OAUTH_ENABLE'))
 
 
 from app import views, models
