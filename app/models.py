@@ -314,6 +314,13 @@ class User(db.Model):
             user_domains.append(q[2])
         return user_domains
 
+    def can_access_domain(self, domain_name):
+        if self.role.name == "Administrator":
+            return True
+
+        query = self.get_domain_query().filter(Domain.name == domain_name)
+        return query.count() >= 1
+
     def delete(self):
         """
         Delete a user
