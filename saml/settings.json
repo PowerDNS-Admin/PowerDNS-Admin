@@ -1,0 +1,30 @@
+{
+    "strict": true,
+    "debug": true,
+    "sp": {
+        "entityId": "http://10.12.95.95",
+        "assertionConsumerService": {
+            "url": "https://10.12.95.95/saml/authorized",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        },
+        "singleLogoutService": {
+            "url": "https://10.12.95.95/saml/sls",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+        "x509cert": "",
+        "privateKey": ""
+    },
+    "idp": {
+        "entityId": "http://fs.ahd-vcloud.biz/adfs/services/trust",
+        "singleSignOnService": {
+            "url": "https://fs.ahd-vcloud.biz/adfs/ls/",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "singleLogoutService": {
+            "url": "https://fs.ahd-vcloud.biz/adfs/ls/",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "x509cert": "-----BEGIN CERTIFICATE-----MIIC3jCCAcagAwIBAgIQPD7o11EBtLZDvWevCYeIGjANBgkqhkiG9w0BAQsFADArMSkwJwYDVQQDEyBBREZTIFNpZ25pbmcgLSBmcy5haGQtdmNsb3VkLmJpejAeFw0xNzAyMjQwOTI5MTBaFw0xODAyMjQwOTI5MTBaMCsxKTAnBgNVBAMTIEFERlMgU2lnbmluZyAtIGZzLmFoZC12Y2xvdWQuYml6MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs8c+Yde1AQpBSikjKMXRY3FmvG64YT8MgJGPJ0CuTr0jyvsARvK51v0FiMsQh48uQ+KtXWNfBTrFee1CkpHQHw1UVRWQVToZzhiTgVBWc3XXzjfxThUe5IGfSQa11+s+/qxlfQZi2V1JhKUpXfYehbQIEJ5n0kzRzGfmZwZ8/A4gSOJGvFOLx0QTQ6scRUvgsDKJbmD3YWDweZwUGZkKSjKDbyNNNQKhwmpwFT2BLNadlscrgxjzDUQIaLnMQabE+DlQqYkxhM4LPvWcwL23dBIRRxIZlJ4oE/ZohtWtaHJewUTtWT3yfeDRD4d4Gxr5cgczwDhhlJtcrcmEmpHzkwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQBU0ADCWI+W1uwXUPL7OXw90VHHQMxuMdClIK2Bwc0De0eaFFHvKWCk3mkdNf+SwxtPHnfAWDO7daxnY6HrqQbcO66gcMgDvgFkC3o5Ml9LBsFv/NmNCeB7+9xxkiYiCe68oitN5iR50JcwhZekpM9MtH8t36p6AWmnhfBt8LMxreuWobDRefx4aIIst8SPP13p4AOk5gTz07YbdMLYsUiTImBbLCcbqdFNMYPiZmUo7jEUnax05oh9vruFj3SltsR21S78ifUN/AmlpYvm+q3mW1q6ikltp6/HoVNMOCsEJqq7VL5jtdOmj2YpFf/twZF5pnbSqe3AZClBp4BufsKp-----END CERTIFICATE-----"
+    }
+}

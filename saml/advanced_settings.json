@@ -1,0 +1,29 @@
+{
+    "security": {
+        "nameIdEncrypted": false,
+        "authnRequestsSigned": false,
+        "logoutRequestSigned": false,
+        "logoutResponseSigned": false,
+        "signMetadata": false,
+        "wantMessagesSigned": true,
+        "wantAssertionsSigned": true,
+        "wantNameIdEncrypted": false
+    },
+    "contactPerson": {
+        "technical": {
+            "givenName": "ahd Service Operation Center",
+            "emailAddress": "servicedesk@ahd.de"
+        },
+        "support": {
+            "givenName" : "ahd Service Operation Center",
+            "emailAddress": "servicedesk@ahd.de"
+        }
+    },
+    "organization": {
+        "en-US": {
+            "name": "PowerDNS-Admin",
+            "displayname": "PowerDNS-Admin",
+            "url": "https://10.12.95.95"
+        }
+    }
+}

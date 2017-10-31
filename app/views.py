@@ -172,10 +172,15 @@ def github_login():
 def saml_login():
     if not app.config.get('SAML_ENABLED'):
         return abort(400)
-    return abort(400)
+    req = utils.prepare_flask_request(request)
+    auth = utils.init_saml_auth(req)
+    redirect_url=OneLogin_Saml2_Utils.get_self_url(req) + url_for('saml_authorized')
+    return redirect(auth.login(return_to=redirect_url))
 
-@app.route('/saml/metadata/')
+@app.route('/saml/metadata')
 def saml_metadata():
+    if not app.config.get('SAML_ENABLED'):
+        return abort(400)
     req = utils.prepare_flask_request(request)
     auth = utils.init_saml_auth(req)
     settings = auth.get_settings()
@@ -188,6 +193,45 @@ def saml_metadata():
     else:
         resp = make_response(errors.join(', '), 500)
     return resp
+
+@app.route('/saml/authorized', methods=['GET', 'POST'])
+def saml_authorized():
+    errors = []
+    if not app.config.get('SAML_ENABLED'):
+        return abort(400)
+    req = utils.prepare_flask_request(request)
+    auth = utils.init_saml_auth(req)
+    auth.process_response()
+    attributes = auth.get_attributes();
+    not_auth_warn = not auth.is_authenticated()
+    if len(errors) == 0:
+        session['samlUserdata'] = auth.get_attributes()
+        session['samlNameId'] = auth.get_nameid()
+        session['samlSessionIndex'] = auth.get_session_index()
+        self_url = OneLogin_Saml2_Utils.get_self_url(req)
+        self_url = self_url+req['script_name']
+        if 'RelayState' in request.form and self_url != request.form['RelayState']:
+            return redirect(auth.redirect_to(request.form['RelayState']))
+        user = User.query.filter_by(username=session['samlNameId'].lower()).first()
+        if not user:
+            # create user
+            user = User(username=session['samlNameId'],
+                        plain_text_password=gen_salt(7),
+                        email=session['samlNameId'])
+            user.create_local_user()
+        session['user_id'] = user.id
+        if session['samlUserdata'].has_key("email"):
+            user.email = session['samlUserdata']["email"][0].lower()
+        if session['samlUserdata'].has_key("givenname"):
+            user.firstname = session['samlUserdata']["givenname"][0]
+        if session['samlUserdata'].has_key("surname"):
+            user.lastname = session['samlUserdata']["surname"][0]
+        user.plain_text_password = gen_salt(7)
+        user.update_profile()
+        login_user(user, remember=False)
+        return redirect(url_for('index'))
+    else:
+        return error(401,"an error occourred processing SAML response")
 
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
@@ -288,6 +332,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('github_token', None)
+    session.clear()
     logout_user()
     return redirect(url_for('login'))
 
