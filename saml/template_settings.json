@@ -2,29 +2,29 @@
     "strict": true,
     "debug": true,
     "sp": {
-        "entityId": "http://127.0.0.1/saml/metadata",
+        "entityId": "http://<powerdns hostname>",
         "assertionConsumerService": {
-            "url": "http://127.0.0.1/saml/authorized",
+            "url": "https://<powerdns hostname>/saml/authorized",
             "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
         },
         "singleLogoutService": {
-            "url": "https://127.0.0.1/saml/sls",
+            "url": "https://<powerdns hostname>/saml/sls",
             "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
         },
-        "NameIDFormat": "urn:oasis:names:tc:SAML:2.0:nameid-format:unspecified",
+        "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
         "x509cert": "",
         "privateKey": ""
     },
     "idp": {
-        "entityId": "https://app.onelogin.com/saml/metadata",
+        "entityId": "http://<adfs hostname>/adfs/services/trust",
         "singleSignOnService": {
-            "url": "https://app.onelogin.com/trust/saml2/http-post/sso/",
+            "url": "https://<adfs hostname>/adfs/ls/",
             "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
         },
         "singleLogoutService": {
-            "url": "https://app.onelogin.com/trust/saml2/http-redirect/slo/",
+            "url": "https://<adfs hostname>/adfs/ls/",
             "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
         },
-        "x509cert": ""
+        "x509cert": "<certificate data directly without linebreaks in pem-format>"
     }
 }

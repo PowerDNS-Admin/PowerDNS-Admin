@@ -5,25 +5,25 @@
         "logoutRequestSigned": false,
         "logoutResponseSigned": false,
         "signMetadata": false,
-        "wantMessagesSigned": false,
-        "wantAssertionsSigned": false,
+        "wantMessagesSigned": true,
+        "wantAssertionsSigned": true,
         "wantNameIdEncrypted": false
     },
     "contactPerson": {
         "technical": {
-            "givenName": "technical_name",
-            "emailAddress": "technical@example.com"
+            "givenName": "<Contact Person>",
+            "emailAddress": "<contact email>"
         },
         "support": {
-            "givenName": "support_name",
-            "emailAddress": "support@example.com"
+            "givenName" : "<Contact Person>",
+            "emailAddress": "<contact email>"
         }
     },
     "organization": {
         "en-US": {
-            "name": "sp_test",
-            "displayname": "SP test",
-            "url": "http://sp.example.com"
+            "name": "PowerDNS-Admin",
+            "displayname": "PowerDNS-Admin",
+            "url": "https://<powerdnsadmin-url>"
         }
     }
 }
