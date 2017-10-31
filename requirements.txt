@@ -12,3 +12,4 @@ pyotp==2.2.1
 qrcode==5.3
 Flask-OAuthlib==0.9.3
 dnspython>=1.12.0
+python-saml==2.3.0
