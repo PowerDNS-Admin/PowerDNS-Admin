@@ -65,6 +65,9 @@ GITHUB_OAUTH_URL = 'http://127.0.0.1:5000/api/v3/'
 GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:5000/oauth/token'
 GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
 
+# SAML Authnetication
+SAML_ENABLED = True
+
 #Default Auth
 BASIC_ENABLED = True
 SIGNUP_ENABLED = True

@@ -20,6 +20,8 @@ from .models import User, Domain, Record, Server, History, Anonymous, Setting, D
 from app import app, login_manager, github
 from lib import utils
 
+from onelogin.saml2.auth import OneLogin_Saml2_Auth
+from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
@@ -166,6 +168,27 @@ def github_login():
         return abort(400)
     return github.authorize(callback=url_for('authorized', _external=True))
 
+@app.route('/saml/login')
+def saml_login():
+    if not app.config.get('SAML_ENABLED'):
+        return abort(400)
+    return abort(400)
+
+@app.route('/saml/metadata/')
+def saml_metadata():
+    req = utils.prepare_flask_request(request)
+    auth = utils.init_saml_auth(req)
+    settings = auth.get_settings()
+    metadata = settings.get_sp_metadata()
+    errors = settings.validate_metadata(metadata)
+
+    if len(errors) == 0:
+        resp = make_response(metadata, 200)
+        resp.headers['Content-Type'] = 'text/xml'
+    else:
+        resp = make_response(errors.join(', '), 500)
+    return resp
+
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
@@ -175,6 +198,7 @@ def login():
     BASIC_ENABLED = app.config['BASIC_ENABLED']
     SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
     GITHUB_ENABLE = app.config.get('GITHUB_OAUTH_ENABLE')
+    SAML_ENABLED = app.config.get('SAML_ENABLED')
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -197,6 +221,7 @@ def login():
     if request.method == 'GET':
         return render_template('login.html',
                                github_enabled=GITHUB_ENABLE,
+                               saml_enabled=SAML_ENABLED,
                                ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
                                basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 

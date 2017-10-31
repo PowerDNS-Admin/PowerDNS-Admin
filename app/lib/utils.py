@@ -8,6 +8,9 @@ import hashlib
 from app import app
 from distutils.version import StrictVersion
 
+from onelogin.saml2.auth import OneLogin_Saml2_Auth
+from onelogin.saml2.utils import OneLogin_Saml2_Utils
+
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
 else:
@@ -159,3 +162,17 @@ def email_to_gravatar_url(email, size=100):
 
     hash_string = hashlib.md5(email).hexdigest()
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
+
+def prepare_flask_request(request):
+    url_data = urlparse.urlparse(request.url)
+    return {
+        'http_host': request.host,
+        'server_port': url_data.port,
+        'script_name': request.path,
+        'get_data': request.args.copy(),
+        'post_data': request.form.copy()
+    }
+
+def init_saml_auth(req):
+    auth = OneLogin_Saml2_Auth(req, custom_base_path=app.config['SAML_PATH'])
+    return auth
