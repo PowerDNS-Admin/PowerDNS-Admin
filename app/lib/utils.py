@@ -164,13 +164,18 @@ def email_to_gravatar_url(email, size=100):
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
 
 def prepare_flask_request(request):
+    # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
     url_data = urlparse.urlparse(request.url)
     return {
+        'https': 'on' if request.scheme == 'https' else 'off',
         'http_host': request.host,
         'server_port': url_data.port,
         'script_name': request.path,
         'get_data': request.args.copy(),
-        'post_data': request.form.copy()
+        'post_data': request.form.copy(),
+        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
+        # 'lowercase_urlencoding': True,
+        'query_string': request.query_string
     }
 
 def init_saml_auth(req):
