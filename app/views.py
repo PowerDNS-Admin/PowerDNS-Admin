@@ -202,8 +202,7 @@ def saml_authorized():
     req = utils.prepare_flask_request(request)
     auth = utils.init_saml_auth(req)
     auth.process_response()
-    attributes = auth.get_attributes();
-    not_auth_warn = not auth.is_authenticated()
+    errors = auth.get_errors()
     if len(errors) == 0:
         session['samlUserdata'] = auth.get_attributes()
         session['samlNameId'] = auth.get_nameid()
@@ -216,7 +215,7 @@ def saml_authorized():
         if not user:
             # create user
             user = User(username=session['samlNameId'],
-                        plain_text_password=gen_salt(7),
+                        plain_text_password=gen_salt(30),
                         email=session['samlNameId'])
             user.create_local_user()
         session['user_id'] = user.id
@@ -226,7 +225,7 @@ def saml_authorized():
             user.firstname = session['samlUserdata']["givenname"][0]
         if session['samlUserdata'].has_key("surname"):
             user.lastname = session['samlUserdata']["surname"][0]
-        user.plain_text_password = gen_salt(7)
+        user.plain_text_password = gen_salt(30)
         user.update_profile()
         session['external_auth'] = True
         login_user(user, remember=False)
@@ -255,7 +254,7 @@ def login():
         if not user:
             # create user
             user = User(username=user_info['name'],
-                        plain_text_password=gen_salt(7),
+                        plain_text_password=gen_salt(30),
                         email=user_info['email'])
             user.create_local_user()
 
