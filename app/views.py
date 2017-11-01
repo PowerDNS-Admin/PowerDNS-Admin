@@ -273,6 +273,7 @@ def login():
 
         session['user_id'] = user.id
         login_user(user, remember = False)
+        session['external_auth'] = True
         return redirect(url_for('index'))
 
     if 'github_token' in session:
