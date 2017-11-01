@@ -228,6 +228,7 @@ def saml_authorized():
             user.lastname = session['samlUserdata']["surname"][0]
         user.plain_text_password = gen_salt(7)
         user.update_profile()
+        session['external_auth'] = True
         login_user(user, remember=False)
         return redirect(url_for('index'))
     else:
@@ -259,6 +260,7 @@ def login():
             user.create_local_user()
 
         session['user_id'] = user.id
+        session['external_auth'] = True
         login_user(user, remember = False)
         return redirect(url_for('index'))
 
@@ -741,8 +743,11 @@ def admin_settings_edit(setting):
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile():
-    if request.method == 'GET':
-        return render_template('user_profile.html')
+    external_account = False
+    if session.has_key('external_auth'):
+        external_account = session['external_auth']
+    if request.method == 'GET' or external_account:
+        return render_template('user_profile.html', external_account=external_account)
     if request.method == 'POST':
         # get new profile info
         firstname = request.form['firstname'] if 'firstname' in request.form else ''
@@ -777,7 +782,7 @@ def user_profile():
         user = User(username=current_user.username, plain_text_password=new_password, firstname=firstname, lastname=lastname, email=email, avatar=save_file_name, reload_info=False)
         user.update_profile()
 
-        return render_template('user_profile.html')
+        return render_template('user_profile.html', external_account=external_account)
 
 
 @app.route('/user/avatar/<string:filename>')
