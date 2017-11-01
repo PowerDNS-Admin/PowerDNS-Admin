@@ -6,6 +6,8 @@ PowerDNS Web-GUI - Built by Flask
 - Local / LDAP user authentication
 - Support Two-factor authentication (TOTP)
 - Support SAML authentication
+- Google oauth authentication
+- Github oauth authentication
 - User management
 - User access management based on domain
 - User activity logging
@@ -86,7 +88,8 @@ Run the application and enjoy!
 ```
 
 ### SAML Authentication
-SAML authentication is supported. In order to use it you have to create your own settings.json and advanced_settings.json based on the templates.
+SAML authentication is supported. Setting are retrieved from Metdata-XML.
+Metadata URL is configured in config.py as well as caching interval.
 Following Assertions are supported and used by this application:
 - nameidentifier in form of email address as user login
 - email used as user email address
