@@ -65,6 +65,7 @@ GITHUB_OAUTH_URL = 'http://127.0.0.1:5000/api/v3/'
 GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:5000/oauth/token'
 GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
 
+
 # Google OAuth
 GOOGLE_OAUTH_ENABLE = False
 GOOGLE_OAUTH_CLIENT_ID = ' '
@@ -76,6 +77,18 @@ GOOGLE_TOKEN_PARAMS = {
 }
 GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
 GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
+
+# SAML Authnetication
+SAML_ENABLED = False
+SAML_DEBUG = True
+SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
+##Example for ADFS Metadata-URL
+SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
+#Cache Lifetime in Seconds
+SAML_METADATA_CACHE_LIFETIME = 1
+SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
+SAML_SP_CONTACT_NAME = '<contact name>'
+SAML_SP_CONTACT_MAIL = '<contact mail>'
 
 #Default Auth
 BASIC_ENABLED = True

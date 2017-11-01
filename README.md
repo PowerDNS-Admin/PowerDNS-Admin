@@ -5,6 +5,7 @@ PowerDNS Web-GUI - Built by Flask
 - Multiple domain management
 - Local / LDAP user authentication
 - Support Two-factor authentication (TOTP)
+- Support SAML authentication
 - User management
 - User access management based on domain
 - User activity logging
@@ -82,6 +83,47 @@ Create database after having proper configs
 Run the application and enjoy!
 ```
 (flask)$ ./run.py
+```
+
+### SAML Authentication
+SAML authentication is supported. In order to use it you have to create your own settings.json and advanced_settings.json based on the templates.
+Following Assertions are supported and used by this application:
+- nameidentifier in form of email address as user login
+- email used as user email address
+- givenname used as firstname
+- surname used as lastname
+
+### ADFS claim rules as example
+Microsoft Active Directory Federation Services can be used as Identity Provider for SAML login.
+The Following rules should be configured to send all attribute information to PowerDNS-Admin.
+The nameidentifier should be something stable from the idp side. All other attributes are update when singing in.
+
+#### sending the nameidentifier
+Name-Identifiers Type is "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+```
+c:[Type == "<here goes your source claim>"]
+ => issue(Type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, ValueType = c.ValueType, Properties["http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format"] = "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress");
+```
+
+#### sending the firstname
+Name-Identifiers Type is "givenname"
+```
+c:[Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"]
+ => issue(Type = "givenname", Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, ValueType = c.ValueType, Properties["http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format"] = "urn:oasis:names:tc:SAML:1.1:nameid-format:transient");
+```
+
+#### sending the lastname
+Name-Identifiers Type is "surname"
+```
+c:[Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"]
+ => issue(Type = "surname", Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, ValueType = c.ValueType, Properties["http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format"] = "urn:oasis:names:tc:SAML:1.1:nameid-format:transient");
+```
+
+#### sending the email
+Name-Identifiers Type is "email"
+```
+c:[Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"]
+ => issue(Type = "email", Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, ValueType = c.ValueType, Properties["http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format"] = "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress");
 ```
 
 ### Screenshots
