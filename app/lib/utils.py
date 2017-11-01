@@ -7,9 +7,39 @@ import hashlib
 
 from app import app
 from distutils.version import StrictVersion
-
+from datetime import datetime,timedelta
+from threading import Thread
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
+from onelogin.saml2.settings import OneLogin_Saml2_Settings
+from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+
+idp_timestamp = datetime(1970,1,1)
+idp_data = None
+if app.config['SAML_ENABLED']:
+    idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
+    if idp_data == None:
+        print('SAML: IDP Metadata initial load failed')
+        exit(-1)
+    idp_timestamp = datetime.now()
+
+def get_idp_data():
+    global idp_data, idp_timestamp
+    lifetime = timedelta(minutes=app.config['SAML_METADATA_CACHE_LIFETIME'])
+    if idp_timestamp+lifetime < datetime.now():
+        background_thread = Thread(target=retreive_idp_data)
+        background_thread.start()
+    return idp_data
+
+def retreive_idp_data():
+    global idp_data, idp_timestamp
+    new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
+    if new_idp_data != None:
+        idp_data = new_idp_data
+        idp_timestamp = datetime.now()
+        print("SAML: IDP Metadata successfully retreived from: " + app.config['SAML_METADATA_URL'])
+    else:
+        print("SAML: IDP Metadata could not be retreived")
 
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
@@ -179,5 +209,57 @@ def prepare_flask_request(request):
     }
 
 def init_saml_auth(req):
-    auth = OneLogin_Saml2_Auth(req, custom_base_path=app.config['SAML_PATH'])
+    own_url = ''
+    if req['https'] == 'on':
+        own_url = 'https://'
+    else:
+        own_url = 'http://'
+    own_url += req['http_host']
+    metadata = get_idp_data()
+    settings = {}
+    settings['sp'] = {}
+    settings['sp']['NameIDFormat'] = idp_data['sp']['NameIDFormat']
+    settings['sp']['entityId'] = app.config['SAML_SP_ENTITY_ID']
+    settings['sp']['privateKey'] = ''
+    settings['sp']['x509cert'] = ''
+    settings['sp']['assertionConsumerService'] = {}
+    settings['sp']['assertionConsumerService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+    settings['sp']['assertionConsumerService']['url'] = own_url+'/saml/authorized'
+    settings['sp']['attributeConsumingService'] = {}
+    settings['sp']['singleLogoutService'] = {}
+    settings['sp']['singleLogoutService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+    settings['sp']['singleLogoutService']['url'] = own_url+'/saml/sls'
+    settings['idp'] = metadata['idp']
+    settings['strict'] = True
+    settings['debug'] = app.config['SAML_DEBUG']
+    settings['security'] = {}
+    settings['security']['digestAlgorithm'] = 'http://www.w3.org/2000/09/xmldsig#sha1'
+    settings['security']['metadataCacheDuration'] = None
+    settings['security']['metadataValidUntil'] = None
+    settings['security']['requestedAuthnContext'] = True
+    settings['security']['signatureAlgorithm'] = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
+    settings['security']['wantAssertionsEncrypted'] = False
+    settings['security']['wantAttributeStatement'] = True
+    settings['security']['wantNameId'] = True
+    settings['security']['authnRequestsSigned'] = False
+    settings['security']['logoutRequestSigned'] = False
+    settings['security']['logoutResponseSigned'] = False
+    settings['security']['nameIdEncrypted'] = False
+    settings['security']['signMetadata'] = False
+    settings['security']['wantAssertionsSigned'] = True
+    settings['security']['wantMessagesSigned'] = True
+    settings['security']['wantNameIdEncrypted'] = False
+    settings['contactPerson'] = {}
+    settings['contactPerson']['support'] = {}
+    settings['contactPerson']['support']['emailAddress'] = app.config['SAML_SP_CONTACT_NAME']
+    settings['contactPerson']['support']['givenName'] = app.config['SAML_SP_CONTACT_MAIL']
+    settings['contactPerson']['technical'] = {}
+    settings['contactPerson']['technical']['emailAddress'] = app.config['SAML_SP_CONTACT_NAME']
+    settings['contactPerson']['technical']['givenName'] = app.config['SAML_SP_CONTACT_MAIL']
+    settings['organization'] = {}
+    settings['organization']['en-US'] = {}
+    settings['organization']['en-US']['displayname'] = 'PowerDNS-Admin'
+    settings['organization']['en-US']['name'] = 'PowerDNS-Admin'
+    settings['organization']['en-US']['url'] = own_url
+    auth = OneLogin_Saml2_Auth(req, settings)
     return auth

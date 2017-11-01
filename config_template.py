@@ -67,6 +67,15 @@ GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
 
 # SAML Authnetication
 SAML_ENABLED = False
+SAML_DEBUG = True
+SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
+##Example for ADFS Metadata-URL
+SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
+#Cache Lifetime in Seconds
+SAML_METADATA_CACHE_LIFETIME = 1
+SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
+SAML_SP_CONTACT_NAME = '<contact name>'
+SAML_SP_CONTACT_MAIL = '<contact mail>'
 
 #Default Auth
 BASIC_ENABLED = True
