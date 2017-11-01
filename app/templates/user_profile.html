@@ -29,10 +29,10 @@
                                     Info</a></li>
                             <li><a href="#tabs-avatar" data-toggle="tab">Change
                                     Avatar</a></li>
-                            <li><a href="#tabs-password" data-toggle="tab">Change
+                            {%  if not external_account %}<li><a href="#tabs-password" data-toggle="tab">Change
                                     Password</a></li>
                             <li><a href="#tabs-authentication" data-toggle="tab">Authentication
-                                    </a></li>
+                                    </a></li>{% endif %}>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tabs-personal">
@@ -51,10 +51,10 @@
                                         <label for="email">E-mail</label> <input type="text"
                                             class="form-control" name="email" id="email"
                                             placeholder="{{ current_user.email }}" {%  if external_account %}disabled{% endif %}>
-                                    </div>
+                                    </div>{%  if not external_account %}
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-flat btn-primary">Submit</button>
-                                    </div>
+                                    </div>{% endif %}
                                 </form>
                             </div>
                             <div class="tab-pane" id="tabs-avatar">
@@ -69,25 +69,25 @@
                                                 else %} <img
                                                     src="{{ current_user.email|email_to_gravatar_url(size=200) }}"
                                                     alt="" /> {% endif %}
-                                            </div>
+                                            </div>{%  if not external_account %}
                                             <div>
                                                 <label for="file">Select image</label> <input type="file"
-                                                    id="file" name="file" {%  if external_account %}disabled{% endif %}>
-                                            </div>
-                                        </div>
+                                                    id="file" name="file">
+                                            </div>{% endif %}
+                                        </div>{%  if not external_account %}
                                         <div>
                                             <span class="label label-danger">NOTE! </span> <span>&nbsp;Only
                                                 supports <strong>.PNG, .JPG, .JPEG</strong>. The best size
                                                 to use is <strong>200x200</strong>.
                                             </span>
-                                        </div>
-                                    </div>
+                                        </div>{% endif %}
+                                    </div>{%  if not external_account %}
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-flat btn-primary">Submit</button>
-                                    </div>
+                                    </div>{% endif %}
                                 </form>
                             </div>
-                            <div class="tab-pane" id="tabs-password">
+                            {%  if not external_account %}<div class="tab-pane" id="tabs-password">
                                 {% if not current_user.password %} Your account password is
                                 managed via LDAP which isn't supported to change here. {% else
                                 %}
@@ -124,7 +124,7 @@
                                         {% endif %}
                                     </div>
                                 </form>
-                            </div>
+                            </div>{% endif %}
                         </div>
                     </div>
                 </div>
