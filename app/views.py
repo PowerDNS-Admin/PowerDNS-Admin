@@ -296,35 +296,38 @@ def dashboard():
 def domain(domain_name):
     r = Record()
     domain = Domain.query.filter(Domain.name == domain_name).first()
-    if domain:
-        # query domain info from PowerDNS API
-        zone_info = r.get_record_data(domain.name)
-        if zone_info:
-            jrecords = zone_info['records']
-        else:
-            # can not get any record, API server might be down
-            return redirect(url_for('error', code=500))
-
-        records = []
-        #TODO: This should be done in the "model" instead of "view"
-        if NEW_SCHEMA:
-            for jr in jrecords:
-                if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
-                    for subrecord in jr['records']:
-                        record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
-                        records.append(record)
-        else:
-            for jr in jrecords:
-                if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
-                    record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
-                    records.append(record)
-        if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
-            editable_records = app.config['RECORDS_ALLOW_EDIT']
-        else:
-            editable_records = ['PTR']
-        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
-    else:
+    if not domain:
         return redirect(url_for('error', code=404))
+
+    if not current_user.can_access_domain(domain_name):
+        abort(403)
+
+    # query domain info from PowerDNS API
+    zone_info = r.get_record_data(domain.name)
+    if zone_info:
+        jrecords = zone_info['records']
+    else:
+        # can not get any record, API server might be down
+        return redirect(url_for('error', code=500))
+
+    records = []
+    #TODO: This should be done in the "model" instead of "view"
+    if NEW_SCHEMA:
+        for jr in jrecords:
+            if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                for subrecord in jr['records']:
+                    record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
+                    records.append(record)
+    else:
+        for jr in jrecords:
+            if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
+                records.append(record)
+    if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
+        editable_records = app.config['RECORDS_ALLOW_EDIT']
+    else:
+        editable_records = ['PTR']
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
@@ -416,6 +419,10 @@ def record_apply(domain_name):
     example jdata: {u'record_ttl': u'1800', u'record_type': u'CNAME', u'record_name': u'test4', u'record_status': u'Active', u'record_data': u'duykhanh.me'}
     """
     #TODO: filter removed records / name modified records.
+
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
     try:
         pdata = request.data
         jdata = json.loads(pdata)
@@ -440,6 +447,10 @@ def record_update(domain_name):
     This route is used for domain work as Slave Zone only
     Pulling the records update from its Master
     """
+
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
     try:
         pdata = request.data
         jdata = json.loads(pdata)
@@ -474,6 +485,9 @@ def record_delete(domain_name, record_name, record_type):
 @app.route('/domain/<string:domain_name>/dnssec', methods=['GET'])
 @login_required
 def domain_dnssec(domain_name):
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
     domain = Domain()
     dnssec = domain.get_domain_dnssec(domain_name)
     return make_response(jsonify(dnssec), 200)
