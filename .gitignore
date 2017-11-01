@@ -23,6 +23,9 @@ nosetests.xml
 flask
 config.py
 logfile.log
+settings.json
+advanced_settings.json
+idp.crt
 
 db_repository/*
 upload/avatar/*

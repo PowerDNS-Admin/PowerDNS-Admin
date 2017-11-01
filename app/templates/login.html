@@ -101,11 +101,16 @@
     {% if google_enabled %}
     <a href="{{ url_for('google_login') }}">Google oauth login</a>
     {% endif %}
+    {% if saml_enabled %}
+    <br>
+    <a href="{{ url_for('saml_login') }}">SAML login</a>
+    {% endif %}
     {% if github_enabled %}
+    <br>
     <a href="{{ url_for('github_login') }}">Github oauth login</a>
     {% endif %}
-    <br>
     {% if signup_enabled %}
+    <br>
     <a href="{{ url_for('register') }}" class="text-center">Create an account </a>
     {% endif %}
   </div>
