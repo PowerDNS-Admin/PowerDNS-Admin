@@ -98,6 +98,9 @@
         <!-- /.col -->
       </div>
     </form>
+    {% if google_enabled %}
+    <a href="{{ url_for('google_login') }}">Google oauth login</a>
+    {% endif %}
     {% if saml_enabled %}
     <br>
     <a href="{{ url_for('saml_login') }}">SAML login</a>
