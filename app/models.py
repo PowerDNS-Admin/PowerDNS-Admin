@@ -288,28 +288,6 @@ class User(db.Model):
         else:
             logging.error('Unsupported authentication method')
             return False
-                    # try to get user's firstname & lastname from LDAP
-                    # this might be changed in the future
-                    self.firstname = result[0][0][1]['givenName'][0]
-                    self.lastname = result[0][0][1]['sn'][0]
-                    self.email = result[0][0][1]['mail'][0]
-                except Exception:
-                    self.firstname = self.username
-                    self.lastname = ''
-
-                # first register user will be in Administrator role
-                self.role_id = Role.query.filter_by(name='User').first().id
-                if User.query.count() == 0:
-                    self.role_id = Role.query.filter_by(name='Administrator').first().id
-
-                self.create_user()
-                logging.info('Created user "%s" in the DB' % self.username)
-
-            return True
-
-        logging.error('Unsupported authentication method')
-        return False
-
 
     def create_user(self):
         """
