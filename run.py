@@ -1,9 +1,9 @@
-#!flask/bin/python
+#!/usr/bin/env python
 from app import app
 from config import PORT
 
 try:
-	from config import BIND_ADDRESS 
+	from config import BIND_ADDRESS
 except:
 	BIND_ADDRESS = '127.0.0.1'
 
