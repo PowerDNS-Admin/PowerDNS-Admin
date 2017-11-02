@@ -1,5 +1,6 @@
 # PowerDNS-Admin
 PowerDNS Web-GUI - Built by Flask
+[![Build Status](https://travis-ci.org/thomasDOTde/PowerDNS-Admin.svg?branch=master)](https://travis-ci.org/thomasDOTde/PowerDNS-Admin)
 
 #### Features:
 - Multiple domain management
