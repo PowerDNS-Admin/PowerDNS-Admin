@@ -1,0 +1,50 @@
+version: '2'
+
+services:
+
+  powerdns-authoritative:
+    image: winggundamth/powerdns-mysql:trusty
+    hostname: powerdns-authoritative
+    depends_on:
+      - powerdns-authoritative-mariadb
+    links:
+      - powerdns-authoritative-mariadb:mysqldb
+    ports:
+      - 172.17.0.1:53:53/udp
+      - 8081:8081
+    environment:
+      - PDNS_DB_HOST=mysqldb
+      - PDNS_DB_USERNAME=root
+      - PDNS_DB_NAME=powerdns
+      - PDNS_DB_PASSWORD=PowerDNSPassword
+      - PDNS_API_KEY=PowerDNSAPIKey
+
+  powerdns-authoritative-mariadb:
+    image: mariadb:10.1.15
+    hostname: powerdns-authoritative-mariadb
+    environment:
+      - MYSQL_DATABASE=powerdns
+      - MYSQL_ROOT_PASSWORD=PowerDNSPassword
+
+  powerdns-admin:
+    image: winggundamth/powerdns-admin:trusty
+    hostname: powerdns-admin
+    depends_on:
+      - powerdns-admin-mariadb
+      - powerdns-authoritative
+    links:
+      - powerdns-admin-mariadb:mysqldb
+      - powerdns-authoritative:powerdns-server
+    volumes:
+      - ./:/home/web/powerdns-admin
+    ports:
+      - 9393:9393
+    environment:
+      - WAITFOR_DB=60
+
+  powerdns-admin-mariadb:
+    image: mariadb:10.1.15
+    hostname: powerdns-admin-mariadb
+    environment:
+      - MYSQL_DATABASE=powerdns-admin
+      - MYSQL_ROOT_PASSWORD=PowerDNSAdminPassword
