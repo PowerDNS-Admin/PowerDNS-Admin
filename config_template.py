@@ -41,6 +41,9 @@ LDAP_URI = 'ldaps://your-ldap-server:636'
 LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
 LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
+LDAP_GROUP_SECURITY = False
+LDAP_ADMIN_GROUP = 'CN=PowerDNS-Admin Admin,OU=Custom,DC=ivan,DC=local'
+LDAP_USER_GROUP = 'CN=PowerDNS-Admin User,OU=Custom,DC=ivan,DC=local'
 # Additional options only if LDAP_TYPE=ldap
 LDAP_USERNAMEFIELD = 'uid'
 LDAP_FILTER = '(objectClass=inetorgperson)'
@@ -100,7 +103,7 @@ PDNS_API_KEY = 'you never know'
 PDNS_VERSION = '3.4.7'
 
 # RECORDS ALLOWED TO EDIT
-RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CNAME', 'SPF', 'PTR', 'MX', 'TXT']
+RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT']
 
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = False
