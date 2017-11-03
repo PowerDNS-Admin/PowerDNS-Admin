@@ -1,5 +1,6 @@
 # PowerDNS-Admin
 PowerDNS Web-GUI - Built by Flask
+[![Build Status](https://travis-ci.org/thomasDOTde/PowerDNS-Admin.svg?branch=master)](https://travis-ci.org/thomasDOTde/PowerDNS-Admin)
 
 #### Features:
 - Multiple domain management
@@ -74,6 +75,14 @@ Web application configuration is stored in `config.py` file. Let's clone it from
 ```
 (flask)$ cp config_template.py config.py 
 (flask)$ vim config.py
+```
+
+You can configure group based security by tweaking the below parameters in `config.py`. Groups membership comes from LDAP.
+Setting `LDAP_GROUP_SECURITY` to True enables group-based security. With this enabled only members of the two groups listed below are allowed to login. Members of `LDAP_ADMIN_GROUP` will get the Administrator role and members of `LDAP_USER_GROUP` will get the User role. Sample config below:
+```
+LDAP_GROUP_SECURITY = True
+LDAP_ADMIN_GROUP = 'CN=PowerDNS-Admin Admin,OU=Custom,DC=ivan,DC=local'
+LDAP_USER_GROUP = 'CN=PowerDNS-Admin User,OU=Custom,DC=ivan,DC=local'
 ```
 
 Create database after having proper configs
