@@ -239,7 +239,7 @@ def saml_authorized():
         login_user(user, remember=False)
         return redirect(url_for('index'))
     else:
-        return error(401,"an error occourred processing SAML response")
+        return  render_template('errors/SAML.html', errors=errors)
 
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
