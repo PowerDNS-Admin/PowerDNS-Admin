@@ -223,7 +223,7 @@ def saml_authorized():
         if not user:
             # create user
             user = User(username=session['samlNameId'],
-                        plain_text_password=gen_salt(30),
+                        plain_text_password = None,
                         email=session['samlNameId'])
             user.create_local_user()
         session['user_id'] = user.id
@@ -233,7 +233,7 @@ def saml_authorized():
             user.firstname = session['samlUserdata']["givenname"][0]
         if session['samlUserdata'].has_key("surname"):
             user.lastname = session['samlUserdata']["surname"][0]
-        user.plain_text_password = gen_salt(30)
+        user.plain_text_password = None
         user.update_profile()
         session['external_auth'] = True
         login_user(user, remember=False)
@@ -267,7 +267,7 @@ def login():
             user = User(username=email,
                         firstname=first_name,
                         lastname=surname,
-                        plain_text_password=gen_salt(7),
+                        plain_text_password=None,
                         email=email)
             user.create_local_user()
 
@@ -283,7 +283,7 @@ def login():
         if not user:
             # create user
             user = User(username=user_info['name'],
-                        plain_text_password=gen_salt(30),
+                        plain_text_password=None,
                         email=user_info['email'])
             user.create_local_user()
 
