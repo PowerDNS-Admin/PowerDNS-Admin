@@ -74,13 +74,16 @@
 {% block extrascripts %}
 <script>
     // set up user data table
-    $("#tbl_users").DataTable({
-        "paging" : true,
-        "lengthChange" : false,
-        "searching" : true,
-        "ordering" : true,
-        "info" : true,
-        "autoWidth" : false
+    $(document).ready(function(){
+        var table = $('#tbl_users').DataTable({
+            'drawCallback': function(settings){
+            // iCheck for checkbox and radio inputs
+                $('input[type="checkbox"]').iCheck({
+                    checkboxClass: 'icheckbox_square-blue',
+                    increaseArea : '20%'
+                });
+            }
+        });
     });
     
     // handle revocation of privileges
