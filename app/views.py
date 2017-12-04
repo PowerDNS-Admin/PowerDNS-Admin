@@ -389,7 +389,7 @@ def clear_session():
 
 @app.route('/logout')
 def logout():
-    if app.config.get('SAML_ENABLED') and session['samlSessionIndex'] and app.config.get('SAML_LOGOUT'):
+    if app.config.get('SAML_ENABLED') and 'samlSessionIndex' in session and app.config.get('SAML_LOGOUT'):
         req = utils.prepare_flask_request(request)
         auth = utils.init_saml_auth(req)
         if app.config.get('SAML_LOGOUT_URL'):
