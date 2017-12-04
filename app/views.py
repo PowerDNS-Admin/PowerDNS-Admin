@@ -380,18 +380,38 @@ def login():
             error = e.message['desc'] if 'desc' in e.message else e
             return render_template('register.html', error=error)
 
-@app.route('/logout')
-def logout():
+def clear_session():
     session.pop('user_id', None)
     session.pop('github_token', None)
     session.pop('google_token', None)
     session.clear()
     logout_user()
-    if app.config.get('SAML_LOGOUT_REDIRECT'):
-	return redirect(app.config.get('SAML_LOGOUT_REDIRECT'))
-    else:
-    	return redirect(url_for('login'))
 
+@app.route('/logout')
+def logout():
+    if app.config.get('SAML_ENABLED') and session['samlSessionIndex'] and app.config.get('SAML_LOGOUT'):
+        req = utils.prepare_flask_request(request)
+        auth = utils.init_saml_auth(req)
+        if app.config.get('SAML_LOGOUT_URL'):
+            return auth.logout(redirect_url = app.config.get('SAML_LOGOUT_URL'))
+        return auth.logout()
+    clear_session()
+    redirect_url = url_for('login')
+    return redirect(url_for('login'))
+
+@app.route('/saml/sls')
+def saml_logout():
+    req = utils.prepare_flask_request(request)
+    auth = utils.init_saml_auth(req)
+    url = auth.process_slo(delete_session_cb=clear_session())
+    errors = auth.get_errors()
+    if len(errors) == 0:
+        if url is not None:
+            return redirect(url)
+        else:
+            return redirect(url_for('index'))
+    else:
+        return render_template('errors/SAML.html', errors=errors)
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
