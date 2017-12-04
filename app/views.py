@@ -387,7 +387,10 @@ def logout():
     session.pop('google_token', None)
     session.clear()
     logout_user()
-    return redirect(url_for('login'))
+    if app.config.get('SAML_LOGOUT_REDIRECT'):
+	return redirect(app.config.get('SAML_LOGOUT_REDIRECT'))
+    else:
+    	return redirect(url_for('login'))
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])

@@ -92,6 +92,8 @@ SAML_METADATA_CACHE_LIFETIME = 1
 SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 SAML_SP_CONTACT_NAME = '<contact name>'
 SAML_SP_CONTACT_MAIL = '<contact mail>'
+## uncomment to redirect to the given URL on logout
+# SAML_LOGOUT_REDIRECT = 'https://<idp>/logout'
 
 #Default Auth
 BASIC_ENABLED = True
