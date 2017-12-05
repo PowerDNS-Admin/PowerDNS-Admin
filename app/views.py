@@ -394,7 +394,7 @@ def logout():
         auth = utils.init_saml_auth(req)
         if app.config.get('SAML_LOGOUT_URL'):
             return redirect(auth.logout(name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                                        redirect_url = app.config.get('SAML_LOGOUT_URL'),
+                                        return_to = app.config.get('SAML_LOGOUT_URL'),
                             session_index = session['samlSessionIndex'], name_id=session['samlNameId']))
         return redirect(auth.logout(name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
                         session_index = session['samlSessionIndex'],
@@ -413,6 +413,8 @@ def saml_logout():
         clear_session()
         if url is not None:
             return redirect(url)
+	elif app.config.get('SAML_LOGOUT_URL'):
+	    return redirect(app.config.get('SAML_LOGOUT_URL'))
         else:
             return redirect(url_for('index'))
     else:
