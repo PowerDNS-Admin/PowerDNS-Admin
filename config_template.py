@@ -92,6 +92,13 @@ SAML_METADATA_CACHE_LIFETIME = 1
 SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 SAML_SP_CONTACT_NAME = '<contact name>'
 SAML_SP_CONTACT_MAIL = '<contact mail>'
+#Use SAML standard logout mechanism retreived from idp metadata
+#If configured false don't care about SAML session on logout.
+#Logout from PowerDNS-Admin only and keep SAML session authenticated.
+SAML_LOGOUT = False
+#Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
+#for example redirect to google.com after successful saml logout
+#SAML_LOGOUT_URL = 'https://google.com'
 
 #Default Auth
 BASIC_ENABLED = True
