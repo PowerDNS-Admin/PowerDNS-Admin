@@ -366,7 +366,9 @@ class User(db.Model):
         if self.role.name == "Administrator":
             return True
 
-        query = self.get_domain_query().filter(Domain.name == domain_name)
+        query = db.session.query(User, DomainUser, Domain).filter(User.id == self.id).filter(
+            User.id == DomainUser.user_id).filter(Domain.id == DomainUser.domain_id).filter(
+            Domain.name == domain_name)
         return query.count() >= 1
 
     def delete(self):
