@@ -400,7 +400,6 @@ def logout():
                         session_index = session['samlSessionIndex'],
                                     name_id=session['samlNameId']))
     clear_session()
-    redirect_url = url_for('login')
     return redirect(url_for('login'))
 
 @app.route('/saml/sls')
@@ -413,10 +412,8 @@ def saml_logout():
         clear_session()
         if url is not None:
             return redirect(url)
-	elif app.config.get('SAML_LOGOUT_URL'):
-	    return redirect(app.config.get('SAML_LOGOUT_URL'))
-        else:
-            return redirect(url_for('index'))
+        elif app.config.get('SAML_LOGOUT_URL'):
+            return redirect(app.config.get('SAML_LOGOUT_URL'))
     else:
         return render_template('errors/SAML.html', errors=errors)
 
