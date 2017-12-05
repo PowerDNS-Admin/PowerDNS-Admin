@@ -393,8 +393,12 @@ def logout():
         req = utils.prepare_flask_request(request)
         auth = utils.init_saml_auth(req)
         if app.config.get('SAML_LOGOUT_URL'):
-            return auth.logout(redirect_url = app.config.get('SAML_LOGOUT_URL'))
-        return auth.logout()
+            return redirect(auth.logout(name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+                                        redirect_url = app.config.get('SAML_LOGOUT_URL'),
+                            session_index = session['samlSessionIndex'], name_id=session['samlNameId']))
+        return redirect(auth.logout(name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+                        session_index = session['samlSessionIndex'],
+                                    name_id=session['samlNameId']))
     clear_session()
     redirect_url = url_for('login')
     return redirect(url_for('login'))
@@ -403,9 +407,10 @@ def logout():
 def saml_logout():
     req = utils.prepare_flask_request(request)
     auth = utils.init_saml_auth(req)
-    url = auth.process_slo(delete_session_cb=clear_session())
+    url = auth.process_slo()
     errors = auth.get_errors()
     if len(errors) == 0:
+        clear_session()
         if url is not None:
             return redirect(url)
         else:
