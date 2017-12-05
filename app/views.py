@@ -360,7 +360,7 @@ def domain_add():
     return render_template('domain_add.html')
 
 
-@app.route('/admin/domain/<string:domain_name>/delete', methods=['GET'])
+@app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
 @login_required
 @admin_role_required
 def domain_delete(domain_name):
@@ -376,7 +376,7 @@ def domain_delete(domain_name):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/admin/domain/<string:domain_name>/manage', methods=['GET', 'POST'])
+@app.route('/admin/domain/<path:domain_name>/manage', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def domain_management(domain_name):
@@ -409,7 +409,7 @@ def domain_management(domain_name):
         return redirect(url_for('domain_management', domain_name=domain_name))
 
 
-@app.route('/domain/<string:domain_name>/apply', methods=['POST'], strict_slashes=False)
+@app.route('/domain/<path:domain_name>/apply', methods=['POST'], strict_slashes=False)
 @login_required
 def record_apply(domain_name):
     """
@@ -433,7 +433,7 @@ def record_apply(domain_name):
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
-@app.route('/domain/<string:domain_name>/update', methods=['POST'], strict_slashes=False)
+@app.route('/domain/<path:domain_name>/update', methods=['POST'], strict_slashes=False)
 @login_required
 def record_update(domain_name):
     """
@@ -456,7 +456,7 @@ def record_update(domain_name):
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
-@app.route('/domain/<string:domain_name>/record/<string:record_name>/type/<string:record_type>/delete', methods=['GET'])
+@app.route('/domain/<path:domain_name>/record/<string:record_name>/type/<string:record_type>/delete', methods=['GET'])
 @login_required
 @admin_role_required
 def record_delete(domain_name, record_name, record_type):
@@ -471,14 +471,14 @@ def record_delete(domain_name, record_name, record_type):
     return redirect(url_for('domain', domain_name=domain_name))
 
 
-@app.route('/domain/<string:domain_name>/dnssec', methods=['GET'])
+@app.route('/domain/<path:domain_name>/dnssec', methods=['GET'])
 @login_required
 def domain_dnssec(domain_name):
     domain = Domain()
     dnssec = domain.get_domain_dnssec(domain_name)
     return make_response(jsonify(dnssec), 200)
 
-@app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
+@app.route('/domain/<path:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def admin_setdomainsetting(domain_name):
