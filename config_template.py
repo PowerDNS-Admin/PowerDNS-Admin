@@ -92,6 +92,9 @@ SAML_METADATA_CACHE_LIFETIME = 1
 SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 SAML_SP_CONTACT_NAME = '<contact name>'
 SAML_SP_CONTACT_MAIL = '<contact mail>'
+#Cofigures if SAML tokens should be encrypted.
+#If enabled a new app certificate will be generated on restart
+SAML_SIGN_REQUEST = False
 #Use SAML standard logout mechanism retreived from idp metadata
 #If configured false don't care about SAML session on logout.
 #Logout from PowerDNS-Admin only and keep SAML session authenticated.

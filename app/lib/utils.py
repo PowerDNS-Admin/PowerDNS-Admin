@@ -6,6 +6,7 @@ import urlparse
 import hashlib
 
 from app import app
+from certutil import *
 from distutils.version import StrictVersion
 from datetime import datetime,timedelta
 from threading import Thread
@@ -193,6 +194,7 @@ def email_to_gravatar_url(email, size=100):
     hash_string = hashlib.md5(email).hexdigest()
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
 
+
 def prepare_flask_request(request):
     # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
     url_data = urlparse.urlparse(request.url)
@@ -204,7 +206,7 @@ def prepare_flask_request(request):
         'get_data': request.args.copy(),
         'post_data': request.form.copy(),
         # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-        # 'lowercase_urlencoding': True,
+        'lowercase_urlencoding': True,
         'query_string': request.query_string
     }
 
@@ -220,8 +222,10 @@ def init_saml_auth(req):
     settings['sp'] = {}
     settings['sp']['NameIDFormat'] = idp_data['sp']['NameIDFormat']
     settings['sp']['entityId'] = app.config['SAML_SP_ENTITY_ID']
-    settings['sp']['privateKey'] = ''
-    settings['sp']['x509cert'] = ''
+    cert = open(CERT_FILE, "r").readlines()
+    key = open(KEY_FILE, "r").readlines()
+    settings['sp']['privateKey'] = "".join(key)
+    settings['sp']['x509cert'] = "".join(cert)
     settings['sp']['assertionConsumerService'] = {}
     settings['sp']['assertionConsumerService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
     settings['sp']['assertionConsumerService']['url'] = own_url+'/saml/authorized'
@@ -233,19 +237,19 @@ def init_saml_auth(req):
     settings['strict'] = True
     settings['debug'] = app.config['SAML_DEBUG']
     settings['security'] = {}
-    settings['security']['digestAlgorithm'] = 'http://www.w3.org/2000/09/xmldsig#sha1'
+    settings['security']['digestAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
     settings['security']['metadataCacheDuration'] = None
     settings['security']['metadataValidUntil'] = None
     settings['security']['requestedAuthnContext'] = True
-    settings['security']['signatureAlgorithm'] = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
+    settings['security']['signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
     settings['security']['wantAssertionsEncrypted'] = False
     settings['security']['wantAttributeStatement'] = True
     settings['security']['wantNameId'] = True
-    settings['security']['authnRequestsSigned'] = False
-    settings['security']['logoutRequestSigned'] = False
-    settings['security']['logoutResponseSigned'] = False
+    settings['security']['authnRequestsSigned'] = app.config['SAML_SIGN_REQUEST']
+    settings['security']['logoutRequestSigned'] = app.config['SAML_SIGN_REQUEST']
+    settings['security']['logoutResponseSigned'] = app.config['SAML_SIGN_REQUEST']
     settings['security']['nameIdEncrypted'] = False
-    settings['security']['signMetadata'] = False
+    settings['security']['signMetadata'] = True
     settings['security']['wantAssertionsSigned'] = True
     settings['security']['wantMessagesSigned'] = True
     settings['security']['wantNameIdEncrypted'] = False

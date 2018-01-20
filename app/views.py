@@ -412,8 +412,10 @@ def saml_logout():
         clear_session()
         if url is not None:
             return redirect(url)
-        elif app.config.get('SAML_LOGOUT_URL'):
+        elif app.config.get('SAML_LOGOUT_URL') is not None:
             return redirect(app.config.get('SAML_LOGOUT_URL'))
+        else:
+            return redirect(url_for('login'))
     else:
         return render_template('errors/SAML.html', errors=errors)
 
