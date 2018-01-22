@@ -13,3 +13,4 @@ qrcode==5.3
 Flask-OAuthlib==0.9.3
 dnspython>=1.12.0
 python-saml==2.3.0
+pyOpenSSL>=0.15
