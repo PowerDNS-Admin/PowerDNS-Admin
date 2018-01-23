@@ -966,7 +966,7 @@ def dyndns_update():
     r = Record()
     r.name = hostname
     # check if the user requested record exists within this domain
-    if r.exists(domain.name) and r.is_allowed:
+    if r.exists(domain.name) and r.is_allowed_edit():
         if r.data == myip:
             # record content did not change, return 'nochg'
             history = History(msg="DynDNS update: attempted update of %s but record did not change" % hostname, created_by=current_user.username)
@@ -981,7 +981,7 @@ def dyndns_update():
                 return render_template('dyndns.html', response='good'), 200
             else:
                 return render_template('dyndns.html', response='911'), 200
-    elif r.is_allowed:
+    elif r.is_allowed_edit():
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
         if (ondemand_creation != None) and (strtobool(ondemand_creation.value) == True):
             record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
