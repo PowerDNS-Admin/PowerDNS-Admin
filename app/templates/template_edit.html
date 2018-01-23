@@ -265,7 +265,6 @@
                                 <label for=\"srv_target\">SRV Target</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\"> \
                             ";
-                modal.modal('show');
             } else {
                 var parts = record_data.val().split(" ");
                 var form = "    <label for=\"srv_priority\">SRV Priority</label> \
@@ -288,6 +287,7 @@
                 record_data.val(data);
                 modal.modal('hide');
             })
+            modal.modal('show');
             } else if (record_type == "SOA") {
                 var modal = $("#modal_custom_record");
                 if (record_data.val() == "") {
