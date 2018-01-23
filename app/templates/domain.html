@@ -70,25 +70,23 @@
                                     </td>
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
-                                    {% if record.is_allowed() %}
+                                    {% if record.is_allowed_edit() %}
                                         <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">Edit&nbsp;<i class="fa fa-edit"></i></button>
                                        {% else %}
                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     {% endif %}
                                     </td>
                                     <td width="6%">
-                                    {% if record.is_allowed() %}
+                                    {% if record.is_allowed_delete() %}
                                         <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">Delete&nbsp;<i class="fa fa-trash"></i></button>
-                                    {% else %}
-                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     {% endif %}
                                 {% else %}
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     </td>
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
-                                    </td> 
+                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                    </td>
                                 {% endif %}
                                     </td>
                                     <!-- hidden column that we can sort on -->
