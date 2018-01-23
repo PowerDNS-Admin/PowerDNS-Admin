@@ -577,6 +577,66 @@ def create_template():
         return redirect(url_for('templates'))
 
 
+@app.route('/template/createfromzone', methods=['POST'])
+@login_required
+@admin_role_required
+def create_template_from_zone():
+    try:
+        pdata = request.data
+        jdata = json.loads(pdata)
+        name = jdata['name']
+        description = jdata['description']
+        domain_name = jdata['domain']
+
+        if ' ' in name or not name or not type:
+            return make_response(jsonify({'status': 'error', 'msg': 'Please correct template name'}), 500)
+
+        if DomainTemplate.query.filter(DomainTemplate.name == name).first():
+            return make_response(jsonify({'status': 'error', 'msg': 'A template with the name %s already exists!' % name}), 500)
+
+        t = DomainTemplate(name=name, description=description)
+        result = t.create()
+        if result['status'] == 'ok':
+            history = History(msg='Add domain template %s' % name, detail=str({'name': name, 'description': description}), created_by=current_user.username)
+            history.add()
+
+            records = []
+            r = Record()
+            domain = Domain.query.filter(Domain.name == domain_name).first()
+            if domain:
+                # query domain info from PowerDNS API
+                zone_info = r.get_record_data(domain.name)
+                if zone_info:
+                    jrecords = zone_info['records']
+
+                if NEW_SCHEMA:
+                    for jr in jrecords:
+                        name = '@' if jr['name'] == domain_name else jr['name']
+                        if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                            for subrecord in jr['records']:
+
+                                record = DomainTemplateRecord(name=name, type=jr['type'], status=True if subrecord['disabled'] else False, ttl=jr['ttl'], data=subrecord['content'])
+                                records.append(record)
+                else:
+                    for jr in jrecords:
+                        if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                            record = DomainTemplateRecord(name=name, type=jr['type'], status=True if jr['disabled'] else False, ttl=jr['ttl'], data=jr['content'])
+                            records.append(record)
+            result_records = t.replace_records(records)
+
+            if result_records['status'] == 'ok':
+                    return make_response(jsonify({'status': 'ok', 'msg': result['msg']}), 200)
+            else:
+                result = t.delete_template()
+                return make_response(jsonify({'status': 'error', 'msg': result_records['msg']}), 500)
+
+        else:
+            return make_response(jsonify({'status': 'error', 'msg': result['msg']}), 500)
+    except Exception:
+        print traceback.format_exc()
+        return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
+
+
 @app.route('/template/<string:template>/edit', methods=['GET'])
 @login_required
 @admin_role_required

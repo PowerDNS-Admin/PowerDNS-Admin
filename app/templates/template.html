@@ -65,7 +65,7 @@
                 {% for template in templates %}
                 <tr>
                   <td>
-                    <strong>{{ template.name }}</strong>
+                    <a href="{{ url_for('edit_template', template=template.name) }}"><strong>{{ template.name }}</strong></a>
                   </td>
                   <td>
                     {{ template.description }}
