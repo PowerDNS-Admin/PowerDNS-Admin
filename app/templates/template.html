@@ -57,8 +57,7 @@
                   <th>Name</th>
                   <th>Description</th>
                   <th>Number of Records</th>
-                  <th>Edit</th>
-                  <th>Delete</th>
+                  <th width="20%">Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -79,8 +78,6 @@
                                             Edit&nbsp;<i class="fa fa-edit"></i>
                                         </button>
                                         </a>
-                  </td>
-                  <td>
                   	<a href="{{ url_for('delete_template', template=template.name) }}">
                    		<button type="button" class="btn btn-flat btn-danger button_delete" id="">
                     		  Delete&nbsp;<i class="fa fa-trash"></i>
