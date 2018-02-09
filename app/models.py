@@ -187,11 +187,13 @@ class User(db.Model):
                 logging.error('LDAP authentication is disabled')
                 return False
 
-            searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
-            if LDAP_TYPE == 'ldap':
-              searchFilter = "(&(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
-              logging.info('Ldap searchFilter "%s"' % searchFilter)
+            if LDAP_TYPE == 'ad':
+                searchFilter = "(&(objectcategory=person)(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
 
+            elif LDAP_TYPE == 'ldap':
+                searchFilter = "(&(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+
+            logging.info('Ldap searchFilter "%s"' % searchFilter)
             result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             if not result:
                 logging.warning('User "%s" does not exist' % self.username)
