@@ -188,7 +188,7 @@ class User(db.Model):
 
             searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
             if LDAP_TYPE == 'ldap':
-              searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+              searchFilter = "(&(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
               logging.info('Ldap searchFilter "%s"' % searchFilter)
 
             result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
