@@ -476,9 +476,9 @@ def domain(domain_name):
                 record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                 records.append(record)
     if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
-        editable_records = app.config['RECORDS_ALLOW_EDIT']
+        editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
     else:
-        editable_records = ['PTR']
+        editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
     return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
 
 
