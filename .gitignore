@@ -31,3 +31,5 @@ db_repository/*
 upload/avatar/*
 tmp/*
 .ropeproject
+.sonarlint/*
+pdns.db

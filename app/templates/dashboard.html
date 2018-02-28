@@ -206,6 +206,7 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
+    PDNS_VERSION = '{{ pdns_version }}'
     // set up history data table
     $("#tbl_history").DataTable({
         "paging" : false,
@@ -214,7 +215,7 @@
         "ordering" : false,
         "info" : false,
         "autoWidth" : false
-    });   
+    });
     // set up domain list
     $("#tbl_domain_list").DataTable({
         "paging" : true,
