@@ -127,6 +127,12 @@ function getdnssec(url){
         else {
             dnssec_msg = '';
             var dnssec = data['dnssec'];
+            if (dnssec.length == 0) {
+              dnssec_msg = '<h3>Enable DNSSEC?';
+              modal.find('.modal-body p').html(dnssec_msg);
+              dnssec_footer = '<button type="button" class="btn btn-flat btn-success button_save pull-left">Enable</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Cancel</button>';
+              modal.find('.modal-footer ').html(dnssec_footer);
+            }
             for (var i = 0; i < dnssec.length; i++) {
                 if (dnssec[i]['active']){
                     dnssec_msg += '<form>'+
