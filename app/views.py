@@ -439,7 +439,7 @@ def dashboard():
         uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
     else:
         uptime = 0
-    return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
+    return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history,pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
@@ -479,7 +479,7 @@ def domain(domain_name):
         editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
     else:
         editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records,pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
