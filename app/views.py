@@ -644,6 +644,27 @@ def domain_dnssec(domain_name):
     dnssec = domain.get_domain_dnssec(domain_name)
     return make_response(jsonify(dnssec), 200)
 
+@app.route('/domain/<string:domain_name>/dnssec/enable', methods=['GET'])
+@login_required
+def domain_dnssec_enable(domain_name):
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
+    domain = Domain()
+    dnssec = domain.enable_domain_dnssec(domain_name)
+    return make_response(jsonify(dnssec), 200)
+
+@app.route('/domain/<string:domain_name>/dnssec/disable', methods=['GET'])
+@login_required
+def domain_dnssec_disable(domain_name):
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
+    domain = Domain()
+    dnssec = domain.get_domain_dnssec(domain_name)
+    return make_response(jsonify({'status': 'error', 'msg': 'Function not implemented'}), 400)
+    #return make_response(jsonify(dnssec), 200)
+
 @app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
