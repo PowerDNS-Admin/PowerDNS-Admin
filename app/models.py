@@ -846,6 +846,27 @@ class Domain(db.Model):
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
 
+    def delete_dnssec_key(self, domain_name, key_id):
+        """
+        Remove keys DNSSEC
+        """
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if domain:
+            headers = {}
+            headers['X-API-Key'] = PDNS_API_KEY
+            url = '/servers/localhost/zones/%s/cryptokeys/%s' % (domain.name, key_id)
+
+            try:
+                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + url), headers=headers, method='DELETE')
+                if 'error' in jdata:
+                    return {'status': 'error', 'msg': 'DNSSEC is not disabled for this domain', 'jdata' : jdata}
+                else:
+                    return {'status': 'ok'}
+            except:
+                return {'status': 'error', 'msg': 'There was something wrong, please contact administrator','id': key_id, 'url': url}
+        else:
+            return {'status': 'error', 'msg': 'This domain doesnot exist'}
+
 class DomainUser(db.Model):
     __tablename__ = 'domain_user'
     id = db.Column(db.Integer, primary_key = True)
