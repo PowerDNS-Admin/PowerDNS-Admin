@@ -116,6 +116,21 @@ function SelectElement(elementID, valueToSelect)
     element.value = valueToSelect;
 }
 
+function enable_dns_sec(url) {
+  $.getJSON(url, function(data) {
+      var modal = $("#modal_dnssec_info");
+
+      if (data['status'] == 'error'){
+          modal.find('.modal-body p').text(data['msg']);
+      }
+      else {
+        modal.modal('hide');
+        //location.reload();
+        window.location.reload(true);
+      }
+  })
+}
+
 function getdnssec(url){
 
     $.getJSON(url, function(data) {
@@ -127,10 +142,11 @@ function getdnssec(url){
         else {
             dnssec_msg = '';
             var dnssec = data['dnssec'];
-            if (dnssec.length == 0) {
+
+            if (dnssec.length == 0 && PDNS_VERSION > 4.1) {
               dnssec_msg = '<h3>Enable DNSSEC?';
               modal.find('.modal-body p').html(dnssec_msg);
-              dnssec_footer = '<button type="button" class="btn btn-flat btn-success button_save pull-left">Enable</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Cancel</button>';
+              dnssec_footer = '<button type="button" class="btn btn-flat btn-success button_dnssec_enable pull-left" id="example.com">Enable</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Cancel</button>';
               modal.find('.modal-footer ').html(dnssec_footer);
             }
             for (var i = 0; i < dnssec.length; i++) {

@@ -158,6 +158,7 @@
                     <button type="button" class="btn btn-flat dnssec btn-success button_dnssec" id="{{ domain.name }}" style="width:100%;">
                         <i class="fa fa-lock"></i>&nbsp;Enabled
                     </button>
+
                     {% else %}
                     <button type="button" class="btn btn-flat dnssec button_dnssec" id="{{ domain.name }}" style="width:100%;">
                         <i class="fa fa-unlock-alt"></i>&nbsp;Disabled
@@ -242,6 +243,12 @@
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
+    });
+
+    $(document.body).on("click", ".button_dnssec_enable", function() {
+        var domain = $(this).prop('id');
+        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable');
+      
     });
 </script>
 {% endblock %}
