@@ -242,13 +242,13 @@
     });
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
-        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
+        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec',domain);
     });
 
     $(document.body).on("click", ".button_dnssec_enable", function() {
         var domain = $(this).prop('id');
         enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable');
-      
+
     });
 </script>
 {% endblock %}
