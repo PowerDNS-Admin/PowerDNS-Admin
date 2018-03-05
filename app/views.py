@@ -666,10 +666,8 @@ def domain_dnssec_disable(domain_name):
     for key in dnssec['dnssec']:
         response = domain.delete_dnssec_key(domain_name,key['id']);
 
-    return make_response(jsonify( { 'status': 'ok', 'msg': 'Setting updated.', 'response': response } ))
+    return make_response(jsonify( { 'status': 'ok', 'msg': 'DNSSEC removed.' } ))
 
-    #return make_response(jsonify({'status': 'error', 'msg': 'Function not implemented'}), 400)
-    #return make_response(jsonify(dnssec), 200)
 
 @app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
