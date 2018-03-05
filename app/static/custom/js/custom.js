@@ -1,3 +1,5 @@
+var dnssecKeyList = []
+
 function applyChanges(data, url, showResult, refreshPage) {
     var success = false;
     $.ajax({
@@ -131,7 +133,7 @@ function enable_dns_sec(url) {
   })
 }
 
-function getdnssec(url){
+function getdnssec(url,domain){
 
     $.getJSON(url, function(data) {
         var modal = $("#modal_dnssec_info");
@@ -143,29 +145,35 @@ function getdnssec(url){
             dnssec_msg = '';
             var dnssec = data['dnssec'];
 
-            if (dnssec.length == 0 && PDNS_VERSION > 4.1) {
+            if (dnssec.length == 0 && parseFloat(PDNS_VERSION) > 4.1) {
               dnssec_msg = '<h3>Enable DNSSEC?';
               modal.find('.modal-body p').html(dnssec_msg);
-              dnssec_footer = '<button type="button" class="btn btn-flat btn-success button_dnssec_enable pull-left" id="example.com">Enable</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Cancel</button>';
+              dnssec_footer = '<button type="button" class="btn btn-flat btn-success button_dnssec_enable pull-left" id="'+domain+'">Enable</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Cancel</button>';
               modal.find('.modal-footer ').html(dnssec_footer);
             }
-            for (var i = 0; i < dnssec.length; i++) {
-                if (dnssec[i]['active']){
-                    dnssec_msg += '<form>'+
-                    '<h3><strong>'+dnssec[i]['keytype']+'</strong></h3>'+
-                    '<strong>DNSKEY</strong>'+
-                    '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dnssec[i]['dnskey']+'">'+
-                    '</form>'+
-                    '<br/>';
-                    if(dnssec[i]['ds']){
-                        var dsList = dnssec[i]['ds'];
-                        dnssec_msg += '<strong>DS</strong>';
-                        for (var j = 0; j < dsList.length; j++){
-                            dnssec_msg += '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dsList[j]+'">';
-                        }
-                    }
-                    dnssec_msg += '</form>';
+            else {
+                if (parseFloat(PDNS_VERSION) > 4.1) {
+                  dnssec_footer = '<button type="button" class="btn btn-flat btn-danger button_dnssec_disable pull-left" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Close</button>';
+                  modal.find('.modal-footer ').html(dnssec_footer);
                 }
+                for (var i = 0; i < dnssec.length; i++) {
+                  if (dnssec[i]['active']){
+                      dnssec_msg += '<form>'+
+                      '<h3><strong>'+dnssec[i]['keytype']+'</strong></h3>'+
+                      '<strong>DNSKEY</strong>'+
+                      '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dnssec[i]['dnskey']+'">'+
+                      '</form>'+
+                      '<br/>';
+                      if(dnssec[i]['ds']){
+                          var dsList = dnssec[i]['ds'];
+                          dnssec_msg += '<strong>DS</strong>';
+                          for (var j = 0; j < dsList.length; j++){
+                              dnssec_msg += '<input class="form-control" autocomplete="off" type="text" readonly="true" value="'+dsList[j]+'">';
+                          }
+                      }
+                      dnssec_msg += '</form>';
+                  }
+              }
             }
             modal.find('.modal-body p').html(dnssec_msg);
         }
