@@ -250,6 +250,12 @@
         enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable');
 
     });
+
+    $(document.body).on("click", ".button_dnssec_disable", function() {
+        var domain = $(this).prop('id');
+        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable');
+
+    });
 </script>
 {% endblock %}
 {% block modals %}
