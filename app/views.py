@@ -439,7 +439,7 @@ def dashboard():
         uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
     else:
         uptime = 0
-    return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
+    return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history,pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
@@ -479,7 +479,7 @@ def domain(domain_name):
         editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
     else:
         editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records,pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
@@ -643,6 +643,31 @@ def domain_dnssec(domain_name):
     domain = Domain()
     dnssec = domain.get_domain_dnssec(domain_name)
     return make_response(jsonify(dnssec), 200)
+
+@app.route('/domain/<string:domain_name>/dnssec/enable', methods=['GET'])
+@login_required
+def domain_dnssec_enable(domain_name):
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
+    domain = Domain()
+    dnssec = domain.enable_domain_dnssec(domain_name)
+    return make_response(jsonify(dnssec), 200)
+
+@app.route('/domain/<string:domain_name>/dnssec/disable', methods=['GET'])
+@login_required
+def domain_dnssec_disable(domain_name):
+    if not current_user.can_access_domain(domain_name):
+        return make_response(jsonify({'status': 'error', 'msg': 'You do not have access to that domain'}), 403)
+
+    domain = Domain()
+    dnssec = domain.get_domain_dnssec(domain_name)
+
+    for key in dnssec['dnssec']:
+        response = domain.delete_dnssec_key(domain_name,key['id']);
+
+    return make_response(jsonify( { 'status': 'ok', 'msg': 'DNSSEC removed.' } ))
+
 
 @app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
