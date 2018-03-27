@@ -10,14 +10,14 @@ from certutil import *
 from distutils.version import StrictVersion
 from datetime import datetime,timedelta
 from threading import Thread
-from onelogin.saml2.auth import OneLogin_Saml2_Auth
-from onelogin.saml2.utils import OneLogin_Saml2_Utils
-from onelogin.saml2.settings import OneLogin_Saml2_Settings
-from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
-idp_timestamp = datetime(1970,1,1)
-idp_data = None
 if app.config['SAML_ENABLED']:
+	from onelogin.saml2.auth import OneLogin_Saml2_Auth
+	from onelogin.saml2.utils import OneLogin_Saml2_Utils
+	from onelogin.saml2.settings import OneLogin_Saml2_Settings
+	from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+	idp_timestamp = datetime(1970,1,1)
+	idp_data = None
     idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
     if idp_data == None:
         print('SAML: IDP Metadata initial load failed')
