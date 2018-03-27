@@ -8,21 +8,22 @@ import hashlib
 from app import app
 from certutil import *
 from distutils.version import StrictVersion
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from threading import Thread
 
 if app.config['SAML_ENABLED']:
-	from onelogin.saml2.auth import OneLogin_Saml2_Auth
-	from onelogin.saml2.utils import OneLogin_Saml2_Utils
-	from onelogin.saml2.settings import OneLogin_Saml2_Settings
-	from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
-	idp_timestamp = datetime(1970,1,1)
-	idp_data = None
+    from onelogin.saml2.auth import OneLogin_Saml2_Auth
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
+    from onelogin.saml2.settings import OneLogin_Saml2_Settings
+    from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+    idp_timestamp = datetime(1970, 1, 1)
+    idp_data = None
     idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
-    if idp_data == None:
+    if idp_data is None:
         print('SAML: IDP Metadata initial load failed')
         exit(-1)
     idp_timestamp = datetime.now()
+
 
 def get_idp_data():
     global idp_data, idp_timestamp
@@ -32,20 +33,23 @@ def get_idp_data():
         background_thread.start()
     return idp_data
 
+
 def retreive_idp_data():
     global idp_data, idp_timestamp
     new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
-    if new_idp_data != None:
+    if new_idp_data is not None:
         idp_data = new_idp_data
         idp_timestamp = datetime.now()
         print("SAML: IDP Metadata successfully retreived from: " + app.config['SAML_METADATA_URL'])
     else:
         print("SAML: IDP Metadata could not be retreived")
 
+
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
 else:
     TIMEOUT = 10
+
 
 def auth_from_url(url):
     auth = None
@@ -95,7 +99,8 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
 
 
 def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
-    r = fetch_remote(remote_url, method=method, data=data, params=params, headers=headers, accept='application/json; q=1')
+    r = fetch_remote(remote_url, method=method, data=data, params=params, headers=headers,
+                     accept='application/json; q=1')
 
     if method == "DELETE":
         return True
@@ -126,12 +131,14 @@ def display_record_name(data):
     else:
         return record_name.replace('.'+domain_name, '')
 
+
 def display_master_name(data):
     """
     input data: "[u'127.0.0.1', u'8.8.8.8']"
     """
     matches = re.findall(r'\'(.+?)\'', data)
     return ", ".join(matches)
+
 
 def display_time(amount, units='s', remove_seconds=True):
     """
@@ -173,6 +180,7 @@ def display_time(amount, units='s', remove_seconds=True):
 
     return final_string
 
+
 def pdns_api_extended_uri(version):
     """
     Check the pdns version
@@ -182,15 +190,14 @@ def pdns_api_extended_uri(version):
     else:
         return ""
 
+
 def email_to_gravatar_url(email, size=100):
     """
     AD doesn't necessarily have email
     """
 
     if not email:
-        email=""
-
-
+        email = ""
     hash_string = hashlib.md5(email).hexdigest()
     return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
 
@@ -210,9 +217,10 @@ def prepare_flask_request(request):
         'query_string': request.query_string
     }
 
+
 def init_saml_auth(req):
     own_url = ''
-    if req['https'] == 'on':
+    if req['https'] is 'on':
         own_url = 'https://'
     else:
         own_url = 'http://'
