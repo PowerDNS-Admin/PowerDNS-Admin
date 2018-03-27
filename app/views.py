@@ -563,6 +563,30 @@ def domain_management(domain_name):
 
         return redirect(url_for('domain_management', domain_name=domain_name))
 
+@app.route('/admin/domain/<string:domain_name>/change_soa_setting', methods=['POST'])
+@login_required
+@admin_role_required
+def domain_change_soa_edit_api(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        return redirect(url_for('error', code=404))
+    new_setting = request.form.get('soa_edit_api')
+    if new_setting == None:
+        return redirect(url_for('error', code=500))
+    if new_setting == '0':
+        return redirect(url_for('domain_management', domain_name=domain_name))
+    print new_setting
+    d = Domain()
+    status = d.update_soa_setting(domain_name=domain_name, soa_edit_api=new_setting)
+    if status['status'] != None:
+        users = User.query.all()
+        d = Domain(name=domain_name)
+        domain_user_ids = d.get_user()
+        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids,
+                               status=status)
+    else:
+        return redirect(url_for('error', code=500))
+
 
 @app.route('/domain/<string:domain_name>/apply', methods=['POST'], strict_slashes=False)
 @login_required

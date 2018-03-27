@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block title %}<title>DNS Control Panel - Domain Management</title>{% endblock %}
+
 {% block dashboard_stat %}
+    {% if status != None %}
+        {% if status['status'] == 'ok' %}
+            <div class="alert alert-success">
+                <strong>Success!</strong> {{ status['msg'] }}
+            </div>
+        {% else %}
+            <div class="alert alert-danger">
+                <strong>Error!</strong> {{ status['msg'] }}
+            </div>
+        {% endif %}
+    {% endif %}
 <section class="content-header">
     <h1>
         Manage domain <small>{{ domain.name }}</small>
@@ -82,6 +94,57 @@
                     	 {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked{% endif %}{% endfor %}>
                     	 &nbsp;Allow on-demand creation of records via DynDNS updates?</p>
                     
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Change SOA-EDIT-API</h3>
+                </div>
+                <div class="box-body">
+                    <p>The SOA-EDIT-API setting defines when and how the SOA serial number will be updated after a change is made to the domain.</p>
+                    <ul>
+                            <li>
+                                (OFF) - Not set
+                            </li>
+                            <li>
+                                INCEPTION-INCREMENT - Uses YYYYMMDDSS format for SOA serial numbers. If the SOA serial from the backend is within two days after inception, it gets incremented by two (the backend should keep SS below 98).
+                            </li>
+                            <li>
+                                INCEPTION - Sets the SOA serial to the last inception time in YYYYMMDD01 format. Uses localtime to find the day for inception time. <strong>Not recomended.</strong>
+                            </li>
+                            <li>
+                                INCREMENT-WEEK - Sets the SOA serial to the number of weeks since the epoch, which is the last inception time in weeks. <strong>Not recomended.</strong>
+                            </li>
+                            <li>
+                                INCREMENT-WEEKS - Increments the serial with the number of weeks since the UNIX epoch. This should work in every setup; but the result won't look like YYYYMMDDSS anymore.
+                            </li>
+                            <li>
+                                EPOCH - Sets the SOA serial to the number of seconds since the epoch.
+                            </li>
+                            <li>
+                                INCEPTION-EPOCH - Sets the new SOA serial number to the maximum of the old SOA serial number, and age in seconds of the last inception.
+                            </li>
+                        </ul>
+                    <b>New SOA-EDIT-API Setting:</b>
+                    <form method="post" action="{{ url_for('domain_change_soa_edit_api', domain_name=domain.name) }}">
+                    <select name="soa_edit_api" class="form-control" style="width:15em;">
+                        <option selected value="0">- Unchanged -</option>
+                        <option>OFF</option>
+                        <option>INCEPTION-INCREMENT</option>
+                        <option>INCEPTION</option>
+                        <option>INCREMENT-WEEK</option>
+                        <option>INCREMENT-WEEKS</option>
+                        <option>EPOCH</option>
+                        <option>INCEPTION-EPOCH</option>
+                    </select><br/>
+                    <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
+                        <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name }}
+                    </button>
+                    </form>
                 </div>
             </div>
         </div>
