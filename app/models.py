@@ -676,6 +676,38 @@ class Domain(db.Model):
             logging.debug(str(e))
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
+    def update_soa_setting(self, domain_name, soa_edit_api):
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'Domain doesnt exist.'}
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+        if soa_edit_api == 'OFF':
+            post_data = {
+                            "soa_edit_api": None,
+                            "kind": domain.type
+                        }
+        else:
+            post_data = {
+                                "soa_edit_api": soa_edit_api,
+                                "kind": domain.type
+            }
+        try:
+            jdata = utils.fetch_json(
+            urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain.name), headers=headers,
+            method='PUT', data=post_data)
+            if 'error' in jdata.keys():
+                logging.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+            else:
+                logging.info('soa-edit-api changed for domain %s successfully' % domain_name)
+                return {'status': 'ok', 'msg': 'soa-edit-api changed successfully'}
+        except Exception, e:
+            print traceback.format_exc()
+            logging.error('Cannot change soa-edit-api for domain %s' % domain_name)
+            logging.debug(str(e))
+            return {'status': 'error', 'msg': 'Cannot change soa-edit-api this domain.'}
+
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
         Check the existing reverse lookup domain,
