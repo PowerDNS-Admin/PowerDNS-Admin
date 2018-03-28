@@ -1,0 +1,3 @@
+Package: pdns-*
+Pin: origin repo.powerdns.com
+Pin-Priority: 600
