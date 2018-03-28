@@ -64,7 +64,10 @@ def inject_default_domain_table_size_setting():
 @app.context_processor
 def inject_auto_ptr_setting():
     auto_ptr_setting = Setting.query.filter(Setting.name == 'auto_ptr').first()
-    return dict(auto_ptr_setting=strtobool(auto_ptr_setting.value))
+    if auto_ptr_setting is None:
+        return dict(auto_ptr_setting=False)
+    else:
+        return dict(auto_ptr_setting=strtobool(auto_ptr_setting.value))
 
 # START USER AUTHENTICATION HANDLER
 @app.before_request
