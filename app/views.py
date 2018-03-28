@@ -19,9 +19,9 @@ from werkzeug.security import gen_salt
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
 from app import app, login_manager, github, google
 from lib import utils
-
-from onelogin.saml2.auth import OneLogin_Saml2_Auth
-from onelogin.saml2.utils import OneLogin_Saml2_Utils
+if app.config['SAML_ENABLED']:
+    from onelogin.saml2.auth import OneLogin_Saml2_Auth
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
