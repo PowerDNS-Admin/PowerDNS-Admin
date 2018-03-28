@@ -2,14 +2,18 @@
 {% block title %}<title>DNS Control Panel - Domain Management</title>{% endblock %}
 
 {% block dashboard_stat %}
-    {% if status != None %}
-        {% if status['status'] == 'ok' %}
+    {% if status %}
+        {% if status.get('status') == 'ok' %}
             <div class="alert alert-success">
-                <strong>Success!</strong> {{ status['msg'] }}
+                <strong>Success!</strong> {{ status.get('msg') }}
             </div>
-        {% else %}
+        {% elif status.get('status') == 'error' %}
             <div class="alert alert-danger">
-                <strong>Error!</strong> {{ status['msg'] }}
+            {% if status.get('msg') != None %}
+                <strong>Error!</strong> {{ status.get('msg') }}
+            {% else %}
+                <strong>Error!</strong> An undefined error occurred.
+            {% endif %}
             </div>
         {% endif %}
     {% endif %}
