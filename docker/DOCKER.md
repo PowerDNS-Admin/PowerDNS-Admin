@@ -8,7 +8,7 @@ Images are currently not available in docker hub or other repository, so you hav
 
 After a successful launch PowerDNS-Admin is reachable at http://localhost:9393
 
-PowerDNS runs op port localhost upd/5353
+PowerDNS runs op port localhost udp/5353
 
 
 ## Basic commands:
