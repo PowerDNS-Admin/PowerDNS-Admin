@@ -3,14 +3,14 @@ version: '2'
 services:
 
   powerdns-authoritative:
-    image: winggundamth/powerdns-mysql:trusty
+    image: powerdns-mysql
     hostname: powerdns-authoritative
     depends_on:
       - powerdns-authoritative-mariadb
     links:
       - powerdns-authoritative-mariadb:mysqldb
     ports:
-      - 172.17.0.1:53:53/udp
+      - 5553:53/udp
       - 8081:8081
     environment:
       - PDNS_DB_HOST=mysqldb
@@ -27,7 +27,7 @@ services:
       - MYSQL_ROOT_PASSWORD=PowerDNSPassword
 
   powerdns-admin:
-    image: winggundamth/powerdns-admin:trusty
+    image: powerdns-admin
     hostname: powerdns-admin
     depends_on:
       - powerdns-admin-mariadb
@@ -36,7 +36,7 @@ services:
       - powerdns-admin-mariadb:mysqldb
       - powerdns-authoritative:powerdns-server
     volumes:
-      - ./:/home/web/powerdns-admin
+      - ../:/home/web/powerdns-admin
     ports:
       - 9393:9393
     environment:
