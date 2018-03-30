@@ -338,7 +338,9 @@ def dashboard_domains():
 
     start = int(request.args.get("start", 0))
     length = min(int(request.args.get("length", 0)), 100)
-    domains = domains[start:start + length]
+
+    if length != -1:
+        domains = domains[start:start + length]
 
     if current_user.role.name != 'Administrator':
         domains = [d[2] for d in domains]
