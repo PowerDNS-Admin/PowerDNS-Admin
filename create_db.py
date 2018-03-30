@@ -1,13 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+import sys
+import time
+import os.path
+import traceback
 
 from migrate.versioning import api
 from config import SQLALCHEMY_DATABASE_URI
 from config import SQLALCHEMY_MIGRATE_REPO
 from app import db
 from app.models import Role, Setting
-import os.path
-import time
-import sys
+
 
 def start():
     wait_time = get_waittime_from_env()
@@ -22,13 +25,14 @@ def get_waittime_from_env():
     return int(os.environ.get('WAITFOR_DB', 1))
 
 def connect_db(wait_time):
-    for i in xrange(0, wait_time):
+    for i in range(0, wait_time):
         print("INFO: Wait for database server")
         sys.stdout.flush()
         try:
             db.create_all()
             return True
         except:
+            traceback.print_exc()
             time.sleep(1)
 
     return False
@@ -36,14 +40,14 @@ def connect_db(wait_time):
 def init_roles(db, role_names):
 
     # Get key name of data
-    name_of_roles = map(lambda r: r.name, role_names)
+    name_of_roles = [r.name for r in role_names]
 
     # Query to get current data
     rows = db.session.query(Role).filter(Role.name.in_(name_of_roles)).all()
-    name_of_rows = map(lambda r: r.name, rows)
+    name_of_rows = [r.name for r in rows]
 
     # Check which data that need to insert
-    roles = filter(lambda r: r.name not in name_of_rows, role_names)
+    roles = [r for r in role_names if r.name not in name_of_rows]
 
     # Insert data
     for role in roles:
@@ -52,14 +56,14 @@ def init_roles(db, role_names):
 def init_settings(db, setting_names):
 
     # Get key name of data
-    name_of_settings = map(lambda r: r.name, setting_names)
+    name_of_settings = [r.name for r in setting_names]
 
     # Query to get current data
     rows = db.session.query(Setting).filter(Setting.name.in_(name_of_settings)).all()
 
     # Check which data that need to insert
-    name_of_rows = map(lambda r: r.name, rows)
-    settings = filter(lambda r: r.name not in name_of_rows, setting_names)
+    name_of_rows = [r.name for r in rows]
+    settings = [r for r in setting_names if r.name not in name_of_rows]
 
     # Insert data
     for setting in settings:

@@ -2,20 +2,21 @@ import re
 import sys
 import json
 import requests
-import urlparse
 import hashlib
 
 from app import app
 from distutils.version import StrictVersion
+from urllib.parse import urlparse
 
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
 else:
     TIMEOUT = 10
 
+
 def auth_from_url(url):
     auth = None
-    parsed_url = urlparse.urlparse(url).netloc
+    parsed_url = urlparse(url).netloc
     if '@' in parsed_url:
         auth = parsed_url.split('@')[0].split(':')
         auth = requests.auth.HTTPBasicAuth(auth[0], auth[1])
@@ -55,7 +56,7 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
         if r.status_code not in (200, 400, 422):
             r.raise_for_status()
     except Exception as e:
-        raise RuntimeError("While fetching " + remote_url + ": " + str(e)), None, sys.exc_info()[2]
+        raise RuntimeError('Error while fetching {0}'.format(remote_url)) from e
 
     return r
 
@@ -72,16 +73,16 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
     try:
         assert('json' in r.headers['content-type'])
     except Exception as e:
-        raise Exception("While fetching " + remote_url + ": " + str(e)), None, sys.exc_info()[2]
+        raise RuntimeError('Error while fetching {0}'.format(remote_url)) from e
 
     # don't use r.json here, as it will read from r.text, which will trigger
     # content encoding auto-detection in almost all cases, WHICH IS EXTREMELY
     # SLOOOOOOOOOOOOOOOOOOOOOOW. just don't.
     data = None
     try:
-        data = json.loads(r.content)
-    except UnicodeDecodeError:
-        data = json.loads(r.content, 'iso-8859-1')
+        data = json.loads(r.content.decode('utf-8'))
+    except Exception as e:
+        raise RuntimeError('Error while loading JSON data from {0}'.format(remote_url)) from e
     return data
 
 
@@ -92,12 +93,14 @@ def display_record_name(data):
     else:
         return record_name.replace('.'+domain_name, '')
 
+
 def display_master_name(data):
     """
     input data: "[u'127.0.0.1', u'8.8.8.8']"
     """
     matches = re.findall(r'\'(.+?)\'', data)
     return ", ".join(matches)
+
 
 def display_time(amount, units='s', remove_seconds=True):
     """
@@ -139,6 +142,7 @@ def display_time(amount, units='s', remove_seconds=True):
 
     return final_string
 
+
 def pdns_api_extended_uri(version):
     """
     Check the pdns version
@@ -148,14 +152,10 @@ def pdns_api_extended_uri(version):
     else:
         return ""
 
-def email_to_gravatar_url(email, size=100):
+
+def email_to_gravatar_url(email="", size=100):
     """
     AD doesn't necessarily have email
     """
-
-    if not email:
-        email=""
-
-
-    hash_string = hashlib.md5(email).hexdigest()
-    return "https://s.gravatar.com/avatar/%s?s=%s" % (hash_string, size)
+    hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
+    return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)

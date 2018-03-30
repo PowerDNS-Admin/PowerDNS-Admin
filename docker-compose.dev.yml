@@ -1,0 +1,22 @@
+version: "2.1"
+
+services:
+  powerdns-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: powerdns-admin
+    container_name: powerdns-admin
+    mem_limit: 256M
+    memswap_limit: 256M
+    tty: true
+    command: /usr/bin/supervisord -c /etc/supervisord.conf
+    ports:
+      - "9191:9191"
+    volumes:
+      - .:/powerdns-admin/
+      - "./configs/development.py:/powerdns-admin/config.py"
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
