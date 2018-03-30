@@ -271,10 +271,6 @@ def logout():
 @login_required
 def dashboard():
     d = Domain().update()
-    if current_user.role.name == 'Administrator':
-        domains = Domain.query.all()
-    else:
-        domains = User(id=current_user.id).get_domain()
 
     # stats for dashboard
     domain_count = Domain.query.count()
@@ -287,7 +283,72 @@ def dashboard():
         uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
     else:
         uptime = 0
-    return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
+    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
+
+
+@app.route('/dashboard-domains', methods=['GET'])
+@login_required
+def dashboard_domains():
+    if current_user.role.name == 'Administrator':
+        domains = Domain.query
+    else:
+        domains = User(id=current_user.id).get_domain_query()
+
+    template = app.jinja_env.get_template("dashboard_domain.html")
+    render = template.make_module(vars={"current_user": current_user})
+
+    columns = [Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master]
+    # History.created_on.desc()
+    order_by = []
+    for i in range(len(columns)):
+        column_index = request.args.get("order[%d][column]" % i)
+        sort_direction = request.args.get("order[%d][dir]" % i)
+        if column_index is None:
+            break
+        if sort_direction != "asc" and sort_direction != "desc":
+            sort_direction = "asc"
+
+        column = columns[int(column_index)]
+        order_by.append(getattr(column, sort_direction)())
+
+    if order_by:
+        domains = domains.order_by(*order_by)
+
+    total_count = domains.count()
+
+    search = request.args.get("search[value]")
+    if search:
+        start = "" if search.startswith("^") else "%"
+        end = "" if search.endswith("$") else "%"
+        domains = domains.filter(Domain.name.ilike(start + search.strip("^$") + end))
+
+    filtered_count = domains.count()
+
+    start = int(request.args.get("start", 0))
+    length = min(int(request.args.get("length", 0)), 100)
+    domains = domains[start:start + length]
+
+    if current_user.role.name != 'Administrator':
+        domains = [d[2] for d in domains]
+
+    data = []
+    for domain in domains:
+        data.append([
+            render.name(domain),
+            render.dnssec(domain),
+            render.type(domain),
+            render.serial(domain),
+            render.master(domain),
+            render.actions(domain),
+        ])
+
+    response_data = {
+        "draw": int(request.args.get("draw", 0)),
+        "recordsTotal": total_count,
+        "recordsFiltered": filtered_count,
+        "data": data,
+    }
+    return jsonify(response_data)
 
 
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
