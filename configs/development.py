@@ -47,6 +47,19 @@ SIGNUP_ENABLED = True
 # GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:5000/oauth/token'
 # GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
 
+# GOOGLE AUTHENTICATION
+GOOGLE_OAUTH_ENABLE = True
+GOOGLE_OAUTH_CLIENT_ID = '829241394512-2dc9shen6tv8ouhot68lg9g6gc029cj3.apps.googleusercontent.com'
+GOOGLE_OAUTH_CLIENT_SECRET = 'wsa9oYp8kyCoIum44Pj1oICc'
+GOOGLE_REDIRECT_URI = '/user/authorized'
+GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
+GOOGLE_TOKEN_PARAMS = {
+    'scope': 'email profile'
+}
+GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
+GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
+
+
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://192.168.100.100:8081/'
 PDNS_API_KEY = 'changeme'
