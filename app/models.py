@@ -258,12 +258,12 @@ class User(db.Model):
         # check if username existed
         user = User.query.filter(User.username == self.username).first()
         if user:
-            return 'Username already existed'
+            return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
         user = User.query.filter(User.email == self.email).first()
         if user:
-            return 'Email already existed'
+            return {'status': False, 'msg': 'Email address is already in use'}
 
         # first register user will be in Administrator role
         self.role_id = Role.query.filter_by(name='User').first().id
@@ -274,7 +274,7 @@ class User(db.Model):
 
         db.session.add(self)
         db.session.commit()
-        return True
+        return {'status': True, 'msg': 'Created user successfully'}
 
     def update_profile(self, enable_otp=None):
         """

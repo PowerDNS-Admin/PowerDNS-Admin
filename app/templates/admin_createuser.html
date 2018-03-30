@@ -28,6 +28,14 @@
             <!-- form start -->
             <form role="form" method="post" action="{{ url_for('admin_createuser') }}">
                 <div class="box-body">
+                    {% if error %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                            {{ error }}
+                         </div>
+                        <span class="help-block">{{ error }}</span>
+                    {% endif %}
                     <div class="form-group has-feedback">
                         <label class="control-label" for="firstname">First Name</label>
                         <input type="text" class="form-control" placeholder="First Name"
@@ -40,24 +48,18 @@
                             name="lastname" {% if user %}value={{ user.lastname }}{% endif %}> <span
                             class="glyphicon glyphicon-user form-control-feedback"></span>
                     </div>
-                    <div class="form-group has-feedback {% if duplicate_email %}has-error{% endif %}">
+                    <div class="form-group has-feedback">
                         <label class="control-label" for="email">E-mail address</label>
                         <input type="email" class="form-control" placeholder="Email"
                             name="email" id="email" {% if user %}value={{ user.email }}{% endif %}> <span
                             class="glyphicon glyphicon-envelope form-control-feedback"></span>
-                        {% if duplicate_email %}
-                        <span class="help-block">This e-mail address is already in use.</span>
-                        {% endif %}
                     </div>
                     <p class="login-box-msg">Enter the account details below</p>
-                    <div class="form-group has-feedback {% if duplicate_username %}has-error{% endif %}">
+                    <div class="form-group has-feedback">
                         <label class="control-label" for="username">Username</label>
                         <input type="text" class="form-control" placeholder="Username"
                             name="username" {% if user %}value={{ user.username }}{% endif %}> <span
                             class="glyphicon glyphicon-user form-control-feedback"></span>
-                        {% if duplicate_username %}
-                        <span class="help-block">This username is already in use.</span>
-                        {% endif %}
                     </div>
                     <div class="form-group has-feedback {% if blank_password %}has-error{% endif %}">
                         <label class="control-label" for="username">Password</label>
