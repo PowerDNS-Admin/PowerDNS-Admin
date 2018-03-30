@@ -23,6 +23,7 @@ nosetests.xml
 flask
 config.py
 logfile.log
+log.txt
 
 db_repository/*
 upload/avatar/*

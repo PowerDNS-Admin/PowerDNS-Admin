@@ -5,7 +5,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 WTF_CSRF_ENABLED = True
 SECRET_KEY = 'We are the world'
 BIND_ADDRESS = '127.0.0.1'
-PORT = 9393
+PORT = 9191
 LOGIN_TITLE = "PDNS"
 
 # TIMEOUT - for large zones

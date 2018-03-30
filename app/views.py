@@ -18,7 +18,7 @@ from werkzeug.security import gen_salt
 
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
 from app import app, login_manager, github
-from lib import utils
+from app.lib import utils
 
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
@@ -34,35 +34,42 @@ if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
 else:
     NEW_SCHEMA = False
 
+
 @app.context_processor
 def inject_fullscreen_layout_setting():
     fullscreen_layout_setting = Setting.query.filter(Setting.name == 'fullscreen_layout').first()
     return dict(fullscreen_layout_setting=strtobool(fullscreen_layout_setting.value))
+
 
 @app.context_processor
 def inject_record_helper_setting():
     record_helper_setting = Setting.query.filter(Setting.name == 'record_helper').first()
     return dict(record_helper_setting=strtobool(record_helper_setting.value))
 
+
 @app.context_processor
 def inject_login_ldap_first_setting():
     login_ldap_first_setting = Setting.query.filter(Setting.name == 'login_ldap_first').first()
     return dict(login_ldap_first_setting=strtobool(login_ldap_first_setting.value))
+
 
 @app.context_processor
 def inject_default_record_table_size_setting():
     default_record_table_size_setting = Setting.query.filter(Setting.name == 'default_record_table_size').first()
     return dict(default_record_table_size_setting=default_record_table_size_setting.value)
 
+
 @app.context_processor
 def inject_default_domain_table_size_setting():
     default_domain_table_size_setting = Setting.query.filter(Setting.name == 'default_domain_table_size').first()
     return dict(default_domain_table_size_setting=default_domain_table_size_setting.value)
 
+
 @app.context_processor
 def inject_auto_ptr_setting():
     auto_ptr_setting = Setting.query.filter(Setting.name == 'auto_ptr').first()
     return dict(auto_ptr_setting=strtobool(auto_ptr_setting.value))
+
 
 # START USER AUTHENTICATION HANDLER
 @app.before_request
@@ -92,6 +99,7 @@ def dyndns_login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 @login_manager.request_loader
 def login_via_authorization_header(request):
     auth_header = request.headers.get('Authorization')
@@ -100,8 +108,7 @@ def login_via_authorization_header(request):
         try:
             auth_header = base64.b64decode(auth_header)
             username,password = auth_header.split(":")
-        except TypeError, e:
-            error = e.message['desc'] if 'desc' in e.message else e
+        except TypeError as e:
             return None
         user = User(username=username, password=password, plain_text_password=password)
         try:
@@ -111,10 +118,9 @@ def login_via_authorization_header(request):
             else:
                 login_user(user, remember = False)
                 return user
-        except Exception, e:
+        except:
             return None
     return None
-
 # END USER AUTHENTICATION HANDLER
 
 # START CUSTOMIZE DECORATOR
@@ -132,17 +138,21 @@ def admin_role_required(f):
 def http_bad_request(e):
     return redirect(url_for('error', code=400))
 
+
 @app.errorhandler(401)
 def http_unauthorized(e):
     return redirect(url_for('error', code=401))
+
 
 @app.errorhandler(404)
 def http_internal_server_error(e):
     return redirect(url_for('error', code=404))
 
+
 @app.errorhandler(500)
 def http_page_not_found(e):
     return redirect(url_for('error', code=500))
+
 
 @app.route('/error/<string:code>')
 def error(code, msg=None):
@@ -152,6 +162,7 @@ def error(code, msg=None):
     else:
         return render_template('errors/404.html'), 404
 
+
 @app.route('/register', methods=['GET'])
 def register():
     SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
@@ -160,11 +171,13 @@ def register():
     else:
         return render_template('errors/404.html'), 404
 
+
 @app.route('/github/login')
 def github_login():
     if not app.config.get('GITHUB_OAUTH_ENABLE'):
         return abort(400)
     return github.authorize(callback=url_for('authorized', _external=True))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
@@ -224,9 +237,8 @@ def login():
             auth = user.is_validate(method=auth_method)
             if auth == False:
                 return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
-        except Exception, e:
-            error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('login.html', error=error, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+        except Exception as e:
+            return render_template('login.html', error=e, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         # check if user enabled OPT authentication
         if user.otp_secret:
@@ -255,9 +267,9 @@ def login():
                 return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
             else:
                 return render_template('register.html', error=result)
-        except Exception, e:
-            error = e.message['desc'] if 'desc' in e.message else e
-            return render_template('register.html', error=error)
+        except Exception as e:
+            return render_template('register.html', error=e)
+
 
 @app.route('/logout')
 def logout():
@@ -284,7 +296,7 @@ def dashboard():
     server = Server(server_id='localhost')
     statistics = server.get_statistic()
     if statistics:
-        uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
+        uptime = list([uptime for uptime in statistics if uptime['name'] == 'uptime'])[0]['value']
     else:
         uptime = 0
     return render_template('dashboard.html', domains=domains, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history)
@@ -417,8 +429,7 @@ def record_apply(domain_name):
     """
     #TODO: filter removed records / name modified records.
     try:
-        pdata = request.data
-        jdata = json.loads(pdata)
+        jdata = request.json
 
         r = Record()
         result = r.apply(domain_name, jdata)
@@ -429,7 +440,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except:
-        print traceback.format_exc()
+        traceback.print_exc()
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -441,8 +452,7 @@ def record_update(domain_name):
     Pulling the records update from its Master
     """
     try:
-        pdata = request.data
-        jdata = json.loads(pdata)
+        jdata = request.json
 
         domain_name = jdata['domain']
         d = Domain()
@@ -452,7 +462,7 @@ def record_update(domain_name):
         else:
             return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
     except:
-        print traceback.format_exc()
+        traceback.print_exc()
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -464,9 +474,9 @@ def record_delete(domain_name, record_name, record_type):
         r = Record(name=record_name, type=record_type)
         result = r.delete(domain=domain_name)
         if result['status'] == 'error':
-            print result['msg']
+            print(result['msg'])
     except:
-        print traceback.format_exc()
+        traceback.print_exc()
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
@@ -478,6 +488,7 @@ def domain_dnssec(domain_name):
     dnssec = domain.get_domain_dnssec(domain_name)
     return make_response(jsonify(dnssec), 200)
 
+
 @app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
@@ -488,9 +499,9 @@ def admin_setdomainsetting(domain_name):
         # {'action': 'set_setting', 'setting': 'default_action, 'value': 'True'}
         #
         try:
-            pdata = request.data
-            jdata = json.loads(pdata)
+            jdata = request.json
             data = jdata['data']
+
             if jdata['action'] == 'set_setting':
                 new_setting = data['setting']
                 new_value = str(data['value'])
@@ -514,7 +525,7 @@ def admin_setdomainsetting(domain_name):
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            print traceback.format_exc()
+            traceback.print_exc()
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -531,11 +542,12 @@ def admin():
     history_number = History.query.count()
 
     if statistics:
-        uptime = filter(lambda uptime: uptime['name'] == 'uptime', statistics)[0]['value']
+        uptime = list([uptime for uptime in statistics if uptime['name'] == 'uptime'])[0]['value']
     else:
         uptime = 0
 
     return render_template('admin.html', domains=domains, users=users, configs=configs, statistics=statistics, uptime=uptime, history_number=history_number)
+
 
 @app.route('/admin/user/create', methods=['GET', 'POST'])
 @login_required
@@ -562,6 +574,7 @@ def admin_createuser():
 
         return redirect(url_for('admin_manageuser'))
 
+
 @app.route('/admin/manageuser', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
@@ -576,8 +589,7 @@ def admin_manageuser():
         # {'action': 'delete_user', 'data': 'username'}
         #
         try:
-            pdata = request.data
-            jdata = json.loads(pdata)
+            jdata = request.json
             data = jdata['data']
 
             if jdata['action'] == 'delete_user':
@@ -614,7 +626,7 @@ def admin_manageuser():
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            print traceback.format_exc()
+            traceback.print_exc()
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -637,6 +649,7 @@ def admin_history():
         histories = History.query.all()
         return render_template('admin_history.html', histories=histories)
 
+
 @app.route('/admin/settings', methods=['GET'])
 @login_required
 @admin_role_required
@@ -644,6 +657,7 @@ def admin_settings():
     if request.method == 'GET':
         settings = Setting.query.filter(Setting.name != 'maintenance')
         return render_template('admin_settings.html', settings=settings)
+
 
 @app.route('/admin/setting/<string:setting>/toggle', methods=['POST'])
 @login_required
@@ -655,18 +669,20 @@ def admin_settings_toggle(setting):
     else:
         return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
 
+
 @app.route('/admin/setting/<string:setting>/edit', methods=['POST'])
 @login_required
 @admin_role_required
 def admin_settings_edit(setting):
-    pdata = request.data
-    jdata = json.loads(pdata)
+    jdata = request.json
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
+
     if (result):
         return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
     else:
         return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
+
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -682,7 +698,7 @@ def user_profile():
 
         # json data
         if request.data:
-            jdata = json.loads(request.data)
+            jdata = request.json
             data = jdata['data']
             if jdata['action'] == 'enable_otp':
                 enable_otp = data['enable_otp']
@@ -701,7 +717,6 @@ def user_profile():
                 if file_extension.lower() in ['jpg', 'jpeg', 'png']:
                     save_file_name = current_user.username + '.' + file_extension
                     file.save(os.path.join(app.config['UPLOAD_DIR'], 'avatar', save_file_name))
-
 
         # update user profile
         user = User(username=current_user.username, plain_text_password=new_password, firstname=firstname, lastname=lastname, email=email, avatar=save_file_name, reload_info=False)
@@ -736,6 +751,7 @@ def qrcode():
 def dyndns_checkip():
     # route covers the default ddclient 'web' setting for the checkip service
     return render_template('dyndns.html', response=request.environ.get('HTTP_X_REAL_IP', request.remote_addr))
+
 
 @app.route('/nic/update', methods=['GET', 'POST'])
 @dyndns_login_required
