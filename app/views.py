@@ -154,7 +154,7 @@ def http_page_not_found(e):
     return redirect(url_for('error', code=500))
 
 
-@app.route('/error/<string:code>')
+@app.route('/error/<path:code>')
 def error(code, msg=None):
     supported_code = ('400', '401', '404', '500')
     if code in supported_code:
@@ -472,7 +472,7 @@ def domain_add():
     return render_template('domain_add.html')
 
 
-@app.route('/admin/domain/<string:domain_name>/delete', methods=['GET'])
+@app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
 @login_required
 @admin_role_required
 def domain_delete(domain_name):
@@ -488,7 +488,7 @@ def domain_delete(domain_name):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/admin/domain/<string:domain_name>/manage', methods=['GET', 'POST'])
+@app.route('/admin/domain/<path:domain_name>/manage', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def domain_management(domain_name):
@@ -521,7 +521,7 @@ def domain_management(domain_name):
         return redirect(url_for('domain_management', domain_name=domain_name))
 
 
-@app.route('/domain/<string:domain_name>/apply', methods=['POST'], strict_slashes=False)
+@app.route('/domain/<path:domain_name>/apply', methods=['POST'], strict_slashes=False)
 @login_required
 def record_apply(domain_name):
     """
@@ -544,7 +544,7 @@ def record_apply(domain_name):
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
-@app.route('/domain/<string:domain_name>/update', methods=['POST'], strict_slashes=False)
+@app.route('/domain/<path:domain_name>/update', methods=['POST'], strict_slashes=False)
 @login_required
 def record_update(domain_name):
     """
@@ -566,7 +566,7 @@ def record_update(domain_name):
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
-@app.route('/domain/<string:domain_name>/record/<string:record_name>/type/<string:record_type>/delete', methods=['GET'])
+@app.route('/domain/<path:domain_name>/record/<path:record_name>/type/<path:record_type>/delete', methods=['GET'])
 @login_required
 @admin_role_required
 def record_delete(domain_name, record_name, record_type):
@@ -581,7 +581,7 @@ def record_delete(domain_name, record_name, record_type):
     return redirect(url_for('domain', domain_name=domain_name))
 
 
-@app.route('/domain/<string:domain_name>/dnssec', methods=['GET'])
+@app.route('/domain/<path:domain_name>/dnssec', methods=['GET'])
 @login_required
 def domain_dnssec(domain_name):
     domain = Domain()
@@ -589,7 +589,7 @@ def domain_dnssec(domain_name):
     return make_response(jsonify(dnssec), 200)
 
 
-@app.route('/domain/<string:domain_name>/managesetting', methods=['GET', 'POST'])
+@app.route('/domain/<path:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def admin_setdomainsetting(domain_name):
@@ -755,7 +755,7 @@ def admin_settings():
         return render_template('admin_settings.html', settings=settings)
 
 
-@app.route('/admin/setting/<string:setting>/toggle', methods=['POST'])
+@app.route('/admin/setting/<path:setting>/toggle', methods=['POST'])
 @login_required
 @admin_role_required
 def admin_settings_toggle(setting):
@@ -766,7 +766,7 @@ def admin_settings_toggle(setting):
         return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
 
 
-@app.route('/admin/setting/<string:setting>/edit', methods=['POST'])
+@app.route('/admin/setting/<path:setting>/edit', methods=['POST'])
 @login_required
 @admin_role_required
 def admin_settings_edit(setting):
@@ -821,7 +821,7 @@ def user_profile():
         return render_template('user_profile.html')
 
 
-@app.route('/user/avatar/<string:filename>')
+@app.route('/user/avatar/<path:filename>')
 def user_avatar(filename):
     return send_from_directory(os.path.join(app.config['UPLOAD_DIR'], 'avatar'), filename)
 
