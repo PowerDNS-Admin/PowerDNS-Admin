@@ -9,6 +9,7 @@ import traceback
 import pyotp
 import re
 import dns.reversename
+import sys
 
 from datetime import datetime
 from distutils.util import strtobool
@@ -186,11 +187,13 @@ class User(db.Model):
                 logging.error('LDAP authentication is disabled')
                 return False
 
-            searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
-            if LDAP_TYPE == 'ldap':
-              searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
-              logging.info('Ldap searchFilter "%s"' % searchFilter)
+            if LDAP_TYPE == 'ad':
+                searchFilter = "(&(objectcategory=person)(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
 
+            elif LDAP_TYPE == 'ldap':
+                searchFilter = "(&(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+
+            logging.info('Ldap searchFilter "%s"' % searchFilter)
             result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             if not result:
                 logging.warning('User "%s" does not exist' % self.username)
@@ -221,6 +224,12 @@ class User(db.Model):
                     self.firstname = result[0][0][1]['givenName'][0]
                     self.lastname = result[0][0][1]['sn'][0]
                     self.email = result[0][0][1]['mail'][0]
+
+                    if sys.version_info < (3,):
+                        if isinstance(self.firstname, str):
+                            self.firstname = self.firstname.decode('utf-8')
+                        if isinstance(self.lastname, str):
+                            self.lastname = self.lastname.decode('utf-8')
                 except Exception:
                     self.firstname = self.username
                     self.lastname = ''
