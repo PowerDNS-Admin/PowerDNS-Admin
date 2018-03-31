@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}<title>DNS Control Panel - DOMAIN</title>{% endblock %}
+{% block title %}<title>DNS Control Panel - Edit Template</title>{% endblock %}
 
 {% block dashboard_stat %}
 <section class="content-header">
     <h1>
-        Manage domain <small>{{ domain.name }}</small>
+        Edit template <small>{{ template }}</small>
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for('dashboard') }}"><i
                 class="fa fa-dashboard"></i> Home</a></li>
-        <li>Domain</li>
-        <li class="active">{{ domain.name }}</li>
+        <li>Templates</li>
+        <li class="active">{{ template }}</li>
     </ol>
 </section>
 {% endblock %}
@@ -21,21 +21,15 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
-                    <h3 class="box-title">Manage Records for {{ domain.name }}</h3>
+                    <h3 class="box-title">Manage Template Records for {{ template }}</h3>
                 </div>
                 <div class="box-body">
-                    {% if domain.type != 'Slave' %}
-                    <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ template }}">
                         Add Record&nbsp;<i class="fa fa-plus"></i>
                     </button>
-                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ template }}">
                         Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
                     </button>
-                    {% else %}
-                    <button type="button" class="btn btn-flat btn-primary pull-left button_update_from_master" id="{{ domain.name }}">
-                        Update from Master&nbsp;<i class="fa fa-download"></i>
-                    </button>
-                    {% endif %}
                 </div>
                 <div class="box-body">
                     <table id="tbl_records" class="table table-bordered table-striped">
@@ -48,13 +42,14 @@
                                 <th>Data</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
+                                <th>ID</th>
                             </tr>
                         </thead>
                         <tbody>
                                 {% for record in records %}
-                                <tr class="odd row_record" id="{{ domain.name }}">
+                                <tr class="odd row_record" id="{{ record.name }}">
                                     <td>
-                                        {{ (record.name,domain.name)|display_record_name }}
+                                        {{ record.name }}
                                     </td>
                                     <td>
                                         {{ record.type }}
@@ -68,41 +63,28 @@
                                     <td class="length-break">
                                          {{ record.data }}
                                     </td>
-                                {% if domain.type != 'Slave' %}
                                     <td width="6%">
-                                    {% if record.is_allowed_edit() %}
-                                        <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">Edit&nbsp;<i class="fa fa-edit"></i></button>
-                                       {% else %}
-                                       <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
-                                    {% endif %}
+                                         <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ record.name }}">
+                                            Edit&nbsp;<i class="fa fa-edit"></i>
+                                        </button>
                                     </td>
                                     <td width="6%">
-                                    {% if record.is_allowed_delete() %}
-                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">Delete&nbsp;<i class="fa fa-trash"></i></button>
-                                    {% endif %}
-                                {% else %}
-                                    <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ record.name }}">
+                                            Delete&nbsp;<i class="fa fa-trash"></i>
+                                        </button>
                                     </td>
-                                    <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                    <td>
+                                    	{{ record.id }}
                                     </td>
-                                {% endif %}
                                     </td>
-                                    <!-- hidden column that we can sort on -->
-                                    <td>1</td>
                                 </tr>
                                 {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <!-- /.box-body -->
             </div>
-            <!-- /.box -->
         </div>
-        <!-- /.col -->
     </div>
-    <!-- /.row -->
 </section>
 {% endblock %}
 {% block extrascripts %}
@@ -132,21 +114,14 @@
             "lengthMenu": " _MENU_ records"
         },
         "retrieve" : true,
-        "columnDefs": [
-            {
-                type: 'natural',
-                targets: [0, 4]
-            },
-            {
-                // hidden column so that we can add new records on top
-                // regardless of whatever sorting is done
-                visible: false,
-                targets: [ 7 ]
-            }
-        ],
-        "orderFixed": [[7, 'asc']]
+        "columnDefs": [{
+        	"targets": [ 7 ],
+        	"visible": false,
+        	"searchable": false
+        }]
+
     });
-    
+
     // handle delete button
     $(document.body).on("click", ".button_delete", function(e) {
         e.stopPropagation();
@@ -154,25 +129,25 @@
         var table = $("#tbl_records").DataTable();
         var record = $(this).prop('id');
         var nRow = $(this).parents('tr')[0];
-        var info = "Are you sure you want to delete " + record + "?"; 
+        var info = "Are you sure you want to delete " + record + "?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_delete_confirm').click(function() {
             table.row(nRow).remove().draw();
             modal.modal('hide');
         })
         modal.modal('show');
-        
+
     });
     // handle edit button
     $(document.body).on("click", ".button_edit, .row_record", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
-            var nRow = $(this)[0]; 
+            var nRow = $(this)[0];
          } else {
             var nRow = $(this).parents('tr')[0];
          }
          var table = $("#tbl_records").DataTable();
-        
+
         if (nEditing == nRow) {
             /* click on row already being edited, do nothing */
         } else if (nEditing !== null && nEditing != nRow && nNew == false) {
@@ -192,43 +167,39 @@
              nEditing = nRow;
          }
     });
-    
+
     // handle apply changes button
     $(document.body).on("click",".button_apply_changes", function() {
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
-        var domain = $(this).prop('id');
-        var info = "Are you sure you want to apply your changes?"; 
+        var template = $(this).prop('id');
+        var info = "Are you sure you want to apply your changes?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_apply_confirm').click(function() {
             var data = getTableData(table);
-            applyChanges(data, $SCRIPT_ROOT + '/domain/' + domain + '/apply', true);
+            applyChanges(data, '/template/' + template + '/apply', true);
             modal.modal('hide');
         })
         modal.modal('show');
-        
+
     });
-    
+
     // handle add record button
     $(document.body).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
-                var modal = $("#modal_error");
-                modal.find('.modal-body p').text("Previous record not saved. Please save it before adding more record.");
-                modal.modal('show');
+                // TODO: replace this alert with modal
+                alert("Previous record not saved. Please save it before adding more record.")
                 return;
             }
-            // clear search first
-            $("#tbl_records").DataTable().search('').columns().search('').draw();
-            
-            // add new row
-            var default_type = records_allow_edit[0]
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '0']);
-            editRow($("#tbl_records").DataTable(), nRow);
-            document.getElementById("edit-row-focus").focus();
+            var table = $("#tbl_records").DataTable();
+
+            var aiNew = table.row.add(['', 'A', 'Active', 3600, '', '', '', '']).draw();
+            var nRow = aiNew.index();
+            editRow(table, nRow);
             nEditing = nRow;
             nNew = true;
         });
-    
+
     //handle cancel button
     $(document.body).on("click", ".button_cancel", function (e) {
             e.stopPropagation();
@@ -242,7 +213,7 @@
                 nEditing = null;
             }
         });
-    
+
     //handle save button
     $(document.body).on("click", ".button_save", function (e) {
             e.stopPropagation();
@@ -251,62 +222,26 @@
             nEditing = null;
             nNew = false;
         });
-    
-    //handle update_from_master button
-    $(document.body).on("click", ".button_update_from_master", function (e) {
-            var domain = $(this).prop('id');
-            applyChanges({'domain': domain}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
-    });
-    
+
     {% if record_helper_setting %}
     //handle wacky record types
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();
         var record_data = $(this);
-        if (record_type == "CAA") {
-            var modal = $("#modal_custom_record");
-            if (record_data.val() == "") {
-                var form = "    <label for=\"caa_flag\">CAA Flag</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"caa_flag\" id=\"caa_flag\" placeholder=\"0\"> \
-                                <label for=\"caa_tag\">CAA Tag</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"caa_tag\" id=\"caa_tag\" placeholder=\"issue\"> \
-                                <label for=\"caa_value\">CAA Value</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"caa_value\" id=\"caa_value\" placeholder=\"eg. letsencrypt.org\"> \
-                            ";
-            } else {
-                var parts = record_data.val().split(" "); 
-                var form = "    <label for=\"caa_flag\">CAA Flag</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"caa_flag\" id=\"caa_flag\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
-                                <label for=\"caa_tag\">CAA Tag</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"caa_tag\" id=\"caa_tag\" placeholder=\"issue\" value=\"" + parts[1] + "\"> \
-                                <label for=\"caa_value\">CAA Value</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"caa_value\" id=\"caa_value\" placeholder=\"eg. letsencrypt.org\" value=\"" + parts[2] + "\"> \
-                            ";
-            }
-            modal.find('.modal-body p').html(form);
-            modal.find('#button_save').click(function() {
-                caa_flag = modal.find('#caa_flag').val();
-                caa_tag = modal.find('#caa_tag').val();
-                caa_value = modal.find('#caa_value').val();
-                data = caa_flag + " " + caa_tag + " " + '"' + caa_value + '"';
-                record_data.val(data);
-                modal.modal('hide');
-            })
-            modal.modal('show');
-        } else if (record_type == "MX") {
+        if (record_type == "MX") {
             var modal = $("#modal_custom_record");
             if (record_data.val() == "") {
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\"> \
                                 <label for=\"mx_server\">MX Server</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\"> \
                             ";
             } else {
                 var parts = record_data.val().split(" ");
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\" value=\"" + parts[0] + "\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\" value=\"" + parts[0] + "\"> \
                                 <label for=\"mx_server\">MX Server</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\" value=\"" + parts[1] + "\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\" value=\"" + parts[1] + "\"> \
                             ";
             }
             modal.find('.modal-body p').html(form);
@@ -331,7 +266,7 @@
                                 <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\"> \
                             ";
             } else {
-                var parts = record_data.val().split(" "); 
+                var parts = record_data.val().split(" ");
                 var form = "    <label for=\"srv_priority\">SRV Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
                                 <label for=\"srv_weight\">SRV Weight</label> \
@@ -352,7 +287,7 @@
                 record_data.val(data);
                 modal.modal('hide');
             })
-			modal.modal('show');
+            modal.modal('show');
             } else if (record_type == "SOA") {
                 var modal = $("#modal_custom_record");
                 if (record_data.val() == "") {
@@ -372,7 +307,7 @@
                                     <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
                                 ";
                 } else {
-                    var parts = record_data.val().split(" "); 
+                    var parts = record_data.val().split(" ");
                     var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
                                     <label for=\"soa_adminemail\">Primary Contact</label> \
@@ -390,7 +325,7 @@
                     ";
                 }
                 modal.find('.modal-body p').html(form);
-                modal.find('#button_save').click(function() {                   
+                modal.find('#button_save').click(function() {
                     soa_primaryns = modal.find('#soa_primaryns').val();
                     soa_adminemail = modal.find('#soa_adminemail').val();
                     soa_serial = modal.find('#soa_serial').val();
@@ -398,7 +333,7 @@
                     soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
                     soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
                     soa_minimumttl = modal.find('#soa_minimumttl').val();
-                    
+
                     data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
                     record_data.val(data);
                     modal.modal('hide');

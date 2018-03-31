@@ -47,6 +47,15 @@
                             </label>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label>Select a template</label>
+                        <select class="form-control" id="domain_template" name="domain_template">
+                            <option value="0">No template</option>
+                            {% for template in templates %}
+                            <option value="{{ template.id }}">{{ template.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="form-group" style="display: none;" id="domain_master_address_div">
                         <input type="text" class="form-control" name="domain_master_address" id="domain_master_address" placeholder="Enter valid master ip addresses (separated by commas)">
                     </div>

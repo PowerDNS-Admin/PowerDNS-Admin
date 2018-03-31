@@ -11,17 +11,21 @@ from io import BytesIO
 import jinja2
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
-from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort
+from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 from werkzeug.security import gen_salt
 
-from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
+from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, github, google
 from app.lib import utils
+from app.lib.log import logger
 from app.decorators import admin_role_required, can_access_domain
 
+# LOG CONFIG
+logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
 
+# FILTERS
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
 jinja2.filters.FILTERS['display_master_name'] = utils.display_master_name
 jinja2.filters.FILTERS['display_second_to_time'] = utils.display_time
@@ -436,10 +440,13 @@ def domain(domain_name):
 @login_required
 @admin_role_required
 def domain_add():
+    templates = DomainTemplate.query.all()
     if request.method == 'POST':
         try:
             domain_name = request.form.getlist('domain_name')[0]
             domain_type = request.form.getlist('radio_type')[0]
+            domain_template = request.form.getlist('domain_template')[0]
+            logging.info("Selected template ==== {0}".format(domain_template))
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
@@ -457,12 +464,28 @@ def domain_add():
             if result['status'] == 'ok':
                 history = History(msg='Add domain %s' % domain_name, detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips}), created_by=current_user.username)
                 history.add()
+                if domain_template != '0':
+                    template = DomainTemplate.query.filter(DomainTemplate.id == domain_template).first()
+                    template_records = DomainTemplateRecord.query.filter(DomainTemplateRecord.template_id == domain_template).all()
+                    record_data = []
+                    for template_record in template_records:
+                        record_row = {'record_data': template_record.data, 'record_name': template_record.name, 'record_status': template_record.status, 'record_ttl': template_record.ttl, 'record_type': template_record.type}
+                        record_data.append(record_row)
+                    r = Record()
+                    result = r.apply(domain_name, record_data)
+                    if result['status'] == 'ok':
+                        history = History(msg='Applying template %s to %s, created records successfully.' % (template.name, domain_name), detail=str(result), created_by=current_user.username)
+                        history.add()
+                    else:
+                        history = History(msg='Applying template %s to %s, FAILED to created records.' % (template.name, domain_name), detail=str(result), created_by=current_user.username)
+                        history.add()
                 return redirect(url_for('dashboard'))
             else:
                 return render_template('errors/400.html', msg=result['msg']), 400
         except:
+            logging.error(traceback.print_exc())
             return redirect(url_for('error', code=500))
-    return render_template('domain_add.html')
+    return render_template('domain_add.html', templates=templates)
 
 
 @app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
@@ -534,7 +557,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except:
-        traceback.print_exc()
+        logging.error(traceback.print_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -557,7 +580,7 @@ def record_update(domain_name):
         else:
             return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
     except:
-        traceback.print_exc()
+        logging.error(traceback.print_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -571,7 +594,7 @@ def record_delete(domain_name, record_name, record_type):
         if result['status'] == 'error':
             print(result['msg'])
     except:
-        traceback.print_exc()
+        logging.error(traceback.print_exc())
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
@@ -621,8 +644,180 @@ def admin_setdomainsetting(domain_name):
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            traceback.print_exc()
+            logging.error(traceback.print_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
+
+
+@app.route('/templates', methods=['GET', 'POST'])
+@app.route('/templates/list', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def templates():
+    templates = DomainTemplate.query.all()
+    return render_template('template.html', templates=templates)
+
+
+@app.route('/template/create', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def create_template():
+    if request.method == 'GET':
+        return render_template('template_add.html')
+    if request.method == 'POST':
+        try:
+            name = request.form.getlist('name')[0]
+            description = request.form.getlist('description')[0]
+
+            if ' ' in name or not name or not type:
+                flash("Please correct your input", 'error')
+                return redirect(url_for('create_template'))
+
+            if DomainTemplate.query.filter(DomainTemplate.name == name).first():
+                flash("A template with the name %s already exists!" % name, 'error')
+                return redirect(url_for('create_template'))
+            t = DomainTemplate(name=name, description=description)
+            result = t.create()
+            if result['status'] == 'ok':
+                history = History(msg='Add domain template %s' % name, detail=str({'name': name, 'description': description}), created_by=current_user.username)
+                history.add()
+                return redirect(url_for('templates'))
+            else:
+                flash(result['msg'], 'error')
+                return redirect(url_for('create_template'))
+        except:
+            logging.error(traceback.print_exc())
+            return redirect(url_for('error', code=500))
+        return redirect(url_for('templates'))
+
+
+@app.route('/template/createfromzone', methods=['POST'])
+@login_required
+@admin_role_required
+def create_template_from_zone():
+    try:
+        jdata = request.json
+        name = jdata['name']
+        description = jdata['description']
+        domain_name = jdata['domain']
+
+        if ' ' in name or not name or not type:
+            return make_response(jsonify({'status': 'error', 'msg': 'Please correct template name'}), 500)
+
+        if DomainTemplate.query.filter(DomainTemplate.name == name).first():
+            return make_response(jsonify({'status': 'error', 'msg': 'A template with the name %s already exists!' % name}), 500)
+
+        t = DomainTemplate(name=name, description=description)
+        result = t.create()
+        if result['status'] == 'ok':
+            history = History(msg='Add domain template %s' % name, detail=str({'name': name, 'description': description}), created_by=current_user.username)
+            history.add()
+
+            records = []
+            r = Record()
+            domain = Domain.query.filter(Domain.name == domain_name).first()
+            if domain:
+                # query domain info from PowerDNS API
+                zone_info = r.get_record_data(domain.name)
+                if zone_info:
+                    jrecords = zone_info['records']
+
+                if NEW_SCHEMA:
+                    for jr in jrecords:
+                        name = '@' if jr['name'] == domain_name else jr['name']
+                        if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                            for subrecord in jr['records']:
+
+                                record = DomainTemplateRecord(name=name, type=jr['type'], status=True if subrecord['disabled'] else False, ttl=jr['ttl'], data=subrecord['content'])
+                                records.append(record)
+                else:
+                    for jr in jrecords:
+                        if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                            record = DomainTemplateRecord(name=name, type=jr['type'], status=True if jr['disabled'] else False, ttl=jr['ttl'], data=jr['content'])
+                            records.append(record)
+            result_records = t.replace_records(records)
+
+            if result_records['status'] == 'ok':
+                    return make_response(jsonify({'status': 'ok', 'msg': result['msg']}), 200)
+            else:
+                result = t.delete_template()
+                return make_response(jsonify({'status': 'error', 'msg': result_records['msg']}), 500)
+
+        else:
+            return make_response(jsonify({'status': 'error', 'msg': result['msg']}), 500)
+    except:
+        logging.error(traceback.print_exc())
+        return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
+
+
+@app.route('/template/<string:template>/edit', methods=['GET'])
+@login_required
+@admin_role_required
+def edit_template(template):
+    try:
+        t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
+        if t is not None:
+            records = []
+            for jr in t.records:
+                if jr.type in app.config['RECORDS_ALLOW_EDIT']:
+                        record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
+                        records.append(record)
+
+            return render_template('template_edit.html', template=t.name, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
+    except:
+        logging.error(traceback.print_exc())
+        return redirect(url_for('error', code=500))
+    return redirect(url_for('templates'))
+
+
+@app.route('/template/<string:template>/apply', methods=['POST'], strict_slashes=False)
+@login_required
+def apply_records(template):
+    try:
+        jdata = request.json
+        records = []
+
+        for j in jdata:
+            name = '@' if j['record_name'] in ['@', ''] else j['record_name']
+            type = j['record_type']
+            data = j['record_data']
+            disabled = True if j['record_status'] == 'Disabled' else False
+            ttl = int(j['record_ttl']) if j['record_ttl'] else 3600
+
+            dtr = DomainTemplateRecord(name=name, type=type, data=data, status=disabled, ttl=ttl)
+            records.append(dtr)
+
+        t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
+        result = t.replace_records(records)
+        if result['status'] == 'ok':
+            history = History(msg='Apply domain template record changes to domain template %s' % template, detail=str(jdata), created_by=current_user.username)
+            history.add()
+            return make_response(jsonify(result), 200)
+        else:
+            return make_response(jsonify(result), 400)
+    except:
+        logging.error(traceback.print_exc())
+        return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
+
+
+@app.route('/template/<string:template>/delete', methods=['GET'])
+@login_required
+@admin_role_required
+def delete_template(template):
+    try:
+        t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
+        if t is not None:
+            result = t.delete_template()
+            if result['status'] == 'ok':
+                history = History(msg='Deleted domain template %s' % template, detail=str({'name': template}), created_by=current_user.username)
+                history.add()
+                return redirect(url_for('templates'))
+            else:
+                flash(result['msg'], 'error')
+                return redirect(url_for('templates'))
+    except:
+        logging.error(traceback.print_exc())
+        return redirect(url_for('error', code=500))
+    return redirect(url_for('templates'))
 
 
 @app.route('/admin', methods=['GET', 'POST'])
@@ -718,7 +913,7 @@ def admin_manageuser():
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            traceback.print_exc()
+            logging.error(traceback.print_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -883,7 +1078,7 @@ def dyndns_update():
     r = Record()
     r.name = hostname
     # check if the user requested record exists within this domain
-    if r.exists(domain.name) and r.is_allowed:
+    if r.exists(domain.name) and r.is_allowed_edit():
         if r.data == myip:
             # record content did not change, return 'nochg'
             history = History(msg="DynDNS update: attempted update of %s but record did not change" % hostname, created_by=current_user.username)
@@ -898,7 +1093,7 @@ def dyndns_update():
                 return render_template('dyndns.html', response='good'), 200
             else:
                 return render_template('dyndns.html', response='911'), 200
-    elif r.is_allowed:
+    elif r.is_allowed_edit():
         ondemand_creation = DomainSetting.query.filter(DomainSetting.domain == domain).filter(DomainSetting.setting == 'create_via_dyndns').first()
         if (ondemand_creation != None) and (strtobool(ondemand_creation.value) == True):
             record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)

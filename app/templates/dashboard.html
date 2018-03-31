@@ -203,6 +203,31 @@
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
     });
+
+    $(document.body).on("click", ".button_template", function (e) {
+        var modal = $("#modal_template");
+        var domain = $(this).prop('id');
+        var form = "    <label for=\"template_name\">Template name</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"template_name\" id=\"template_name\" placeholder=\"Enter a valid template name (required)\"> \
+                        <label for=\"template_description\">Template description</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"template_description\" id=\"template_description\" placeholder=\"Enter a template description (optional)\"> \
+                        <input id=\"domain\" name=\"domain\" type=\"hidden\" value=\""+domain+"\"> \
+                    ";
+        modal.find('.modal-body p').html(form);        
+        modal.find('#button_save').click(function() {                   
+            var data = {};
+            data['name'] = modal.find('#template_name').val();
+            data['description'] = modal.find('#template_description').val();
+            data['domain'] = modal.find('#domain').val();
+            applyChanges(data, $SCRIPT_ROOT + "{{ url_for('create_template_from_zone') }}", true);
+            modal.modal('hide');
+        })
+        modal.find('#button_close').click(function() {
+            modal.modal('hide');
+        })
+        
+        modal.modal('show');
+    });
 </script>
 {% endblock %}
 {% block modals %}
@@ -252,4 +277,27 @@
     <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+<div class="modal fade modal-primary" id="modal_template">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Clone to template</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    id="button_close" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
 {% endblock %}
