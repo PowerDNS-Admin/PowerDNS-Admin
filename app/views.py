@@ -19,6 +19,7 @@ from werkzeug.security import gen_salt
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting
 from app import app, login_manager, github, google
 from app.lib import utils
+from app.decorators import admin_role_required, can_access_domain
 
 
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
@@ -123,15 +124,6 @@ def login_via_authorization_header(request):
     return None
 # END USER AUTHENTICATION HANDLER
 
-# START CUSTOMIZE DECORATOR
-def admin_role_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if g.user.role.name != 'Administrator':
-            return redirect(url_for('error', code=401))
-        return f(*args, **kwargs)
-    return decorated_function
-# END CUSTOMIZE DECORATOR
 
 # START VIEWS
 @app.errorhandler(400)
@@ -405,6 +397,7 @@ def dashboard_domains():
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
 @app.route('/domain', methods=['GET', 'POST'])
 @login_required
+@can_access_domain
 def domain(domain_name):
     r = Record()
     domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -523,6 +516,7 @@ def domain_management(domain_name):
 
 @app.route('/domain/<path:domain_name>/apply', methods=['POST'], strict_slashes=False)
 @login_required
+@can_access_domain
 def record_apply(domain_name):
     """
     example jdata: {u'record_ttl': u'1800', u'record_type': u'CNAME', u'record_name': u'test4', u'record_status': u'Active', u'record_data': u'duykhanh.me'}
@@ -546,6 +540,7 @@ def record_apply(domain_name):
 
 @app.route('/domain/<path:domain_name>/update', methods=['POST'], strict_slashes=False)
 @login_required
+@can_access_domain
 def record_update(domain_name):
     """
     This route is used for domain work as Slave Zone only
@@ -582,6 +577,7 @@ def record_delete(domain_name, record_name, record_type):
 
 
 @app.route('/domain/<path:domain_name>/dnssec', methods=['GET'])
+@can_access_domain
 @login_required
 def domain_dnssec(domain_name):
     domain = Domain()
