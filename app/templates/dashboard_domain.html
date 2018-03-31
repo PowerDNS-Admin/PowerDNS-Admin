@@ -27,19 +27,22 @@
 {% endmacro %}
 
 {% macro actions(domain) %}
-  {% if current_user.role.name !='Administrator' %}
-    <td width="6%">
-      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
-        Manage&nbsp;<i class="fa fa-cog"></i>
+  {% if current_user.role.name =='Administrator' %}
+    <td width="25%">
+      <button type="button" class="btn btn-flat btn-success button_template" id="{{ domain.name }}">
+        Template&nbsp;<i class="fa fa-clone"></i>
       </button>
-    </td>
-    {% else %}
-    <td width="20%">
       <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
         Manage&nbsp;<i class="fa fa-cog"></i>
       </button>
       <button type="button" class="btn btn-flat btn-danger" onclick="window.location.href='{{ url_for('domain_management', domain_name=domain.name) }}'">
         Admin&nbsp;<i class="fa fa-cog"></i>
+      </button>
+    </td>
+    {% else %}
+    <td width="6%">
+      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
+        Manage&nbsp;<i class="fa fa-cog"></i>
       </button>
     </td>
   {% endif %}
