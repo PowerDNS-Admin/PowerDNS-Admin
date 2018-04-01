@@ -78,13 +78,24 @@
     // set up user data table
     $("#tbl_users").DataTable({
         "paging" : true,
-        "lengthChange" : false,
+        "lengthChange" : true,
         "searching" : true,
         "ordering" : true,
-        "info" : true,
-        "autoWidth" : false
+        "info" : false,
+        "autoWidth" : false,
+        "lengthMenu": [ [10, 25, 50, 100, -1],
+                      [10, 25, 50, 100, "All"]],
+        "pageLength": 10
     });
-    
+
+    // avoid losing icheck box style when database refreshed
+    $('#tbl_users').on('draw.dt', function () {
+        $('.admin_toggle').iCheck({
+            handle: 'checkbox',
+            checkboxClass: 'icheckbox_square-blue'
+        });
+    });
+
     // handle revocation of privileges
     $(document.body).on('click', '.button_revoke', function() {
         var modal = $("#modal_revoke");
