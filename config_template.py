@@ -36,6 +36,7 @@ SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 # LDAP CONFIG
+LDAP_ENABLE = False
 LDAP_TYPE = 'ldap'
 LDAP_URI = 'ldaps://your-ldap-server:636'
 # with LDAP_BIND_TYPE you can specify 'direct' or 'search' to use user credentials

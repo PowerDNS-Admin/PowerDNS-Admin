@@ -185,11 +185,10 @@ def github_login():
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
-    # these parameters will be needed in multiple paths
-    LDAP_ENABLED = True if 'LDAP_TYPE' in app.config.keys() else False
     LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
     BASIC_ENABLED = app.config['BASIC_ENABLED']
     SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
+    LDAP_ENABLE = app.config.get('LDAP_ENABLE')
     GITHUB_ENABLE = app.config.get('GITHUB_OAUTH_ENABLE')
     GOOGLE_ENABLE = app.config.get('GOOGLE_OAUTH_ENABLE')
 
@@ -242,7 +241,7 @@ def login():
         return render_template('login.html',
                                github_enabled=GITHUB_ENABLE,
                                google_enabled=GOOGLE_ENABLE,
-                               ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
+                               ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE,
                                basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
     # process login
@@ -268,18 +267,18 @@ def login():
         try:
             auth = user.is_validate(method=auth_method)
             if auth == False:
-                return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+                return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
         except Exception as e:
-            return render_template('login.html', error=e, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+            return render_template('login.html', error=e, ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         # check if user enabled OPT authentication
         if user.otp_secret:
             if otp_token:
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
-                    return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+                    return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
             else:
-                return render_template('login.html', error='Token required', ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+                return render_template('login.html', error='Token required', ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
 
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
@@ -296,7 +295,7 @@ def login():
         try:
             result = user.create_local_user()
             if result['status'] == True:
-                return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+                return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
             else:
                 return render_template('register.html', error=result['msg'])
         except Exception as e:
