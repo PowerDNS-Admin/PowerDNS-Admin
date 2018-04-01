@@ -154,7 +154,7 @@ def http_page_not_found(e):
 def error(code, msg=None):
     supported_code = ('400', '401', '404', '500')
     if code in supported_code:
-        return render_template('errors/%s.html' % code, msg=msg), int(code)
+        return render_template('errors/{0}.html'.format(code), msg=msg), int(code)
     else:
         return render_template('errors/404.html'), 404
 
@@ -346,8 +346,8 @@ def dashboard_domains():
     # History.created_on.desc()
     order_by = []
     for i in range(len(columns)):
-        column_index = request.args.get("order[%d][column]" % i)
-        sort_direction = request.args.get("order[%d][dir]" % i)
+        column_index = request.args.get("order[{0}][column]".format(i))
+        sort_direction = request.args.get("order[{0}][dir]".format(i))
         if column_index is None:
             break
         if sort_direction != "asc" and sort_direction != "desc":
@@ -462,7 +462,7 @@ def domain_add():
             d = Domain()
             result = d.add(domain_name=domain_name, domain_type=domain_type, soa_edit_api=soa_edit_api, domain_master_ips=domain_master_ips)
             if result['status'] == 'ok':
-                history = History(msg='Add domain %s' % domain_name, detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips}), created_by=current_user.username)
+                history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips}), created_by=current_user.username)
                 history.add()
                 if domain_template != '0':
                     template = DomainTemplate.query.filter(DomainTemplate.id == domain_template).first()
@@ -474,10 +474,10 @@ def domain_add():
                     r = Record()
                     result = r.apply(domain_name, record_data)
                     if result['status'] == 'ok':
-                        history = History(msg='Applying template %s to %s, created records successfully.' % (template.name, domain_name), detail=str(result), created_by=current_user.username)
+                        history = History(msg='Applying template {0} to {1}, created records successfully.'.format(template.name, domain_name), detail=str(result), created_by=current_user.username)
                         history.add()
                     else:
-                        history = History(msg='Applying template %s to %s, FAILED to created records.' % (template.name, domain_name), detail=str(result), created_by=current_user.username)
+                        history = History(msg='Applying template {0} to {1}, FAILED to created records.'.format(template.name, domain_name), detail=str(result), created_by=current_user.username)
                         history.add()
                 return redirect(url_for('dashboard'))
             else:
@@ -498,7 +498,7 @@ def domain_delete(domain_name):
     if result['status'] == 'error':
         return redirect(url_for('error', code=500))
 
-    history = History(msg='Delete domain %s' % domain_name, created_by=current_user.username)
+    history = History(msg='Delete domain {0}'.format(domain_name), created_by=current_user.username)
     history.add()
 
     return redirect(url_for('dashboard'))
@@ -531,7 +531,7 @@ def domain_management(domain_name):
         # grant/revoke user privielges
         d.grant_privielges(new_user_list)
 
-        history = History(msg='Change domain %s access control' % domain_name, detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
+        history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
         history.add()
 
         return redirect(url_for('domain_management', domain_name=domain_name))
@@ -551,7 +551,7 @@ def record_apply(domain_name):
         r = Record()
         result = r.apply(domain_name, jdata)
         if result['status'] == 'ok':
-            history = History(msg='Apply record changes to domain %s' % domain_name, detail=str(jdata), created_by=current_user.username)
+            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(jdata), created_by=current_user.username)
             history.add()
             return make_response(jsonify( result ), 200)
         else:
@@ -629,14 +629,14 @@ def admin_setdomainsetting(domain_name):
 
                 if setting:
                     if setting.set(new_value):
-                        history = History(msg='Setting %s changed value to %s for %s' % (new_setting, new_value, domain.name), created_by=current_user.username)
+                        history = History(msg='Setting {0} changed value to {1} for {2}'.format(new_setting, new_value, domain.name), created_by=current_user.username)
                         history.add()
                         return make_response(jsonify( { 'status': 'ok', 'msg': 'Setting updated.' } ))
                     else:
                         return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to set value of setting.' } ))
                 else:
                     if domain.add_setting(new_setting, new_value):
-                        history = History(msg='New setting %s with value %s for %s has been created' % (new_setting, new_value, domain.name), created_by=current_user.username)
+                        history = History(msg='New setting {0} with value {1} for {2} has been created'.format(new_setting, new_value, domain.name), created_by=current_user.username)
                         history.add()
                         return make_response(jsonify( { 'status': 'ok', 'msg': 'New setting created and updated.' } ))
                     else:
@@ -673,12 +673,12 @@ def create_template():
                 return redirect(url_for('create_template'))
 
             if DomainTemplate.query.filter(DomainTemplate.name == name).first():
-                flash("A template with the name %s already exists!" % name, 'error')
+                flash("A template with the name {0} already exists!".format(name), 'error')
                 return redirect(url_for('create_template'))
             t = DomainTemplate(name=name, description=description)
             result = t.create()
             if result['status'] == 'ok':
-                history = History(msg='Add domain template %s' % name, detail=str({'name': name, 'description': description}), created_by=current_user.username)
+                history = History(msg='Add domain template {0}'.format(name), detail=str({'name': name, 'description': description}), created_by=current_user.username)
                 history.add()
                 return redirect(url_for('templates'))
             else:
@@ -704,12 +704,12 @@ def create_template_from_zone():
             return make_response(jsonify({'status': 'error', 'msg': 'Please correct template name'}), 500)
 
         if DomainTemplate.query.filter(DomainTemplate.name == name).first():
-            return make_response(jsonify({'status': 'error', 'msg': 'A template with the name %s already exists!' % name}), 500)
+            return make_response(jsonify({'status': 'error', 'msg': 'A template with the name {0} already exists!'.format(name)}), 500)
 
         t = DomainTemplate(name=name, description=description)
         result = t.create()
         if result['status'] == 'ok':
-            history = History(msg='Add domain template %s' % name, detail=str({'name': name, 'description': description}), created_by=current_user.username)
+            history = History(msg='Add domain template {0}'.format(name), detail=str({'name': name, 'description': description}), created_by=current_user.username)
             history.add()
 
             records = []
@@ -789,7 +789,7 @@ def apply_records(template):
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
         result = t.replace_records(records)
         if result['status'] == 'ok':
-            history = History(msg='Apply domain template record changes to domain template %s' % template, detail=str(jdata), created_by=current_user.username)
+            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(jdata), created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
         else:
@@ -808,7 +808,7 @@ def delete_template(template):
         if t is not None:
             result = t.delete_template()
             if result['status'] == 'ok':
-                history = History(msg='Deleted domain template %s' % template, detail=str({'name': template}), created_by=current_user.username)
+                history = History(msg='Deleted domain template {0}'.format(template), detail=str({'name': template}), created_by=current_user.username)
                 history.add()
                 return redirect(url_for('templates'))
             else:
@@ -883,7 +883,7 @@ def admin_manageuser():
                 user = User(username=data)
                 result = user.delete()
                 if result:
-                    history = History(msg='Delete username %s' % data, created_by=current_user.username)
+                    history = History(msg='Delete username {0}'.format(data), created_by=current_user.username)
                     history.add()
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'User has been removed.' } ), 200)
                 else:
@@ -893,7 +893,7 @@ def admin_manageuser():
                 user = User(username=data)
                 result = user.revoke_privilege()
                 if result:
-                    history = History(msg='Revoke %s user privielges' % data, created_by=current_user.username)
+                    history = History(msg='Revoke {0} user privielges'.format(data), created_by=current_user.username)
                     history.add()
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Revoked user privielges.' } ), 200)
                 else:
@@ -905,7 +905,7 @@ def admin_manageuser():
                 user = User(username=username)
                 result = user.set_admin(is_admin)
                 if result:
-                    history = History(msg='Change user role of %s' % username, created_by=current_user.username)
+                    history = History(msg='Change user role of {0}'.format(username), created_by=current_user.username)
                     history.add()
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Changed user role successfully.' } ), 200)
                 else:
@@ -991,7 +991,7 @@ def user_profile():
                 enable_otp = data['enable_otp']
                 user = User(username=current_user.username)
                 user.update_profile(enable_otp=enable_otp)
-                return make_response(jsonify( { 'status': 'ok', 'msg': 'Change OTP Authentication successfully. Status: %s' % enable_otp } ), 200)
+                return make_response(jsonify( { 'status': 'ok', 'msg': 'Change OTP Authentication successfully. Status: {0}'.format(enable_otp) } ), 200)
 
         # get new avatar
         save_file_name = None
@@ -1071,7 +1071,7 @@ def dyndns_update():
             break
 
     if not domain:
-        history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
+        history = History(msg="DynDNS update: attempted update of {0} but it does not exist for this user".format(hostname), created_by=current_user.username)
         history.add()
         return render_template('dyndns.html', response='nohost'), 200
 
@@ -1081,14 +1081,14 @@ def dyndns_update():
     if r.exists(domain.name) and r.is_allowed_edit():
         if r.data == myip:
             # record content did not change, return 'nochg'
-            history = History(msg="DynDNS update: attempted update of %s but record did not change" % hostname, created_by=current_user.username)
+            history = History(msg="DynDNS update: attempted update of {0} but record did not change".format(hostname), created_by=current_user.username)
             history.add()
             return render_template('dyndns.html', response='nochg'), 200
         else:
             oldip = r.data
             result = r.update(domain.name, myip)
             if result['status'] == 'ok':
-                history = History(msg='DynDNS update: updated record %s in zone %s, it changed from %s to %s' % (hostname,domain.name,oldip,myip), detail=str(result), created_by=current_user.username)
+                history = History(msg='DynDNS update: updated record {0} in zone {1}, it changed from {2} to {3}'.format(hostname,domain.name,oldip,myip), detail=str(result), created_by=current_user.username)
                 history.add()
                 return render_template('dyndns.html', response='good'), 200
             else:
@@ -1099,11 +1099,11 @@ def dyndns_update():
             record = Record(name=hostname,type='A',data=myip,status=False,ttl=3600)
             result = record.add(domain.name)
             if result['status'] == 'ok':
-                history = History(msg='DynDNS update: created record %s in zone %s, it now represents %s' % (hostname,domain.name,myip), detail=str(result), created_by=current_user.username)
+                history = History(msg='DynDNS update: created record {0} in zone {1}, it now represents {2}'.format(hostname,domain.name,myip), detail=str(result), created_by=current_user.username)
                 history.add()
                 return render_template('dyndns.html', response='good'), 200
 
-    history = History(msg="DynDNS update: attempted update of %s but it does not exist for this user" % hostname, created_by=current_user.username)
+    history = History(msg='DynDNS update: attempted update of {0} but it does not exist for this user'.format(hostname), created_by=current_user.username)
     history.add()
     return render_template('dyndns.html', response='nohost'), 200
 
