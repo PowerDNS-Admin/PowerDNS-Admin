@@ -28,29 +28,50 @@ SQLALCHEMY_TRACK_MODIFICATIONS = True
 BASIC_ENABLED = True
 SIGNUP_ENABLED = True
 
-## LDAP CONFIG
-# LDAP_TYPE = 'ldap'
-# LDAP_URI = 'ldaps://your-ldap-server:636'
-# LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
-# LDAP_PASSWORD = 'dnsuser'
-# LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
-## Additional options only if LDAP_TYPE=ldap
-# LDAP_USERNAMEFIELD = 'uid'
-# LDAP_FILTER = '(objectClass=inetorgperson)'
+
+# LDAP CONFIG
+LDAP_TYPE = 'ldap'
+LDAP_URI = 'ldaps://your-ldap-server:636'
+# with LDAP_BIND_TYPE you can specify 'direct' or 'search' to use user credentials
+# for binding or a predefined LDAP_USERNAME and LDAP_PASSWORD, binding with non-DN only works with AD
+LDAP_BIND_TYPE= 'direct' # direct or search
+LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
+LDAP_PASSWORD = 'dnsuser'
+LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
+# Additional options only if LDAP_TYPE=ldap
+LDAP_USERNAMEFIELD = 'uid'
+LDAP_FILTER = '(objectClass=inetorgperson)'
+# enable LDAP_GROUP_SECURITY to allow Admin and User roles based on LDAP groups
+#LDAP_GROUP_SECURITY = True # True or False
+#LDAP_ADMIN_GROUP = 'CN=DnsAdmins,CN=Users,DC=example,DC=me'
+#LDAP_USER_GROUP = 'CN=Domain Admins,CN=Users,DC=example,DC=me'
+
+## AD CONFIG
+#LDAP_TYPE = 'ad'
+#LDAP_URI = 'ldaps://your-ad-server:636'
+#LDAP_USERNAME = 'cn=dnsuser,ou=Users,dc=domain,dc=local'
+#LDAP_PASSWORD = 'dnsuser'
+#LDAP_SEARCH_BASE = 'dc=domain,dc=local'
+## You may prefer 'userPrincipalName' instead
+#LDAP_USERNAMEFIELD = 'sAMAccountName'
+## AD Group that you would like to have accesss to web app
+#LDAP_FILTER = 'memberof=cn=DNS_users,ou=Groups,dc=domain,dc=local'
+
 
 ## GITHUB AUTHENTICATION
-# GITHUB_OAUTH_ENABLE = False
-# GITHUB_OAUTH_KEY = 'G0j1Q15aRsn36B3aD6nwKLiYbeirrUPU8nDd1wOC'
-# GITHUB_OAUTH_SECRET = '0WYrKWePeBDkxlezzhFbDn1PBnCwEa0vCwVFvy6iLtgePlpT7WfUlAa9sZgm'
-# GITHUB_OAUTH_SCOPE = 'email'
-# GITHUB_OAUTH_URL = 'http://127.0.0.1:5000/api/v3/'
-# GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:5000/oauth/token'
-# GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
+GITHUB_OAUTH_ENABLE = False
+GITHUB_OAUTH_KEY = ''
+GITHUB_OAUTH_SECRET = ''
+GITHUB_OAUTH_SCOPE = 'email'
+GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
+GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
+GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
+
 
 # GOOGLE AUTHENTICATION
 GOOGLE_OAUTH_ENABLE = True
-GOOGLE_OAUTH_CLIENT_ID = '829241394512-2dc9shen6tv8ouhot68lg9g6gc029cj3.apps.googleusercontent.com'
-GOOGLE_OAUTH_CLIENT_SECRET = 'wsa9oYp8kyCoIum44Pj1oICc'
+GOOGLE_OAUTH_CLIENT_ID = ''
+GOOGLE_OAUTH_CLIENT_SECRET = ''
 GOOGLE_REDIRECT_URI = '/user/authorized'
 GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
 GOOGLE_TOKEN_PARAMS = {
