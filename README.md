@@ -52,10 +52,14 @@ MariaDB [(none)]> GRANT ALL PRIVILEGES ON powerdnsadmin.* TO powerdnsadmin@'%' I
 There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment.
 
 Firstly, let's edit `configs/developments.py` configuration file.
+
 Secondly, build the docker image of PowerDNS-Admin
-` $docker-compose -f docker-compose.dev.yml build`
+
+``` $docker-compose -f docker-compose.dev.yml build```
+
 Finally, start it
-`$ docker-compose -f docker-compose.dev.yml up`
+
+```$ docker-compose -f docker-compose.dev.yml up```
 
 You can now access PowerDNS-Admin at url http://localhost:9191
 
