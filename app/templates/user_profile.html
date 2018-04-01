@@ -165,7 +165,7 @@
                 'enable_otp' : enable_otp
             }
         };
-        applyChanges(postdata, $SCRIPT_ROOT + '/user/profile');
+        applyChanges(postdata, $SCRIPT_ROOT + '/user/profile', false, true);
         location.reload();
     });
 </script>
