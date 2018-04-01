@@ -125,16 +125,6 @@
             <div class="box-header">
               <h3 class="box-title">Hosted Domains</h3>
             </div>
-            <!-- /.box-header -->
-            <!--
-            {% if current_user.role.name == 'Administrator' %}
-            <div class="box-body">
-                <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain_add') }}'">
-                    New Domain&nbsp;<i class="fa fa-plus"></i>
-                </button>
-            </div>
-            {% endif %}
-             -->
             <div class="box-body">
               <table id="tbl_domain_list" class="table table-bordered table-striped">
                 <thead>
@@ -144,7 +134,7 @@
                   <th>Type</th>
                   <th>Serial</th>
                   <th>Master</th>
-                  <th {% if current_user.role.name !='Administrator' %}width="6%"{% else %}width="20%"{% endif %}>Action</th>
+                  <th {% if current_user.role.name !='Administrator' %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -199,10 +189,6 @@
         $('#modal-code-content').html(json_library.prettyPrint(info));
         modal.modal('show');
     });
-    $(document.body).on("click", ".button_dnssec", function() {
-        var domain = $(this).prop('id');
-        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
-    });
 
     $(document.body).on("click", ".button_template", function (e) {
         var modal = $("#modal_template");
@@ -253,30 +239,6 @@
     </div>
     <!-- /.modal-dialog -->
 </div>
-<!-- /.modal -->
-<div class="modal fade" id="modal_dnssec_info">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">DNSSEC</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-right"
-                    data-dismiss="modal">Close</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
 <div class="modal fade modal-primary" id="modal_template">
     <div class="modal-dialog">
         <div class="modal-content">
