@@ -125,16 +125,6 @@
             <div class="box-header">
               <h3 class="box-title">Hosted Domains</h3>
             </div>
-            <!-- /.box-header -->
-            <!--
-            {% if current_user.role.name == 'Administrator' %}
-            <div class="box-body">
-                <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain_add') }}'">
-                    New Domain&nbsp;<i class="fa fa-plus"></i>
-                </button>
-            </div>
-            {% endif %}
-             -->
             <div class="box-body">
               <table id="tbl_domain_list" class="table table-bordered table-striped">
                 <thead>
@@ -144,53 +134,11 @@
                   <th>Type</th>
                   <th>Serial</th>
                   <th>Master</th>
-                  <th>Action</th>
+                  <th {% if current_user.role.name !='Administrator' %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for domain in domains %}
-                <tr>
-                  <td>
-                    <a href="{{ url_for('domain', domain_name=domain.name) }}"><strong>{{ domain.name }}</strong></a>
-                  </td>
-                  <td>
-                    {% if domain.dnssec %}
-                    <button type="button" class="btn btn-flat dnssec btn-success button_dnssec" id="{{ domain.name }}" style="width:100%;">
-                        <i class="fa fa-lock"></i>&nbsp;Enabled
-                    </button>
-                    {% else %}
-                    <button type="button" class="btn btn-flat dnssec button_dnssec" id="{{ domain.name }}" style="width:100%;">
-                        <i class="fa fa-unlock-alt"></i>&nbsp;Disabled
-                    </button>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {{ domain.type }}
-                  </td>
-                  <td>
-                  {% if domain.serial == 0 %}{{ domain.notified_serial }}{% else %}{{domain.serial}}{% endif %}
-                  </td>
-                  <td>
-                    {% if domain.master == '[]'%}N/A {% else %}{{ domain.master|display_master_name }}{% endif %}
-                  </td>
-                  {% if current_user.role.name !='Administrator' %}
-                  <td width="6%">
-                    <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
-                      Manage&nbsp;<i class="fa fa-cog"></i>
-                    </button>
-                  </td>
-                  {% else %}
-                  <td width="20%">
-                    <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
-                      Manage&nbsp;<i class="fa fa-cog"></i>
-                    </button>
-                    <button type="button" class="btn btn-flat btn-danger" onclick="window.location.href='{{ url_for('domain_management', domain_name=domain.name) }}'">
-                      Admin&nbsp;<i class="fa fa-cog"></i>
-                    </button>
-                  </td>
-                  {% endif %}
-                </tr>
-                {% endfor %}
+                  <!-- Content loaded via AJAX. -->
                 </tbody>
               </table>
             </div>
@@ -214,23 +162,26 @@
         "ordering" : false,
         "info" : false,
         "autoWidth" : false
-    });   
+    });
     // set up domain list
     $("#tbl_domain_list").DataTable({
         "paging" : true,
         "lengthChange" : true,
         "searching" : true,
         "ordering" : true,
+        "processing" : true,
+        "serverSide" : true,
+        "ajax" : "{{ url_for('dashboard_domains') }}",
         "info" : false,
         "autoWidth" : false,
-	    {% if default_domain_table_size_setting in ['10','25','50','100'] %}
-	    "lengthMenu": [ [10, 25, 50, 100, -1],
-	                    [10, 25, 50, 100, "All"]],
-	    {% else %}
-	    "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
-	                    [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
-	    {% endif %}
-	    "pageLength": {{ default_domain_table_size_setting }}
+      {% if default_domain_table_size_setting in ['10','25','50','100'] %}
+      "lengthMenu": [ [10, 25, 50, 100, -1],
+                      [10, 25, 50, 100, "All"]],
+      {% else %}
+      "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
+                      [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
+      {% endif %}
+      "pageLength": {{ default_domain_table_size_setting }}
     });
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
@@ -238,9 +189,30 @@
         $('#modal-code-content').html(json_library.prettyPrint(info));
         modal.modal('show');
     });
-    $(document.body).on("click", ".button_dnssec", function() {
+
+    $(document.body).on("click", ".button_template", function (e) {
+        var modal = $("#modal_template");
         var domain = $(this).prop('id');
-        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec');
+        var form = "    <label for=\"template_name\">Template name</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"template_name\" id=\"template_name\" placeholder=\"Enter a valid template name (required)\"> \
+                        <label for=\"template_description\">Template description</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"template_description\" id=\"template_description\" placeholder=\"Enter a template description (optional)\"> \
+                        <input id=\"domain\" name=\"domain\" type=\"hidden\" value=\""+domain+"\"> \
+                    ";
+        modal.find('.modal-body p').html(form);        
+        modal.find('#button_save').click(function() {                   
+            var data = {};
+            data['name'] = modal.find('#template_name').val();
+            data['description'] = modal.find('#template_description').val();
+            data['domain'] = modal.find('#domain').val();
+            applyChanges(data, $SCRIPT_ROOT + "{{ url_for('create_template_from_zone') }}", true);
+            modal.modal('hide');
+        })
+        modal.find('#button_close').click(function() {
+            modal.modal('hide');
+        })
+        
+        modal.modal('show');
     });
 </script>
 {% endblock %}
@@ -267,8 +239,7 @@
     </div>
     <!-- /.modal-dialog -->
 </div>
-<!-- /.modal -->
-<div class="modal fade" id="modal_dnssec_info">
+<div class="modal fade modal-primary" id="modal_template">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -276,19 +247,19 @@
                     aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">DNSSEC</h4>
+                <h4 class="modal-title">Clone to template</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-right"
-                    data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    id="button_close" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
             </div>
         </div>
         <!-- /.modal-content -->
     </div>
     <!-- /.modal-dialog -->
 </div>
-<!-- /.modal -->
 {% endblock %}

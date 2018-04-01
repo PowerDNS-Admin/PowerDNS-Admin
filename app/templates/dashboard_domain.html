@@ -1,0 +1,45 @@
+{% macro name(domain) %}
+  <a href="{{ url_for('domain', domain_name=domain.name) }}"><strong>{{ domain.name }}</strong></a>
+{% endmacro %}
+
+{% macro dnssec(domain) %}
+  {% if domain.dnssec %}
+  <td><span class="label label-success"><i class="fa fa-lock-alt"></i>&nbsp;Enabled</span></td>
+  {% else %}
+  <td><span class="label label-primary"><i class="fa fa-unlock-alt"></i>&nbsp;Disabled</span></td>
+  {% endif %}
+{% endmacro %}
+
+{% macro type(domain) %}
+  {{ domain.type }}
+{% endmacro %}
+
+{% macro serial(domain) %}
+    {% if domain.serial == 0 %}{{ domain.notified_serial }}{% else %}{{domain.serial}}{% endif %}
+{% endmacro %}
+
+{% macro master(domain) %}
+    {% if domain.master == '[]'%}N/A{% else %}{{ domain.master|display_master_name }}{% endif %}
+{% endmacro %}
+
+{% macro actions(domain) %}
+  {% if current_user.role.name =='Administrator' %}
+    <td width="25%">
+      <button type="button" class="btn btn-flat btn-success button_template" id="{{ domain.name }}">
+        Template&nbsp;<i class="fa fa-clone"></i>
+      </button>
+      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
+        Manage&nbsp;<i class="fa fa-cog"></i>
+      </button>
+      <button type="button" class="btn btn-flat btn-danger" onclick="window.location.href='{{ url_for('domain_management', domain_name=domain.name) }}'">
+        Admin&nbsp;<i class="fa fa-cog"></i>
+      </button>
+    </td>
+    {% else %}
+    <td width="6%">
+      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain', domain_name=domain.name) }}'">
+        Manage&nbsp;<i class="fa fa-cog"></i>
+      </button>
+    </td>
+  {% endif %}
+{% endmacro %}

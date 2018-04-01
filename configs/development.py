@@ -3,37 +3,31 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 # BASIC APP CONFIG
 WTF_CSRF_ENABLED = True
-SECRET_KEY = 'We are the world'
-BIND_ADDRESS = '127.0.0.1'
-PORT = 9191
-LOGIN_TITLE = "PDNS"
+SECRET_KEY = 'changeme'
+LOG_LEVEL = 'DEBUG'
+LOG_FILE = 'log.txt'
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
 
-# LOG CONFIG
-LOG_LEVEL = 'DEBUG'
-LOG_FILE = 'logfile.log'
-# For Docker, leave empty string
-#LOG_FILE = ''
-
-# Upload
+# UPLOAD DIR
 UPLOAD_DIR = os.path.join(basedir, 'upload')
 
-# DATABASE CONFIG
-#You'll need MySQL-python
-SQLA_DB_USER = 'powerdnsadmin'
-SQLA_DB_PASSWORD = 'powerdnsadminpassword'
-SQLA_DB_HOST = 'mysqlhostorip'
-SQLA_DB_NAME = 'powerdnsadmin'
+# DATABASE CONFIG FOR MYSQL
+DB_USER = 'powerdnsadmin'
+DB_PASSWORD = 'powerdnsadminpassword'
+DB_HOST = 'docker.for.mac.localhost'
+DB_NAME = 'powerdnsadmin'
 
 #MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
-    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
-#SQLite
-#SQLALCHEMY_DATABASE_URI = 'sqlite:////path/to/your/pdns.db'
+SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_NAME
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
+
+# AUTHENTICATION CONFIG
+BASIC_ENABLED = True
+SIGNUP_ENABLED = True
+
 
 # LDAP CONFIG
 LDAP_ENABLE = False
@@ -64,7 +58,8 @@ LDAP_FILTER = '(objectClass=inetorgperson)'
 ## AD Group that you would like to have accesss to web app
 #LDAP_FILTER = 'memberof=cn=DNS_users,ou=Groups,dc=domain,dc=local'
 
-# Github Oauth
+
+## GITHUB AUTHENTICATION
 GITHUB_OAUTH_ENABLE = False
 GITHUB_OAUTH_KEY = ''
 GITHUB_OAUTH_SECRET = ''
@@ -73,10 +68,11 @@ GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
 GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
 GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
 
-# Google OAuth
+
+# GOOGLE AUTHENTICATION
 GOOGLE_OAUTH_ENABLE = False
-GOOGLE_OAUTH_CLIENT_ID = ' '
-GOOGLE_OAUTH_CLIENT_SECRET = ' '
+GOOGLE_OAUTH_CLIENT_ID = ''
+GOOGLE_OAUTH_CLIENT_SECRET = ''
 GOOGLE_REDIRECT_URI = '/user/authorized'
 GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
 GOOGLE_TOKEN_PARAMS = {
@@ -85,13 +81,10 @@ GOOGLE_TOKEN_PARAMS = {
 GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
 GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
 
-#Default Auth
-BASIC_ENABLED = True
-SIGNUP_ENABLED = True
 
 # POWERDNS CONFIG
-PDNS_STATS_URL = 'http://172.16.214.131:8081/'
-PDNS_API_KEY = 'you never know'
+PDNS_STATS_URL = 'http://192.168.100.100:8081/'
+PDNS_API_KEY = 'changeme'
 PDNS_VERSION = '4.1.1'
 
 # RECORDS ALLOWED TO EDIT

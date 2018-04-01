@@ -98,6 +98,9 @@
         <!-- /.col -->
       </div>
     </form>
+    {% if google_enabled %}
+    <a href="{{ url_for('google_login') }}">Google oauth login</a>
+    {% endif %}
     {% if github_enabled %}
     <a href="{{ url_for('github_login') }}">Github oauth login</a>
     {% endif %}

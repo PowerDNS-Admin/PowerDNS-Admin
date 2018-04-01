@@ -1,33 +1,49 @@
 import os
 import ldap
+import ldap.filter
 import time
 import base64
 import bcrypt
-import urlparse
 import itertools
 import traceback
 import pyotp
 import re
 import dns.reversename
+import sys
 
 from datetime import datetime
+from urllib.parse import urljoin
 from distutils.util import strtobool
 from distutils.version import StrictVersion
 from flask_login import AnonymousUserMixin
 
 from app import app, db
-from lib import utils
-from lib.log import logger
+from app.lib import utils
+from app.lib.log import logger
+
+# LOG CONFIGS
 logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
 
 if 'LDAP_TYPE' in app.config.keys():
     LDAP_URI = app.config['LDAP_URI']
-    LDAP_USERNAME = app.config['LDAP_USERNAME']
-    LDAP_PASSWORD = app.config['LDAP_PASSWORD']
+
+    if 'LDAP_USERNAME' in app.config.keys() and 'LDAP_PASSWORD' in app.config.keys(): #backward compatability
+        LDAP_BIND_TYPE = 'search'
+    if 'LDAP_BIND_TYPE' in app.config.keys():
+        LDAP_BIND_TYPE = app.config['LDAP_BIND_TYPE']
+    if LDAP_BIND_TYPE == 'search':
+        LDAP_USERNAME = app.config['LDAP_USERNAME']
+        LDAP_PASSWORD = app.config['LDAP_PASSWORD']
+
     LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
     LDAP_TYPE = app.config['LDAP_TYPE']
     LDAP_FILTER = app.config['LDAP_FILTER']
     LDAP_USERNAMEFIELD = app.config['LDAP_USERNAMEFIELD']
+
+    LDAP_GROUP_SECURITY = app.config.get('LDAP_GROUP_SECURITY')
+    if LDAP_GROUP_SECURITY == True:
+        LDAP_ADMIN_GROUP = app.config['LDAP_ADMIN_GROUP']
+        LDAP_USER_GROUP = app.config['LDAP_USER_GROUP']
 else:
     LDAP_TYPE = False
 
@@ -107,10 +123,10 @@ class User(db.Model):
             return str(self.id)  # python 3
 
     def __repr__(self):
-        return '<User %r>' % (self.username)
+        return '<User {0}>'.format(self.username)
 
     def get_totp_uri(self):
-        return 'otpauth://totp/PowerDNS-Admin:%s?secret=%s&issuer=PowerDNS-Admin' % (self.username, self.otp_secret)
+        return "otpauth://totp/PowerDNS-Admin:{0}?secret={1}&issuer=PowerDNS-Admin".format(self.username, self.otp_secret)
 
     def verify_totp(self, token):
         totp = pyotp.TOTP(self.otp_secret)
@@ -141,12 +157,16 @@ class User(db.Model):
         try:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             l = ldap.initialize(LDAP_URI)
-            l.set_option(ldap.OPT_REFERRALS, 0)
+            l.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
             l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
             l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
             l.set_option( ldap.OPT_X_TLS_DEMAND, True )
             l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
             l.protocol_version = ldap.VERSION3
+            if LDAP_BIND_TYPE == "direct":
+                global LDAP_USERNAME; LDAP_USERNAME = self.username
+                global LDAP_PASSWORD; LDAP_PASSWORD = self.password
+
 
             l.simple_bind_s(LDAP_USERNAME, LDAP_PASSWORD)
             ldap_result_id = l.search(baseDN, searchScope, searchFilter, retrieveAttributes)
@@ -160,7 +180,7 @@ class User(db.Model):
                         result_set.append(result_data)
             return result_set
 
-        except ldap.LDAPError, e:
+        except ldap.LDAPError as e:
             logging.error(e)
             raise
 
@@ -173,66 +193,88 @@ class User(db.Model):
 
             if user_info:
                 if user_info.password and self.check_password(user_info.password):
-                    logging.info('User "%s" logged in successfully' % self.username)
+                    logging.info('User "{0}" logged in successfully'.format(self.username))
                     return True
-                logging.error('User "%s" input a wrong password' % self.username)
+                logging.error('User "{0}" input a wrong password'.format(self.username))
                 return False
 
-            logging.warning('User "%s" does not exist' % self.username)
+            logging.warning('User "{0}" does not exist'.format(self.username))
             return False
 
         if method == 'LDAP':
+            allowedlogin = False
+            isadmin = False
             if not LDAP_TYPE:
                 logging.error('LDAP authentication is disabled')
                 return False
 
-            searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
             if LDAP_TYPE == 'ldap':
-              searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
-              logging.info('Ldap searchFilter "%s"' % searchFilter)
+                searchFilter = "(&({0}={1}){2})".format(LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+                logging.info('Ldap searchFilter "{0}"'.format(searchFilter))
+            elif LDAP_TYPE == 'ad':
+                searchFilter = "(&(objectcategory=person)({0}={1}){2})".format(LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
 
             result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             if not result:
-                logging.warning('User "%s" does not exist' % self.username)
+                logging.warning('LDAP User "{0}" does not exist'.format(self.username))
                 return False
 
-            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-            l = ldap.initialize(LDAP_URI)
-            l.set_option(ldap.OPT_REFERRALS, 0)
-            l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-            l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
-            l.set_option( ldap.OPT_X_TLS_DEMAND, True )
-            l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
-            l.protocol_version = ldap.VERSION3
-
             try:
-                ldap_username = result[0][0][0]
-                l.simple_bind_s(ldap_username, self.password)
-                logging.info('User "%s" logged in successfully' % self.username)
-            except Exception:
-                logging.error('User "%s" input a wrong password' % self.username)
+                ldap_username = ldap.filter.escape_filter_chars(result[0][0][0])
+                if LDAP_GROUP_SECURITY:
+                    try:
+                        if LDAP_TYPE == 'ldap':
+                            ldap_user_dn = ldap.filter.escape_filter_chars(result[0][0][0])
+                            logging.info(result[0][0][0])
+                        if (self.ldap_search('(member={0})'.format(ldap_user_dn) ,LDAP_ADMIN_GROUP)):
+                            allowedlogin = True
+                            isadmin = True
+                            logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP))
+                        if (self.ldap_search('(member={0})'.format(ldap_user_dn) ,LDAP_USER_GROUP)):
+                            #if (group == LDAP_USER_GROUP):
+                            allowedlogin = True
+                            logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username,LDAP_USER_GROUP))
+                        if allowedlogin == False:
+                            logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
+                            return False
+                    except Exception as e:
+                        logging.error('LDAP group lookup for user "{0}" has failed'.format(e))
+                        return False
+                    logging.info('User "{0}" logged in successfully'.format(self.username))
+            except Exception as e:
+                logging.error('User "{0}" input a wrong LDAP password'.format(e))
                 return False
 
             # create user if not exist in the db
             if not User.query.filter(User.username == self.username).first():
+                self.firstname = self.username
+                self.lastname = ''
                 try:
                     # try to get user's firstname & lastname from LDAP
                     # this might be changed in the future
-                    self.firstname = result[0][0][1]['givenName'][0]
-                    self.lastname = result[0][0][1]['sn'][0]
-                    self.email = result[0][0][1]['mail'][0]
-                except Exception:
-                    self.firstname = self.username
-                    self.lastname = ''
+                    self.firstname = result[0][0][1]['givenName']
+                    self.lastname = result[0][0][1]['sn']
+                    self.email = result[0][0][1]['mail']
+                except Exception as e:
+                    logging.info("reading ldap data threw an exception {0}".format(e))
 
                 # first register user will be in Administrator role
                 self.role_id = Role.query.filter_by(name='User').first().id
                 if User.query.count() == 0:
                     self.role_id = Role.query.filter_by(name='Administrator').first().id
 
-                self.create_user()
-                logging.info('Created user "%s" in the DB' % self.username)
+                # user will be in Administrator role if part of LDAP Admin group
+                if LDAP_GROUP_SECURITY:
+                    if isadmin == True:
+                        self.role_id = Role.query.filter_by(name='Administrator').first().id
 
+                self.create_user()
+                logging.info('Created user "{0}" in the DB'.format(self.username))
+
+            # user already exists in database, set their admin status based on group membership (if enabled)
+            if LDAP_GROUP_SECURITY:
+                self.set_admin(isadmin)
+            self.update_profile()
             return True
 
         logging.error('Unsupported authentication method')
@@ -258,22 +300,23 @@ class User(db.Model):
         # check if username existed
         user = User.query.filter(User.username == self.username).first()
         if user:
-            return 'Username already existed'
+            return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
         user = User.query.filter(User.email == self.email).first()
         if user:
-            return 'Email already existed'
+            return {'status': False, 'msg': 'Email address is already in use'}
 
         # first register user will be in Administrator role
         self.role_id = Role.query.filter_by(name='User').first().id
         if User.query.count() == 0:
             self.role_id = Role.query.filter_by(name='Administrator').first().id
+
         self.password = self.get_hashed_password(self.plain_text_password)
 
         db.session.add(self)
         db.session.commit()
-        return True
+        return {'status': True, 'msg': 'Created user successfully'}
 
     def update_profile(self, enable_otp=None):
         """
@@ -303,16 +346,18 @@ class User(db.Model):
             db.session.rollback()
             return False
 
+    def get_domain_query(self):
+        return db.session.query(User, DomainUser, Domain) \
+            .filter(User.id == self.id) \
+            .filter(User.id == DomainUser.user_id) \
+            .filter(Domain.id == DomainUser.domain_id)
+
     def get_domain(self):
         """
         Get domains which user has permission to
         access
         """
-        user_domains = []
-        query = db.session.query(User, DomainUser, Domain).filter(User.id==self.id).filter(User.id==DomainUser.user_id).filter(Domain.id==DomainUser.domain_id).all()
-        for q in query:
-            user_domains.append(q[2])
-        return user_domains
+        return [q[2] for q in self.get_domain_query()]
 
     def delete(self):
         """
@@ -327,7 +372,7 @@ class User(db.Model):
             return True
         except:
             db.session.rollback()
-            logging.error('Cannot delete user %s from DB' % self.username)
+            logging.error('Cannot delete user {0} from DB'.format(self.username))
             return False
 
     def revoke_privilege(self):
@@ -344,7 +389,7 @@ class User(db.Model):
                 return True
             except:
                 db.session.rollback()
-                logging.error('Cannot revoke user %s privielges.' % self.username)
+                logging.error('Cannot revoke user {0} privielges'.format(self.username))
                 return False
         return False
 
@@ -390,7 +435,7 @@ class Role(db.Model):
         self.description = description
 
     def __repr__(self):
-        return '<Role %r>' % (self.name)
+        return '<Role {0}r>'.format(self.name)
 
 class DomainSetting(db.Model):
     __tablename__ = 'domain_setting'
@@ -406,7 +451,7 @@ class DomainSetting(db.Model):
         self.value = value
 
     def __repr__(self):
-        return '<DomainSetting %r for $d>' % (setting, self.domain.name)
+        return '<DomainSetting {0} for {1}>'.format(setting, self.domain.name)
 
     def __eq__(self, other):
         return self.setting == other.setting
@@ -444,15 +489,15 @@ class Domain(db.Model):
         self.dnssec = dnssec
 
     def __repr__(self):
-        return '<Domain %r>' % (self.name)
+        return '<Domain {0}>'.format(self.name)
 
     def add_setting(self, setting, value):
         try:
             self.settings.append(DomainSetting(setting=setting, value=value))
             db.session.commit()
             return True
-        except Exception, e:
-            logging.error('Can not create setting %s for domain %s. %s' % (setting, self.name, str(e)))
+        except Exception as e:
+            logging.error('Can not create setting {0} for domain {1}. {2}'.format(setting, self.name, e))
             return False
 
     def get_domains(self):
@@ -476,7 +521,7 @@ class Domain(db.Model):
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
         return jdata
 
     def get_id_by_name(self, name):
@@ -500,7 +545,7 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
@@ -564,8 +609,8 @@ class Domain(db.Model):
                     except:
                         db.session.rollback()
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
-        except Exception, e:
-            logging.error('Can not update domain table.' + str(e))
+        except Exception as e:
+            logging.error('Can not update domain table. Error: {0}'.format(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
     def add(self, domain_name, domain_type, soa_edit_api, domain_ns=[], domain_master_ips=[]):
@@ -596,17 +641,16 @@ class Domain(db.Model):
                             }
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
             if 'error' in jdata.keys():
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
-                logging.info('Added domain %s successfully' % domain_name)
+                logging.info('Added domain {0} successfully'.format(domain_name))
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
-        except Exception, e:
-            print traceback.format_exc()
-            logging.error('Cannot add domain %s' % domain_name)
-            logging.debug(str(e))
+        except Exception as e:
+            logging.error('Cannot add domain {0}'.format(domain_name))
+            logging.debug(traceback.print_exc())
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
@@ -629,7 +673,7 @@ class Domain(db.Model):
             result = self.add(domain_reverse_name, 'Master', 'INCEPTION-INCREMENT', '', '')
             self.update()
             if result['status'] == 'ok':
-                history = History(msg='Add reverse lookup domain %s' % domain_reverse_name, detail=str({'domain_type': 'Master', 'domain_master_ips': ''}), created_by='System')
+                history = History(msg='Add reverse lookup domain {0}'.format(domain_reverse_name), detail=str({'domain_type': 'Master', 'domain_master_ips': ''}), created_by='System')
                 history.add()
             else:
                 return {'status': 'error', 'msg': 'Adding reverse lookup domain failed'}
@@ -671,13 +715,12 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain_name), headers=headers, method='DELETE')
-            logging.info('Delete domain %s successfully' % domain_name)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
+            logging.info('Delete domain {0} successfully'.format(domain_name))
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
-        except Exception, e:
-            print traceback.format_exc()
-            logging.error('Cannot delete domain %s' % domain_name)
-            logging.debug(str(e))
+        except Exception as e:
+            logging.error('Cannot delete domain {0}'.format(domain_name))
+            logging.debug(traceback.print_exc())
             return {'status': 'error', 'msg': 'Cannot delete domain'}
 
     def get_user(self):
@@ -709,7 +752,7 @@ class Domain(db.Model):
                 db.session.commit()
         except:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on domain %s' % self.name)
+            logging.error('Cannot revoke user privielges on domain {0}'.format(self.name))
 
         try:
             for uid in added_ids:
@@ -718,7 +761,7 @@ class Domain(db.Model):
                 db.session.commit()
         except:
             db.session.rollback()
-            logging.error('Cannot grant user privielges to domain %s' % self.name)
+            logging.error('Cannot grant user privielges to domain {0}'.format(self.name))
 
 
     def update_from_master(self, domain_name):
@@ -730,7 +773,7 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/axfr-retrieve' % domain), headers=headers, method='PUT')
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/axfr-retrieve'.format(domain)), headers=headers, method='PUT')
                 return {'status': 'ok', 'msg': 'Update from Master successfully'}
             except:
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
@@ -746,7 +789,7 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s/cryptokeys' % domain.name), headers=headers, method='GET')
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='GET')
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain'}
                 else:
@@ -768,7 +811,7 @@ class DomainUser(db.Model):
         self.user_id = user_id
 
     def __repr__(self):
-        return '<Domain_User %r %r>' % (self.domain_id, self.user_id)
+        return '<Domain_User {0} {1}>'.format(self.domain_id, self.user_id)
 
 
 class Record(object):
@@ -791,7 +834,7 @@ class Record(object):
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers)
         except:
             logging.error("Cannot fetch domain's record data from remote powerdns api")
             return False
@@ -865,11 +908,11 @@ class Record(object):
                 }
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
-        except Exception, e:
-            logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
+        except Exception as e:
+            logging.error("Cannot add record {0}/{1}/{2} to domain {3}. DETAIL: {4}".format(self.name, self.type, self.data, domain, e))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
 
@@ -891,7 +934,7 @@ class Record(object):
         list_deleted_records = [x for x in list_current_records if x not in list_new_records]
 
         # convert back to list of hash
-        deleted_records = [x for x in current_records if [x['name'],x['type']] in list_deleted_records and x['type'] in app.config['RECORDS_ALLOW_EDIT']]
+        deleted_records = [x for x in current_records if [x['name'],x['type']] in list_deleted_records and (x['type'] in app.config['RECORDS_ALLOW_EDIT'] and x['type'] != 'SOA')]
 
         # return a tuple
         return deleted_records, new_records
@@ -1039,12 +1082,14 @@ class Record(object):
                     })
 
         postdata_for_new = {"rrsets": final_records}
-
+        logging.info(postdata_for_new)
+        logging.info(postdata_for_delete)
+        logging.info(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)))
         try:
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
-            jdata1 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_delete)
-            jdata2 = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=postdata_for_new)
+            jdata1 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_delete)
+            jdata2 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_new)
 
             if 'error' in jdata2.keys():
                 logging.error('Cannot apply record changes.')
@@ -1054,8 +1099,8 @@ class Record(object):
                 self.auto_ptr(domain, new_records, deleted_records)
                 logging.info('Record was applied successfully.')
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
-        except Exception, e:
-            logging.error("Cannot apply record changes to domain %s. DETAIL: %s" % (str(e), domain))
+        except Exception as e:
+            logging.error("Cannot apply record changes to domain {0}. DETAIL: {1}".format(e, domain))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
     def auto_ptr(self, domain, new_records, deleted_records):
@@ -1097,7 +1142,7 @@ class Record(object):
                         self.delete(domain_reverse_name)
                 return {'status': 'ok', 'msg': 'Auto-PTR record was updated successfully'}
             except Exception as e:
-                logging.error("Cannot update auto-ptr record changes to domain %s. DETAIL: %s" % (str(e), domain))
+                logging.error("Cannot update auto-ptr record changes to domain {0}. DETAIL: {1}".format(domain, e))
                 return {'status': 'error', 'msg': 'Auto-PTR creation failed. There was something wrong, please contact administrator.'}
 
     def delete(self, domain):
@@ -1117,18 +1162,24 @@ class Record(object):
                 ]
             }
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
         except:
-            logging.error("Cannot remove record %s/%s/%s from domain %s" % (self.name, self.type, self.data, domain))
+            logging.error("Cannot remove record {0}/{1}/{2} from domain {3}".format(self.name, self.type, self.data, domain))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
-    def is_allowed(self):
+    def is_allowed_edit(self):
         """
-        Check if record is allowed to edit/removed
+        Check if record is allowed to edit
         """
         return self.type in app.config['RECORDS_ALLOW_EDIT']
+
+    def is_allowed_delete(self):
+        """
+        Check if record is allowed to removed
+        """
+        return (self.type in app.config['RECORDS_ALLOW_EDIT'] and self.type != 'SOA')
 
     def exists(self, domain):
         """
@@ -1191,11 +1242,11 @@ class Record(object):
                     ]
                 }
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/%s' % domain), headers=headers, method='PATCH', data=data)
-            logging.debug("dyndns data: " % data)
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
+            logging.debug("dyndns data: {0}".format(data))
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
-        except Exception, e:
-            logging.error("Cannot add record %s/%s/%s to domain %s. DETAIL: %s" % (self.name, self.type, self.data, domain, str(e)))
+        except Exception as e:
+            logging.error("Cannot add record {0}/{1}/{2} to domain {3}. DETAIL: {4}".format(self.name, self.type, self.data, domain, e))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
 
@@ -1217,7 +1268,7 @@ class Server(object):
         headers['X-API-Key'] = PDNS_API_KEY
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/config' % self.server_id), headers=headers, method='GET')
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/{0}/config'.format(self.server_id)), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server configuration.")
@@ -1232,7 +1283,7 @@ class Server(object):
         headers['X-API-Key'] = PDNS_API_KEY
 
         try:
-            jdata = utils.fetch_json(urlparse.urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/%s/statistics' % self.server_id), headers=headers, method='GET')
+            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/{0}/statistics'.format(self.server_id)), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server statistics.")
@@ -1254,7 +1305,7 @@ class History(db.Model):
         self.created_by = created_by
 
     def __repr__(self):
-        return '<History %r>' % (self.msg)
+        return '<History {0}>'.format(self.msg)
 
     def add(self):
         """
@@ -1316,7 +1367,7 @@ class Setting(db.Model):
                 db.session.commit()
                 return True
         except:
-            logging.error('Cannot set maintenance to %s' % mode)
+            logging.error('Cannot set maintenance to {0}'.format(mode))
             logging.debug(traceback.format_exc())
             db.session.rollback()
             return False
@@ -1333,10 +1384,10 @@ class Setting(db.Model):
                 db.session.commit()
                 return True
             else:
-                logging.error('Setting %s does not exist' % setting)
+                logging.error('Setting {0} does not exist'.format(setting))
                 return False
         except:
-            logging.error('Cannot toggle setting %s' % setting)
+            logging.error('Cannot toggle setting {0}'.format(setting))
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
@@ -1351,10 +1402,90 @@ class Setting(db.Model):
                 db.session.commit()
                 return True
             else:
-                logging.error('Setting %s does not exist' % setting)
+                logging.error('Setting {0} does not exist'.format(setting))
                 return False
         except:
-            logging.error('Cannot edit setting %s' % setting)
+            logging.error('Cannot edit setting {0}'.format(setting))
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
+
+
+class DomainTemplate(db.Model):
+    __tablename__ = "domain_template"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), index=True, unique=True)
+    description = db.Column(db.String(255))
+    records = db.relationship('DomainTemplateRecord', back_populates='template', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return '<DomainTemplate {0}>'.format(self.name)
+
+    def __init__(self, name=None, description=None):
+        self.id = None
+        self.name = name
+        self.description = description
+
+    def replace_records(self, records):
+        try:
+            self.records = []
+            for record in records:
+                self.records.append(record)
+            db.session.commit()
+            return {'status': 'ok', 'msg': 'Template records have been modified'}
+        except Exception as e:
+            logging.error('Cannot create template records Error: {0}'.format(e))
+            db.session.rollback()
+            return {'status': 'error', 'msg': 'Can not create template records'}
+
+    def create(self):
+        try:
+            db.session.add(self)
+            db.session.commit()
+            return {'status': 'ok', 'msg': 'Template has been created'}
+        except Exception as e:
+            logging.error('Can not update domain template table. Error: {0}'.format(e))
+            db.session.rollback()
+            return {'status': 'error', 'msg': 'Can not update domain template table'}
+
+    def delete_template(self):
+        try:
+            self.records = []
+            db.session.delete(self)
+            db.session.commit()
+            return {'status': 'ok', 'msg': 'Template has been deleted'}
+        except Exception as e:
+            logging.error('Can not delete domain template. Error: {0}'.format(e))
+            db.session.rollback()
+            return {'status': 'error', 'msg': 'Can not delete domain template'}
+
+
+class DomainTemplateRecord(db.Model):
+    __tablename__ = "domain_template_record"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    type = db.Column(db.String(64))
+    ttl = db.Column(db.Integer)
+    data = db.Column(db.String(255))
+    status = db.Column(db.Boolean)
+    template_id = db.Column(db.Integer, db.ForeignKey('domain_template.id'))
+    template = db.relationship('DomainTemplate', back_populates='records')
+
+    def __repr__(self):
+        return '<DomainTemplateRecord {0}>'.format(self.id)
+
+    def __init__(self, id=None, name=None, type=None, ttl=None, data=None, status=None):
+        self.id = id
+        self.name = name
+        self.type = type
+        self.ttl = ttl
+        self.data = data
+        self.status = status
+
+    def apply(self):
+        try:
+            db.session.commit()
+        except Exception as e:
+            logging.error('Can not update domain template table. Error: {0}'.format(e))
+            db.session.rollback()
+            return {'status': 'error', 'msg': 'Can not update domain template table'}
