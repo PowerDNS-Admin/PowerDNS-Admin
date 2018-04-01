@@ -174,14 +174,14 @@
         "ajax" : "{{ url_for('dashboard_domains') }}",
         "info" : false,
         "autoWidth" : false,
-	    {% if default_domain_table_size_setting in ['10','25','50','100'] %}
-	    "lengthMenu": [ [10, 25, 50, 100, -1],
-	                    [10, 25, 50, 100, "All"]],
-	    {% else %}
-	    "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
-	                    [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
-	    {% endif %}
-	    "pageLength": {{ default_domain_table_size_setting }}
+      {% if default_domain_table_size_setting in ['10','25','50','100'] %}
+      "lengthMenu": [ [10, 25, 50, 100, -1],
+                      [10, 25, 50, 100, "All"]],
+      {% else %}
+      "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
+                      [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
+      {% endif %}
+      "pageLength": {{ default_domain_table_size_setting }}
     });
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
