@@ -65,12 +65,12 @@ LDAP_FILTER = '(objectClass=inetorgperson)'
 
 # Github Oauth
 GITHUB_OAUTH_ENABLE = False
-GITHUB_OAUTH_KEY = 'G0j1Q15aRsn36B3aD6nwKLiYbeirrUPU8nDd1wOC'
-GITHUB_OAUTH_SECRET = '0WYrKWePeBDkxlezzhFbDn1PBnCwEa0vCwVFvy6iLtgePlpT7WfUlAa9sZgm'
+GITHUB_OAUTH_KEY = ''
+GITHUB_OAUTH_SECRET = ''
 GITHUB_OAUTH_SCOPE = 'email'
-GITHUB_OAUTH_URL = 'http://127.0.0.1:5000/api/v3/'
-GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:5000/oauth/token'
-GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:5000/oauth/authorize'
+GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
+GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
+GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
 
 # Google OAuth
 GOOGLE_OAUTH_ENABLE = False
@@ -91,7 +91,7 @@ SIGNUP_ENABLED = True
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://172.16.214.131:8081/'
 PDNS_API_KEY = 'you never know'
-PDNS_VERSION = '3.4.7'
+PDNS_VERSION = '4.1.1'
 
 # RECORDS ALLOWED TO EDIT
 RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'NS']
