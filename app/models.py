@@ -40,8 +40,8 @@ if 'LDAP_TYPE' in app.config.keys():
     LDAP_FILTER = app.config['LDAP_FILTER']
     LDAP_USERNAMEFIELD = app.config['LDAP_USERNAMEFIELD']
 
-    LDAP_GROUP_SECURITY = app.config['LDAP_GROUP_SECURITY']
-    if app.config['LDAP_GROUP_SECURITY'] == True:
+    LDAP_GROUP_SECURITY = app.config.get('LDAP_GROUP_SECURITY')
+    if LDAP_GROUP_SECURITY == True:
         LDAP_ADMIN_GROUP = app.config['LDAP_ADMIN_GROUP']
         LDAP_USER_GROUP = app.config['LDAP_USER_GROUP']
 else:
@@ -193,12 +193,12 @@ class User(db.Model):
 
             if user_info:
                 if user_info.password and self.check_password(user_info.password):
-                    logging.info('User "%s" logged in successfully' % self.username)
+                    logging.info('User "{0}" logged in successfully'.format(self.username))
                     return True
-                logging.error('User "%s" input a wrong password' % self.username)
+                logging.error('User "{0}" input a wrong password'.format(self.username))
                 return False
 
-            logging.warning('User "%s" does not exist' % self.username)
+            logging.warning('User "{0}" does not exist'.format(self.username))
             return False
 
         if method == 'LDAP':
@@ -208,18 +208,15 @@ class User(db.Model):
                 logging.error('LDAP authentication is disabled')
                 return False
 
-            #searchFilter = "(&(objectcategory=person)(samaccountname=%s))" % self.username
             if LDAP_TYPE == 'ldap':
-              searchFilter = "(&(%s=%s)%s)" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
-              logging.info('Ldap searchFilter "%s"' % searchFilter)
+                searchFilter = "(&({0}={1}){2})".format(LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+                logging.info('Ldap searchFilter "{0}"'.format(searchFilter))
+            elif LDAP_TYPE == 'ad':
+                searchFilter = "(&(objectcategory=person)({0}={1}){2})".format(LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
 
-            elif LDAP_TYPE == 'ldap':
-                searchFilter = "(&(%s=%s)(%s))" % (LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
-
-            logging.info('Ldap searchFilter "%s"' % searchFilter)
             result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             if not result:
-                logging.warning('LDAP User "%s" does not exist' % self.username)
+                logging.warning('LDAP User "{0}" does not exist'.format(self.username))
                 return False
 
             try:
@@ -232,20 +229,20 @@ class User(db.Model):
                         if (self.ldap_search('(member=%s)' % ldap_user_dn ,LDAP_ADMIN_GROUP)):
                             allowedlogin = True
                             isadmin = True
-                            logging.info('User %s is part of the "%s" group that allows admin access to PowerDNS-Admin' % (self.username,LDAP_ADMIN_GROUP))
+                            logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP))
                         if (self.ldap_search('(member=%s)' % ldap_user_dn ,LDAP_USER_GROUP)):
                             #if (group == LDAP_USER_GROUP):
                             allowedlogin = True
-                            logging.info('User %s is part of the "%s" group that allows user access to PowerDNS-Admin' % (self.username,LDAP_USER_GROUP))
+                            logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username,LDAP_USER_GROUP))
                         if allowedlogin == False:
-                            logging.error('User %s is not part of the "%s" or "%s" groups that allow access to PowerDNS-Admin' % (self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
+                            logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
                             return False
-                    except Exception, e:
-                        logging.error('LDAP group lookup for user "%s" has failed' % e)
+                    except Exception as e:
+                        logging.error('LDAP group lookup for user "{0}" has failed'.format(e))
                         return False
-                    logging.info('User "%s" logged in successfully' % self.username)
-            except Exception, e:
-                logging.error('User "%s" input a wrong LDAP password' % e)
+                    logging.info('User "{0}" logged in successfully'.format(self.username))
+            except Exception as e:
+                logging.error('User "{0}" input a wrong LDAP password'.format(e))
                 return False
 
             # create user if not exist in the db
@@ -258,8 +255,8 @@ class User(db.Model):
                     self.firstname = result[0][0][1]['givenName']
                     self.lastname = result[0][0][1]['sn']
                     self.email = result[0][0][1]['mail']
-                except Exception, e:
-                    logging.info("reading ldap data threw an exception %s" % e)
+                except Exception as e:
+                    logging.info("reading ldap data threw an exception {0}".format(e))
 
                 # first register user will be in Administrator role
                 self.role_id = Role.query.filter_by(name='User').first().id
@@ -272,7 +269,7 @@ class User(db.Model):
                         self.role_id = Role.query.filter_by(name='Administrator').first().id
 
                 self.create_user()
-                logging.info('Created user "%s" in the DB' % self.username)
+                logging.info('Created user "{0}" in the DB'.format(self.username))
 
             # user already exists in database, set their admin status based on group membership (if enabled)
             if LDAP_GROUP_SECURITY:
