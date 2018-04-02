@@ -11,7 +11,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 db = SQLAlchemy(app)
 
-
 def enable_github_oauth(GITHUB_ENABLE):
     if not GITHUB_ENABLE:
         return None, None
@@ -89,5 +88,9 @@ def enable_google_oauth(GOOGLE_ENABLE):
 
 google = enable_google_oauth(app.config.get('GOOGLE_OAUTH_ENABLE'))
 
-
 from app import views, models
+
+if app.config.get('SAML_ENABLED') and app.config.get('SAML_ENCRYPT'):
+    from app.lib import certutil
+    if not certutil.check_certificate():
+        certutil.create_self_signed_cert()

@@ -14,3 +14,6 @@ pyotp==2.2.6
 qrcode==6.0
 dnspython==1.15.0
 gunicorn==19.7.1
+python3-saml
+pyOpenSSL>=0.15
+pytz>=2017.3

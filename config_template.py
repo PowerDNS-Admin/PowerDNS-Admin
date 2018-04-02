@@ -28,15 +28,15 @@ SQLA_DB_HOST = 'mysqlhostorip'
 SQLA_DB_NAME = 'powerdnsadmin'
 
 #MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
-    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
+#SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
+#    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
 #SQLite
-#SQLALCHEMY_DATABASE_URI = 'sqlite:////path/to/your/pdns.db'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///pdns.db'
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 # LDAP CONFIG
-LDAP_ENABLE = False
+LDAP_ENABLED = False
 LDAP_TYPE = 'ldap'
 LDAP_URI = 'ldaps://your-ldap-server:636'
 # with LDAP_BIND_TYPE you can specify 'direct' or 'search' to use user credentials
@@ -45,6 +45,9 @@ LDAP_BIND_TYPE= 'direct' # direct or search
 LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
 LDAP_PASSWORD = 'dnsuser'
 LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
+LDAP_GROUP_SECURITY = False
+LDAP_ADMIN_GROUP = 'CN=PowerDNS-Admin Admin,OU=Custom,DC=ivan,DC=local'
+LDAP_USER_GROUP = 'CN=PowerDNS-Admin User,OU=Custom,DC=ivan,DC=local'
 # Additional options only if LDAP_TYPE=ldap
 LDAP_USERNAMEFIELD = 'uid'
 LDAP_FILTER = '(objectClass=inetorgperson)'
@@ -73,6 +76,7 @@ GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
 GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
 GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
 
+
 # Google OAuth
 GOOGLE_OAUTH_ENABLE = False
 GOOGLE_OAUTH_CLIENT_ID = ' '
@@ -85,6 +89,28 @@ GOOGLE_TOKEN_PARAMS = {
 GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
 GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
 
+# SAML Authnetication
+SAML_ENABLED = False
+SAML_DEBUG = True
+SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
+##Example for ADFS Metadata-URL
+SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
+#Cache Lifetime in Seconds
+SAML_METADATA_CACHE_LIFETIME = 1
+SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
+SAML_SP_CONTACT_NAME = '<contact name>'
+SAML_SP_CONTACT_MAIL = '<contact mail>'
+#Cofigures if SAML tokens should be encrypted.
+#If enabled a new app certificate will be generated on restart
+SAML_SIGN_REQUEST = False
+#Use SAML standard logout mechanism retreived from idp metadata
+#If configured false don't care about SAML session on logout.
+#Logout from PowerDNS-Admin only and keep SAML session authenticated.
+SAML_LOGOUT = False
+#Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
+#for example redirect to google.com after successful saml logout
+#SAML_LOGOUT_URL = 'https://google.com'
+
 #Default Auth
 BASIC_ENABLED = True
 SIGNUP_ENABLED = True
@@ -95,10 +121,9 @@ PDNS_API_KEY = 'you never know'
 PDNS_VERSION = '4.1.1'
 
 # RECORDS ALLOWED TO EDIT
-RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'NS']
-
-# RECORDS ALLOWED TO EDIT FOR REVERSE DOMAINS
-REVERSE_ALLOW_EDIT = ['PTR', 'NS']
+RECORDS_ALLOW_EDIT = ['SOA', 'A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC', 'NS', 'PTR']
+FORWARD_RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC' 'NS']
+REVERSE_RECORDS_ALLOW_EDIT = ['TXT', 'LOC', 'NS', 'PTR']
 
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = False

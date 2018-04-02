@@ -30,7 +30,7 @@ SIGNUP_ENABLED = True
 
 
 # LDAP CONFIG
-LDAP_ENABLE = False
+LDAP_ENABLED = False
 LDAP_TYPE = 'ldap'
 LDAP_URI = 'ldaps://your-ldap-server:636'
 # with LDAP_BIND_TYPE you can specify 'direct' or 'search' to use user credentials
@@ -80,6 +80,29 @@ GOOGLE_TOKEN_PARAMS = {
 }
 GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
 GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
+
+
+# SAML AUTHENTICATION
+SAML_ENABLED = False
+SAML_DEBUG = True
+SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
+##Example for ADFS Metadata-URL
+SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
+#Cache Lifetime in Seconds
+SAML_METADATA_CACHE_LIFETIME = 1
+SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
+SAML_SP_CONTACT_NAME = '<contact name>'
+SAML_SP_CONTACT_MAIL = '<contact mail>'
+#Cofigures if SAML tokens should be encrypted.
+#If enabled a new app certificate will be generated on restart
+SAML_SIGN_REQUEST = False
+#Use SAML standard logout mechanism retreived from idp metadata
+#If configured false don't care about SAML session on logout.
+#Logout from PowerDNS-Admin only and keep SAML session authenticated.
+SAML_LOGOUT = False
+#Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
+#for example redirect to google.com after successful saml logout
+#SAML_LOGOUT_URL = 'https://google.com'
 
 
 # POWERDNS CONFIG

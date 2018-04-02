@@ -4,9 +4,9 @@
 
 {% macro dnssec(domain) %}
   {% if domain.dnssec %}
-  <td><span class="label label-success"><i class="fa fa-lock-alt"></i>&nbsp;Enabled</span></td>
+  <td><span style="cursor:pointer" class="label label-success button_dnssec" id="{{ domain.name }}"><i class="fa fa-lock"></i>&nbsp;Enabled</span></td>
   {% else %}
-  <td><span class="label label-primary"><i class="fa fa-unlock-alt"></i>&nbsp;Disabled</span></td>
+  <td><span style="cursor:pointer" class="label label-primary button_dnssec" id="{{ domain.name }}"><i class="fa fa-unlock-alt"></i>&nbsp;Disabled</span></td>
   {% endif %}
 {% endmacro %}
 

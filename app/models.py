@@ -140,7 +140,9 @@ class User(db.Model):
 
     def check_password(self, hashed_password):
         # Check hased password. Useing bcrypt, the salt is saved into the hash itself
-        return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        if (self.plain_text_password):
+            return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        return False
 
     def get_user_info_by_id(self):
         user_info = User.query.get(int(self.id))
@@ -276,9 +278,9 @@ class User(db.Model):
                 self.set_admin(isadmin)
             self.update_profile()
             return True
-
-        logging.error('Unsupported authentication method')
-        return False
+        else:
+            logging.error('Unsupported authentication method')
+            return False
 
     def create_user(self):
         """
@@ -286,10 +288,10 @@ class User(db.Model):
         We will create a local user (in DB) in order to manage user
         profile such as name, roles,...
         """
-        
+
         # Set an invalid password hash for non local users
         self.password = '*'
-        
+
         db.session.add(self)
         db.session.commit()
 
@@ -653,9 +655,41 @@ class Domain(db.Model):
             logging.debug(traceback.print_exc())
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
+    def update_soa_setting(self, domain_name, soa_edit_api):
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'Domain doesnt exist.'}
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+        if soa_edit_api == 'OFF':
+            post_data = {
+                            "soa_edit_api": None,
+                            "kind": domain.type
+                        }
+        else:
+            post_data = {
+                                "soa_edit_api": soa_edit_api,
+                                "kind": domain.type
+            }
+        try:
+            jdata = utils.fetch_json(
+            urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers,
+            method='PUT', data=post_data)
+            if 'error' in jdata.keys():
+                logging.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+            else:
+                logging.info('soa-edit-api changed for domain {0} successfully'.format(domain_name))
+                return {'status': 'ok', 'msg': 'soa-edit-api changed successfully'}
+        except Exception as e:
+            logging.debug(e)
+            logging.debug(traceback.format_exc())
+            logging.error('Cannot change soa-edit-api for domain {0}'.format(domain_name))
+            return {'status': 'error', 'msg': 'Cannot change soa-edit-api this domain.'}
+
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
-        Check the existing reverse lookup domain, 
+        Check the existing reverse lookup domain,
         if not exists create a new one automatically
         """
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
@@ -799,6 +833,50 @@ class Domain(db.Model):
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
 
+    def enable_domain_dnssec(self, domain_name):
+        """
+        Enable domain DNSSEC
+        """
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if domain:
+            headers = {}
+            headers['X-API-Key'] = PDNS_API_KEY
+            post_data = {
+                "keytype": "ksk",
+                "active": True
+            }
+            try:
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='POST',data=post_data)
+                if 'error' in jdata:
+                    return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain', 'jdata' : jdata}
+                else:
+                    return {'status': 'ok'}
+            except:
+                logging.error(traceback.print_exc())
+                return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+        else:
+            return {'status': 'error', 'msg': 'This domain does not exist'}
+
+    def delete_dnssec_key(self, domain_name, key_id):
+        """
+        Remove keys DNSSEC
+        """
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if domain:
+            headers = {}
+            headers['X-API-Key'] = PDNS_API_KEY
+            url = '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(domain.name, key_id)
+
+            try:
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + url), headers=headers, method='DELETE')
+                if 'error' in jdata:
+                    return {'status': 'error', 'msg': 'DNSSEC is not disabled for this domain', 'jdata' : jdata}
+                else:
+                    return {'status': 'ok'}
+            except:
+                return {'status': 'error', 'msg': 'There was something wrong, please contact administrator','id': key_id, 'url': url}
+        else:
+            return {'status': 'error', 'msg': 'This domain doesnot exist'}
 
 class DomainUser(db.Model):
     __tablename__ = 'domain_user'
@@ -953,7 +1031,7 @@ class Record(object):
                     if r_type == 'PTR': # only ptr
                         if ':' in r['record_name']: # dirty ipv6 check
                             r_name = r['record_name']
-            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -962,7 +1040,7 @@ class Record(object):
                         "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
                     }
             records.append(record)
-        
+
         deleted_records, new_records = self.compare(domain, records)
 
         records = []
@@ -974,7 +1052,7 @@ class Record(object):
                     if r_type == 'PTR': # only ptr
                         if ':' in r['name']: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r['name']).to_text()
-                            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -1035,12 +1113,12 @@ class Record(object):
                 r_name = key[0]
                 r_type = key[1]
                 r_changetype = key[2]
-                
+
                 if PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
                         if ':' in r_name: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r_name).to_text()
-                
+
                 new_record = {
                         "name": r_name,
                         "type": r_type,

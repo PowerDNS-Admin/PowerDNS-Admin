@@ -7,6 +7,44 @@ import hashlib
 from app import app
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
+from datetime import datetime, timedelta
+from threading import Thread
+
+from .certutil import *
+
+if app.config['SAML_ENABLED']:
+    from onelogin.saml2.auth import OneLogin_Saml2_Auth
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
+    from onelogin.saml2.settings import OneLogin_Saml2_Settings
+    from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+    idp_timestamp = datetime(1970, 1, 1)
+    idp_data = None
+    idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
+    if idp_data is None:
+        print('SAML: IDP Metadata initial load failed')
+        exit(-1)
+    idp_timestamp = datetime.now()
+
+
+def get_idp_data():
+    global idp_data, idp_timestamp
+    lifetime = timedelta(minutes=app.config['SAML_METADATA_CACHE_LIFETIME'])
+    if idp_timestamp+lifetime < datetime.now():
+        background_thread = Thread(target=retreive_idp_data)
+        background_thread.start()
+    return idp_data
+
+
+def retreive_idp_data():
+    global idp_data, idp_timestamp
+    new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'])
+    if new_idp_data is not None:
+        idp_data = new_idp_data
+        idp_timestamp = datetime.now()
+        print("SAML: IDP Metadata successfully retreived from: " + app.config['SAML_METADATA_URL'])
+    else:
+        print("SAML: IDP Metadata could not be retreived")
+
 
 if 'TIMEOUT' in app.config.keys():
     TIMEOUT = app.config['TIMEOUT']
@@ -62,7 +100,8 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
 
 
 def fetch_json(remote_url, method='GET', data=None, params=None, headers=None):
-    r = fetch_remote(remote_url, method=method, data=data, params=params, headers=headers, accept='application/json; q=1')
+    r = fetch_remote(remote_url, method=method, data=data, params=params, headers=headers,
+                     accept='application/json; q=1')
 
     if method == "DELETE":
         return True
@@ -159,3 +198,78 @@ def email_to_gravatar_url(email="", size=100):
     """
     hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
     return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)
+
+
+def prepare_flask_request(request):
+    # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
+    url_data = urlparse.urlparse(request.url)
+    return {
+        'https': 'on' if request.scheme == 'https' else 'off',
+        'http_host': request.host,
+        'server_port': url_data.port,
+        'script_name': request.path,
+        'get_data': request.args.copy(),
+        'post_data': request.form.copy(),
+        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
+        'lowercase_urlencoding': True,
+        'query_string': request.query_string
+    }
+
+
+def init_saml_auth(req):
+    own_url = ''
+    if req['https'] is 'on':
+        own_url = 'https://'
+    else:
+        own_url = 'http://'
+    own_url += req['http_host']
+    metadata = get_idp_data()
+    settings = {}
+    settings['sp'] = {}
+    settings['sp']['NameIDFormat'] = idp_data['sp']['NameIDFormat']
+    settings['sp']['entityId'] = app.config['SAML_SP_ENTITY_ID']
+    cert = open(CERT_FILE, "r").readlines()
+    key = open(KEY_FILE, "r").readlines()
+    settings['sp']['privateKey'] = "".join(key)
+    settings['sp']['x509cert'] = "".join(cert)
+    settings['sp']['assertionConsumerService'] = {}
+    settings['sp']['assertionConsumerService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+    settings['sp']['assertionConsumerService']['url'] = own_url+'/saml/authorized'
+    settings['sp']['attributeConsumingService'] = {}
+    settings['sp']['singleLogoutService'] = {}
+    settings['sp']['singleLogoutService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+    settings['sp']['singleLogoutService']['url'] = own_url+'/saml/sls'
+    settings['idp'] = metadata['idp']
+    settings['strict'] = True
+    settings['debug'] = app.config['SAML_DEBUG']
+    settings['security'] = {}
+    settings['security']['digestAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+    settings['security']['metadataCacheDuration'] = None
+    settings['security']['metadataValidUntil'] = None
+    settings['security']['requestedAuthnContext'] = True
+    settings['security']['signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+    settings['security']['wantAssertionsEncrypted'] = False
+    settings['security']['wantAttributeStatement'] = True
+    settings['security']['wantNameId'] = True
+    settings['security']['authnRequestsSigned'] = app.config['SAML_SIGN_REQUEST']
+    settings['security']['logoutRequestSigned'] = app.config['SAML_SIGN_REQUEST']
+    settings['security']['logoutResponseSigned'] = app.config['SAML_SIGN_REQUEST']
+    settings['security']['nameIdEncrypted'] = False
+    settings['security']['signMetadata'] = True
+    settings['security']['wantAssertionsSigned'] = True
+    settings['security']['wantMessagesSigned'] = True
+    settings['security']['wantNameIdEncrypted'] = False
+    settings['contactPerson'] = {}
+    settings['contactPerson']['support'] = {}
+    settings['contactPerson']['support']['emailAddress'] = app.config['SAML_SP_CONTACT_NAME']
+    settings['contactPerson']['support']['givenName'] = app.config['SAML_SP_CONTACT_MAIL']
+    settings['contactPerson']['technical'] = {}
+    settings['contactPerson']['technical']['emailAddress'] = app.config['SAML_SP_CONTACT_NAME']
+    settings['contactPerson']['technical']['givenName'] = app.config['SAML_SP_CONTACT_MAIL']
+    settings['organization'] = {}
+    settings['organization']['en-US'] = {}
+    settings['organization']['en-US']['displayname'] = 'PowerDNS-Admin'
+    settings['organization']['en-US']['name'] = 'PowerDNS-Admin'
+    settings['organization']['en-US']['url'] = own_url
+    auth = OneLogin_Saml2_Auth(req, settings)
+    return auth
