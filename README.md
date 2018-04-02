@@ -1,5 +1,6 @@
 # PowerDNS-Admin
 A PowerDNS web interface with advanced features.
+[![Build Status](https://travis-ci.org/ngoduykhanh/PowerDNS-Admin.svg?branch=master)](https://travis-ci.org/ngoduykhanh/PowerDNS-Admin)
 
 #### Features:
 - Multiple domain management
