@@ -315,6 +315,7 @@ class User(db.Model):
             self.role_id = Role.query.filter_by(name='Administrator').first().id
 
         self.password = self.get_hashed_password(self.plain_text_password)
+        self.password = self.password.decode("utf-8")
 
         db.session.add(self)
         db.session.commit()
