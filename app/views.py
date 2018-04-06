@@ -551,7 +551,7 @@ def domain(domain_name):
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
             editable_records = app.config['RECORDS_ALLOW_EDIT']
         else:
-            editable_records = app.config['REVERSE_ALLOW_EDIT']
+            editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
     else:
         for jr in jrecords:
