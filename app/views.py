@@ -1150,7 +1150,7 @@ def admin_settings_edit(setting):
 @login_required
 def user_profile():
     external_account = False
-    if session.has_key('external_auth'):
+    if 'external_auth' in session:
         external_account = session['external_auth']
     if request.method == 'GET' or external_account:
         return render_template('user_profile.html', external_account=external_account)
