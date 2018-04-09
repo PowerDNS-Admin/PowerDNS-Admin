@@ -9,7 +9,6 @@ services:
     container_name: powerdns-admin
     mem_limit: 256M
     memswap_limit: 256M
-    tty: true
     command: /usr/bin/supervisord -c /etc/supervisord.conf
     ports:
       - "9191:9191"

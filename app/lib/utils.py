@@ -196,6 +196,9 @@ def email_to_gravatar_url(email="", size=100):
     """
     AD doesn't necessarily have email
     """
+    if email is None:
+        email = ""
+
     hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
     return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)
 
