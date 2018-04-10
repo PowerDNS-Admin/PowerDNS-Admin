@@ -691,7 +691,7 @@ def domain_clone():
                 if not n or result['status'] == 'error':
                     return redirect(url_for('error', code=404))
                 #permit users
-                n.grant_privielges(users)
+                n.grant_privileges(users)
                 #add records
                 post_records = []
                 for record in records:
