@@ -135,6 +135,9 @@ class User(db.Model):
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
+        if plain_text_password == None:
+            return plain_text_password
+
         pw = plain_text_password if plain_text_password else self.plain_text_password
         return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
@@ -315,7 +318,9 @@ class User(db.Model):
             self.role_id = Role.query.filter_by(name='Administrator').first().id
 
         self.password = self.get_hashed_password(self.plain_text_password)
-        self.password = self.password.decode("utf-8")
+
+        if self.password:
+            self.password = self.password.decode("utf-8")
 
         db.session.add(self)
         db.session.commit()
@@ -336,7 +341,9 @@ class User(db.Model):
         user.password = self.get_hashed_password(self.plain_text_password) if self.plain_text_password else user.password
         user.avatar = self.avatar if self.avatar else user.avatar
 
-        user.otp_secret = ""
+        if enable_otp is not None:
+            user.otp_secret = ""
+
         if enable_otp == True:
             # generate the opt secret key
             user.otp_secret = base64.b32encode(os.urandom(10)).decode('utf-8')
