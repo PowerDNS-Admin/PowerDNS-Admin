@@ -118,7 +118,7 @@ def login_via_authorization_header(request):
     if auth_header:
         auth_header = auth_header.replace('Basic ', '', 1)
         try:
-            auth_header = base64.b64decode(auth_header)
+            auth_header = str(base64.b64decode(auth_header), 'utf-8')
             username,password = auth_header.split(":")
         except TypeError as e:
             return None
