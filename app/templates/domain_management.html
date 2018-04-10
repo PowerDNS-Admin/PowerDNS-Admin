@@ -87,6 +87,24 @@
             </div>
         </div>
     </div>
+	<div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Domain Cloning</h3>
+                </div>
+                <div class="box-body">
+                    <p>This function is used to clone a domain. All records and user privileges associated to this domain will also be cloned.</p>
+					<div class="form-group">
+                        <input type="text" class="form-control" name="domain_clone_name" id="domain_clone_name" placeholder="Enter name of new domain">
+                    </div>
+                    <button type="button" class="btn btn-flat btn-primary pull-left clone_domain" id="{{ domain.name }}">
+                        Clone
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xs-12">
             <div class="box">
@@ -208,6 +226,15 @@ $('.auto_ptr_toggle').on('ifToggled', function(event) {
         }
     };
     applyChanges(postdata,  $SCRIPT_ROOT + '/domain/' + domain + '/managesetting', true);
+});
+
+// handle cloning of domain
+$(document.body).on('click', '.clone_domain', function() {
+    var domain = $(this).prop('id');
+	var new_domain = $('#domain_clone_name').val();
+	$.post($SCRIPT_ROOT + '/admin/domain/clone', { src_domain: domain, dst_domain: new_domain }).done(function() {
+		window.location.href = $SCRIPT_ROOT + '/domain/' + new_domain;
+	});
 });
 
 // handle deletion of domain
