@@ -25,7 +25,7 @@
                     <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
                         Add Record&nbsp;<i class="fa fa-plus"></i>
                     </button>
-                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}">
+                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
                         Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
                     </button>
                     {% else %}
@@ -196,11 +196,14 @@
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var domain = $(this).prop('id');
+        var serial = $(".button_apply_changes").val(); 
         var info = "Are you sure you want to apply your changes?";
         modal.find('.modal-body p').text(info);
-        modal.find('#button_apply_confirm').click(function() {
-            var data = getTableData(table);
-            applyChanges(data, $SCRIPT_ROOT + '/domain/' + domain + '/apply', true);
+
+        // following unbind("click") is to avoid multiple times execution
+        modal.find('#button_apply_confirm').unbind("click").click(function() {
+            var data = {'serial': serial, 'record': getTableData(table)};
+            applyRecordChanges(data, domain);
             modal.modal('hide');
         })
         modal.modal('show');
