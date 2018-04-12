@@ -130,7 +130,7 @@ def display_record_name(data):
     if record_name == domain_name:
         return '@'
     else:
-        return record_name.replace('.'+domain_name, '')
+        return re.sub('\.{}$'.format(domain_name), '', record_name)
 
 
 def display_master_name(data):

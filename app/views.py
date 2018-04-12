@@ -917,14 +917,14 @@ def create_template_from_zone():
                 if NEW_SCHEMA:
                     for jr in jrecords:
                         if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
-                            name = '@' if jr['name'] == domain_name else jr['name'].replace('.'+domain_name, '')
+                            name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
                             for subrecord in jr['records']:
                                 record = DomainTemplateRecord(name=name, type=jr['type'], status=True if subrecord['disabled'] else False, ttl=jr['ttl'], data=subrecord['content'])
                                 records.append(record)
                 else:
                     for jr in jrecords:
                         if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
-                            name = '@' if jr['name'] == domain_name else jr['name'].replace('.'+domain_name, '')
+                            name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
                             record = DomainTemplateRecord(name=name, type=jr['type'], status=True if jr['disabled'] else False, ttl=jr['ttl'], data=jr['content'])
                             records.append(record)
 
