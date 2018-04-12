@@ -1561,7 +1561,7 @@ class DomainTemplateRecord(db.Model):
     name = db.Column(db.String(255))
     type = db.Column(db.String(64))
     ttl = db.Column(db.Integer)
-    data = db.Column(db.String(255))
+    data = db.Column(db.Text)
     status = db.Column(db.Boolean)
     template_id = db.Column(db.Integer, db.ForeignKey('domain_template.id'))
     template = db.relationship('DomainTemplate', back_populates='records')
