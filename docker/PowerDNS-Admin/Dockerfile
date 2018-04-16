@@ -1,42 +1,28 @@
-# PowerDNS-Admin
-# Original from:
-# https://github.com/ngoduykhanh/PowerDNS-Admin
-#
-# Initial image by winggundamth(/powerdns-mysql:trusty)
-#
-#
-FROM alpine
-MAINTAINER Jeroen Boonstra <jeroen [at] provider.nl>
+FROM ubuntu:latest
+MAINTAINER Khanh Ngo "ngokhanhit@gmail.com"
+ARG ENVIRONMENT=development
+ENV ENVIRONMENT=${ENVIRONMENT}
 
-ENV APP_USER=web APP_NAME=powerdns-admin
-ENV APP_PATH=/home/$APP_USER/$APP_NAME
+WORKDIR /powerdns-admin
 
+RUN apt-get update -y
+RUN apt-get install -y python3-pip python3-dev supervisor
 
-RUN apk add --update \
-    sudo \
-    python \
-    libxml2 \
-    xmlsec \
-    git \
-    python-dev \
-    py-pip \
-    build-base  \
-    libxml2-dev \
-    xmlsec-dev \
-    libffi-dev \
-    openldap-dev \
-  && adduser -S web
+# lib for building mysql db driver
+RUN apt-get install -y libmysqlclient-dev
 
-RUN sudo -u $APP_USER -H git clone --depth=1 \
-      https://github.com/thomasDOTde/PowerDNS-Admin $APP_PATH
+# lib for buiding ldap and ssl-based application
+RUN apt-get install -y libsasl2-dev libldap2-dev libssl-dev
 
-RUN pip install -r $APP_PATH/requirements.txt
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+# lib for building python3-saml
+RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config 
 
+COPY ./requirements.txt /powerdns-admin/requirements.txt
+RUN pip3 install -r requirements.txt
 
-USER $APP_USER
-WORKDIR $APP_PATH
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["python", "run.py"]
-EXPOSE 9393
-VOLUME ["/var/log"]
+ADD ./supervisord.conf /etc/supervisord.conf
+ADD . /powerdns-admin/
+COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
+COPY ./docker/PowerDNS-Admin/entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
