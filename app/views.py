@@ -1,5 +1,6 @@
 import base64
 import json
+import logging as logger
 import os
 import traceback
 import re
@@ -19,15 +20,13 @@ from werkzeug.security import gen_salt
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, github, google
 from app.lib import utils
-from app.lib.log import logger
 from app.decorators import admin_role_required, can_access_domain
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-# LOG CONFIG
-logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
+logging = logger.getLogger(__name__)
 
 # FILTERS
 jinja2.filters.FILTERS['display_record_name'] = utils.display_record_name
@@ -118,7 +117,7 @@ def login_via_authorization_header(request):
     if auth_header:
         auth_header = auth_header.replace('Basic ', '', 1)
         try:
-            auth_header = base64.b64decode(auth_header)
+            auth_header = str(base64.b64decode(auth_header), 'utf-8')
             username,password = auth_header.split(":")
         except TypeError as e:
             return None
@@ -312,12 +311,13 @@ def login():
         return redirect(url_for('index'))
 
     if request.method == 'GET':
-        return render_template('login.html',
-                               github_enabled=GITHUB_ENABLE,
-                               google_enabled=GOOGLE_ENABLE,
-                               saml_enabled=SAML_ENABLED,
-                               ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
-                               basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
+        return render_template('login.html', github_enabled=GITHUB_ENABLE,
+                                             google_enabled=GOOGLE_ENABLE,
+                                             saml_enabled=SAML_ENABLED,
+                                             ldap_enabled=LDAP_ENABLED,
+                                             login_title=LOGIN_TITLE,
+                                             basic_enabled=BASIC_ENABLED,
+                                             signup_enabled=SIGNUP_ENABLED)
 
     # process login
     username = request.form['username']
@@ -331,6 +331,9 @@ def login():
     email = request.form.get('email')
     rpassword = request.form.get('rpassword')
 
+    if auth_method != 'LOCAL':
+        session['external_auth'] = True
+
     if None in [firstname, lastname, email]:
         #login case
         remember_me = False
@@ -342,37 +345,46 @@ def login():
         try:
             auth = user.is_validate(method=auth_method)
             if auth == False:
-                return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED,
-                                       login_title=LOGIN_TITLE,
-                                       basic_enabled=BASIC_ENABLED,
-                                       signup_enabled=SIGNUP_ENABLED,
-                                       github_enabled=GITHUB_ENABLE,
-                                       saml_enabled=SAML_ENABLED)
+                return render_template('login.html', error='Invalid credentials',
+                                                     github_enabled=GITHUB_ENABLE,
+                                                     google_enabled=GOOGLE_ENABLE,
+                                                     saml_enabled=SAML_ENABLED,
+                                                     ldap_enabled=LDAP_ENABLED,
+                                                     login_title=LOGIN_TITLE,
+                                                     basic_enabled=BASIC_ENABLED,
+                                                     signup_enabled=SIGNUP_ENABLED)
         except Exception as e:
-            return render_template('login.html', error=e, ldap_enabled=LDAP_ENABLED, login_title=LOGIN_TITLE,
-                                   basic_enabled=BASIC_ENABLED,
-                                   signup_enabled=SIGNUP_ENABLED,
-                                   github_enabled=GITHUB_ENABLE,
-                                   saml_enabled=SAML_ENABLED)
+            return render_template('login.html', error=e,
+                                                 github_enabled=GITHUB_ENABLE,
+                                                 google_enabled=GOOGLE_ENABLE,
+                                                 saml_enabled=SAML_ENABLED,
+                                                 ldap_enabled=LDAP_ENABLED,
+                                                 login_title=LOGIN_TITLE,
+                                                 basic_enabled=BASIC_ENABLED,
+                                                 signup_enabled=SIGNUP_ENABLED)
 
         # check if user enabled OPT authentication
         if user.otp_secret:
             if otp_token:
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
-                    return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLED,
-                                           login_title=LOGIN_TITLE,
-                                           basic_enabled=BASIC_ENABLED,
-                                           signup_enabled=SIGNUP_ENABLED,
-                                           github_enabled=GITHUB_ENABLE,
-                                           saml_enabled=SAML_ENABLED)
+                    return render_template('login.html', error='Invalid credentials',
+                                                         github_enabled=GITHUB_ENABLE,
+                                                         google_enabled=GOOGLE_ENABLE,
+                                                         saml_enabled=SAML_ENABLED,
+                                                         ldap_enabled=LDAP_ENABLED,
+                                                         login_title=LOGIN_TITLE,
+                                                         basic_enabled=BASIC_ENABLED,
+                                                         signup_enabled=SIGNUP_ENABLED)
             else:
-                return render_template('login.html', error='Token required', ldap_enabled=LDAP_ENABLED,
-                                       login_title=LOGIN_TITLE,
-                                       basic_enabled=BASIC_ENABLED,
-                                       signup_enabled=SIGNUP_ENABLED,
-                                       github_enabled = GITHUB_ENABLE,
-                                       saml_enabled = SAML_ENABLED)
+                return render_template('login.html', error='Token required',
+                                                     github_enabled=GITHUB_ENABLE,
+                                                     google_enabled=GOOGLE_ENABLE,
+                                                     saml_enabled=SAML_ENABLED,
+                                                     ldap_enabled=LDAP_ENABLED,
+                                                     login_title=LOGIN_TITLE,
+                                                     basic_enabled=BASIC_ENABLED,
+                                                     signup_enabled=SIGNUP_ENABLED)
 
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
@@ -389,9 +401,14 @@ def login():
         try:
             result = user.create_local_user()
             if result == True:
-                return render_template('login.html', username=username, password=password, ldap_enabled=LDAP_ENABLED,
-                                       login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED,
-                                       github_enabled=GITHUB_ENABLE,saml_enabled=SAML_ENABLED)
+                return render_template('login.html', username=username, password=password,
+                                                     github_enabled=GITHUB_ENABLE,
+                                                     google_enabled=GOOGLE_ENABLE,
+                                                     saml_enabled=SAML_ENABLED,
+                                                     ldap_enabled=LDAP_ENABLED,
+                                                     login_title=LOGIN_TITLE,
+                                                     basic_enabled=BASIC_ENABLED,
+                                                     signup_enabled=SIGNUP_ENABLED)
             else:
                 return render_template('register.html', error=result['msg'])
         except Exception as e:
@@ -523,7 +540,6 @@ def dashboard_domains():
 
 
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
-@app.route('/domain', methods=['GET', 'POST'])
 @login_required
 @can_access_domain
 def domain(domain_name):
@@ -551,7 +567,7 @@ def domain(domain_name):
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
             editable_records = app.config['RECORDS_ALLOW_EDIT']
         else:
-            editable_records = app.config['REVERSE_ALLOW_EDIT']
+            editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
     else:
         for jr in jrecords:
@@ -562,7 +578,7 @@ def domain(domain_name):
         editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
     else:
         editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records,pdns_version=app.config['PDNS_VERSION'])
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
@@ -575,7 +591,6 @@ def domain_add():
             domain_name = request.form.getlist('domain_name')[0]
             domain_type = request.form.getlist('radio_type')[0]
             domain_template = request.form.getlist('domain_template')[0]
-            logging.info("Selected template ==== {0}".format(domain_template))
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
@@ -698,11 +713,26 @@ def record_apply(domain_name):
     example jdata: {u'record_ttl': u'1800', u'record_type': u'CNAME', u'record_name': u'test4', u'record_status': u'Active', u'record_data': u'duykhanh.me'}
     """
     #TODO: filter removed records / name modified records.
+
     try:
         jdata = request.json
 
+        submitted_serial = jdata['serial']
+        submitted_record = jdata['record']
+
+        domain = Domain.query.filter(Domain.name==domain_name).first()
+
+        logging.debug('Your submitted serial: {0}'.format(submitted_serial))
+        logging.debug('Current domain serial: {0}'.format(domain.serial))
+
+        if domain:
+            if int(submitted_serial) != domain.serial:
+                return make_response(jsonify( {'status': 'error', 'msg': 'The zone has been changed by another session or user. Please refresh this web page to load updated records.'} ), 500)
+        else:
+            return make_response(jsonify( {'status': 'error', 'msg': 'Domain name {0} does not exist'.format(domain_name)} ), 404)
+
         r = Record()
-        result = r.apply(domain_name, jdata)
+        result = r.apply(domain_name, submitted_record)
         if result['status'] == 'ok':
             history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(jdata), created_by=current_user.username)
             history.add()
@@ -750,6 +780,15 @@ def record_delete(domain_name, record_name, record_type):
         logging.error(traceback.print_exc())
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
+
+
+@app.route('/domain/<path:domain_name>/info', methods=['GET'])
+@login_required
+@can_access_domain
+def domain_info(domain_name):
+    domain = Domain()
+    domain_info = domain.get_domain_info(domain_name)
+    return make_response(jsonify(domain_info), 200)
 
 
 @app.route('/domain/<path:domain_name>/dnssec', methods=['GET'])
@@ -898,17 +937,18 @@ def create_template_from_zone():
 
                 if NEW_SCHEMA:
                     for jr in jrecords:
-                        name = '@' if jr['name'] == domain_name else jr['name']
                         if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                            name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
                             for subrecord in jr['records']:
-
                                 record = DomainTemplateRecord(name=name, type=jr['type'], status=True if subrecord['disabled'] else False, ttl=jr['ttl'], data=subrecord['content'])
                                 records.append(record)
                 else:
                     for jr in jrecords:
                         if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                            name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
                             record = DomainTemplateRecord(name=name, type=jr['type'], status=True if jr['disabled'] else False, ttl=jr['ttl'], data=jr['content'])
                             records.append(record)
+
             result_records = t.replace_records(records)
 
             if result_records['status'] == 'ok':
@@ -1150,7 +1190,7 @@ def admin_settings_edit(setting):
 @login_required
 def user_profile():
     external_account = False
-    if session.has_key('external_auth'):
+    if 'external_auth' in session:
         external_account = session['external_auth']
     if request.method == 'GET' or external_account:
         return render_template('user_profile.html', external_account=external_account)

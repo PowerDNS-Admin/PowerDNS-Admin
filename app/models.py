@@ -10,6 +10,7 @@ import pyotp
 import re
 import dns.reversename
 import sys
+import logging as logger
 
 from datetime import datetime
 from urllib.parse import urljoin
@@ -19,10 +20,8 @@ from flask_login import AnonymousUserMixin
 
 from app import app, db
 from app.lib import utils
-from app.lib.log import logger
 
-# LOG CONFIGS
-logging = logger('MODEL', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
+logging = logger.getLogger(__name__)
 
 if 'LDAP_TYPE' in app.config.keys():
     LDAP_URI = app.config['LDAP_URI']
@@ -135,6 +134,9 @@ class User(db.Model):
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
+        if plain_text_password == None:
+            return plain_text_password
+
         pw = plain_text_password if plain_text_password else self.plain_text_password
         return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
@@ -316,6 +318,9 @@ class User(db.Model):
 
         self.password = self.get_hashed_password(self.plain_text_password)
 
+        if self.password:
+            self.password = self.password.decode("utf-8")
+
         db.session.add(self)
         db.session.commit()
         return {'status': True, 'msg': 'Created user successfully'}
@@ -335,7 +340,9 @@ class User(db.Model):
         user.password = self.get_hashed_password(self.plain_text_password) if self.plain_text_password else user.password
         user.avatar = self.avatar if self.avatar else user.avatar
 
-        user.otp_secret = ""
+        if enable_otp is not None:
+            user.otp_secret = ""
+
         if enable_otp == True:
             # generate the opt secret key
             user.otp_secret = base64.b32encode(os.urandom(10)).decode('utf-8')
@@ -502,24 +509,18 @@ class Domain(db.Model):
             logging.error('Can not create setting {0} for domain {1}. {2}'.format(setting, self.name, e))
             return False
 
+    def get_domain_info(self, domain_name):
+        """
+        Get all domains which has in PowerDNS
+        """
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers)
+        return jdata
+
     def get_domains(self):
         """
         Get all domains which has in PowerDNS
-        jdata example:
-            [
-              {
-                "id": "example.org.",
-                "url": "/servers/localhost/zones/example.org.",
-                "name": "example.org",
-                "kind": "Native",
-                "dnssec": false,
-                "account": "",
-                "masters": [],
-                "serial": 2015101501,
-                "notified_serial": 0,
-                "last_check": 0
-              }
-            ]
         """
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
@@ -878,6 +879,7 @@ class Domain(db.Model):
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
 
+
 class DomainUser(db.Model):
     __tablename__ = 'domain_user'
     id = db.Column(db.Integer, primary_key = True)
@@ -1175,6 +1177,7 @@ class Record(object):
                 return {'status': 'error', 'msg': jdata2['error']}
             else:
                 self.auto_ptr(domain, new_records, deleted_records)
+                self.update_db_serial(domain)
                 logging.info('Record was applied successfully.')
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
         except Exception as e:
@@ -1326,6 +1329,20 @@ class Record(object):
         except Exception as e:
             logging.error("Cannot add record {0}/{1}/{2} to domain {3}. DETAIL: {4}".format(self.name, self.type, self.data, domain, e))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+
+    def update_db_serial(self, domain):
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='GET')
+        serial = jdata['serial']
+
+        domain = Domain.query.filter(Domain.name==domain).first()
+        if domain:
+            domain.serial = serial
+            db.session.commit()
+            return {'status': True, 'msg': 'Synced local serial for domain name {0}'.format(domain)}
+        else:
+            return {'status': False, 'msg': 'Could not find domain name {0} in local db'.format(domain)}
 
 
 class Server(object):
@@ -1544,7 +1561,7 @@ class DomainTemplateRecord(db.Model):
     name = db.Column(db.String(255))
     type = db.Column(db.String(64))
     ttl = db.Column(db.Integer)
-    data = db.Column(db.String(255))
+    data = db.Column(db.Text)
     status = db.Column(db.Boolean)
     template_id = db.Column(db.Integer, db.ForeignKey('domain_template.id'))
     template = db.relationship('DomainTemplate', back_populates='records')

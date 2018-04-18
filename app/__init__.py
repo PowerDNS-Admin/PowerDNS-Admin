@@ -7,6 +7,10 @@ app = Flask(__name__)
 app.config.from_object('config')
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
+#### CONFIGURE LOGGER ####
+from app.lib.log import logger
+logging = logger('powerdns-admin', app.config['LOG_LEVEL'], app.config['LOG_FILE']).config()
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 db = SQLAlchemy(app)

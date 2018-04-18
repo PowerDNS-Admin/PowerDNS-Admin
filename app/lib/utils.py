@@ -130,7 +130,7 @@ def display_record_name(data):
     if record_name == domain_name:
         return '@'
     else:
-        return record_name.replace('.'+domain_name, '')
+        return re.sub('\.{}$'.format(domain_name), '', record_name)
 
 
 def display_master_name(data):
@@ -196,6 +196,9 @@ def email_to_gravatar_url(email="", size=100):
     """
     AD doesn't necessarily have email
     """
+    if email is None:
+        email = ""
+
     hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
     return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)
 

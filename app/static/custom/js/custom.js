@@ -30,6 +30,37 @@ function applyChanges(data, url, showResult, refreshPage) {
     });
 }
 
+function applyRecordChanges(data, domain) {
+    var success = false;
+    $.ajax({
+        type : "POST",
+        url : $SCRIPT_ROOT + '/domain/' + domain + '/apply',
+        data : JSON.stringify(data),// now data come in this function
+        contentType : "application/json; charset=utf-8",
+        crossDomain : true,
+        dataType : "json",
+        success : function(data, status, jqXHR) {
+            // update Apply button value
+            $.getJSON($SCRIPT_ROOT + '/domain/' + domain + '/info', function(data) {
+                $(".button_apply_changes").val(data['serial']);
+            });
+
+            console.log("Applied changes successfully.")
+            var modal = $("#modal_success");
+            modal.find('.modal-body p').text("Applied changes successfully");
+            modal.modal('show');
+        },
+
+        error : function(jqXHR, status) {
+            console.log(jqXHR);
+            var modal = $("#modal_error");
+            var responseJson = jQuery.parseJSON(jqXHR.responseText);
+            modal.find('.modal-body p').text(responseJson['msg']);
+            modal.modal('show');
+        }
+    });
+}
+
 function getTableData(table) {
     var rData = []
 
