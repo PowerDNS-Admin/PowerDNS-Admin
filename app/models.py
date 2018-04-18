@@ -942,7 +942,7 @@ class Record(object):
         # validate record first
         r = self.get_record_data(domain)
         records = r['records']
-        check = filter(lambda check: check['name'] == self.name, records)
+        check = list(filter(lambda check: check['name'] == self.name, records))
         if check:
             r = check[0]
             if r['type'] in ('A', 'AAAA' ,'CNAME'):
