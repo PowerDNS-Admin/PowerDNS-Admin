@@ -1140,8 +1140,12 @@ def admin_manageuser():
 @admin_role_required
 def admin_history():
     if request.method == 'POST':
-        h = History()
-        result = h.remove_all()
+        result = None
+        ALLOW_HISTORY_CLEAR = app.config['ALLOW_HISTORY_CLEAR']
+        if ALLOW_HISTORY_CLEAR == True:
+            h = History()
+            result = h.remove_all()
+
         if result:
             history = History(msg='Remove all histories', created_by=current_user.username)
             history.add()
@@ -1152,7 +1156,7 @@ def admin_history():
 
     if request.method == 'GET':
         histories = History.query.all()
-        return render_template('admin_history.html', histories=histories)
+        return render_template('admin_history.html', histories=histories,allow_history_clear=app.config['ALLOW_HISTORY_CLEAR'])
 
 
 @app.route('/admin/settings', methods=['GET'])
