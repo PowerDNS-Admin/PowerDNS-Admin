@@ -1,4 +1,4 @@
-version: "2"
+version: "2.1"
 
 services:
   powerdns-admin:
@@ -31,7 +31,8 @@ services:
       - PDNS_HOST=${PDNS_HOST}
       - PDNS_API_KEY=${PDNS_API_KEY}
     depends_on:
-      - powerdns-admin-mysql
+      powerdns-admin-mysql:
+        condition: service_healthy
 
   powerdns-admin-mysql:
     image: mysql/mysql-server:5.7
@@ -47,6 +48,10 @@ services:
       - MYSQL_DATABASE=${PDA_DB_NAME}
       - MYSQL_USER=${PDA_DB_USER}
       - MYSQL_PASSWORD=${PDA_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
 
   pdns-server:
     image: psitrax/powerdns
@@ -63,7 +68,8 @@ services:
       - PDNS_API_KEY=${PDNS_API_KEY}
       - PDNS_WEBSERVER_ALLOW_FROM=${PDNS_WEBSERVER_ALLOW_FROM}
     depends_on:
-      - pdns-mysql
+      pdns-mysql:
+        condition: service_healthy
 
   pdns-mysql:
     image: mysql/mysql-server:5.7
@@ -79,6 +85,10 @@ services:
       - MYSQL_DATABASE=${PDNS_DB_NAME}
       - MYSQL_USER=${PDNS_DB_USER}
       - MYSQL_PASSWORD=${PDNS_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
 
 networks:
   default:
