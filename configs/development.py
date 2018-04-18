@@ -14,10 +14,10 @@ TIMEOUT = 10
 UPLOAD_DIR = os.path.join(basedir, 'upload')
 
 # DATABASE CONFIG FOR MYSQL
-DB_USER = 'powerdnsadmin'
-DB_PASSWORD = 'powerdnsadminpassword'
-DB_HOST = 'docker.for.mac.localhost'
-DB_NAME = 'powerdnsadmin'
+DB_HOST = os.environ.get('PDA_DB_HOST')
+DB_NAME = os.environ.get('PDA_DB_NAME')
+DB_USER = os.environ.get('PDA_DB_USER')
+DB_PASSWORD = os.environ.get('PDA_DB_PASSWORD')
 
 #MySQL
 SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_NAME
@@ -106,8 +106,8 @@ SAML_LOGOUT = False
 
 
 # POWERDNS CONFIG
-PDNS_STATS_URL = 'http://192.168.100.100:8081/'
-PDNS_API_KEY = 'changeme'
+PDNS_STATS_URL = 'http://{0}:8081'.format(os.environ.get('PDNS_HOST'))
+PDNS_API_KEY = os.environ.get('PDNS_API_KEY')
 PDNS_VERSION = '4.1.1'
 
 # RECORDS ALLOWED TO EDIT

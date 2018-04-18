@@ -17,57 +17,23 @@ A PowerDNS web interface with advanced features.
 - DynDNS 2 protocol support
 - Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
 
-## Setup
-
-### PowerDNS Version Support:
-PowerDNS-Admin supports PowerDNS autoritative server versions **3.4.2** and higher. 
-
-### pdns Service
-I assume that you have already installed pdns service. Make sure that your `pdns.conf` config file has these contents
-
-PowerDNS 4.0.0 and later
-```
-api=yes
-api-key=your-powerdns-api-key
-webserver=yes
-```
-
-PowerDNS before 4.0.0
-```
-experimental-json-interface=yes
-experimental-api-key=your-powerdns-api-key
-webserver=yes
-```
-
-This will enable API access in pdns service so PowerDNS-Admin can intergrate with it.
-
-### Create Database
-We will create a database which used by this web application. Please note that this database is difference from pdns database itself.
-
-PowerDNS-Admin supports MySQL server, Maria DB, PostgresQL and SQL Lite.
-
-```
-MariaDB [(none)]> CREATE DATABASE powerdnsadmin;
-
-MariaDB [(none)]> GRANT ALL PRIVILEGES ON powerdnsadmin.* TO powerdnsadmin@'%' IDENTIFIED BY 'your-password';
-```
-
 ### Running PowerDNS-Admin
-There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment.
+There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment which has PowerDNS-Admin, PowerDNS server and MySQL Back-End Database.
 
-Firstly, let's edit `configs/developments.py` configuration file.
+Step 1: Changing configuration
+The configuration file for developement environment is located at `configs/development.py`, you can override some configs by editing `.env` file.
 
-Secondly, build the docker image of PowerDNS-Admin
+Step 2: Build docker images
 
-``` $docker-compose -f docker-compose.dev.yml build```
+```$ docker-compose build```
 
-Finally, start it
+Step 3: Start docker containers
 
-```$ docker-compose -f docker-compose.dev.yml up```
+```$ docker-compose up```
 
 You can now access PowerDNS-Admin at url http://localhost:9191
 
-NOTE: For other methods to run PowerDNS-Admin, please take look at WIKI pages.
+**NOTE:** For other methods to run PowerDNS-Admin, please take look at WIKI pages.
 
 ### Screenshots
 ![login page](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/images/readme_screenshots/fullscreen-login.png?raw=true)
