@@ -68,7 +68,15 @@
         "searching" : true,
         "ordering" : true,
         "info" : true,
-        "autoWidth" : false
+        "autoWidth" : false,
+        "columnDefs": [
+            {
+                "render": function ( data, type, row ) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+                },
+                "targets": 2
+            }
+        ]
     });
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");

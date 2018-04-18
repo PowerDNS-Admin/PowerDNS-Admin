@@ -162,7 +162,15 @@
         "searching" : false,
         "ordering" : false,
         "info" : false,
-        "autoWidth" : false
+        "autoWidth" : false,
+        "columnDefs": [
+            {
+                "render": function ( data, type, row ) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+                },
+                "targets": 2
+            }
+        ]
     });
     // set up domain list
     $("#tbl_domain_list").DataTable({
