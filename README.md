@@ -18,7 +18,7 @@ A PowerDNS web interface with advanced features.
 - Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
 
 ### Running PowerDNS-Admin
-There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment which have PowerDNS-Admin, PowerDNS server and MySQL Back-End Database.
+There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment which has PowerDNS-Admin, PowerDNS server and MySQL Back-End Database.
 
 Step 1: Changing configuration
 The configuration file for developement environment is located at `configs/developments.py`, you can override some configs by editing `.env` file.
