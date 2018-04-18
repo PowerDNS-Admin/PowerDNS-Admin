@@ -69,8 +69,10 @@
         "ordering" : true,
         "info" : true,
         "autoWidth" : false,
+        "order": [[ 2, "desc" ]],
         "columnDefs": [
             {
+                "type": "time",
                 "render": function ( data, type, row ) {
                     return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
                 },
