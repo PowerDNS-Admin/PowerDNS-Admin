@@ -389,13 +389,16 @@ def login():
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
     else:
+        if not username or not password or not email:
+            return render_template('register.html', error='Please input required information')
+
         # registration case
         user = User(username=username, plain_text_password=password, firstname=firstname, lastname=lastname, email=email)
 
         # TODO: Move this into the JavaScript
         # validate password and password confirmation
         if password != rpassword:
-            error = "Passsword and confirmation do not match"
+            error = "Password confirmation does not match"
             return render_template('register.html', error=error)
 
         try:
