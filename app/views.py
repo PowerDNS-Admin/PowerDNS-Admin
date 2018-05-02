@@ -17,7 +17,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 from werkzeug.security import gen_salt
 
-from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
+from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord, Role
 from app import app, login_manager, github, google
 from app.lib import utils
 from app.decorators import admin_role_required, can_access_domain
@@ -230,20 +230,36 @@ def saml_authorized():
         self_url = self_url+req['script_name']
         if 'RelayState' in request.form and self_url != request.form['RelayState']:
             return redirect(auth.redirect_to(request.form['RelayState']))
-        user = User.query.filter_by(username=session['samlNameId'].lower()).first()
+        if app.config.get('SAML_ATTRIBUTE_USERNAME', False):
+            username = session['samlUserdata'][app.config['SAML_ATTRIBUTE_USERNAME']][0].lower()
+        else:
+            username =  session['samlNameId'].lower()
+        user = User.query.filter_by(username=username).first()
         if not user:
             # create user
-            user = User(username=session['samlNameId'],
+            user = User(username=username,
                         plain_text_password = None,
                         email=session['samlNameId'])
             user.create_local_user()
         session['user_id'] = user.id
-        if session['samlUserdata'].has_key("email"):
-            user.email = session['samlUserdata']["email"][0].lower()
-        if session['samlUserdata'].has_key("givenname"):
-            user.firstname = session['samlUserdata']["givenname"][0]
-        if session['samlUserdata'].has_key("surname"):
-            user.lastname = session['samlUserdata']["surname"][0]
+        logging.debug("Attributes are: {0}".format(repr(session['samlUserdata'])))
+        email_attribute_name = app.config.get('SAML_ATTRIBUTE_EMAIL', 'email')
+        givenname_attribute_name = app.config.get('SAML_ATTRIBUTE_GIVENNAME', 'givenname')
+        surname_attribute_name = app.config.get('SAML_ATTRIBUTE_SURNAME', 'surname')
+        admin_attribute_name = app.config.get('SAML_ATTRIBUTE_ADMIN', None)
+        if email_attribute_name in session['samlUserdata']:
+            user.email = session['samlUserdata'][email_attribute_name][0].lower()
+        if givenname_attribute_name in session['samlUserdata']:
+            user.firstname = session['samlUserdata'][givenname_attribute_name][0]
+        if surname_attribute_name in session['samlUserdata']:
+            user.lastname = session['samlUserdata'][surname_attribute_name][0]
+        if admin_attribute_name:
+          if 'true' in session['samlUserdata'].get(admin_attribute_name, []):
+            logging.debug("User is an admin")
+            user.role_id = Role.query.filter_by(name='Administrator').first().id
+          else:
+            logging.debug("User is NOT an admin")
+            user.role_id = Role.query.filter_by(name='User').first().id
         user.plain_text_password = None
         user.update_profile()
         session['external_auth'] = True
