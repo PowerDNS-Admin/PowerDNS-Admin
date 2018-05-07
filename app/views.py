@@ -276,7 +276,7 @@ def login():
 
         # check if user enabled OPT authentication
         if user.otp_secret:
-            if otp_token:
+            if otp_token and isinstance(otp_token, int):
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
                     return render_template('login.html', error='Invalid credentials', ldap_enabled=LDAP_ENABLE, login_title=LOGIN_TITLE, basic_enabled=BASIC_ENABLED, signup_enabled=SIGNUP_ENABLED)
