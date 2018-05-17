@@ -7,6 +7,7 @@ SECRET_KEY = 'We are the world'
 BIND_ADDRESS = '127.0.0.1'
 PORT = 9191
 LOGIN_TITLE = "PDNS"
+DEBUG_MODE = True
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
