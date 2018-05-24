@@ -127,3 +127,6 @@ REVERSE_RECORDS_ALLOW_EDIT = ['SOA', 'TXT', 'LOC', 'NS', 'PTR']
 
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = False
+
+# Allow history clearing in history management tab
+ALLOW_HISTORY_CLEAR = True
