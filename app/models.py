@@ -627,21 +627,19 @@ class Domain(db.Model):
             domain_name = domain_name + '.'
             domain_ns = [ns + '.' for ns in domain_ns]
 
-        if soa_edit_api == 'OFF':
-            post_data = {
-                            "name": domain_name,
-                            "kind": domain_type,
-                            "masters": domain_master_ips,
-                            "nameservers": domain_ns,
-                        }
-        else:
-            post_data = {
-                                "name": domain_name,
-                                "kind": domain_type,
-                                "masters": domain_master_ips,
-                                "nameservers": domain_ns,
-                                "soa_edit_api": soa_edit_api
-                            }
+        if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
+            soa_edit_api = 'DEFAULT'
+
+        elif soa_edit_api == 'OFF':
+            soa_edit_api = ''
+
+        post_data = {
+            "name": domain_name,
+            "kind": domain_type,
+            "masters": domain_master_ips,
+            "nameservers": domain_ns,
+            "soa_edit_api": soa_edit_api
+        }
 
         try:
             jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
@@ -662,16 +660,18 @@ class Domain(db.Model):
             return {'status': 'error', 'msg': 'Domain doesnt exist.'}
         headers = {}
         headers['X-API-Key'] = PDNS_API_KEY
-        if soa_edit_api == 'OFF':
-            post_data = {
-                            "soa_edit_api": None,
-                            "kind": domain.type
-                        }
-        else:
-            post_data = {
-                                "soa_edit_api": soa_edit_api,
-                                "kind": domain.type
-            }
+
+        if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
+            soa_edit_api = 'DEFAULT'
+
+        elif soa_edit_api == 'OFF':
+            soa_edit_api = ''
+
+        post_data = {
+            "soa_edit_api": soa_edit_api,
+            "kind": domain.type
+        }
+
         try:
             jdata = utils.fetch_json(
             urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers,
@@ -705,7 +705,7 @@ class Domain(db.Model):
                 system_auto_ptr or \
                 domain_auto_ptr
             ):
-            result = self.add(domain_reverse_name, 'Master', 'INCEPTION-INCREMENT', '', '')
+            result = self.add(domain_reverse_name, 'Master', 'DEFAULT', '', '')
             self.update()
             if result['status'] == 'ok':
                 history = History(msg='Add reverse lookup domain {0}'.format(domain_reverse_name), detail=str({'domain_type': 'Master', 'domain_master_ips': ''}), created_by='System')
