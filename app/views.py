@@ -17,7 +17,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 from werkzeug.security import gen_salt
 
-from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
+from .models import User, Account, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, github, google
 from app.lib import utils
 from app.decorators import admin_role_required, can_access_domain
@@ -486,7 +486,7 @@ def dashboard_domains():
     template = app.jinja_env.get_template("dashboard_domain.html")
     render = template.make_module(vars={"current_user": current_user})
 
-    columns = [Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master]
+    columns = [Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master, Domain.account]
     # History.created_on.desc()
     order_by = []
     for i in range(len(columns)):
@@ -509,7 +509,13 @@ def dashboard_domains():
     if search:
         start = "" if search.startswith("^") else "%"
         end = "" if search.endswith("$") else "%"
-        domains = domains.filter(Domain.name.ilike(start + search.strip("^$") + end))
+
+        if current_user.role.name == 'Administrator':
+            domains = domains.outerjoin(Account).filter(Domain.name.ilike(start + search.strip("^$") + end) |
+                                                        Account.name.ilike(start + search.strip("^$") + end) |
+                                                        Account.description.ilike(start + search.strip("^$") + end))
+        else:
+            domains = domains.filter(Domain.name.ilike(start + search.strip("^$") + end))
 
     filtered_count = domains.count()
 
@@ -530,6 +536,7 @@ def dashboard_domains():
             render.type(domain),
             render.serial(domain),
             render.master(domain),
+            render.account(domain),
             render.actions(domain),
         ])
 
@@ -595,6 +602,7 @@ def domain_add():
             domain_type = request.form.getlist('radio_type')[0]
             domain_template = request.form.getlist('domain_template')[0]
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
+            account_id = request.form.getlist('accountid')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
                 return render_template('errors/400.html', msg="Please correct your input"), 400
@@ -606,10 +614,13 @@ def domain_add():
                     domain_master_ips = domain_master_string.split(',')
             else:
                 domain_master_ips = []
+
+            account_name = Account().get_name_by_id(account_id)
+
             d = Domain()
-            result = d.add(domain_name=domain_name, domain_type=domain_type, soa_edit_api=soa_edit_api, domain_master_ips=domain_master_ips)
+            result = d.add(domain_name=domain_name, domain_type=domain_type, soa_edit_api=soa_edit_api, domain_master_ips=domain_master_ips, account_name=account_name)
             if result['status'] == 'ok':
-                history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips}), created_by=current_user.username)
+                history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips, 'account_id': account_id}), created_by=current_user.username)
                 history.add()
                 if domain_template != '0':
                     template = DomainTemplate.query.filter(DomainTemplate.id == domain_template).first()
@@ -632,7 +643,10 @@ def domain_add():
         except:
             logging.error(traceback.print_exc())
             return redirect(url_for('error', code=500))
-    return render_template('domain_add.html', templates=templates)
+
+    else:
+        accounts = Account.query.all()
+        return render_template('domain_add.html', templates=templates, accounts=accounts)
 
 
 @app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
@@ -660,12 +674,14 @@ def domain_management(domain_name):
         if not domain:
             return redirect(url_for('error', code=404))
         users = User.query.all()
+        accounts = Account.query.all()
 
         # get list of user ids to initilize selection data
         d = Domain(name=domain_name)
         domain_user_ids = d.get_user()
+        account = d.get_account()
 
-        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids)
+        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids, accounts=accounts, domain_account=account)
 
     if request.method == 'POST':
         # username in right column
@@ -701,9 +717,32 @@ def domain_change_soa_edit_api(domain_name):
     status = d.update_soa_setting(domain_name=domain_name, soa_edit_api=new_setting)
     if status['status'] != None:
         users = User.query.all()
+        accounts = Account.query.all()
         d = Domain(name=domain_name)
         domain_user_ids = d.get_user()
-        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids, status=status)
+        account = d.get_account()
+        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids, accounts=accounts, domain_account=account)
+    else:
+        return redirect(url_for('error', code=500))
+
+
+@app.route('/admin/domain/<path:domain_name>/change_account', methods=['POST'])
+@login_required
+@admin_role_required
+def domain_change_account(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        return redirect(url_for('error', code=404))
+
+    account_id = request.form.get('accountid')
+    status = domain.assoc_account(account_id)
+    if status['status']:
+        users = User.query.all()
+        accounts = Account.query.all()
+        d = Domain(name=domain_name)
+        domain_user_ids = d.get_user()
+        account = d.get_account()
+        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids, accounts=accounts, domain_account=account)
     else:
         return redirect(url_for('error', code=500))
 
@@ -1128,6 +1167,85 @@ def admin_manageuser():
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Changed user role successfully.' } ), 200)
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot change user role.' } ), 500)
+            else:
+                return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
+        except:
+            logging.error(traceback.print_exc())
+            return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
+
+
+@app.route('/admin/account/edit/<account_name>', methods=['GET', 'POST'])
+@app.route('/admin/account/edit', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_editaccount(account_name=None):
+
+    if request.method == 'GET':
+        if account_name is None:
+            return render_template('admin_editaccount.html', create=1)
+
+        else:
+            account = Account.query.filter(Account.name == account_name).first()
+            return render_template('admin_editaccount.html', account=account, create=0)
+
+    if request.method == 'POST':
+        fdata = request.form
+
+        if not account_name:
+            account_name = fdata['accountname']
+        account = Account(name=account_name, description=fdata['accountdescription'], contact=fdata['accountcontact'], mail=fdata['accountmail'])
+
+        create = int(fdata['create'])
+        if create:
+            # account __init__ sanitizes and lowercases the name, so to manage expectations
+            # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
+            if account.name == "" or account.name != account_name.lower():
+                return render_template('admin_editaccount.html', account=account, create=create, invalid_accountname=True)
+
+            if Account.query.filter(Account.name == account_name).first():
+                return render_template('admin_editaccount.html', account=account, create=create, duplicate_accountname=True)
+
+            result = account.create_account()
+            history = History(msg='Create account {0}'.format(account.name), created_by=current_user.username)
+
+        else:
+            result = account.update_account()
+            history = History(msg='Update account {0}'.format(account.name), created_by=current_user.username)
+
+        if result['status']:
+            history.add()
+            return redirect(url_for('admin_manageaccount'))
+
+        return render_template('admin_editaccount.html', account=account, create=create, error=result['msg'])
+
+
+@app.route('/admin/manageaccount', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_manageaccount():
+    if request.method == 'GET':
+        accounts = Account.query.order_by(Account.name).all()
+        return render_template('admin_manageaccount.html', accounts=accounts)
+
+    if request.method == 'POST':
+        #
+        # post data should in format
+        # {'action': 'delete_account', 'data': 'accountname'}
+        #
+        try:
+            jdata = request.json
+            data = jdata['data']
+
+            if jdata['action'] == 'delete_account':
+                account = Account(name=data)
+                result = account.delete_account()
+                if result:
+                    history = History(msg='Delete account {0}'.format(data), created_by=current_user.username)
+                    history.add()
+                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Account has been removed.' } ), 200)
+                else:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot remove account.' } ), 500)
+
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:

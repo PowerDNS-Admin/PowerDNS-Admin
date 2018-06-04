@@ -134,6 +134,7 @@
                   <th>Type</th>
                   <th>Serial</th>
                   <th>Master</th>
+                  <th>Account</th>
                   <th {% if current_user.role.name !='Administrator' %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
                 </tr>
                 </thead>
@@ -178,6 +179,10 @@
         "lengthChange" : true,
         "searching" : true,
         "ordering" : true,
+        "columnDefs": [
+            { "orderable": false, "targets": [-1] }
+            {% if current_user.role.name != 'Administrator' %},{ "visible": false, "targets": [-2] }{% endif %}
+        ],
         "processing" : true,
         "serverSide" : true,
         "ajax" : "{{ url_for('dashboard_domains') }}",

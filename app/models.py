@@ -426,6 +426,110 @@ class User(db.Model):
             return False
 
 
+class Account(db.Model):
+    __tablename__ = 'account'
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(40), index=True, unique=True, nullable=False)
+    description = db.Column(db.String(128))
+    contact = db.Column(db.String(128))
+    mail = db.Column(db.String(128))
+    domains = db.relationship("Domain", back_populates="account")
+
+    def __init__(self, name=None, description=None, contact=None, mail=None):
+        self.name = name
+        self.description = description
+        self.contact = contact
+        self.mail = mail
+
+        if self.name is not None:
+            self.name = ''.join(c for c in self.name.lower() if c in "abcdefghijklmnopqrstuvwxyz0123456789")
+
+    def __repr__(self):
+        return '<Account {0}r>'.format(self.name)
+
+    def get_name_by_id(self, account_id):
+        """
+        Convert account_id to account_name
+        """
+        account = Account.query.filter(Account.id == account_id).first()
+        if account is None:
+            return ''
+
+        return account.name
+
+    def get_id_by_name(self, account_name):
+        """
+        Convert account_name to account_id
+        """
+        account = Account.query.filter(Account.name == account_name).first()
+        if account is None:
+            return 0
+
+        return account.id
+
+    def unassociate_domains(self):
+        """
+        Remove associations to this account from all domains
+        """
+        account = Account.query.filter(Account.name == self.name).first()
+        for domain in account.domains:
+            domain.assoc_account(None)
+
+    def create_account(self):
+        """
+        Create a new account
+        """
+        # Sanity check - account name
+        if self.name == "":
+            return {'status': False, 'msg': 'No account name specified'}
+
+        # check that account name is not already used
+        account = Account.query.filter(Account.name == self.name).first()
+        if account:
+            return {'status': False, 'msg': 'Account already exists'}
+
+        db.session.add(self)
+        db.session.commit()
+        return {'status': True, 'msg': 'Account created successfully'}
+
+    def update_account(self):
+        """
+        Update an existing account
+        """
+        # Sanity check - account name
+        if self.name == "":
+            return {'status': False, 'msg': 'No account name specified'}
+
+        # read account and check that it exists
+        account = Account.query.filter(Account.name == self.name).first()
+        if not account:
+            return {'status': False, 'msg': 'Account does not exist'}
+
+        account.description = self.description
+        account.contact = self.contact
+        account.mail = self.mail
+
+        db.session.commit()
+        return {'status': True, 'msg': 'Account updated successfully'}
+
+    def delete_account(self):
+        """
+        Delete an account
+        """
+        # unassociate all domains first
+        self.unassociate_domains()
+
+        try:
+            Account.query.filter(Account.name == self.name).delete()
+            db.session.commit()
+            return True
+
+        except:
+            db.session.rollback()
+            logging.error('Cannot delete account {0} from DB'.format(self.username))
+            return False
+
+
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(64), index=True, unique=True)
@@ -445,6 +549,7 @@ class Role(db.Model):
 
     def __repr__(self):
         return '<Role {0}r>'.format(self.name)
+
 
 class DomainSetting(db.Model):
     __tablename__ = 'domain_setting'
@@ -485,9 +590,11 @@ class Domain(db.Model):
     notified_serial = db.Column(db.Integer)
     last_check = db.Column(db.Integer)
     dnssec = db.Column(db.Integer)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable = False)
+    account = db.relationship("Account", back_populates="domains")
     settings = db.relationship('DomainSetting', back_populates='domain')
 
-    def __init__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None, dnssec=None):
+    def __init__(self, id=None, name=None, master=None, type='NATIVE', serial=None, notified_serial=None, last_check=None, dnssec=None, account_id=None):
         self.id = id
         self.name = name
         self.master = master
@@ -496,6 +603,7 @@ class Domain(db.Model):
         self.notified_serial = notified_serial
         self.last_check = last_check
         self.dnssec = dnssec
+        self.account_id = account_id
 
     def __repr__(self):
         return '<Domain {0}>'.format(self.name)
@@ -575,6 +683,7 @@ class Domain(db.Model):
 
             # update/add new domain
             for data in jdata:
+                account_id = Account().get_id_by_name(data['account'])
                 d = dict_db_domain.get(data['name'].rstrip('.'), None)
                 changed = False
                 if d:
@@ -584,7 +693,8 @@ class Domain(db.Model):
                         or d.serial != data['serial']
                         or d.notified_serial != data['notified_serial']
                         or d.last_check != ( 1 if data['last_check'] else 0 )
-                        or d.dnssec != data['dnssec'] ):
+                        or d.dnssec != data['dnssec']
+                        or d.account_id != account_id ):
 
                             d.master = str(data['masters'])
                             d.type = data['kind']
@@ -592,6 +702,7 @@ class Domain(db.Model):
                             d.notified_serial = data['notified_serial']
                             d.last_check = 1 if data['last_check'] else 0
                             d.dnssec = 1 if data['dnssec'] else 0
+                            d.account_id = account_id
                             changed = True
 
                 else:
@@ -604,19 +715,20 @@ class Domain(db.Model):
                     d.notified_serial = data['notified_serial']
                     d.last_check = data['last_check']
                     d.dnssec = 1 if data['dnssec'] else 0
+                    d.account_id = account_id
                     db.session.add(d)
                     changed = True
                 if changed:
                     try:
                         db.session.commit()
-                    except:
+                    except Exception as e:
                         db.session.rollback()
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
         except Exception as e:
             logging.error('Can not update domain table. Error: {0}'.format(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
-    def add(self, domain_name, domain_type, soa_edit_api, domain_ns=[], domain_master_ips=[]):
+    def add(self, domain_name, domain_type, soa_edit_api, domain_ns=[], domain_master_ips=[], account_name=None):
         """
         Add a domain to power dns
         """
@@ -638,7 +750,8 @@ class Domain(db.Model):
             "kind": domain_type,
             "masters": domain_master_ips,
             "nameservers": domain_ns,
-            "soa_edit_api": soa_edit_api
+            "soa_edit_api": soa_edit_api,
+            "account": account_name
         }
 
         try:
@@ -647,6 +760,7 @@ class Domain(db.Model):
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
+                self.update()
                 logging.info('Added domain {0} successfully'.format(domain_name))
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
         except Exception as e:
@@ -798,7 +912,6 @@ class Domain(db.Model):
             db.session.rollback()
             logging.error('Cannot grant user privielges to domain {0}'.format(self.name))
 
-
     def update_from_master(self, domain_name):
         """
         Update records from Master DNS server
@@ -878,6 +991,60 @@ class Domain(db.Model):
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator','id': key_id, 'url': url}
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
+
+    def assoc_account(self, account_id):
+        """
+        Associate domain with a domain, specified by account id
+        """
+        domain_name = self.name
+
+        # Sanity check - domain name
+        if domain_name == "":
+            return {'status': False, 'msg': 'No domain name specified'}
+
+        # read domain and check that it exists
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': False, 'msg': 'Domain does not exist'}
+
+        headers = {}
+        headers['X-API-Key'] = PDNS_API_KEY
+
+        account_name = Account().get_name_by_id(account_id)
+
+        post_data = {
+            "account": account_name
+        }
+
+        try:
+            jdata = utils.fetch_json(
+            urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers,
+            method='PUT', data=post_data)
+
+            if 'error' in jdata.keys():
+                logging.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+
+            else:
+                self.update()
+                logging.info('account changed for domain {0} successfully'.format(domain_name))
+                return {'status': 'ok', 'msg': 'account changed successfully'}
+
+        except Exception as e:
+            logging.debug(e)
+            logging.debug(traceback.format_exc())
+            logging.error('Cannot change account for domain {0}'.format(domain_name))
+            return {'status': 'error', 'msg': 'Cannot change account for this domain.'}
+
+        return {'status': True, 'msg': 'Domain association successful'}
+
+    def get_account(self):
+        """
+        Get current account associated with this domain
+        """
+        domain = Domain.query.filter(Domain.name == self.name).first()
+
+        return domain.account
 
 
 class DomainUser(db.Model):

@@ -31,6 +31,12 @@
                     <div class="form-group">
                         <input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter a valid domain name (required)">
                     </div>
+                    <select name="accountid" class="form-control" style="width:15em;">
+                        <option value="0">- No Account -</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% endfor %}
+                    </select><br/>
                     <div class="form-group">
                         <label>Type</label>
                         <div class="radio">
