@@ -67,6 +67,21 @@
                         <span class="fa fa-envelope form-control-feedback"></span>
                     </div>
                 </div>
+                <div class="box-header with-border">
+                    <h3 class="box-title">Access Control</h3>
+                </div>
+                <div class="box-body">
+                    <p>Users on the right have access to manage records in all domains
+                        associated with the account.</p>
+                    <p>Click on users to move between columns.</p>
+                    <div class="form-group col-xs-2">
+                        <select multiple="multiple" class="form-control" id="account_multi_user" name="account_multi_user">
+                            {% for user in users %}
+                            <option {% if user.id in account_user_ids %}selected{% endif %} value="{{ user.username }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
                 <div class="box-footer">
                     <button type="submit" class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %} Account</button>
                 </div>
@@ -95,4 +110,9 @@
     </div>
 </div>
 </section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+        $("#account_multi_user").multiSelect();
+</script>
 {% endblock %}

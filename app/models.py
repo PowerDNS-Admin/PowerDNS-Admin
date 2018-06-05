@@ -355,25 +355,48 @@ class User(db.Model):
             db.session.rollback()
             return False
 
+    def get_account_query(self):
+        """
+        Get query for account to which the user is associated.
+        """
+        return db.session.query(Account) \
+            .outerjoin(AccountUser, Account.id==AccountUser.account_id) \
+            .filter(AccountUser.user_id==self.id)
+
+    def get_account(self):
+        """
+        Get all accounts to which the user is associated.
+        """
+        return self.get_account_query()
+
     def get_domain_query(self):
-        return db.session.query(User, DomainUser, Domain) \
-            .filter(User.id == self.id) \
-            .filter(User.id == DomainUser.user_id) \
-            .filter(Domain.id == DomainUser.domain_id)
+        """
+        Get query for domain to which the user has access permission.
+        This includes direct domain permission AND permission through
+        account membership
+        """
+        return db.session.query(Domain) \
+            .outerjoin(DomainUser, Domain.id==DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id==Account.id) \
+            .outerjoin(AccountUser, Account.id==AccountUser.account_id) \
+            .filter(db.or_(DomainUser.user_id==User.id, AccountUser.user_id==User.id)) \
+            .filter(User.id==self.id)
 
     def get_domain(self):
         """
         Get domains which user has permission to
         access
         """
-        return [q[2] for q in self.get_domain_query()]
+        return self.get_domain_query()
 
     def delete(self):
         """
         Delete a user
         """
-        # revoke all user privileges first
+        # revoke all user privileges and account associations first
         self.revoke_privilege()
+        for a in self.get_account():
+            a.revoke_privileges_by_id(self.id)
 
         try:
             User.query.filter(User.username == self.username).delete()
@@ -516,8 +539,9 @@ class Account(db.Model):
         """
         Delete an account
         """
-        # unassociate all domains first
+        # unassociate all domains and users first
         self.unassociate_domains()
+        self.grant_privileges([])
 
         try:
             Account.query.filter(Account.name == self.name).delete()
@@ -528,6 +552,56 @@ class Account(db.Model):
             db.session.rollback()
             logging.error('Cannot delete account {0} from DB'.format(self.username))
             return False
+
+    def get_user(self):
+        """
+        Get users (id) associated with this account
+        """
+        user_ids = []
+        query = db.session.query(AccountUser, Account).filter(User.id==AccountUser.user_id).filter(Account.id==AccountUser.account_id).filter(Account.name==self.name).all()
+        for q in query:
+            user_ids.append(q[0].user_id)
+        return user_ids
+
+    def grant_privileges(self, new_user_list):
+        """
+        Reconfigure account_user table
+        """
+        account_id = self.get_id_by_name(self.name)
+
+        account_user_ids = self.get_user()
+        new_user_ids = [u.id for u in User.query.filter(User.username.in_(new_user_list)).all()] if new_user_list else []
+
+        removed_ids = list(set(account_user_ids).difference(new_user_ids))
+        added_ids = list(set(new_user_ids).difference(account_user_ids))
+
+        try:
+            for uid in removed_ids:
+                AccountUser.query.filter(AccountUser.user_id == uid).filter(AccountUser.account_id==account_id).delete()
+                db.session.commit()
+        except:
+            db.session.rollback()
+            logging.error('Cannot revoke user privielges on account {0}'.format(self.name))
+
+        try:
+            for uid in added_ids:
+                au = AccountUser(account_id, uid)
+                db.session.add(au)
+                db.session.commit()
+        except:
+            db.session.rollback()
+            logging.error('Cannot grant user privileges to account {0}'.format(self.name))
+
+    def revoke_privileges_by_id(self, user_id):
+        """
+        Remove a single user from prigilege list based on user_id
+        """
+        new_uids = [u for u in self.get_user() if u != user_id]
+        users = []
+        for uid in new_uids:
+            users.append(User(id=uid).get_user_info_by_id().username)
+
+        self.grant_privileges(users)
 
 
 class Role(db.Model):
@@ -1059,6 +1133,20 @@ class DomainUser(db.Model):
 
     def __repr__(self):
         return '<Domain_User {0} {1}>'.format(self.domain_id, self.user_id)
+
+
+class AccountUser(db.Model):
+    __tablename__ = 'account_user'
+    id = db.Column(db.Integer, primary_key = True)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable = False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
+
+    def __init__(self, account_id, user_id):
+        self.account_id = account_id
+        self.user_id = user_id
+
+    def __repr__(self):
+        return '<Account_User {0} {1}>'.format(self.account_id, self.user_id)
 
 
 class Record(object):

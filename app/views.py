@@ -525,9 +525,6 @@ def dashboard_domains():
     if length != -1:
         domains = domains[start:start + length]
 
-    if current_user.role.name != 'Administrator':
-        domains = [d[2] for d in domains]
-
     data = []
     for domain in domains:
         data.append([
@@ -1179,31 +1176,40 @@ def admin_manageuser():
 @login_required
 @admin_role_required
 def admin_editaccount(account_name=None):
+    users = User.query.all()
 
     if request.method == 'GET':
         if account_name is None:
-            return render_template('admin_editaccount.html', create=1)
+            return render_template('admin_editaccount.html', users=users, create=1)
 
         else:
             account = Account.query.filter(Account.name == account_name).first()
-            return render_template('admin_editaccount.html', account=account, create=0)
+            account_user_ids = account.get_user()
+            return render_template('admin_editaccount.html', account=account, account_user_ids=account_user_ids, users=users, create=0)
 
     if request.method == 'POST':
         fdata = request.form
+        new_user_list = request.form.getlist('account_multi_user')
 
+        # on POST, synthesize account and account_user_ids from form data
         if not account_name:
             account_name = fdata['accountname']
+
         account = Account(name=account_name, description=fdata['accountdescription'], contact=fdata['accountcontact'], mail=fdata['accountmail'])
+        account_user_ids = []
+        for username in new_user_list:
+            userid = User(username=username).get_user_info_by_username().id
+            account_user_ids.append(userid)
 
         create = int(fdata['create'])
         if create:
             # account __init__ sanitizes and lowercases the name, so to manage expectations
             # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
             if account.name == "" or account.name != account_name.lower():
-                return render_template('admin_editaccount.html', account=account, create=create, invalid_accountname=True)
+                return render_template('admin_editaccount.html', account=account, account_user_ids=account_user_ids, users=users, create=create, invalid_accountname=True)
 
-            if Account.query.filter(Account.name == account_name).first():
-                return render_template('admin_editaccount.html', account=account, create=create, duplicate_accountname=True)
+            if Account.query.filter(Account.name == account.name).first():
+                return render_template('admin_editaccount.html', account=account, account_user_ids=account_user_ids, users=users, create=create, duplicate_accountname=True)
 
             result = account.create_account()
             history = History(msg='Create account {0}'.format(account.name), created_by=current_user.username)
@@ -1213,10 +1219,11 @@ def admin_editaccount(account_name=None):
             history = History(msg='Update account {0}'.format(account.name), created_by=current_user.username)
 
         if result['status']:
+            account.grant_privileges(new_user_list)
             history.add()
             return redirect(url_for('admin_manageaccount'))
 
-        return render_template('admin_editaccount.html', account=account, create=create, error=result['msg'])
+        return render_template('admin_editaccount.html', account=account, account_user_ids=account_user_ids, users=users, create=create, error=result['msg'])
 
 
 @app.route('/admin/manageaccount', methods=['GET', 'POST'])
