@@ -472,7 +472,8 @@ def dashboard():
         uptime = list([uptime for uptime in statistics if uptime['name'] == 'uptime'])[0]['value']
     else:
         uptime = 0
-    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history,pdns_version=app.config['PDNS_VERSION'])
+
+    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/dashboard-domains', methods=['GET'])
