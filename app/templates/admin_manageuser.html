@@ -47,7 +47,7 @@
                                 <td>{{ user.lastname }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>
-                                    <input type="checkbox" id="{{ user.username }}" class="admin_toggle" {% if user.role.name=='Administrator' %}checked{% endif %}>
+                                    <input type="checkbox" id="{{ user.username }}" class="admin_toggle" {% if user.role.name=='Administrator' %}checked{% endif %} {% if user.username==current_user.username %}disabled{% endif %}>
                                 </td>
                                 <td width="6%">
                                     <button type="button" class="btn btn-flat btn-warning button_revoke" id="{{ user.username }}">
@@ -55,7 +55,7 @@
                                     </button>
                                 </td>
                                 <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ user.username }}">
+                                    <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ user.username }}" {% if user.username==current_user.username %}disabled{% endif %}>
                                         Delete&nbsp;<i class="fa fa-trash"></i>
                                     </button>
                                 </td>
