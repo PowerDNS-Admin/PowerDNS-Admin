@@ -486,7 +486,7 @@ class Account(db.Model):
         """
         account = Account.query.filter(Account.name == account_name).first()
         if account is None:
-            return 0
+            return None
 
         return account.id
 
@@ -664,7 +664,7 @@ class Domain(db.Model):
     notified_serial = db.Column(db.Integer)
     last_check = db.Column(db.Integer)
     dnssec = db.Column(db.Integer)
-    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable = False)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'))
     account = db.relationship("Account", back_populates="domains")
     settings = db.relationship('DomainSetting', back_populates='domain')
 
