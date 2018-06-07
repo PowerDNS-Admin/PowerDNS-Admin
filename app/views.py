@@ -20,7 +20,7 @@ from werkzeug.security import gen_salt
 from .models import User, Domain, Record, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, github, google
 from app.lib import utils
-from app.decorators import admin_role_required, can_access_domain
+from app.decorators import admin_role_required, can_access_domain, can_configure_dnssec
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -807,6 +807,7 @@ def domain_dnssec(domain_name):
 @app.route('/domain/<path:domain_name>/dnssec/enable', methods=['GET'])
 @login_required
 @can_access_domain
+@can_configure_dnssec
 def domain_dnssec_enable(domain_name):
     domain = Domain()
     dnssec = domain.enable_domain_dnssec(domain_name)
@@ -816,6 +817,7 @@ def domain_dnssec_enable(domain_name):
 @app.route('/domain/<path:domain_name>/dnssec/disable', methods=['GET'])
 @login_required
 @can_access_domain
+@can_configure_dnssec
 def domain_dnssec_disable(domain_name):
     domain = Domain()
     dnssec = domain.get_domain_dnssec(domain_name)

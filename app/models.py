@@ -849,7 +849,7 @@ class Domain(db.Model):
             try:
                 jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='POST',data=post_data)
                 if 'error' in jdata:
-                    return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain', 'jdata' : jdata}
+                    return {'status': 'error', 'msg': 'Cannot enable DNSSEC for this domain. Error: {0}'.format(jdata['error']), 'jdata' : jdata}
                 else:
                     return {'status': 'ok'}
             except:
@@ -871,7 +871,7 @@ class Domain(db.Model):
             try:
                 jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + url), headers=headers, method='DELETE')
                 if 'error' in jdata:
-                    return {'status': 'error', 'msg': 'DNSSEC is not disabled for this domain', 'jdata' : jdata}
+                    return {'status': 'error', 'msg': 'Cannot disable DNSSEC for this domain. Error: {0}'.format(jdata['error']), 'jdata' : jdata}
                 else:
                     return {'status': 'ok'}
             except:

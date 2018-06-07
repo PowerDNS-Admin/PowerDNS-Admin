@@ -26,3 +26,13 @@ def can_access_domain(f):
 
         return f(*args, **kwargs)
     return decorated_function
+
+
+def can_configure_dnssec(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user.role.name != 'Administrator' and app.config['DNSSEC_ADMINS_ONLY']:
+                return redirect(url_for('error', code=401))
+
+        return f(*args, **kwargs)
+    return decorated_function
