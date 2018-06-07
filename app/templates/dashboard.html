@@ -224,6 +224,7 @@
         modal.modal('show');
     });
 
+    {% if current_user.role.name == 'Administrator' or dnssec_adm_only == false %}
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
@@ -240,6 +241,7 @@
         enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable');
 
     });
+    {% endif %}
 </script>
 {% endblock %}
 {% block modals %}
