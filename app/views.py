@@ -1098,6 +1098,8 @@ def admin_manageuser():
             data = jdata['data']
 
             if jdata['action'] == 'delete_user':
+                if username == current_user.username:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot delete yourself.' } ), 400)
                 user = User(username=data)
                 result = user.delete()
                 if result:
@@ -1119,6 +1121,8 @@ def admin_manageuser():
 
             elif jdata['action'] == 'set_admin':
                 username = data['username']
+                if username == current_user.username:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot change you own admin rights.' } ), 400)
                 is_admin = data['is_admin']
                 user = User(username=username)
                 result = user.set_admin(is_admin)
