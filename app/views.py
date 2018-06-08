@@ -459,7 +459,12 @@ def saml_logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    d = Domain().update()
+    if not app.config.get('BG_DOMAIN_UPDATES'):
+        logging.debug('Update domains in foreground')
+        d = Domain().update()
+    else:
+        logging.debug('Update domains in background')
+
 
     # stats for dashboard
     domain_count = Domain.query.count()
