@@ -478,7 +478,7 @@ def dashboard():
     else:
         uptime = 0
 
-    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], pdns_version=app.config['PDNS_VERSION'])
+    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], pdns_version=app.config['PDNS_VERSION'], show_bg_domain_button=app.config['BG_DOMAIN_UPDATES'])
 
 
 @app.route('/dashboard-domains', methods=['GET'])
