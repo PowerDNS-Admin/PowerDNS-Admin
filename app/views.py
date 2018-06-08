@@ -547,6 +547,17 @@ def dashboard_domains():
     }
     return jsonify(response_data)
 
+@app.route('/dashboard-domains-updater', methods=['GET', 'POST'])
+@login_required
+def dashboard_domains_updater():
+    logging.debug('Update domains in background')
+    d = Domain().update()
+
+    response_data = {
+        "result": d,
+    }
+    return jsonify(response_data)
+
 
 @app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
 @login_required
