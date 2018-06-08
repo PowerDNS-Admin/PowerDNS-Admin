@@ -199,6 +199,12 @@
         modal.modal('show');
     });
 
+    $(document.body).on('click', '.refresh-bg-button', function() {
+        var modal = $("#modal_bg_reload");
+        modal.modal('show');
+        reload_domains($SCRIPT_ROOT + '/dashboard-domains-updater');
+    });
+
     $(document.body).on("click", ".button_template", function (e) {
         var modal = $("#modal_template");
         var domain = $(this).prop('id');
