@@ -1101,9 +1101,9 @@ def admin_manageuser():
             data = jdata['data']
 
             if jdata['action'] == 'delete_user':
-                if username == current_user.username:
-                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot delete yourself.' } ), 400)
                 user = User(username=data)
+                if user.username == current_user.username:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot delete yourself.' } ), 400)
                 result = user.delete()
                 if result:
                     history = History(msg='Delete username {0}'.format(data), created_by=current_user.username)
