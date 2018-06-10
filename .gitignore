@@ -34,3 +34,5 @@ tmp/*
 .ropeproject
 .sonarlint/*
 pdns.db
+
+node_modules
