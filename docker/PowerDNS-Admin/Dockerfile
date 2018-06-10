@@ -26,7 +26,6 @@ RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-co
 
 COPY ./requirements.txt /powerdns-admin/requirements.txt
 RUN pip3 install -r requirements.txt
-RUN yarn
 
 ADD ./supervisord.conf /etc/supervisord.conf
 ADD . /powerdns-admin/

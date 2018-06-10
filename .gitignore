@@ -36,3 +36,6 @@ tmp/*
 pdns.db
 
 node_modules
+
+.webassets-cache
+app/static/generated

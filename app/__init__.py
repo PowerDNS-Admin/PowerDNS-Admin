@@ -3,9 +3,13 @@ from flask import Flask, request, session, redirect, url_for
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
+from app.assets import assets
+
 app = Flask(__name__)
 app.config.from_object('config')
 app.wsgi_app = ProxyFix(app.wsgi_app)
+
+assets.init_app(app)
 
 #### CONFIGURE LOGGER ####
 from app.lib.log import logger
