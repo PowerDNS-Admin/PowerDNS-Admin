@@ -120,3 +120,6 @@ DNSSEC_ADMINS_ONLY = True
 
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = False
+
+# Domain updates in background, for big installations
+BG_DOMAIN_UPDATES = False
