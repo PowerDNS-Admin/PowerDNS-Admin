@@ -459,7 +459,12 @@ def saml_logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    d = Domain().update()
+    if not app.config.get('BG_DOMAIN_UPDATES'):
+        logging.debug('Update domains in foreground')
+        d = Domain().update()
+    else:
+        logging.debug('Update domains in background')
+
 
     # stats for dashboard
     domain_count = Domain.query.count()
@@ -473,7 +478,7 @@ def dashboard():
     else:
         uptime = 0
 
-    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], pdns_version=app.config['PDNS_VERSION'])
+    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], pdns_version=app.config['PDNS_VERSION'], show_bg_domain_button=app.config['BG_DOMAIN_UPDATES'])
 
 
 @app.route('/dashboard-domains', methods=['GET'])
@@ -539,6 +544,17 @@ def dashboard_domains():
         "recordsTotal": total_count,
         "recordsFiltered": filtered_count,
         "data": data,
+    }
+    return jsonify(response_data)
+
+@app.route('/dashboard-domains-updater', methods=['GET', 'POST'])
+@login_required
+def dashboard_domains_updater():
+    logging.debug('Update domains in background')
+    d = Domain().update()
+
+    response_data = {
+        "result": d,
     }
     return jsonify(response_data)
 
