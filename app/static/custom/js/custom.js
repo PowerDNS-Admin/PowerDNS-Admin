@@ -212,6 +212,13 @@ function getdnssec(url, domain){
     });
 }
 
+function reload_domains(url) {
+  $.getJSON(url, function(data) {
+    $('#modal_bg_reload_content').html("<i class=\"fa fa-check\"></i> Finished: " + data['result']['msg']);
+  })
+}
+
+
 // pretty JSON
 json_library = {
     replacer: function(match, pIndent, pKey, pVal, pEnd) {

@@ -842,19 +842,30 @@ class Domain(db.Model):
         if domain:
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
-            post_data = {
-                "keytype": "ksk",
-                "active": True
-            }
             try:
+                # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
+                post_data = {
+                    "api_rectify": True
+                }
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers, method='PUT', data=post_data)
+                if 'error' in jdata:
+                    return {'status': 'error', 'msg': 'API-RECTIFY could not be enabled for this domain', 'jdata' : jdata}
+
+                # Activate DNSSEC
+                post_data = {
+                    "keytype": "ksk",
+                    "active": True
+                }
                 jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='POST',data=post_data)
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'Cannot enable DNSSEC for this domain. Error: {0}'.format(jdata['error']), 'jdata' : jdata}
-                else:
-                    return {'status': 'ok'}
+
+                return {'status': 'ok'}
+
             except:
                 logging.error(traceback.print_exc())
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+
         else:
             return {'status': 'error', 'msg': 'This domain does not exist'}
 
@@ -866,16 +877,26 @@ class Domain(db.Model):
         if domain:
             headers = {}
             headers['X-API-Key'] = PDNS_API_KEY
-            url = '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(domain.name, key_id)
-
             try:
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + url), headers=headers, method='DELETE')
-                if 'error' in jdata:
+                # Deactivate DNSSEC
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(domain.name, key_id)), headers=headers, method='DELETE')
+                if jdata != True:
                     return {'status': 'error', 'msg': 'Cannot disable DNSSEC for this domain. Error: {0}'.format(jdata['error']), 'jdata' : jdata}
-                else:
-                    return {'status': 'ok'}
+
+                # Disable API-RECTIFY for domain, AFTER deactivating DNSSEC
+                post_data = {
+                    "api_rectify": False
+                }
+                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers, method='PUT', data=post_data)
+                if 'error' in jdata:
+                    return {'status': 'error', 'msg': 'API-RECTIFY could not be disabled for this domain', 'jdata' : jdata}
+
+                return {'status': 'ok'}
+
             except:
-                return {'status': 'error', 'msg': 'There was something wrong, please contact administrator','id': key_id, 'url': url}
+                logging.error(traceback.print_exc())
+                return {'status': 'error', 'msg': 'There was something wrong, please contact administrator','domain': domain.name, 'id': key_id}
+
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
 
