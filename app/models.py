@@ -1389,7 +1389,8 @@ class Server(object):
 class History(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     msg = db.Column(db.String(256))
-    detail = db.Column(db.Text().with_variant(db.Text(length=2**24-2), 'mysql'))
+    # detail = db.Column(db.Text().with_variant(db.Text(length=2**24-2), 'mysql'))
+    detail = db.Column(db.Text())
     created_by = db.Column(db.String(128))
     created_on = db.Column(db.DateTime, default=datetime.utcnow)
 
