@@ -1,4 +1,5 @@
 Flask==0.12.2
+Flask-Assets==0.12
 Flask-WTF==0.14.2
 Flask-Login==0.4.1
 Flask-OAuthlib==0.9.4
@@ -17,3 +18,5 @@ gunicorn==19.7.1
 python3-saml
 pyOpenSSL>=0.15
 pytz>=2017.3
+cssmin==0.2.0
+jsmin==2.2.2
