@@ -6,7 +6,14 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 WORKDIR /powerdns-admin
 
 RUN apt-get update -y
-RUN apt-get install -y python3-pip python3-dev supervisor
+RUN apt-get install -y python3-pip python3-dev supervisor curl
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
+
+# Install yarn
+RUN apt-get update -y
+RUN apt-get install -y yarn
 
 # lib for building mysql db driver
 RUN apt-get install -y libmysqlclient-dev

@@ -34,3 +34,8 @@ tmp/*
 .ropeproject
 .sonarlint/*
 pdns.db
+
+node_modules
+
+.webassets-cache
+app/static/generated

@@ -6,30 +6,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   {% block title %}<title>DNS Control Panel</title>{% endblock %}
   <!--  Get Google Fonts we like -->
-  <link href="//fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css"/>
-  <link href='//fonts.googleapis.com/css?family=Roboto+Mono:400,300,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto+Mono:400,300,700">
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Bootstrap 3.3.6 -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/bootstrap/css/bootstrap.min.css') }}">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
-  <!-- Ionicons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
-  <!-- DataTables -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/plugins/datatables/dataTables.bootstrap.css') }}">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/dist/css/AdminLTE.min.css') }}">
-  <!-- AdminLTE Skins. Choose a skin from the css/skins
-       folder instead of downloading all of them to reduce the load. -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/dist/css/skins/_all-skins.min.css') }}">
-  <!-- iCheck -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte2/plugins/iCheck/all.css') }}">
-  <!-- multiselect -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='multiselect/css/multi-select.css') }}">
-  <!-- custom CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='custom/css/custom.css') }}">
-
+  {% assets "css_main" -%}
+      <link rel="stylesheet" href="{{ ASSET_URL }}">
+  {%- endassets %}
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -52,7 +35,7 @@
     <!-- Header Navbar: style can be found in header.less -->
     <nav class="navbar navbar-static-top">
       <!-- Sidebar toggle button-->
-      <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+      <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
         <span class="sr-only">Toggle navigation</span>
       </a>
 
@@ -120,7 +103,7 @@
         </div>
       </div>
       <!-- sidebar menu: : style can be found in sidebar.less -->
-      <ul class="sidebar-menu">
+      <ul class="sidebar-menu" data-widget="tree">
         <li class="header">USER ACTIONS</li>
         <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
         {% if current_user.role.name == 'Administrator' %}
@@ -166,37 +149,9 @@
 	$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 {% block scripts %}
-<!-- jQuery 2.2.0 -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/jQuery/jQuery-2.2.0.min.js') }}"></script>
-<!-- jQuery UI 1.11.4 -->
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-<script>
-  $.widget.bridge('uibutton', $.ui.button);
-</script>
-<!-- Bootstrap 3.3.6 -->
-<script src="{{ url_for('static', filename='adminlte2/bootstrap/js/bootstrap.min.js') }}"></script>
-<!-- DataTables -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/datatables/jquery.dataTables.min.js') }}"></script>
-<script src="{{ url_for('static', filename='adminlte2/plugins/datatables/dataTables.bootstrap.min.js') }}"></script>
-<!-- DataTables Natural Sort -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/datatables/extensions/NaturalSort/natural.min.js') }}"></script>
-<!-- Sparkline -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/sparkline/jquery.sparkline.min.js') }}"></script>
-<!-- Slimscroll -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/slimScroll/jquery.slimscroll.min.js') }}"></script>
-<!-- iCheck 1.0.1 -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/iCheck/icheck.min.js') }}"></script>
-<!-- FastClick -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/fastclick/fastclick.js') }}"></script>
-<!-- Moment.js -->
-<script src="{{ url_for('static', filename='adminlte2/plugins/daterangepicker/moment.min.js') }}"></script>
-<!-- AdminLTE App -->
-<script src="{{ url_for('static', filename='adminlte2/dist/js/app.min.js') }}"></script>
-<!-- Multiselect -->
-<script src="{{ url_for('static', filename='multiselect/js/jquery.multi-select.js') }}"></script>
-<!-- PowerDNS-Admin custom.js -->
-<script src="{{ url_for('static', filename='custom/js/custom.js') }}"></script>
+{% assets "js_main" -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
 {% endblock %}
 {% block extrascripts %}
 {% endblock %}

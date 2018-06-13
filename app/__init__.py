@@ -11,9 +11,13 @@ class SQLAlchemy(SA):
         options["pool_pre_ping"] = True
 
 
+from app.assets import assets
+
 app = Flask(__name__)
 app.config.from_object('config')
 app.wsgi_app = ProxyFix(app.wsgi_app)
+
+assets.init_app(app)
 
 #### CONFIGURE LOGGER ####
 from app.lib.log import logger
