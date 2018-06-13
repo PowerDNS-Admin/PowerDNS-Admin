@@ -1,8 +1,16 @@
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, session, redirect, url_for
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy as SA
 from flask_migrate import Migrate
+
+
+# subclass SQLAlchemy to enable pool_pre_ping
+class SQLAlchemy(SA):
+    def apply_pool_defaults(self, app, options):
+        SA.apply_pool_defaults(self, app, options)
+        options["pool_pre_ping"] = True
+
 
 app = Flask(__name__)
 app.config.from_object('config')

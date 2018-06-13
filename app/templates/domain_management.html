@@ -75,6 +75,32 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
+                    <h3 class="box-title">Account</h3>
+                </div>
+                <div class="box-body">
+                    <div class="col-xs-12">
+                        <div class="form-group">
+                            <form method="post" action="{{ url_for('domain_change_account', domain_name=domain.name) }}">
+                                <select name="accountid" class="form-control" style="width:15em;">
+                                    <option value="0">- No Account -</option>
+                                    {% for account in accounts %}
+                                    <option value="{{ account.id }}" {% if domain_account.id == account.id %}selected{% endif %}>{{ account.name }}</option>
+                                    {% endfor %}
+                                </select><br/>
+                                <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
+                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
                     <h3 class="box-title">Auto PTR creation</h3>
                 </div>
                 <div class="box-body">
