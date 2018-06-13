@@ -31,7 +31,7 @@ SQLA_DB_NAME = 'powerdnsadmin'
 #SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
 #    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
 #SQLite
-SQLALCHEMY_DATABASE_URI = 'sqlite:///pdns.db'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
