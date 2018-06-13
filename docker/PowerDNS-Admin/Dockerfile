@@ -6,6 +6,7 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 WORKDIR /powerdns-admin
 
 RUN apt-get update -y
+RUN apt-get install -y apt-transport-https
 RUN apt-get install -y python3-pip python3-dev supervisor curl
 
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
