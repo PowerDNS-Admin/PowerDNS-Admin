@@ -28,6 +28,7 @@ advanced_settings.json
 idp.crt
 log.txt
 
+migrations/*
 db_repository/*
 upload/avatar/*
 tmp/*

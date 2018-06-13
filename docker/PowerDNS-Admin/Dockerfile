@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-MAINTAINER Khanh Ngo "ngokhanhit@gmail.com"
+MAINTAINER Khanh Ngo "k@ndk.name"
 ARG ENVIRONMENT=development
 ENV ENVIRONMENT=${ENVIRONMENT}
 
@@ -7,6 +7,12 @@ WORKDIR /powerdns-admin
 
 RUN apt-get update -y
 RUN apt-get install -y apt-transport-https
+
+RUN apt-get install -y locales locales-all
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+
 RUN apt-get install -y python3-pip python3-dev supervisor curl
 
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -

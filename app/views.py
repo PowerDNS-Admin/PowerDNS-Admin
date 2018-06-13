@@ -465,7 +465,6 @@ def dashboard():
     else:
         logging.debug('Update domains in background')
 
-
     # stats for dashboard
     domain_count = Domain.query.count()
     users = User.query.all()

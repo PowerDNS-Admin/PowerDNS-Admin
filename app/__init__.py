@@ -2,6 +2,7 @@ from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, session, redirect, url_for
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy as SA
+from flask_migrate import Migrate
 
 
 # subclass SQLAlchemy to enable pool_pre_ping
@@ -26,6 +27,7 @@ logging = logger('powerdns-admin', app.config['LOG_LEVEL'], app.config['LOG_FILE
 login_manager = LoginManager()
 login_manager.init_app(app)
 db = SQLAlchemy(app)
+migrate = Migrate(app, db) # used for flask-migrate
 
 def enable_github_oauth(GITHUB_ENABLE):
     if not GITHUB_ENABLE:
