@@ -45,49 +45,46 @@ else:
 
 @app.context_processor
 def inject_fullscreen_layout_setting():
-    fullscreen_layout_setting = Setting.query.filter(Setting.name == 'fullscreen_layout').first()
-    return dict(fullscreen_layout_setting=strtobool(fullscreen_layout_setting.value))
+    setting_value = Setting().get('fullscreen_layout')
+    return dict(fullscreen_layout_setting=strtobool(setting_value))
 
 
 @app.context_processor
 def inject_record_helper_setting():
-    record_helper_setting = Setting.query.filter(Setting.name == 'record_helper').first()
-    return dict(record_helper_setting=strtobool(record_helper_setting.value))
+    setting_value = Setting().get('record_helper')
+    return dict(record_helper_setting=strtobool(setting_value))
 
 
 @app.context_processor
 def inject_login_ldap_first_setting():
-    login_ldap_first_setting = Setting.query.filter(Setting.name == 'login_ldap_first').first()
-    return dict(login_ldap_first_setting=strtobool(login_ldap_first_setting.value))
+    setting_value = Setting().get('login_ldap_first')
+    return dict(login_ldap_first_setting=strtobool(setting_value))
 
 
 @app.context_processor
 def inject_default_record_table_size_setting():
-    default_record_table_size_setting = Setting.query.filter(Setting.name == 'default_record_table_size').first()
-    return dict(default_record_table_size_setting=default_record_table_size_setting.value)
+    setting_value = Setting().get('default_record_table_size')
+    return dict(default_record_table_size_setting=setting_value)
 
 
 @app.context_processor
 def inject_default_domain_table_size_setting():
-    default_domain_table_size_setting = Setting.query.filter(Setting.name == 'default_domain_table_size').first()
-    return dict(default_domain_table_size_setting=default_domain_table_size_setting.value)
+    setting_value = Setting().get('default_domain_table_size')
+    return dict(default_domain_table_size_setting=setting_value)
 
 
 @app.context_processor
 def inject_auto_ptr_setting():
-    auto_ptr_setting = Setting.query.filter(Setting.name == 'auto_ptr').first()
-    if auto_ptr_setting is None:
-        return dict(auto_ptr_setting=False)
-    else:
-        return dict(auto_ptr_setting=strtobool(auto_ptr_setting.value))
+    setting_value = Setting().get('auto_ptr')
+    return dict(auto_ptr_setting=strtobool(setting_value))
 
 
 # START USER AUTHENTICATION HANDLER
 @app.before_request
 def before_request():
     # check site maintenance mode first
-    maintenance = Setting.query.filter(Setting.name == 'maintenance').first()
-    if maintenance and maintenance.value == 'True':
+    maintenance = Setting().get('maintenance')
+    if strtobool(maintenance):
         return render_template('maintenance.html')
 
     # check if user is anonymous
@@ -1307,7 +1304,16 @@ def admin_history():
 @admin_role_required
 def admin_settings():
     if request.method == 'GET':
-        settings = Setting.query.filter(Setting.name != 'maintenance')
+        # start with a copy of the setting defaults (ignore maintenance setting)
+        settings = Setting.defaults.copy()
+        settings.pop('maintenance', None)
+
+        # update settings info with any customizations
+        for s in settings:
+            value = Setting().get(s)
+            if value is not None:
+                settings[s] = value
+
         return render_template('admin_settings.html', settings=settings)
 
 

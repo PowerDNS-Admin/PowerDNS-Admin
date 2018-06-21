@@ -884,8 +884,7 @@ class Domain(db.Model):
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
         domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
         domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
-        system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
-        system_auto_ptr = strtobool(system_auto_ptr.value)
+        system_auto_ptr = strtobool(Setting().get('auto_ptr'))
         self.name = domain_name
         domain_id = self.get_id_by_name(domain_reverse_name)
         if None == domain_id and \
@@ -1468,8 +1467,7 @@ class Record(object):
         domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
         domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
 
-        system_auto_ptr = Setting.query.filter(Setting.name == 'auto_ptr').first()
-        system_auto_ptr = strtobool(system_auto_ptr.value)
+        system_auto_ptr = strtobool(Setting().get('auto_ptr'))
 
         if system_auto_ptr or domain_auto_ptr:
             try:
@@ -1710,6 +1708,18 @@ class Setting(db.Model):
     name = db.Column(db.String(64))
     value = db.Column(db.String(256))
 
+    # default settings (serves as list of known settings too):
+    # Note: booleans must be strings because of the way they are stored and used
+    defaults = {
+        'maintenance': 'False',
+        'fullscreen_layout': 'True',
+        'record_helper': 'True',
+        'login_ldap_first': 'True',
+        'default_record_table_size': 15,
+        'default_domain_table_size': 10,
+        'auto_ptr': 'False'
+    }
+
     def __init__(self, id=None, name=None, value=None):
         self.id = id
         self.name = name
@@ -1722,42 +1732,41 @@ class Setting(db.Model):
         self.value = value
 
     def set_mainteance(self, mode):
-        """
-        mode = True/False
-        """
-        mode = str(mode)
         maintenance = Setting.query.filter(Setting.name=='maintenance').first()
+
+        if maintenance is None:
+            value = self.defaults['maintenance']
+            maintenance = Setting(name='maintenance', value=value)
+            db.session.add(maintenance)
+
+        mode = str(mode)
+
         try:
-            if maintenance:
-                if maintenance.value != mode:
-                    maintenance.value = mode
-                    db.session.commit()
-                return True
-            else:
-                s = Setting(name='maintenance', value=mode)
-                db.session.add(s)
+            if maintenance.value != mode:
+                maintenance.value = mode
                 db.session.commit()
-                return True
+            return True
         except:
             logging.error('Cannot set maintenance to {0}'.format(mode))
-            logging.debug(traceback.format_exc())
+            logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
 
     def toggle(self, setting):
-        setting = str(setting)
         current_setting = Setting.query.filter(Setting.name==setting).first()
+
+        if current_setting is None:
+            value = self.defaults[setting]
+            current_setting = Setting(name=setting, value=value)
+            db.session.add(current_setting)
+
         try:
-            if current_setting:
-                if current_setting.value == "True":
-                    current_setting.value = "False"
-                else:
-                    current_setting.value = "True"
-                db.session.commit()
-                return True
+            if current_setting.value == "True":
+                current_setting.value = "False"
             else:
-                logging.error('Setting {0} does not exist'.format(setting))
-                return False
+                current_setting.value = "True"
+            db.session.commit()
+            return True
         except:
             logging.error('Cannot toggle setting {0}'.format(setting))
             logging.debug(traceback.format_exec())
@@ -1765,22 +1774,33 @@ class Setting(db.Model):
             return False
 
     def set(self, setting, value):
-        setting = str(setting)
-        new_value = str(value)
         current_setting = Setting.query.filter(Setting.name==setting).first()
+
+        if current_setting is None:
+            current_setting = Setting(name=setting, value=None)
+            db.session.add(current_setting)
+
+        value = str(value)
+
         try:
-            if current_setting:
-                current_setting.value = new_value
-                db.session.commit()
-                return True
-            else:
-                logging.error('Setting {0} does not exist'.format(setting))
-                return False
+            current_setting.value = value
+            db.session.commit()
+            return True
         except:
             logging.error('Cannot edit setting {0}'.format(setting))
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
+
+    def get(self, setting):
+        if setting in self.defaults:
+            result = self.query.filter(Setting.name == setting).first()
+            if result is not None:
+                return result.value
+            else:
+                return self.defaults[setting]
+        else:
+            logging.error('Unknown setting queried: {0}'.format(setting))
 
 
 class DomainTemplate(db.Model):
