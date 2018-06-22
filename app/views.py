@@ -576,6 +576,8 @@ def domain(domain_name):
         # can not get any record, API server might be down
         return redirect(url_for('error', code=500))
 
+    quick_edit = strtobool(Setting().get('allow_quick_edit'))
+
     records = []
     #TODO: This should be done in the "model" instead of "view"
     if NEW_SCHEMA:
@@ -588,7 +590,7 @@ def domain(domain_name):
             editable_records = app.config['RECORDS_ALLOW_EDIT']
         else:
             editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
-        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records)
+        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
     else:
         for jr in jrecords:
             if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
@@ -598,7 +600,7 @@ def domain(domain_name):
         editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
     else:
         editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, pdns_version=app.config['PDNS_VERSION'])
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit, pdns_version=app.config['PDNS_VERSION'])
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
