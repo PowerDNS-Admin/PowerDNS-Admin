@@ -1731,7 +1731,7 @@ class Setting(db.Model):
         self.name = name
         self.value = value
 
-    def set_mainteance(self, mode):
+    def set_maintenance(self, mode):
         maintenance = Setting.query.filter(Setting.name=='maintenance').first()
 
         if maintenance is None:
