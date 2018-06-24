@@ -22,6 +22,12 @@
     {% if domain.master == '[]'%}N/A{% else %}{{ domain.master|display_master_name }}{% endif %}
 {% endmacro %}
 
+{% macro account(domain) %}
+    {% if current_user.role.name =='Administrator' %}
+      {% if domain.account_description != "" %}{{ domain.account.description }} {% endif %}[{{ domain.account.name }}]
+    {% endif %}
+{% endmacro %}
+
 {% macro actions(domain) %}
   {% if current_user.role.name =='Administrator' %}
     <td width="25%">

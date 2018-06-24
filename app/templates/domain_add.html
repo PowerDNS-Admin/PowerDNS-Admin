@@ -31,6 +31,12 @@
                     <div class="form-group">
                         <input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter a valid domain name (required)">
                     </div>
+                    <select name="accountid" class="form-control" style="width:15em;">
+                        <option value="0">- No Account -</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% endfor %}
+                    </select><br/>
                     <div class="form-group">
                         <label>Type</label>
                         <div class="radio">
@@ -63,27 +69,12 @@
                         <label>SOA-EDIT-API</label>
                         <div class="radio">
                             <label>
-                                <input type="radio" name="radio_type_soa_edit_api" id="radio_off" value="OFF" checked> (OFF)
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_default" value="DEFAULT" checked> DEFAULT
                             </label>
                         </div>
                         <div class="radio">
                             <label>
-                                <input type="radio" name="radio_type_soa_edit_api" id="radio_inception_increment" value="INCEPTION-INCREMENT"> INCEPTION-INCREMENT
-                            </label>
-                        </div>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="radio_type_soa_edit_api" id="radio_inception" value="INCEPTION"> INCEPTION
-                            </label>
-                        </div>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="radio_type_soa_edit_api" id="radio_increment_week" value="INCREMENT-WEEK"> INCREMENT-WEEK
-                            </label>
-                        </div>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="radio_type_soa_edit_api" id="radio_increment_weeks" value="INCREMENT-WEEKS"> INCREMENT-WEEKS
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_increase" value="INCREASE"> INCREASE
                             </label>
                         </div>
                         <div class="radio">
@@ -93,7 +84,7 @@
                         </div>
                         <div class="radio">
                             <label>
-                                <input type="radio" name="radio_type_soa_edit_api" id="radio_inception_epoch" value="INCEPTION-EPOCH"> INCEPTION-EPOCH
+                                <input type="radio" name="radio_type_soa_edit_api" id="radio_off" value="OFF"> OFF
                             </label>
                         </div>
                     </div>
@@ -132,28 +123,19 @@
                         </ul>
                     </dd>
                     <dt>SOA-EDIT-API</dt>
-                    <dd>The SOA-EDIT-API setting defines when and how the SOA serial number will be updated after a change is made to the domain.
+                    <dd>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change is made to the domain.
                         <ul>
-                            <li>
-                                (OFF) - Not set
+	                    <li>
+                                DEFAULT - Generate a soa serial of YYYYMMDD01. If the current serial is lower than the generated serial, use the generated serial. If the current serial is higher or equal to the generated serial, increase the current serial by 1.
                             </li>
                             <li>
-                                INCEPTION-INCREMENT - Uses YYYYMMDDSS format for SOA serial numbers. If the SOA serial from the backend is within two days after inception, it gets incremented by two (the backend should keep SS below 98).
+                                INCREASE - Increase the current serial by 1.
                             </li>
                             <li>
-                                INCEPTION - Sets the SOA serial to the last inception time in YYYYMMDD01 format. Uses localtime to find the day for inception time. <strong>Not recomended.</strong>
+                                EPOCH - Change the serial to the number of seconds since the EPOCH, aka unixtime.
                             </li>
                             <li>
-                                INCREMENT-WEEK - Sets the SOA serial to the number of weeks since the epoch, which is the last inception time in weeks. <strong>Not recomended.</strong>
-                            </li>
-                            <li>
-                                INCREMENT-WEEKS - Increments the serial with the number of weeks since the UNIX epoch. This should work in every setup; but the result won't look like YYYYMMDDSS anymore.
-                            </li>
-                            <li>
-                                EPOCH - Sets the SOA serial to the number of seconds since the epoch.
-                            </li>
-                            <li>
-                                INCEPTION-EPOCH - Sets the new SOA serial number to the maximum of the old SOA serial number, and age in seconds of the last inception. 
+                                OFF - Disable automatic updates of the SOA serial.
                             </li>
                         </ul>
                     </dd>

@@ -161,8 +161,8 @@
         modal.modal('show');
 
     });
-    // handle edit button
-    $(document.body).on("click", ".button_edit, .row_record", function(e) {
+    // handle edit button and record click
+    $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
             var nRow = $(this)[0];

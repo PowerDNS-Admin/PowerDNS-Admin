@@ -75,6 +75,32 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
+                    <h3 class="box-title">Account</h3>
+                </div>
+                <div class="box-body">
+                    <div class="col-xs-12">
+                        <div class="form-group">
+                            <form method="post" action="{{ url_for('domain_change_account', domain_name=domain.name) }}">
+                                <select name="accountid" class="form-control" style="width:15em;">
+                                    <option value="0">- No Account -</option>
+                                    {% for account in accounts %}
+                                    <option value="{{ account.id }}" {% if domain_account.id == account.id %}selected{% endif %}>{{ account.name }}</option>
+                                    {% endfor %}
+                                </select><br/>
+                                <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
+                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
                     <h3 class="box-title">Auto PTR creation</h3>
                 </div>
                 <div class="box-body">
@@ -109,41 +135,29 @@
                     <h3 class="box-title">Change SOA-EDIT-API</h3>
                 </div>
                 <div class="box-body">
-                    <p>The SOA-EDIT-API setting defines when and how the SOA serial number will be updated after a change is made to the domain.</p>
+                    <p>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change is made to the domain.</p>
                     <ul>
                             <li>
-                                (OFF) - Not set
+                                DEFAULT - Generate a soa serial of YYYYMMDD01. If the current serial is lower than the generated serial, use the generated serial. If the current serial is higher or equal to the generated serial, increase the current serial by 1.
                             </li>
                             <li>
-                                INCEPTION-INCREMENT - Uses YYYYMMDDSS format for SOA serial numbers. If the SOA serial from the backend is within two days after inception, it gets incremented by two (the backend should keep SS below 98).
+                                INCREASE - Increase the current serial by 1.
                             </li>
                             <li>
-                                INCEPTION - Sets the SOA serial to the last inception time in YYYYMMDD01 format. Uses localtime to find the day for inception time. <strong>Not recomended.</strong>
+                                EPOCH - Change the serial to the number of seconds since the EPOCH, aka unixtime.
                             </li>
                             <li>
-                                INCREMENT-WEEK - Sets the SOA serial to the number of weeks since the epoch, which is the last inception time in weeks. <strong>Not recomended.</strong>
-                            </li>
-                            <li>
-                                INCREMENT-WEEKS - Increments the serial with the number of weeks since the UNIX epoch. This should work in every setup; but the result won't look like YYYYMMDDSS anymore.
-                            </li>
-                            <li>
-                                EPOCH - Sets the SOA serial to the number of seconds since the epoch.
-                            </li>
-                            <li>
-                                INCEPTION-EPOCH - Sets the new SOA serial number to the maximum of the old SOA serial number, and age in seconds of the last inception.
+                                OFF - Disable automatic updates of the SOA serial.
                             </li>
                         </ul>
                     <b>New SOA-EDIT-API Setting:</b>
                     <form method="post" action="{{ url_for('domain_change_soa_edit_api', domain_name=domain.name) }}">
                     <select name="soa_edit_api" class="form-control" style="width:15em;">
                         <option selected value="0">- Unchanged -</option>
-                        <option>OFF</option>
-                        <option>INCEPTION-INCREMENT</option>
-                        <option>INCEPTION</option>
-                        <option>INCREMENT-WEEK</option>
-                        <option>INCREMENT-WEEKS</option>
+                        <option>DEFAULT</option>
+                        <option>INCREASE</option>
                         <option>EPOCH</option>
-                        <option>INCEPTION-EPOCH</option>
+                        <option>OFF</option>
                     </select><br/>
                     <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
                         <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name }}

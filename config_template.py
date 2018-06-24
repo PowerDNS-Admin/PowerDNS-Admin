@@ -31,7 +31,7 @@ SQLA_DB_NAME = 'powerdnsadmin'
 #SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
 #    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
 #SQLite
-SQLALCHEMY_DATABASE_URI = 'sqlite:///pdns.db'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
@@ -165,5 +165,11 @@ RECORDS_ALLOW_EDIT = ['SOA', 'A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'S
 FORWARD_RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC' 'NS']
 REVERSE_RECORDS_ALLOW_EDIT = ['SOA', 'TXT', 'LOC', 'NS', 'PTR']
 
+# ALLOW DNSSEC CHANGES FOR ADMINS ONLY
+DNSSEC_ADMINS_ONLY = False
+
 # EXPERIMENTAL FEATURES
 PRETTY_IPV6_PTR = False
+
+# Domain updates in background, for big installations
+BG_DOMAIN_UPDATES = False

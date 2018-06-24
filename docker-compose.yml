@@ -30,6 +30,7 @@ services:
       - PDA_DB_PASSWORD=${PDA_DB_PASSWORD}
       - PDNS_HOST=${PDNS_HOST}
       - PDNS_API_KEY=${PDNS_API_KEY}
+      - FLASK_APP=/powerdns-admin/app/__init__.py
     depends_on:
       powerdns-admin-mysql:
         condition: service_healthy
