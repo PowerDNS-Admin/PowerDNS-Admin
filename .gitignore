@@ -7,6 +7,9 @@
 # pycharm
 .idea
 
+# vscode
+.vscode
+
 *.py[cod]
 
 # Installer logs
