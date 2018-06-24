@@ -253,10 +253,18 @@ def saml_authorized():
         if admin_attribute_name:
           if 'true' in session['samlUserdata'].get(admin_attribute_name, []):
             logging.debug("User is an admin")
-            user.role_id = Role.query.filter_by(name='Administrator').first().id
+            admin_role = Role.query.filter_by(name='Administrator').first().id
+            if user.role_id != admin_role:
+                user.role_id = admin_role
+                history = History(msg='Promoting {0} to administrator'.format(user.username), created_by='SAML Assertion')
+                history.add()
           else:
             logging.debug("User is NOT an admin")
-            user.role_id = Role.query.filter_by(name='User').first().id
+            user_role = Role.query.filter_by(name='User').first().id
+            if user.role_id != user_role:
+                user.role_id = user_role
+                history = History(msg='Demoting {0} to user'.format(user.username), created_by='SAML Assertion')
+                history.add()
         user.plain_text_password = None
         user.update_profile()
         session['external_auth'] = True
