@@ -1717,7 +1717,8 @@ class Setting(db.Model):
         'login_ldap_first': 'True',
         'default_record_table_size': 15,
         'default_domain_table_size': 10,
-        'auto_ptr': 'False'
+        'auto_ptr': 'False',
+        'allow_quick_edit': 'True'
     }
 
     def __init__(self, id=None, name=None, value=None):
