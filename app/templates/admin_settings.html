@@ -30,21 +30,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for setting in settings %}
+                            {% for setting_name, setting_value in settings.items() %}
                             <tr class="odd ">
-                                <td>{{ setting.name }}</td>
-                                {% if setting.value == "True" or setting.value == "False" %}
-                                <td>{{ setting.value }}</td>
+                                <td>{{ setting_name }}</td>
+                                {% if setting_value == "True" or setting_value == "False" %}
+                                <td>{{ setting_value }}</td>
                                 {% else %}
-                                <td><input name="value" id="value" value="{{ setting.value }}"></td>
+                                <td><input name="value" id="value" value="{{ setting_value }}"></td>
                                 {% endif %}
                                 <td width="6%">
-                                    {% if setting.value == "True" or setting.value == "False" %}
-                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting.name }}">
+                                    {% if setting_value == "True" or setting_value == "False" %}
+                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting_name }}">
                                         Toggle&nbsp;<i class="fa fa-info"></i>
                                     </button>
                                     {% else %}
-                                    <button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting.name }}">
+                                    <button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting_name }}">
                                         Save&nbsp;<i class="fa fa-info"></i>
                                     </button>
                                     {% endif %}
