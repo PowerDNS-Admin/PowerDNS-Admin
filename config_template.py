@@ -137,6 +137,13 @@ SAML_METADATA_CACHE_LIFETIME = 1
 ###  the user is set as a non-administrator user.
 #SAML_ATTRIBUTE_ADMIN = 'https://example.edu/pdns-admin'
 
+## Attribute to get account names from
+### Default: Don't control accounts with SAML attribute
+### If set, the user will be added and removed from accounts to match
+###  what's in the login assertion. Accounts that don't exist will
+###  be created and the user added to them.
+SAML_ATTRIBUTE_ACCOUNT = 'https://example.edu/pdns-account'
+
 SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 SAML_SP_CONTACT_NAME = '<contact name>'
 SAML_SP_CONTACT_MAIL = '<contact mail>'

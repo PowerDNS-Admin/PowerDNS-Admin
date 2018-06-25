@@ -239,10 +239,10 @@ def saml_authorized():
                         email=session['samlNameId'])
             user.create_local_user()
         session['user_id'] = user.id
-        logging.debug("Attributes are: {0}".format(repr(session['samlUserdata'])))
         email_attribute_name = app.config.get('SAML_ATTRIBUTE_EMAIL', 'email')
         givenname_attribute_name = app.config.get('SAML_ATTRIBUTE_GIVENNAME', 'givenname')
         surname_attribute_name = app.config.get('SAML_ATTRIBUTE_SURNAME', 'surname')
+        account_attribute_name = app.config.get('SAML_ATTRIBUTE_ACCOUNT', None)
         admin_attribute_name = app.config.get('SAML_ATTRIBUTE_ADMIN', None)
         if email_attribute_name in session['samlUserdata']:
             user.email = session['samlUserdata'][email_attribute_name][0].lower()
@@ -251,15 +251,36 @@ def saml_authorized():
         if surname_attribute_name in session['samlUserdata']:
             user.lastname = session['samlUserdata'][surname_attribute_name][0]
         if admin_attribute_name:
+            user_accounts = set(user.get_account())
+            saml_accounts = []
+            for account_name in session['samlUserdata'].get(account_attribute_name, []):
+                clean_name = ''.join(c for c in account_name.lower() if c in "abcdefghijklmnopqrstuvwxyz0123456789")
+                if len(clean_name) > Account.name.type.length:
+                    logging.error("Account name {0} too long. Truncated.".format(clean_name))
+                account = Account.query.filter_by(name=clean_name).first()
+                if not account:
+                    account = Account(name=clean_name.lower(), description='', contact='', mail='')
+                    account.create_account()
+                    history = History(msg='Account {0} created'.format(account.name), created_by='SAML Assertion')
+                    history.add()
+                saml_accounts.append(account)
+            saml_accounts = set(saml_accounts)
+            for account in saml_accounts - user_accounts:
+                account.add_user(user)
+                history = History(msg='Adding {0} to account {1}'.format(user.username, account.name), created_by='SAML Assertion')
+                history.add()
+            for account in user_accounts - saml_accounts:
+                account.remove_user(user)
+                history = History(msg='Removing {0} from account {1}'.format(user.username, account.name), created_by='SAML Assertion')
+                history.add()
+        if admin_attribute_name:
           if 'true' in session['samlUserdata'].get(admin_attribute_name, []):
-            logging.debug("User is an admin")
             admin_role = Role.query.filter_by(name='Administrator').first().id
             if user.role_id != admin_role:
                 user.role_id = admin_role
                 history = History(msg='Promoting {0} to administrator'.format(user.username), created_by='SAML Assertion')
                 history.add()
           else:
-            logging.debug("User is NOT an admin")
             user_role = Role.query.filter_by(name='User').first().id
             if user.role_id != user_role:
                 user.role_id = user_role
