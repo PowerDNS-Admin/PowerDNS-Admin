@@ -62,7 +62,7 @@
                                     <td>
                                          {{ record.ttl }}
                                     </td>
-                                    <td class="length-break">
+                                    <td>
                                          {{ record.data }}
                                     </td>
                                 {% if domain.type != 'Slave' %}
@@ -158,12 +158,16 @@
         var nRow = $(this).parents('tr')[0];
         var info = "Are you sure you want to delete " + record + "?";
         modal.find('.modal-body p').text(info);
-        modal.find('#button_delete_confirm').click(function() {
-            table.row(nRow).remove().draw();
-            modal.modal('hide');
-        })
         modal.modal('show');
 
+        $("#button_delete_confirm").unbind().one('click', function(e) {
+            table.row(nRow).remove().draw();
+            modal.modal('hide');
+        });
+
+        $("#button_delete_cancel").unbind().one('click', function(e) {
+            modal.modal('hide');
+        });
     });
     // handle edit button and record click
     $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
@@ -429,7 +433,7 @@
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left"
+                <button type="button" class="btn btn-flat btn-default pull-left" id="button_delete_cancel"
                     data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
             </div>
