@@ -188,7 +188,7 @@ class User(db.Model):
             logging.error(e)
             raise
 
-    def is_validate(self, method):
+    def is_validate(self, method, src_ip=''):
         """
         Validate user credential
         """
@@ -197,12 +197,12 @@ class User(db.Model):
 
             if user_info:
                 if user_info.password and self.check_password(user_info.password):
-                    logging.info('User "{0}" logged in successfully'.format(self.username))
+                    logging.info('User "{0}" logged in successfully. Authentication request from {1}'.format(self.username, src_ip))
                     return True
-                logging.error('User "{0}" input a wrong password'.format(self.username))
+                logging.error('User "{0}" inputted a wrong password. Authentication request from {1}'.format(self.username, src_ip))
                 return False
 
-            logging.warning('User "{0}" does not exist'.format(self.username))
+            logging.warning('User "{0}" does not exist. Authentication request from {1}'.format(self.username, src_ip))
             return False
 
         if method == 'LDAP':
@@ -220,7 +220,7 @@ class User(db.Model):
 
             result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
             if not result:
-                logging.warning('LDAP User "{0}" does not exist'.format(self.username))
+                logging.warning('LDAP User "{0}" does not exist. Authentication request from {1}'.format(self.username, src_ip))
                 return False
 
             try:
@@ -242,11 +242,13 @@ class User(db.Model):
                             logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
                             return False
                     except Exception as e:
-                        logging.error('LDAP group lookup for user "{0}" has failed'.format(e))
+                        logging.error('LDAP group lookup for user "{0}" has failed. Authentication request from {1}'.format(self.username, src_ip))
+                        logging.debug(e)
                         return False
                     logging.info('User "{0}" logged in successfully'.format(self.username))
             except Exception as e:
-                logging.error('User "{0}" input a wrong LDAP password'.format(e))
+                logging.error('User "{0}" input a wrong LDAP password. Authentication request from {1}'.format(self.username, src_ip))
+                logging.debug(e)
                 return False
 
             # create user if not exist in the db

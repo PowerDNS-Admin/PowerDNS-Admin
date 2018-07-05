@@ -120,7 +120,7 @@ def login_via_authorization_header(request):
             return None
         user = User(username=username, password=password, plain_text_password=password)
         try:
-            auth = user.is_validate(method='LOCAL')
+            auth = user.is_validate(method='LOCAL', src_ip=request.remote_addr)
             if auth == False:
                 return None
             else:
@@ -340,7 +340,7 @@ def login():
         user = User(username=username, password=password, plain_text_password=password)
 
         try:
-            auth = user.is_validate(method=auth_method)
+            auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
             if auth == False:
                 return render_template('login.html', error='Invalid credentials',
                                                      github_enabled=GITHUB_ENABLE,
