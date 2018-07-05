@@ -22,6 +22,9 @@ RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.lis
 RUN apt-get update -y
 RUN apt-get install -y yarn
 
+# Install Netcat for DB healthcheck
+RUN apt-get install -y netcat
+
 # lib for building mysql db driver
 RUN apt-get install -y libmysqlclient-dev
 
@@ -29,7 +32,7 @@ RUN apt-get install -y libmysqlclient-dev
 RUN apt-get install -y libsasl2-dev libldap2-dev libssl-dev
 
 # lib for building python3-saml
-RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config 
+RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config
 
 COPY ./requirements.txt /powerdns-admin/requirements.txt
 RUN pip3 install -r requirements.txt

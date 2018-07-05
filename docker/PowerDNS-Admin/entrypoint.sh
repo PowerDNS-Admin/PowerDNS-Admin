@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# Wait for us to be able to connect to MySQL before proceeding
+until nc -zv \
+  $PDA_DB_HOST \
+  3306;
+do
+  echo "MySQL ($PDA_DB_HOST) is unavailable - sleeping"
+  sleep 1
+done
+
 cd /powerdns-admin
 
 if [ ! -d "/powerdns-admin/migrations" ]; then
