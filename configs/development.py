@@ -5,7 +5,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 WTF_CSRF_ENABLED = True
 SECRET_KEY = 'changeme'
 LOG_LEVEL = 'DEBUG'
-LOG_FILE = 'log.txt'
+LOG_FILE = 'logs/log.txt'
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
