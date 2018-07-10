@@ -14,8 +14,14 @@ services:
     ports:
       - "9191:9191"
     volumes:
+      # Code
       - .:/powerdns-admin/
       - "./configs/${ENVIRONMENT}.py:/powerdns-admin/config.py"
+      # Assets dir volume
+      - powerdns-admin-assets:/powerdns-admin/app/static
+      - powerdns-admin-assets2:/powerdns-admin/node_modules
+      - powerdns-admin-assets3:/powerdns-admin/logs
+      - ./app/static/custom:/powerdns-admin/app/static/custom
     logging:
       driver: json-file
       options:
@@ -41,8 +47,10 @@ services:
     container_name: powerdns-admin-mysql
     mem_limit: 256M
     memswap_limit: 256M
-    ports:
-      - "3306:3306"
+    expose:
+      - 3306
+    volumes:
+      - powerdns-admin-mysql-data:/var/lib/mysql
     networks:
       - default
     environment:
@@ -78,8 +86,10 @@ services:
     container_name: ${PDNS_DB_HOST}
     mem_limit: 256M
     memswap_limit: 256M
-    ports:
-      - "3307:3306"
+    expose:
+      - 3306
+    volumes:
+      - powerdns-mysql-data:/var/lib/mysql
     networks:
       - default
     environment:
@@ -96,3 +106,7 @@ networks:
 
 volumes:
   powerdns-mysql-data:
+  powerdns-admin-mysql-data:
+  powerdns-admin-assets:
+  powerdns-admin-assets2:
+  powerdns-admin-assets3:
