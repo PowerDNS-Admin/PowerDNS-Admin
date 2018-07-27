@@ -759,7 +759,7 @@ class Domain(db.Model):
 
             # update/add new domain
             for data in jdata:
-                account_id = Account().get_id_by_name(data['account'])
+                account_id = Account().get_id_by_name(data.get('account'))
                 d = dict_db_domain.get(data['name'].rstrip('.'), None)
                 changed = False
                 if d:
