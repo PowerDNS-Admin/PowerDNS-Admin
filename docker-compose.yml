@@ -67,6 +67,7 @@ services:
     hostname: ${PDNS_HOST}
     ports:
       - "53:53"
+      - "53:53/udp"
     networks:
       - default
     command: --api=yes --api-key=${PDNS_API_KEY} --webserver-address=0.0.0.0 --webserver-allow-from=0.0.0.0/0
