@@ -486,6 +486,10 @@ class Account(db.Model):
         """
         Convert account_name to account_id
         """
+        # Skip actual database lookup for empty queries
+        if account_name is None or account_name == "":
+            return None
+
         account = Account.query.filter(Account.name == account_name).first()
         if account is None:
             return None
@@ -759,7 +763,11 @@ class Domain(db.Model):
 
             # update/add new domain
             for data in jdata:
-                account_id = Account().get_id_by_name(data['account'])
+                if 'account' in data:
+                    account_id = Account().get_id_by_name(data['account'])
+                else:
+                    logging.debug("No 'account' data found in API result - Unsupported PowerDNS version?")
+                    account_id = None
                 d = dict_db_domain.get(data['name'].rstrip('.'), None)
                 changed = False
                 if d:
