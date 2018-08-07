@@ -608,6 +608,32 @@ class Account(db.Model):
             users.append(User(id=uid).get_user_info_by_id().username)
 
         self.grant_privileges(users)
+    def add_user(self, user):
+        """
+        Add a single user to Account by User
+        """
+        try:
+            au = AccountUser(self.id, user.id)
+            db.session.add(au)
+            db.session.commit()
+            return True
+        except:
+            db.session.rollback()
+            logging.error('Cannot add user privielges on account {0}'.format(self.name))
+            return False
+
+    def remove_user(self, user):
+        """
+        Remove a single user from Account by User
+        """
+        try:
+            AccountUser.query.filter(AccountUser.user_id == user.id).filter(AccountUser.account_id == self.id).delete()
+            db.session.commit()
+            return True
+        except:
+            db.session.rollback()
+            logging.error('Cannot revoke user privielges on account {0}'.format(self.name))
+            return False
 
 
 class Role(db.Model):
