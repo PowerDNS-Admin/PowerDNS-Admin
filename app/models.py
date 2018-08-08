@@ -258,9 +258,9 @@ class User(db.Model):
                 try:
                     # try to get user's firstname & lastname from LDAP
                     # this might be changed in the future
-                    self.firstname = result[0][0][1]['givenName']
-                    self.lastname = result[0][0][1]['sn']
-                    self.email = result[0][0][1]['mail']
+                    self.firstname = result[0][0][1]['givenName'][0].decode("utf-8")
+                    self.lastname = result[0][0][1]['sn'][0].decode("utf-8")
+                    self.email = result[0][0][1]['mail'][0].decode("utf-8")
                 except Exception as e:
                     logging.info("reading ldap data threw an exception {0}".format(e))
 
