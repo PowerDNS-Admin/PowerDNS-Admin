@@ -339,7 +339,7 @@ class User(db.Model):
         user.firstname = self.firstname if self.firstname else user.firstname
         user.lastname = self.lastname if self.lastname else user.lastname
         user.email = self.email if self.email else user.email
-        user.password = self.get_hashed_password(self.plain_text_password) if self.plain_text_password else user.password
+        user.password = self.get_hashed_password(self.plain_text_password).decode("utf-8") if self.plain_text_password else user.password
         user.avatar = self.avatar if self.avatar else user.avatar
 
         if enable_otp is not None:
