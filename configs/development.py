@@ -32,20 +32,19 @@ SIGNUP_ENABLED = True
 # LDAP CONFIG
 LDAP_ENABLED = False
 LDAP_TYPE = 'ldap'
-LDAP_URI = 'ldaps://your-ldap-server:636'
-# with LDAP_BIND_TYPE you can specify 'direct' or 'search' to use user credentials
-# for binding or a predefined LDAP_USERNAME and LDAP_PASSWORD, binding with non-DN only works with AD
-LDAP_BIND_TYPE= 'direct' # direct or search
-LDAP_USERNAME = 'cn=dnsuser,ou=users,ou=services,dc=duykhanh,dc=me'
-LDAP_PASSWORD = 'dnsuser'
-LDAP_SEARCH_BASE = 'ou=System Admins,ou=People,dc=duykhanh,dc=me'
+LDAP_URI = 'ldap://docker.for.mac.localhost:389'
+LDAP_ADMIN_USERNAME = 'cn=admin,dc=mydomain,dc=com'
+LDAP_ADMIN_PASSWORD = 'password'
+LDAP_SEARCH_BASE = 'dc=mydomain,dc=com'
+
 # Additional options only if LDAP_TYPE=ldap
 LDAP_USERNAMEFIELD = 'uid'
 LDAP_FILTER = '(objectClass=inetorgperson)'
+
 # enable LDAP_GROUP_SECURITY to allow Admin and User roles based on LDAP groups
-#LDAP_GROUP_SECURITY = True # True or False
-#LDAP_ADMIN_GROUP = 'CN=DnsAdmins,CN=Users,DC=example,DC=me'
-#LDAP_USER_GROUP = 'CN=Domain Admins,CN=Users,DC=example,DC=me'
+LDAP_GROUP_SECURITY = False # True or False
+LDAP_ADMIN_GROUP = 'cn=sysops,dc=mydomain,dc=com'
+LDAP_USER_GROUP = 'cn=user,dc=mydomain,dc=com'
 
 ## AD CONFIG
 #LDAP_TYPE = 'ad'
