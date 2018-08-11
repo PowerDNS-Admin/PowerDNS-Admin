@@ -98,6 +98,10 @@ SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMet
 #Cache Lifetime in Seconds
 SAML_METADATA_CACHE_LIFETIME = 1
 
+# SAML SSO binding format to use
+## Default: library default (urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect)
+#SAML_IDP_SSO_BINDING = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+
 ## EntityID of the IdP to use. Only needed if more than one IdP is
 ##   in the SAML_METADATA_URL
 ### Default: First (only) IdP in the SAML_METADATA_URL
