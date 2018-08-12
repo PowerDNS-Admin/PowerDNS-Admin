@@ -328,6 +328,36 @@ class User(db.Model):
         db.session.commit()
         return {'status': True, 'msg': 'Created user successfully'}
 
+    def update_local_user(self):
+        """
+        Update local user
+        """
+        # Sanity check - account name
+        if self.username == "":
+            return {'status': False, 'msg': 'No user name specified'}
+
+        # read user and check that it exists
+        user = User.query.filter(User.username == self.username).first()
+        if not user:
+            return {'status': False, 'msg': 'User does not exist'}
+
+        # check if new email exists (only if changed)
+        if user.email != self.email:
+            checkuser = User.query.filter(User.email == self.email).first()
+            if checkuser:
+                return {'status': False, 'msg': 'New email address is already in use'}
+
+        user.firstname = self.firstname
+        user.lastname = self.lastname
+        user.email = self.email
+
+        # store new password hash (only if changed)
+        if self.plain_text_password != "":
+            user.password = self.get_hashed_password(self.plain_text_password).decode("utf-8")
+
+        db.session.commit()
+        return {'status': True, 'msg': 'User updated successfully'}
+
     def update_profile(self, enable_otp=None):
         """
         Update user profile

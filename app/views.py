@@ -1156,26 +1156,44 @@ def admin():
     return render_template('admin.html', domains=domains, users=users, configs=configs, statistics=statistics, uptime=uptime, history_number=history_number)
 
 
-@app.route('/admin/user/create', methods=['GET', 'POST'])
+@app.route('/admin/user/edit/<user_username>', methods=['GET', 'POST'])
+@app.route('/admin/user/edit', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
-def admin_createuser():
+def admin_edituser(user_username=None):
     if request.method == 'GET':
-        return render_template('admin_createuser.html')
+        if not user_username:
+            return render_template('admin_edituser.html', create=1)
 
-    if request.method == 'POST':
+        else:
+            user = User.query.filter(User.username == user_username).first()
+            return render_template('admin_edituser.html', user=user, create=0)
+
+    elif request.method == 'POST':
         fdata = request.form
 
-        user = User(username=fdata['username'], plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'])
+        if not user_username:
+            user_username = fdata['username']
 
-        if fdata['password'] == "":
-            return render_template('admin_createuser.html', user=user, blank_password=True)
+        user = User(username=user_username, plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'], reload_info=False)
 
-        result = user.create_local_user();
+        create = int(fdata['create'])
+        if create:
+            if fdata['password'] == "":
+                return render_template('admin_edituser.html', user=user, create=create, blank_password=True)
+
+            result = user.create_local_user()
+            history = History(msg='Created user {0}'.format(user.username), created_by=current_user.username)
+
+        else:
+            result = user.update_local_user()
+            history = History(msg='Updated user {0}'.format(user.username), created_by=current_user.username)
+
         if result['status']:
+            history.add()
             return redirect(url_for('admin_manageuser'))
 
-        return render_template('admin_createuser.html', user=user, error=result['msg'])
+        return render_template('admin_edituser.html', user=user, create=create, error=result['msg'])
 
 
 @app.route('/admin/manageuser', methods=['GET', 'POST'])
@@ -1194,6 +1212,16 @@ def admin_manageuser():
         try:
             jdata = request.json
             data = jdata['data']
+
+            if jdata['action'] == 'user_otp_disable':
+                user = User(username=data)
+                result = user.update_profile(enable_otp=False)
+                if result:
+                    history = History(msg='Two factor authentication disabled for user {0}'.format(data), created_by=current_user.username)
+                    history.add()
+                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Two factor authentication has been disabled for user.' } ), 200)
+                else:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot disable two factor authentication for user.' } ), 500)
 
             if jdata['action'] == 'delete_user':
                 user = User(username=data)
