@@ -88,7 +88,7 @@
                 <p><strong>Beware: This could compromise security!</strong></p>
             </div>
             <div class="box-footer">
-                <button type="button" class="btn btn-flat btn-warning button_otp_disable" id="{{ user.username }}" {% if user.otp_secret == "" %}disabled{% endif %}>Disable Two Factor Authentication</button>
+                <button type="button" class="btn btn-flat btn-warning button_otp_disable" id="{{ user.username }}" {% if not user.otp_secret %}disabled{% endif %}>Disable Two Factor Authentication</button>
             </div>
         </div>
         {% endif %}
