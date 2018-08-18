@@ -6,7 +6,6 @@ WTF_CSRF_ENABLED = True
 SECRET_KEY = 'We are the world'
 BIND_ADDRESS = '127.0.0.1'
 PORT = 9191
-LOGIN_TITLE = "PDNS"
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
@@ -35,22 +34,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-# LDAP CONFIG
-LDAP_ENABLED = False
-LDAP_TYPE = 'ldap'
-LDAP_URI = 'ldaps://your-ldap-server:636'
-LDAP_ADMIN_USERNAME = 'cn=admin,dc=mydomain,dc=com'
-LDAP_ADMIN_PASSWORD = 'password'
-LDAP_SEARCH_BASE = 'dc=mydomain,dc=com'
-
-# Additional options only if LDAP_TYPE=ldap
-LDAP_USERNAMEFIELD = 'uid'
-LDAP_FILTER = '(objectClass=inetorgperson)'
-
-# enable LDAP_GROUP_SECURITY to allow Admin and User roles based on LDAP groups
-LDAP_GROUP_SECURITY = False # True or False
-LDAP_ADMIN_GROUP = 'cn=sysops,dc=mydomain,dc=com'
-LDAP_USER_GROUP = 'cn=user,dc=mydomain,dc=com'
 
 ## AD CONFIG
 #LDAP_TYPE = 'ad'
@@ -158,9 +141,6 @@ SAML_LOGOUT = False
 #for example redirect to google.com after successful saml logout
 #SAML_LOGOUT_URL = 'https://google.com'
 
-#Default Auth
-BASIC_ENABLED = True
-SIGNUP_ENABLED = True
 
 # POWERDNS CONFIG
 PDNS_STATS_URL = 'http://172.16.214.131:8081/'

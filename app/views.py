@@ -44,6 +44,11 @@ else:
 
 
 @app.context_processor
+def inject_sitename():
+    setting = Setting().get('site_name')
+    return dict(SITE_NAME=setting)
+
+@app.context_processor
 def inject_setting():
     setting = Setting()
     return dict(SETTING=setting)
@@ -134,8 +139,7 @@ def error(code, msg=None):
 
 @app.route('/register', methods=['GET'])
 def register():
-    SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
-    if SIGNUP_ENABLED:
+    if Setting().get('signup_enabled'):
         return render_template('register.html')
     else:
         return render_template('errors/404.html'), 404
@@ -268,11 +272,6 @@ def saml_authorized():
 @login_manager.unauthorized_handler
 def login():
     LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
-    BASIC_ENABLED = app.config['BASIC_ENABLED']
-    SIGNUP_ENABLED = app.config['SIGNUP_ENABLED']
-    LDAP_ENABLED = app.config.get('LDAP_ENABLED')
-    GITHUB_ENABLE = app.config.get('GITHUB_OAUTH_ENABLE')
-    GOOGLE_ENABLE = app.config.get('GOOGLE_OAUTH_ENABLE')
     SAML_ENABLED = app.config.get('SAML_ENABLED')
 
     if g.user is not None and current_user.is_authenticated:
@@ -323,13 +322,7 @@ def login():
         return redirect(url_for('index'))
 
     if request.method == 'GET':
-        return render_template('login.html', github_enabled=GITHUB_ENABLE,
-                                             google_enabled=GOOGLE_ENABLE,
-                                             saml_enabled=SAML_ENABLED,
-                                             ldap_enabled=LDAP_ENABLED,
-                                             login_title=LOGIN_TITLE,
-                                             basic_enabled=BASIC_ENABLED,
-                                             signup_enabled=SIGNUP_ENABLED)
+        return render_template('login.html', saml_enabled=SAML_ENABLED)
 
     # process login
     username = request.form['username']
@@ -357,46 +350,18 @@ def login():
         try:
             auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
             if auth == False:
-                return render_template('login.html', error='Invalid credentials',
-                                                     github_enabled=GITHUB_ENABLE,
-                                                     google_enabled=GOOGLE_ENABLE,
-                                                     saml_enabled=SAML_ENABLED,
-                                                     ldap_enabled=LDAP_ENABLED,
-                                                     login_title=LOGIN_TITLE,
-                                                     basic_enabled=BASIC_ENABLED,
-                                                     signup_enabled=SIGNUP_ENABLED)
+                return render_template('login.html', saml_enabled=SAML_ENABLED, error='Invalid credentials')
         except Exception as e:
-            return render_template('login.html', error=e,
-                                                 github_enabled=GITHUB_ENABLE,
-                                                 google_enabled=GOOGLE_ENABLE,
-                                                 saml_enabled=SAML_ENABLED,
-                                                 ldap_enabled=LDAP_ENABLED,
-                                                 login_title=LOGIN_TITLE,
-                                                 basic_enabled=BASIC_ENABLED,
-                                                 signup_enabled=SIGNUP_ENABLED)
+            return render_template('login.html', saml_enabled=SAML_ENABLED, error=e)
 
         # check if user enabled OPT authentication
         if user.otp_secret:
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
-                    return render_template('login.html', error='Invalid credentials',
-                                                         github_enabled=GITHUB_ENABLE,
-                                                         google_enabled=GOOGLE_ENABLE,
-                                                         saml_enabled=SAML_ENABLED,
-                                                         ldap_enabled=LDAP_ENABLED,
-                                                         login_title=LOGIN_TITLE,
-                                                         basic_enabled=BASIC_ENABLED,
-                                                         signup_enabled=SIGNUP_ENABLED)
+                    return render_template('login.html', saml_enabled=SAML_ENABLED, error='Invalid credentials')
             else:
-                return render_template('login.html', error='Token required',
-                                                     github_enabled=GITHUB_ENABLE,
-                                                     google_enabled=GOOGLE_ENABLE,
-                                                     saml_enabled=SAML_ENABLED,
-                                                     ldap_enabled=LDAP_ENABLED,
-                                                     login_title=LOGIN_TITLE,
-                                                     basic_enabled=BASIC_ENABLED,
-                                                     signup_enabled=SIGNUP_ENABLED)
+                return render_template('login.html', saml_enabled=SAML_ENABLED, error='Token required')
 
         login_user(user, remember = remember_me)
         return redirect(request.args.get('next') or url_for('index'))
@@ -416,14 +381,7 @@ def login():
         try:
             result = user.create_local_user()
             if result == True:
-                return render_template('login.html', username=username, password=password,
-                                                     github_enabled=GITHUB_ENABLE,
-                                                     google_enabled=GOOGLE_ENABLE,
-                                                     saml_enabled=SAML_ENABLED,
-                                                     ldap_enabled=LDAP_ENABLED,
-                                                     login_title=LOGIN_TITLE,
-                                                     basic_enabled=BASIC_ENABLED,
-                                                     signup_enabled=SIGNUP_ENABLED)
+                return render_template('login.html', saml_enabled=SAML_ENABLED, username=username, password=password)
             else:
                 return render_template('register.html', error=result['msg'])
         except Exception as e:
@@ -1416,6 +1374,7 @@ def admin_setting_authentication():
             Setting().set('ldap_enabled', True if request.form.get('ldap_enabled') else False)
             Setting().set('ldap_type', request.form.get('ldap_type'))
             Setting().set('ldap_uri', request.form.get('ldap_uri'))
+            Setting().set('ldap_base_dn', request.form.get('ldap_base_dn'))
             Setting().set('ldap_admin_username', request.form.get('ldap_admin_username'))
             Setting().set('ldap_admin_password', request.form.get('ldap_admin_password'))
             Setting().set('ldap_filter_basic', request.form.get('ldap_filter_basic'))

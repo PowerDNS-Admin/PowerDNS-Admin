@@ -23,19 +23,6 @@ from app.lib import utils
 
 logging = logger.getLogger(__name__)
 
-if 'LDAP_TYPE' in app.config.keys():
-    LDAP_URI = app.config['LDAP_URI']
-    LDAP_SEARCH_BASE = app.config['LDAP_SEARCH_BASE']
-    LDAP_TYPE = app.config['LDAP_TYPE']
-    LDAP_FILTER = app.config['LDAP_FILTER']
-    LDAP_USERNAMEFIELD = app.config['LDAP_USERNAMEFIELD']
-
-    LDAP_GROUP_SECURITY = app.config.get('LDAP_GROUP_SECURITY')
-    if LDAP_GROUP_SECURITY == True:
-        LDAP_ADMIN_GROUP = app.config['LDAP_ADMIN_GROUP']
-        LDAP_USER_GROUP = app.config['LDAP_USER_GROUP']
-else:
-    LDAP_TYPE = False
 
 if 'PRETTY_IPV6_PTR' in app.config.keys():
     import dns.inet
@@ -147,7 +134,7 @@ class User(db.Model):
 
     def ldap_init_conn(self):
         ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-        conn = ldap.initialize(LDAP_URI)
+        conn = ldap.initialize(Setting().get('ldap_uri'))
         conn.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
         conn.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
         conn.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
@@ -162,7 +149,7 @@ class User(db.Model):
 
         try:
             conn = self.ldap_init_conn()
-            conn.simple_bind_s(app.config['LDAP_ADMIN_USERNAME'], app.config['LDAP_ADMIN_PASSWORD'])
+            conn.simple_bind_s(Setting().get('ldap_admin_username'), Setting().get('ldap_admin_password'))
             ldap_result_id = conn.search(baseDN, searchScope, searchFilter, retrieveAttributes)
             result_set = []
 
@@ -177,6 +164,8 @@ class User(db.Model):
 
         except ldap.LDAPError as e:
             logging.error(e)
+            logging.debug('baseDN: {0}'.format(baseDN))
+            logging.debug(traceback.format_exc())
             raise
 
     def ldap_auth(self, ldap_username, password):
@@ -207,34 +196,38 @@ class User(db.Model):
 
         if method == 'LDAP':
             isadmin = False
-            if not LDAP_TYPE:
-                logging.error('LDAP authentication is disabled')
-                return False
+            LDAP_TYPE = Setting().get('ldap_type')
+            LDAP_BASE_DN = Setting().get('ldap_base_dn')
+            LDAP_FILTER_BASIC = Setting().get('ldap_filter_basic')
+            LDAP_FILTER_USERNAME = Setting().get('ldap_filter_username')
+            LDAP_ADMIN_GROUP = Setting().get('ldap_admin_group')
+            LDAP_USER_GROUP = Setting().get('ldap_user_group')
+            LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
             if LDAP_TYPE == 'ldap':
-                searchFilter = "(&({0}={1}){2})".format(LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+                searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_BASIC)
                 logging.debug('Ldap searchFilter "{0}"'.format(searchFilter))
             elif LDAP_TYPE == 'ad':
-                searchFilter = "(&(objectcategory=person)({0}={1}){2})".format(LDAP_USERNAMEFIELD, self.username, LDAP_FILTER)
+                searchFilter = "(&(objectcategory=person)({0}={1}){2})".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_BASIC)
 
-            ldap_result = self.ldap_search(searchFilter, LDAP_SEARCH_BASE)
+            ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
             if not ldap_result:
                 logging.warning('LDAP User "{0}" does not exist. Authentication request from {1}'.format(self.username, src_ip))
                 return False
             else:
                 try:
                     ldap_username = ldap.filter.escape_filter_chars(ldap_result[0][0][0])
-                    # check if LDAP_SECURITY_GROUP is enabled
+                    # check if LDAP_GROUP_SECURITY_ENABLED is True
                     # user can be assigned to ADMIN or USER role.
-                    if LDAP_GROUP_SECURITY:
+                    if LDAP_GROUP_SECURITY_ENABLED:
                         try:
                             if (self.ldap_search(searchFilter, LDAP_ADMIN_GROUP)):
                                 isadmin = True
-                                logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP))
+                                logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP))
                             elif (self.ldap_search(searchFilter, LDAP_USER_GROUP)):
-                                logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username,LDAP_USER_GROUP))
+                                logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username, LDAP_USER_GROUP))
                             else:
-                                logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username,LDAP_ADMIN_GROUP,LDAP_USER_GROUP))
+                                logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_USER_GROUP))
                                 return False
                         except Exception as e:
                             logging.error('LDAP group lookup for user "{0}" has failed. Authentication request from {1}'.format(self.username, src_ip))
@@ -256,13 +249,12 @@ class User(db.Model):
                 self.firstname = self.username
                 self.lastname = ''
                 try:
-                    # try to get user's firstname & lastname from LDAP
-                    # this might be changed in the future
+                    # try to get user's firstname, lastname and email address from LDAP attributes
                     self.firstname = ldap_result[0][0][1]['givenName'][0].decode("utf-8")
                     self.lastname = ldap_result[0][0][1]['sn'][0].decode("utf-8")
                     self.email = ldap_result[0][0][1]['mail'][0].decode("utf-8")
                 except Exception as e:
-                    logging.info("Reading ldap data threw an exception {0}".format(e))
+                    logging.warning("Reading ldap data threw an exception {0}".format(e))
                     logging.debug(traceback.format_exc())
 
                 # first register user will be in Administrator role
@@ -271,7 +263,7 @@ class User(db.Model):
                     self.role_id = Role.query.filter_by(name='Administrator').first().id
 
                 # user will be in Administrator role if part of LDAP Admin group
-                if LDAP_GROUP_SECURITY:
+                if LDAP_GROUP_SECURITY_ENABLED:
                     if isadmin == True:
                         self.role_id = Role.query.filter_by(name='Administrator').first().id
 
@@ -279,7 +271,7 @@ class User(db.Model):
                 logging.info('Created user "{0}" in the DB'.format(self.username))
 
             # user already exists in database, set their admin status based on group membership (if enabled)
-            if LDAP_GROUP_SECURITY:
+            if LDAP_GROUP_SECURITY_ENABLED:
                 self.set_admin(isadmin)
             self.update_profile()
             return True
@@ -951,7 +943,7 @@ class Domain(db.Model):
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
         domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
         domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
-        system_auto_ptr = strtobool(Setting().get('auto_ptr'))
+        system_auto_ptr = Setting().get('auto_ptr')
         self.name = domain_name
         domain_id = self.get_id_by_name(domain_reverse_name)
         if None == domain_id and \
@@ -1504,8 +1496,8 @@ class Record(object):
                     })
 
         postdata_for_new = {"rrsets": final_records}
-        logging.info(postdata_for_new)
-        logging.info(postdata_for_delete)
+        logging.debug(postdata_for_new)
+        logging.debug(postdata_for_delete)
         logging.info(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)))
         try:
             headers = {}
@@ -1523,7 +1515,8 @@ class Record(object):
                 logging.info('Record was applied successfully.')
                 return {'status': 'ok', 'msg': 'Record was applied successfully'}
         except Exception as e:
-            logging.error("Cannot apply record changes to domain {0}. DETAIL: {1}".format(e, domain))
+            logging.error("Cannot apply record changes to domain {0}. Error: {1}".format(domain, e))
+            logging.debug(traceback.format_exc())
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
     def auto_ptr(self, domain, new_records, deleted_records):
@@ -1534,7 +1527,7 @@ class Record(object):
         domain_auto_ptr = DomainSetting.query.filter(DomainSetting.domain == domain_obj).filter(DomainSetting.setting == 'auto_ptr').first()
         domain_auto_ptr = strtobool(domain_auto_ptr.value) if domain_auto_ptr else False
 
-        system_auto_ptr = strtobool(Setting().get('auto_ptr'))
+        system_auto_ptr = Setting().get('auto_ptr')
 
         if system_auto_ptr or domain_auto_ptr:
             try:
@@ -1785,6 +1778,7 @@ class Setting(db.Model):
         'default_domain_table_size': 10,
         'auto_ptr': False,
         'allow_quick_edit': True,
+        'site_name': 'PowerDNS-Admin',
         'pdns_api_url': '',
         'pdns_api_key': '',
         'pdns_version': '4.1.1',
@@ -1793,6 +1787,7 @@ class Setting(db.Model):
         'ldap_enabled': False,
         'ldap_type': 'ldap',
         'ldap_uri': '',
+        'ldap_base_dn': '',
         'ldap_admin_username': '',
         'ldap_admin_password': '',
         'ldap_filter_basic': '',

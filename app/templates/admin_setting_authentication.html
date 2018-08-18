@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set active_page = "admin_settings" %}
 {% block title %}
-<title>DNS Control Panel - Authentication Settings</title>
+<title>Authentication Settings - {{ SITE_NAME }}</title>
 {% endblock %} {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -80,12 +80,16 @@
                                                     <input type="text" class="form-control" name="ldap_uri" id="ldap_uri" placeholder="e.g. ldaps://your-ldap-server:636" value="{{ SETTING.get('ldap_uri') }}">
                                                 </div>
                                                 <div class="form-group">
+                                                    <label for="ldap_base_dn">LDAP Base DN</label>
+                                                    <input type="text" class="form-control" name="ldap_base_dn" id="ldap_base_dn" placeholder="e.g. dc=mydomain,dc=com" value="{{ SETTING.get('ldap_base_dn') }}">
+                                                </div>
+                                                <div class="form-group">
                                                     <label for="ldap_admin_username">LDAP admin username</label>
                                                     <input type="text" class="form-control" name="ldap_admin_username" id="ldap_admin_username" placeholder="e.g. cn=admin,dc=mydomain,dc=com" value="{{ SETTING.get('ldap_admin_username') }}">
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="ldap_admin_password">LDAP admin password</label>
-                                                    <input type="passowrd" class="form-control" name="ldap_admin_password" id="ldap_admin_password" placeholder="LDAP Admin password" value="{{ SETTING.get('ldap_admin_password') }}">
+                                                    <input type="password" class="form-control" name="ldap_admin_password" id="ldap_admin_password" placeholder="LDAP Admin password" value="{{ SETTING.get('ldap_admin_password') }}">
                                                 </div>
                                             </fieldset>
                                             <fieldset>
