@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% set active_page = "admin_settings" %}
+{% block title %}
+<title>DNS Control Panel - PDNS Settings</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Settings <small>PowerDNS-Admin settings</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Setting</a></li>
+        <li class="active">PDNS</li>
+    </ol>
+</section>
+{% endblock %}
+{% block content %}
+<section class="content">
+<div class="row">
+    <div class="col-md-4">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">PDNS Settings</h3>
+            </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+            <form role="form" method="post" action="">
+                <input type="hidden" name="create" value="{{ create }}">
+                <div class="box-body">
+                    {% if error %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                            {{ error }}
+                         </div>
+                        <span class="help-block">{{ error }}</span>
+                    {% endif %}
+                    <div class="form-group has-feedback">
+                        <label class="control-label" for="pdns_api_url">PDNS API URL</label>
+                        <input type="text" class="form-control" placeholder="PowerDNS API url" name="pdns_api_url" value="{{ pdns_api_url }}">
+                        <span class="form-control-feedback"></span>
+                    </div>
+                    <div class="form-group has-feedback">
+                        <label class="control-label" for="pdns_api_key">PDNS API KEY</label>
+                        <input type="text" class="form-control" placeholder="PowerDNS API key" name="pdns_api_key" value="{{ pdns_api_key }}">
+                        <span class="form-control-feedback"></span>
+                    </div>
+                    <div class="form-group has-feedback">
+                        <label class="control-label" for="pdns_version">PDNS VERSION</label>
+                        <input type="text" class="form-control" placeholder="PowerDNS version" name="pdns_version" value="{{ pdns_version }}">
+                        <span class="form-control-feedback"></span>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <button type="submit" class="btn btn-flat btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Help</h3>
+            </div>
+            <div class="box-body">
+                <p>Fill in all the fields to the in the form to the left.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+{% endblock %}

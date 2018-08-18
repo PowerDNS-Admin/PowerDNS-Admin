@@ -1774,18 +1774,47 @@ class Setting(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(64))
     value = db.Column(db.String(256))
+    view = db.Column(db.String(64))
 
-    # default settings (serves as list of known settings too):
-    # Note: booleans must be strings because of the way they are stored and used
     defaults = {
-        'maintenance': 'False',
-        'fullscreen_layout': 'True',
-        'record_helper': 'True',
-        'login_ldap_first': 'True',
+        'maintenance': False,
+        'fullscreen_layout': True,
+        'record_helper': True,
+        'login_ldap_first': True,
         'default_record_table_size': 15,
         'default_domain_table_size': 10,
-        'auto_ptr': 'False',
-        'allow_quick_edit': 'True'
+        'auto_ptr': False,
+        'allow_quick_edit': True,
+        'pdns_api_url': '',
+        'pdns_api_key': '',
+        'pdns_version': '4.1.1',
+        'local_db_enabled': True,
+        'signup_enabled': True,
+        'ldap_enabled': False,
+        'ldap_type': 'ldap',
+        'ldap_uri': '',
+        'ldap_admin_username': '',
+        'ldap_admin_password': '',
+        'ldap_filter_basic': '',
+        'ldap_filter_username': '',
+        'ldap_sg_enabled': False,
+        'ldap_admin_group': False,
+        'ldap_user_group': False,
+        'github_oauth_enabled': False,
+        'github_oauth_key': '',
+        'github_oauth_secret': '',
+        'github_oauth_scope': 'email',
+        'github_oauth_api_url': 'https://api.github.com/user',
+        'github_oauth_token_url': 'https://github.com/login/oauth/access_token',
+        'github_oauth_authorize_url': 'https://github.com/login/oauth/authorize',
+        'google_oauth_enabled': False,
+        'google_oauth_client_id':'',
+        'google_oauth_client_secret':'',
+        'google_redirect_uri': '/user/authorized',
+        'google_token_url': 'https://accounts.google.com/o/oauth2/token',
+        'google_token_params': {'scope': 'email profile'},
+        'google_authorize_url':'https://accounts.google.com/o/oauth2/auth',
+        'google_base_url':'https://www.googleapis.com/oauth2/v1/',
     }
 
     def __init__(self, id=None, name=None, value=None):
@@ -1804,7 +1833,7 @@ class Setting(db.Model):
 
         if maintenance is None:
             value = self.defaults['maintenance']
-            maintenance = Setting(name='maintenance', value=value)
+            maintenance = Setting(name='maintenance', value=str(value))
             db.session.add(maintenance)
 
         mode = str(mode)
@@ -1825,7 +1854,7 @@ class Setting(db.Model):
 
         if current_setting is None:
             value = self.defaults[setting]
-            current_setting = Setting(name=setting, value=value)
+            current_setting = Setting(name=setting, value=str(value))
             db.session.add(current_setting)
 
         try:
@@ -1864,11 +1893,19 @@ class Setting(db.Model):
         if setting in self.defaults:
             result = self.query.filter(Setting.name == setting).first()
             if result is not None:
-                return result.value
+                return strtobool(result.value) if result.value in ['True', 'False'] else result.value
             else:
                 return self.defaults[setting]
         else:
             logging.error('Unknown setting queried: {0}'.format(setting))
+
+    def get_view(self, view):
+        r = {}
+        settings = Setting.query.filter(Setting.view == view).all()
+        for setting in settings:
+            d = setting.__dict__
+            r[d['name']] = d['value']
+        return r
 
 
 class DomainTemplate(db.Model):

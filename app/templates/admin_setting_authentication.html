@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% set active_page = "admin_settings" %}
+{% block title %}
+<title>DNS Control Panel - Authentication Settings</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Settings <small>PowerDNS-Admin settings</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Setting</a></li>
+        <li class="active">Authentication</li>
+    </ol>
+</section>
+{% endblock %}
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Authentication Settings</h3>
+                </div>
+                <div class="box-body">
+                    <!-- Custom Tabs -->
+                    <div class="nav-tabs-custom" id="tabs">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tabs-general" data-toggle="tab">General</a></li>
+                            <li class="active"><a href="#tabs-ldap" data-toggle="tab">LDAP</a></li>
+                            <li><a href="#tabs-google" data-toggle="tab">Google OAuth</a></li>
+                            <li><a href="#tabs-github" data-toggle="tab">Github OAuth</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tabs-general">
+                                <form role="form" method="post">
+                                    <input type="hidden" value="general" name="config_tab" />
+                                    <div class="form-group">
+                                        <input type="checkbox" id="local_db_enabled" name="local_db_enabled" class="checkbox" {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
+                                        <label for="local_db_enabled">Local DB Authentication</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="checkbox" id="signup_enabled" name="signup_enabled" class="checkbox" {% if SETTING.get('signup_enabled') %}checked{% endif %}>
+                                        <label for="signup_enabled">Allow users to sign up</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="tab-pane active" id="tabs-ldap">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <form role="form" method="post">
+                                            <input type="hidden" value="ldap" name="config_tab" />
+                                            <fieldset>
+                                                <legend>GENERAL</legend>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="ldap_enabled" name="ldap_enabled" class="checkbox" {% if SETTING.get('ldap_enabled') %}checked{% endif %}>
+                                                    <label for="ldap_enabled">Enable LDAP Authentication</label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Type</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="ldap_type" id="ldap" value="ldap" {% if SETTING.get('ldap_type')=='ldap' %}checked{% endif %}> OpenLDAP
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="ldap_type" id="ad" value="ad" {% if SETTING.get('ldap_type')=='ad' %}checked{% endif %}> Active Directory
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>ADMINISTRATOR INFO</legend>
+                                                <div class="form-group">
+                                                    <label for="ldap_uri">LDAP URI</label>
+                                                    <input type="text" class="form-control" name="ldap_uri" id="ldap_uri" placeholder="e.g. ldaps://your-ldap-server:636" value="{{ SETTING.get('ldap_uri') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ldap_admin_username">LDAP admin username</label>
+                                                    <input type="text" class="form-control" name="ldap_admin_username" id="ldap_admin_username" placeholder="e.g. cn=admin,dc=mydomain,dc=com" value="{{ SETTING.get('ldap_admin_username') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ldap_admin_password">LDAP admin password</label>
+                                                    <input type="passowrd" class="form-control" name="ldap_admin_password" id="ldap_admin_password" placeholder="LDAP Admin password" value="{{ SETTING.get('ldap_admin_password') }}">
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>FILTERS</legend>
+                                                <div class="form-group">
+                                                    <label for="ldap_filter_basic">Basic filter</label>
+                                                    <input type="text" class="form-control" name="ldap_filter_basic" id="ldap_filter_basic" placeholder="e.g. (objectClass=inetorgperson)"value="{{ SETTING.get('ldap_filter_basic') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ldap_filter_username">Username field</label>
+                                                    <input type="text" class="form-control" name="ldap_filter_username" id="ldap_filter_username" placeholder="e.g. uid" value="{{ SETTING.get('ldap_filter_username') }}">
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>GROUP SECURITY</legend>
+                                                <div class="form-group">
+                                                    <label>Status</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="ldap_sg_enabled" id="ldap_sg_off" value="OFF" {% if not SETTING.get('ldap_sg_enabled') %}checked{% endif %}> OFF
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="ldap_sg_enabled" id="ldap_sg_on" value="ON" {% if SETTING.get('ldap_sg_enabled') %}checked{% endif %}> ON
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ldap_admin_group">Admin group</label>
+                                                    <input type="text" class="form-control" name="ldap_admin_group" id="ldap_admin_group" placeholder="e.g. cn=sysops,dc=mydomain,dc=com" value="{{ SETTING.get('ldap_admin_group') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ldap_user_group">User group</label>
+                                                    <input type="text" class="form-control" name="ldap_user_group" id="ldap_user_group" placeholder="e.g. cn=users,dc=mydomain,dc=com" value="{{ SETTING.get('ldap_user_group') }}">
+                                                </div>
+                                            </fieldset>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <legend>Help</legend>
+                                        <p>TBD</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tabs-google">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <form role="form" method="post">
+                                            <input type="hidden" value="google" name="config_tab" />
+                                            <fieldset>
+                                                <legend>GENERAL</legend>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="google_oauth_enabled" name="google_oauth_enabled" class="checkbox" {% if SETTING.get('google_oauth_enabled') %}checked{% endif %}>
+                                                    <label for="google_oauth_enabled">Enable Google OAuth</label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="google_oauth_client_id">Client ID</label>
+                                                    <input type="text" class="form-control" name="google_oauth_client_id" id="google_oauth_client_id" placeholder="Google OAuth client ID" value="{{ SETTING.get('google_oauth_client_id') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="google_oauth_client_secret">Client secret</label>
+                                                    <input type="text" class="form-control" name="google_oauth_client_secret" id="google_oauth_client_secret" placeholder="Google OAuth client secret" value="{{ SETTING.get('google_oauth_client_secret') }}">
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>ADVANCE</legend>
+                                                <div class="form-group">
+                                                    <label for="google_redirect_uri">Redirect URI</label>
+                                                    <input type="text" class="form-control" name="google_redirect_uri" id="google_redirect_uri" placeholder="e.g. /user/authorized" value="{{ SETTING.get('google_redirect_uri') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="google_token_url">Token URL</label>
+                                                    <input type="text" class="form-control" name="google_token_url" id="google_token_url" placeholder="e.g. https://accounts.google.com/o/oauth2/token" value="{{ SETTING.get('google_token_url') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="google_token_params">Token params</label>
+                                                    <input type="text" class="form-control" name="google_token_params" id="google_token_params" placeholder="e.g. {'scope': 'email profile'}" value="{{ SETTING.get('google_token_params') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="google_authorize_url">Authorize URL</label>
+                                                    <input type="text" class="form-control" name="google_authorize_url" id="google_authorize_url" placeholder="e.g. https://accounts.google.com/o/oauth2/auth" value="{{ SETTING.get('google_authorize_url') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="google_base_url">Base URL</label>
+                                                    <input type="text" class="form-control" name="google_base_url" id="google_base_url" placeholder="e.g. https://www.googleapis.com/oauth2/v1/" value="{{ SETTING.get('google_base_url') }}">
+                                                </div>
+                                            </fieldset>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <legend>Help</legend>
+                                        <p>TBD</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tabs-github">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <form role="form" method="post">
+                                            <input type="hidden" value="github" name="config_tab" />
+                                            <fieldset>
+                                                <legend>GENERAL</legend>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="github_oauth_enabled" name="github_oauth_enabled" class="checkbox" {% if SETTING.get('github_oauth_enabled') %}checked{% endif %}>
+                                                    <label for="github_oauth_enabled">Enable Github OAuth</label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="github_oauth_key">Client key</label>
+                                                    <input type="text" class="form-control" name="github_oauth_key" id="github_oauth_key" placeholder="Google OAuth client ID" value="{{ SETTING.get('github_oauth_key') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="github_oauth_secret">Client secret</label>
+                                                    <input type="text" class="form-control" name="github_oauth_secret" id="github_oauth_secret" placeholder="Google OAuth client secret" value="{{ SETTING.get('github_oauth_secret') }}">
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>ADVANCE</legend>
+                                                <div class="form-group">
+                                                    <label for="github_oauth_scope">Scope</label>
+                                                    <input type="text" class="form-control" name="github_oauth_scope" id="github_oauth_scope" placeholder="e.g. email" value="{{ SETTING.get('github_oauth_scope') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="github_oauth_api_url">API URL</label>
+                                                    <input type="text" class="form-control" name="github_oauth_api_url" id="github_oauth_api_url" placeholder="e.g. https://api.github.com/user" value="{{ SETTING.get('github_oauth_api_url') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="github_oauth_token_url">Token URL</label>
+                                                    <input type="text" class="form-control" name="github_oauth_token_url" id="github_oauth_token_url" placeholder="e.g. https://github.com/login/oauth/access_token" value="{{ SETTING.get('github_oauth_token_url') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="github_oauth_authorize_url">Authorize URL</label>
+                                                    <input type="text" class="form-control" name="github_oauth_authorize_url" id="github_oauth_authorize_url" placeholder="e.g. https://github.com/login/oauth/authorize" value="{{ SETTING.get('github_oauth_authorize_url') }}">
+                                                </div>
+                                            </fieldset>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <legend>Help</legend>
+                                        <p>TBD</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+<!-- TODO: add password and password confirmation comparisson check -->
+<script>
+
+    $(function() {
+        $('#tabs').tabs({
+            // add url anchor tags
+            activate: function(event, ui) {
+                window.location.hash = ui.newPanel.attr('id');
+            }
+        });
+        // re-set active tab (ui)
+        var activeTabIdx = $('#tabs').tabs('option','active');
+        $('#tabs li:eq('+activeTabIdx+')').tab('show')
+    });
+
+    // initialize pretty checkboxes
+    $('.checkbox').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    });
+</script>
+{% endblock %}

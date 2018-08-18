@@ -105,9 +105,9 @@
                 </div>
                 <div class="box-body">
                     <p><input type="checkbox" id="{{ domain.name }}" class="auto_ptr_toggle"
-                         {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %} {% if auto_ptr_setting %}disabled="True"{% endif %}>
+                         {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %} {% if SETTING.get('auto_ptr') %}disabled="True"{% endif %}>
                          &nbsp;Allow automatic reverse pointer creation on record updates?{% if
-                         auto_ptr_setting %}</br><code>Auto-ptr is enabled globally on the PDA system!</code>{% endif %}</p>
+                         SETTING.get('auto_ptr') %}</br><code>Auto-ptr is enabled globally on the PDA system!</code>{% endif %}</p>
                     
                 </div>
             </div>

@@ -55,7 +55,7 @@
                     <div class="form-group">
               <select class="form-control" name="auth_method">
                         <option value="LOCAL">LOCAL Authentication</option>
-						{% if login_ldap_first_setting %}
+						{% if SETTING.get('login_ldap_first') %}
                         <option value="LDAP" selected="selected">LDAP Authentication</option>
 						{% else %}
 						<option value="LDAP">LDAP Authentication</option>

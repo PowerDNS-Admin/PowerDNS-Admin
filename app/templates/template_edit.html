@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set active_page = "admin_domain_template" %}
 {% block title %}<title>DNS Control Panel - Edit Template</title>{% endblock %}
 
 {% block dashboard_stat %}
@@ -102,14 +103,14 @@
         "ordering" : true,
         "info" : true,
         "autoWidth" : false,
-        {% if default_record_table_size_setting in ['5','15','20'] %}
+        {% if SETTING.get('default_record_table_size') in ['5','15','20'] %}
         "lengthMenu": [ [5, 15, 20, -1],
                         [5, 15, 20, "All"]],
         {% else %}
-        "lengthMenu": [ [5, 15, 20, {{ default_record_table_size_setting }}, -1],
-                        [5, 15, 20, {{ default_record_table_size_setting }}, "All"]],
+        "lengthMenu": [ [5, 15, 20, {{ SETTING.get('default_record_table_size') }}, -1],
+                        [5, 15, 20, {{ SETTING.get('default_record_table_size') }}, "All"]],
         {% endif %}
-        "pageLength": {{ default_record_table_size_setting }},
+        "pageLength": {{ SETTING.get('default_record_table_size') }},
         "language": {
             "lengthMenu": " _MENU_ records"
         },
@@ -223,7 +224,7 @@
             nNew = false;
         });
 
-    {% if record_helper_setting %}
+    {% if SETTING.get('record_helper') %}
     //handle wacky record types
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();

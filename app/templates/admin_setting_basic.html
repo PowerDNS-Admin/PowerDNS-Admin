@@ -1,5 +1,7 @@
-{% extends "base.html" %} {% block title %}
-<title>DNS Control Panel - Settings</title>
+{% extends "base.html" %}
+{% set active_page = "admin_settings" %}
+{% block title %}
+<title>DNS Control Panel - Basic Settings</title>
 {% endblock %} {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -7,9 +9,9 @@
         Settings <small>PowerDNS-Admin settings</small>
     </h1>
     <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard') }}"><i
-                class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Settings</li>
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Setting</a></li>
+        <li class="active">Basic</li>
     </ol>
 </section>
 {% endblock %} {% block content %}
@@ -18,7 +20,7 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
-                    <h3 class="box-title">Settings Management</h3>
+                    <h3 class="box-title">Basic Settings</h3>
                 </div>
                 <div class="box-body">
                     <table id="tbl_settings" class="table table-bordered table-striped">
@@ -30,21 +32,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for setting_name, setting_value in settings.items() %}
+                            {% for setting in settings %}
                             <tr class="odd ">
-                                <td>{{ setting_name }}</td>
-                                {% if setting_value == "True" or setting_value == "False" %}
-                                <td>{{ setting_value }}</td>
+                                <td>{{ setting.name }}</td>
+                                {% if setting.value == "True" or setting.value == "False" %}
+                                <td>{{ setting.value }}</td>
                                 {% else %}
-                                <td><input name="value" id="value" value="{{ setting_value }}"></td>
+                                <td><input name="value" id="value" value="{{ setting.value }}"></td>
                                 {% endif %}
                                 <td width="6%">
-                                    {% if setting_value == "True" or setting_value == "False" %}
-                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting_name }}">
+                                    {% if setting.value == "True" or setting.value == "False" %}
+                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting.name }}">
                                         Toggle&nbsp;<i class="fa fa-info"></i>
                                     </button>
                                     {% else %}
-                                    <button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting_name }}">
+                                    <button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting.name }}">
                                         Save&nbsp;<i class="fa fa-info"></i>
                                     </button>
                                     {% endif %}
@@ -76,14 +78,14 @@
     });
     $(document.body).on('click', '.setting-toggle-button', function() {
         var setting = $(this).prop('id');
-        applyChanges('', $SCRIPT_ROOT + '/admin/setting/' + setting + '/toggle', false, true)
+        applyChanges('', $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
     });
     
     $(document.body).on('click', '.setting-save-button', function() {
         var setting = $(this).prop('id');
         var value = $(this).parents('tr').find('#value')[0].value;
         var postdata = {'value': value};
-        applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/' + setting + '/edit', false, true)
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
     });
 </script>
 {% endblock %} 

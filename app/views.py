@@ -44,52 +44,22 @@ else:
 
 
 @app.context_processor
-def inject_fullscreen_layout_setting():
-    setting_value = Setting().get('fullscreen_layout')
-    return dict(fullscreen_layout_setting=strtobool(setting_value))
-
-
-@app.context_processor
-def inject_record_helper_setting():
-    setting_value = Setting().get('record_helper')
-    return dict(record_helper_setting=strtobool(setting_value))
-
-
-@app.context_processor
-def inject_login_ldap_first_setting():
-    setting_value = Setting().get('login_ldap_first')
-    return dict(login_ldap_first_setting=strtobool(setting_value))
-
-
-@app.context_processor
-def inject_default_record_table_size_setting():
-    setting_value = Setting().get('default_record_table_size')
-    return dict(default_record_table_size_setting=setting_value)
-
-
-@app.context_processor
-def inject_default_domain_table_size_setting():
-    setting_value = Setting().get('default_domain_table_size')
-    return dict(default_domain_table_size_setting=setting_value)
-
-
-@app.context_processor
-def inject_auto_ptr_setting():
-    setting_value = Setting().get('auto_ptr')
-    return dict(auto_ptr_setting=strtobool(setting_value))
+def inject_setting():
+    setting = Setting()
+    return dict(SETTING=setting)
 
 
 # START USER AUTHENTICATION HANDLER
 @app.before_request
 def before_request():
-    # check site maintenance mode first
-    maintenance = Setting().get('maintenance')
-    if strtobool(maintenance):
-        return render_template('maintenance.html')
-
     # check if user is anonymous
     g.user = current_user
     login_manager.anonymous_user = Anonymous
+
+    # check site maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and g.user.role.name != 'Administrator':
+        return render_template('maintenance.html')
 
 
 @login_manager.user_loader
@@ -621,7 +591,7 @@ def domain(domain_name):
         # can not get any record, API server might be down
         return redirect(url_for('error', code=500))
 
-    quick_edit = strtobool(Setting().get('allow_quick_edit'))
+    quick_edit = Setting().get('allow_quick_edit')
 
     records = []
     #TODO: This should be done in the "model" instead of "view"
@@ -1374,39 +1344,19 @@ def admin_history():
         return render_template('admin_history.html', histories=histories)
 
 
-@app.route('/admin/settings', methods=['GET'])
+@app.route('/admin/setting/basic', methods=['GET'])
 @login_required
 @admin_role_required
-def admin_settings():
+def admin_setting_basic():
     if request.method == 'GET':
-        # start with a copy of the setting defaults (ignore maintenance setting)
-        settings = Setting.defaults.copy()
-        settings.pop('maintenance', None)
-
-        # update settings info with any customizations
-        for s in settings:
-            value = Setting().get(s)
-            if value is not None:
-                settings[s] = value
-
-        return render_template('admin_settings.html', settings=settings)
+        settings = Setting.query.filter(Setting.view=='basic').all()
+        return render_template('admin_setting_basic.html', settings=settings)
 
 
-@app.route('/admin/setting/<path:setting>/toggle', methods=['POST'])
+@app.route('/admin/setting/basic/<path:setting>/edit', methods=['POST'])
 @login_required
 @admin_role_required
-def admin_settings_toggle(setting):
-    result = Setting().toggle(setting)
-    if (result):
-        return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
-    else:
-        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
-
-
-@app.route('/admin/setting/<path:setting>/edit', methods=['POST'])
-@login_required
-@admin_role_required
-def admin_settings_edit(setting):
+def admin_setting_basic_edit(setting):
     jdata = request.json
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
@@ -1415,6 +1365,87 @@ def admin_settings_edit(setting):
         return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
     else:
         return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
+
+
+@app.route('/admin/setting/basic/<path:setting>/toggle', methods=['POST'])
+@login_required
+@admin_role_required
+def admin_setting_basic_toggle(setting):
+    result = Setting().toggle(setting)
+    if (result):
+        return make_response(jsonify( { 'status': 'ok', 'msg': 'Toggled setting successfully.' } ), 200)
+    else:
+        return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to toggle setting.' } ), 500)
+
+
+@app.route('/admin/setting/pdns', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_setting_pdns():
+    if request.method == 'GET':
+        pdns_api_url = Setting().get('pdns_api_url')
+        pdns_api_key = Setting().get('pdns_api_key')
+        pdns_version = Setting().get('pdns_version')
+        return render_template('admin_setting_pdns.html', pdns_api_url=pdns_api_url, pdns_api_key=pdns_api_key, pdns_version=pdns_version)
+    elif request.method == 'POST':
+        pdns_api_url = request.form.get('pdns_api_url')
+        pdns_api_key = request.form.get('pdns_api_key')
+        pdns_version = request.form.get('pdns_version')
+
+        Setting().set('pdns_api_url', pdns_api_url)
+        Setting().set('pdns_api_key', pdns_api_key)
+        Setting().set('pdns_version', pdns_version)
+
+        return render_template('admin_setting_pdns.html', pdns_api_url=pdns_api_url, pdns_api_key=pdns_api_key, pdns_version=pdns_version)
+
+
+@app.route('/admin/setting/authentication', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_setting_authentication():
+    if request.method == 'GET':
+        return render_template('admin_setting_authentication.html')
+    elif request.method == 'POST':
+        conf_type = request.form.get('config_tab')
+        if conf_type == 'general':
+            local_db_enabled = True if request.form.get('local_db_enabled') else False
+            signup_enabled = True if request.form.get('signup_enabled', ) else False
+            Setting().set('local_db_enabled', local_db_enabled)
+            Setting().set('signup_enabled', signup_enabled)
+        elif conf_type == 'ldap':
+            Setting().set('ldap_enabled', True if request.form.get('ldap_enabled') else False)
+            Setting().set('ldap_type', request.form.get('ldap_type'))
+            Setting().set('ldap_uri', request.form.get('ldap_uri'))
+            Setting().set('ldap_admin_username', request.form.get('ldap_admin_username'))
+            Setting().set('ldap_admin_password', request.form.get('ldap_admin_password'))
+            Setting().set('ldap_filter_basic', request.form.get('ldap_filter_basic'))
+            Setting().set('ldap_filter_username', request.form.get('ldap_filter_username'))
+            Setting().set('ldap_sg_enabled', True if request.form.get('ldap_sg_enabled')=='ON' else False)
+            Setting().set('ldap_admin_group', request.form.get('ldap_admin_group'))
+            Setting().set('ldap_user_group', request.form.get('ldap_user_group'))
+        elif conf_type == 'google':
+            Setting().set('google_oauth_enabled', True if request.form.get('google_oauth_enabled') else False)
+            Setting().set('google_oauth_client_id', request.form.get('google_oauth_client_id'))
+            Setting().set('google_oauth_client_secret', request.form.get('google_oauth_client_secret'))
+            Setting().set('google_redirect_uri', request.form.get('google_redirect_uri'))
+            Setting().set('google_token_url', request.form.get('google_token_url'))
+            Setting().set('google_token_params', request.form.get('google_token_params'))
+            Setting().set('google_authorize_url', request.form.get('google_authorize_url'))
+            Setting().set('google_base_url', request.form.get('google_base_url'))
+
+        elif conf_type == 'github':
+            Setting().set('github_oauth_enabled', True if request.form.get('github_oauth_enabled') else False)
+            Setting().set('github_oauth_key', request.form.get('github_oauth_key'))
+            Setting().set('github_oauth_secret', request.form.get('github_oauth_secret'))
+            Setting().set('github_oauth_scope', request.form.get('github_oauth_scope'))
+            Setting().set('github_oauth_api_url', request.form.get('github_oauth_api_url'))
+            Setting().set('github_oauth_token_url', request.form.get('github_oauth_token_url'))
+            Setting().set('github_oauth_authorize_url', request.form.get('github_oauth_authorize_url'))
+        else:
+            return abort(400)
+
+        setting = Setting().get_view('authentication')
+        return render_template('admin_setting_authentication.html', setting=setting)
 
 
 @app.route('/user/profile', methods=['GET', 'POST'])

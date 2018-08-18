@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set active_page = "new_domain" %}
 {% block title %}<title>DNS Control Panel - Add Domain</title>{% endblock %}
 
 {% block dashboard_stat %}
@@ -45,7 +46,7 @@
                             </label>
                             &nbsp;&nbsp;&nbsp;
                             <label>
-                                <input type="radio" name="radio_type"id="radio_type_master" value="master"> Master
+                                <input type="radio" name="radio_type" id="radio_type_master" value="master"> Master
                             </label>
                             &nbsp;&nbsp;&nbsp;
                             <label>

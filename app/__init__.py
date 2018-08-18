@@ -39,7 +39,7 @@ def enable_github_oauth(GITHUB_ENABLE):
         consumer_key=app.config['GITHUB_OAUTH_KEY'],
         consumer_secret=app.config['GITHUB_OAUTH_SECRET'],
         request_token_params={'scope': app.config['GITHUB_OAUTH_SCOPE']},
-        base_url=app.config['GITHUB_OAUTH_URL'],
+        base_url=app.config['GITHUB_OAUTH_URL'], # API URL
         request_token_url=None,
         access_token_method='POST',
         access_token_url=app.config['GITHUB_OAUTH_TOKEN'],

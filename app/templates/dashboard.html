@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set active_page = "dashboard" %}
 {% block title %}<title>DNS Control Panel - HOME</title>{% endblock %}
 
 {% block dashboard_stat %}
@@ -188,14 +189,14 @@
         "ajax" : "{{ url_for('dashboard_domains') }}",
         "info" : false,
         "autoWidth" : false,
-      {% if default_domain_table_size_setting in ['10','25','50','100'] %}
+      {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
       "lengthMenu": [ [10, 25, 50, 100, -1],
                       [10, 25, 50, 100, "All"]],
       {% else %}
-      "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
-                      [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
+      "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                      [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
       {% endif %}
-      "pageLength": {{ default_domain_table_size_setting }}
+      "pageLength": {{ SETTING.get('default_domain_table_size') }}
     });
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
