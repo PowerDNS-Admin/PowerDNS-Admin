@@ -1383,23 +1383,36 @@ def admin_setting_authentication():
         return render_template('admin_setting_authentication.html')
     elif request.method == 'POST':
         conf_type = request.form.get('config_tab')
+        result = None
+
         if conf_type == 'general':
             local_db_enabled = True if request.form.get('local_db_enabled') else False
             signup_enabled = True if request.form.get('signup_enabled', ) else False
-            Setting().set('local_db_enabled', local_db_enabled)
-            Setting().set('signup_enabled', signup_enabled)
+
+            if not local_db_enabled and not Setting().get('ldap_enabled'):
+                result = {'status': False, 'msg': 'Local DB and LDAP Authentication can not be disabled at the same time.'}
+            else:
+                Setting().set('local_db_enabled', local_db_enabled)
+                Setting().set('signup_enabled', signup_enabled)
+                result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'ldap':
-            Setting().set('ldap_enabled', True if request.form.get('ldap_enabled') else False)
-            Setting().set('ldap_type', request.form.get('ldap_type'))
-            Setting().set('ldap_uri', request.form.get('ldap_uri'))
-            Setting().set('ldap_base_dn', request.form.get('ldap_base_dn'))
-            Setting().set('ldap_admin_username', request.form.get('ldap_admin_username'))
-            Setting().set('ldap_admin_password', request.form.get('ldap_admin_password'))
-            Setting().set('ldap_filter_basic', request.form.get('ldap_filter_basic'))
-            Setting().set('ldap_filter_username', request.form.get('ldap_filter_username'))
-            Setting().set('ldap_sg_enabled', True if request.form.get('ldap_sg_enabled')=='ON' else False)
-            Setting().set('ldap_admin_group', request.form.get('ldap_admin_group'))
-            Setting().set('ldap_user_group', request.form.get('ldap_user_group'))
+            ldap_enabled = True if request.form.get('ldap_enabled') else False
+
+            if not ldap_enabled and not Setting().get('local_db_enabled'):
+                result = {'status': False, 'msg': 'Local DB and LDAP Authentication can not be disabled at the same time.'}
+            else:
+                Setting().set('ldap_enabled', ldap_enabled)
+                Setting().set('ldap_type', request.form.get('ldap_type'))
+                Setting().set('ldap_uri', request.form.get('ldap_uri'))
+                Setting().set('ldap_base_dn', request.form.get('ldap_base_dn'))
+                Setting().set('ldap_admin_username', request.form.get('ldap_admin_username'))
+                Setting().set('ldap_admin_password', request.form.get('ldap_admin_password'))
+                Setting().set('ldap_filter_basic', request.form.get('ldap_filter_basic'))
+                Setting().set('ldap_filter_username', request.form.get('ldap_filter_username'))
+                Setting().set('ldap_sg_enabled', True if request.form.get('ldap_sg_enabled')=='ON' else False)
+                Setting().set('ldap_admin_group', request.form.get('ldap_admin_group'))
+                Setting().set('ldap_user_group', request.form.get('ldap_user_group'))
+                result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':
             Setting().set('google_oauth_enabled', True if request.form.get('google_oauth_enabled') else False)
             Setting().set('google_oauth_client_id', request.form.get('google_oauth_client_id'))
@@ -1408,7 +1421,7 @@ def admin_setting_authentication():
             Setting().set('google_token_params', request.form.get('google_token_params'))
             Setting().set('google_authorize_url', request.form.get('google_authorize_url'))
             Setting().set('google_base_url', request.form.get('google_base_url'))
-
+            result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'github':
             Setting().set('github_oauth_enabled', True if request.form.get('github_oauth_enabled') else False)
             Setting().set('github_oauth_key', request.form.get('github_oauth_key'))
@@ -1417,11 +1430,11 @@ def admin_setting_authentication():
             Setting().set('github_oauth_api_url', request.form.get('github_oauth_api_url'))
             Setting().set('github_oauth_token_url', request.form.get('github_oauth_token_url'))
             Setting().set('github_oauth_authorize_url', request.form.get('github_oauth_authorize_url'))
+            result = {'status': True, 'msg': 'Saved successfully'}
         else:
             return abort(400)
 
-        setting = Setting().get_view('authentication')
-        return render_template('admin_setting_authentication.html', setting=setting)
+        return render_template('admin_setting_authentication.html', result=result)
 
 
 @app.route('/user/profile', methods=['GET', 'POST'])
