@@ -59,11 +59,10 @@ def update_data():
             {'id': 32, 'name': 'google_oauth_enabled', 'value': 'False', 'view': 'authentication'},
             {'id': 33, 'name': 'google_oauth_client_id', 'value': '', 'view': 'authentication'},
             {'id': 34, 'name': 'google_oauth_client_secret', 'value': '', 'view': 'authentication'},
-            {'id': 35, 'name': 'google_redirect_uri', 'value': '/user/authorized', 'view': 'authentication'},
-            {'id': 36, 'name': 'google_token_url', 'value': 'https://accounts.google.com/o/oauth2/token', 'view': 'authentication'},
-            {'id': 37, 'name': 'google_token_params', 'value': "{'scope': 'email profile'}", 'view': 'authentication'},
-            {'id': 38, 'name': 'google_authorize_url', 'value': 'https://accounts.google.com/o/oauth2/auth', 'view': 'authentication'},
-            {'id': 39, 'name': 'google_base_url', 'value': 'https://www.googleapis.com/oauth2/v1/', 'view': 'authentication'},
+            {'id': 35, 'name': 'google_token_url', 'value': 'https://accounts.google.com/o/oauth2/token', 'view': 'authentication'},
+            {'id': 36, 'name': 'google_token_params', 'value': "{'scope': 'email profile'}", 'view': 'authentication'},
+            {'id': 37, 'name': 'google_authorize_url', 'value': 'https://accounts.google.com/o/oauth2/auth', 'view': 'authentication'},
+            {'id': 38, 'name': 'google_base_url', 'value': 'https://www.googleapis.com/oauth2/v1/', 'view': 'authentication'},
         ]
     )
 

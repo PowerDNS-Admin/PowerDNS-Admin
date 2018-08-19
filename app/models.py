@@ -1805,7 +1805,6 @@ class Setting(db.Model):
         'google_oauth_enabled': False,
         'google_oauth_client_id':'',
         'google_oauth_client_secret':'',
-        'google_redirect_uri': '/user/authorized',
         'google_token_url': 'https://accounts.google.com/o/oauth2/token',
         'google_token_params': {'scope': 'email profile'},
         'google_authorize_url':'https://accounts.google.com/o/oauth2/auth',

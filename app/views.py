@@ -18,8 +18,9 @@ from werkzeug import secure_filename
 from werkzeug.security import gen_salt
 
 from .models import User, Account, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
-from app import app, login_manager, github, google
+from app import app, login_manager
 from app.lib import utils
+from app.oauth import github_oauth, google_oauth
 from app.decorators import admin_role_required, can_access_domain, can_configure_dnssec
 
 if app.config['SAML_ENABLED']:
@@ -27,6 +28,8 @@ if app.config['SAML_ENABLED']:
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 logging = logger.getLogger(__name__)
+google = google_oauth()
+github = github_oauth()
 
 # FILTERS
 app.jinja_env.filters['display_record_name'] = utils.display_record_name
@@ -147,16 +150,19 @@ def register():
 
 @app.route('/google/login')
 def google_login():
-    if not app.config.get('GOOGLE_OAUTH_ENABLE'):
+    if not Setting().get('google_oauth_enabled'):
         return abort(400)
-    return google.authorize(callback=url_for('authorized', _external=True))
+    else:
+        return google.authorize(callback=url_for('google_authorized', _external=True))
 
 
 @app.route('/github/login')
 def github_login():
-    if not app.config.get('GITHUB_OAUTH_ENABLE'):
+    if not Setting().get('github_oauth_enabled'):
         return abort(400)
-    return github.authorize(callback=url_for('authorized', _external=True))
+    else:
+        return github.authorize(callback=url_for('github_authorized', _external=True))
+
 
 @app.route('/saml/login')
 def saml_login():
@@ -166,6 +172,7 @@ def saml_login():
     auth = utils.init_saml_auth(req)
     redirect_url=OneLogin_Saml2_Utils.get_self_url(req) + url_for('saml_authorized')
     return redirect(auth.login(return_to=redirect_url))
+
 
 @app.route('/saml/metadata')
 def saml_metadata():
@@ -183,6 +190,7 @@ def saml_metadata():
     else:
         resp = make_response(errors.join(', '), 500)
     return resp
+
 
 @app.route('/saml/authorized', methods=['GET', 'POST'])
 def saml_authorized():
@@ -268,6 +276,7 @@ def saml_authorized():
     else:
         return  render_template('errors/SAML.html', errors=errors)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
@@ -302,14 +311,19 @@ def login():
         return redirect(url_for('index'))
 
     if 'github_token' in session:
-        me = github.get('user')
-        user_info = me.data
-        user = User.query.filter_by(username=user_info['name']).first()
+        me = github.get('user').data
+
+        github_username = me['login']
+        github_name = me['name']
+        github_email = me['email']
+
+        user = User.query.filter_by(username=github_username).first()
         if not user:
-            # create user
-            user = User(username=user_info['name'],
+            user = User(username=github_username,
                         plain_text_password=None,
-                        email=user_info['email'])
+                        firstname=github_name,
+                        lastname='',
+                        email=github_email)
 
             result = user.create_local_user()
             if not result['status']:
@@ -387,12 +401,14 @@ def login():
         except Exception as e:
             return render_template('register.html', error=e)
 
+
 def clear_session():
     session.pop('user_id', None)
     session.pop('github_token', None)
     session.pop('google_token', None)
     session.clear()
     logout_user()
+
 
 @app.route('/logout')
 def logout():
@@ -408,6 +424,7 @@ def logout():
                                     name_id=session['samlNameId']))
     clear_session()
     return redirect(url_for('login'))
+
 
 @app.route('/saml/sls')
 def saml_logout():
@@ -425,6 +442,7 @@ def saml_logout():
             return redirect(url_for('login'))
     else:
         return render_template('errors/SAML.html', errors=errors)
+
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -1386,7 +1404,6 @@ def admin_setting_authentication():
             Setting().set('google_oauth_enabled', True if request.form.get('google_oauth_enabled') else False)
             Setting().set('google_oauth_client_id', request.form.get('google_oauth_client_id'))
             Setting().set('google_oauth_client_secret', request.form.get('google_oauth_client_secret'))
-            Setting().set('google_redirect_uri', request.form.get('google_redirect_uri'))
             Setting().set('google_token_url', request.form.get('google_token_url'))
             Setting().set('google_token_params', request.form.get('google_token_params'))
             Setting().set('google_authorize_url', request.form.get('google_authorize_url'))
