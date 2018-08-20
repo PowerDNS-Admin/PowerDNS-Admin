@@ -31,17 +31,6 @@ if 'PRETTY_IPV6_PTR' in app.config.keys():
 else:
     PRETTY_IPV6_PTR = False
 
-PDNS_STATS_URL = app.config['PDNS_STATS_URL']
-PDNS_API_KEY = app.config['PDNS_API_KEY']
-PDNS_VERSION = app.config['PDNS_VERSION']
-API_EXTENDED_URL = utils.pdns_api_extended_uri(PDNS_VERSION)
-
-# Flag for pdns v4.x.x
-# TODO: Find another way to do this
-if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
-    NEW_SCHEMA = True
-else:
-    NEW_SCHEMA = False
 
 class Anonymous(AnonymousUserMixin):
   def __init__(self):
@@ -733,6 +722,16 @@ class Domain(db.Model):
         self.last_check = last_check
         self.dnssec = dnssec
         self.account_id = account_id
+        # PDNS configs
+        self.PDNS_STATS_URL = Setting().get('pdns_api_url')
+        self.PDNS_API_KEY = Setting().get('pdns_api_key')
+        self.PDNS_VERSION = Setting().get('pdns_version')
+        self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
+
+        if StrictVersion(self.PDNS_VERSION) >= StrictVersion('4.0.0'):
+            self.NEW_SCHEMA = True
+        else:
+            self.NEW_SCHEMA = False
 
     def __repr__(self):
         return '<Domain {0}>'.format(self.name)
@@ -751,8 +750,8 @@ class Domain(db.Model):
         Get all domains which has in PowerDNS
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
-        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers)
+        headers['X-API-Key'] = self.PDNS_API_KEY
+        jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers)
         return jdata
 
     def get_domains(self):
@@ -760,8 +759,8 @@ class Domain(db.Model):
         Get all domains which has in PowerDNS
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
-        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+        headers['X-API-Key'] = self.PDNS_API_KEY
+        jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
         return jdata
 
     def get_id_by_name(self, name):
@@ -783,9 +782,9 @@ class Domain(db.Model):
         dict_db_domain = dict((x.name,x) for x in db_domain)
 
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
@@ -866,9 +865,9 @@ class Domain(db.Model):
         Add a domain to power dns
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
-        if NEW_SCHEMA:
+        if self.NEW_SCHEMA:
             domain_name = domain_name + '.'
             domain_ns = [ns + '.' for ns in domain_ns]
 
@@ -888,7 +887,7 @@ class Domain(db.Model):
         }
 
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers, method='POST', data=post_data)
             if 'error' in jdata.keys():
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
@@ -906,7 +905,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': 'error', 'msg': 'Domain doesnt exist.'}
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
         if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
             soa_edit_api = 'DEFAULT'
@@ -921,7 +920,7 @@ class Domain(db.Model):
 
         try:
             jdata = utils.fetch_json(
-            urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers,
+            urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers,
             method='PUT', data=post_data)
             if 'error' in jdata.keys():
                 logging.error(jdata['error'])
@@ -994,9 +993,9 @@ class Domain(db.Model):
         Delete a single domain name from powerdns
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
             logging.info('Delete domain {0} successfully'.format(domain_name))
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
         except Exception as e:
@@ -1051,9 +1050,9 @@ class Domain(db.Model):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {}
-            headers['X-API-Key'] = PDNS_API_KEY
+            headers['X-API-Key'] = self.PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/axfr-retrieve'.format(domain.name)), headers=headers, method='PUT')
+                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}/axfr-retrieve'.format(domain.name)), headers=headers, method='PUT')
                 return {'status': 'ok', 'msg': 'Update from Master successfully'}
             except:
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
@@ -1067,9 +1066,9 @@ class Domain(db.Model):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {}
-            headers['X-API-Key'] = PDNS_API_KEY
+            headers['X-API-Key'] = self.PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='GET')
+                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='GET')
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain'}
                 else:
@@ -1086,13 +1085,13 @@ class Domain(db.Model):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {}
-            headers['X-API-Key'] = PDNS_API_KEY
+            headers['X-API-Key'] = self.PDNS_API_KEY
             try:
                 # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
                 post_data = {
                     "api_rectify": True
                 }
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers, method='PUT', data=post_data)
+                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers, method='PUT', data=post_data)
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'API-RECTIFY could not be enabled for this domain', 'jdata' : jdata}
 
@@ -1101,7 +1100,7 @@ class Domain(db.Model):
                     "keytype": "ksk",
                     "active": True
                 }
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='POST',data=post_data)
+                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys'.format(domain.name)), headers=headers, method='POST',data=post_data)
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'Cannot enable DNSSEC for this domain. Error: {0}'.format(jdata['error']), 'jdata' : jdata}
 
@@ -1121,10 +1120,10 @@ class Domain(db.Model):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {}
-            headers['X-API-Key'] = PDNS_API_KEY
+            headers['X-API-Key'] = self.PDNS_API_KEY
             try:
                 # Deactivate DNSSEC
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(domain.name, key_id)), headers=headers, method='DELETE')
+                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(domain.name, key_id)), headers=headers, method='DELETE')
                 if jdata != True:
                     return {'status': 'error', 'msg': 'Cannot disable DNSSEC for this domain. Error: {0}'.format(jdata['error']), 'jdata' : jdata}
 
@@ -1132,7 +1131,7 @@ class Domain(db.Model):
                 post_data = {
                     "api_rectify": False
                 }
-                jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers, method='PUT', data=post_data)
+                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain.name)), headers=headers, method='PUT', data=post_data)
                 if 'error' in jdata:
                     return {'status': 'error', 'msg': 'API-RECTIFY could not be disabled for this domain', 'jdata' : jdata}
 
@@ -1161,7 +1160,7 @@ class Domain(db.Model):
             return {'status': False, 'msg': 'Domain does not exist'}
 
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
         account_name = Account().get_name_by_id(account_id)
 
@@ -1171,7 +1170,7 @@ class Domain(db.Model):
 
         try:
             jdata = utils.fetch_json(
-            urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers,
+            urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers,
             method='PUT', data=post_data)
 
             if 'error' in jdata.keys():
@@ -1240,20 +1239,30 @@ class Record(object):
         self.status = status
         self.ttl = ttl
         self.data = data
+        # PDNS configs
+        self.PDNS_STATS_URL = Setting().get('pdns_api_url')
+        self.PDNS_API_KEY = Setting().get('pdns_api_key')
+        self.PDNS_VERSION = Setting().get('pdns_version')
+        self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
+
+        if StrictVersion(self.PDNS_VERSION) >= StrictVersion('4.0.0'):
+            self.NEW_SCHEMA = True
+        else:
+            self.NEW_SCHEMA = False
 
     def get_record_data(self, domain):
         """
         Query domain's DNS records via API
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers)
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers)
         except:
             logging.error("Cannot fetch domain's record data from remote powerdns api")
             return False
 
-        if NEW_SCHEMA:
+        if self.NEW_SCHEMA:
             rrsets = jdata['rrsets']
             for rrset in rrsets:
                 r_name = rrset['name'].rstrip('.')
@@ -1284,9 +1293,9 @@ class Record(object):
 
         # continue if the record is ready to be added
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
-        if NEW_SCHEMA:
+        if self.NEW_SCHEMA:
             data = {"rrsets": [
                         {
                             "name": self.name.rstrip('.') + '.',
@@ -1322,7 +1331,7 @@ class Record(object):
                 }
 
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
         except Exception as e:
@@ -1363,7 +1372,7 @@ class Record(object):
             r_name = domain if r['record_name'] in ['@', ''] else r['record_name'] + '.' + domain
             r_type = r['record_type']
             if PRETTY_IPV6_PTR: # only if activated
-                if NEW_SCHEMA: # only if new schema
+                if self.NEW_SCHEMA: # only if new schema
                     if r_type == 'PTR': # only ptr
                         if ':' in r['record_name']: # dirty ipv6 check
                             r_name = r['record_name']
@@ -1381,10 +1390,10 @@ class Record(object):
 
         records = []
         for r in deleted_records:
-            r_name = r['name'].rstrip('.') + '.' if NEW_SCHEMA else r['name']
+            r_name = r['name'].rstrip('.') + '.' if self.NEW_SCHEMA else r['name']
             r_type = r['type']
             if PRETTY_IPV6_PTR: # only if activated
-                if NEW_SCHEMA: # only if new schema
+                if self.NEW_SCHEMA: # only if new schema
                     if r_type == 'PTR': # only ptr
                         if ':' in r['name']: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r['name']).to_text()
@@ -1402,7 +1411,7 @@ class Record(object):
 
         records = []
         for r in new_records:
-            if NEW_SCHEMA:
+            if self.NEW_SCHEMA:
                 r_name = r['name'].rstrip('.') + '.'
                 r_type = r['type']
                 if PRETTY_IPV6_PTR: # only if activated
@@ -1445,7 +1454,7 @@ class Record(object):
         final_records = []
         records = sorted(records, key = lambda item: (item["name"], item["type"], item["changetype"]))
         for key, group in itertools.groupby(records, lambda item: (item["name"], item["type"], item["changetype"])):
-            if NEW_SCHEMA:
+            if self.NEW_SCHEMA:
                 r_name = key[0]
                 r_type = key[1]
                 r_changetype = key[2]
@@ -1498,12 +1507,12 @@ class Record(object):
         postdata_for_new = {"rrsets": final_records}
         logging.debug(postdata_for_new)
         logging.debug(postdata_for_delete)
-        logging.info(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)))
+        logging.info(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)))
         try:
             headers = {}
-            headers['X-API-Key'] = PDNS_API_KEY
-            jdata1 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_delete)
-            jdata2 = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_new)
+            headers['X-API-Key'] = self.PDNS_API_KEY
+            jdata1 = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_delete)
+            jdata2 = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_new)
 
             if 'error' in jdata2.keys():
                 logging.error('Cannot apply record changes.')
@@ -1565,7 +1574,7 @@ class Record(object):
         Delete a record from domain
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
         data = {"rrsets": [
                     {
                         "name": self.name.rstrip('.') + '.',
@@ -1577,7 +1586,7 @@ class Record(object):
                 ]
             }
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
         except:
@@ -1619,9 +1628,9 @@ class Record(object):
         Update single record
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
-        if NEW_SCHEMA:
+        if self.NEW_SCHEMA:
             data = {"rrsets": [
                         {
                             "name": self.name + '.',
@@ -1657,7 +1666,7 @@ class Record(object):
                     ]
                 }
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug("dyndns data: {0}".format(data))
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
         except Exception as e:
@@ -1666,8 +1675,8 @@ class Record(object):
 
     def update_db_serial(self, domain):
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
-        jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='GET')
+        headers['X-API-Key'] = self.PDNS_API_KEY
+        jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='GET')
         serial = jdata['serial']
 
         domain = Domain.query.filter(Domain.name==domain).first()
@@ -1688,16 +1697,21 @@ class Server(object):
     def __init__(self, server_id=None, server_config=None):
         self.server_id = server_id
         self.server_config = server_config
+        # PDNS configs
+        self.PDNS_STATS_URL = Setting().get('pdns_api_url')
+        self.PDNS_API_KEY = Setting().get('pdns_api_key')
+        self.PDNS_VERSION = Setting().get('pdns_version')
+        self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
 
     def get_config(self):
         """
         Get server config
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/{0}/config'.format(self.server_id)), headers=headers, method='GET')
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/{0}/config'.format(self.server_id)), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server configuration.")
@@ -1709,10 +1723,10 @@ class Server(object):
         Get server statistics
         """
         headers = {}
-        headers['X-API-Key'] = PDNS_API_KEY
+        headers['X-API-Key'] = self.PDNS_API_KEY
 
         try:
-            jdata = utils.fetch_json(urljoin(PDNS_STATS_URL, API_EXTENDED_URL + '/servers/{0}/statistics'.format(self.server_id)), headers=headers, method='GET')
+            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/{0}/statistics'.format(self.server_id)), headers=headers, method='GET')
             return jdata
         except:
             logging.error("Can not get server statistics.")

@@ -104,7 +104,7 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    PDNS_VERSION = '{{ pdns_version }}'
+    PDNS_VERSION = '{{ SETTING.get("pdns_version") }}'
     // superglobals
     window.records_allow_edit = {{ editable_records|tojson }};
     window.nEditing = null;

@@ -37,14 +37,6 @@ app.jinja_env.filters['display_master_name'] = utils.display_master_name
 app.jinja_env.filters['display_second_to_time'] = utils.display_time
 app.jinja_env.filters['email_to_gravatar_url'] = utils.email_to_gravatar_url
 
-# Flag for pdns v4.x.x
-# TODO: Find another way to do this
-PDNS_VERSION = app.config['PDNS_VERSION']
-if StrictVersion(PDNS_VERSION) >= StrictVersion('4.0.0'):
-    NEW_SCHEMA = True
-else:
-    NEW_SCHEMA = False
-
 
 @app.context_processor
 def inject_sitename():
@@ -447,6 +439,9 @@ def saml_logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key') or not Setting().get('pdns_version'):
+        return redirect(url_for('admin_setting_pdns'))
+
     if not app.config.get('BG_DOMAIN_UPDATES'):
         logging.debug('Update domains in foreground')
         d = Domain().update()
@@ -465,7 +460,7 @@ def dashboard():
     else:
         uptime = 0
 
-    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], pdns_version=app.config['PDNS_VERSION'], show_bg_domain_button=app.config['BG_DOMAIN_UPDATES'])
+    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], show_bg_domain_button=app.config['BG_DOMAIN_UPDATES'])
 
 
 @app.route('/dashboard-domains', methods=['GET'])
@@ -571,7 +566,7 @@ def domain(domain_name):
 
     records = []
     #TODO: This should be done in the "model" instead of "view"
-    if NEW_SCHEMA:
+    if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for jr in jrecords:
             if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
                 for subrecord in jr['records']:
@@ -591,7 +586,7 @@ def domain(domain_name):
         editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
     else:
         editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit, pdns_version=app.config['PDNS_VERSION'])
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
@@ -982,7 +977,7 @@ def create_template_from_zone():
                 if zone_info:
                     jrecords = zone_info['records']
 
-                if NEW_SCHEMA:
+                if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
                     for jr in jrecords:
                         if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
                             name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
@@ -1086,6 +1081,9 @@ def delete_template(template):
 @login_required
 @admin_role_required
 def admin():
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key') or not Setting().get('pdns_version'):
+        return redirect(url_for('admin_setting_pdns'))
+
     domains = Domain.query.all()
     users = User.query.all()
 

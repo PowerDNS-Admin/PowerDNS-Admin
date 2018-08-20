@@ -34,40 +34,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-
-## AD CONFIG
-#LDAP_TYPE = 'ad'
-#LDAP_URI = 'ldaps://your-ad-server:636'
-#LDAP_USERNAME = 'cn=dnsuser,ou=Users,dc=domain,dc=local'
-#LDAP_PASSWORD = 'dnsuser'
-#LDAP_SEARCH_BASE = 'dc=domain,dc=local'
-## You may prefer 'userPrincipalName' instead
-#LDAP_USERNAMEFIELD = 'sAMAccountName'
-## AD Group that you would like to have accesss to web app
-#LDAP_FILTER = 'memberof=cn=DNS_users,ou=Groups,dc=domain,dc=local'
-
-# Github Oauth
-GITHUB_OAUTH_ENABLE = False
-GITHUB_OAUTH_KEY = ''
-GITHUB_OAUTH_SECRET = ''
-GITHUB_OAUTH_SCOPE = 'email'
-GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
-GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
-GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
-
-
-# Google OAuth
-GOOGLE_OAUTH_ENABLE = False
-GOOGLE_OAUTH_CLIENT_ID = ' '
-GOOGLE_OAUTH_CLIENT_SECRET = ' '
-GOOGLE_REDIRECT_URI = '/user/authorized'
-GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
-GOOGLE_TOKEN_PARAMS = {
-    'scope': 'email profile'
-}
-GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
-GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
-
 # SAML Authnetication
 SAML_ENABLED = False
 SAML_DEBUG = True
@@ -140,12 +106,6 @@ SAML_LOGOUT = False
 #Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
 #for example redirect to google.com after successful saml logout
 #SAML_LOGOUT_URL = 'https://google.com'
-
-
-# POWERDNS CONFIG
-PDNS_STATS_URL = 'http://172.16.214.131:8081/'
-PDNS_API_KEY = 'you never know'
-PDNS_VERSION = '4.1.1'
 
 # RECORDS ALLOWED TO EDIT
 RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC', 'NS', 'PTR', 'SOA']
