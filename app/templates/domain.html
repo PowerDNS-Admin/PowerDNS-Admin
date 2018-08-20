@@ -267,7 +267,7 @@
             applyChanges({'domain': domain}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
     });
 
-    {% if SETTING.get('record_helper_setting') %}
+    {% if SETTING.get('record_helper') %}
     //handle wacky record types
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();

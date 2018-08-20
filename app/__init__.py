@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy as SA
 from flask_migrate import Migrate
 from flask_oauthlib.client import OAuth
+from sqlalchemy.exc import OperationalError
 
 # subclass SQLAlchemy to enable pool_pre_ping
 class SQLAlchemy(SA):
@@ -35,4 +36,9 @@ if app.config.get('SAML_ENABLED') and app.config.get('SAML_ENCRYPT'):
     if not certutil.check_certificate():
         certutil.create_self_signed_cert()
 
-from app import models, views
+from app import models
+
+try:
+    from app import views
+except OperationalError:
+    logging.error("You have not initialized the DB yet or DB migration is running...")
