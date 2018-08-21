@@ -236,7 +236,7 @@
         modal.modal('show');
     });
 
-    {% if current_user.role.name == 'Administrator' or dnssec_adm_only == false %}
+    {% if current_user.role.name == 'Administrator' or not SETTING.get('dnssec_admins_only') %}
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);

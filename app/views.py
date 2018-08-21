@@ -442,7 +442,8 @@ def dashboard():
     if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key') or not Setting().get('pdns_version'):
         return redirect(url_for('admin_setting_pdns'))
 
-    if not app.config.get('BG_DOMAIN_UPDATES'):
+    BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
+    if not BG_DOMAIN_UPDATE:
         logging.debug('Update domains in foreground')
         d = Domain().update()
     else:
@@ -460,7 +461,7 @@ def dashboard():
     else:
         uptime = 0
 
-    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, dnssec_adm_only=app.config['DNSSEC_ADMINS_ONLY'], show_bg_domain_button=app.config['BG_DOMAIN_UPDATES'])
+    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, show_bg_domain_button=BG_DOMAIN_UPDATE)
 
 
 @app.route('/dashboard-domains', methods=['GET'])
@@ -573,7 +574,7 @@ def domain(domain_name):
                     record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
                     records.append(record)
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
-            editable_records = app.config['RECORDS_ALLOW_EDIT']
+            editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
         else:
             editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)

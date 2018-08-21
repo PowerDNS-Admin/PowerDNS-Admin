@@ -9,6 +9,8 @@ import traceback
 import pyotp
 import re
 import dns.reversename
+import dns.inet
+import dns.name
 import sys
 import logging as logger
 
@@ -22,14 +24,6 @@ from app import app, db
 from app.lib import utils
 
 logging = logger.getLogger(__name__)
-
-
-if 'PRETTY_IPV6_PTR' in app.config.keys():
-    import dns.inet
-    import dns.name
-    PRETTY_IPV6_PTR = app.config['PRETTY_IPV6_PTR']
-else:
-    PRETTY_IPV6_PTR = False
 
 
 class Anonymous(AnonymousUserMixin):
@@ -1244,6 +1238,7 @@ class Record(object):
         self.PDNS_API_KEY = Setting().get('pdns_api_key')
         self.PDNS_VERSION = Setting().get('pdns_version')
         self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
+        self.PRETTY_IPV6_PTR = Setting().get('pretty_ipv6_ptr')
 
         if StrictVersion(self.PDNS_VERSION) >= StrictVersion('4.0.0'):
             self.NEW_SCHEMA = True
@@ -1266,7 +1261,7 @@ class Record(object):
             rrsets = jdata['rrsets']
             for rrset in rrsets:
                 r_name = rrset['name'].rstrip('.')
-                if PRETTY_IPV6_PTR: # only if activated
+                if self.PRETTY_IPV6_PTR: # only if activated
                     if rrset['type'] == 'PTR': # only ptr
                         if 'ip6.arpa' in r_name: # only if v6-ptr
                             r_name = dns.reversename.to_address(dns.name.from_text(r_name))
@@ -1371,7 +1366,7 @@ class Record(object):
         for r in post_records:
             r_name = domain if r['record_name'] in ['@', ''] else r['record_name'] + '.' + domain
             r_type = r['record_type']
-            if PRETTY_IPV6_PTR: # only if activated
+            if self.PRETTY_IPV6_PTR: # only if activated
                 if self.NEW_SCHEMA: # only if new schema
                     if r_type == 'PTR': # only ptr
                         if ':' in r['record_name']: # dirty ipv6 check
@@ -1392,7 +1387,7 @@ class Record(object):
         for r in deleted_records:
             r_name = r['name'].rstrip('.') + '.' if self.NEW_SCHEMA else r['name']
             r_type = r['type']
-            if PRETTY_IPV6_PTR: # only if activated
+            if self.PRETTY_IPV6_PTR: # only if activated
                 if self.NEW_SCHEMA: # only if new schema
                     if r_type == 'PTR': # only ptr
                         if ':' in r['name']: # dirty ipv6 check
@@ -1414,7 +1409,7 @@ class Record(object):
             if self.NEW_SCHEMA:
                 r_name = r['name'].rstrip('.') + '.'
                 r_type = r['type']
-                if PRETTY_IPV6_PTR: # only if activated
+                if self.PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
                         if ':' in r['name']: # dirty ipv6 check
                             r_name = r['name']
@@ -1459,7 +1454,7 @@ class Record(object):
                 r_type = key[1]
                 r_changetype = key[2]
 
-                if PRETTY_IPV6_PTR: # only if activated
+                if self.PRETTY_IPV6_PTR: # only if activated
                     if r_type == 'PTR': # only ptr
                         if ':' in r_name: # dirty ipv6 check
                             r_name = dns.reversename.from_address(r_name).to_text()
@@ -1792,6 +1787,9 @@ class Setting(db.Model):
         'default_domain_table_size': 10,
         'auto_ptr': False,
         'allow_quick_edit': True,
+        'pretty_ipv6_ptr': False,
+        'dnssec_admins_only': False,
+        'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
         'pdns_api_url': '',
         'pdns_api_key': '',
