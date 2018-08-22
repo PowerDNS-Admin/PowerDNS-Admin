@@ -40,5 +40,5 @@ from app import models
 
 try:
     from app import views
-except OperationalError:
+except:
     logging.error("You have not initialized the DB yet or DB migration is running...")

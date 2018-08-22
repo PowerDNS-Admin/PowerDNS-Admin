@@ -1372,7 +1372,7 @@ class Record(object):
         list_deleted_records = [x for x in list_current_records if x not in list_new_records]
 
         # convert back to list of hash
-        deleted_records = [x for x in current_records if [x['name'],x['type']] in list_deleted_records and (x['type'] in app.config['RECORDS_ALLOW_EDIT'] and x['type'] != 'SOA')]
+        deleted_records = [x for x in current_records if [x['name'],x['type']] in list_deleted_records and (x['type'] in Setting().get_records_allow_to_edit() and x['type'] != 'SOA')]
 
         # return a tuple
         return deleted_records, new_records
@@ -1612,13 +1612,13 @@ class Record(object):
         """
         Check if record is allowed to edit
         """
-        return self.type in app.config['RECORDS_ALLOW_EDIT']
+        return self.type in Setting().get_records_allow_to_edit()
 
     def is_allowed_delete(self):
         """
         Check if record is allowed to removed
         """
-        return (self.type in app.config['RECORDS_ALLOW_EDIT'] and self.type != 'SOA')
+        return (self.type in Setting().get_records_allow_to_edit() and self.type != 'SOA')
 
     def exists(self, domain):
         """
