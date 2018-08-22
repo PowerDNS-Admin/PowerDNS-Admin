@@ -146,7 +146,63 @@
                                     </div>
                                     <div class="col-md-8">
                                         <legend>Help</legend>
-                                        <p>TBD</p>
+                                        <dl class="dl-horizontal">
+                                            <dt>Enable LDAP Authentication</dt>
+                                            <dd>Turn on / off the LDAP authentication.</dd>
+                                            <dt>Type</dt>
+                                            <dd>Select your current directory service type.
+                                                <ul>
+                                                    <li>
+                                                        OpenLDAP - Open source implementation of the Lightweight Directory Access Protocol.
+                                                    </li>
+                                                    <li>
+                                                        Active Directory - Active Directory is a directory service that Microsoft developed for the Windows domain networks.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>ADMINISTRATOR INFO</dt>
+                                            <dd>Your LDAP connection string and admin credential used by PDA to query user information.
+                                                <ul>
+                                                    <li>
+                                                        LDAP URI - The fully qualified domain names of your directory servers. (e.g. ldap://127.0.0.1:389)
+                                                    </li>
+                                                    <li>
+                                                        LDAP Base DN - The point from where a PDA will search for users.
+                                                    </li>
+                                                    <li>
+                                                        LDAP admin username - Your LDAP administrator user which has permission to query information in the Base DN above.
+                                                    </li>
+                                                    <li>
+                                                        LDAP admin password - The password of LDAP administrator user.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>FILTERS</dt>
+                                            <dd>Define how you want to filter your user in LDAP query.
+                                                <ul>
+                                                    <li>
+                                                        Basic filter - The filter that will be applied to all LDAP query by PDA. (e.g. <i>(objectClass=inetorgperson)</i> for LDAP and <i>(objectClass=organizationalPerson)</i> for Active Directory)
+                                                    </li>
+                                                    <li>
+                                                        Username field - The field PDA will look for user's username. (e.g. <i>uid</i> for LDAP and <i>userPrincipalName</i> for Active Directory)
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>GROUP SECURITY</dt>
+                                            <dd>User can be assigned to PDA's User or Admin group by matching following LDAP Group.
+                                                <ul>
+                                                    <li>
+                                                        Status - Turn on / off group security feature.
+                                                    </li>
+                                                    <li>
+                                                        Admin group - Your LDAP admin group.
+                                                    </li>
+                                                    <li>
+                                                        User group - Your LDAP user group.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                        </dl>
                                     </div>
                                 </div>
                             </div>
@@ -202,7 +258,8 @@
                                     </div>
                                     <div class="col-md-8">
                                         <legend>Help</legend>
-                                        <p>TBD</p>
+                                        <p>Fill in all the fields in the left form.</p>
+                                        <p>Make sure you add PDA redirection URI (e.g http://localhost:9191/google/authorized) to your Google App Credentials Restriction.</p>
                                     </div>
                                 </div>
                             </div>
@@ -258,7 +315,7 @@
                                     </div>
                                     <div class="col-md-8">
                                         <legend>Help</legend>
-                                        <p>TBD</p>
+                                        <p>Fill in all the fields in the left form.</p>
                                     </div>
                                 </div>
 
