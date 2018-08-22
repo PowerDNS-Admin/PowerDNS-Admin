@@ -188,13 +188,12 @@ class User(db.Model):
             LDAP_USER_GROUP = Setting().get('ldap_user_group')
             LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
-            if LDAP_TYPE == 'ldap':
-                searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_BASIC)
-                logging.debug('Ldap searchFilter "{0}"'.format(searchFilter))
-            elif LDAP_TYPE == 'ad':
-                searchFilter = "(&(objectcategory=person)({0}={1}){2})".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_BASIC)
+            searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_BASIC)
+            logging.debug('Ldap searchFilter {0}'.format(searchFilter))
 
             ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
+            logging.debug('Ldap search result: {0}'.format(ldap_result))
+
             if not ldap_result:
                 logging.warning('LDAP User "{0}" does not exist. Authentication request from {1}'.format(self.username, src_ip))
                 return False
@@ -205,13 +204,29 @@ class User(db.Model):
                     # user can be assigned to ADMIN or USER role.
                     if LDAP_GROUP_SECURITY_ENABLED:
                         try:
-                            if (self.ldap_search(searchFilter, LDAP_ADMIN_GROUP)):
-                                isadmin = True
-                                logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP))
-                            elif (self.ldap_search(searchFilter, LDAP_USER_GROUP)):
-                                logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username, LDAP_USER_GROUP))
+                            if LDAP_TYPE == 'ldap':
+                                if (self.ldap_search(searchFilter, LDAP_ADMIN_GROUP)):
+                                    isadmin = True
+                                    logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP))
+                                elif (self.ldap_search(searchFilter, LDAP_USER_GROUP)):
+                                    logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username, LDAP_USER_GROUP))
+                                else:
+                                    logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_USER_GROUP))
+                                    return False
+                            elif LDAP_TYPE == 'ad':
+                                user_ldap_groups = [g.decode("utf-8") for g in ldap_result[0][0][1]['memberOf']]
+                                logging.debug('user_ldap_groups: {0}'.format(user_ldap_groups))
+
+                                if (LDAP_ADMIN_GROUP in user_ldap_groups):
+                                    isadmin = True
+                                    logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP))
+                                elif (LDAP_USER_GROUP in user_ldap_groups):
+                                    logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username, LDAP_USER_GROUP))
+                                else:
+                                    logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_USER_GROUP))
+                                    return False
                             else:
-                                logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_USER_GROUP))
+                                logging.error('Invalid LDAP type')
                                 return False
                         except Exception as e:
                             logging.error('LDAP group lookup for user "{0}" has failed. Authentication request from {1}'.format(self.username, src_ip))
@@ -234,9 +249,13 @@ class User(db.Model):
                 self.lastname = ''
                 try:
                     # try to get user's firstname, lastname and email address from LDAP attributes
-                    self.firstname = ldap_result[0][0][1]['givenName'][0].decode("utf-8")
-                    self.lastname = ldap_result[0][0][1]['sn'][0].decode("utf-8")
-                    self.email = ldap_result[0][0][1]['mail'][0].decode("utf-8")
+                    if LDAP_TYPE == 'ldap':
+                        self.firstname = ldap_result[0][0][1]['givenName'][0].decode("utf-8")
+                        self.lastname = ldap_result[0][0][1]['sn'][0].decode("utf-8")
+                        self.email = ldap_result[0][0][1]['mail'][0].decode("utf-8")
+                    elif LDAP_TYPE == 'ad':
+                        self.firstname = ldap_result[0][0][1]['name'][0].decode("utf-8")
+                        self.email = ldap_result[0][0][1]['userPrincipalName'][0].decode("utf-8")
                 except Exception as e:
                     logging.warning("Reading ldap data threw an exception {0}".format(e))
                     logging.debug(traceback.format_exc())
