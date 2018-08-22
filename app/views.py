@@ -8,6 +8,7 @@ from distutils.util import strtobool
 from distutils.version import StrictVersion
 from functools import wraps
 from io import BytesIO
+from ast import literal_eval
 
 import jinja2
 import qrcode as qrc
@@ -564,29 +565,31 @@ def domain(domain_name):
         return redirect(url_for('error', code=500))
 
     quick_edit = Setting().get('allow_quick_edit')
-
+    records_allow_to_edit = Setting().get_records_allow_to_edit()
+    forward_records_allow_to_edit = Setting().get_forward_records_allow_to_edit()
+    reverse_records_allow_to_edit = Setting().get_reverse_records_allow_to_edit()
     records = []
-    #TODO: This should be done in the "model" instead of "view"
+
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for jr in jrecords:
-            if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+            if jr['type'] in Setting().get_records_allow_to_edit():
                 for subrecord in jr['records']:
                     record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
                     records.append(record)
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
-            editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
+            editable_records = forward_records_allow_to_edit
         else:
-            editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
+            editable_records = reverse_records_allow_to_edit
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
     else:
         for jr in jrecords:
-            if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+            if jr['type'] in Setting().get_records_allow_to_edit():
                 record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                 records.append(record)
     if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
-        editable_records = app.config['FORWARD_RECORDS_ALLOW_EDIT']
+        editable_records = forward_records_allow_to_edit
     else:
-        editable_records = app.config['REVERSE_RECORDS_ALLOW_EDIT']
+        editable_records = reverse_records_allow_to_edit
     return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
 
 
@@ -980,14 +983,14 @@ def create_template_from_zone():
 
                 if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
                     for jr in jrecords:
-                        if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                        if jr['type'] in Setting().get_records_allow_to_edit():
                             name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
                             for subrecord in jr['records']:
                                 record = DomainTemplateRecord(name=name, type=jr['type'], status=True if subrecord['disabled'] else False, ttl=jr['ttl'], data=subrecord['content'])
                                 records.append(record)
                 else:
                     for jr in jrecords:
-                        if jr['type'] in app.config['RECORDS_ALLOW_EDIT']:
+                        if jr['type'] in Setting().get_records_allow_to_edit():
                             name = '@' if jr['name'] == domain_name else re.sub('\.{}$'.format(domain_name), '', jr['name'])
                             record = DomainTemplateRecord(name=name, type=jr['type'], status=True if jr['disabled'] else False, ttl=jr['ttl'], data=jr['content'])
                             records.append(record)
@@ -1013,14 +1016,15 @@ def create_template_from_zone():
 def edit_template(template):
     try:
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
+        records_allow_to_edit = Setting().get_records_allow_to_edit()
         if t is not None:
             records = []
             for jr in t.records:
-                if jr.type in app.config['RECORDS_ALLOW_EDIT']:
+                if jr.type in records_allow_to_edit:
                         record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
                         records.append(record)
 
-            return render_template('template_edit.html', template=t.name, records=records, editable_records=app.config['RECORDS_ALLOW_EDIT'])
+            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit)
     except:
         logging.error(traceback.print_exc())
         return redirect(url_for('error', code=500))
@@ -1372,6 +1376,27 @@ def admin_setting_pdns():
         Setting().set('pdns_version', pdns_version)
 
         return render_template('admin_setting_pdns.html', pdns_api_url=pdns_api_url, pdns_api_key=pdns_api_key, pdns_version=pdns_version)
+
+
+@app.route('/admin/setting/dns-records', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def admin_setting_records():
+    if request.method == 'GET':
+        f_records = literal_eval(Setting().get('forward_records_allow_edit'))
+        r_records = literal_eval(Setting().get('reverse_records_allow_edit'))
+        return render_template('admin_setting_records.html', f_records=f_records, r_records=r_records)
+    elif request.method == 'POST':
+        fr = {}
+        rr = {}
+        records = Setting().defaults['forward_records_allow_edit']
+        for r in records:
+            fr[r] = True if request.form.get('fr_{0}'.format(r.lower())) else False
+            rr[r] = True if request.form.get('rr_{0}'.format(r.lower())) else False
+
+        Setting().set('forward_records_allow_edit', str(fr))
+        Setting().set('reverse_records_allow_edit', str(rr))
+        return redirect(url_for('admin_setting_records'))
 
 
 @app.route('/admin/setting/authentication', methods=['GET', 'POST'])

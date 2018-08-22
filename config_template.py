@@ -11,28 +11,25 @@ PORT = 9191
 TIMEOUT = 10
 
 # LOG CONFIG
+#  	- For docker, LOG_FILE=''
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
-# For Docker, leave empty string
-#LOG_FILE = ''
 
-# Upload
+# UPLOAD DIRECTORY
 UPLOAD_DIR = os.path.join(basedir, 'upload')
 
 # DATABASE CONFIG
-#You'll need MySQL-python
-SQLA_DB_USER = 'powerdnsadmin'
-SQLA_DB_PASSWORD = 'powerdnsadminpassword'
-SQLA_DB_HOST = 'mysqlhostorip'
-SQLA_DB_NAME = 'powerdnsadmin'
-
-#MySQL
-#SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
-#    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
-#SQLite
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
-SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
+SQLA_DB_USER = 'pda'
+SQLA_DB_PASSWORD = 'changeme'
+SQLA_DB_HOST = '127.0.0.1'
+SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
+
+# DATBASE - MySQL
+SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
+
+# DATABSE - SQLite
+#SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
 # SAML Authnetication
 SAML_ENABLED = False
@@ -106,17 +103,3 @@ SAML_LOGOUT = False
 #Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
 #for example redirect to google.com after successful saml logout
 #SAML_LOGOUT_URL = 'https://google.com'
-
-# RECORDS ALLOWED TO EDIT
-RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC', 'NS', 'PTR', 'SOA']
-FORWARD_RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC' 'NS']
-REVERSE_RECORDS_ALLOW_EDIT = ['SOA', 'TXT', 'LOC', 'NS', 'PTR']
-
-# ALLOW DNSSEC CHANGES FOR ADMINS ONLY
-DNSSEC_ADMINS_ONLY = False
-
-# EXPERIMENTAL FEATURES
-PRETTY_IPV6_PTR = False
-
-# Domain updates in background, for big installations
-BG_DOMAIN_UPDATES = False

@@ -14,6 +14,7 @@ import dns.name
 import sys
 import logging as logger
 
+from ast import literal_eval
 from datetime import datetime
 from urllib.parse import urljoin
 from distutils.util import strtobool
@@ -1775,7 +1776,7 @@ class History(db.Model):
 class Setting(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(64))
-    value = db.Column(db.String(256))
+    value = db.Column(db.Text())
     view = db.Column(db.String(64))
 
     defaults = {
@@ -1821,6 +1822,8 @@ class Setting(db.Model):
         'google_token_params': {'scope': 'email profile'},
         'google_authorize_url':'https://accounts.google.com/o/oauth2/auth',
         'google_base_url':'https://www.googleapis.com/oauth2/v1/',
+        'forward_records_allow_edit': {'A': True, 'AAAA': True, 'AFSDB': False, 'ALIAS': False, 'CAA': True, 'CERT': False, 'CDNSKEY': False, 'CDS': False, 'CNAME': True, 'DNSKEY': False, 'DNAME': False, 'DS': False, 'HINFO': False, 'KEY': False, 'LOC': True, 'MX': True, 'NAPTR': False, 'NS': True, 'NSEC': False, 'NSEC3': False, 'NSEC3PARAM': False, 'OPENPGPKEY': False, 'PTR': True, 'RP': False, 'RRSIG': False, 'SOA': False, 'SPF': True, 'SSHFP': False, 'SRV': True, 'TKEY': False, 'TSIG': False, 'TLSA': False, 'SMIMEA': False, 'TXT': True, 'URI': False},
+        'reverse_records_allow_edit': {'A': False, 'AAAA': False, 'AFSDB': False, 'ALIAS': False, 'CAA': False, 'CERT': False, 'CDNSKEY': False, 'CDS': False, 'CNAME': False, 'DNSKEY': False, 'DNAME': False, 'DS': False, 'HINFO': False, 'KEY': False, 'LOC': True, 'MX': False, 'NAPTR': False, 'NS': True, 'NSEC': False, 'NSEC3': False, 'NSEC3PARAM': False, 'OPENPGPKEY': False, 'PTR': True, 'RP': False, 'RRSIG': False, 'SOA': False, 'SPF': False, 'SSHFP': False, 'SRV': False, 'TKEY': False, 'TSIG': False, 'TLSA': False, 'SMIMEA': False, 'TXT': True, 'URI': False},
     }
 
     def __init__(self, id=None, name=None, value=None):
@@ -1904,6 +1907,17 @@ class Setting(db.Model):
                 return self.defaults[setting]
         else:
             logging.error('Unknown setting queried: {0}'.format(setting))
+
+    def get_records_allow_to_edit(self):
+        return list(set(self.get_forward_records_allow_to_edit() + self.get_reverse_records_allow_to_edit()))
+
+    def get_forward_records_allow_to_edit(self):
+        records = literal_eval(self.get('forward_records_allow_edit'))
+        return [r for r in records if records[r]]
+
+    def get_reverse_records_allow_to_edit(self):
+        records = literal_eval(self.get('reverse_records_allow_edit'))
+        return [r for r in records if records[r]]
 
     def get_view(self, view):
         r = {}
