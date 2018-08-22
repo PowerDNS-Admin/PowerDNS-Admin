@@ -263,7 +263,7 @@ def saml_authorized():
                 history.add()
         user.plain_text_password = None
         user.update_profile()
-        session['external_auth'] = True
+        session['authentication_type'] = 'SAML'
         login_user(user, remember=False)
         return redirect(url_for('index'))
     else:
@@ -300,7 +300,7 @@ def login():
 
         session['user_id'] = user.id
         login_user(user, remember = False)
-        session['external_auth'] = True
+        session['authentication_type'] = 'OAuth'
         return redirect(url_for('index'))
 
     if 'github_token' in session:
@@ -324,7 +324,7 @@ def login():
                 return redirect(url_for('login'))
 
         session['user_id'] = user.id
-        session['external_auth'] = True
+        session['authentication_type'] = 'OAuth'
         login_user(user, remember = False)
         return redirect(url_for('index'))
 
@@ -343,8 +343,7 @@ def login():
     email = request.form.get('email')
     rpassword = request.form.get('rpassword')
 
-    if auth_method != 'LOCAL':
-        session['external_auth'] = True
+    session['authentication_type'] = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
 
     if None in [firstname, lastname, email]:
         #login case
@@ -399,6 +398,7 @@ def clear_session():
     session.pop('user_id', None)
     session.pop('github_token', None)
     session.pop('google_token', None)
+    session.pop('authentication_type', None)
     session.clear()
     logout_user()
 
@@ -411,9 +411,9 @@ def logout():
         if app.config.get('SAML_LOGOUT_URL'):
             return redirect(auth.logout(name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
                                         return_to = app.config.get('SAML_LOGOUT_URL'),
-                            session_index = session['samlSessionIndex'], name_id=session['samlNameId']))
+                                        session_index = session['samlSessionIndex'], name_id=session['samlNameId']))
         return redirect(auth.logout(name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                        session_index = session['samlSessionIndex'],
+                                    session_index = session['samlSessionIndex'],
                                     name_id=session['samlNameId']))
     clear_session()
     return redirect(url_for('login'))
@@ -1464,45 +1464,50 @@ def admin_setting_authentication():
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile():
-    external_account = False
-    if 'external_auth' in session:
-        external_account = session['external_auth']
-    if request.method == 'GET' or external_account:
-        return render_template('user_profile.html', external_account=external_account)
+    if request.method == 'GET':
+        return render_template('user_profile.html')
     if request.method == 'POST':
-        # get new profile info
-        firstname = request.form['firstname'] if 'firstname' in request.form else ''
-        lastname = request.form['lastname'] if 'lastname' in request.form else ''
-        email = request.form['email'] if 'email' in request.form else ''
-        new_password = request.form['password'] if 'password' in request.form else ''
+        if session['authentication_type'] == 'LOCAL':
+            firstname = request.form['firstname'] if 'firstname' in request.form else ''
+            lastname = request.form['lastname'] if 'lastname' in request.form else ''
+            email = request.form['email'] if 'email' in request.form else ''
+            new_password = request.form['password'] if 'password' in request.form else ''
+        else:
+            firstname = lastname = email = new_password = ''
+            logging.warning('Authenticated externally. User {0} information will not allowed to update the profile'.format(current_user.username))
 
-        # json data
         if request.data:
             jdata = request.json
             data = jdata['data']
             if jdata['action'] == 'enable_otp':
-                enable_otp = data['enable_otp']
-                user = User(username=current_user.username)
-                user.update_profile(enable_otp=enable_otp)
-                return make_response(jsonify( { 'status': 'ok', 'msg': 'Change OTP Authentication successfully. Status: {0}'.format(enable_otp) } ), 200)
+                if session['authentication_type'] in ['LOCAL', 'LDAP']:
+                    enable_otp = data['enable_otp']
+                    user = User(username=current_user.username)
+                    user.update_profile(enable_otp=enable_otp)
+                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Change OTP Authentication successfully. Status: {0}'.format(enable_otp) } ), 200)
+                else:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'User {0} is externally. You are not allowed to update the OTP'.format(current_user.username) } ), 400)
 
         # get new avatar
         save_file_name = None
         if 'file' in request.files:
-            file = request.files['file']
-            if file:
-                filename = secure_filename(file.filename)
-                file_extension = filename.rsplit('.', 1)[1]
+            if session['authentication_type'] in ['LOCAL', 'LDAP']:
+                file = request.files['file']
+                if file:
+                    filename = secure_filename(file.filename)
+                    file_extension = filename.rsplit('.', 1)[1]
 
-                if file_extension.lower() in ['jpg', 'jpeg', 'png']:
-                    save_file_name = current_user.username + '.' + file_extension
-                    file.save(os.path.join(app.config['UPLOAD_DIR'], 'avatar', save_file_name))
+                    if file_extension.lower() in ['jpg', 'jpeg', 'png']:
+                        save_file_name = current_user.username + '.' + file_extension
+                        file.save(os.path.join(app.config['UPLOAD_DIR'], 'avatar', save_file_name))
+            else:
+                logging.error('Authenticated externally. User {0} is not allowed to update the avatar')
+                abort(400)
 
-        # update user profile
         user = User(username=current_user.username, plain_text_password=new_password, firstname=firstname, lastname=lastname, email=email, avatar=save_file_name, reload_info=False)
         user.update_profile()
 
-        return render_template('user_profile.html', external_account=external_account)
+        return render_template('user_profile.html')
 
 
 @app.route('/user/avatar/<path:filename>')

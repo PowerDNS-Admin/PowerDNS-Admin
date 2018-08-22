@@ -26,10 +26,10 @@ SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 # DATBASE - MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
+#SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
 
 # DATABSE - SQLite
-#SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
 # SAML Authnetication
 SAML_ENABLED = False

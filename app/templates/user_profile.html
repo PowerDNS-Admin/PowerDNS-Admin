@@ -19,7 +19,7 @@
         <div class="col-lg-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Edit my profile{%  if external_account %} [Disabled - Authenticated externally]{% endif %}</h3>
+                    <h3 class="box-title">Edit my profile{%  if session['authentication_type'] != 'LOCAL' %} [Disabled - Authenticated externally]{% endif %}</h3>
                 </div>
                 <div class="box-body">
                     <!-- Custom Tabs -->
@@ -29,10 +29,11 @@
                                     Info</a></li>
                             <li><a href="#tabs-avatar" data-toggle="tab">Change
                                     Avatar</a></li>
-                            {%  if not external_account %}<li><a href="#tabs-password" data-toggle="tab">Change
-                                    Password</a></li>
-                            <li><a href="#tabs-authentication" data-toggle="tab">Authentication
-                                    </a></li>
+                            {%  if session['authentication_type'] == 'LOCAL' %}
+                            <li><a href="#tabs-password" data-toggle="tab">Change Password</a></li>
+                            {% endif %}
+                            {%  if session['authentication_type'] in ['LOCAL', 'LDAP'] %}
+                            <li><a href="#tabs-authentication" data-toggle="tab">Authentication</a></li>
                             {% endif %}
                         </ul>
                         <div class="tab-content">
@@ -41,18 +42,18 @@
                                     <div class="form-group">
                                         <label for="firstname">First Name</label> <input type="text"
                                             class="form-control" name="firstname" id="firstname"
-                                            placeholder="{{ current_user.firstname }}" {%  if external_account %}disabled{% endif %}>
+                                            placeholder="{{ current_user.firstname }}" {%  if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                     </div>
                                     <div class="form-group">
                                         <label for="lastname">Last Name</label> <input type="text"
                                             class="form-control" name="lastname" id="lastname"
-                                            placeholder="{{ current_user.lastname }}" {%  if external_account %}disabled{% endif %}>
+                                            placeholder="{{ current_user.lastname }}" {%  if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                     </div>
                                     <div class="form-group">
                                         <label for="email">E-mail</label> <input type="text"
                                             class="form-control" name="email" id="email"
-                                            placeholder="{{ current_user.email }}" {%  if external_account %}disabled{% endif %}>
-                                    </div>{%  if not external_account %}
+                                            placeholder="{{ current_user.email }}" {%  if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
+                                    </div>{%  if session['authentication_type'] == 'LOCAL' %}
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-flat btn-primary">Submit</button>
                                     </div>{% endif %}
@@ -70,50 +71,50 @@
                                                 else %} <img
                                                     src="{{ current_user.email|email_to_gravatar_url(size=200) }}"
                                                     alt="" /> {% endif %}
-                                            </div>{%  if not external_account %}
+                                            </div>{%  if session['authentication_type'] == 'LOCAL' %}
                                             <div>
                                                 <label for="file">Select image</label> <input type="file"
                                                     id="file" name="file">
                                             </div>{% endif %}
-                                        </div>{%  if not external_account %}
+                                        </div>{%  if session['authentication_type'] == 'LOCAL' %}
                                         <div>
                                             <span class="label label-danger">NOTE! </span> <span>&nbsp;Only
                                                 supports <strong>.PNG, .JPG, .JPEG</strong>. The best size
                                                 to use is <strong>200x200</strong>.
                                             </span>
                                         </div>{% endif %}
-                                    </div>{%  if not external_account %}
+                                    </div>{%  if session['authentication_type'] == 'LOCAL' %}
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-flat btn-primary">Submit</button>
                                     </div>{% endif %}
                                 </form>
                             </div>
-                            {%  if not external_account %}<div class="tab-pane" id="tabs-password">
-                                {% if not current_user.password %} Your account password is
-                                managed via LDAP which isn't supported to change here. {% else
-                                %}
+                            {% if session['authentication_type'] == 'LOCAL' %}
+                                <div class="tab-pane" id="tabs-password">
+                                {% if not current_user.password %}
+                                Your account password is managed via LDAP which isn't supported to change here.
+                                {% else %}
                                 <form action="{{ user_profile }}" method="post">
                                     <div class="form-group">
                                         <label for="password">New Password</label> <input
-                                            type="password" class="form-control" name="password"
-                                            id="newpassword" {%  if external_account %}disabled{% endif %} />
+                                            type="password" class="form-control" name="password" id="newpassword"/>
                                     </div>
                                     <div class="form-group">
                                         <label for="rpassword">Re-type New Password</label> <input
-                                            type="password" class="form-control" name="rpassword"
-                                            id="rpassword" {%  if external_account %}disabled{% endif %} />
+                                            type="password" class="form-control" name="rpassword" id="rpassword"/>
                                     </div>
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-flat btn-primary" {%  if external_account %}disabled{% endif %}>Change
-                                            password</button>
+                                        <button type="submit" class="btn btn-flat btn-primary">Change Password</button>
                                     </div>
                                 </form>
                                 {% endif %}
                             </div>
+                            {% endif %}
+                            <!-- {% if session['authentication_type'] in ['LOCAL', 'LDAP'] %} -->
                             <div class="tab-pane" id="tabs-authentication">
                                 <form action="{{ user_profile }}" method="post">
                                     <div class="form-group">
-                                        <input type="checkbox" id="otp_toggle" class="otp_toggle" {% if current_user.otp_secret %}checked{% endif %} {%  if external_account %}disabled{% endif %}>
+                                        <input type="checkbox" id="otp_toggle" class="otp_toggle" {% if current_user.otp_secret %}checked{% endif %}>
                                         <label for="otp_toggle">Enable Two Factor Authentication</label>
                                         {% if current_user.otp_secret %}
                                         <div id="token_information">
@@ -125,7 +126,8 @@
                                         {% endif %}
                                     </div>
                                 </form>
-                            </div>{% endif %}
+                            </div>
+                            <!-- {% endif %} -->
                         </div>
                     </div>
                 </div>
