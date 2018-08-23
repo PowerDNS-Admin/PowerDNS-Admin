@@ -28,9 +28,10 @@ if app.config['SAML_ENABLED']:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
+google = None
+github = None
 logging = logger.getLogger(__name__)
-google = google_oauth()
-github = github_oauth()
+
 
 # FILTERS
 app.jinja_env.filters['display_record_name'] = utils.display_record_name
@@ -48,6 +49,14 @@ def inject_sitename():
 def inject_setting():
     setting = Setting()
     return dict(SETTING=setting)
+
+
+@app.before_first_request
+def register_modules():
+    global google
+    global github
+    google = google_oauth()
+    github = github_oauth()
 
 
 # START USER AUTHENTICATION HANDLER
@@ -143,7 +152,8 @@ def register():
 
 @app.route('/google/login')
 def google_login():
-    if not Setting().get('google_oauth_enabled'):
+    if not Setting().get('google_oauth_enabled') or google is None:
+        logging.error('Google OAuth is disabled or you have not yet reloaded the pda application after enabling.')
         return abort(400)
     else:
         return google.authorize(callback=url_for('google_authorized', _external=True))
@@ -151,7 +161,8 @@ def google_login():
 
 @app.route('/github/login')
 def github_login():
-    if not Setting().get('github_oauth_enabled'):
+    if not Setting().get('github_oauth_enabled') or github is None:
+        logging.error('Github OAuth is disabled or you have not yet reloaded the pda application after enabling.')
         return abort(400)
     else:
         return github.authorize(callback=url_for('github_authorized', _external=True))
@@ -1445,7 +1456,7 @@ def admin_setting_authentication():
             Setting().set('google_token_params', request.form.get('google_token_params'))
             Setting().set('google_authorize_url', request.form.get('google_authorize_url'))
             Setting().set('google_base_url', request.form.get('google_base_url'))
-            result = {'status': True, 'msg': 'Saved successfully'}
+            result = {'status': True, 'msg': 'Saved successfully. Please reload PDA to take effect.'}
         elif conf_type == 'github':
             Setting().set('github_oauth_enabled', True if request.form.get('github_oauth_enabled') else False)
             Setting().set('github_oauth_key', request.form.get('github_oauth_key'))
@@ -1454,7 +1465,7 @@ def admin_setting_authentication():
             Setting().set('github_oauth_api_url', request.form.get('github_oauth_api_url'))
             Setting().set('github_oauth_token_url', request.form.get('github_oauth_token_url'))
             Setting().set('github_oauth_authorize_url', request.form.get('github_oauth_authorize_url'))
-            result = {'status': True, 'msg': 'Saved successfully'}
+            result = {'status': True, 'msg': 'Saved successfully. Please reload PDA to take effect.'}
         else:
             return abort(400)
 

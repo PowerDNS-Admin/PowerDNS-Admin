@@ -37,8 +37,4 @@ if app.config.get('SAML_ENABLED') and app.config.get('SAML_ENCRYPT'):
         certutil.create_self_signed_cert()
 
 from app import models
-
-try:
-    from app import views
-except:
-    logging.error("You have not initialized the DB yet or DB migration is running...")
+from app import views

@@ -7,7 +7,6 @@ from app.models import Setting
 
 # TODO: 
 #   - Replace Flask-OAuthlib by authlib
-#   - Fix flask-migrate issue with calling Setting() class during downgrade / upgrade
 #   - Fix github/google enabling (Currently need to reload the flask app)
 
 def github_oauth():
