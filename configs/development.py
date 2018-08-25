@@ -24,63 +24,6 @@ SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-# AUTHENTICATION CONFIG
-BASIC_ENABLED = True
-SIGNUP_ENABLED = True
-
-
-# LDAP CONFIG
-LDAP_ENABLED = False
-LDAP_TYPE = 'ldap'
-LDAP_URI = 'ldap://docker.for.mac.localhost:389'
-LDAP_ADMIN_USERNAME = 'cn=admin,dc=mydomain,dc=com'
-LDAP_ADMIN_PASSWORD = 'password'
-LDAP_SEARCH_BASE = 'dc=mydomain,dc=com'
-
-# Additional options only if LDAP_TYPE=ldap
-LDAP_USERNAMEFIELD = 'uid'
-LDAP_FILTER = '(objectClass=inetorgperson)'
-
-# enable LDAP_GROUP_SECURITY to allow Admin and User roles based on LDAP groups
-LDAP_GROUP_SECURITY = False # True or False
-LDAP_ADMIN_GROUP = 'cn=sysops,dc=mydomain,dc=com'
-LDAP_USER_GROUP = 'cn=user,dc=mydomain,dc=com'
-
-## AD CONFIG
-#LDAP_TYPE = 'ad'
-#LDAP_URI = 'ldaps://your-ad-server:636'
-#LDAP_USERNAME = 'cn=dnsuser,ou=Users,dc=domain,dc=local'
-#LDAP_PASSWORD = 'dnsuser'
-#LDAP_SEARCH_BASE = 'dc=domain,dc=local'
-## You may prefer 'userPrincipalName' instead
-#LDAP_USERNAMEFIELD = 'sAMAccountName'
-## AD Group that you would like to have accesss to web app
-#LDAP_FILTER = 'memberof=cn=DNS_users,ou=Groups,dc=domain,dc=local'
-
-
-## GITHUB AUTHENTICATION
-GITHUB_OAUTH_ENABLE = False
-GITHUB_OAUTH_KEY = ''
-GITHUB_OAUTH_SECRET = ''
-GITHUB_OAUTH_SCOPE = 'email'
-GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
-GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
-GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
-
-
-# GOOGLE AUTHENTICATION
-GOOGLE_OAUTH_ENABLE = False
-GOOGLE_OAUTH_CLIENT_ID = ''
-GOOGLE_OAUTH_CLIENT_SECRET = ''
-GOOGLE_REDIRECT_URI = '/user/authorized'
-GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
-GOOGLE_TOKEN_PARAMS = {
-    'scope': 'email profile'
-}
-GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
-GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
-
-
 # SAML Authnetication
 SAML_ENABLED = False
 SAML_DEBUG = True
@@ -89,6 +32,10 @@ SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
 SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
 #Cache Lifetime in Seconds
 SAML_METADATA_CACHE_LIFETIME = 1
+
+# SAML SSO binding format to use
+## Default: library default (urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect)
+#SAML_IDP_SSO_BINDING = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
 
 ## EntityID of the IdP to use. Only needed if more than one IdP is
 ##   in the SAML_METADATA_URL
@@ -149,22 +96,3 @@ SAML_LOGOUT = False
 #Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
 #for example redirect to google.com after successful saml logout
 #SAML_LOGOUT_URL = 'https://google.com'
-
-# POWERDNS CONFIG
-PDNS_STATS_URL = 'http://{0}:8081'.format(os.environ.get('PDNS_HOST'))
-PDNS_API_KEY = os.environ.get('PDNS_API_KEY')
-PDNS_VERSION = '4.1.1'
-
-# RECORDS ALLOWED TO EDIT
-RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC', 'NS', 'PTR', 'SOA']
-FORWARD_RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC' 'NS']
-REVERSE_RECORDS_ALLOW_EDIT = ['SOA', 'TXT', 'LOC', 'NS', 'PTR']
-
-# ALLOW DNSSEC CHANGES FOR ADMINS ONLY
-DNSSEC_ADMINS_ONLY = True
-
-# EXPERIMENTAL FEATURES
-PRETTY_IPV6_PTR = False
-
-# Domain updates in background, for big installations
-BG_DOMAIN_UPDATES = False

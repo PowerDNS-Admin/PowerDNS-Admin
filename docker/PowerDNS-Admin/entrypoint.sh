@@ -40,6 +40,9 @@ else
   set -e
 fi
 
+echo "===> Update PDNS API connection info"
+mysql -h${PDA_DB_HOST} -u${PDA_DB_USER} -p${PDA_DB_PASSWORD} ${PDA_DB_NAME} -e "UPDATE setting SET value='http://${PDNS_HOST}:8081' WHERE name='pdns_api_url';"
+mysql -h${PDA_DB_HOST} -u${PDA_DB_USER} -p${PDA_DB_PASSWORD} ${PDA_DB_NAME} -e "UPDATE setting SET value='${PDNS_API_KEY}' WHERE name='pdns_api_key';"
 
 echo "===> Assets management"
 echo "---> Running Yarn"
