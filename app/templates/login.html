@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>DNS Control Panel - Log In</title>
+  <title>Log In - {{ SITE_NAME }}</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   {% assets "css_login" -%}
@@ -20,7 +20,7 @@
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href="{{ url_for('index') }}">Sign In {{ login_title }}</a>
+    <a href="{{ url_for('index') }}"><b>PowerDNS</b>-Admin</a>
   </div>
   <!-- /.login-logo -->
   <div class="login-box-body">
@@ -31,42 +31,34 @@
         {{ error }}
       </div>
   {% endif %}
-      <form action="" method="post">
+      <form action="" method="post" data-toggle="validator">
       <div class="form-group">
-        {% if username %}
-        <input type="text" class="form-control" placeholder="Username" name="username" value="{{ username }}">
-        {% else %}
-        <input type="text" class="form-control" placeholder="Username" name="username">
-        {% endif %}
-        <span class="glyphicon glyphicon-user form-control-feedback"></span>
+        <input type="text" class="form-control" placeholder="Username" name="username" data-error="Please input your username" required {% if username %}value="{{ username }}"{% endif %}>
+        <span class="help-block with-errors"></span>
       </div>
       <div class="form-group">
-        {% if password %}
-        <input type="password" class="form-control" placeholder="Password" name="password" value="{{ password }}">
-        {% else %}
-        <input type="password" class="form-control" placeholder="Password" name="password">
-        {% endif %}
-        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+        <input type="password" class="form-control" placeholder="Password" name="password" data-error="Please input your password" required {% if password %}value="{{ password }}"{% endif %}>
+        <span class="help-block with-errors"></span>
       </div>
       <div class="form-group">
         <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
       </div>
-            {% if ldap_enabled and basic_enabled %}
+            {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
                     <div class="form-group">
               <select class="form-control" name="auth_method">
                         <option value="LOCAL">LOCAL Authentication</option>
-						{% if login_ldap_first_setting %}
+						{% if SETTING.get('login_ldap_first') %}
                         <option value="LDAP" selected="selected">LDAP Authentication</option>
 						{% else %}
 						<option value="LDAP">LDAP Authentication</option>
 						{% endif %}
               </select>
             </div>
-            {% elif ldap_enabled and not basic_enabled %}
+            {% elif SETTING.get('ldap_enabled') and not SETTING.get('local_db_enabled') %}
             <div class="form-group">
                       <input type="hidden" name="auth_method" value="LDAP">
             </div>
-                    {% elif basic_enabled and not ldap_enabled %}
+                    {% elif SETTING.get('local_db_enabled') and not SETTING.get('ldap_enabled') %}
                     <div class="form-group">
                       <input type="hidden" name="auth_method" value="LOCAL">
             </div>
@@ -91,25 +83,33 @@
         <!-- /.col -->
       </div>
     </form>
-    {% if google_enabled %}
-    <a href="{{ url_for('google_login') }}">Google oauth login</a>
+    {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') %}
+    <div class="social-auth-links text-center">
+      <p>- OR -</p>
+      {% if SETTING.get('github_oauth_enabled') %}
+      <a href="{{ url_for('github_login') }}" class="btn btn-block btn-social btn-github btn-flat"><i class="fa fa-github"></i> Sign in using
+        Github</a>
+      {% endif %}
+
+      {% if SETTING.get('google_oauth_enabled') %}
+      <a href="{{ url_for('google_login') }}" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using
+        Google</a>
+      {% endif %}
+    </div>
     {% endif %}
+
     {% if saml_enabled %}
-    <br>
     <a href="{{ url_for('saml_login') }}">SAML login</a>
     {% endif %}
-    {% if github_enabled %}
-    <br>
-    <a href="{{ url_for('github_login') }}">Github oauth login</a>
-    {% endif %}
-    {% if signup_enabled %}
+
+    {% if SETTING.get('signup_enabled') %}
     <br>
     <a href="{{ url_for('register') }}" class="text-center">Create an account </a>
     {% endif %}
   </div>
   <!-- /.login-box-body -->
   <div class="login-box-footer">
-    <center><p>2018 &copy; Khanh Ngo</p></center>
+    <center><p>Powered by <a href="https://github.com/ngoduykhanh/PowerDNS-Admin">PowerDNS-Admin</a></p></center>
   </div>
 </div>
 <!-- /.login-box -->
@@ -117,6 +117,10 @@
 {% assets "js_login" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
+{% assets "js_validation" -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+
 <script>
   $(function () {
     $('input').iCheck({

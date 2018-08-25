@@ -6,84 +6,30 @@ WTF_CSRF_ENABLED = True
 SECRET_KEY = 'We are the world'
 BIND_ADDRESS = '127.0.0.1'
 PORT = 9191
-LOGIN_TITLE = "PDNS"
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
 
 # LOG CONFIG
+#  	- For docker, LOG_FILE=''
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
-# For Docker, leave empty string
-#LOG_FILE = ''
 
-# Upload
+# UPLOAD DIRECTORY
 UPLOAD_DIR = os.path.join(basedir, 'upload')
 
 # DATABASE CONFIG
-#You'll need MySQL-python
-SQLA_DB_USER = 'powerdnsadmin'
-SQLA_DB_PASSWORD = 'powerdnsadminpassword'
-SQLA_DB_HOST = 'mysqlhostorip'
-SQLA_DB_NAME = 'powerdnsadmin'
-
-#MySQL
-#SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'\
-#    +SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
-#SQLite
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
-SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
+SQLA_DB_USER = 'pda'
+SQLA_DB_PASSWORD = 'changeme'
+SQLA_DB_HOST = '127.0.0.1'
+SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-# LDAP CONFIG
-LDAP_ENABLED = False
-LDAP_TYPE = 'ldap'
-LDAP_URI = 'ldaps://your-ldap-server:636'
-LDAP_ADMIN_USERNAME = 'cn=admin,dc=mydomain,dc=com'
-LDAP_ADMIN_PASSWORD = 'password'
-LDAP_SEARCH_BASE = 'dc=mydomain,dc=com'
+# DATBASE - MySQL
+SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
 
-# Additional options only if LDAP_TYPE=ldap
-LDAP_USERNAMEFIELD = 'uid'
-LDAP_FILTER = '(objectClass=inetorgperson)'
-
-# enable LDAP_GROUP_SECURITY to allow Admin and User roles based on LDAP groups
-LDAP_GROUP_SECURITY = False # True or False
-LDAP_ADMIN_GROUP = 'cn=sysops,dc=mydomain,dc=com'
-LDAP_USER_GROUP = 'cn=user,dc=mydomain,dc=com'
-
-## AD CONFIG
-#LDAP_TYPE = 'ad'
-#LDAP_URI = 'ldaps://your-ad-server:636'
-#LDAP_USERNAME = 'cn=dnsuser,ou=Users,dc=domain,dc=local'
-#LDAP_PASSWORD = 'dnsuser'
-#LDAP_SEARCH_BASE = 'dc=domain,dc=local'
-## You may prefer 'userPrincipalName' instead
-#LDAP_USERNAMEFIELD = 'sAMAccountName'
-## AD Group that you would like to have accesss to web app
-#LDAP_FILTER = 'memberof=cn=DNS_users,ou=Groups,dc=domain,dc=local'
-
-# Github Oauth
-GITHUB_OAUTH_ENABLE = False
-GITHUB_OAUTH_KEY = ''
-GITHUB_OAUTH_SECRET = ''
-GITHUB_OAUTH_SCOPE = 'email'
-GITHUB_OAUTH_URL = 'http://127.0.0.1:9191/api/v3/'
-GITHUB_OAUTH_TOKEN = 'http://127.0.0.1:9191/oauth/token'
-GITHUB_OAUTH_AUTHORIZE = 'http://127.0.0.1:9191/oauth/authorize'
-
-
-# Google OAuth
-GOOGLE_OAUTH_ENABLE = False
-GOOGLE_OAUTH_CLIENT_ID = ' '
-GOOGLE_OAUTH_CLIENT_SECRET = ' '
-GOOGLE_REDIRECT_URI = '/user/authorized'
-GOOGLE_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
-GOOGLE_TOKEN_PARAMS = {
-    'scope': 'email profile'
-}
-GOOGLE_AUTHORIZE_URL='https://accounts.google.com/o/oauth2/auth'
-GOOGLE_BASE_URL='https://www.googleapis.com/oauth2/v1/'
+# DATABSE - SQLite
+# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
 # SAML Authnetication
 SAML_ENABLED = False
@@ -157,26 +103,3 @@ SAML_LOGOUT = False
 #Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
 #for example redirect to google.com after successful saml logout
 #SAML_LOGOUT_URL = 'https://google.com'
-
-#Default Auth
-BASIC_ENABLED = True
-SIGNUP_ENABLED = True
-
-# POWERDNS CONFIG
-PDNS_STATS_URL = 'http://172.16.214.131:8081/'
-PDNS_API_KEY = 'you never know'
-PDNS_VERSION = '4.1.1'
-
-# RECORDS ALLOWED TO EDIT
-RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC', 'NS', 'PTR', 'SOA']
-FORWARD_RECORDS_ALLOW_EDIT = ['A', 'AAAA', 'CAA', 'CNAME', 'MX', 'PTR', 'SPF', 'SRV', 'TXT', 'LOC' 'NS']
-REVERSE_RECORDS_ALLOW_EDIT = ['SOA', 'TXT', 'LOC', 'NS', 'PTR']
-
-# ALLOW DNSSEC CHANGES FOR ADMINS ONLY
-DNSSEC_ADMINS_ONLY = False
-
-# EXPERIMENTAL FEATURES
-PRETTY_IPV6_PTR = False
-
-# Domain updates in background, for big installations
-BG_DOMAIN_UPDATES = False

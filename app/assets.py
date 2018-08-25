@@ -28,6 +28,11 @@ js_login = Bundle(
     output='generated/login.js'
 )
 
+js_validation = Bundle(
+    'node_modules/bootstrap-validator/dist/validator.js',
+    output='generated/validation.js'
+)
+
 css_main = Bundle(
     'node_modules/bootstrap/dist/css/bootstrap.css',
     'node_modules/font-awesome/css/font-awesome.css',
@@ -62,6 +67,7 @@ js_main = Bundle(
 
 assets = Environment()
 assets.register('js_login', js_login)
+assets.register('js_validation', js_validation)
 assets.register('css_login', css_login)
 assets.register('js_main', js_main)
 assets.register('css_main', css_main)

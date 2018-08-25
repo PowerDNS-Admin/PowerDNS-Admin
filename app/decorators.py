@@ -2,7 +2,7 @@ from functools import wraps
 from flask import g, request, redirect, url_for
 
 from app import app
-from app.models import Role
+from app.models import Role, Setting
 
 
 def admin_role_required(f):
@@ -31,7 +31,7 @@ def can_access_domain(f):
 def can_configure_dnssec(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if g.user.role.name != 'Administrator' and app.config['DNSSEC_ADMINS_ONLY']:
+        if g.user.role.name != 'Administrator' and Setting().get('dnssec_admins_only'):
                 return redirect(url_for('error', code=401))
 
         return f(*args, **kwargs)

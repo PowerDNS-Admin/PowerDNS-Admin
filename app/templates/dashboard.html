@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}<title>DNS Control Panel - HOME</title>{% endblock %}
+{% set active_page = "dashboard" %}
+{% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
     <!-- Content Header (Page header) -->
@@ -155,7 +156,7 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    PDNS_VERSION = '{{ pdns_version }}'
+    PDNS_VERSION = '{{ SETTING.get("pdns_version") }}'
     // set up history data table
     $("#tbl_history").DataTable({
         "paging" : false,
@@ -188,14 +189,14 @@
         "ajax" : "{{ url_for('dashboard_domains') }}",
         "info" : false,
         "autoWidth" : false,
-      {% if default_domain_table_size_setting in ['10','25','50','100'] %}
+      {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
       "lengthMenu": [ [10, 25, 50, 100, -1],
                       [10, 25, 50, 100, "All"]],
       {% else %}
-      "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
-                      [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
+      "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                      [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
       {% endif %}
-      "pageLength": {{ default_domain_table_size_setting }}
+      "pageLength": {{ SETTING.get('default_domain_table_size') }}
     });
     $(document.body).on('click', '.history-info-button', function() {
         var modal = $("#modal_history_info");
@@ -235,7 +236,7 @@
         modal.modal('show');
     });
 
-    {% if current_user.role.name == 'Administrator' or dnssec_adm_only == false %}
+    {% if current_user.role.name == 'Administrator' or not SETTING.get('dnssec_admins_only') %}
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
