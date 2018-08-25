@@ -276,7 +276,7 @@ class User(db.Model):
             # user already exists in database, set their admin status based on group membership (if enabled)
             if LDAP_GROUP_SECURITY_ENABLED:
                 self.set_admin(isadmin)
-            self.update_profile()
+
             return True
         else:
             logging.error('Unsupported authentication method')
@@ -314,9 +314,9 @@ class User(db.Model):
         if User.query.count() == 0:
             self.role_id = Role.query.filter_by(name='Administrator').first().id
 
-        self.password = self.get_hashed_password(self.plain_text_password)
+        self.password = self.get_hashed_password(self.plain_text_password) if self.plain_text_password else '*'
 
-        if self.password:
+        if self.password and self.password != '*':
             self.password = self.password.decode("utf-8")
 
         db.session.add(self)

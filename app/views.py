@@ -68,7 +68,7 @@ def before_request():
 
     # check site maintenance mode
     maintenance = Setting().get('maintenance')
-    if maintenance and g.user.role.name != 'Administrator':
+    if maintenance and current_user.is_authenticated and current_user.role.name != 'Administrator':
         return render_template('maintenance.html')
 
 
@@ -297,7 +297,6 @@ def login():
         email = user_data['email']
         user = User.query.filter_by(username=email).first()
         if not user:
-            # create user
             user = User(username=email,
                         firstname=first_name,
                         lastname=surname,
@@ -389,15 +388,13 @@ def login():
         # registration case
         user = User(username=username, plain_text_password=password, firstname=firstname, lastname=lastname, email=email)
 
-        # TODO: Move this into the JavaScript
-        # validate password and password confirmation
         if password != rpassword:
             error = "Password confirmation does not match"
             return render_template('register.html', error=error)
 
         try:
             result = user.create_local_user()
-            if result == True:
+            if result and result['status']:
                 return render_template('login.html', saml_enabled=SAML_ENABLED, username=username, password=password)
             else:
                 return render_template('register.html', error=result['msg'])
