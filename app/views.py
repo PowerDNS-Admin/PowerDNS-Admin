@@ -745,14 +745,9 @@ def domain_change_account(domain_name):
         return redirect(url_for('error', code=404))
 
     account_id = request.form.get('accountid')
-    status = domain.assoc_account(account_id)
+    status = Domain(name=domain.name).assoc_account(account_id)
     if status['status']:
-        users = User.query.all()
-        accounts = Account.query.all()
-        d = Domain(name=domain_name)
-        domain_user_ids = d.get_user()
-        account = d.get_account()
-        return render_template('domain_management.html', domain=domain, users=users, domain_user_ids=domain_user_ids, accounts=accounts, domain_account=account)
+        return redirect(url_for('domain_management', domain_name=domain.name))
     else:
         return redirect(url_for('error', code=500))
 
