@@ -22,7 +22,7 @@ from .models import User, Account, Domain, Record, Role, Server, History, Anonym
 from app import app, login_manager
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth
-from app.decorators import admin_role_required, can_access_domain, can_configure_dnssec
+from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -68,7 +68,7 @@ def before_request():
 
     # check site maintenance mode
     maintenance = Setting().get('maintenance')
-    if maintenance and current_user.is_authenticated and current_user.role.name != 'Administrator':
+    if maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']:
         return render_template('maintenance.html')
 
 
@@ -476,7 +476,7 @@ def dashboard():
 @app.route('/dashboard-domains', methods=['GET'])
 @login_required
 def dashboard_domains():
-    if current_user.role.name == 'Administrator':
+    if current_user.role.name in ['Administrator', 'Operator']:
         domains = Domain.query
     else:
         domains = User(id=current_user.id).get_domain_query()
@@ -508,7 +508,7 @@ def dashboard_domains():
         start = "" if search.startswith("^") else "%"
         end = "" if search.endswith("$") else "%"
 
-        if current_user.role.name == 'Administrator':
+        if current_user.role.name in ['Administrator', 'Operator']:
             domains = domains.outerjoin(Account).filter(Domain.name.ilike(start + search.strip("^$") + end) |
                                                         Account.name.ilike(start + search.strip("^$") + end) |
                                                         Account.description.ilike(start + search.strip("^$") + end))
@@ -603,7 +603,7 @@ def domain(domain_name):
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_add():
     templates = DomainTemplate.query.all()
     if request.method == 'POST':
@@ -661,7 +661,7 @@ def domain_add():
 
 @app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_delete(domain_name):
     d = Domain()
     result = d.delete(domain_name)
@@ -677,7 +677,7 @@ def domain_delete(domain_name):
 
 @app.route('/admin/domain/<path:domain_name>/manage', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_management(domain_name):
     if request.method == 'GET':
         domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -712,7 +712,7 @@ def domain_management(domain_name):
 
 @app.route('/admin/domain/<path:domain_name>/change_soa_setting', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_change_soa_edit_api(domain_name):
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
@@ -738,7 +738,7 @@ def domain_change_soa_edit_api(domain_name):
 
 @app.route('/admin/domain/<path:domain_name>/change_account', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_change_account(domain_name):
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
@@ -816,7 +816,7 @@ def record_update(domain_name):
 
 @app.route('/domain/<path:domain_name>/record/<path:record_name>/type/<path:record_type>/delete', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def record_delete(domain_name, record_name, record_type):
     try:
         r = Record(name=record_name, type=record_type)
@@ -873,7 +873,7 @@ def domain_dnssec_disable(domain_name):
 
 @app.route('/domain/<path:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setdomainsetting(domain_name):
     if request.method == 'POST':
         #
@@ -914,7 +914,7 @@ def admin_setdomainsetting(domain_name):
 @app.route('/templates', methods=['GET', 'POST'])
 @app.route('/templates/list', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def templates():
     templates = DomainTemplate.query.all()
     return render_template('template.html', templates=templates)
@@ -922,7 +922,7 @@ def templates():
 
 @app.route('/template/create', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def create_template():
     if request.method == 'GET':
         return render_template('template_add.html')
@@ -955,7 +955,7 @@ def create_template():
 
 @app.route('/template/createfromzone', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def create_template_from_zone():
     try:
         jdata = request.json
@@ -1015,7 +1015,7 @@ def create_template_from_zone():
 
 @app.route('/template/<path:template>/edit', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def edit_template(template):
     try:
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
@@ -1066,7 +1066,7 @@ def apply_records(template):
 
 @app.route('/template/<path:template>/delete', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def delete_template(template):
     try:
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
@@ -1085,10 +1085,10 @@ def delete_template(template):
     return redirect(url_for('templates'))
 
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin/pdns', methods=['GET'])
 @login_required
-@admin_role_required
-def admin():
+@operator_role_required
+def admin_pdns():
     if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key') or not Setting().get('pdns_version'):
         return redirect(url_for('admin_setting_pdns'))
 
@@ -1111,7 +1111,7 @@ def admin():
 @app.route('/admin/user/edit/<user_username>', methods=['GET', 'POST'])
 @app.route('/admin/user/edit', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_edituser(user_username=None):
     if request.method == 'GET':
         if not user_username:
@@ -1150,11 +1150,12 @@ def admin_edituser(user_username=None):
 
 @app.route('/admin/manageuser', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_manageuser():
     if request.method == 'GET':
+        roles = Role.query.all()
         users = User.query.order_by(User.username).all()
-        return render_template('admin_manageuser.html', users=users)
+        return render_template('admin_manageuser.html', users=users, roles=roles)
 
     if request.method == 'POST':
         #
@@ -1197,19 +1198,31 @@ def admin_manageuser():
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot revoke user privilege.' } ), 500)
 
-            elif jdata['action'] == 'set_admin':
+            elif jdata['action'] == 'update_user_role':
                 username = data['username']
+                role_name = data['role_name']
+
                 if username == current_user.username:
-                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot change you own admin rights.' } ), 400)
-                is_admin = data['is_admin']
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot change you own roles.' } ), 400)
+
+                user = User.query.filter(User.username==username).first()
+                if not user:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'User does not exist.' } ), 404)
+
+                if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You do not have permission to change Administrator users role.' } ), 400)
+
+                if role_name == 'Administrator' and current_user.role.name != 'Administrator':
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You do not have permission to promote a user to Administrator role.' } ), 400)
+
                 user = User(username=username)
-                result = user.set_admin(is_admin)
-                if result:
-                    history = History(msg='Change user role of {0}'.format(username), created_by=current_user.username)
+                result = user.set_role(role_name)
+                if result['status']:
+                    history = History(msg='Change user role of {0} to {1}'.format(username, role_name), created_by=current_user.username)
                     history.add()
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Changed user role successfully.' } ), 200)
                 else:
-                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot change user role.' } ), 500)
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot change user role. {0}'.format(result['msg']) } ), 500)
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
@@ -1220,7 +1233,7 @@ def admin_manageuser():
 @app.route('/admin/account/edit/<account_name>', methods=['GET', 'POST'])
 @app.route('/admin/account/edit', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_editaccount(account_name=None):
     users = User.query.all()
 
@@ -1274,7 +1287,7 @@ def admin_editaccount(account_name=None):
 
 @app.route('/admin/manageaccount', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_manageaccount():
     if request.method == 'GET':
         accounts = Account.query.order_by(Account.name).all()
@@ -1308,7 +1321,7 @@ def admin_manageaccount():
 
 @app.route('/admin/history', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_history():
     if request.method == 'POST':
         h = History()
@@ -1328,7 +1341,7 @@ def admin_history():
 
 @app.route('/admin/setting/basic', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_basic():
     if request.method == 'GET':
         settings = Setting.query.filter(Setting.view=='basic').all()
@@ -1337,7 +1350,7 @@ def admin_setting_basic():
 
 @app.route('/admin/setting/basic/<path:setting>/edit', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_basic_edit(setting):
     jdata = request.json
     new_value = jdata['value']
@@ -1351,7 +1364,7 @@ def admin_setting_basic_edit(setting):
 
 @app.route('/admin/setting/basic/<path:setting>/toggle', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_basic_toggle(setting):
     result = Setting().toggle(setting)
     if (result):
@@ -1383,7 +1396,7 @@ def admin_setting_pdns():
 
 @app.route('/admin/setting/dns-records', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_records():
     if request.method == 'GET':
         f_records = literal_eval(Setting().get('forward_records_allow_edit'))
@@ -1438,6 +1451,7 @@ def admin_setting_authentication():
                 Setting().set('ldap_filter_username', request.form.get('ldap_filter_username'))
                 Setting().set('ldap_sg_enabled', True if request.form.get('ldap_sg_enabled')=='ON' else False)
                 Setting().set('ldap_admin_group', request.form.get('ldap_admin_group'))
+                Setting().set('ldap_operator_group', request.form.get('ldap_operator_group'))
                 Setting().set('ldap_user_group', request.form.get('ldap_user_group'))
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':

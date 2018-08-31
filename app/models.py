@@ -150,7 +150,7 @@ class User(db.Model):
             logging.error(e)
             logging.debug('baseDN: {0}'.format(baseDN))
             logging.debug(traceback.format_exc())
-            raise
+
 
     def ldap_auth(self, ldap_username, password):
         try:
@@ -165,6 +165,8 @@ class User(db.Model):
         """
         Validate user credential
         """
+        role_name = 'User'
+
         if method == 'LOCAL':
             user_info = User.query.filter(User.username == self.username).first()
 
@@ -179,12 +181,12 @@ class User(db.Model):
             return False
 
         if method == 'LDAP':
-            isadmin = False
             LDAP_TYPE = Setting().get('ldap_type')
             LDAP_BASE_DN = Setting().get('ldap_base_dn')
             LDAP_FILTER_BASIC = Setting().get('ldap_filter_basic')
             LDAP_FILTER_USERNAME = Setting().get('ldap_filter_username')
             LDAP_ADMIN_GROUP = Setting().get('ldap_admin_group')
+            LDAP_OPERATOR_GROUP = Setting().get('ldap_operator_group')
             LDAP_USER_GROUP = Setting().get('ldap_user_group')
             LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
@@ -206,24 +208,30 @@ class User(db.Model):
                         try:
                             if LDAP_TYPE == 'ldap':
                                 if (self.ldap_search(searchFilter, LDAP_ADMIN_GROUP)):
-                                    isadmin = True
+                                    role_name = 'Administrator'
                                     logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP))
+                                elif (self.ldap_search(searchFilter, LDAP_OPERATOR_GROUP)):
+                                    role_name = 'Operator'
+                                    logging.info('User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'.format(self.username, LDAP_OPERATOR_GROUP))
                                 elif (self.ldap_search(searchFilter, LDAP_USER_GROUP)):
                                     logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username, LDAP_USER_GROUP))
                                 else:
-                                    logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_USER_GROUP))
+                                    logging.error('User {0} is not part of the "{1}", "{2}" or "{3}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_OPERATOR_GROUP, LDAP_USER_GROUP))
                                     return False
                             elif LDAP_TYPE == 'ad':
                                 user_ldap_groups = [g.decode("utf-8") for g in ldap_result[0][0][1]['memberOf']]
                                 logging.debug('user_ldap_groups: {0}'.format(user_ldap_groups))
 
                                 if (LDAP_ADMIN_GROUP in user_ldap_groups):
-                                    isadmin = True
+                                    role_name = 'Administrator'
                                     logging.info('User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP))
+                                elif (LDAP_OPERATOR_GROUP in user_ldap_groups):
+                                    role_name = 'Operator'
+                                    logging.info('User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'.format(self.username, LDAP_OPERATOR_GROUP))
                                 elif (LDAP_USER_GROUP in user_ldap_groups):
                                     logging.info('User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'.format(self.username, LDAP_USER_GROUP))
                                 else:
-                                    logging.error('User {0} is not part of the "{1}" or "{2}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_USER_GROUP))
+                                    logging.error('User {0} is not part of the "{1}", "{2}" or "{3}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_OPERATOR_GROUP, LDAP_USER_GROUP))
                                     return False
                             else:
                                 logging.error('Invalid LDAP type')
@@ -261,21 +269,17 @@ class User(db.Model):
                     logging.debug(traceback.format_exc())
 
                 # first register user will be in Administrator role
-                self.role_id = Role.query.filter_by(name='User').first().id
                 if User.query.count() == 0:
                     self.role_id = Role.query.filter_by(name='Administrator').first().id
-
-                # user will be in Administrator role if part of LDAP Admin group
-                if LDAP_GROUP_SECURITY_ENABLED:
-                    if isadmin == True:
-                        self.role_id = Role.query.filter_by(name='Administrator').first().id
+                else:
+                    self.role_id = Role.query.filter_by(name=role_name).first().id
 
                 self.create_user()
                 logging.info('Created user "{0}" in the DB'.format(self.username))
 
-            # user already exists in database, set their admin status based on group membership (if enabled)
+            # user already exists in database, set their role based on group membership (if enabled)
             if LDAP_GROUP_SECURITY_ENABLED:
-                self.set_admin(isadmin)
+                self.set_role(role_name)
 
             return True
         else:
@@ -453,28 +457,15 @@ class User(db.Model):
                 return False
         return False
 
-    def set_admin(self, is_admin):
-        """
-        Set role for a user:
-            is_admin == True  => Administrator
-            is_admin == False => User
-        """
-        user_role_name = 'Administrator' if is_admin else 'User'
-        role = Role.query.filter(Role.name==user_role_name).first()
-
-        try:
-            if role:
-                user = User.query.filter(User.username==self.username).first()
-                user.role_id = role.id
-                db.session.commit()
-                return True
-            else:
-                return False
-        except:
-            db.session.roleback()
-            logging.error('Cannot change user role in DB')
-            logging.debug(traceback.format_exc())
-            return False
+    def set_role(self, role_name):
+        role = Role.query.filter(Role.name==role_name).first()
+        if role:
+            user = User.query.filter(User.username==self.username).first()
+            user.role_id = role.id
+            db.session.commit()
+            return {'status': True, 'msg': 'Set user role successfully'}
+        else:
+            return {'status': False, 'msg': 'Role does not exist'}
 
 
 class Account(db.Model):
@@ -1825,8 +1816,9 @@ class Setting(db.Model):
         'ldap_filter_basic': '',
         'ldap_filter_username': '',
         'ldap_sg_enabled': False,
-        'ldap_admin_group': False,
-        'ldap_user_group': False,
+        'ldap_admin_group': '',
+        'ldap_operator_group': '',
+        'ldap_user_group': '',
         'github_oauth_enabled': False,
         'github_oauth_key': '',
         'github_oauth_secret': '',

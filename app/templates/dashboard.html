@@ -19,7 +19,7 @@
 {% block content %}
  <!-- Main content -->
     <section class="content">
-      {% if current_user.role.name == 'Administrator' %}
+      {% if current_user.role.name in ['Administrator', 'Operator'] %}
       <div class="row">
         <div class="col-xs-3">
             <div class="box">
@@ -69,7 +69,7 @@
                       </a>
                     </div>
                     <div class="col-lg-6">
-                      <a href="{{ url_for('admin') }}">
+                      <a href="{{ url_for('admin_pdns') }}">
                       <div class="small-box bg-green">
                         <div class="inner">
                           <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
@@ -102,17 +102,17 @@
                     </thead>
                     <tbody>
                     {% for history in histories %}
-                            <tr class="odd">
-                                <td>{{ history.created_by }}</td>
-                                <td>{{ history.msg }}</td>
-                                <td>{{ history.created_on }}</td>
-                                <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail|replace("[]","None") }}'>
-                                        Info&nbsp;<i class="fa fa-info"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                      <tr class="odd">
+                          <td>{{ history.created_by }}</td>
+                          <td>{{ history.msg }}</td>
+                          <td>{{ history.created_on }}</td>
+                          <td width="6%">
+                              <button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail|replace("[]","None") }}'>
+                                  Info&nbsp;<i class="fa fa-info"></i>
+                              </button>
+                          </td>
+                      </tr>
+                    {% endfor %}
                     </tbody>
                   </table>
                 </div>
@@ -136,7 +136,7 @@
                   <th>Serial</th>
                   <th>Master</th>
                   <th>Account</th>
-                  <th {% if current_user.role.name !='Administrator' %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                  <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -182,7 +182,7 @@
         "ordering" : true,
         "columnDefs": [
             { "orderable": false, "targets": [-1] }
-            {% if current_user.role.name != 'Administrator' %},{ "visible": false, "targets": [-2] }{% endif %}
+            {% if current_user.role.name not in ['Administrator', 'Operator'] %},{ "visible": false, "targets": [-2] }{% endif %}
         ],
         "processing" : true,
         "serverSide" : true,
@@ -236,7 +236,7 @@
         modal.modal('show');
     });
 
-    {% if current_user.role.name == 'Administrator' or not SETTING.get('dnssec_admins_only') %}
+    {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
