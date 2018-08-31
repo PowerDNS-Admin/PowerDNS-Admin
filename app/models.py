@@ -1,7 +1,6 @@
 import os
 import ldap
 import ldap.filter
-import time
 import base64
 import bcrypt
 import itertools
@@ -11,7 +10,6 @@ import re
 import dns.reversename
 import dns.inet
 import dns.name
-import sys
 import logging as logger
 
 from ast import literal_eval
@@ -434,9 +432,9 @@ class User(db.Model):
             User.query.filter(User.username == self.username).delete()
             db.session.commit()
             return True
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot delete user {0} from DB'.format(self.username))
+            logging.error('Cannot delete user {0} from DB. DETAIL: {1}'.format(self.username, e))
             return False
 
     def revoke_privilege(self):
@@ -451,9 +449,9 @@ class User(db.Model):
                 DomainUser.query.filter(DomainUser.user_id == user_id).delete()
                 db.session.commit()
                 return True
-            except:
+            except Exception as e:
                 db.session.rollback()
-                logging.error('Cannot revoke user {0} privielges'.format(self.username))
+                logging.error('Cannot revoke user {0} privielges. DETAIL: {1}'.format(self.username, e))
                 return False
         return False
 
@@ -571,9 +569,9 @@ class Account(db.Model):
             db.session.commit()
             return True
 
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot delete account {0} from DB'.format(self.username))
+            logging.error('Cannot delete account {0} from DB. DETAIL: {1}'.format(self.username, e))
             return False
 
     def get_user(self):
@@ -602,18 +600,18 @@ class Account(db.Model):
             for uid in removed_ids:
                 AccountUser.query.filter(AccountUser.user_id == uid).filter(AccountUser.account_id==account_id).delete()
                 db.session.commit()
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on account {0}'.format(self.name))
+            logging.error('Cannot revoke user privielges on account {0}. DETAIL: {1}'.format(self.name, e))
 
         try:
             for uid in added_ids:
                 au = AccountUser(account_id, uid)
                 db.session.add(au)
                 db.session.commit()
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot grant user privileges to account {0}'.format(self.name))
+            logging.error('Cannot grant user privileges to account {0}. DETAIL: {1}'.format(self.name, e))
 
     def revoke_privileges_by_id(self, user_id):
         """
@@ -634,9 +632,9 @@ class Account(db.Model):
             db.session.add(au)
             db.session.commit()
             return True
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot add user privielges on account {0}'.format(self.name))
+            logging.error('Cannot add user privielges on account {0}. DETAIL: {1}'.format(self.name, e))
             return False
 
     def remove_user(self, user):
@@ -647,9 +645,9 @@ class Account(db.Model):
             AccountUser.query.filter(AccountUser.user_id == user.id).filter(AccountUser.account_id == self.id).delete()
             db.session.commit()
             return True
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on account {0}'.format(self.name))
+            logging.error('Cannot revoke user privielges on account {0}. DETAIL: {1}'.format(self.name, e))
             return False
 
 
@@ -698,8 +696,8 @@ class DomainSetting(db.Model):
             self.value = value
             db.session.commit()
             return True
-        except:
-            logging.error('Unable to set DomainSetting value')
+        except Exception as e:
+            logging.error('Unable to set DomainSetting value. DETAIL: {0}'.format(e))
             logging.debug(traceback.format_exc())
             db.session.rollback()
             return False
@@ -775,7 +773,8 @@ class Domain(db.Model):
         try:
             domain = Domain.query.filter(Domain.name==name).first()
             return domain.id
-        except:
+        except Exception as e:
+            logging.error('Domain does not exist. ERROR: {1}'.format(e))
             return None
 
     def update(self):
@@ -809,8 +808,8 @@ class Domain(db.Model):
                     # then remove domain
                     Domain.query.filter(Domain.name == d).delete()
                     db.session.commit()
-            except:
-                logging.error('Can not delete domain from DB')
+            except Exception as e:
+                logging.error('Can not delete domain from DB. DETAIL: {0}'.format(e))
                 logging.debug(traceback.format_exc())
                 db.session.rollback()
 
@@ -902,7 +901,7 @@ class Domain(db.Model):
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
         except Exception as e:
             logging.error('Cannot add domain {0}'.format(domain_name))
-            logging.debug(traceback.print_exc())
+            logging.debug(traceback.format_exc())
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
     def update_soa_setting(self, domain_name, soa_edit_api):
@@ -1000,12 +999,12 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
         try:
-            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
+            utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
             logging.info('Delete domain {0} successfully'.format(domain_name))
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
         except Exception as e:
             logging.error('Cannot delete domain {0}'.format(domain_name))
-            logging.debug(traceback.print_exc())
+            logging.debug(traceback.format_exc())
             return {'status': 'error', 'msg': 'Cannot delete domain'}
 
     def get_user(self):
@@ -1035,18 +1034,18 @@ class Domain(db.Model):
             for uid in removed_ids:
                 DomainUser.query.filter(DomainUser.user_id == uid).filter(DomainUser.domain_id==domain_id).delete()
                 db.session.commit()
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on domain {0}'.format(self.name))
+            logging.error('Cannot revoke user privielges on domain {0}. DETAIL: {1}'.format(self.name, e))
 
         try:
             for uid in added_ids:
                 du = DomainUser(domain_id, uid)
                 db.session.add(du)
                 db.session.commit()
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error('Cannot grant user privielges to domain {0}'.format(self.name))
+            logging.error('Cannot grant user privielges to domain {0}. DETAIL: {1}'.format(self.name, e))
 
     def update_from_master(self, domain_name):
         """
@@ -1057,9 +1056,10 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = self.PDNS_API_KEY
             try:
-                jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}/axfr-retrieve'.format(domain.name)), headers=headers, method='PUT')
+                utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}/axfr-retrieve'.format(domain.name)), headers=headers, method='PUT')
                 return {'status': 'ok', 'msg': 'Update from Master successfully'}
-            except:
+            except Exception as e:
+                logging.error('Cannot update from master. DETAIL: {0}'.format(e))
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
@@ -1078,7 +1078,8 @@ class Domain(db.Model):
                     return {'status': 'error', 'msg': 'DNSSEC is not enabled for this domain'}
                 else:
                     return {'status': 'ok', 'dnssec': jdata}
-            except:
+            except Exception as e:
+                logging.error('Cannot get domain dnssec. DETAIL: {0}'.format(e))
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
         else:
             return {'status': 'error', 'msg': 'This domain doesnot exist'}
@@ -1111,8 +1112,9 @@ class Domain(db.Model):
 
                 return {'status': 'ok'}
 
-            except:
-                logging.error(traceback.print_exc())
+            except Exception as e:
+                logging.error('Cannot enable dns sec. DETAIL: {}'.format(e))
+                logging.debug(traceback.format_exc())
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
         else:
@@ -1142,8 +1144,9 @@ class Domain(db.Model):
 
                 return {'status': 'ok'}
 
-            except:
-                logging.error(traceback.print_exc())
+            except Exception as e:
+                logging.error('Cannot delete dnssec key. DETAIL: {0}'.format(e))
+                logging.debug(traceback.format_exc())
                 return {'status': 'error', 'msg': 'There was something wrong, please contact administrator','domain': domain.name, 'id': key_id}
 
         else:
@@ -1181,10 +1184,9 @@ class Domain(db.Model):
             if 'error' in jdata.keys():
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
-
             else:
                 self.update()
-                logging.info('account changed for domain {0} successfully'.format(domain_name))
+                logging.info('Account changed for domain {0} successfully'.format(domain_name))
                 return {'status': 'ok', 'msg': 'account changed successfully'}
 
         except Exception as e:
@@ -1192,8 +1194,6 @@ class Domain(db.Model):
             logging.debug(traceback.format_exc())
             logging.error('Cannot change account for domain {0}'.format(domain_name))
             return {'status': 'error', 'msg': 'Cannot change account for this domain.'}
-
-        return {'status': True, 'msg': 'Domain association successful'}
 
     def get_account(self):
         """
@@ -1264,8 +1264,8 @@ class Record(object):
         headers['X-API-Key'] = self.PDNS_API_KEY
         try:
             jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers)
-        except:
-            logging.error("Cannot fetch domain's record data from remote powerdns api")
+        except Exception as e:
+            logging.error("Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}".format(e))
             return False
 
         if self.NEW_SCHEMA:
@@ -1562,7 +1562,6 @@ class Record(object):
                         self.add(domain_reverse_name)
                 for r in deleted_records:
                     if r['type'] in ['A', 'AAAA']:
-                        r_name = r['name'] + '.'
                         r_content = r['content']
                         reverse_host_address = dns.reversename.from_address(r_content).to_text()
                         domain_reverse_name = d.get_reverse_domain_name(reverse_host_address)
@@ -1595,8 +1594,8 @@ class Record(object):
             jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
-        except:
-            logging.error("Cannot remove record {0}/{1}/{2} from domain {3}".format(self.name, self.type, self.data, domain))
+        except Exception as e:
+            logging.error("Cannot remove record {0}/{1}/{2} from domain {3}. DETAIL: {4}".format(self.name, self.type, self.data, domain, e))
             return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
 
     def is_allowed_edit(self):
@@ -1672,7 +1671,7 @@ class Record(object):
                     ]
                 }
         try:
-            jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
+            utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=data)
             logging.debug("dyndns data: {0}".format(data))
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
         except Exception as e:
@@ -1719,8 +1718,8 @@ class Server(object):
         try:
             jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/{0}/config'.format(self.server_id)), headers=headers, method='GET')
             return jdata
-        except:
-            logging.error("Can not get server configuration.")
+        except Exception as e:
+            logging.error("Can not get server configuration. DETAIL: {0}".format(e))
             logging.debug(traceback.format_exc())
             return []
 
@@ -1734,8 +1733,8 @@ class Server(object):
         try:
             jdata = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/{0}/statistics'.format(self.server_id)), headers=headers, method='GET')
             return jdata
-        except:
-            logging.error("Can not get server statistics.")
+        except Exception as e:
+            logging.error("Can not get server statistics. DETAIL: {0}".format(e))
             logging.debug(traceback.format_exc())
             return []
 
@@ -1773,13 +1772,13 @@ class History(db.Model):
         Remove all history from DB
         """
         try:
-            num_rows_deleted = db.session.query(History).delete()
+            db.session.query(History).delete()
             db.session.commit()
             logging.info("Removed all history")
             return True
-        except:
+        except Exception as e:
             db.session.rollback()
-            logging.error("Cannot remove history")
+            logging.error("Cannot remove history. DETAIL: {0}".format(e))
             logging.debug(traceback.format_exc())
             return False
 
@@ -1863,8 +1862,8 @@ class Setting(db.Model):
                 maintenance.value = mode
                 db.session.commit()
             return True
-        except:
-            logging.error('Cannot set maintenance to {0}'.format(mode))
+        except Exception as e:
+            logging.error('Cannot set maintenance to {0}. DETAIL: {1}'.format(mode, e))
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
@@ -1884,8 +1883,8 @@ class Setting(db.Model):
                 current_setting.value = "True"
             db.session.commit()
             return True
-        except:
-            logging.error('Cannot toggle setting {0}'.format(setting))
+        except Exception as e:
+            logging.error('Cannot toggle setting {0}. DETAIL: {1}'.format(setting, e))
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False
@@ -1903,8 +1902,8 @@ class Setting(db.Model):
             current_setting.value = value
             db.session.commit()
             return True
-        except:
-            logging.error('Cannot edit setting {0}'.format(setting))
+        except Exception as e:
+            logging.error('Cannot edit setting {0}. DETAIL: {1}'.format(setting, e))
             logging.debug(traceback.format_exec())
             db.session.rollback()
             return False

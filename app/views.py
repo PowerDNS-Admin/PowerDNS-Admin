@@ -1,5 +1,4 @@
 import base64
-import json
 import logging as logger
 import os
 import traceback
@@ -10,13 +9,11 @@ from functools import wraps
 from io import BytesIO
 from ast import literal_eval
 
-import jinja2
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
 from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
-from werkzeug.security import gen_salt
 
 from .models import User, Account, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager
@@ -25,7 +22,6 @@ from app.oauth import github_oauth, google_oauth
 from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec
 
 if app.config['SAML_ENABLED']:
-    from onelogin.saml2.auth import OneLogin_Saml2_Auth
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 google = None
@@ -284,7 +280,6 @@ def saml_authorized():
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
-    LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
     SAML_ENABLED = app.config.get('SAML_ENABLED')
 
     if g.user is not None and current_user.is_authenticated:
@@ -454,7 +449,7 @@ def dashboard():
     BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
     if not BG_DOMAIN_UPDATE:
         logging.debug('Update domains in foreground')
-        d = Domain().update()
+        Domain().update()
     else:
         logging.debug('Update domains in background')
 
@@ -580,7 +575,7 @@ def domain(domain_name):
 
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for jr in jrecords:
-            if jr['type'] in Setting().get_records_allow_to_edit():
+            if jr['type'] in records_allow_to_edit:
                 for subrecord in jr['records']:
                     record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
                     records.append(record)
@@ -591,7 +586,7 @@ def domain(domain_name):
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
     else:
         for jr in jrecords:
-            if jr['type'] in Setting().get_records_allow_to_edit():
+            if jr['type'] in records_allow_to_edit:
                 record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                 records.append(record)
     if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
@@ -651,7 +646,7 @@ def domain_add():
             else:
                 return render_template('errors/400.html', msg=result['msg']), 400
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return redirect(url_for('error', code=500))
 
     else:
@@ -697,10 +692,6 @@ def domain_management(domain_name):
         # username in right column
         new_user_list = request.form.getlist('domain_multi_user[]')
 
-        # get list of user ids to compare
-        d = Domain(name=domain_name)
-        domain_user_ids = d.get_user()
-
         # grant/revoke user privielges
         d.grant_privielges(new_user_list)
 
@@ -718,7 +709,7 @@ def domain_change_soa_edit_api(domain_name):
     if not domain:
         return redirect(url_for('error', code=404))
     new_setting = request.form.get('soa_edit_api')
-    if new_setting == None:
+    if new_setting is None:
         return redirect(url_for('error', code=500))
     if new_setting == '0':
         return redirect(url_for('domain_management', domain_name=domain_name))
@@ -787,7 +778,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -810,7 +801,7 @@ def record_update(domain_name):
         else:
             return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -824,7 +815,7 @@ def record_delete(domain_name, record_name, record_type):
         if result['status'] == 'error':
             print(result['msg'])
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
@@ -866,7 +857,7 @@ def domain_dnssec_disable(domain_name):
     dnssec = domain.get_domain_dnssec(domain_name)
 
     for key in dnssec['dnssec']:
-        response = domain.delete_dnssec_key(domain_name,key['id']);
+        domain.delete_dnssec_key(domain_name,key['id']);
 
     return make_response(jsonify( { 'status': 'ok', 'msg': 'DNSSEC removed.' } ))
 
@@ -907,7 +898,7 @@ def admin_setdomainsetting(domain_name):
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -938,6 +929,7 @@ def create_template():
             if DomainTemplate.query.filter(DomainTemplate.name == name).first():
                 flash("A template with the name {0} already exists!".format(name), 'error')
                 return redirect(url_for('create_template'))
+
             t = DomainTemplate(name=name, description=description)
             result = t.create()
             if result['status'] == 'ok':
@@ -948,9 +940,8 @@ def create_template():
                 flash(result['msg'], 'error')
                 return redirect(url_for('create_template'))
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return redirect(url_for('error', code=500))
-        return redirect(url_for('templates'))
 
 
 @app.route('/template/createfromzone', methods=['POST'])
@@ -1003,13 +994,13 @@ def create_template_from_zone():
             if result_records['status'] == 'ok':
                     return make_response(jsonify({'status': 'ok', 'msg': result['msg']}), 200)
             else:
-                result = t.delete_template()
+                t.delete_template()
                 return make_response(jsonify({'status': 'error', 'msg': result_records['msg']}), 500)
 
         else:
             return make_response(jsonify({'status': 'error', 'msg': result['msg']}), 500)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
@@ -1029,7 +1020,7 @@ def edit_template(template):
 
             return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return redirect(url_for('error', code=500))
     return redirect(url_for('templates'))
 
@@ -1060,7 +1051,7 @@ def apply_records(template):
         else:
             return make_response(jsonify(result), 400)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
@@ -1080,7 +1071,7 @@ def delete_template(template):
                 flash(result['msg'], 'error')
                 return redirect(url_for('templates'))
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return redirect(url_for('error', code=500))
     return redirect(url_for('templates'))
 
@@ -1226,7 +1217,7 @@ def admin_manageuser():
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -1315,7 +1306,7 @@ def admin_manageaccount():
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 

@@ -1,8 +1,7 @@
 from functools import wraps
-from flask import g, request, redirect, url_for
+from flask import g, redirect, url_for
 
-from app import app
-from app.models import Role, Setting
+from app.models import Setting
 
 
 def admin_role_required(f):

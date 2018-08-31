@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from app import app, db
-from app.models import Role, Setting, DomainTemplate
+from app import db
+from app.models import Role, DomainTemplate
 
 admin_role = Role(name='Administrator', description='Administrator')
 user_role = Role(name='User', description='User')

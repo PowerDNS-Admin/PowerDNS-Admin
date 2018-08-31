@@ -29,7 +29,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 db = SQLAlchemy(app)            # database
 migrate = Migrate(app, db)      # flask-migrate
-oauth = OAuth(app)              # oauth
+oauth_client = OAuth(app)       # oauth
 
 if app.config.get('SAML_ENABLED') and app.config.get('SAML_ENCRYPT'):
     from app.lib import certutil
