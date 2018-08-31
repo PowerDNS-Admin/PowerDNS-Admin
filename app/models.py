@@ -774,7 +774,7 @@ class Domain(db.Model):
             domain = Domain.query.filter(Domain.name==name).first()
             return domain.id
         except Exception as e:
-            logging.error('Domain does not exist. ERROR: {1}'.format(e))
+            logging.error('Domain does not exist. ERROR: {0}'.format(e))
             return None
 
     def update(self):
