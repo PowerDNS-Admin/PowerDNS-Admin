@@ -1,7 +1,6 @@
 var dnssecKeyList = []
 
 function applyChanges(data, url, showResult, refreshPage) {
-    var success = false;
     $.ajax({
         type : "POST",
         url : url,
@@ -36,7 +35,6 @@ function applyChanges(data, url, showResult, refreshPage) {
 }
 
 function applyRecordChanges(data, domain) {
-    var success = false;
     $.ajax({
         type : "POST",
         url : $SCRIPT_ROOT + '/domain/' + domain + '/apply',
@@ -67,8 +65,6 @@ function applyRecordChanges(data, domain) {
 }
 
 function getTableData(table) {
-    var rData = []
-
     // reformat - pretty format
     var records = []
     table.rows().every(function() {
@@ -86,15 +82,13 @@ function getTableData(table) {
 
 function saveRow(oTable, nRow) {
 
+    var status = 'Disabled';
     var jqInputs = $(oTable.row(nRow).node()).find("input");
     var jqSelect = $(oTable.row(nRow).node()).find("select");
 
     if (jqSelect[1].value == 'false') {
         status = 'Active';
-    } else {
-        status = 'Disabled';
     }
-
 
     oTable.cell(nRow,0).data(jqInputs[0].value);
     oTable.cell(nRow,1).data(jqSelect[0].value);
@@ -114,12 +108,12 @@ function saveRow(oTable, nRow) {
 
 function restoreRow(oTable, nRow) {
     var aData = oTable.row(nRow).data();
-    var jqTds = $('>td', nRow);
     oTable.row(nRow).data(aData);
     oTable.draw();
 }
 
 function editRow(oTable, nRow) {
+    var isDisabled = 'true';
     var aData = oTable.row(nRow).data();
     var jqTds = oTable.cells(nRow,'').nodes();
     var record_types = "";
@@ -138,9 +132,6 @@ function editRow(oTable, nRow) {
     // set current value of dropdows column
     if (aData[2] == 'Active'){
         isDisabled = 'false';
-    }
-    else {
-        isDisabled = 'true';
     }
 
     SelectElement('record_type', aData[1]);
@@ -172,13 +163,14 @@ function enable_dns_sec(url) {
 function getdnssec(url, domain){
 
     $.getJSON(url, function(data) {
+        var dnssec_footer = '';
         var modal = $("#modal_dnssec_info");
 
         if (data['status'] == 'error'){
             modal.find('.modal-body p').text(data['msg']);
         }
         else {
-            dnssec_msg = '';
+            var dnssec_msg = '';
             var dnssec = data['dnssec'];
 
             if (dnssec.length == 0 && parseFloat(PDNS_VERSION) >= 4.1) {

@@ -161,8 +161,7 @@
     // handle checkbox toggling
     $('.otp_toggle').on('ifToggled', function(event) {
         var enable_otp = $(this).prop('checked');
-        var username = $(this).prop('id');
-        postdata = {
+        var postdata = {
             'action' : 'enable_otp',
             'data' : {
                 'enable_otp' : enable_otp
