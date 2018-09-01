@@ -61,3 +61,18 @@ def can_configure_dnssec(f):
 
         return f(*args, **kwargs)
     return decorated_function
+
+
+def can_create_domain(f):
+    """
+    Grant access if:
+        - user is in Operator role or higher, or
+        - allow_user_create_domain is on
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user.role.name not in ['Administrator', 'Operator'] and not Setting().get('allow_user_create_domain'):
+            return redirect(url_for('error', code=401))
+
+        return f(*args, **kwargs)
+    return decorated_function

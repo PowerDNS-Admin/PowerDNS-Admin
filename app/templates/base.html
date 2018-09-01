@@ -108,10 +108,12 @@
         <li class="{{ 'active' if active_page == 'dashboard' else '' }}">
           <a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Dashboard</a>
         </li>
-        {% if current_user.role.name in ['Administrator', 'Operator'] %}
+        {% if SETTING.get('allow_user_create_domain') %}
         <li class="{{ 'active' if active_page == 'new_domain' else '' }}">
           <a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> New Domain</a>
         </li>
+        {% endif %}
+        {% if current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="header">ADMINISTRATION</li>
         <li class="{{ 'active' if active_page == 'admin_console' else '' }}">
           <a href="{{ url_for('admin_pdns') }}"><i class="fa fa-info-circle"></i> PDNS</a>

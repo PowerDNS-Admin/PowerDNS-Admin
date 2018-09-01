@@ -19,7 +19,7 @@ from .models import User, Account, Domain, Record, Role, Server, History, Anonym
 from app import app, login_manager
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth
-from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec
+from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec, can_create_domain
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
@@ -598,7 +598,7 @@ def domain(domain_name):
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
 @login_required
-@operator_role_required
+@can_create_domain
 def domain_add():
     templates = DomainTemplate.query.all()
     if request.method == 'POST':
@@ -627,6 +627,11 @@ def domain_add():
             if result['status'] == 'ok':
                 history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips, 'account_id': account_id}), created_by=current_user.username)
                 history.add()
+
+                # grant user access to the domain
+                Domain(name=domain_name).grant_privielges([current_user.username])
+
+                # apply template if needed
                 if domain_template != '0':
                     template = DomainTemplate.query.filter(DomainTemplate.id == domain_template).first()
                     template_records = DomainTemplateRecord.query.filter(DomainTemplateRecord.template_id == domain_template).all()
@@ -693,6 +698,7 @@ def domain_management(domain_name):
         new_user_list = request.form.getlist('domain_multi_user[]')
 
         # grant/revoke user privielges
+        d = Domain(name=domain_name)
         d.grant_privielges(new_user_list)
 
         history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list}), created_by=current_user.username)

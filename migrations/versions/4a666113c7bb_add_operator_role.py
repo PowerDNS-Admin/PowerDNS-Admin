@@ -24,10 +24,11 @@ def update_data():
         sa.sql.column('view', sa.String)
     )
 
-    # add ldap_operator_group setting
+    # add new settings
     op.bulk_insert(setting_table,
         [
             {'id': 44, 'name': 'ldap_operator_group', 'value': '', 'view': 'authentication'},
+            {'id': 45, 'name': 'allow_user_create_domain', 'value': 'False', 'view': 'basic'},
         ]
     )
 
@@ -54,5 +55,6 @@ def downgrade():
     op.execute("UPDATE user SET role_id = 2 WHERE role_id=3")
     op.execute("DELETE FROM role WHERE name = 'Operator'")
 
-    # delete ldap setting
+    # delete settings
     op.execute("DELETE FROM setting WHERE name = 'ldap_operator_group'")
+    op.execute("DELETE FROM setting WHERE name = 'allow_user_create_domain'")

@@ -1799,6 +1799,7 @@ class Setting(db.Model):
         'allow_quick_edit': True,
         'pretty_ipv6_ptr': False,
         'dnssec_admins_only': False,
+        'allow_user_create_domain': False,
         'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
         'pdns_api_url': '',
