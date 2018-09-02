@@ -1392,10 +1392,12 @@ class Record(object):
                         if ':' in r['record_name']: # dirty ipv6 check
                             r_name = r['record_name']
 
+            r_data = domain if r_type == 'CNAME' and r['record_data'] in ['@', ''] else r['record_data']
+            
             record = {
                         "name": r_name,
                         "type": r_type,
-                        "content": r['record_data'],
+                        "content": r_data,
                         "disabled": True if r['record_status'] == 'Disabled' else False,
                         "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
                     }
