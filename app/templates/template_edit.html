@@ -115,12 +115,23 @@
             "lengthMenu": " _MENU_ records"
         },
         "retrieve" : true,
-        "columnDefs": [{
-        	"targets": [ 7 ],
-        	"visible": false,
-        	"searchable": false
-        }]
-
+        "columnDefs": [
+            {
+                type: 'natural',
+                targets: [0, 4]
+            },
+            {
+                // hidden column so that we can add new records on top
+                // regardless of whatever sorting is done
+                visible: false,
+                targets: [ 7 ]
+            },
+            {
+                className: "length-break",
+                targets: [ 4 ]
+            }
+        ],
+        "orderFixed": [[7, 'asc']]
     });
 
     // handle delete button
@@ -132,15 +143,19 @@
         var nRow = $(this).parents('tr')[0];
         var info = "Are you sure you want to delete " + record + "?";
         modal.find('.modal-body p').text(info);
-        modal.find('#button_delete_confirm').click(function() {
-            table.row(nRow).remove().draw();
-            modal.modal('hide');
-        })
         modal.modal('show');
 
+        $("#button_delete_confirm").unbind().one('click', function(e) {
+            table.row(nRow).remove().draw();
+            modal.modal('hide');
+        });
+
+        $("#button_delete_cancel").unbind().one('click', function(e) {
+            modal.modal('hide');
+        });
     });
-    // handle edit button
-    $(document.body).on("click", ".button_edit, .row_record", function(e) {
+    // handle edit button and record click
+    $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
             var nRow = $(this)[0];
@@ -176,7 +191,9 @@
         var template = $(this).prop('id');
         var info = "Are you sure you want to apply your changes?";
         modal.find('.modal-body p').text(info);
-        modal.find('#button_apply_confirm').click(function() {
+
+        // following unbind("click") is to avoid multiple times execution
+        modal.find('#button_apply_confirm').unbind("click").click(function() {
             var data = getTableData(table);
             applyChanges(data, '/template/' + template + '/apply', true);
             modal.modal('hide');
@@ -188,15 +205,19 @@
     // handle add record button
     $(document.body).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
-                // TODO: replace this alert with modal
-                alert("Previous record not saved. Please save it before adding more record.")
+                var modal = $("#modal_error");
+                modal.find('.modal-body p').text("Previous record not saved. Please save it before adding more record.");
+                modal.modal('show');
                 return;
             }
-            var table = $("#tbl_records").DataTable();
+            // clear search first
+            $("#tbl_records").DataTable().search('').columns().search('').draw();
 
-            var aiNew = table.row.add(['', 'A', 'Active', 3600, '', '', '', '']).draw();
-            var nRow = aiNew.index();
-            editRow(table, nRow);
+            // add new row
+            var default_type = records_allow_edit[0]
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '0']);
+            editRow($("#tbl_records").DataTable(), nRow);
+            document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
             nNew = true;
         });
@@ -229,20 +250,50 @@
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();
         var record_data = $(this);
-        if (record_type == "MX") {
+        if (record_type == "CAA") {
+            var modal = $("#modal_custom_record");
+            if (record_data.val() == "") {
+                var form = "    <label for=\"caa_flag\">CAA Flag</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"caa_flag\" id=\"caa_flag\" placeholder=\"0\"> \
+                                <label for=\"caa_tag\">CAA Tag</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"caa_tag\" id=\"caa_tag\" placeholder=\"issue\"> \
+                                <label for=\"caa_value\">CAA Value</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"caa_value\" id=\"caa_value\" placeholder=\"eg. letsencrypt.org\"> \
+                            ";
+            } else {
+                var parts = record_data.val().split(" ");
+                var form = "    <label for=\"caa_flag\">CAA Flag</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"caa_flag\" id=\"caa_flag\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
+                                <label for=\"caa_tag\">CAA Tag</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"caa_tag\" id=\"caa_tag\" placeholder=\"issue\" value=\"" + parts[1] + "\"> \
+                                <label for=\"caa_value\">CAA Value</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"caa_value\" id=\"caa_value\" placeholder=\"eg. letsencrypt.org\" value=\"" + parts[2] + "\"> \
+                            ";
+            }
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                caa_flag = modal.find('#caa_flag').val();
+                caa_tag = modal.find('#caa_tag').val();
+                caa_value = modal.find('#caa_value').val();
+                data = caa_flag + " " + caa_tag + " " + '"' + caa_value + '"';
+                record_data.val(data);
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        } else if (record_type == "MX") {
             var modal = $("#modal_custom_record");
             if (record_data.val() == "") {
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\"> \
                                 <label for=\"mx_server\">MX Server</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\"> \
                             ";
             } else {
                 var parts = record_data.val().split(" ");
                 var form = "    <label for=\"mx_priority\">MX Priority</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"10\" value=\"" + parts[0] + "\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\" value=\"" + parts[0] + "\"> \
                                 <label for=\"mx_server\">MX Server</label> \
-                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"postfix.example.com\" value=\"" + parts[1] + "\"> \
+                                <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\" value=\"" + parts[1] + "\"> \
                             ";
             }
             modal.find('.modal-body p').html(form);
@@ -360,7 +411,7 @@
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left"
+                <button type="button" class="btn btn-flat btn-default pull-left" id="button_delete_cancel"
                     data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
             </div>

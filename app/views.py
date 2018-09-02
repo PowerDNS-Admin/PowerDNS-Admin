@@ -1017,16 +1017,18 @@ def edit_template(template):
     try:
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
         records_allow_to_edit = Setting().get_records_allow_to_edit()
+        quick_edit = Setting().get('record_quick_edit')
         if t is not None:
             records = []
             for jr in t.records:
                 if jr.type in records_allow_to_edit:
-                        record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
-                        records.append(record)
+                    record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
+                    records.append(record)
 
-            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit)
-    except:
-        logging.error(traceback.format_exc())
+            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit, quick_edit=quick_edit)
+    except Exception as e:
+        logging.error('Cannot open domain template page. DETAIL: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return redirect(url_for('error', code=500))
     return redirect(url_for('templates'))
 

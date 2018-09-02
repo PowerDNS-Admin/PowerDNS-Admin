@@ -156,7 +156,7 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    PDNS_VERSION = '{{ SETTING.get("pdns_version") }}'
+    PDNS_VERSION = '{{ SETTING.get("pdns_version") }}';
     // set up history data table
     $("#tbl_history").DataTable({
         "paging" : false,

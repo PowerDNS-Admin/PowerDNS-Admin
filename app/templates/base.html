@@ -108,7 +108,7 @@
         <li class="{{ 'active' if active_page == 'dashboard' else '' }}">
           <a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Dashboard</a>
         </li>
-        {% if SETTING.get('allow_user_create_domain') %}
+        {% if SETTING.get('allow_user_create_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="{{ 'active' if active_page == 'new_domain' else '' }}">
           <a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> New Domain</a>
         </li>

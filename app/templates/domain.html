@@ -57,13 +57,13 @@
                                         {{ record.type }}
                                     </td>
                                     <td>
-                                         {{ record.status }}
+                                        {{ record.status }}
                                     </td>
                                     <td>
-                                         {{ record.ttl }}
+                                        {{ record.ttl }}
                                     </td>
                                     <td>
-                                         {{ record.data }}
+                                        {{ record.data }}
                                     </td>
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
@@ -104,7 +104,6 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    PDNS_VERSION = '{{ SETTING.get("pdns_version") }}'
     // superglobals
     window.records_allow_edit = {{ editable_records|tojson }};
     window.nEditing = null;
@@ -361,7 +360,7 @@
                 record_data.val(data);
                 modal.modal('hide');
             })
-			modal.modal('show');
+            modal.modal('show');
             } else if (record_type == "SOA") {
                 var modal = $("#modal_custom_record");
                 if (record_data.val() == "") {
