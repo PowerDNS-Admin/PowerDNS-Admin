@@ -567,7 +567,7 @@ def domain(domain_name):
         # can not get any record, API server might be down
         return redirect(url_for('error', code=500))
 
-    quick_edit = Setting().get('allow_quick_edit')
+    quick_edit = Setting().get('record_quick_edit')
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting().get_forward_records_allow_to_edit()
     reverse_records_allow_to_edit = Setting().get_reverse_records_allow_to_edit()

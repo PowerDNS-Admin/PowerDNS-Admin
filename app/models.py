@@ -1796,7 +1796,7 @@ class Setting(db.Model):
         'default_record_table_size': 15,
         'default_domain_table_size': 10,
         'auto_ptr': False,
-        'allow_quick_edit': True,
+        'record_quick_edit': True,
         'pretty_ipv6_ptr': False,
         'dnssec_admins_only': False,
         'allow_user_create_domain': False,

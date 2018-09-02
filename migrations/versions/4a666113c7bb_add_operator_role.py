@@ -29,6 +29,7 @@ def update_data():
         [
             {'id': 44, 'name': 'ldap_operator_group', 'value': '', 'view': 'authentication'},
             {'id': 45, 'name': 'allow_user_create_domain', 'value': 'False', 'view': 'basic'},
+            {'id': 46, 'name': 'record_quick_edit', 'value': 'True', 'view': 'basic'},
         ]
     )
 
