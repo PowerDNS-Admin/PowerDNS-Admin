@@ -34,6 +34,7 @@ app.jinja_env.filters['display_record_name'] = utils.display_record_name
 app.jinja_env.filters['display_master_name'] = utils.display_master_name
 app.jinja_env.filters['display_second_to_time'] = utils.display_time
 app.jinja_env.filters['email_to_gravatar_url'] = utils.email_to_gravatar_url
+app.jinja_env.filters['display_setting_state'] = utils.display_setting_state
 
 
 @app.context_processor
@@ -1343,7 +1344,20 @@ def admin_history():
 @operator_role_required
 def admin_setting_basic():
     if request.method == 'GET':
-        settings = Setting.query.filter(Setting.view=='basic').all()
+        settings = ['maintenance',
+                    'fullscreen_layout',
+                    'record_helper',
+                    'login_ldap_first',
+                    'default_record_table_size',
+                    'default_domain_table_size',
+                    'auto_ptr',
+                    'record_quick_edit',
+                    'pretty_ipv6_ptr',
+                    'dnssec_admins_only',
+                    'allow_user_create_domain',
+                    'bg_domain_updates',
+                    'site_name'] 
+
         return render_template('admin_setting_basic.html', settings=settings)
 
 
@@ -1398,8 +1412,11 @@ def admin_setting_pdns():
 @operator_role_required
 def admin_setting_records():
     if request.method == 'GET':
-        f_records = literal_eval(Setting().get('forward_records_allow_edit'))
-        r_records = literal_eval(Setting().get('reverse_records_allow_edit'))
+        _fr = Setting().get('forward_records_allow_edit')
+        _rr = Setting().get('reverse_records_allow_edit')
+        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
+        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
+
         return render_template('admin_setting_records.html', f_records=f_records, r_records=r_records)
     elif request.method == 'POST':
         fr = {}

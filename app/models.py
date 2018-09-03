@@ -1786,7 +1786,6 @@ class Setting(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(64))
     value = db.Column(db.Text())
-    view = db.Column(db.String(64))
 
     defaults = {
         'maintenance': False,
@@ -1923,20 +1922,14 @@ class Setting(db.Model):
         return list(set(self.get_forward_records_allow_to_edit() + self.get_reverse_records_allow_to_edit()))
 
     def get_forward_records_allow_to_edit(self):
-        records = literal_eval(self.get('forward_records_allow_edit'))
-        return [r for r in records if records[r]]
+        records = self.get('forward_records_allow_edit')
+        f_records = literal_eval(records) if isinstance(records, str) else records
+        return [r for r in f_records if f_records[r]]
 
     def get_reverse_records_allow_to_edit(self):
-        records = literal_eval(self.get('reverse_records_allow_edit'))
-        return [r for r in records if records[r]]
-
-    def get_view(self, view):
-        r = {}
-        settings = Setting.query.filter(Setting.view == view).all()
-        for setting in settings:
-            d = setting.__dict__
-            r[d['name']] = d['value']
-        return r
+        records = self.get('reverse_records_allow_edit')
+        r_records = literal_eval(records) if isinstance(records, str) else records
+        return [r for r in r_records if r_records[r]]
 
 
 class DomainTemplate(db.Model):

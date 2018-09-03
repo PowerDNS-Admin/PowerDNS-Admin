@@ -34,23 +34,22 @@
                         <tbody>
                             {% for setting in settings %}
                             <tr class="odd ">
-                                <td>{{ setting.name }}</td>
-                                {% if setting.value == "True" or setting.value == "False" %}
-                                <td>{{ setting.value }}</td>
-                                {% else %}
-                                <td><input name="value" id="value" value="{{ setting.value }}"></td>
-                                {% endif %}
+                                <td>{{ setting }}</td>
+                                {% if SETTING.get(setting) in [True, False] %}
+                                <td>{{ SETTING.get(setting)|display_setting_state }}</td>
                                 <td width="6%">
-                                    {% if setting.value == "True" or setting.value == "False" %}
-                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting.name }}">
+                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button" id="{{ setting }}">
                                         Toggle&nbsp;<i class="fa fa-info"></i>
                                     </button>
-                                    {% else %}
-                                    <button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting.name }}">
+                                </td>
+                                {% else %}
+                                <td><input name="value" id="value" value="{{ SETTING.get(setting) }}"></td>
+                                <td width="6%">
+                                    <button type="button" class="btn btn-flat btn-warning setting-save-button" id="{{ setting }}">
                                         Save&nbsp;<i class="fa fa-info"></i>
                                     </button>
-                                    {% endif %}
                                 </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>

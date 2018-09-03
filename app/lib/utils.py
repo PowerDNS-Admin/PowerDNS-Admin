@@ -282,3 +282,12 @@ def init_saml_auth(req):
     settings['organization']['en-US']['url'] = own_url
     auth = OneLogin_Saml2_Auth(req, settings)
     return auth
+
+
+def display_setting_state(value):
+    if value == 1:
+        return "ON"
+    elif value == 0:
+        return "OFF"
+    else:
+        return "UNKNOWN"
