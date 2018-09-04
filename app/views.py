@@ -630,7 +630,7 @@ def domain_add():
                 history.add()
 
                 # grant user access to the domain
-                Domain(name=domain_name).grant_privielges([current_user.username])
+                Domain(name=domain_name).grant_privileges([current_user.username])
 
                 # apply template if needed
                 if domain_template != '0':
@@ -700,7 +700,7 @@ def domain_management(domain_name):
 
         # grant/revoke user privielges
         d = Domain(name=domain_name)
-        d.grant_privielges(new_user_list)
+        d.grant_privileges(new_user_list)
 
         history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
         history.add()
