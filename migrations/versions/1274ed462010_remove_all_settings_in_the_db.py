@@ -1,4 +1,4 @@
-"""Change setting.value data type
+"""Remove all setting in the DB
 
 Revision ID: 31a4ed468b18
 Revises: 4a666113c7bb

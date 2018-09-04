@@ -1,4 +1,6 @@
+import sys
 import os
+import re
 import ldap
 import ldap.filter
 import base64
@@ -6,7 +8,6 @@ import bcrypt
 import itertools
 import traceback
 import pyotp
-import re
 import dns.reversename
 import dns.inet
 import dns.name
@@ -1924,12 +1925,20 @@ class Setting(db.Model):
     def get_forward_records_allow_to_edit(self):
         records = self.get('forward_records_allow_edit')
         f_records = literal_eval(records) if isinstance(records, str) else records
-        return [r for r in f_records if f_records[r]]
+        r_name = [r for r in f_records if f_records[r]]
+        # Sort alphabetically if python version is smaller than 3.6
+        if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
+            r_name.sort()
+        return r_name
 
     def get_reverse_records_allow_to_edit(self):
         records = self.get('reverse_records_allow_edit')
         r_records = literal_eval(records) if isinstance(records, str) else records
-        return [r for r in r_records if r_records[r]]
+        r_name = [r for r in r_records if r_records[r]]
+        # Sort alphabetically if python version is smaller than 3.6
+        if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
+            r_name.sort()
+        return r_name
 
 
 class DomainTemplate(db.Model):
