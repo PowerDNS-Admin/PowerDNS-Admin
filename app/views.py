@@ -1324,12 +1324,14 @@ def admin_manageaccount():
 @operator_role_required
 def admin_history():
     if request.method == 'POST':
+        if current_user.role != 'Administrator':
+            return make_response(jsonify( { 'status': 'error', 'msg': 'You do not have permission to remove history.' } ), 401)
+
         h = History()
         result = h.remove_all()
         if result:
             history = History(msg='Remove all histories', created_by=current_user.username)
             history.add()
-
             return make_response(jsonify( { 'status': 'ok', 'msg': 'Changed user role successfully.' } ), 200)
         else:
             return make_response(jsonify( { 'status': 'error', 'msg': 'Can not remove histories.' } ), 500)
