@@ -36,7 +36,7 @@
                                 <th>First Name</th>
                                 <th>Last Name</th>
                                 <th>Email</th>
-                                <th>Admin</th>
+                                <th>Role</th>
                                 <th>Privileges</th>
                                 <th>Action</th>
                             </tr>
@@ -49,18 +49,22 @@
                                 <td>{{ user.lastname }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>
-                                    <input type="checkbox" id="{{ user.username }}" class="admin_toggle" {% if user.role.name=='Administrator' %}checked{% endif %} {% if user.username==current_user.username %}disabled{% endif %}>
+                                    <select id="{{ user.username }}" class="user_role" {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
+                                        {% for role in roles %}
+                                        <option value="{{ role.name }}" {% if role.id==user.role.id %}selected{% endif %}>{{ role.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </td>
                                 <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-warning button_revoke" id="{{ user.username }}">
+                                    <button type="button" class="btn btn-flat btn-warning button_revoke" id="{{ user.username }}" {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
                                         Revoke&nbsp;<i class="fa fa-lock"></i>
                                     </button>
                                 </td>
                                 <td width="15%">
-                                    <button type="button" class="btn btn-flat btn-success button_edit" onclick="window.location.href='{{ url_for('admin_edituser', user_username=user.username) }}'">
+                                    <button type="button" class="btn btn-flat btn-success button_edit" onclick="window.location.href='{{ url_for('admin_edituser', user_username=user.username) }}'" {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
                                         Edit&nbsp;<i class="fa fa-lock"></i>
                                     </button>
-                                    <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ user.username }}" {% if user.username==current_user.username %}disabled{% endif %}>
+                                    <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ user.username }}" {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
                                         Delete&nbsp;<i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -93,14 +97,6 @@
         "pageLength": 10
     });
 
-    // avoid losing icheck box style when database refreshed
-    $('#tbl_users').on('draw.dt', function () {
-        $('.admin_toggle').iCheck({
-            handle: 'checkbox',
-            checkboxClass: 'icheckbox_square-blue'
-        });
-    });
-
     // handle revocation of privileges
     $(document.body).on('click', '.button_revoke', function() {
         var modal = $("#modal_revoke");
@@ -129,24 +125,18 @@
         
     });
 
-    // initialize pretty checkboxes
-    $('.admin_toggle').iCheck({
-        checkboxClass : 'icheckbox_square-blue',
-        increaseArea : '20%' // optional
-    });
-    
-    // handle checkbox toggling
-    $(document.body).on('ifToggled', '.admin_toggle', function() {
-        var is_admin = $(this).prop('checked');
+    // handle user role changing
+    $('.user_role').on('change', function() {
+        var role_name = this.value;
         var username = $(this).prop('id');
         postdata = {
-            'action' : 'set_admin',
+            'action' : 'update_user_role',
             'data' : {
                 'username' : username,
-                'is_admin' : is_admin
+                'role_name' : role_name
             }
         };
-        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser');
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser', showResult=true);
     });
 </script>
 {% endblock %}

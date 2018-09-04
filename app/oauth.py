@@ -1,8 +1,7 @@
 from ast import literal_eval
 from flask import request, session, redirect, url_for
-from flask_oauthlib.client import OAuth
 
-from app import app, oauth
+from app import app, oauth_client
 from app.models import Setting
 
 # TODO: 
@@ -13,7 +12,7 @@ def github_oauth():
     if not Setting().get('github_oauth_enabled'):
         return None
 
-    github = oauth.remote_app(
+    github = oauth_client.remote_app(
         'github',
         consumer_key = Setting().get('github_oauth_key'),
         consumer_secret = Setting().get('github_oauth_secret'),
@@ -48,7 +47,7 @@ def google_oauth():
     if not Setting().get('google_oauth_enabled'):
         return None
 
-    google = oauth.remote_app(
+    google = oauth_client.remote_app(
         'google',
         consumer_key=Setting().get('google_oauth_client_id'),
         consumer_secret=Setting().get('google_oauth_client_secret'),

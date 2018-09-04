@@ -23,13 +23,13 @@
 {% endmacro %}
 
 {% macro account(domain) %}
-    {% if current_user.role.name =='Administrator' %}
+    {% if current_user.role.name in ['Administrator', 'Operator'] %}
       {% if domain.account_description != "" %}{{ domain.account.description }} {% endif %}[{{ domain.account.name }}]
     {% endif %}
 {% endmacro %}
 
 {% macro actions(domain) %}
-  {% if current_user.role.name =='Administrator' %}
+  {% if current_user.role.name in ['Administrator', 'Operator'] %}
     <td width="25%">
       <button type="button" class="btn btn-flat btn-success button_template" id="{{ domain.name }}">
         Template&nbsp;<i class="fa fa-clone"></i>

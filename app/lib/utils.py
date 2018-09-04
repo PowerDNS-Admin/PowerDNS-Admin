@@ -1,5 +1,4 @@
 import re
-import sys
 import json
 import requests
 import hashlib
@@ -10,12 +9,10 @@ from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from threading import Thread
 
-from .certutil import *
+from .certutil import KEY_FILE, CERT_FILE
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
-    from onelogin.saml2.utils import OneLogin_Saml2_Utils
-    from onelogin.saml2.settings import OneLogin_Saml2_Settings
     from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
     idp_timestamp = datetime(1970, 1, 1)
     idp_data = None
@@ -227,7 +224,7 @@ def prepare_flask_request(request):
 
 def init_saml_auth(req):
     own_url = ''
-    if req['https'] is 'on':
+    if req['https'] == 'on':
         own_url = 'https://'
     else:
         own_url = 'http://'
@@ -285,3 +282,12 @@ def init_saml_auth(req):
     settings['organization']['en-US']['url'] = own_url
     auth = OneLogin_Saml2_Auth(req, settings)
     return auth
+
+
+def display_setting_state(value):
+    if value == 1:
+        return "ON"
+    elif value == 0:
+        return "OFF"
+    else:
+        return "UNKNOWN"

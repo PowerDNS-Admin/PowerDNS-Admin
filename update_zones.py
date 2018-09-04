@@ -10,8 +10,6 @@
 ##############################################################
 
 ### Imports
-from app import app
-from app.lib import log
 from app.models import Domain
 from config import BG_DOMAIN_UPDATES
 

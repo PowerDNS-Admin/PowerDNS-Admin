@@ -1,5 +1,4 @@
 import base64
-import json
 import logging as logger
 import os
 import traceback
@@ -10,22 +9,19 @@ from functools import wraps
 from io import BytesIO
 from ast import literal_eval
 
-import jinja2
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
 from flask import g, request, make_response, jsonify, render_template, session, redirect, url_for, send_from_directory, abort, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
-from werkzeug.security import gen_salt
 
 from .models import User, Account, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth
-from app.decorators import admin_role_required, can_access_domain, can_configure_dnssec
+from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec, can_create_domain
 
 if app.config['SAML_ENABLED']:
-    from onelogin.saml2.auth import OneLogin_Saml2_Auth
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 google = None
@@ -38,6 +34,7 @@ app.jinja_env.filters['display_record_name'] = utils.display_record_name
 app.jinja_env.filters['display_master_name'] = utils.display_master_name
 app.jinja_env.filters['display_second_to_time'] = utils.display_time
 app.jinja_env.filters['email_to_gravatar_url'] = utils.email_to_gravatar_url
+app.jinja_env.filters['display_setting_state'] = utils.display_setting_state
 
 
 @app.context_processor
@@ -68,7 +65,7 @@ def before_request():
 
     # check site maintenance mode
     maintenance = Setting().get('maintenance')
-    if maintenance and current_user.is_authenticated and current_user.role.name != 'Administrator':
+    if maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']:
         return render_template('maintenance.html')
 
 
@@ -284,7 +281,6 @@ def saml_authorized():
 @app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def login():
-    LOGIN_TITLE = app.config['LOGIN_TITLE'] if 'LOGIN_TITLE' in app.config.keys() else ''
     SAML_ENABLED = app.config.get('SAML_ENABLED')
 
     if g.user is not None and current_user.is_authenticated:
@@ -454,7 +450,7 @@ def dashboard():
     BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
     if not BG_DOMAIN_UPDATE:
         logging.debug('Update domains in foreground')
-        d = Domain().update()
+        Domain().update()
     else:
         logging.debug('Update domains in background')
 
@@ -476,7 +472,7 @@ def dashboard():
 @app.route('/dashboard-domains', methods=['GET'])
 @login_required
 def dashboard_domains():
-    if current_user.role.name == 'Administrator':
+    if current_user.role.name in ['Administrator', 'Operator']:
         domains = Domain.query
     else:
         domains = User(id=current_user.id).get_domain_query()
@@ -508,7 +504,7 @@ def dashboard_domains():
         start = "" if search.startswith("^") else "%"
         end = "" if search.endswith("$") else "%"
 
-        if current_user.role.name == 'Administrator':
+        if current_user.role.name in ['Administrator', 'Operator']:
             domains = domains.outerjoin(Account).filter(Domain.name.ilike(start + search.strip("^$") + end) |
                                                         Account.name.ilike(start + search.strip("^$") + end) |
                                                         Account.description.ilike(start + search.strip("^$") + end))
@@ -572,7 +568,7 @@ def domain(domain_name):
         # can not get any record, API server might be down
         return redirect(url_for('error', code=500))
 
-    quick_edit = Setting().get('allow_quick_edit')
+    quick_edit = Setting().get('record_quick_edit')
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting().get_forward_records_allow_to_edit()
     reverse_records_allow_to_edit = Setting().get_reverse_records_allow_to_edit()
@@ -580,7 +576,7 @@ def domain(domain_name):
 
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for jr in jrecords:
-            if jr['type'] in Setting().get_records_allow_to_edit():
+            if jr['type'] in records_allow_to_edit:
                 for subrecord in jr['records']:
                     record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
                     records.append(record)
@@ -591,7 +587,7 @@ def domain(domain_name):
         return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
     else:
         for jr in jrecords:
-            if jr['type'] in Setting().get_records_allow_to_edit():
+            if jr['type'] in records_allow_to_edit:
                 record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
                 records.append(record)
     if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
@@ -603,7 +599,7 @@ def domain(domain_name):
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@can_create_domain
 def domain_add():
     templates = DomainTemplate.query.all()
     if request.method == 'POST':
@@ -632,6 +628,11 @@ def domain_add():
             if result['status'] == 'ok':
                 history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips, 'account_id': account_id}), created_by=current_user.username)
                 history.add()
+
+                # grant user access to the domain
+                Domain(name=domain_name).grant_privileges([current_user.username])
+
+                # apply template if needed
                 if domain_template != '0':
                     template = DomainTemplate.query.filter(DomainTemplate.id == domain_template).first()
                     template_records = DomainTemplateRecord.query.filter(DomainTemplateRecord.template_id == domain_template).all()
@@ -651,7 +652,7 @@ def domain_add():
             else:
                 return render_template('errors/400.html', msg=result['msg']), 400
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return redirect(url_for('error', code=500))
 
     else:
@@ -661,7 +662,7 @@ def domain_add():
 
 @app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_delete(domain_name):
     d = Domain()
     result = d.delete(domain_name)
@@ -677,7 +678,7 @@ def domain_delete(domain_name):
 
 @app.route('/admin/domain/<path:domain_name>/manage', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_management(domain_name):
     if request.method == 'GET':
         domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -697,12 +698,9 @@ def domain_management(domain_name):
         # username in right column
         new_user_list = request.form.getlist('domain_multi_user[]')
 
-        # get list of user ids to compare
-        d = Domain(name=domain_name)
-        domain_user_ids = d.get_user()
-
         # grant/revoke user privielges
-        d.grant_privielges(new_user_list)
+        d = Domain(name=domain_name)
+        d.grant_privileges(new_user_list)
 
         history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
         history.add()
@@ -712,13 +710,13 @@ def domain_management(domain_name):
 
 @app.route('/admin/domain/<path:domain_name>/change_soa_setting', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_change_soa_edit_api(domain_name):
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
         return redirect(url_for('error', code=404))
     new_setting = request.form.get('soa_edit_api')
-    if new_setting == None:
+    if new_setting is None:
         return redirect(url_for('error', code=500))
     if new_setting == '0':
         return redirect(url_for('domain_management', domain_name=domain_name))
@@ -738,7 +736,7 @@ def domain_change_soa_edit_api(domain_name):
 
 @app.route('/admin/domain/<path:domain_name>/change_account', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def domain_change_account(domain_name):
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
@@ -787,7 +785,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -810,13 +808,13 @@ def record_update(domain_name):
         else:
             return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
 @app.route('/domain/<path:domain_name>/record/<path:record_name>/type/<path:record_type>/delete', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def record_delete(domain_name, record_name, record_type):
     try:
         r = Record(name=record_name, type=record_type)
@@ -824,7 +822,7 @@ def record_delete(domain_name, record_name, record_type):
         if result['status'] == 'error':
             print(result['msg'])
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
@@ -866,14 +864,14 @@ def domain_dnssec_disable(domain_name):
     dnssec = domain.get_domain_dnssec(domain_name)
 
     for key in dnssec['dnssec']:
-        response = domain.delete_dnssec_key(domain_name,key['id']);
+        domain.delete_dnssec_key(domain_name,key['id']);
 
     return make_response(jsonify( { 'status': 'ok', 'msg': 'DNSSEC removed.' } ))
 
 
 @app.route('/domain/<path:domain_name>/managesetting', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setdomainsetting(domain_name):
     if request.method == 'POST':
         #
@@ -907,14 +905,14 @@ def admin_setdomainsetting(domain_name):
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
 @app.route('/templates', methods=['GET', 'POST'])
 @app.route('/templates/list', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def templates():
     templates = DomainTemplate.query.all()
     return render_template('template.html', templates=templates)
@@ -922,7 +920,7 @@ def templates():
 
 @app.route('/template/create', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def create_template():
     if request.method == 'GET':
         return render_template('template_add.html')
@@ -938,6 +936,7 @@ def create_template():
             if DomainTemplate.query.filter(DomainTemplate.name == name).first():
                 flash("A template with the name {0} already exists!".format(name), 'error')
                 return redirect(url_for('create_template'))
+
             t = DomainTemplate(name=name, description=description)
             result = t.create()
             if result['status'] == 'ok':
@@ -948,14 +947,13 @@ def create_template():
                 flash(result['msg'], 'error')
                 return redirect(url_for('create_template'))
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return redirect(url_for('error', code=500))
-        return redirect(url_for('templates'))
 
 
 @app.route('/template/createfromzone', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def create_template_from_zone():
     try:
         jdata = request.json
@@ -1003,33 +1001,35 @@ def create_template_from_zone():
             if result_records['status'] == 'ok':
                     return make_response(jsonify({'status': 'ok', 'msg': result['msg']}), 200)
             else:
-                result = t.delete_template()
+                t.delete_template()
                 return make_response(jsonify({'status': 'error', 'msg': result_records['msg']}), 500)
 
         else:
             return make_response(jsonify({'status': 'error', 'msg': result['msg']}), 500)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
 @app.route('/template/<path:template>/edit', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def edit_template(template):
     try:
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
         records_allow_to_edit = Setting().get_records_allow_to_edit()
+        quick_edit = Setting().get('record_quick_edit')
         if t is not None:
             records = []
             for jr in t.records:
                 if jr.type in records_allow_to_edit:
-                        record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
-                        records.append(record)
+                    record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
+                    records.append(record)
 
-            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit)
-    except:
-        logging.error(traceback.print_exc())
+            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit, quick_edit=quick_edit)
+    except Exception as e:
+        logging.error('Cannot open domain template page. DETAIL: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return redirect(url_for('error', code=500))
     return redirect(url_for('templates'))
 
@@ -1060,13 +1060,13 @@ def apply_records(template):
         else:
             return make_response(jsonify(result), 400)
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
 @app.route('/template/<path:template>/delete', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def delete_template(template):
     try:
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
@@ -1080,15 +1080,15 @@ def delete_template(template):
                 flash(result['msg'], 'error')
                 return redirect(url_for('templates'))
     except:
-        logging.error(traceback.print_exc())
+        logging.error(traceback.format_exc())
         return redirect(url_for('error', code=500))
     return redirect(url_for('templates'))
 
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin/pdns', methods=['GET'])
 @login_required
-@admin_role_required
-def admin():
+@operator_role_required
+def admin_pdns():
     if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key') or not Setting().get('pdns_version'):
         return redirect(url_for('admin_setting_pdns'))
 
@@ -1111,7 +1111,7 @@ def admin():
 @app.route('/admin/user/edit/<user_username>', methods=['GET', 'POST'])
 @app.route('/admin/user/edit', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_edituser(user_username=None):
     if request.method == 'GET':
         if not user_username:
@@ -1150,11 +1150,12 @@ def admin_edituser(user_username=None):
 
 @app.route('/admin/manageuser', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_manageuser():
     if request.method == 'GET':
+        roles = Role.query.all()
         users = User.query.order_by(User.username).all()
-        return render_template('admin_manageuser.html', users=users)
+        return render_template('admin_manageuser.html', users=users, roles=roles)
 
     if request.method == 'POST':
         #
@@ -1197,30 +1198,42 @@ def admin_manageuser():
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot revoke user privilege.' } ), 500)
 
-            elif jdata['action'] == 'set_admin':
+            elif jdata['action'] == 'update_user_role':
                 username = data['username']
+                role_name = data['role_name']
+
                 if username == current_user.username:
-                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot change you own admin rights.' } ), 400)
-                is_admin = data['is_admin']
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You cannot change you own roles.' } ), 400)
+
+                user = User.query.filter(User.username==username).first()
+                if not user:
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'User does not exist.' } ), 404)
+
+                if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You do not have permission to change Administrator users role.' } ), 400)
+
+                if role_name == 'Administrator' and current_user.role.name != 'Administrator':
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'You do not have permission to promote a user to Administrator role.' } ), 400)
+
                 user = User(username=username)
-                result = user.set_admin(is_admin)
-                if result:
-                    history = History(msg='Change user role of {0}'.format(username), created_by=current_user.username)
+                result = user.set_role(role_name)
+                if result['status']:
+                    history = History(msg='Change user role of {0} to {1}'.format(username, role_name), created_by=current_user.username)
                     history.add()
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Changed user role successfully.' } ), 200)
                 else:
-                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot change user role.' } ), 500)
+                    return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot change user role. {0}'.format(result['msg']) } ), 500)
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
 @app.route('/admin/account/edit/<account_name>', methods=['GET', 'POST'])
 @app.route('/admin/account/edit', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_editaccount(account_name=None):
     users = User.query.all()
 
@@ -1274,7 +1287,7 @@ def admin_editaccount(account_name=None):
 
 @app.route('/admin/manageaccount', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_manageaccount():
     if request.method == 'GET':
         accounts = Account.query.order_by(Account.name).all()
@@ -1302,21 +1315,23 @@ def admin_manageaccount():
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
         except:
-            logging.error(traceback.print_exc())
+            logging.error(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
 @app.route('/admin/history', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_history():
     if request.method == 'POST':
+        if current_user.role != 'Administrator':
+            return make_response(jsonify( { 'status': 'error', 'msg': 'You do not have permission to remove history.' } ), 401)
+
         h = History()
         result = h.remove_all()
         if result:
             history = History(msg='Remove all histories', created_by=current_user.username)
             history.add()
-
             return make_response(jsonify( { 'status': 'ok', 'msg': 'Changed user role successfully.' } ), 200)
         else:
             return make_response(jsonify( { 'status': 'error', 'msg': 'Can not remove histories.' } ), 500)
@@ -1328,16 +1343,29 @@ def admin_history():
 
 @app.route('/admin/setting/basic', methods=['GET'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_basic():
     if request.method == 'GET':
-        settings = Setting.query.filter(Setting.view=='basic').all()
+        settings = ['maintenance',
+                    'fullscreen_layout',
+                    'record_helper',
+                    'login_ldap_first',
+                    'default_record_table_size',
+                    'default_domain_table_size',
+                    'auto_ptr',
+                    'record_quick_edit',
+                    'pretty_ipv6_ptr',
+                    'dnssec_admins_only',
+                    'allow_user_create_domain',
+                    'bg_domain_updates',
+                    'site_name'] 
+
         return render_template('admin_setting_basic.html', settings=settings)
 
 
 @app.route('/admin/setting/basic/<path:setting>/edit', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_basic_edit(setting):
     jdata = request.json
     new_value = jdata['value']
@@ -1351,7 +1379,7 @@ def admin_setting_basic_edit(setting):
 
 @app.route('/admin/setting/basic/<path:setting>/toggle', methods=['POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_basic_toggle(setting):
     result = Setting().toggle(setting)
     if (result):
@@ -1383,11 +1411,14 @@ def admin_setting_pdns():
 
 @app.route('/admin/setting/dns-records', methods=['GET', 'POST'])
 @login_required
-@admin_role_required
+@operator_role_required
 def admin_setting_records():
     if request.method == 'GET':
-        f_records = literal_eval(Setting().get('forward_records_allow_edit'))
-        r_records = literal_eval(Setting().get('reverse_records_allow_edit'))
+        _fr = Setting().get('forward_records_allow_edit')
+        _rr = Setting().get('reverse_records_allow_edit')
+        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
+        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
+
         return render_template('admin_setting_records.html', f_records=f_records, r_records=r_records)
     elif request.method == 'POST':
         fr = {}
@@ -1438,6 +1469,7 @@ def admin_setting_authentication():
                 Setting().set('ldap_filter_username', request.form.get('ldap_filter_username'))
                 Setting().set('ldap_sg_enabled', True if request.form.get('ldap_sg_enabled')=='ON' else False)
                 Setting().set('ldap_admin_group', request.form.get('ldap_admin_group'))
+                Setting().set('ldap_operator_group', request.form.get('ldap_operator_group'))
                 Setting().set('ldap_user_group', request.form.get('ldap_user_group'))
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':
