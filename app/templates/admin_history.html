@@ -23,7 +23,7 @@
                     <h3 class="box-title">History Management</h3>
                 </div>
                 <div class="box-body clearfix">
-                    <button type="button" class="btn btn-flat btn-danger pull-right" data-toggle="modal" data-target="#modal_clear_history" {% if current_user.role != 'Administrator' %}disabled{% endif %}>
+                    <button type="button" class="btn btn-flat btn-danger pull-right" data-toggle="modal" data-target="#modal_clear_history" {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
                         Clear History&nbsp;<i class="fa fa-trash"></i>
                     </button>
                 </div>
