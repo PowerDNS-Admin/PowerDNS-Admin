@@ -980,7 +980,7 @@ class Domain(db.Model):
                 domain_users.append(tmp.username)
             if 0 != len(domain_users):
                 self.name = domain_reverse_name
-                self.grant_privielges(domain_users)
+                self.grant_privileges(domain_users)
                 return {'status': 'ok', 'msg': 'New reverse lookup domain created with granted privilages'}
             return {'status': 'ok', 'msg': 'New reverse lookup domain created without users'}
         return {'status': 'ok', 'msg': 'Reverse lookup domain already exists'}
@@ -1027,7 +1027,7 @@ class Domain(db.Model):
             user_ids.append(q[0].user_id)
         return user_ids
 
-    def grant_privielges(self, new_user_list):
+    def grant_privileges(self, new_user_list):
         """
         Reconfigure domain_user table
         """

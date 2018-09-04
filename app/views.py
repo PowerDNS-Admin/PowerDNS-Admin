@@ -658,6 +658,78 @@ def domain_add():
         accounts = Account.query.all()
         return render_template('domain_add.html', templates=templates, accounts=accounts)
 
+	
+@app.route('/admin/domain/clone', methods=['POST'])
+@login_required
+@admin_role_required
+def domain_clone():
+    domain_name = request.form.getlist('src_domain')[0].rstrip('.')
+    new_domain_name = request.form.getlist('dst_domain')[0].rstrip('.')
+    
+    #check if empty
+    if new_domain_name == '' or not new_domain_name.find('.'):
+        return make_response(jsonify( {'status': 'error', 'msg': 'Invalid target domain'} ), 500)
+    else:
+        #check if exists
+        result = Domain().update()
+        if result['status'] == 'error':
+            return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
+        check = Domain.query.filter(Domain.name == new_domain_name).first()
+        
+        if result['status'] == 'ok' and check is not None:
+            return make_response(jsonify( {'status': 'error', 'msg': 'Target domain already exists'} ), 403)
+        else:
+            #get source domain
+            domain = Domain.query.filter(Domain.name == domain_name).first()
+            if not domain:
+                return redirect(url_for('error', code=404))
+            if not current_user.can_access_domain(domain_name):
+                abort(403)
+            type = domain.type
+            soa = 'INCEPTION-INCREMENT'
+            #TODO: domain.settings -> soa
+            master_ips = domain.master
+            user_ids = domain.get_user()
+            users = []
+            for user in user_ids:
+                users.append(User(id=user).username)
+                
+            #get records
+            # query domain info from PowerDNS API
+            zone_info = Record().get_record_data(domain.name)
+            if zone_info:
+                records = zone_info['records']
+            else:
+                # can not get any record, API server might be down
+                return redirect(url_for('error', code=500))
+            
+            #create new domain
+            result = Domain().add(domain_name=new_domain_name, domain_type=type, soa_edit_api=soa, domain_master_ips=master_ips)
+            if result['status'] == 'error':
+                return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
+            else:    
+                result = Domain().update()
+                if result['status'] == 'error':
+                    return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
+                n = Domain.query.filter(Domain.name == new_domain_name).first()
+                if not n or result['status'] == 'error':
+                    return redirect(url_for('error', code=404))
+                #permit users
+                n.grant_privileges(users)
+                #add records
+                post_records = []
+                for record in records:
+                    migrated_name = record['name'].replace(domain_name, '').rstrip('.')
+                    for content in record['records']:
+                        post_records.append({'record_ttl': record['ttl'], 'record_type': record['type'], 'record_name': migrated_name, 'record_status': content['disabled'], 'record_data': content['content']})
+                result = Record().apply(n.name, post_records)
+                if result['status'] == 'error':
+                    return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
+				
+                history = History(msg='Clone domain %s to %s' % (domain_name, new_domain_name), detail=str({'src_domain': domain_name, 'dst_domain': new_domain_name}), created_by=current_user.username)
+                history.add()
+                return redirect(url_for('domain', domain_name=new_domain_name))
+
 
 @app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
 @login_required
@@ -702,7 +774,7 @@ def domain_management(domain_name):
         domain_user_ids = d.get_user()
 
         # grant/revoke user privielges
-        d.grant_privielges(new_user_list)
+        d.grant_privileges(new_user_list)
 
         history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
         history.add()
