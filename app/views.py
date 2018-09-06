@@ -103,7 +103,8 @@ def login_via_authorization_header(request):
             else:
                 login_user(user, remember = False)
                 return user
-        except:
+        except Exception as e:
+            logging.error('Error: {0}'.format(e))
             return None
     return None
 # END USER AUTHENTICATION HANDLER
@@ -651,8 +652,9 @@ def domain_add():
                 return redirect(url_for('dashboard'))
             else:
                 return render_template('errors/400.html', msg=result['msg']), 400
-        except:
-            logging.error(traceback.format_exc())
+        except Exception as e:
+            logging.error('Cannot add domain. Error: {0}'.format(e))
+            logging.debug(traceback.format_exc())
             return redirect(url_for('error', code=500))
 
     else:
@@ -784,8 +786,9 @@ def record_apply(domain_name):
             return make_response(jsonify( result ), 200)
         else:
             return make_response(jsonify( result ), 400)
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        logging.error('Canot apply record changes. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -807,8 +810,9 @@ def record_update(domain_name):
             return make_response(jsonify( {'status': 'ok', 'msg': result['msg']} ), 200)
         else:
             return make_response(jsonify( {'status': 'error', 'msg': result['msg']} ), 500)
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        logging.error('Cannot update record. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
@@ -821,8 +825,9 @@ def record_delete(domain_name, record_name, record_type):
         result = r.delete(domain=domain_name)
         if result['status'] == 'error':
             print(result['msg'])
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        logging.error('Cannot delete record. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return redirect(url_for('error', code=500)), 500
     return redirect(url_for('domain', domain_name=domain_name))
 
@@ -904,8 +909,9 @@ def admin_setdomainsetting(domain_name):
                         return make_response(jsonify( { 'status': 'error', 'msg': 'Unable to create new setting.' } ))
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
-        except:
-            logging.error(traceback.format_exc())
+        except Exception as e:
+            logging.error('Cannot change domain setting. Error: {0}'.format(e))
+            logging.debug(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -946,8 +952,9 @@ def create_template():
             else:
                 flash(result['msg'], 'error')
                 return redirect(url_for('create_template'))
-        except:
-            logging.error(traceback.format_exc())
+        except Exception as e:
+            logging.error('Cannot create domain template. Error: {0}'.format(e))
+            logging.debug(traceback.format_exc())
             return redirect(url_for('error', code=500))
 
 
@@ -1006,8 +1013,9 @@ def create_template_from_zone():
 
         else:
             return make_response(jsonify({'status': 'error', 'msg': result['msg']}), 500)
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        logging.error('Cannot create template from zone. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
@@ -1059,8 +1067,9 @@ def apply_records(template):
             return make_response(jsonify(result), 200)
         else:
             return make_response(jsonify(result), 400)
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        logging.error('Cannot apply record changes to the template. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
@@ -1079,8 +1088,9 @@ def delete_template(template):
             else:
                 flash(result['msg'], 'error')
                 return redirect(url_for('templates'))
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        logging.error('Cannot delete template. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return redirect(url_for('error', code=500))
     return redirect(url_for('templates'))
 
@@ -1225,8 +1235,9 @@ def admin_manageuser():
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot change user role. {0}'.format(result['msg']) } ), 500)
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
-        except:
-            logging.error(traceback.format_exc())
+        except Exception as e:
+            logging.error('Cannot update user. Error: {0}'.format(e))
+            logging.debug(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -1311,11 +1322,11 @@ def admin_manageaccount():
                     return make_response(jsonify( { 'status': 'ok', 'msg': 'Account has been removed.' } ), 200)
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot remove account.' } ), 500)
-
             else:
                 return make_response(jsonify( { 'status': 'error', 'msg': 'Action not supported.' } ), 400)
-        except:
-            logging.error(traceback.format_exc())
+        except Exception as e:
+            logging.error('Cannot update account. Error: {0}'.format(e))
+            logging.debug(traceback.format_exc())
             return make_response(jsonify( { 'status': 'error', 'msg': 'There is something wrong, please contact Administrator.' } ), 400)
 
 
@@ -1590,7 +1601,9 @@ def dyndns_update():
     try:
         # get all domains owned by the current user
         domains = User(id=current_user.id).get_domain()
-    except:
+    except Exception as e:
+        logging.error('DynDNS Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
         return render_template('dyndns.html', response='911'), 200
 
     domain = None
