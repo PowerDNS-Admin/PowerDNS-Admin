@@ -20,7 +20,7 @@ from distutils.util import strtobool
 from distutils.version import StrictVersion
 from flask_login import AnonymousUserMixin
 
-from app import app, db
+from app import db
 from app.lib import utils
 
 logging = logger.getLogger(__name__)
@@ -95,7 +95,7 @@ class User(db.Model):
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
-        if plain_text_password == None:
+        if plain_text_password is None:
             return plain_text_password
 
         pw = plain_text_password if plain_text_password else self.plain_text_password
@@ -1523,7 +1523,11 @@ class Record(object):
             jdata1 = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_delete)
             jdata2 = utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain)), headers=headers, method='PATCH', data=postdata_for_new)
 
-            if 'error' in jdata2.keys():
+            if 'error' in jdata1.keys():
+                logging.error('Cannot apply record changes.')
+                logging.debug(jdata1['error'])
+                return {'status': 'error', 'msg': jdata1['error']}
+            elif 'error' in jdata2.keys():
                 logging.error('Cannot apply record changes.')
                 logging.debug(jdata2['error'])
                 return {'status': 'error', 'msg': jdata2['error']}
