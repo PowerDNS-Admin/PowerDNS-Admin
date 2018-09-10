@@ -106,43 +106,43 @@
       <ul class="sidebar-menu" data-widget="tree">
         <li class="header">USER ACTIONS</li>
         <li class="{{ 'active' if active_page == 'dashboard' else '' }}">
-          <a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Dashboard</a>
+          <a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
         </li>
         {% if SETTING.get('allow_user_create_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="{{ 'active' if active_page == 'new_domain' else '' }}">
-          <a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> New Domain</a>
+          <a href="{{ url_for('domain_add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a>
         </li>
         {% endif %}
         {% if current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="header">ADMINISTRATION</li>
         <li class="{{ 'active' if active_page == 'admin_console' else '' }}">
-          <a href="{{ url_for('admin_pdns') }}"><i class="fa fa-info-circle"></i> PDNS</a>
+          <a href="{{ url_for('admin_pdns') }}"><i class="fa fa-info-circle"></i> <span>PDNS</span></a>
         </li>
         <li class="{{ 'active' if active_page == 'admin_history' else '' }}">
-          <a href="{{ url_for('admin_history') }}"><i class="fa fa-calendar"></i> History</a>
+          <a href="{{ url_for('admin_history') }}"><i class="fa fa-calendar"></i> <span>History</span></a>
         </li>
         <li class="{{ 'active' if active_page == 'admin_domain_template' else '' }}">
-          <a href="{{ url_for('templates') }}"><i class="fa fa-clone"></i> Domain Templates</a>
+          <a href="{{ url_for('templates') }}"><i class="fa fa-clone"></i> <span>Domain Templates</span></a>
         </li>
         <li class="{{ 'active' if active_page == 'admin_accounts' else '' }}">
-          <a href="{{ url_for('admin_manageaccount') }}"><i class="fa fa-industry"></i> Accounts</a>
+          <a href="{{ url_for('admin_manageaccount') }}"><i class="fa fa-industry"></i> <span>Accounts</span></a>
         </li>
         <li class="{{ 'active' if active_page == 'admin_users' else '' }}">
-          <a href="{{ url_for('admin_manageuser') }}"><i class="fa fa-users"></i> Users</a>
+          <a href="{{ url_for('admin_manageuser') }}"><i class="fa fa-users"></i> <span>Users</span></a>
         </li>          
         <li class="{{ 'treeview active' if active_page == 'admin_settings' else 'treeview' }}">
           <a href="#">
-            <i class="fa fa-cog"></i> Settings
+            <i class="fa fa-cog"></i> <span>Settings</span>
             <span class="pull-right-container">
               <i class="fa fa-angle-left pull-right"></i>
             </span>
           </a>
           <ul class="treeview-menu" {% if active_page == 'admin_settings' %}style="display: block;"{% endif %}>
-            <li><a href="{{ url_for('admin_setting_basic') }}"><i class="fa fa-circle-o"></i></i> Basic</a></li>
-            <li><a href="{{ url_for('admin_setting_records') }}"><i class="fa fa-circle-o"></i> Records</a></li>
+            <li><a href="{{ url_for('admin_setting_basic') }}"><i class="fa fa-circle-o"></i></i> <span>Basic</span></a></li>
+            <li><a href="{{ url_for('admin_setting_records') }}"><i class="fa fa-circle-o"></i> <span>Records</span></a></li>
             {% if current_user.role.name == 'Administrator' %}
-            <li><a href="{{ url_for('admin_setting_pdns') }}"><i class="fa fa-circle-o"></i> PDNS</a></li>
-            <li><a href="{{ url_for('admin_setting_authentication') }}"><i class="fa fa-circle-o"></i> Authentication</a></li>
+            <li><a href="{{ url_for('admin_setting_pdns') }}"><i class="fa fa-circle-o"></i> <span>PDNS</a></li>
+            <li><a href="{{ url_for('admin_setting_authentication') }}"><i class="fa fa-circle-o"></i> <span>Authentication</span></a></li>
             {% endif %}
           </ul>
         </li>
