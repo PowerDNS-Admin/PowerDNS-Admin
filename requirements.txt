@@ -1,6 +1,5 @@
 Flask==1.0.2
 Flask-Assets==0.12
-Flask-WTF==0.14.2
 Flask-Login==0.4.1
 Flask-OAuthlib==0.9.4
 Flask-SQLAlchemy==2.3.2
