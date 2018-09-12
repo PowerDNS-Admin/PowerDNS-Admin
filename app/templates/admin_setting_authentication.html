@@ -13,6 +13,21 @@
         <li><a href="#">Setting</a></li>
         <li class="active">Authentication</li>
     </ol>
+    <script>
+        function ldapSelection() {
+            if (document.getElementById('ldap').checked) {
+                document.getElementById('ldap_openldap_fields').style.display = 'block';
+                document.getElementById('ldap_ad_fields').style.display = 'none';
+            } else {
+                document.getElementById('ldap_openldap_fields').style.display = 'none';
+                document.getElementById('ldap_ad_fields').style.display = 'block';
+            }
+        }
+
+        window.onload = function() {
+            ldapSelection();
+        }
+    </script>
 </section>
 {% endblock %}
 {% block content %}
@@ -70,11 +85,11 @@
                                                     <label>Type</label>
                                                     <div class="radio">
                                                         <label>
-                                                            <input type="radio" name="ldap_type" id="ldap" value="ldap" {% if SETTING.get('ldap_type')=='ldap' %}checked{% endif %}> OpenLDAP
+                                                            <input type="radio" name="ldap_type" id="ldap" onclick="javascript:ldapSelection();" value="ldap" {% if SETTING.get('ldap_type')=='ldap' %}checked{% endif %}> OpenLDAP
                                                         </label>
                                                         &nbsp;&nbsp;&nbsp;
                                                         <label>
-                                                            <input type="radio" name="ldap_type" id="ad" value="ad" {% if SETTING.get('ldap_type')=='ad' %}checked{% endif %}> Active Directory
+                                                            <input type="radio" name="ldap_type" id="ad" onclick="javascript:ldapSelection();" value="ad" {% if SETTING.get('ldap_type')=='ad' %}checked{% endif %}> Active Directory
                                                         </label>
                                                     </div>
                                                 </div>
@@ -90,15 +105,24 @@
                                                     <input type="text" class="form-control" name="ldap_base_dn" id="ldap_base_dn" placeholder="e.g. dc=mydomain,dc=com" data-error="Please input LDAP Base DN" value="{{ SETTING.get('ldap_base_dn') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label for="ldap_admin_username">LDAP admin username</label>
-                                                    <input type="text" class="form-control" name="ldap_admin_username" id="ldap_admin_username" placeholder="e.g. cn=admin,dc=mydomain,dc=com" data-error="Please input LDAP admin username" value="{{ SETTING.get('ldap_admin_username') }}">
-                                                    <span class="help-block with-errors"></span>
+                                                <div id="ldap_openldap_fields">
+                                                    <div class="form-group">
+                                                        <label for="ldap_admin_username">LDAP admin username</label>
+                                                        <input type="text" class="form-control" name="ldap_admin_username" id="ldap_admin_username" placeholder="e.g. cn=admin,dc=mydomain,dc=com" data-error="Please input LDAP admin username" value="{{ SETTING.get('ldap_admin_username') }}">
+                                                        <span class="help-block with-errors"></span>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="ldap_admin_password">LDAP admin password</label>
+                                                        <input type="password" class="form-control" name="ldap_admin_password" id="ldap_admin_password" placeholder="LDAP Admin password" data-error="Please input LDAP admin password" value="{{ SETTING.get('ldap_admin_password') }}">
+                                                        <span class="help-block with-errors"></span>
+                                                    </div>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label for="ldap_admin_password">LDAP admin password</label>
-                                                    <input type="password" class="form-control" name="ldap_admin_password" id="ldap_admin_password" placeholder="LDAP Admin password" data-error="Please input LDAP admin password" value="{{ SETTING.get('ldap_admin_password') }}">
-                                                    <span class="help-block with-errors"></span>
+                                                <div id="ldap_ad_fields">
+                                                    <div class="form-group">
+                                                        <label for="ldap_domain">Active Directory domain</label>
+                                                        <input type="text" class="form-control" name="ldap_domain" id="ldap_domain" placeholder="Active Directory domain" data-error="Please input Actve Directory domain value" value="{{ SETTING.get('ldap_domain') }}">
+                                                        <span class="help-block with-errors"></span>
+                                                    </div>
                                                 </div>
                                             </fieldset>
                                             <fieldset>
@@ -175,10 +199,13 @@
                                                         LDAP Base DN - The point from where a PDA will search for users.
                                                     </li>
                                                     <li>
-                                                        LDAP admin username - Your LDAP administrator user which has permission to query information in the Base DN above.
+                                                        LDAP admin username - Your LDAP administrator user which has permission to query information in the Base DN above. Not needed for Active Directory authentication.
                                                     </li>
                                                     <li>
-                                                        LDAP admin password - The password of LDAP administrator user.
+                                                        LDAP admin password - The password of LDAP administrator user. Not needed for Active Directory authentication.
+                                                    </li>
+                                                    <li>
+                                                        Active Directory domain - Active Directory domain used.
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -337,7 +364,6 @@
 </section>
 {% endblock %}
 {% block extrascripts %}
-
 {% assets "js_validation" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
@@ -378,8 +404,15 @@
         if (is_enabled){
             $('#ldap_uri').prop('required', true);
             $('#ldap_base_dn').prop('required', true);
-            $('#ldap_admin_username').prop('required', true);
-            $('#ldap_admin_password').prop('required', true);
+            if ($('#ldap').is(":checked") ) {
+                $('#ldap_admin_username').prop('required', true);
+                $('#ldap_admin_password').prop('required', true);
+                $('#ldap_domain').prop('required', false);
+            } else {
+                $('#ldap_admin_username').prop('required', false);
+                $('#ldap_admin_password').prop('required', false);
+                $('#ldap_domain').prop('required', true);
+            }
             $('#ldap_filter_basic').prop('required', true);
             $('#ldap_filter_username').prop('required', true);
 
@@ -413,12 +446,31 @@
         }
     });
 
+    $("input[name='ldap_type']" ).change(function(){
+        if ($('#ldap').is(":checked") && $('#ldap_enabled').is(":checked")) {
+            $('#ldap_admin_group').prop('required', true);
+            $('#ldap_user_group').prop('required', true);
+            $('#ldap_domain').prop('required', false);
+        } else {
+            $('#ldap_admin_group').prop('required', false);
+            $('#ldap_user_group').prop('required', false);
+            $('#ldap_domain').prop('required', true);
+        }
+    });
+
     // init validation reqirement at first time page load
     {% if SETTING.get('ldap_enabled') %}
         $('#ldap_uri').prop('required', true);
         $('#ldap_base_dn').prop('required', true);
-        $('#ldap_admin_username').prop('required', true);
-        $('#ldap_admin_password').prop('required', true);
+        if ($('#ldap').is(":checked") ) {
+            $('#ldap_admin_username').prop('required', true);
+            $('#ldap_admin_password').prop('required', true);
+            $('#ldap_domain').prop('required', false);
+        } else {
+            $('#ldap_admin_username').prop('required', false);
+            $('#ldap_admin_password').prop('required', false);
+            $('#ldap_domain').prop('required', true);
+        }
         $('#ldap_filter_basic').prop('required', true);
         $('#ldap_filter_username').prop('required', true);
 

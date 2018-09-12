@@ -132,7 +132,10 @@ class User(db.Model):
 
         try:
             conn = self.ldap_init_conn()
-            conn.simple_bind_s(Setting().get('ldap_admin_username'), Setting().get('ldap_admin_password'))
+            if Setting().get('ldap_type') == 'ad':
+                conn.simple_bind_s("{0}@{1}".format(self.username,Setting().get('ldap_domain')), self.password)
+            else:
+                conn.simple_bind_s(Setting().get('ldap_admin_username'), Setting().get('ldap_admin_password'))
             ldap_result_id = conn.search(baseDN, searchScope, searchFilter, retrieveAttributes)
             result_set = []
 
@@ -189,6 +192,13 @@ class User(db.Model):
             LDAP_USER_GROUP = Setting().get('ldap_user_group')
             LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
+            # validate ldap user password
+            if Setting().get('ldap_type') == 'ad':
+                ldap_username = "{0}@{1}".format(self.username,Setting().get('ldap_domain'))
+                if not self.ldap_auth(ldap_username, self.password):
+                    logging.error('User "{0}" input a wrong LDAP password. Authentication request from {1}'.format(self.username, src_ip))
+                    return False
+
             searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_BASIC)
             logging.debug('Ldap searchFilter {0}'.format(searchFilter))
 
@@ -240,10 +250,11 @@ class User(db.Model):
                             logging.debug(traceback.format_exc())
                             return False
 
-                    # validate ldap user password
-                    if not self.ldap_auth(ldap_username, self.password):
-                        logging.error('User "{0}" input a wrong LDAP password. Authentication request from {1}'.format(self.username, src_ip))
-                        return False
+                        if Setting().get('ldap_type') != 'ad':
+                            # validate ldap user password
+                            if not self.ldap_auth(ldap_username, self.password):
+                                logging.error('User "{0}" input a wrong LDAP password. Authentication request from {1}'.format(self.username, src_ip))
+                                return False
 
                 except Exception as e:
                     logging.error('Wrong LDAP configuration. {0}'.format(e))
@@ -1825,6 +1836,7 @@ class Setting(db.Model):
         'ldap_admin_group': '',
         'ldap_operator_group': '',
         'ldap_user_group': '',
+        'ldap_domain': '',
         'github_oauth_enabled': False,
         'github_oauth_key': '',
         'github_oauth_secret': '',

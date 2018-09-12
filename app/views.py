@@ -1482,6 +1482,7 @@ def admin_setting_authentication():
                 Setting().set('ldap_admin_group', request.form.get('ldap_admin_group'))
                 Setting().set('ldap_operator_group', request.form.get('ldap_operator_group'))
                 Setting().set('ldap_user_group', request.form.get('ldap_user_group'))
+                Setting().set('ldap_domain', request.form.get('ldap_domain'))
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':
             Setting().set('google_oauth_enabled', True if request.form.get('google_oauth_enabled') else False)
