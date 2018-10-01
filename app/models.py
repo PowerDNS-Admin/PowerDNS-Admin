@@ -1808,6 +1808,7 @@ class Setting(db.Model):
         'allow_user_create_domain': False,
         'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
+        'session_timeout': 10,
         'pdns_api_url': '',
         'pdns_api_key': '',
         'pdns_version': '4.1.1',
