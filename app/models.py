@@ -176,7 +176,7 @@ class User(db.Model):
                     for member in group[0][1]['memberOf']:
                         result += self.ad_recursive_groups( member.decode("utf-8") )
             return result
-        except:
+        except ldap.LDAPError as e:
             logging.exception("Recursive AD Group search error")
             return result
 
