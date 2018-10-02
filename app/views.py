@@ -1375,7 +1375,8 @@ def admin_setting_basic():
                     'dnssec_admins_only',
                     'allow_user_create_domain',
                     'bg_domain_updates',
-                    'site_name'] 
+                    'site_name',
+                    'session_timeout' ] 
 
         return render_template('admin_setting_basic.html', settings=settings)
 
