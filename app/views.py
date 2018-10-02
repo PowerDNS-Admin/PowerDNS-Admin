@@ -689,7 +689,7 @@ def domain_management(domain_name):
         users = User.query.all()
         accounts = Account.query.all()
 
-        # get list of user ids to initilize selection data
+        # get list of user ids to initialize selection data
         d = Domain(name=domain_name)
         domain_user_ids = d.get_user()
         account = d.get_account()
