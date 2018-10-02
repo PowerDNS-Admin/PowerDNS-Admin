@@ -695,7 +695,7 @@ def domain_management(domain_name):
         users = User.query.all()
         accounts = Account.query.all()
 
-        # get list of user ids to initilize selection data
+        # get list of user ids to initialize selection data
         d = Domain(name=domain_name)
         domain_user_ids = d.get_user()
         account = d.get_account()
@@ -706,7 +706,7 @@ def domain_management(domain_name):
         # username in right column
         new_user_list = request.form.getlist('domain_multi_user[]')
 
-        # grant/revoke user privielges
+        # grant/revoke user privileges
         d = Domain(name=domain_name)
         d.grant_privileges(new_user_list)
 
@@ -793,7 +793,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except Exception as e:
-        logging.error('Canot apply record changes. Error: {0}'.format(e))
+        logging.error('Cannot apply record changes. Error: {0}'.format(e))
         logging.debug(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
@@ -1204,13 +1204,13 @@ def admin_manageuser():
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot remove user.' } ), 500)
 
-            elif jdata['action'] == 'revoke_user_privielges':
+            elif jdata['action'] == 'revoke_user_privileges':
                 user = User(username=data)
                 result = user.revoke_privilege()
                 if result:
-                    history = History(msg='Revoke {0} user privielges'.format(data), created_by=current_user.username)
+                    history = History(msg='Revoke {0} user privileges'.format(data), created_by=current_user.username)
                     history.add()
-                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Revoked user privielges.' } ), 200)
+                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Revoked user privileges.' } ), 200)
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot revoke user privilege.' } ), 500)
 

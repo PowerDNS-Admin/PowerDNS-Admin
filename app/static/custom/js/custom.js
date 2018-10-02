@@ -129,7 +129,7 @@ function editRow(oTable, nRow) {
     jqTds[5].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_save">Save</button>';
     jqTds[6].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_cancel">Cancel</button>';
 
-    // set current value of dropdows column
+    // set current value of dropdown column
     if (aData[2] == 'Active'){
         isDisabled = 'false';
     }

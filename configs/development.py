@@ -24,7 +24,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-# SAML Authnetication
+# SAML Authentication
 SAML_ENABLED = False
 SAML_DEBUG = True
 SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
@@ -86,10 +86,10 @@ SAML_ATTRIBUTE_ACCOUNT = 'https://example.edu/pdns-account'
 SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 SAML_SP_CONTACT_NAME = '<contact name>'
 SAML_SP_CONTACT_MAIL = '<contact mail>'
-#Cofigures if SAML tokens should be encrypted.
+#Configures if SAML tokens should be encrypted.
 #If enabled a new app certificate will be generated on restart
 SAML_SIGN_REQUEST = False
-#Use SAML standard logout mechanism retreived from idp metadata
+#Use SAML standard logout mechanism retrieved from idp metadata
 #If configured false don't care about SAML session on logout.
 #Logout from PowerDNS-Admin only and keep SAML session authenticated.
 SAML_LOGOUT = False
