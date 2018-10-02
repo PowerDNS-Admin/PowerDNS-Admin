@@ -102,7 +102,7 @@ class User(db.Model):
         return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
     def check_password(self, hashed_password):
-        # Check hased password. Useing bcrypt, the salt is saved into the hash itself
+        # Check hased password. Using bcrypt, the salt is saved into the hash itself
         if (self.plain_text_password):
             return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
         return False
