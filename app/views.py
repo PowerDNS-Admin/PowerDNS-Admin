@@ -787,7 +787,7 @@ def record_apply(domain_name):
         else:
             return make_response(jsonify( result ), 400)
     except Exception as e:
-        logging.error('Canot apply record changes. Error: {0}'.format(e))
+        logging.error('Cannot apply record changes. Error: {0}'.format(e))
         logging.debug(traceback.format_exc())
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
