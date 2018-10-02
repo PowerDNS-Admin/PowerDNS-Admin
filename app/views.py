@@ -3,6 +3,7 @@ import logging as logger
 import os
 import traceback
 import re
+import datetime
 from distutils.util import strtobool
 from distutils.version import StrictVersion
 from functools import wraps
@@ -68,6 +69,11 @@ def before_request():
     if maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']:
         return render_template('maintenance.html')
 
+    # Manage session timeout
+    session.permanent = True
+    app.permanent_session_lifetime = datetime.timedelta(minutes=int(Setting().get('session_timeout')))
+    session.modified = True
+    g.user = current_user
 
 @login_manager.user_loader
 def load_user(id):
@@ -1369,7 +1375,8 @@ def admin_setting_basic():
                     'dnssec_admins_only',
                     'allow_user_create_domain',
                     'bg_domain_updates',
-                    'site_name'] 
+                    'site_name',
+                    'session_timeout' ] 
 
         return render_template('admin_setting_basic.html', settings=settings)
 
