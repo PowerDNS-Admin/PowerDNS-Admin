@@ -700,7 +700,7 @@ def domain_management(domain_name):
         # username in right column
         new_user_list = request.form.getlist('domain_multi_user[]')
 
-        # grant/revoke user privielges
+        # grant/revoke user privileges
         d = Domain(name=domain_name)
         d.grant_privileges(new_user_list)
 
@@ -1198,13 +1198,13 @@ def admin_manageuser():
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot remove user.' } ), 500)
 
-            elif jdata['action'] == 'revoke_user_privielges':
+            elif jdata['action'] == 'revoke_user_privileges':
                 user = User(username=data)
                 result = user.revoke_privilege()
                 if result:
-                    history = History(msg='Revoke {0} user privielges'.format(data), created_by=current_user.username)
+                    history = History(msg='Revoke {0} user privileges'.format(data), created_by=current_user.username)
                     history.add()
-                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Revoked user privielges.' } ), 200)
+                    return make_response(jsonify( { 'status': 'ok', 'msg': 'Revoked user privileges.' } ), 200)
                 else:
                     return make_response(jsonify( { 'status': 'error', 'msg': 'Cannot revoke user privilege.' } ), 500)
 

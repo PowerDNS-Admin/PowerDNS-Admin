@@ -104,7 +104,7 @@
         var info = "Are you sure you want to revoke all privileges for " + username + ". They will not able to access any domain."; 
         modal.find('.modal-body p').text(info);
         modal.find('#button_revoke_confirm').click(function() {
-            var postdata = {'action': 'revoke_user_privielges', 'data': username}
+            var postdata = {'action': 'revoke_user_privileges', 'data': username}
             applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser');
             modal.modal('hide');
         })
