@@ -31,7 +31,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_
 # DATABSE - SQLite
 # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
-# SAML Authnetication
+# SAML Authentication
 SAML_ENABLED = False
 SAML_DEBUG = True
 SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')

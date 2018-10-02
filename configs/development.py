@@ -24,7 +24,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-# SAML Authnetication
+# SAML Authentication
 SAML_ENABLED = False
 SAML_DEBUG = True
 SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
