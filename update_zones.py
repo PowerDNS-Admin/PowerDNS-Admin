@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 ####################################################################################################################################
-# A CLI Script to update list of domains instead from the UI. Can be usefull for people who want to execute updates from a cronjob 
+# A CLI Script to update list of domains instead from the UI. Can be useful for people who want to execute updates from a cronjob 
 # 
 # Tip:
 # When running from a cron, use flock (you might need to install it) to be sure only one process is running a time. eg:
