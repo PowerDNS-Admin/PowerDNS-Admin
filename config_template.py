@@ -93,7 +93,7 @@ SAML_ATTRIBUTE_ACCOUNT = 'https://example.edu/pdns-account'
 SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 SAML_SP_CONTACT_NAME = '<contact name>'
 SAML_SP_CONTACT_MAIL = '<contact mail>'
-#Cofigures if SAML tokens should be encrypted.
+#Configures if SAML tokens should be encrypted.
 #If enabled a new app certificate will be generated on restart
 SAML_SIGN_REQUEST = False
 #Use SAML standard logout mechanism retreived from idp metadata
