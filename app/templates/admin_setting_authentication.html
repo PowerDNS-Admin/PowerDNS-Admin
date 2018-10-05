@@ -458,7 +458,7 @@
         }
     });
 
-    // init validation reqirement at first time page load
+    // init validation requirement at first time page load
     {% if SETTING.get('ldap_enabled') %}
         $('#ldap_uri').prop('required', true);
         $('#ldap_base_dn').prop('required', true);
