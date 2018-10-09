@@ -102,7 +102,7 @@ class User(db.Model):
         return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
     def check_password(self, hashed_password):
-        # Check hased password. Useing bcrypt, the salt is saved into the hash itself
+        # Check hased password. Using bcrypt, the salt is saved into the hash itself
         if (self.plain_text_password):
             return bcrypt.checkpw(self.plain_text_password.encode('utf-8'), hashed_password.encode('utf-8'))
         return False
@@ -451,7 +451,7 @@ class User(db.Model):
 
     def revoke_privilege(self):
         """
-        Revoke all privielges from a user
+        Revoke all privileges from a user
         """
         user = User.query.filter(User.username == self.username).first()
 
@@ -463,7 +463,7 @@ class User(db.Model):
                 return True
             except Exception as e:
                 db.session.rollback()
-                logging.error('Cannot revoke user {0} privielges. DETAIL: {1}'.format(self.username, e))
+                logging.error('Cannot revoke user {0} privileges. DETAIL: {1}'.format(self.username, e))
                 return False
         return False
 
@@ -614,7 +614,7 @@ class Account(db.Model):
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on account {0}. DETAIL: {1}'.format(self.name, e))
+            logging.error('Cannot revoke user privileges on account {0}. DETAIL: {1}'.format(self.name, e))
 
         try:
             for uid in added_ids:
@@ -627,7 +627,7 @@ class Account(db.Model):
 
     def revoke_privileges_by_id(self, user_id):
         """
-        Remove a single user from prigilege list based on user_id
+        Remove a single user from privilege list based on user_id
         """
         new_uids = [u for u in self.get_user() if u != user_id]
         users = []
@@ -646,7 +646,7 @@ class Account(db.Model):
             return True
         except Exception as e:
             db.session.rollback()
-            logging.error('Cannot add user privielges on account {0}. DETAIL: {1}'.format(self.name, e))
+            logging.error('Cannot add user privileges on account {0}. DETAIL: {1}'.format(self.name, e))
             return False
 
     def remove_user(self, user):
@@ -659,7 +659,7 @@ class Account(db.Model):
             return True
         except Exception as e:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on account {0}. DETAIL: {1}'.format(self.name, e))
+            logging.error('Cannot revoke user privileges on account {0}. DETAIL: {1}'.format(self.name, e))
             return False
 
 
@@ -983,7 +983,7 @@ class Domain(db.Model):
             if 0 != len(domain_users):
                 self.name = domain_reverse_name
                 self.grant_privileges(domain_users)
-                return {'status': 'ok', 'msg': 'New reverse lookup domain created with granted privilages'}
+                return {'status': 'ok', 'msg': 'New reverse lookup domain created with granted privileges'}
             return {'status': 'ok', 'msg': 'New reverse lookup domain created without users'}
         return {'status': 'ok', 'msg': 'Reverse lookup domain already exists'}
 
@@ -1048,7 +1048,7 @@ class Domain(db.Model):
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            logging.error('Cannot revoke user privielges on domain {0}. DETAIL: {1}'.format(self.name, e))
+            logging.error('Cannot revoke user privileges on domain {0}. DETAIL: {1}'.format(self.name, e))
 
         try:
             for uid in added_ids:
@@ -1057,7 +1057,7 @@ class Domain(db.Model):
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            logging.error('Cannot grant user privielges to domain {0}. DETAIL: {1}'.format(self.name, e))
+            logging.error('Cannot grant user privileges to domain {0}. DETAIL: {1}'.format(self.name, e))
 
     def update_from_master(self, domain_name):
         """
@@ -1819,6 +1819,7 @@ class Setting(db.Model):
         'allow_user_create_domain': False,
         'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
+        'session_timeout': 10,
         'pdns_api_url': '',
         'pdns_api_key': '',
         'pdns_version': '4.1.1',
