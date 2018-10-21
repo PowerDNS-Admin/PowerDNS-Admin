@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy as SA
 from flask_migrate import Migrate
 from flask_oauthlib.client import OAuth
+from authlib.flask.client import OAuth as AuthlibOAuth
 from sqlalchemy.exc import OperationalError
 
 # subclass SQLAlchemy to enable pool_pre_ping
@@ -30,6 +31,7 @@ login_manager.init_app(app)
 db = SQLAlchemy(app)            # database
 migrate = Migrate(app, db)      # flask-migrate
 oauth_client = OAuth(app)       # oauth
+authlib_oauth_client = AuthlibOAuth(app) # authlib oauth
 
 if app.config.get('SAML_ENABLED') and app.config.get('SAML_ENCRYPT'):
     from app.lib import certutil

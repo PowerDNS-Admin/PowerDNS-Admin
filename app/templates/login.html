@@ -83,14 +83,17 @@
         <!-- /.col -->
       </div>
     </form>
-    {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') %}
+    {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') %}
     <div class="social-auth-links text-center">
       <p>- OR -</p>
+      {% if SETTING.get('oidc_oauth_enabled') %}
+      <a href="{{ url_for('oidc_login') }}" class="btn btn-block btn-social btn-openid btn-flat"><i class="fa fa-openid"></i> Sign in using
+        OpenID Connect</a>
+      {% endif %}
       {% if SETTING.get('github_oauth_enabled') %}
       <a href="{{ url_for('github_login') }}" class="btn btn-block btn-social btn-github btn-flat"><i class="fa fa-github"></i> Sign in using
         Github</a>
       {% endif %}
-
       {% if SETTING.get('google_oauth_enabled') %}
       <a href="{{ url_for('google_login') }}" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using
         Google</a>

@@ -4,4 +4,4 @@ from config import PORT
 from config import BIND_ADDRESS
 
 if __name__ == '__main__':
-    app.run(debug = True, host=BIND_ADDRESS, port=PORT)
+    app.run(debug = True, host=BIND_ADDRESS, port=PORT, use_reloader=False)
