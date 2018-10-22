@@ -1,44 +1,44 @@
 from ast import literal_eval
 from flask import request, session, redirect, url_for
 
-from app import app, oauth_client, authlib_oauth_client
+from app import app, authlib_oauth_client
 from app.models import Setting
 
 # TODO: 
-#   - Replace Flask-OAuthlib by authlib
 #   - Fix github/google enabling (Currently need to reload the flask app)
 
 def github_oauth():
     if not Setting().get('github_oauth_enabled'):
         return None
 
-    github = oauth_client.remote_app(
+    def fetch_github_token():
+        return session.get('github_token')
+
+    github = authlib_oauth_client.register(
         'github',
-        consumer_key = Setting().get('github_oauth_key'),
-        consumer_secret = Setting().get('github_oauth_secret'),
+        client_id = Setting().get('github_oauth_key'),
+        client_secret = Setting().get('github_oauth_secret'),
         request_token_params = {'scope': Setting().get('github_oauth_scope')},
-        base_url = Setting().get('github_oauth_api_url'),
+        api_base_url = Setting().get('github_oauth_api_url'),
         request_token_url = None,
-        access_token_method = 'POST',
         access_token_url = Setting().get('github_oauth_token_url'),
-        authorize_url = Setting().get('github_oauth_authorize_url')
+        authorize_url = Setting().get('github_oauth_authorize_url'),
+        client_kwargs={'scope': Setting().get('github_oauth_scope')},
+        fetch_token=fetch_github_token,
     )
 
     @app.route('/github/authorized')
     def github_authorized():
         session['github_oauthredir'] = url_for('.github_authorized', _external=True)
-        resp = github.authorized_response()
-        if resp is None:
+        token = github.authorize_access_token()
+        if token is None:
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error'],
                 request.args['error_description']
             )
-        session['github_token'] = (resp['access_token'], '')
+        session['github_token'] = (token)
         return redirect(url_for('.login'))
 
-    @github.tokengetter
-    def get_github_oauth_token():
-        return session.get('github_token')
 
     return github
 
@@ -47,32 +47,33 @@ def google_oauth():
     if not Setting().get('google_oauth_enabled'):
         return None
 
-    google = oauth_client.remote_app(
+    def fetch_google_token():
+        return session.get('google_token')
+        print("afkafna")
+
+    google = authlib_oauth_client.register(
         'google',
-        consumer_key=Setting().get('google_oauth_client_id'),
-        consumer_secret=Setting().get('google_oauth_client_secret'),
-        request_token_params=literal_eval(Setting().get('google_token_params')),
-        base_url=Setting().get('google_base_url'),
+        client_id=Setting().get('google_oauth_client_id'),
+        client_secret=Setting().get('google_oauth_client_secret'),
+        api_base_url=Setting().get('google_base_url'),
         request_token_url=None,
-        access_token_method='POST',
         access_token_url=Setting().get('google_token_url'),
         authorize_url=Setting().get('google_authorize_url'),
+        client_kwargs={'scope': Setting().get('google_oauth_scope')},
+        fetch_token=fetch_google_token,
     )
 
     @app.route('/google/authorized')
     def google_authorized():
-        resp = google.authorized_response()
-        if resp is None:
+        session['google_oauthredir'] = url_for('.google_authorized', _external=True)
+        token = google.authorize_access_token()
+        if token is None:
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error_reason'],
                 request.args['error_description']
             )
-        session['google_token'] = (resp['access_token'], '')
+        session['google_token'] = (token)
         return redirect(url_for('.login'))
-
-    @google.tokengetter
-    def get_google_oauth_token():
-        return session.get('google_token')
 
     return google
 

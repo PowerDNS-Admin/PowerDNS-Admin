@@ -245,8 +245,8 @@
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="google_token_params">Token params</label>
-                                                    <input type="text" class="form-control" name="google_token_params" id="google_token_params" placeholder="e.g. {'scope': 'email profile'}" data-error="Please input token params" value="{{ SETTING.get('google_token_params') }}">
+                                                    <label for="google_oauth_scope">Scope</label>
+                                                    <input type="text" class="form-control" name="google_oauth_scope" id="google_oauth_scope" placeholder="e.g. email profile" data-error="Please input scope" value="{{ SETTING.get('google_oauth_scope') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                                 <div class="form-group">
@@ -496,14 +496,14 @@
             $('#google_oauth_client_id').prop('required', true);
             $('#google_oauth_client_secret').prop('required', true);
             $('#google_token_url').prop('required', true);
-            $('#google_token_params').prop('required', true);
+            $('#google_oauth_scope').prop('required', true);
             $('#google_authorize_url').prop('required', true);
             $('#google_base_url').prop('required', true);
         } else {
             $('#google_oauth_client_id').prop('required', false);
             $('#google_oauth_client_secret').prop('required', false);
             $('#google_token_url').prop('required', false);
-            $('#google_token_params').prop('required', false);
+            $('#google_oauth_scope').prop('required', false);
             $('#google_authorize_url').prop('required', false);
             $('#google_base_url').prop('required', false);
         }
@@ -514,7 +514,7 @@
         $('#google_oauth_client_id').prop('required', true);
         $('#google_oauth_client_secret').prop('required', true);
         $('#google_token_url').prop('required', true);
-        $('#google_token_params').prop('required', true);
+        $('#google_oauth_scope').prop('required', true);
         $('#google_authorize_url').prop('required', true);
         $('#google_base_url').prop('required', true);
     {% endif %}

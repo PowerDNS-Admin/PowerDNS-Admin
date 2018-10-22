@@ -163,7 +163,8 @@ def google_login():
         logging.error('Google OAuth is disabled or you have not yet reloaded the pda application after enabling.')
         return abort(400)
     else:
-        return google.authorize(callback=url_for('google_authorized', _external=True))
+        redirect_uri = url_for('google_authorized', _external=True)
+        return google.authorize_redirect(redirect_uri)
 
 
 @app.route('/github/login')
@@ -172,7 +173,8 @@ def github_login():
         logging.error('Github OAuth is disabled or you have not yet reloaded the pda application after enabling.')
         return abort(400)
     else:
-        return github.authorize(callback=url_for('github_authorized', _external=True))
+        redirect_uri = url_for('github_authorized', _external=True)
+        return github.authorize_redirect(redirect_uri)
 
 @app.route('/oidc/login')
 def oidc_login():
@@ -306,11 +308,13 @@ def login():
         return redirect(url_for('dashboard'))
 
     if 'google_token' in session:
-        user_data = google.get('userinfo').data
+        user_data = json.loads(google.get('userinfo').text)
         first_name = user_data['given_name']
         surname = user_data['family_name']
         email = user_data['email']
         user = User.query.filter_by(username=email).first()
+        if user == None:
+            user = User.query.filter_by(email=email).first()
         if not user:
             user = User(username=email,
                         firstname=first_name,
@@ -329,13 +333,14 @@ def login():
         return redirect(url_for('index'))
 
     if 'github_token' in session:
-        me = github.get('user').data
-
+        me = json.loads(github.get('user').text)
         github_username = me['login']
         github_name = me['name']
         github_email = me['email']
 
         user = User.query.filter_by(username=github_username).first()
+        if user == None:
+            user = User.query.filter_by(email=github_email).first()
         if not user:
             user = User(username=github_username,
                         plain_text_password=None,
@@ -1532,7 +1537,7 @@ def admin_setting_authentication():
             Setting().set('google_oauth_client_id', request.form.get('google_oauth_client_id'))
             Setting().set('google_oauth_client_secret', request.form.get('google_oauth_client_secret'))
             Setting().set('google_token_url', request.form.get('google_token_url'))
-            Setting().set('google_token_params', request.form.get('google_token_params'))
+            Setting().set('google_oauth_scope', request.form.get('google_oauth_scope'))
             Setting().set('google_authorize_url', request.form.get('google_authorize_url'))
             Setting().set('google_base_url', request.form.get('google_base_url'))
             result = {'status': True, 'msg': 'Saved successfully. Please reload PDA to take effect.'}
