@@ -249,7 +249,13 @@ class User(db.Model):
                                     return False
                             elif LDAP_TYPE == 'ad':
                                 user_ldap_groups = []
-                                for group in [g.decode("utf-8") for g in ldap_result[0][0][1]['memberOf']]:
+                                user_ad_member_of = ldap_result[0][0][1].get('memberOf')
+
+                                if not user_ad_member_of:
+                                    logging.error('User {0} does not belong to any group while LDAP_GROUP_SECURITY_ENABLED is ON'.format(self.username))
+                                    return False
+
+                                for group in [g.decode("utf-8") for g in user_ad_member_of]:
                                     user_ldap_groups += self.ad_recursive_groups( group )
 
                                 if (LDAP_ADMIN_GROUP in user_ldap_groups):
