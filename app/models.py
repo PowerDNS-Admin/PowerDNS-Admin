@@ -163,6 +163,26 @@ class User(db.Model):
             logging.error(e)
             return False
 
+    def ad_recursive_groups(self, groupDN):
+        """
+        Recursively list groups belonging to a group. It will allow checking deep in the Active Directory 
+        whether a user is allowed to enter or not
+        """
+        LDAP_BASE_DN = Setting().get('ldap_base_dn')
+        groupSearchFilter =  "(&(objectcategory=group)(member=%s))" % groupDN
+        result=[ groupDN ]
+        try:
+            groups = self.ldap_search(groupSearchFilter, LDAP_BASE_DN)
+            for group in groups:
+                result += [ group[0][0] ]
+                if 'memberOf' in group[0][1]:
+                    for member in group[0][1]['memberOf']:
+                        result += self.ad_recursive_groups( member.decode("utf-8") )
+            return result
+        except ldap.LDAPError as e:
+            logging.exception("Recursive AD Group search error")
+            return result
+
     def is_validate(self, method, src_ip=''):
         """
         Validate user credential
@@ -228,8 +248,9 @@ class User(db.Model):
                                     logging.error('User {0} is not part of the "{1}", "{2}" or "{3}" groups that allow access to PowerDNS-Admin'.format(self.username, LDAP_ADMIN_GROUP, LDAP_OPERATOR_GROUP, LDAP_USER_GROUP))
                                     return False
                             elif LDAP_TYPE == 'ad':
-                                user_ldap_groups = [g.decode("utf-8") for g in ldap_result[0][0][1]['memberOf']]
-                                logging.debug('user_ldap_groups: {0}'.format(user_ldap_groups))
+                                user_ldap_groups = []
+                                for group in [g.decode("utf-8") for g in ldap_result[0][0][1]['memberOf']]:
+                                    user_ldap_groups += self.ad_recursive_groups( group )
 
                                 if (LDAP_ADMIN_GROUP in user_ldap_groups):
                                     role_name = 'Administrator'
