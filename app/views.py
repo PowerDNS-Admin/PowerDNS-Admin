@@ -4,6 +4,7 @@ import os
 import traceback
 import re
 import datetime
+import json
 from distutils.util import strtobool
 from distutils.version import StrictVersion
 from functools import wraps
@@ -19,7 +20,7 @@ from werkzeug import secure_filename
 from .models import User, Account, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager
 from app.lib import utils
-from app.oauth import github_oauth, google_oauth
+from app.oauth import github_oauth, google_oauth, oidc_oauth
 from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec, can_create_domain
 
 if app.config['SAML_ENABLED']:
@@ -53,8 +54,10 @@ def inject_setting():
 def register_modules():
     global google
     global github
+    global oidc
     google = google_oauth()
     github = github_oauth()
+    oidc = oidc_oauth()
 
 
 # START USER AUTHENTICATION HANDLER
@@ -160,7 +163,8 @@ def google_login():
         logging.error('Google OAuth is disabled or you have not yet reloaded the pda application after enabling.')
         return abort(400)
     else:
-        return google.authorize(callback=url_for('google_authorized', _external=True))
+        redirect_uri = url_for('google_authorized', _external=True)
+        return google.authorize_redirect(redirect_uri)
 
 
 @app.route('/github/login')
@@ -169,8 +173,18 @@ def github_login():
         logging.error('Github OAuth is disabled or you have not yet reloaded the pda application after enabling.')
         return abort(400)
     else:
-        return github.authorize(callback=url_for('github_authorized', _external=True))
+        redirect_uri = url_for('github_authorized', _external=True)
+        return github.authorize_redirect(redirect_uri)
 
+@app.route('/oidc/login')
+def oidc_login():
+    if not Setting().get('oidc_oauth_enabled') or oidc is None:
+        logging.error('OIDC OAuth is disabled or you have not yet reloaded the pda application after enabling.')
+        return abort(400)
+    else:
+        redirect_uri = url_for('oidc_authorized', _external=True)
+        return oidc.authorize_redirect(redirect_uri)
+            
 
 @app.route('/saml/login')
 def saml_login():
@@ -294,11 +308,13 @@ def login():
         return redirect(url_for('dashboard'))
 
     if 'google_token' in session:
-        user_data = google.get('userinfo').data
+        user_data = json.loads(google.get('userinfo').text)
         first_name = user_data['given_name']
         surname = user_data['family_name']
         email = user_data['email']
         user = User.query.filter_by(username=email).first()
+        if user == None:
+            user = User.query.filter_by(email=email).first()
         if not user:
             user = User(username=email,
                         firstname=first_name,
@@ -317,13 +333,14 @@ def login():
         return redirect(url_for('index'))
 
     if 'github_token' in session:
-        me = github.get('user').data
-
+        me = json.loads(github.get('user').text)
         github_username = me['login']
         github_name = me['name']
         github_email = me['email']
 
         user = User.query.filter_by(username=github_username).first()
+        if user == None:
+            user = User.query.filter_by(email=github_email).first()
         if not user:
             user = User(username=github_username,
                         plain_text_password=None,
@@ -334,6 +351,31 @@ def login():
             result = user.create_local_user()
             if not result['status']:
                 session.pop('github_token', None)
+                return redirect(url_for('login'))
+
+        session['user_id'] = user.id
+        session['authentication_type'] = 'OAuth'
+        login_user(user, remember = False)
+        return redirect(url_for('index'))
+
+    if 'oidc_token' in session:
+        me = json.loads(oidc.get('userinfo').text)
+        oidc_username = me["preferred_username"]
+        oidc_givenname = me["name"]
+        oidc_familyname = ""
+        oidc_email = me["email"]
+
+        user = User.query.filter_by(username=oidc_username).first()
+        if not user:
+            user = User(username=oidc_username,
+                        plain_text_password=None,
+                        firstname=oidc_givenname,
+                        lastname=oidc_familyname,
+                        email=oidc_email)
+
+            result = user.create_local_user()
+            if not result['status']:
+                session.pop('oidc_token', None)
                 return redirect(url_for('login'))
 
         session['user_id'] = user.id
@@ -1496,7 +1538,7 @@ def admin_setting_authentication():
             Setting().set('google_oauth_client_id', request.form.get('google_oauth_client_id'))
             Setting().set('google_oauth_client_secret', request.form.get('google_oauth_client_secret'))
             Setting().set('google_token_url', request.form.get('google_token_url'))
-            Setting().set('google_token_params', request.form.get('google_token_params'))
+            Setting().set('google_oauth_scope', request.form.get('google_oauth_scope'))
             Setting().set('google_authorize_url', request.form.get('google_authorize_url'))
             Setting().set('google_base_url', request.form.get('google_base_url'))
             result = {'status': True, 'msg': 'Saved successfully. Please reload PDA to take effect.'}
@@ -1508,6 +1550,15 @@ def admin_setting_authentication():
             Setting().set('github_oauth_api_url', request.form.get('github_oauth_api_url'))
             Setting().set('github_oauth_token_url', request.form.get('github_oauth_token_url'))
             Setting().set('github_oauth_authorize_url', request.form.get('github_oauth_authorize_url'))
+            result = {'status': True, 'msg': 'Saved successfully. Please reload PDA to take effect.'}
+        elif conf_type == 'oidc':
+            Setting().set('oidc_oauth_enabled', True if request.form.get('oidc_oauth_enabled') else False)
+            Setting().set('oidc_oauth_key', request.form.get('oidc_oauth_key'))
+            Setting().set('oidc_oauth_secret', request.form.get('oidc_oauth_secret'))
+            Setting().set('oidc_oauth_scope', request.form.get('oidc_oauth_scope'))
+            Setting().set('oidc_oauth_api_url', request.form.get('oidc_oauth_api_url'))
+            Setting().set('oidc_oauth_token_url', request.form.get('oidc_oauth_token_url'))
+            Setting().set('oidc_oauth_authorize_url', request.form.get('oidc_oauth_authorize_url'))
             result = {'status': True, 'msg': 'Saved successfully. Please reload PDA to take effect.'}
         else:
             return abort(400)
