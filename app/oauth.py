@@ -1,4 +1,3 @@
-from ast import literal_eval
 from flask import request, session, redirect, url_for
 
 from app import app, authlib_oauth_client
@@ -39,7 +38,6 @@ def github_oauth():
         session['github_token'] = (token)
         return redirect(url_for('.login'))
 
-
     return github
 
 
@@ -49,7 +47,6 @@ def google_oauth():
 
     def fetch_google_token():
         return session.get('google_token')
-        print("afkafna")
 
     google = authlib_oauth_client.register(
         'google',

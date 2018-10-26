@@ -11,9 +11,8 @@ A PowerDNS web interface with advanced features.
 - User management
 - User access management based on domain
 - User activity logging
-- Local DB / SAML / LDAP / Active Directory user authentication
-- Google oauth authentication
-- Github oauth authentication
+- Support Local DB / SAML / LDAP / Active Directory user authentication
+- Support Google / Github / OpenID OAuth
 - Support Two-factor authentication (TOTP)
 - Dashboard and pdns service statistics
 - DynDNS 2 protocol support

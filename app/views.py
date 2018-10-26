@@ -313,7 +313,7 @@ def login():
         surname = user_data['family_name']
         email = user_data['email']
         user = User.query.filter_by(username=email).first()
-        if user == None:
+        if user is None:
             user = User.query.filter_by(email=email).first()
         if not user:
             user = User(username=email,
@@ -339,7 +339,7 @@ def login():
         github_email = me['email']
 
         user = User.query.filter_by(username=github_username).first()
-        if user == None:
+        if user is None:
             user = User.query.filter_by(email=github_email).first()
         if not user:
             user = User(username=github_username,
