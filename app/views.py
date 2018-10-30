@@ -600,7 +600,7 @@ def dashboard_domains_updater():
     return jsonify(response_data)
 
 
-@app.route('/domain/<path:domain_name>', methods=['GET', 'POST'])
+@app.route('/domain/<path:domain_name>', methods=['GET'])
 @login_required
 @can_access_domain
 def domain(domain_name):

@@ -412,6 +412,22 @@
                     modal.modal('hide');
                 })
             modal.modal('show');
+        } else if (record_type == "TXT") {
+            var txt_data = record_data.val().replace(/"/g, '&quot;');
+            var modal = $("#modal_custom_record");
+            var form = "    <label for=\"txt_record\">TXT Record Data</label> \
+                            <textarea style=\"min-width: 100%;color: #333;\" placeholder=\"Your TXT record data\" rows=\"5\" id=\"txt_record\" name=\"txt_record\">" + txt_data + "</textarea> \
+                       ";
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                data = modal.find('#txt_record').val();
+                if (! /^".*"$/.test(data)) {
+                    data = '"' + data + '"';
+                }
+                record_data.val(data);
+                modal.modal('hide');
+            })
+            modal.modal('show');
         }
     });
     {% endif %}
