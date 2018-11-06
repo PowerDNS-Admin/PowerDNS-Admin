@@ -34,6 +34,7 @@ services:
       - PDA_DB_NAME=${PDA_DB_NAME}
       - PDA_DB_USER=${PDA_DB_USER}
       - PDA_DB_PASSWORD=${PDA_DB_PASSWORD}
+      - PDA_DB_PORT=${PDA_DB_PORT}
       - PDNS_HOST=${PDNS_HOST}
       - PDNS_API_KEY=${PDNS_API_KEY}
       - FLASK_APP=/powerdns-admin/app/__init__.py
