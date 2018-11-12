@@ -1627,7 +1627,7 @@ def qrcode():
         return redirect(url_for('index'))
 
     # render qrcode for FreeTOTP
-    img = qrc.make(current_user.get_totp_uri(), image_factory=qrc_svg.SvgImage)
+    img = qrc.make(current_user.get_totp_uri(), image_factory=qrc_svg.SvgPathImage)
     stream = BytesIO()
     img.save(stream)
     return stream.getvalue(), 200, {
