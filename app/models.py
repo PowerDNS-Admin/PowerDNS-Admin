@@ -212,7 +212,7 @@ class User(db.Model):
             LDAP_USER_GROUP = Setting().get('ldap_user_group')
             LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
-            # validate ldap user password
+            # validate AD user password
             if Setting().get('ldap_type') == 'ad':
                 ldap_username = "{0}@{1}".format(self.username,Setting().get('ldap_domain'))
                 if not self.ldap_auth(ldap_username, self.password):
@@ -231,6 +231,13 @@ class User(db.Model):
             else:
                 try:
                     ldap_username = ldap.filter.escape_filter_chars(ldap_result[0][0][0])
+
+                    if Setting().get('ldap_type') != 'ad':
+                        # validate ldap user password
+                        if not self.ldap_auth(ldap_username, self.password):
+                            logging.error('User "{0}" input a wrong LDAP password. Authentication request from {1}'.format(self.username, src_ip))
+                            return False
+
                     # check if LDAP_GROUP_SECURITY_ENABLED is True
                     # user can be assigned to ADMIN or USER role.
                     if LDAP_GROUP_SECURITY_ENABLED:
@@ -276,12 +283,6 @@ class User(db.Model):
                             logging.error('LDAP group lookup for user "{0}" has failed. Authentication request from {1}'.format(self.username, src_ip))
                             logging.debug(traceback.format_exc())
                             return False
-
-                        if Setting().get('ldap_type') != 'ad':
-                            # validate ldap user password
-                            if not self.ldap_auth(ldap_username, self.password):
-                                logging.error('User "{0}" input a wrong LDAP password. Authentication request from {1}'.format(self.username, src_ip))
-                                return False
 
                 except Exception as e:
                     logging.error('Wrong LDAP configuration. {0}'.format(e))
