@@ -15,12 +15,12 @@ UPLOAD_DIR = os.path.join(basedir, 'upload')
 
 # DATABASE CONFIG FOR MYSQL
 DB_HOST = os.environ.get('PDA_DB_HOST')
+DB_PORT = os.environ.get('PDA_DB_PORT', 3306 )
 DB_NAME = os.environ.get('PDA_DB_NAME')
 DB_USER = os.environ.get('PDA_DB_USER')
 DB_PASSWORD = os.environ.get('PDA_DB_PASSWORD')
-
 #MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_NAME
+SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+':'+ str(DB_PORT) + '/'+DB_NAME
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
