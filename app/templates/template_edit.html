@@ -195,7 +195,7 @@
         // following unbind("click") is to avoid multiple times execution
         modal.find('#button_apply_confirm').unbind("click").click(function() {
             var data = getTableData(table);
-            applyChanges(data, '/template/' + template + '/apply', true);
+            applyChanges(data, $SCRIPT_ROOT + '/template/' + template + '/apply', true);
             modal.modal('hide');
         })
         modal.modal('show');
