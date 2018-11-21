@@ -26,6 +26,7 @@
             <!-- /.box-header -->
             <!-- form start -->
             <form role="form" method="post">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="create" value="{{ create }}">
                 <div class="box-body">
                     <table class="table table-bordered">

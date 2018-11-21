@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy as SA
 from flask_migrate import Migrate
 from authlib.flask.client import OAuth as AuthlibOAuth
 from sqlalchemy.exc import OperationalError
+from flask_seasurf import SeaSurf
 
 # subclass SQLAlchemy to enable pool_pre_ping
 class SQLAlchemy(SA):
@@ -18,6 +19,7 @@ from app.assets import assets
 app = Flask(__name__)
 app.config.from_object('config')
 app.wsgi_app = ProxyFix(app.wsgi_app)
+csrf = SeaSurf(app)
 
 assets.init_app(app)
 

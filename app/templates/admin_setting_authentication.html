@@ -57,6 +57,7 @@
                         <div class="tab-content">
                             <div class="tab-pane active" id="tabs-general">
                                 <form role="form" method="post">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" value="general" name="config_tab" />
                                     <div class="form-group">
                                         <input type="checkbox" id="local_db_enabled" name="local_db_enabled" class="checkbox" {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
@@ -75,6 +76,7 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <form role="form" method="post" data-toggle="validator">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="ldap" name="config_tab" />
                                             <fieldset>
                                                 <legend>GENERAL</legend>
@@ -246,6 +248,7 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <form role="form" method="post" data-toggle="validator">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="google" name="config_tab" />
                                             <fieldset>
                                                 <legend>GENERAL</legend>
@@ -303,6 +306,7 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <form role="form" method="post" data-toggle="validator">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="github" name="config_tab" />
                                             <fieldset>
                                                 <legend>GENERAL</legend>
@@ -353,12 +357,13 @@
                                         <legend>Help</legend>
                                         <p>Fill in all the fields in the left form.</p>
                                     </div>
-                                </div>                                    
+                                </div>
                             </div>
                             <div class="tab-pane" id="tabs-oidc">
                                 <div class="row">
                                     <div class="col-md-4">
                                         <form role="form" method="post" data-toggle="validator">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="oidc" name="config_tab" />
                                             <fieldset>
                                                 <legend>GENERAL</legend>

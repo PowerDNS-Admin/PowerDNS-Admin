@@ -35,6 +35,7 @@
         <div class="col-xs-12">
             <div class="box">
                 <form method="post" action="{{ url_for('domain_management', domain_name=domain.name) }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <div class="box-header">
                     <h3 class="box-title">Domain Access Control</h3>
                 </div>
@@ -81,6 +82,7 @@
                     <div class="col-xs-12">
                         <div class="form-group">
                             <form method="post" action="{{ url_for('domain_change_account', domain_name=domain.name) }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                 <select name="accountid" class="form-control" style="width:15em;">
                                     <option value="0">- No Account -</option>
                                     {% for account in accounts %}
@@ -108,7 +110,6 @@
                          {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %} {% if SETTING.get('auto_ptr') %}disabled="True"{% endif %}>
                          &nbsp;Allow automatic reverse pointer creation on record updates?{% if
                          SETTING.get('auto_ptr') %}</br><code>Auto-ptr is enabled globally on the PDA system!</code>{% endif %}</p>
-                    
                 </div>
             </div>
         </div>
@@ -123,7 +124,6 @@
                     <p><input type="checkbox" id="{{ domain.name }}" class="dyndns_on_demand_toggle"
                     	 {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked{% endif %}{% endfor %}>
                     	 &nbsp;Allow on-demand creation of records via DynDNS updates?</p>
-                    
                 </div>
             </div>
         </div>
@@ -152,6 +152,7 @@
                         </ul>
                     <b>New SOA-EDIT-API Setting:</b>
                     <form method="post" action="{{ url_for('domain_change_soa_edit_api', domain_name=domain.name) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <select name="soa_edit_api" class="form-control" style="width:15em;">
                         <option selected value="0">- Unchanged -</option>
                         <option>DEFAULT</option>
@@ -207,7 +208,8 @@ $('.dyndns_on_demand_toggle').on('ifToggled', function(event) {
         'data' : {
             'setting' : 'create_via_dyndns',
             'value' : is_checked
-        }
+        },
+        '_csrf_token': '{{ csrf_token() }}'
     };
     applyChanges(postdata,  $SCRIPT_ROOT + '/domain/' + domain + '/managesetting', true);
 });
@@ -219,7 +221,8 @@ $('.auto_ptr_toggle').on('ifToggled', function(event) {
         'data' : {
             'setting' : 'auto_ptr',
             'value' : is_checked
-        }
+        },
+        '_csrf_token': '{{ csrf_token() }}'
     };
     applyChanges(postdata,  $SCRIPT_ROOT + '/domain/' + domain + '/managesetting', true);
 });
@@ -231,13 +234,13 @@ $(document.body).on('click', '.delete_domain', function() {
     var info = "Are you sure you want to delete " + domain + "?";
     modal.find('.modal-body p').text(info);
     modal.find('#button_delete_confirm').click(function() {
-        $.get($SCRIPT_ROOT + '/admin/domain/' + domain + '/delete', function() {
+        $.post($SCRIPT_ROOT + '/admin/domain/' + domain + '/delete', { '_csrf_token': '{{ csrf_token() }}' }, function() {
             window.location.href = '{{ url_for('dashboard') }}';
         });
         modal.modal('hide');
     })
     modal.modal('show');
-    
+
 });
 </script>
 {% endblock %}

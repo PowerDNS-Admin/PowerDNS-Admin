@@ -28,6 +28,7 @@
             <!-- /.box-header -->
             <!-- form start -->
             <form role="form" method="post" action="{% if create %}{{ url_for('admin_editaccount') }}{% else %}{{ url_for('admin_editaccount', account_name=account.name) }}{% endif %}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="create" value="{{ create }}">
                 <div class="box-body">
                     {% if error %}

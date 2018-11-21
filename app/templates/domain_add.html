@@ -28,6 +28,7 @@
             <!-- /.box-header -->
             <!-- form start -->
             <form role="form" method="post" action="{{ url_for('domain_add') }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <div class="box-body">
                     <div class="form-group">
                         <input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter a valid domain name (required)">

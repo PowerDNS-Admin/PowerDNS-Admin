@@ -79,11 +79,9 @@
                       Edit&nbsp;<i class="fa fa-edit"></i>
                     </button>
                   </a>
-                    <a href="{{ url_for('delete_template', template=template.name) }}">
-                      <button type="button" class="btn btn-flat btn-danger button_delete" id="btn_delete">
-                          Delete&nbsp;<i class="fa fa-trash"></i>
-                      </button>
-                    </a>
+                    <button type="button" class="btn btn-flat btn-danger button_delete" id="{{template.name}}">
+                        Delete&nbsp;<i class="fa fa-trash"></i>
+                    </button>
                   </td>
                 </tr>
                 {% endfor %}
@@ -111,6 +109,15 @@
         "info" : false,
         "autoWidth" : false
     });
+    // handle delete button
+    $(document.body).on("click", ".button_delete", function(e) {
+        var template = $(this).prop('id');
+        $.post($SCRIPT_ROOT + '/template/' + template + '/delete', { '_csrf_token': '{{ csrf_token() }}' }, function() {
+            window.location.href = '{{ url_for('templates') }}';
+        });
+
+    });
+
 </script>
 {% endblock %}
 {% block modals %}

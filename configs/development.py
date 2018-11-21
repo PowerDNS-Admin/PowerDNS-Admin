@@ -2,7 +2,6 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # BASIC APP CONFIG
-WTF_CSRF_ENABLED = True
 SECRET_KEY = 'changeme'
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logs/log.txt'

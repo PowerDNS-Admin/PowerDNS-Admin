@@ -220,9 +220,9 @@
                         <input type=\"text\" class=\"form-control\" name=\"template_description\" id=\"template_description\" placeholder=\"Enter a template description (optional)\"> \
                         <input id=\"domain\" name=\"domain\" type=\"hidden\" value=\""+domain+"\"> \
                     ";
-        modal.find('.modal-body p').html(form);        
-        modal.find('#button_save').click(function() {                   
-            var data = {};
+        modal.find('.modal-body p').html(form);
+        modal.find('#button_save').click(function() {
+            var data = {'_csrf_token': '{{ csrf_token() }}'};
             data['name'] = modal.find('#template_name').val();
             data['description'] = modal.find('#template_description').val();
             data['domain'] = modal.find('#domain').val();
@@ -232,7 +232,7 @@
         modal.find('#button_close').click(function() {
             modal.modal('hide');
         })
-        
+
         modal.modal('show');
     });
 
@@ -244,13 +244,13 @@
 
     $(document.body).on("click", ".button_dnssec_enable", function() {
         var domain = $(this).prop('id');
-        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable');
+        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable', '{{ csrf_token() }}');
 
     });
 
     $(document.body).on("click", ".button_dnssec_disable", function() {
         var domain = $(this).prop('id');
-        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable');
+        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable', '{{ csrf_token() }}');
 
     });
     {% endif %}

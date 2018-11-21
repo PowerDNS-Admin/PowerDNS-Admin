@@ -60,7 +60,7 @@
     </div>
     <!-- /.row -->
 </section>
-{% endblock %} 
+{% endblock %}
 {% block extrascripts %}
 <script>
     // set up history data table
@@ -89,7 +89,7 @@
         modal.modal('show');
     });
 </script>
-{% endblock %} 
+{% endblock %}
 {% block modals %}
 <!-- Clear History Confirmation Box -->
 <div class="modal fade modal-warning" id="modal_clear_history">
@@ -108,7 +108,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-flat btn-default pull-left"
                     data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" onclick="applyChanges('', $SCRIPT_ROOT + '/admin/history', false, true);">Clear History</button>
+                <button type="button" class="btn btn-flat btn-danger" onclick="applyChanges({'_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/admin/history', false, true);">Clear History</button>
             </div>
         </div>
         <!-- /.modal-content -->

@@ -67,7 +67,7 @@
     </div>
     <!-- /.row -->
 </section>
-{% endblock %} 
+{% endblock %}
 {% block extrascripts %}
 <script>
     // set up accounts data table
@@ -90,16 +90,16 @@
     $(document.body).on('click', '.button_delete', function() {
         var modal = $("#modal_delete");
         var accountname = $(this).prop('id');
-        var info = "Are you sure you want to delete " + accountname + "?"; 
+        var info = "Are you sure you want to delete " + accountname + "?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_delete_confirm').click(function() {
-            var postdata = {'action': 'delete_account', 'data': accountname}
+            var postdata = {'action': 'delete_account', 'data': accountname, '_csrf_token': '{{ csrf_token() }}'}
             applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageaccount', false, true);
             modal.modal('hide');
         })
         modal.modal('show');
     });
-    
+
 </script>
 {% endblock %}
 {% block modals %}

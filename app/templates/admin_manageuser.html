@@ -81,7 +81,7 @@
     </div>
     <!-- /.row -->
 </section>
-{% endblock %} 
+{% endblock %}
 {% block extrascripts %}
 <script>
     // set up user data table
@@ -101,10 +101,10 @@
     $(document.body).on('click', '.button_revoke', function() {
         var modal = $("#modal_revoke");
         var username = $(this).prop('id');
-        var info = "Are you sure you want to revoke all privileges for " + username + ". They will not able to access any domain."; 
+        var info = "Are you sure you want to revoke all privileges for " + username + ". They will not able to access any domain.";
         modal.find('.modal-body p').text(info);
         modal.find('#button_revoke_confirm').click(function() {
-            var postdata = {'action': 'revoke_user_privileges', 'data': username}
+            var postdata = {'action': 'revoke_user_privileges', 'data': username, '_csrf_token': '{{ csrf_token() }}'}
             applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser');
             modal.modal('hide');
         })
@@ -114,15 +114,15 @@
     $(document.body).on('click', '.button_delete', function() {
         var modal = $("#modal_delete");
         var username = $(this).prop('id');
-        var info = "Are you sure you want to delete " + username + "?"; 
+        var info = "Are you sure you want to delete " + username + "?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_delete_confirm').click(function() {
-            var postdata = {'action': 'delete_user', 'data': username}
+            var postdata = {'action': 'delete_user', 'data': username, '_csrf_token': '{{ csrf_token() }}'}
             applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser', false, true);
             modal.modal('hide');
         })
         modal.modal('show');
-        
+
     });
 
     // handle user role changing
@@ -134,7 +134,8 @@
             'data' : {
                 'username' : username,
                 'role_name' : role_name
-            }
+            },
+            '_csrf_token' : '{{ csrf_token() }}'
         };
         applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser', showResult=true);
     });

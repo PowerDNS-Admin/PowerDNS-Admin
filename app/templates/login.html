@@ -32,6 +32,7 @@
       </div>
   {% endif %}
       <form action="" method="post" data-toggle="validator">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <input type="text" class="form-control" placeholder="Username" name="username" data-error="Please input your username" required {% if username %}value="{{ username }}"{% endif %}>
         <span class="help-block with-errors"></span>

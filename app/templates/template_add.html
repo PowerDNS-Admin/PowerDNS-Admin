@@ -50,6 +50,7 @@ if errors %}
 				<!-- form start -->
 				<form role="form" method="post"
 					action="{{ url_for('create_template') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 					<div class="box-body">
 						<div class="form-group">
 							<input type="text" class="form-control" name="name" id="name"

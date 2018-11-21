@@ -26,6 +26,7 @@
             <!-- /.box-header -->
             <!-- form start -->
             <form role="form" method="post" data-toggle="validator">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <div class="box-body">
                     {% if not SETTING.get('pdns_api_url') or not SETTING.get('pdns_api_key') or not SETTING.get('pdns_version') %}
                         <div class="alert alert-danger alert-dismissible">

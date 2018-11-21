@@ -63,7 +63,7 @@
     </div>
     <!-- /.row -->
 </section>
-{% endblock %} 
+{% endblock %}
 {% block extrascripts %}
 <script>
     // set up history data table
@@ -77,14 +77,14 @@
     });
     $(document.body).on('click', '.setting-toggle-button', function() {
         var setting = $(this).prop('id');
-        applyChanges('', $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
+        applyChanges({'_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
     });
-    
+
     $(document.body).on('click', '.setting-save-button', function() {
         var setting = $(this).prop('id');
         var value = $(this).parents('tr').find('#value')[0].value;
-        var postdata = {'value': value};
+        var postdata = {'value': value, '_csrf_token': '{{ csrf_token() }}'};
         applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
     });
 </script>
-{% endblock %} 
+{% endblock %}

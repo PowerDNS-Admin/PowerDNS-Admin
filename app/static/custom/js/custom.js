@@ -145,8 +145,8 @@ function SelectElement(elementID, valueToSelect)
     element.value = valueToSelect;
 }
 
-function enable_dns_sec(url) {
-  $.getJSON(url, function(data) {
+function enable_dns_sec(url, csrf_token) {
+  $.post(url, {'_csrf_token': csrf_token}, function(data) {
       var modal = $("#modal_dnssec_info");
 
       if (data['status'] == 'error'){
@@ -157,7 +157,7 @@ function enable_dns_sec(url) {
         //location.reload();
         window.location.reload(true);
       }
-  })
+  }, 'json')
 }
 
 function getdnssec(url, domain){

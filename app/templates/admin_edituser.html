@@ -28,6 +28,7 @@
             <!-- /.box-header -->
             <!-- form start -->
             <form role="form" method="post" action="{% if create %}{{ url_for('admin_edituser') }}{% else %}{{ url_for('admin_edituser', user_username=user.username) }}{% endif %}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="create" value="{{ create }}">
                 <div class="box-body">
                     {% if error %}
@@ -115,14 +116,14 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    // handle disabling two factor authentication 
+    // handle disabling two factor authentication
     $(document.body).on('click', '.button_otp_disable', function() {
         var modal = $("#modal_otp_disable");
         var username = $(this).prop('id');
-        var info = "Are you sure you want to disable two factor authentication for user " + username + "?"; 
+        var info = "Are you sure you want to disable two factor authentication for user " + username + "?";
         modal.find('.modal-body p').text(info);
         modal.find('#button_otp_disable_confirm').click(function() {
-            var postdata = {'action': 'user_otp_disable', 'data': username}
+            var postdata = {'action': 'user_otp_disable', 'data': username, '_csrf_token': '{{ csrf_token() }}'}
             applyChanges(postdata, $SCRIPT_ROOT + '/admin/manageuser', false, true);
         })
         modal.modal('show');

@@ -18,7 +18,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 
 from .models import User, Account, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
-from app import app, login_manager
+from app import app, login_manager, csrf
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth, oidc_oauth
 from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec, can_create_domain
@@ -184,7 +184,6 @@ def oidc_login():
     else:
         redirect_uri = url_for('oidc_authorized', _external=True)
         return oidc.authorize_redirect(redirect_uri)
-            
 
 @app.route('/saml/login')
 def saml_login():
@@ -215,6 +214,7 @@ def saml_metadata():
 
 
 @app.route('/saml/authorized', methods=['GET', 'POST'])
+@csrf.exempt
 def saml_authorized():
     errors = []
     if not app.config.get('SAML_ENABLED'):
@@ -710,7 +710,7 @@ def domain_add():
         return render_template('domain_add.html', templates=templates, accounts=accounts)
 
 
-@app.route('/admin/domain/<path:domain_name>/delete', methods=['GET'])
+@app.route('/admin/domain/<path:domain_name>/delete', methods=['POST'])
 @login_required
 @operator_role_required
 def domain_delete(domain_name):
@@ -864,22 +864,6 @@ def record_update(domain_name):
         return make_response(jsonify( {'status': 'error', 'msg': 'Error when applying new changes'} ), 500)
 
 
-@app.route('/domain/<path:domain_name>/record/<path:record_name>/type/<path:record_type>/delete', methods=['GET'])
-@login_required
-@operator_role_required
-def record_delete(domain_name, record_name, record_type):
-    try:
-        r = Record(name=record_name, type=record_type)
-        result = r.delete(domain=domain_name)
-        if result['status'] == 'error':
-            print(result['msg'])
-    except Exception as e:
-        logging.error('Cannot delete record. Error: {0}'.format(e))
-        logging.debug(traceback.format_exc())
-        return redirect(url_for('error', code=500)), 500
-    return redirect(url_for('domain', domain_name=domain_name))
-
-
 @app.route('/domain/<path:domain_name>/info', methods=['GET'])
 @login_required
 @can_access_domain
@@ -898,7 +882,7 @@ def domain_dnssec(domain_name):
     return make_response(jsonify(dnssec), 200)
 
 
-@app.route('/domain/<path:domain_name>/dnssec/enable', methods=['GET'])
+@app.route('/domain/<path:domain_name>/dnssec/enable', methods=['POST'])
 @login_required
 @can_access_domain
 @can_configure_dnssec
@@ -908,7 +892,7 @@ def domain_dnssec_enable(domain_name):
     return make_response(jsonify(dnssec), 200)
 
 
-@app.route('/domain/<path:domain_name>/dnssec/disable', methods=['GET'])
+@app.route('/domain/<path:domain_name>/dnssec/disable', methods=['POST'])
 @login_required
 @can_access_domain
 @can_configure_dnssec
@@ -1097,7 +1081,7 @@ def apply_records(template):
         jdata = request.json
         records = []
 
-        for j in jdata:
+        for j in jdata['records']:
             name = '@' if j['record_name'] in ['@', ''] else j['record_name']
             type = j['record_type']
             data = j['record_data']
@@ -1121,7 +1105,7 @@ def apply_records(template):
         return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
-@app.route('/template/<path:template>/delete', methods=['GET'])
+@app.route('/template/<path:template>/delete', methods=['POST'])
 @login_required
 @operator_role_required
 def delete_template(template):
@@ -1418,7 +1402,7 @@ def admin_setting_basic():
                     'allow_user_create_domain',
                     'bg_domain_updates',
                     'site_name',
-                    'session_timeout' ] 
+                    'session_timeout' ]
 
         return render_template('admin_setting_basic.html', settings=settings)
 
@@ -1638,6 +1622,7 @@ def qrcode():
 
 
 @app.route('/nic/checkip.html', methods=['GET', 'POST'])
+@csrf.exempt
 def dyndns_checkip():
     # route covers the default ddclient 'web' setting for the checkip service
     return render_template('dyndns.html', response=request.environ.get('HTTP_X_REAL_IP', request.remote_addr))
@@ -1645,6 +1630,7 @@ def dyndns_checkip():
 
 @app.route('/nic/update', methods=['GET', 'POST'])
 @dyndns_login_required
+@csrf.exempt
 def dyndns_update():
     # dyndns protocol response codes in use are:
     # good: update successful

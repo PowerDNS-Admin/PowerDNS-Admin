@@ -203,13 +203,13 @@
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var domain = $(this).prop('id');
-        var serial = $(".button_apply_changes").val(); 
+        var serial = $(".button_apply_changes").val();
         var info = "Are you sure you want to apply your changes?";
         modal.find('.modal-body p').text(info);
 
         // following unbind("click") is to avoid multiple times execution
         modal.find('#button_apply_confirm').unbind("click").click(function() {
-            var data = {'serial': serial, 'record': getTableData(table)};
+            var data = {'serial': serial, 'record': getTableData(table), '_csrf_token': '{{ csrf_token() }}'};
             applyRecordChanges(data, domain);
             modal.modal('hide');
         })
@@ -263,7 +263,7 @@
     //handle update_from_master button
     $(document.body).on("click", ".button_update_from_master", function (e) {
             var domain = $(this).prop('id');
-            applyChanges({'domain': domain}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
+            applyChanges({'domain': domain, '_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
     });
 
     {% if SETTING.get('record_helper') %}
