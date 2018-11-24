@@ -23,8 +23,10 @@ def upgrade():
     # written to the DB.
     op.execute("DELETE FROM setting")
 
-    # drop view column since we don't need it
-    op.drop_column('setting', 'view')
+    with op.batch_alter_table('setting') as batch_op:
+        # drop view column since we don't need it
+        batch_op.drop_column('view')
 
 def downgrade():
-    op.add_column('setting', sa.Column('view', sa.String(length=64), nullable=True))
+    with op.batch_alter_table('setting') as batch_op:
+        batch_op.add_column(sa.Column('view', sa.String(length=64), nullable=True))
