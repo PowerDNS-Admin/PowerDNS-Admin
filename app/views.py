@@ -621,6 +621,7 @@ def domain(domain_name):
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting().get_forward_records_allow_to_edit()
     reverse_records_allow_to_edit = Setting().get_reverse_records_allow_to_edit()
+    ttl_options = Setting().get_ttl_options()
     records = []
 
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
@@ -633,7 +634,7 @@ def domain(domain_name):
             editable_records = forward_records_allow_to_edit
         else:
             editable_records = reverse_records_allow_to_edit
-        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
+        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit, ttl_options=ttl_options)
     else:
         for jr in jrecords:
             if jr['type'] in records_allow_to_edit:
@@ -643,7 +644,7 @@ def domain(domain_name):
         editable_records = forward_records_allow_to_edit
     else:
         editable_records = reverse_records_allow_to_edit
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit, ttl_options=ttl_options)
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
@@ -1402,7 +1403,8 @@ def admin_setting_basic():
                     'allow_user_create_domain',
                     'bg_domain_updates',
                     'site_name',
-                    'session_timeout' ]
+                    'session_timeout',
+                    'ttl_options' ]
 
         return render_template('admin_setting_basic.html', settings=settings)
 

@@ -12,6 +12,7 @@ import dns.reversename
 import dns.inet
 import dns.name
 import logging as logger
+import pytimeparse
 
 from ast import literal_eval
 from datetime import datetime
@@ -165,7 +166,7 @@ class User(db.Model):
 
     def ad_recursive_groups(self, groupDN):
         """
-        Recursively list groups belonging to a group. It will allow checking deep in the Active Directory 
+        Recursively list groups belonging to a group. It will allow checking deep in the Active Directory
         whether a user is allowed to enter or not
         """
         LDAP_BASE_DN = Setting().get('ldap_base_dn')
@@ -1424,7 +1425,7 @@ class Record(object):
                             r_name = r['record_name']
 
             r_data = domain if r_type == 'CNAME' and r['record_data'] in ['@', ''] else r['record_data']
-            
+
             record = {
                         "name": r_name,
                         "type": r_type,
@@ -1889,6 +1890,7 @@ class Setting(db.Model):
         'oidc_oauth_authorize_url': '',
         'forward_records_allow_edit': {'A': True, 'AAAA': True, 'AFSDB': False, 'ALIAS': False, 'CAA': True, 'CERT': False, 'CDNSKEY': False, 'CDS': False, 'CNAME': True, 'DNSKEY': False, 'DNAME': False, 'DS': False, 'HINFO': False, 'KEY': False, 'LOC': True, 'MX': True, 'NAPTR': False, 'NS': True, 'NSEC': False, 'NSEC3': False, 'NSEC3PARAM': False, 'OPENPGPKEY': False, 'PTR': True, 'RP': False, 'RRSIG': False, 'SOA': False, 'SPF': True, 'SSHFP': False, 'SRV': True, 'TKEY': False, 'TSIG': False, 'TLSA': False, 'SMIMEA': False, 'TXT': True, 'URI': False},
         'reverse_records_allow_edit': {'A': False, 'AAAA': False, 'AFSDB': False, 'ALIAS': False, 'CAA': False, 'CERT': False, 'CDNSKEY': False, 'CDS': False, 'CNAME': False, 'DNSKEY': False, 'DNAME': False, 'DS': False, 'HINFO': False, 'KEY': False, 'LOC': True, 'MX': False, 'NAPTR': False, 'NS': True, 'NSEC': False, 'NSEC3': False, 'NSEC3PARAM': False, 'OPENPGPKEY': False, 'PTR': True, 'RP': False, 'RRSIG': False, 'SOA': False, 'SPF': False, 'SSHFP': False, 'SRV': False, 'TKEY': False, 'TSIG': False, 'TLSA': False, 'SMIMEA': False, 'TXT': True, 'URI': False},
+        'ttl_options': '1 minute,5 minutes,30 minutes,60 minutes,24 hours',
     }
 
     def __init__(self, id=None, name=None, value=None):
@@ -1993,6 +1995,9 @@ class Setting(db.Model):
         if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
             r_name.sort()
         return r_name
+
+    def get_ttl_options(self):
+        return [ (pytimeparse.parse(ttl),ttl) for ttl in self.get('ttl_options').split(',') ]
 
 
 class DomainTemplate(db.Model):
