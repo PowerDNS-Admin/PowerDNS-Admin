@@ -299,7 +299,6 @@ def saml_authorized():
         return  render_template('errors/SAML.html', errors=errors)
 
 
-@app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
 def unauthorized_callback():
     session['next'] = request.path
