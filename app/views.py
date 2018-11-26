@@ -299,8 +299,13 @@ def saml_authorized():
         return  render_template('errors/SAML.html', errors=errors)
 
 
-@app.route('/login', methods=['GET', 'POST'])
 @login_manager.unauthorized_handler
+def unauthorized_callback():
+    session['next'] = request.path
+    return redirect('/login')
+
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     SAML_ENABLED = app.config.get('SAML_ENABLED')
 
@@ -425,7 +430,7 @@ def login():
                 return render_template('login.html', saml_enabled=SAML_ENABLED, error='Token required')
 
         login_user(user, remember = remember_me)
-        return redirect(request.args.get('next') or url_for('index'))
+        return redirect(session.get('next', url_for('index')))
     else:
         if not username or not password or not email:
             return render_template('register.html', error='Please input required information')
