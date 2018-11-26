@@ -33,8 +33,9 @@ def update_data():
     )
 
 def upgrade():
-    # change column data type
-    op.alter_column('setting', 'value', existing_type=sa.String(256), type_=sa.Text())
+    with op.batch_alter_table('setting') as batch_op:
+        # change column data type
+        batch_op.alter_column('value', existing_type=sa.String(256), type_=sa.Text())
     # update data for new schema
     update_data()
 
@@ -42,5 +43,6 @@ def upgrade():
 def downgrade():
     # delete added records in previous version
     op.execute("DELETE FROM setting WHERE id > 41")
-    # change column data type
-    op.alter_column('setting', 'value', existing_type=sa.Text(), type_=sa.String(256))
+    with op.batch_alter_table('setting') as batch_op:
+        # change column data type
+        batch_op.alter_column('value', existing_type=sa.Text(), type_=sa.String(256))
