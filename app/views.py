@@ -301,8 +301,8 @@ def saml_authorized():
 
 @login_manager.unauthorized_handler
 def unauthorized_callback():
-    session['next'] = request.path
-    return redirect('/login')
+    session['next'] = request.script_root + request.path
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
