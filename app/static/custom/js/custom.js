@@ -112,18 +112,33 @@ function restoreRow(oTable, nRow) {
     oTable.draw();
 }
 
+function sec2str(t){
+    var d = Math.floor(t/86400),
+        h = Math.floor(t/3600) % 24,
+        m = Math.floor(t/60) % 60,
+        s = t % 60;
+    return (d>0?d+' days ':'')+(h>0?h+' hours ':'')+(m>0?m+' minutes ':'')+(s>0?s+' seconds':'');
+}
+
 function editRow(oTable, nRow) {
     var isDisabled = 'true';
     var aData = oTable.row(nRow).data();
     var jqTds = oTable.cells(nRow,'').nodes();
     var record_types = "";
     var ttl_opts = "";
+    var ttl_not_found = true;
     for(var i = 0; i < records_allow_edit.length; i++) {
         var record_type = records_allow_edit[i];
         record_types += "<option value=\"" + record_type + "\">" + record_type + "</option>";
     }
     for(var i = 0; i < ttl_options.length; i++) {
         ttl_opts += "<option value=\"" + ttl_options[i][0] + "\">" + ttl_options[i][1] + "</option>";
+        if (ttl_options[i][0] == aData[3]) {
+          ttl_not_found = false;
+        }
+    }
+    if (ttl_not_found) {
+      ttl_opts += "<option value=\"" + aData[3] + "\">" + sec2str(aData[3]) + "</option>";
     }
     jqTds[0].innerHTML = '<input type="text" id="edit-row-focus" class="form-control input-small" value="' + aData[0] + '">';
     jqTds[1].innerHTML = '<select class="form-control" id="record_type" name="record_type" value="' + aData[1]  + '">' + record_types + '</select>';
