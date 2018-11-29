@@ -626,6 +626,7 @@ def domain(domain_name):
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting().get_forward_records_allow_to_edit()
     reverse_records_allow_to_edit = Setting().get_reverse_records_allow_to_edit()
+    ttl_options = Setting().get_ttl_options()
     records = []
 
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
@@ -638,7 +639,7 @@ def domain(domain_name):
             editable_records = forward_records_allow_to_edit
         else:
             editable_records = reverse_records_allow_to_edit
-        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
+        return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit, ttl_options=ttl_options)
     else:
         for jr in jrecords:
             if jr['type'] in records_allow_to_edit:
@@ -648,7 +649,7 @@ def domain(domain_name):
         editable_records = forward_records_allow_to_edit
     else:
         editable_records = reverse_records_allow_to_edit
-    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit)
+    return render_template('domain.html', domain=domain, records=records, editable_records=editable_records, quick_edit=quick_edit, ttl_options=ttl_options)
 
 
 @app.route('/admin/domain/add', methods=['GET', 'POST'])
@@ -1064,6 +1065,7 @@ def edit_template(template):
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
         records_allow_to_edit = Setting().get_records_allow_to_edit()
         quick_edit = Setting().get('record_quick_edit')
+        ttl_options = Setting().get_ttl_options()
         if t is not None:
             records = []
             for jr in t.records:
@@ -1071,7 +1073,7 @@ def edit_template(template):
                     record = DomainTemplateRecord(name=jr.name, type=jr.type, status='Disabled' if jr.status else 'Active', ttl=jr.ttl, data=jr.data)
                     records.append(record)
 
-            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit, quick_edit=quick_edit)
+            return render_template('template_edit.html', template=t.name, records=records, editable_records=records_allow_to_edit, quick_edit=quick_edit, ttl_options=ttl_options)
     except Exception as e:
         logging.error('Cannot open domain template page. DETAIL: {0}'.format(e))
         logging.debug(traceback.format_exc())
@@ -1407,7 +1409,8 @@ def admin_setting_basic():
                     'allow_user_create_domain',
                     'bg_domain_updates',
                     'site_name',
-                    'session_timeout' ]
+                    'session_timeout',
+                    'ttl_options' ]
 
         return render_template('admin_setting_basic.html', settings=settings)
 
