@@ -126,7 +126,7 @@
     });
 
     // handle user role changing
-    $('.user_role').on('change', function() {
+     $(document.body).on('change', '.user_role', function() {
         var role_name = this.value;
         var username = $(this).prop('id');
         var postdata = {
