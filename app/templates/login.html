@@ -41,9 +41,11 @@
         <input type="password" class="form-control" placeholder="Password" name="password" data-error="Please input your password" required {% if password %}value="{{ password }}"{% endif %}>
         <span class="help-block with-errors"></span>
       </div>
+      {% if SETTING.get('enable_otp') %}
       <div class="form-group">
         <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
       </div>
+      {% endif %}
             {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
                     <div class="form-group">
               <select class="form-control" name="auth_method">

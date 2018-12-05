@@ -1410,7 +1410,8 @@ def admin_setting_basic():
                     'bg_domain_updates',
                     'site_name',
                     'session_timeout',
-                    'ttl_options' ]
+                    'ttl_options',
+                    'enable_otp']
 
         return render_template('admin_setting_basic.html', settings=settings)
 
