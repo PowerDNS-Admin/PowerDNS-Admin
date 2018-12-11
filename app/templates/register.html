@@ -31,7 +31,7 @@
             </div>
             {% endif %}
             <p class="login-box-msg">Enter your personal details below</p>
-            <form action="{{ url_for('login') }}" method="post" data-toggle="validator">
+            <form action="{{ url_for('register') }}" method="post" data-toggle="validator">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group has-feedback">
                     <input type="text" class="form-control" placeholder="First Name" name="firstname" data-error="Please input your first name" required>
