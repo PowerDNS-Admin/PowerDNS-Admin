@@ -149,10 +149,35 @@ def error(code, msg=None):
         return render_template('errors/404.html'), 404
 
 
-@app.route('/register', methods=['GET'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if Setting().get('signup_enabled'):
-        return render_template('register.html')
+        if request.method == 'GET':
+            return render_template('register.html')
+        elif request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            firstname = request.form.get('firstname')
+            lastname = request.form.get('lastname')
+            email = request.form.get('email')
+            rpassword = request.form.get('rpassword')
+
+            if not username or not password or not email:
+                return render_template('register.html', error='Please input required information')
+
+            if password != rpassword:
+                return render_template('register.html', error = "Password confirmation does not match")
+
+            user = User(username=username, plain_text_password=password, firstname=firstname, lastname=lastname, email=email)
+
+            try:
+                result = user.create_local_user()
+                if result and result['status']:
+                    return redirect(url_for('login'))
+                else:
+                    return render_template('register.html', error=result['msg'])
+            except Exception as e:
+                return render_template('register.html', error=e)
     else:
         return render_template('errors/404.html'), 404
 
@@ -391,65 +416,34 @@ def login():
     if request.method == 'GET':
         return render_template('login.html', saml_enabled=SAML_ENABLED)
 
-    # process login
+    # process Local-DB authentication
     username = request.form['username']
     password = request.form['password']
     otp_token = request.form.get('otptoken')
     auth_method = request.form.get('auth_method', 'LOCAL')
-
-    # addition fields for registration case
-    firstname = request.form.get('firstname')
-    lastname = request.form.get('lastname')
-    email = request.form.get('email')
-    rpassword = request.form.get('rpassword')
-
     session['authentication_type'] = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
+    remember_me = True if 'remember' in request.form else False
 
-    if None in [firstname, lastname, email]:
-        #login case
-        remember_me = False
-        if 'remember' in request.form:
-            remember_me = True
+    user = User(username=username, password=password, plain_text_password=password)
 
-        user = User(username=username, password=password, plain_text_password=password)
+    try:
+        auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
+        if auth == False:
+            return render_template('login.html', saml_enabled=SAML_ENABLED, error='Invalid credentials')
+    except Exception as e:
+        return render_template('login.html', saml_enabled=SAML_ENABLED, error=e)
 
-        try:
-            auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
-            if auth == False:
+    # check if user enabled OPT authentication
+    if user.otp_secret:
+        if otp_token and otp_token.isdigit():
+            good_token = user.verify_totp(otp_token)
+            if not good_token:
                 return render_template('login.html', saml_enabled=SAML_ENABLED, error='Invalid credentials')
-        except Exception as e:
-            return render_template('login.html', saml_enabled=SAML_ENABLED, error=e)
+        else:
+            return render_template('login.html', saml_enabled=SAML_ENABLED, error='Token required')
 
-        # check if user enabled OPT authentication
-        if user.otp_secret:
-            if otp_token and otp_token.isdigit():
-                good_token = user.verify_totp(otp_token)
-                if not good_token:
-                    return render_template('login.html', saml_enabled=SAML_ENABLED, error='Invalid credentials')
-            else:
-                return render_template('login.html', saml_enabled=SAML_ENABLED, error='Token required')
-
-        login_user(user, remember = remember_me)
-        return redirect(session.get('next', url_for('index')))
-    else:
-        if not username or not password or not email:
-            return render_template('register.html', error='Please input required information')
-
-        # registration case
-        user = User(username=username, plain_text_password=password, firstname=firstname, lastname=lastname, email=email)
-
-        if password != rpassword:
-            error = "Password confirmation does not match"
-            return render_template('register.html', error=error)
-
-        try:
-            result = user.create_local_user()
-            if result and result['status']:
-                return render_template('login.html', saml_enabled=SAML_ENABLED, username=username, password=password)
-            else:
-                return render_template('register.html', error=result['msg'])
-        except Exception as e:
-            return render_template('register.html', error=e)
+    login_user(user, remember=remember_me)
+    return redirect(session.get('next', url_for('index')))
 
 
 def clear_session():
