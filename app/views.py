@@ -829,7 +829,8 @@ def record_apply(domain_name):
         r = Record()
         result = r.apply(domain_name, submitted_record)
         if result['status'] == 'ok':
-            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(jdata), created_by=current_user.username)
+            jdata.pop('_csrf_token', None) # don't store csrf token in the history.
+            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(json.dumps(jdata)), created_by=current_user.username)
             history.add()
             return make_response(jsonify( result ), 200)
         else:
@@ -1095,7 +1096,8 @@ def apply_records(template):
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
         result = t.replace_records(records)
         if result['status'] == 'ok':
-            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(jdata), created_by=current_user.username)
+            jdata.pop('_csrf_token', None) # don't store csrf token in the history.
+            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(json.dumps(jdata)), created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
         else:
