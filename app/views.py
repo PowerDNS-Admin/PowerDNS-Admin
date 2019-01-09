@@ -517,6 +517,91 @@ def dashboard():
     return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, show_bg_domain_button=BG_DOMAIN_UPDATE)
 
 
+# SYBPATCH
+#########################################################
+sybDomains = [".in-addr.arpa", ".ip6.arpa"]
+
+@app.route('/dashboard-domains_filtered')
+@login_required
+def dashboard_domains_filtered():
+    if current_user.role.name in ['Administrator', 'Operator']:
+        domains = Domain.query
+    else:
+        domains = User(id=current_user.id).get_domain_query()
+
+    template = app.jinja_env.get_template("dashboard_domain.html")
+    render = template.make_module(vars={"current_user": current_user})
+
+    columns = [Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master, Domain.account]
+    # History.created_on.desc()
+    order_by = []
+    for i in range(len(columns)):
+        column_index = request.args.get("order[{0}][column]".format(i))
+        sort_direction = request.args.get("order[{0}][dir]".format(i))
+        if column_index is None:
+            break
+        if sort_direction != "asc" and sort_direction != "desc":
+            sort_direction = "asc"
+
+        column = columns[int(column_index)]
+        order_by.append(getattr(column, sort_direction)())
+
+    if order_by:
+        domains = domains.order_by(*order_by)
+
+    filter = str(request.args.get("boxid"))
+
+    if filter!="default":
+        domains = domains.filter(Domain.name.ilike("%"+filter))
+    else:
+        from sqlalchemy import not_
+        for filter in sybDomains:
+            domains = domains.filter(not_(Domain.name.ilike("%"+filter)))
+
+    total_count = domains.count()
+
+    search = request.args.get("search[value]")
+    if search:
+        start = "" if search.startswith("^") else "%"
+        end = "" if search.endswith("$") else "%"
+
+        if current_user.role.name in ['Administrator', 'Operator']:
+            domains = domains.outerjoin(Account).filter(Domain.name.ilike(start + search.strip("^$") + end) |
+                                                        Account.name.ilike(start + search.strip("^$") + end) |
+                                                        Account.description.ilike(start + search.strip("^$") + end))
+        else:
+            domains = domains.filter(Domain.name.ilike(start + search.strip("^$") + end))
+
+    filtered_count = domains.count()
+
+    start = int(request.args.get("start", 0))
+    length = min(int(request.args.get("length", 0)), 100)
+
+    if length != -1:
+        domains = domains[start:start + length]
+
+    data = []
+    for domain in domains:
+        data.append([
+            render.name(domain),
+            render.dnssec(domain),
+            render.type(domain),
+            render.serial(domain),
+            render.master(domain),
+            render.account(domain),
+            render.actions(domain),
+        ])
+
+    response_data = {
+        "draw": int(request.args.get("draw", 0)),
+        "recordsTotal": total_count,
+        "recordsFiltered": filtered_count,
+        "data": data,
+    }
+    return jsonify(response_data)
+
+
+###################################################
 @app.route('/dashboard-domains', methods=['GET'])
 @login_required
 def dashboard_domains():
@@ -586,6 +671,9 @@ def dashboard_domains():
         "data": data,
     }
     return jsonify(response_data)
+
+###################################################
+
 
 @app.route('/dashboard-domains-updater', methods=['GET', 'POST'])
 @login_required
@@ -829,8 +917,7 @@ def record_apply(domain_name):
         r = Record()
         result = r.apply(domain_name, submitted_record)
         if result['status'] == 'ok':
-            jdata.pop('_csrf_token', None) # don't store csrf token in the history.
-            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(json.dumps(jdata)), created_by=current_user.username)
+            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(jdata), created_by=current_user.username)
             history.add()
             return make_response(jsonify( result ), 200)
         else:
@@ -1096,8 +1183,7 @@ def apply_records(template):
         t = DomainTemplate.query.filter(DomainTemplate.name == template).first()
         result = t.replace_records(records)
         if result['status'] == 'ok':
-            jdata.pop('_csrf_token', None) # don't store csrf token in the history.
-            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(json.dumps(jdata)), created_by=current_user.username)
+            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(jdata), created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
         else:
@@ -1158,30 +1244,23 @@ def admin_pdns():
 @login_required
 @operator_role_required
 def admin_edituser(user_username=None):
-    if user_username:
-        user  = User.query.filter(User.username == user_username).first()
-        create = False
-
-        if not user:
-            return render_template('errors/404.html'), 404
-
-        if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
-            return render_template('errors/401.html'), 401
-    else:
-        user = None
-        create = True
-
     if request.method == 'GET':
-        return render_template('admin_edituser.html', user=user, create=create)
+        if not user_username:
+            return render_template('admin_edituser.html', create=1)
+
+        else:
+            user = User.query.filter(User.username == user_username).first()
+            return render_template('admin_edituser.html', user=user, create=0)
 
     elif request.method == 'POST':
         fdata = request.form
 
-        if create:
+        if not user_username:
             user_username = fdata['username']
 
         user = User(username=user_username, plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'], reload_info=False)
 
+        create = int(fdata['create'])
         if create:
             if fdata['password'] == "":
                 return render_template('admin_edituser.html', user=user, create=create, blank_password=True)

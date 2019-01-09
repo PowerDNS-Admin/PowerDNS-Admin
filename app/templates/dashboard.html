@@ -120,37 +120,97 @@
         </div>
       </div>
       {% endif %}
+
+<!--SYBPATCH-->
+      <!-- default -->
       <div class="row">
         <div class="col-xs-12">
           <div class="box">
             <div class="box-header">
-              <h3 class="box-title">Hosted Domains</h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
+              <h3 class="box-title" data-toggle="collapse" data-target="#collapse_default" aria-expanded="false" aria-controls="collapse_default">Hosted Domains</h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
             </div>
-            <div class="box-body">
-              <table id="tbl_domain_list" class="table table-bordered table-striped">
-                <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>DNSSEC</th>
-                  <th>Type</th>
-                  <th>Serial</th>
-                  <th>Master</th>
-                  <th>Account</th>
-                  <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                  <!-- Content loaded via AJAX. -->
-                </tbody>
-              </table>
+            <div class="collapse" id="collapse_default">
+                <div class="box-body">
+                  <table id="tbl_domain_list_default" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>DNSSEC</th>
+                      <th>Type</th>
+                      <th>Serial</th>
+                      <th>Master</th>
+                      <th>Account</th>
+                      <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
             </div>
-            <!-- /.box-body -->
           </div>
-          <!-- /.box -->
         </div>
-        <!-- /.col -->
       </div>
-      <!-- /.row -->
+      <!-- .in_addr.arpa -->
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title" data-toggle="collapse" data-target="#collapse_inaddrarpa" aria-expanded="false" aria-controls="collapse_inaddrarpa">Hosted Domains - in-addr</h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
+            </div>
+            <div class="collapse" id="collapse_inaddrarpa">
+                <div class="box-body">
+                  <table id="tbl_domain_list_in_addr_arpa" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>DNSSEC</th>
+                      <th>Type</th>
+                      <th>Serial</th>
+                      <th>Master</th>
+                      <th>Account</th>
+                      <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- .ip6.arpa -->
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title" data-toggle="collapse" data-target="#collapse_ip6arpa" aria-expanded="false" aria-controls="collapse_ip6arpa">Hosted Domains - ip6</h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
+            </div>
+            <div class="collapse" id="collapse_ip6arpa">
+                <div class="box-body">
+                  <table id="tbl_domain_list_ip6_arpa" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>DNSSEC</th>
+                      <th>Type</th>
+                      <th>Serial</th>
+                      <th>Master</th>
+                      <th>Account</th>
+                      <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
+          </div>
+          </div>
+        </div>
+      </div>
+<!--SYBPATCH-->
+
     </section>
     <!-- /.content -->
 {% endblock %}
@@ -174,31 +234,40 @@
             }
         ]
     });
-    // set up domain list
-    $("#tbl_domain_list").DataTable({
-        "paging" : true,
-        "lengthChange" : true,
-        "searching" : true,
-        "ordering" : true,
-        "columnDefs": [
-            { "orderable": false, "targets": [-1] }
-            {% if current_user.role.name not in ['Administrator', 'Operator'] %},{ "visible": false, "targets": [-2] }{% endif %}
-        ],
-        "processing" : true,
-        "serverSide" : true,
-        "ajax" : "{{ url_for('dashboard_domains') }}",
-        "info" : false,
-        "autoWidth" : false,
-      {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
-      "lengthMenu": [ [10, 25, 50, 100, -1],
-                      [10, 25, 50, 100, "All"]],
-      {% else %}
-      "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
-                      [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
-      {% endif %}
-      "pageLength": {{ SETTING.get('default_domain_table_size') }}
-    });
-    $(document.body).on('click', '.history-info-button', function() {
+
+//SYBPATCH//
+    function setUpDomainList(id ,url){
+        $(id).DataTable({
+            "paging" : true,
+            "lengthChange" : true,
+            "searching" : true,
+            "ordering" : true,
+            "columnDefs": [
+                { "orderable": false, "targets": [-1] }
+                {% if current_user.role.name not in ['Administrator', 'Operator'] %},{ "visible": false, "targets": [-2] }{% endif %}
+            ],
+            "processing" : true,
+            "serverSide" : true,
+            "ajax" : url,
+            "info" : false,
+            "autoWidth" : false,
+          {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
+          "lengthMenu": [ [10, 25, 50, 100, -1],
+                          [10, 25, 50, 100, "All"]],
+          {% else %}
+          "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                          [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
+          {% endif %}
+          "pageLength": {{ SETTING.get('default_domain_table_size') }}
+        });
+    }
+    setUpDomainList("#tbl_domain_list_default", "{{url_for('dashboard_domains_filtered')}}?boxid=default");
+    setUpDomainList("#tbl_domain_list_ip6_arpa", "{{url_for('dashboard_domains_filtered')}}?boxid=.ip6.arpa");
+    setUpDomainList("#tbl_domain_list_in_addr_arpa", "{{url_for('dashboard_domains_filtered')}}?boxid=.in-addr.arpa");
+//SYBPATCH//
+
+    $(document.body).on('click', '.history-info-button', function()
+    {
         var modal = $("#modal_history_info");
         var info = $(this).val();
         $('#modal-code-content').html(json_library.prettyPrint(info));
