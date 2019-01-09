@@ -1158,23 +1158,30 @@ def admin_pdns():
 @login_required
 @operator_role_required
 def admin_edituser(user_username=None):
-    if request.method == 'GET':
-        if not user_username:
-            return render_template('admin_edituser.html', create=1)
+    if user_username:
+        user  = User.query.filter(User.username == user_username).first()
+        create = False
 
-        else:
-            user = User.query.filter(User.username == user_username).first()
-            return render_template('admin_edituser.html', user=user, create=0)
+        if not user:
+            return render_template('errors/404.html'), 404
+
+        if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+            return render_template('errors/401.html'), 401
+    else:
+        user = None
+        create = True
+
+    if request.method == 'GET':
+        return render_template('admin_edituser.html', user=user, create=create)
 
     elif request.method == 'POST':
         fdata = request.form
 
-        if not user_username:
+        if create:
             user_username = fdata['username']
 
         user = User(username=user_username, plain_text_password=fdata['password'], firstname=fdata['firstname'], lastname=fdata['lastname'], email=fdata['email'], reload_info=False)
 
-        create = int(fdata['create'])
         if create:
             if fdata['password'] == "":
                 return render_template('admin_edituser.html', user=user, create=create, blank_password=True)
