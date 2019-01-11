@@ -36,6 +36,8 @@
                                 <th>Description</th>
                                 <th>Contact</th>
                                 <th>Mail</th>
+                                <th>Member</th>
+                                <th>Domain</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -46,6 +48,8 @@
                                 <td>{{ account.description }}</td>
                                 <td>{{ account.contact }}</td>
                                 <td>{{ account.mail }}</td>
+                                <td>{{ account.user_num }}</td>
+                                <td>{{ account.domains|length }}</td>
                                 <td width="15%">
                                     <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('admin_editaccount', account_name=account.name) }}'">
                                         Edit&nbsp;<i class="fa fa-cog"></i>
