@@ -4,7 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 # BASIC APP CONFIG
 SECRET_KEY = 'changeme'
 LOG_LEVEL = 'DEBUG'
-LOG_FILE = 'logs/log.txt'
+LOG_FILE = os.path.join(basedir, 'logs/log.txt')
 
 # TIMEOUT - for large zones
 TIMEOUT = 10
