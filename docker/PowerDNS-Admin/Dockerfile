@@ -15,6 +15,10 @@ ENV LANGUAGE en_US.UTF-8
 
 RUN apt-get install -y python3-pip python3-dev supervisor curl mysql-client
 
+# Install node 10.x
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN apt-get install -y nodejs
+
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
 
