@@ -17,7 +17,7 @@ from flask import g, request, make_response, jsonify, render_template, session, 
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 
-from .models import User, Account, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
+from .models import User, Account, AccountUser, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, csrf
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth, oidc_oauth
@@ -1344,6 +1344,8 @@ def admin_editaccount(account_name=None):
 def admin_manageaccount():
     if request.method == 'GET':
         accounts = Account.query.order_by(Account.name).all()
+        for account in accounts:
+            account.user_num = AccountUser.query.filter(AccountUser.account_id==account.id).count()
         return render_template('admin_manageaccount.html', accounts=accounts)
 
     if request.method == 'POST':

@@ -558,7 +558,7 @@ class Account(db.Model):
         """
         account = Account.query.filter(Account.name == self.name).first()
         for domain in account.domains:
-            domain.assoc_account(None)
+            Domain(name=domain.name).assoc_account(None)
 
     def create_account(self):
         """
@@ -664,6 +664,7 @@ class Account(db.Model):
             users.append(User(id=uid).get_user_info_by_id().username)
 
         self.grant_privileges(users)
+
     def add_user(self, user):
         """
         Add a single user to Account by User
