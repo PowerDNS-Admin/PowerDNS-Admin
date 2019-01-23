@@ -488,7 +488,89 @@ def saml_logout():
     else:
         return render_template('errors/SAML.html', errors=errors)
 
+# SYBPATCH
+#########################################################
+from app import customBoxes
+from sqlalchemy import not_
 
+@app.route('/dashboard_domains_custom/<path:boxId>', methods=['GET'])
+@login_required
+def dashboard_domains_custom(boxId):
+    if current_user.role.name in ['Administrator', 'Operator']:
+        domains = Domain.query
+    else:
+        domains = User(id=current_user.id).get_domain_query()
+
+    template = app.jinja_env.get_template("dashboard_domain.html")
+    render = template.make_module(vars={"current_user": current_user})
+
+    columns = [Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master, Domain.account]
+    # History.created_on.desc()
+    order_by = []
+    for i in range(len(columns)):
+        column_index = request.args.get("order[{0}][column]".format(i))
+        sort_direction = request.args.get("order[{0}][dir]".format(i))
+        if column_index is None:
+            break
+        if sort_direction != "asc" and sort_direction != "desc":
+            sort_direction = "asc"
+
+        column = columns[int(column_index)]
+        order_by.append(getattr(column, sort_direction)())
+
+    if order_by:
+        domains = domains.order_by(*order_by)
+
+    if boxId == "reverse":
+        for boxId in customBoxes.order:
+            if boxId == "reverse": continue
+            domains = domains.filter(not_(Domain.name.ilike(customBoxes.boxes[boxId][1])))
+    else:
+        domains = domains.filter(Domain.name.ilike(customBoxes.boxes[boxId][1]))
+
+    total_count = domains.count()
+
+    search = request.args.get("search[value]")
+    if search:
+        start = "" if search.startswith("^") else "%"
+        end = "" if search.endswith("$") else "%"
+
+        if current_user.role.name in ['Administrator', 'Operator']:
+            domains = domains.outerjoin(Account).filter(Domain.name.ilike(start + search.strip("^$") + end) |
+                                                        Account.name.ilike(start + search.strip("^$") + end) |
+                                                        Account.description.ilike(start + search.strip("^$") + end))
+        else:
+            domains = domains.filter(Domain.name.ilike(start + search.strip("^$") + end))
+
+    filtered_count = domains.count()
+
+    start = int(request.args.get("start", 0))
+    length = min(int(request.args.get("length", 0)), 100)
+
+    if length != -1:
+        domains = domains[start:start + length]
+
+    data = []
+    for domain in domains:
+        data.append([
+            render.name(domain),
+            render.dnssec(domain),
+            render.type(domain),
+            render.serial(domain),
+            render.master(domain),
+            render.account(domain),
+            render.actions(domain),
+        ])
+
+    response_data = {
+        "draw": int(request.args.get("draw", 0)),
+        "recordsTotal": total_count,
+        "recordsFiltered": filtered_count,
+        "data": data,
+    }
+    return jsonify(response_data)
+
+# add custom boxes
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
@@ -514,7 +596,11 @@ def dashboard():
     else:
         uptime = 0
 
-    return render_template('dashboard.html', domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, show_bg_domain_button=BG_DOMAIN_UPDATE)
+    # add custom boxes to render_template
+    return render_template('dashboard.html', custom_boxes=customBoxes, domain_count=domain_count, users=users, history_number=history_number, uptime=uptime, histories=history, show_bg_domain_button=BG_DOMAIN_UPDATE)
+
+# SYBPATCH END
+#########################################################
 
 
 @app.route('/dashboard-domains', methods=['GET'])

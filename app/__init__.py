@@ -7,6 +7,10 @@ from authlib.flask.client import OAuth as AuthlibOAuth
 from sqlalchemy.exc import OperationalError
 from flask_seasurf import SeaSurf
 
+### SYBPATCH ###
+from app.customboxes import customBoxes
+### SYBPATCH ###
+
 # subclass SQLAlchemy to enable pool_pre_ping
 class SQLAlchemy(SA):
     def apply_pool_defaults(self, app, options):
