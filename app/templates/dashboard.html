@@ -120,43 +120,89 @@
         </div>
       </div>
       {% endif %}
-      <div class="row">
-        <div class="col-xs-12">
-          <div class="box">
-            <div class="box-header">
-              <h3 class="box-title">Hosted Domains</h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
-            </div>
-            <div class="box-body">
-              <table id="tbl_domain_list" class="table table-bordered table-striped">
-                <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>DNSSEC</th>
-                  <th>Type</th>
-                  <th>Serial</th>
-                  <th>Master</th>
-                  <th>Account</th>
-                  <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                  <!-- Content loaded via AJAX. -->
-                </tbody>
-              </table>
-            </div>
-            <!-- /.box-body -->
-          </div>
-          <!-- /.box -->
-        </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
+
+<!--SYBPATCH START-->
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tab_{{custom_boxes.order[0]}}" data-toggle="tab">Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b></a></li>
+            {% for boxId in custom_boxes.order[1:] %}
+                <li><a href="#tab_{{boxId}}" data-toggle="tab">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></a></li>
+            {% endfor %}
+            </ul>
+            <div class="tab-content">
+            {% for boxId in custom_boxes.order %}
+              <div class="tab-pane" id='tab_{{boxId}}'>
+                  <div class="row">
+                    <div class="col-xs-12">
+                      <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
+                        </div>
+                        <div class="box-body">
+                          <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>DNSSEC</th>
+                              <th>Type</th>
+                              <th>Serial</th>
+                              <th>Master</th>
+                              <th>Account</th>
+                              <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            {% endfor %}
+            </div><!-- /.tab-content -->
+        </div><!-- custom tabs -->
+<!--SYBPATCH END-->
+
     </section>
     <!-- /.content -->
 {% endblock %}
 {% block extrascripts %}
 <script>
     PDNS_VERSION = '{{ SETTING.get("pdns_version") }}';
+
+//SYBPATCH START//
+    function setUpDomainList(id ,url){
+        $(id).DataTable({
+            "paging" : true,
+            "lengthChange" : true,
+            "searching" : true,
+            "ordering" : true,
+            "columnDefs": [
+                { "orderable": false, "targets": [-1] }
+                {% if current_user.role.name not in ['Administrator', 'Operator'] %},{ "visible": false, "targets": [-2] }{% endif %}
+            ],
+            "processing" : true,
+            "serverSide" : true,
+            "ajax" : url,
+            "info" : false,
+            "autoWidth" : false,
+          {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
+          "lengthMenu": [ [10, 25, 50, 100, -1],
+                          [10, 25, 50, 100, "All"]],
+          {% else %}
+          "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                          [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
+          {% endif %}
+          "pageLength": {{ SETTING.get('default_domain_table_size') }}
+        });
+    }
+    $('#tab_{{custom_boxes.order[0]}}').addClass( "active" );
+    {% for boxId in custom_boxes.order %}
+    setUpDomainList("#tbl_domain_list_{{boxId}}", "{{url_for('dashboard_domains_custom',boxId=boxId)}}");
+    {% endfor %}
+//SYBPATCH END//
+
     // set up history data table
     $("#tbl_history").DataTable({
         "paging" : false,
@@ -174,31 +220,9 @@
             }
         ]
     });
-    // set up domain list
-    $("#tbl_domain_list").DataTable({
-        "paging" : true,
-        "lengthChange" : true,
-        "searching" : true,
-        "ordering" : true,
-        "columnDefs": [
-            { "orderable": false, "targets": [-1] }
-            {% if current_user.role.name not in ['Administrator', 'Operator'] %},{ "visible": false, "targets": [-2] }{% endif %}
-        ],
-        "processing" : true,
-        "serverSide" : true,
-        "ajax" : "{{ url_for('dashboard_domains') }}",
-        "info" : false,
-        "autoWidth" : false,
-      {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
-      "lengthMenu": [ [10, 25, 50, 100, -1],
-                      [10, 25, 50, 100, "All"]],
-      {% else %}
-      "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
-                      [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
-      {% endif %}
-      "pageLength": {{ SETTING.get('default_domain_table_size') }}
-    });
-    $(document.body).on('click', '.history-info-button', function() {
+
+    $(document.body).on('click', '.history-info-button', function()
+    {
         var modal = $("#modal_history_info");
         var info = $(this).val();
         $('#modal-code-content').html(json_library.prettyPrint(info));
