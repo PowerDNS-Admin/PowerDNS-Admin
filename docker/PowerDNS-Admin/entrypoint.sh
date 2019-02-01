@@ -82,5 +82,5 @@ echo "---> Running Flask assets"
 chown -R www-data:www-data /powerdns-admin/logs
 su -s /bin/bash -c 'flask assets build' www-data
 
-echo "===> Start supervisor"
-/usr/bin/supervisord -c /etc/supervisord.conf
+echo "===> Start powerDNS-Admin"
+su-exec www-data /usr/local/bin/gunicorn -t 120 --workers 4 --bind '0.0.0.0:9191' --log-level info app:app

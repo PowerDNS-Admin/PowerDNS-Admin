@@ -5,7 +5,7 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 WORKDIR /powerdns-admin
 
 RUN set -xe; \
-    apk add --no-cache nodejs python3 supervisor mariadb-client yarn netcat-openbsd; \
+    apk add --no-cache su-exec nodejs python3 mariadb-client yarn netcat-openbsd; \
     pip3 install --upgrade pip
 
 COPY ./requirements.txt /powerdns-admin/requirements.txt
@@ -22,7 +22,8 @@ RUN set -xe; \
     addgroup -Sg 50 www-data; \
     adduser www-data www-data; \
     chown -R www-data:www-data /powerdns-admin/app/static; \
-    yarn install --pure-lockfile
+    yarn install --pure-lockfile; \
+    rm config.py
 
 ADD ./supervisord.conf /etc/supervisord.conf
 COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
