@@ -26,26 +26,29 @@ done
 # Go in Workdir
 cd /powerdns-admin
 
-echo "===> Set configuration file from environment variable"
-[ -n "$SECRET_KEY" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$SECRET_KEY'/" config.py
-[ -n "$PDNS_PORT" ] && sed -i "s/^\(PORT\)/\1 = $PDNS_PORT/" config.py
-[ -n "$BIND_ADDRESS" ] && sed -i "s/^\(BIND_ADDRESS\)/\1 = '$BIND_ADDRESS'/" config.py
-[ -n "$PDA_DB_USER" ] && sed -i "s/^\(SQLA_DB_USER\)/\1 = '$PDA_DB_USER'/" config.py
-[ -n "$PDA_DB_PASSWORD" ] && sed -i "s/^\(SQLA_DB_PASSWORD\)/\1 = '$PDA_DB_PASSWORD'/" config.py
-[ -n "$PDA_DB_HOST" ] && sed -i "s/^\(SQLA_DB_HOST\)/\1 = '$PDA_DB_HOST'/" config.py
-[ -n "$PDA_DB_PORT" ] && sed -i "s/^\(SQLA_DB_PORT\)/\1 = $PDA_DB_PORT/" config.py
-[ -n "$PDA_DB_NAME" ] && sed -i "s/^\(SQLA_DB_NAME\)/\1 = '$PDA_DB_NAME'/" config.py
-[ -n "$LDAP_TYPE" ] && sed -i "s/^\(LDAP_TYPE\)/\1 = '$LDAP_TYPE'/" config.py
-[ -n "$LDAP_URI" ] && sed -i "s/^\(LDAP_URI\)/\1 = '$LDAP_URI'/" config.py
-[ -n "$LDAP_USERNAME" ] && sed -i "s/^\(LDAP_USERNAME\)/\1 = '$LDAP_USERNAME'/" config.py
-[ -n "$LDAP_PASSWORD" ] && sed -i "s/^\(LDAP_PASSWORD\)/\1 = '$LDAP_PASSWORD'/" config.py
-[ -n "$LDAP_SEARCH_BASE" ] && sed -i "s/^\(LDAP_SEARCH_BASE\)/\1 = '$LDAP_SEARCH_BASE'/" config.py
-[ -n "$LDAP_USERNAMEFIELD" ] && sed -i "s/^\(LDAP_USERNAMEFIELD\)/\1 = '$LDAP_USERNAMEFIELD'/" config.py
-[ -n "$LDAP_FILTER" ] && sed -i "s/^\(LDAP_FILTER\)/\1 = '$LDAP_FILTER'/" config.py
-[ -n "$PDNS_STATS_URL" ] && sed -i "s/^\(PDNS_STATS_URL\)/\1 = '$PDNS_STATS_URL'/" config.py
-[ -n "$PDNS_API_KEY" ] && sed -i "s/^\(PDNS_API_KEY\)/\1 = '$PDNS_API_KEY'/" config.py
-[ -n "$BIND_ADDRESS" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$BIND_ADDRESS'/" config.py
-[ -n "$BIND_ADDRESS" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$BIND_ADDRESS'/" config.py
+if [ ! -f config.py ]; then
+  echo "===> Set configuration file from environment variable"
+  cp config_template.py config.py
+  [ -n "$SECRET_KEY" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$SECRET_KEY'/" config.py
+  [ -n "$PDNS_PORT" ] && sed -i "s/^\(PORT\)/\1 = $PDNS_PORT/" config.py
+  [ -n "$BIND_ADDRESS" ] && sed -i "s/^\(BIND_ADDRESS\)/\1 = '$BIND_ADDRESS'/" config.py
+  [ -n "$PDA_DB_USER" ] && sed -i "s/^\(SQLA_DB_USER\)/\1 = '$PDA_DB_USER'/" config.py
+  [ -n "$PDA_DB_PASSWORD" ] && sed -i "s/^\(SQLA_DB_PASSWORD\)/\1 = '$PDA_DB_PASSWORD'/" config.py
+  [ -n "$PDA_DB_HOST" ] && sed -i "s/^\(SQLA_DB_HOST\)/\1 = '$PDA_DB_HOST'/" config.py
+  [ -n "$PDA_DB_PORT" ] && sed -i "s/^\(SQLA_DB_PORT\)/\1 = $PDA_DB_PORT/" config.py
+  [ -n "$PDA_DB_NAME" ] && sed -i "s/^\(SQLA_DB_NAME\)/\1 = '$PDA_DB_NAME'/" config.py
+  [ -n "$LDAP_TYPE" ] && sed -i "s/^\(LDAP_TYPE\)/\1 = '$LDAP_TYPE'/" config.py
+  [ -n "$LDAP_URI" ] && sed -i "s/^\(LDAP_URI\)/\1 = '$LDAP_URI'/" config.py
+  [ -n "$LDAP_USERNAME" ] && sed -i "s/^\(LDAP_USERNAME\)/\1 = '$LDAP_USERNAME'/" config.py
+  [ -n "$LDAP_PASSWORD" ] && sed -i "s/^\(LDAP_PASSWORD\)/\1 = '$LDAP_PASSWORD'/" config.py
+  [ -n "$LDAP_SEARCH_BASE" ] && sed -i "s/^\(LDAP_SEARCH_BASE\)/\1 = '$LDAP_SEARCH_BASE'/" config.py
+  [ -n "$LDAP_USERNAMEFIELD" ] && sed -i "s/^\(LDAP_USERNAMEFIELD\)/\1 = '$LDAP_USERNAMEFIELD'/" config.py
+  [ -n "$LDAP_FILTER" ] && sed -i "s/^\(LDAP_FILTER\)/\1 = '$LDAP_FILTER'/" config.py
+  [ -n "$PDNS_STATS_URL" ] && sed -i "s/^\(PDNS_STATS_URL\)/\1 = '$PDNS_STATS_URL'/" config.py
+  [ -n "$PDNS_API_KEY" ] && sed -i "s/^\(PDNS_API_KEY\)/\1 = '$PDNS_API_KEY'/" config.py
+  [ -n "$BIND_ADDRESS" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$BIND_ADDRESS'/" config.py
+  [ -n "$BIND_ADDRESS" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$BIND_ADDRESS'/" config.py
+fi
 
 echo "===> DB management"
 if [ ! -d "${DB_MIGRATION_DIR}" ]; then
