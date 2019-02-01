@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -o errexit
 set -o pipefail
@@ -7,11 +7,11 @@ set -o pipefail
 # == Vars
 #
 DB_MIGRATION_DIR='/powerdns-admin/migrations'
-if [[ -z ${PDNS_PROTO} ]];
+if [ -z ${PDNS_PROTO} ];
  then PDNS_PROTO="http"
 fi
 
-if [[ -z ${PDNS_PORT} ]];
+if [ -z ${PDNS_PORT} ];
  then PDNS_PORT=8081
 fi
 
@@ -19,9 +19,7 @@ fi
 
 # Wait for us to be able to connect to MySQL before proceeding
 echo "===> Waiting for $PDA_DB_HOST MySQL service"
-until nc -zv \
-  $PDA_DB_HOST \
-  $PDA_DB_PORT;
+until nc -zv $PDA_DB_HOST $PDA_DB_PORT;
 do
   echo "MySQL ($PDA_DB_HOST) is unavailable - sleeping"
   sleep 1
