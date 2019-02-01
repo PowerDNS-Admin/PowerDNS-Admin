@@ -46,8 +46,6 @@ if [ ! -f config.py ]; then
   [ -n "$LDAP_FILTER" ] && sed -i "s/^\(LDAP_FILTER\)/\1 = '$LDAP_FILTER'/" config.py
   [ -n "$PDNS_STATS_URL" ] && sed -i "s/^\(PDNS_STATS_URL\)/\1 = '$PDNS_STATS_URL'/" config.py
   [ -n "$PDNS_API_KEY" ] && sed -i "s/^\(PDNS_API_KEY\)/\1 = '$PDNS_API_KEY'/" config.py
-  [ -n "$BIND_ADDRESS" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$BIND_ADDRESS'/" config.py
-  [ -n "$BIND_ADDRESS" ] && sed -i "s/^\(SECRET_KEY\)/\1 = '$BIND_ADDRESS'/" config.py
 fi
 
 echo "===> DB management"
@@ -79,11 +77,11 @@ echo "===> Assets management"
 echo "---> Running Yarn"
 chown -R www-data:www-data /powerdns-admin/app/static
 chown -R www-data:www-data /powerdns-admin/node_modules
-su -s /bin/bash -c 'yarn install --pure-lockfile' www-data
+su-exec www-data yarn install --pure-lockfile
 
 echo "---> Running Flask assets"
 chown -R www-data:www-data /powerdns-admin/logs
-su -s /bin/bash -c 'flask assets build' www-data
+su-exec www-data flask assets build
 
 echo "===> Start powerDNS-Admin"
-su-exec www-data /usr/local/bin/gunicorn -t 120 --workers 4 --bind '0.0.0.0:9191' --log-level info app:app
+su-exec www-data /usr/bin/gunicorn -t 120 --workers 4 --bind '0.0.0.0:9191' --log-level info app:app
