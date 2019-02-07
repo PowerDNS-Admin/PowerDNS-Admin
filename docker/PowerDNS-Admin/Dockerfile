@@ -5,7 +5,7 @@ ENV ENVIRONMENT=${ENVIRONMENT}
 WORKDIR /powerdns-admin
 
 RUN set -xe; \
-    apk add --no-cache su-exec nodejs python3 mariadb-client mariadb-connector-c yarn netcat-openbsd libldap; \
+    apk add --no-cache su-exec nodejs python3 mariadb-client mariadb-connector-c yarn netcat-openbsd libldap xmlsec; \
     pip3 install --upgrade pip
 
 COPY ./requirements.txt /powerdns-admin/requirements.txt
