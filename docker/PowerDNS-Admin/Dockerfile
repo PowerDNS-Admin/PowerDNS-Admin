@@ -22,8 +22,7 @@ RUN set -xe; \
     addgroup -Sg 50 www-data; \
     adduser www-data www-data; \
     chown -R www-data:www-data /powerdns-admin/app/static; \
-    yarn install --pure-lockfile; \
-    rm config.py
+    yarn install --pure-lockfile
 
 ADD ./supervisord.conf /etc/supervisord.conf
 COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
