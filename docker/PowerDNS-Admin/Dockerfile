@@ -32,7 +32,7 @@ RUN set -xe; \
     rm config.py
 
 ADD ./supervisord.conf /etc/supervisord.conf
-COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
+#COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
 COPY ./docker/PowerDNS-Admin/entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
