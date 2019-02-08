@@ -27,7 +27,7 @@ RUN set -xe; \
 RUN set -xe; \
     sed -i "s%^\(LOG_FILE\).*$%\1 = 'logs/logfile.log'%" config_template.py; \
     install -d -m 755 -o www-data -g www-data logs; \
-    sed -e 's/^# \(SQLALCHEMY_DATABASE_URI.*\)$/\1/' > config.py; \
+    sed -e 's/^# \(SQLALCHEMY_DATABASE_URI.*\)$/\1/' config_template.py > config.py; \
     su-exec www-data flask assets build; \
     rm config.py
 
