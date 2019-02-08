@@ -2,4 +2,3 @@
 .gitlab-ci.yml
 config.py
 configs
-docker
