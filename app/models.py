@@ -731,7 +731,7 @@ class DomainSetting(db.Model):
         return '<DomainSetting {0} for {1}>'.format(setting, self.domain.name)
 
     def __eq__(self, other):
-        return self.setting == other.setting
+        return type(self) == type(other) and self.setting == other.setting
 
     def set(self, value):
         try:
