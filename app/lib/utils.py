@@ -2,6 +2,7 @@ import re
 import json
 import requests
 import hashlib
+import ipaddress
 
 from app import app
 from distutils.version import StrictVersion
@@ -291,3 +292,14 @@ def display_setting_state(value):
         return "OFF"
     else:
         return "UNKNOWN"
+
+
+def validate_ipaddress(address):
+        try:
+            ip = ipaddress.ip_address(address)
+        except ValueError:
+            pass
+        else:
+            if isinstance(ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+                return [ip]
+        return []

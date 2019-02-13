@@ -1666,7 +1666,7 @@ class Record(object):
         jrecords = jdata['records']
 
         for jr in jrecords:
-            if jr['name'] == self.name:
+            if jr['name'] == self.name and jr['type'] == self.type:
                 self.name = jr['name']
                 self.type = jr['type']
                 self.status = jr['disabled']
