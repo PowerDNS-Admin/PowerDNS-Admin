@@ -187,7 +187,7 @@
             "ajax" : url,
             "info" : false,
             "autoWidth" : false,
-          {% if SETTING.get('default_domain_table_size') in ['10','25','50','100'] %}
+          {% if SETTING.get('default_domain_table_size')|string in ['10','25','50','100'] %}
           "lengthMenu": [ [10, 25, 50, 100, -1],
                           [10, 25, 50, 100, "All"]],
           {% else %}
