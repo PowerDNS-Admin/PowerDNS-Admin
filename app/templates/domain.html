@@ -413,7 +413,43 @@
                     modal.modal('hide');
                 })
             modal.modal('show');
-        } else if (record_type == "TXT") {
+            } else if (record_type == "TLSA") {
+                var modal = $("#modal_custom_record");
+                if (record_data.val() == "") {
+                    var form = "    <label for=\"tlsa_certificate_usage\">TLSA Certificate Usage</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_certificate_usage\" id=\"tlsa_certificate_usage\" placeholder=\"3\"> \
+                                    <label for=\"tlsa_selector\">TLSA-Selector</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_selector\" id=\"tlsa_selector\" placeholder=\"1\"> \
+                                    <label for=\"tlsa_matching\"> TLSA Matching Type</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_matching\" id=\"tlsa_matching\" placeholder=\"1\"> \
+                                    <label for=\"tlsa_hash\">Hash</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_hash\" id=\"tlsa_hash\" placeholder=\"HASH\"> \
+                    ";
+                } else {
+                    var parts = record_data.val().split(" ");
+                    var form = "    <label for=\"tlsa_certificate_usage\">TLSA Certificate Usage</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_certificate_usage\" id=\"tlsa_certificate_usage\" value=\"" + parts[0] + "\"> \
+                                    <label for=\"tlsa_selector\">TLSA-Selector</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_selector\" id=\"tlsa_selector\" value=\"" + parts[1] + "\"> \
+                                    <label for=\"tlsa_matching\"> TLSA Matching Type</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_matching\" id=\"tlsa_matching\" value=\"" + parts[2] + "\"> \
+                                    <label for=\"tlsa_hash\">Hash</label> \
+                                    <input type=\"text\" class=\"form-control\" name=\"tlsa_hash\" id=\"tlsa_hash\" value=\"" + parts[3] + "\"> \
+                    ";
+                }
+                modal.find('.modal-body p').html(form);
+                modal.find('#button_save').click(function() {
+                    tlsa_certificate_usage = modal.find('#tlsa_certificate_usage').val();
+                    tlsa_selector = modal.find('#tlsa_selector').val();
+                    tlsa_matching = modal.find('#tlsa_matching').val();
+                    tlsa_hash = modal.find('#tlsa_hash').val();
+                   
+                    data = tlsa_certificate_usage + " " + tlsa_selector + " " + tlsa_matching + " " + tlsa_hash;
+                    record_data.val(data);
+                    modal.modal('hide');
+                })
+            modal.modal('show');
+            } else if (record_type == "TXT") {
             var txt_data = record_data.val().replace(/"/g, '&quot;');
             var modal = $("#modal_custom_record");
             var form = "    <label for=\"txt_record\">TXT Record Data</label> \
