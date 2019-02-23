@@ -3,6 +3,7 @@ import json
 import requests
 import hashlib
 import ipaddress
+import os
 
 from app import app
 from distutils.version import StrictVersion
@@ -244,10 +245,12 @@ def init_saml_auth(req):
     else:
         settings['sp']['NameIDFormat'] = idp_data.get('sp', {}).get('NameIDFormat', 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified')
     settings['sp']['entityId'] = app.config['SAML_SP_ENTITY_ID']
-    cert = open(CERT_FILE, "r").readlines()
-    key = open(KEY_FILE, "r").readlines()
-    settings['sp']['privateKey'] = "".join(key)
-    settings['sp']['x509cert'] = "".join(cert)
+    if os.path.isfile(CERT_FILE):
+      cert = open(CERT_FILE, "r").readlines()
+      settings['sp']['x509cert'] = "".join(cert)
+    if os.path.isfile(KEY_FILE):
+      key = open(KEY_FILE, "r").readlines()
+      settings['sp']['privateKey'] = "".join(key)
     settings['sp']['assertionConsumerService'] = {}
     settings['sp']['assertionConsumerService']['binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
     settings['sp']['assertionConsumerService']['url'] = own_url+'/saml/authorized'
@@ -273,7 +276,7 @@ def init_saml_auth(req):
     settings['security']['nameIdEncrypted'] = False
     settings['security']['signMetadata'] = True
     settings['security']['wantAssertionsSigned'] = True
-    settings['security']['wantMessagesSigned'] = True
+    settings['security']['wantMessagesSigned'] = app.config.get('SAML_WANT_MESSAGE_SIGNED', True)
     settings['security']['wantNameIdEncrypted'] = False
     settings['contactPerson'] = {}
     settings['contactPerson']['support'] = {}
