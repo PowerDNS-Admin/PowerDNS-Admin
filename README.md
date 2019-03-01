@@ -156,3 +156,21 @@ delete record:
 ```
 curl -H 'Content-Type: application/json' -X PATCH --data '{"rrsets": [ {"name": "test.yourdomain.com.", "type": "A", "ttl": 86400, "changetype": "DELETE"}]}' -H 'X-API-Key: YUdDdGhQM0tMQWV5alpJ' http://localhost:9191/api/v1/servers/localhost/zones/yourdomain.com | jq
 ```
+
+### Generate ER diagram
+
+```
+apt-get install python-dev graphviz libgraphviz-dev pkg-config
+```
+
+```
+pip install graphviz mysqlclient ERAlchemy
+```
+
+```
+docker-compose up -d
+```
+
+```
+eralchemy -i 'mysql://powerdns_admin:changeme@'$(docker inspect powerdns-admin-mysql|jq -jr '.[0].NetworkSettings.Networks.powerdnsadmin_default.IPAddress')':3306/powerdns_admin' -o /tmp/output.pdf
+```
