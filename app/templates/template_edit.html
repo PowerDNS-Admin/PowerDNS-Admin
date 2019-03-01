@@ -48,7 +48,7 @@
                         </thead>
                         <tbody>
                                 {% for record in records %}
-                                <tr class="odd row_record" id="{{ record.name }}">
+                                <tr class="odd row_record">
                                     <td>
                                         {{ record.name }}
                                     </td>
@@ -65,12 +65,12 @@
                                          {{ record.data }}
                                     </td>
                                     <td width="6%">
-                                         <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ record.name }}">
+                                         <button type="button" class="btn btn-flat btn-warning button_edit">
                                             Edit&nbsp;<i class="fa fa-edit"></i>
                                         </button>
                                     </td>
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ record.name }}">
+                                        <button type="button" class="btn btn-flat btn-danger button_delete">
                                             Delete&nbsp;<i class="fa fa-trash"></i>
                                         </button>
                                     </td>
@@ -187,6 +187,13 @@
 
     // handle apply changes button
     $(document.body).on("click",".button_apply_changes", function() {
+        if (nNew || nEditing) {
+            var modal = $("#modal_error");
+            modal.find('.modal-body p').text("Previous record not saved. Please save it before applying the changes.");
+            modal.modal('show');
+            return;
+        }
+
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var template = $(this).prop('id');
