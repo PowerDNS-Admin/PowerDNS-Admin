@@ -1,0 +1,50 @@
+version: "2.1"
+
+services:
+  powerdns-admin:
+    build:
+      context: .
+      dockerfile: docker/PowerDNS-Admin/Dockerfile.test
+      args:
+        - ENVIRONMENT=test
+    image: powerdns-admin-test
+    env_file:
+      - ./env-test
+    container_name: powerdns-admin-test
+    mem_limit: 256M
+    memswap_limit: 256M
+    ports:
+      - "9191:9191"
+    volumes:
+      # Code
+      - .:/powerdns-admin/
+      - "./configs/test.py:/powerdns-admin/config.py"
+      - powerdns-admin-assets3:/powerdns-admin/logs
+      - ./app/static/custom:/powerdns-admin/app/static/custom
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+    networks:
+      - default
+    depends_on:
+      - pdns-server
+
+  pdns-server:
+    build:
+      context: .
+      dockerfile: docker/PowerDNS-Admin/Dockerfile.pdns.test
+    image: pdns-server-test
+    ports:
+      - "5053:53"
+      - "5053:53/udp"
+    networks:
+      - default
+    env_file:
+      - ./env-test
+
+networks:
+  default:
+
+volumes:
+  powerdns-admin-assets3:

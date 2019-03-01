@@ -23,6 +23,7 @@ from app import app, login_manager, csrf
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth, oidc_oauth
 from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec, can_create_domain
+from yaml import Loader, load
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
@@ -107,7 +108,9 @@ def login_via_authorization_header(request):
             return None
         user = User(username=username, password=password, plain_text_password=password)
         try:
-            auth = user.is_validate(method='LOCAL', src_ip=request.remote_addr)
+            auth_method = request.args.get('auth_method', 'LOCAL')
+            auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
+            auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
             if auth == False:
                 return None
             else:
@@ -130,11 +133,13 @@ def http_bad_request(e):
 def http_unauthorized(e):
     return redirect(url_for('error', code=401))
 
-
 @app.errorhandler(404)
-def http_internal_server_error(e):
-    return redirect(url_for('error', code=404))
-
+@app.errorhandler(405)
+def _handle_api_error(ex):
+    if request.path.startswith('/api/'):
+        return json.dumps({"msg": "NotFound"}), 404
+    else:
+        return redirect(url_for('error', code=404))
 
 @app.errorhandler(500)
 def http_page_not_found(e):
@@ -149,6 +154,22 @@ def error(code, msg=None):
     else:
         return render_template('errors/404.html'), 404
 
+@app.route('/swagger', methods=['GET'])
+def swagger_spec():
+    try:
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        spec_path = os.path.join(dir_path, "swagger-spec.yaml")
+        spec = open(spec_path,'r')
+        loaded_spec = load(spec.read(), Loader)
+    except Exception as e:
+        logging.error('Cannot view swagger spec. Error: {0}'.format(e))
+        logging.debug(traceback.format_exc())
+        return redirect(url_for('error', code=500))
+
+    resp = make_response(json.dumps(loaded_spec), 200)
+    resp.headers['Content-Type'] = 'application/json'
+
+    return resp
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1816,7 +1837,6 @@ def dyndns_update():
             history.add()
 
     return render_template('dyndns.html', response=response), 200
-
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required

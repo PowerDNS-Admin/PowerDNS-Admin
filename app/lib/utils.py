@@ -11,6 +11,10 @@ from datetime import datetime, timedelta
 from threading import Thread
 
 from .certutil import KEY_FILE, CERT_FILE
+import logging as logger
+
+logging = logger.getLogger(__name__)
+
 
 if app.config['SAML_ENABLED']:
     from onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -95,10 +99,12 @@ def fetch_remote(remote_url, method='GET', data=None, accept=None, params=None, 
         params=params
         )
     try:
-        if r.status_code not in (200, 400, 422):
+        if r.status_code not in (200, 201, 204, 400, 422):
             r.raise_for_status()
     except Exception as e:
-        raise RuntimeError('Error while fetching {0}'.format(remote_url)) from e
+        msg = "Returned status {0} and content {1}"
+        logging.error(msg.format(r.status_code, r.content))
+        raise RuntimeError('Error while fetching {0}'.format(remote_url))
 
     return r
 
