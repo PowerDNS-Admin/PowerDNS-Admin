@@ -68,14 +68,14 @@
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
                                     {% if record.is_allowed_edit() %}
-                                        <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">Edit&nbsp;<i class="fa fa-edit"></i></button>
+                                        <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
                                        {% else %}
                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     {% endif %}
                                     </td>
                                     <td width="6%">
                                     {% if record.is_allowed_delete() %}
-                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">Delete&nbsp;<i class="fa fa-trash"></i></button>
+                                        <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
                                     {% endif %}
                                 {% else %}
                                     <td width="6%">
@@ -201,6 +201,13 @@
 
     // handle apply changes button
     $(document.body).on("click",".button_apply_changes", function() {
+        if (nNew || nEditing) {
+            var modal = $("#modal_error");
+            modal.find('.modal-body p').text("Previous record not saved. Please save it before applying the changes.");
+            modal.modal('show');
+            return;
+        }
+
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var domain = $(this).prop('id');
