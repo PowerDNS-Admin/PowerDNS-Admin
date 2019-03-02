@@ -13,6 +13,7 @@ TIMEOUT = 10
 #  	- For docker, LOG_FILE=''
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = 'logfile.log'
+SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 
 # UPLOAD DIRECTORY
 UPLOAD_DIR = os.path.join(basedir, 'upload')
