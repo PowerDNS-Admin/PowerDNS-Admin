@@ -21,3 +21,7 @@ jsmin==2.2.2
 Authlib==0.10
 Flask-Seasurf
 pytimeparse
+lima
+pytest
+bravado-core
+PyYAML

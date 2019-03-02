@@ -14,8 +14,8 @@ ENV LANGUAGE en_US.UTF-8
 
 RUN apt-get install -y python3-pip python3-dev supervisor curl mysql-client
 
-# Install node 10.x
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+
 RUN apt-get install -y nodejs
 
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
@@ -38,11 +38,9 @@ RUN apt-get install -y libsasl2-dev libldap2-dev libssl-dev
 RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config
 
 COPY ./requirements.txt /powerdns-admin/requirements.txt
+COPY ./docker/PowerDNS-Admin/wait-for-pdns.sh /opt
+RUN chmod u+x /opt/wait-for-pdns.sh
+
 RUN pip3 install -r requirements.txt
 
-ADD ./supervisord.conf /etc/supervisord.conf
-ADD . /powerdns-admin/
-COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
-COPY ./docker/PowerDNS-Admin/entrypoint.sh /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/opt/wait-for-pdns.sh", "/usr/local/bin/pytest","--capture=no","-vv"]

@@ -1,24 +1,5 @@
-language: python
-python:
-  - "3.5.2"
-before_install:
-  - sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
-  - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-  - travis_retry sudo apt-get update
-  - travis_retry sudo apt-get install python3-dev libxml2-dev libxmlsec1-dev yarn
-  - mysql -e 'CREATE DATABASE pda';
-  - mysql -e "GRANT ALL PRIVILEGES ON pda.* to pda@'%' IDENTIFIED BY 'changeme'";
-install:
-  - pip install -r requirements.txt
-before_script:
-  - mv config_template.py config.py
-  - export FLASK_APP=app/__init__.py
-  - flask db upgrade
-  - yarn install --pure-lockfile
-  - flask assets build
+language: minimal
 script:
-  - sh run_travis.sh
-cache:
-  yarn: true
+  - docker-compose -f docker-compose-test.yml up --exit-code-from powerdns-admin --abort-on-container-exit
 services:
-  - mysql
+  - docker

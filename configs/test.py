@@ -11,17 +11,24 @@ TIMEOUT = 10
 
 # UPLOAD DIR
 UPLOAD_DIR = os.path.join(basedir, 'upload')
-
+TEST_USER_PASSWORD = 'test'
+TEST_USER = 'test'
+TEST_ADMIN_USER = 'admin'
+TEST_ADMIN_PASSWORD = 'admin'
+TEST_USER_APIKEY = 'wewdsfewrfsfsdf'
+TEST_ADMIN_APIKEY = 'nghnbnhtghrtert'
 # DATABASE CONFIG FOR MYSQL
-DB_HOST = os.environ.get('PDA_DB_HOST')
-DB_PORT = os.environ.get('PDA_DB_PORT', 3306 )
-DB_NAME = os.environ.get('PDA_DB_NAME')
-DB_USER = os.environ.get('PDA_DB_USER')
-DB_PASSWORD = os.environ.get('PDA_DB_PASSWORD')
-#MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+':'+ str(DB_PORT) + '/'+DB_NAME
-SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
-SQLALCHEMY_TRACK_MODIFICATIONS = True
+# DB_HOST = os.environ.get('PDA_DB_HOST')
+# DB_PORT = os.environ.get('PDA_DB_PORT', 3306 )
+# DB_NAME = os.environ.get('PDA_DB_NAME')
+# DB_USER = os.environ.get('PDA_DB_USER')
+# DB_PASSWORD = os.environ.get('PDA_DB_PASSWORD')
+# #MySQL
+# SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+':'+ str(DB_PORT) + '/'+DB_NAME
+# SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
+TEST_DB_LOCATION = '/tmp/testing.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(TEST_DB_LOCATION)
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # SAML Authentication
 SAML_ENABLED = False
