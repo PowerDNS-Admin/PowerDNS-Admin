@@ -13,20 +13,20 @@ def validate_apikey(apikey):
 
 
 def get_swagger_spec(spec_path):
-    with open(spec_path, 'r') as spec:
+    with open(spec_path, "r") as spec:
         return load(spec.read(), Loader)
 
 
 bravado_config = {
-    'validate_swagger_spec': False,
-    'validate_requests': False,
-    'validate_responses': False,
-    'use_models': True,
+    "validate_swagger_spec": False,
+    "validate_requests": False,
+    "validate_responses": False,
+    "use_models": True,
 }
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 spec_path = os.path.join(dir_path, "swagger-spec.yaml")
 spec_dict = get_swagger_spec(spec_path)
 spec = Spec.from_dict(spec_dict, config=bravado_config)
-zone_spec = spec_dict['definitions']['Zone']
-apikey_spec = spec_dict['definitions']['ApiKey']
+zone_spec = spec_dict["definitions"]["Zone"]
+apikey_spec = spec_dict["definitions"]["ApiKey"]

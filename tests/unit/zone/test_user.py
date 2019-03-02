@@ -5,6 +5,7 @@ import sys
 import json
 from collections import namedtuple
 import logging as logger
+
 sys.path.append(os.getcwd())
 import app
 from app.validators import validate_zone
@@ -15,38 +16,23 @@ from tests.fixtures import zone_data, created_zone_data, load_data
 
 
 class TestUnitApiZoneUser(object):
-
     @pytest.fixture
     def common_data_mock(self):
-        self.oauth_setting_patcher = patch(
-            'app.oauth.Setting',
-            spec=app.models.Setting
-        )
+        self.oauth_setting_patcher = patch("app.oauth.Setting", spec=app.models.Setting)
         self.api_setting_patcher = patch(
-            'app.blueprints.api.Setting',
-            spec=app.models.Setting
+            "app.blueprints.api.Setting", spec=app.models.Setting
         )
-        self.views_setting_patcher = patch(
-            'app.views.Setting',
-            spec=app.models.Setting
-        )
+        self.views_setting_patcher = patch("app.views.Setting", spec=app.models.Setting)
         self.helpers_setting_patcher = patch(
-            'app.lib.helper.Setting',
-            spec=app.models.Setting
+            "app.lib.helper.Setting", spec=app.models.Setting
         )
         self.models_setting_patcher = patch(
-            'app.models.Setting',
-            spec=app.models.Setting
+            "app.models.Setting", spec=app.models.Setting
         )
-        self.decorators_setting_patcher = patch(
-            'app.decorators.Setting'
-        )
-        self.mock_user_patcher = patch(
-            'app.decorators.User'
-        )
+        self.decorators_setting_patcher = patch("app.decorators.Setting")
+        self.mock_user_patcher = patch("app.decorators.User")
         self.mock_hist_patcher = patch(
-            'app.blueprints.api.History',
-            spec=app.models.History
+            "app.blueprints.api.History", spec=app.models.History
         )
 
         self.mock_oauth_setting = self.oauth_setting_patcher.start()
@@ -75,10 +61,11 @@ class TestUnitApiZoneUser(object):
         common_data_mock,
         zone_data,
         basic_auth_user_headers,
-        created_zone_data
+        created_zone_data,
     ):
-        with patch('app.lib.helper.requests.request') as mock_post, \
-             patch('app.blueprints.api.Domain') as mock_domain:
+        with patch("app.lib.helper.requests.request") as mock_post, patch(
+            "app.blueprints.api.Domain"
+        ) as mock_domain:
             mock_post.return_value.status_code = 201
             mock_post.return_value.content = json.dumps(created_zone_data)
             mock_post.return_value.headers = {}
@@ -88,59 +75,43 @@ class TestUnitApiZoneUser(object):
                 "/api/v1/pdnsadmin/zones",
                 headers=basic_auth_user_headers,
                 data=json.dumps(zone_data),
-                content_type="application/json"
+                content_type="application/json",
             )
             data = res.get_json(force=True)
-            data['rrsets'] = []
+            data["rrsets"] = []
 
             validate_zone(data)
             assert res.status_code == 201
 
     def test_get_multiple_zones(
-        self,
-        client,
-        common_data_mock,
-        zone_data,
-        basic_auth_user_headers
+        self, client, common_data_mock, zone_data, basic_auth_user_headers
     ):
-        test_domain = Domain(1, name=zone_data['name'].rstrip("."))
+        test_domain = Domain(1, name=zone_data["name"].rstrip("."))
         self.mockk.get_domains.return_value = [test_domain]
 
-        res = client.get(
-            "/api/v1/pdnsadmin/zones",
-            headers=basic_auth_user_headers
-        )
+        res = client.get("/api/v1/pdnsadmin/zones", headers=basic_auth_user_headers)
         data = res.get_json(force=True)
 
-        fake_domain = namedtuple(
-            "Domain",
-            data[0].keys()
-        )(*data[0].values())
+        fake_domain = namedtuple("Domain", data[0].keys())(*data[0].values())
         domain_schema = DomainSchema(many=True)
 
         json.dumps(domain_schema.dump([fake_domain]))
         assert res.status_code == 200
 
     def test_delete_zone(
-        self,
-        client,
-        common_data_mock,
-        zone_data,
-        basic_auth_user_headers
+        self, client, common_data_mock, zone_data, basic_auth_user_headers
     ):
-        with patch('app.lib.utils.requests.request') as mock_delete, \
-             patch('app.blueprints.api.Domain') as mock_domain:
+        with patch("app.lib.utils.requests.request") as mock_delete, patch(
+            "app.blueprints.api.Domain"
+        ) as mock_domain:
             mock_domain.return_value.update.return_value = True
-            test_domain = Domain(1, name=zone_data['name'].rstrip("."))
+            test_domain = Domain(1, name=zone_data["name"].rstrip("."))
             self.mockk.get_domains.return_value = [test_domain]
             mock_delete.return_value.status_code = 204
-            mock_delete.return_value.content = ''
+            mock_delete.return_value.content = ""
 
             zone_url_format = "/api/v1/pdnsadmin/zones/{0}"
-            zone_url = zone_url_format.format(zone_data['name'].rstrip("."))
-            res = client.delete(
-                zone_url,
-                headers=basic_auth_user_headers
-            )
+            zone_url = zone_url_format.format(zone_data["name"].rstrip("."))
+            res = client.delete(zone_url, headers=basic_auth_user_headers)
 
             assert res.status_code == 204

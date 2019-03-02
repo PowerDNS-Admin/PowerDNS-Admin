@@ -12,7 +12,7 @@ from app.schema import ApiKeySchema, DomainSchema, ApiPlainKeySchema
 from urllib.parse import urljoin
 from app.lib.log import logging
 
-api_blueprint = Blueprint('api_blueprint', __name__)
+api_blueprint = Blueprint("api_blueprint", __name__)
 
 apikey_schema = ApiKeySchema(many=True)
 domain_schema = DomainSchema(many=True)
@@ -71,17 +71,17 @@ def before_request():
 
 
 @csrf.exempt
-@api_blueprint.route('/pdnsadmin/zones', methods=['POST'])
+@api_blueprint.route("/pdnsadmin/zones", methods=["POST"])
 @api_basic_auth
 @api_can_create_domain
 def api_login_create_zone():
-    pdns_api_url = Setting().get('pdns_api_url')
-    pdns_api_key = Setting().get('pdns_api_key')
-    pdns_version = Setting().get('pdns_version')
+    pdns_api_url = Setting().get("pdns_api_url")
+    pdns_api_key = Setting().get("pdns_api_key")
+    pdns_version = Setting().get("pdns_version")
     api_uri_with_prefix = utils.pdns_api_extended_uri(pdns_version)
-    api_full_uri = api_uri_with_prefix + '/servers/localhost/zones'
+    api_full_uri = api_uri_with_prefix + "/servers/localhost/zones"
     headers = {}
-    headers['X-API-Key'] = pdns_api_key
+    headers["X-API-Key"] = pdns_api_key
 
     msg_str = "Sending request to powerdns API {0}"
     msg = msg_str.format(request.get_json(force=True))
@@ -89,10 +89,10 @@ def api_login_create_zone():
 
     resp = utils.fetch_remote(
         urljoin(pdns_api_url, api_full_uri),
-        method='POST',
+        method="POST",
         data=request.get_json(force=True),
         headers=headers,
-        accept='application/json; q=1'
+        accept="application/json; q=1",
     )
 
     if resp.status_code == 201:
@@ -100,15 +100,15 @@ def api_login_create_zone():
         data = request.get_json(force=True)
 
         history = History(
-            msg='Add domain {0}'.format(data['name'].rstrip('.')),
+            msg="Add domain {0}".format(data["name"].rstrip(".")),
             detail=json.dumps(data),
-            created_by=g.user.username
+            created_by=g.user.username,
         )
         history.add()
 
-        if g.user.role.name not in ['Administrator', 'Operator']:
+        if g.user.role.name not in ["Administrator", "Operator"]:
             logging.debug("User is ordinary user, assigning created domain")
-            domain = Domain(name=data['name'].rstrip('.'))
+            domain = Domain(name=data["name"].rstrip("."))
             domain.update()
             domain.grant_privileges([g.user.username])
 
@@ -119,10 +119,10 @@ def api_login_create_zone():
 
 
 @csrf.exempt
-@api_blueprint.route('/pdnsadmin/zones', methods=['GET'])
+@api_blueprint.route("/pdnsadmin/zones", methods=["GET"])
 @api_basic_auth
 def api_login_list_zones():
-    if g.user.role.name not in ['Administrator', 'Operator']:
+    if g.user.role.name not in ["Administrator", "Operator"]:
         domain_obj_list = g.user.get_domains()
     else:
         domain_obj_list = Domain.query.all()
@@ -132,28 +132,25 @@ def api_login_list_zones():
 
 
 @csrf.exempt
-@api_blueprint.route(
-    '/pdnsadmin/zones/<string:domain_name>',
-    methods=['DELETE']
-)
+@api_blueprint.route("/pdnsadmin/zones/<string:domain_name>", methods=["DELETE"])
 @api_basic_auth
 @api_can_create_domain
 def api_login_delete_zone(domain_name):
-    pdns_api_url = Setting().get('pdns_api_url')
-    pdns_api_key = Setting().get('pdns_api_key')
-    pdns_version = Setting().get('pdns_version')
+    pdns_api_url = Setting().get("pdns_api_url")
+    pdns_api_key = Setting().get("pdns_api_key")
+    pdns_version = Setting().get("pdns_version")
     api_uri_with_prefix = utils.pdns_api_extended_uri(pdns_version)
-    api_full_uri = api_uri_with_prefix + '/servers/localhost/zones'
-    api_full_uri += '/' + domain_name
+    api_full_uri = api_uri_with_prefix + "/servers/localhost/zones"
+    api_full_uri += "/" + domain_name
     headers = {}
-    headers['X-API-Key'] = pdns_api_key
+    headers["X-API-Key"] = pdns_api_key
 
     domain = Domain.query.filter(Domain.name == domain_name)
 
     if not domain:
         abort(404)
 
-    if g.user.role.name not in ['Administrator', 'Operator']:
+    if g.user.role.name not in ["Administrator", "Operator"]:
         user_domains_obj_list = g.user.get_domains()
         user_domains_list = [item.name for item in user_domains_obj_list]
 
@@ -166,32 +163,32 @@ def api_login_delete_zone(domain_name):
     try:
         resp = utils.fetch_remote(
             urljoin(pdns_api_url, api_full_uri),
-            method='DELETE',
+            method="DELETE",
             headers=headers,
-            accept='application/json; q=1'
+            accept="application/json; q=1",
         )
 
         if resp.status_code == 204:
             logging.debug("Request to powerdns API successful")
 
             history = History(
-                msg='Delete domain {0}'.format(domain_name),
-                detail='',
-                created_by=g.user.username
+                msg="Delete domain {0}".format(domain_name),
+                detail="",
+                created_by=g.user.username,
             )
             history.add()
 
             domain = Domain()
             domain.update()
     except Exception as e:
-        logging.error('Error: {0}'.format(e))
+        logging.error("Error: {0}".format(e))
         abort(500)
 
     return resp.content, resp.status_code, resp.headers.items()
 
 
 @csrf.exempt
-@api_blueprint.route('/pdnsadmin/apikeys', methods=['POST'])
+@api_blueprint.route("/pdnsadmin/apikeys", methods=["POST"])
 @api_basic_auth
 def api_generate_apikey():
     data = request.get_json()
@@ -200,29 +197,29 @@ def api_generate_apikey():
     apikey = None
     domain_obj_list = []
 
-    abort(400) if 'domains' not in data else None
-    abort(400) if not isinstance(data['domains'], (list,)) else None
-    abort(400) if 'role' not in data else None
+    abort(400) if "domains" not in data else None
+    abort(400) if not isinstance(data["domains"], (list,)) else None
+    abort(400) if "role" not in data else None
 
-    description = data['description'] if 'description' in data else None
-    role_name = data['role']
-    domains = data['domains']
+    description = data["description"] if "description" in data else None
+    role_name = data["role"]
+    domains = data["domains"]
 
-    if role_name == 'User' and len(domains) == 0:
+    if role_name == "User" and len(domains) == 0:
         logging.error("Apikey with User role must have domains")
         raise ApiKeyNotUsable()
-    elif role_name == 'User':
+    elif role_name == "User":
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
             msg = "One of supplied domains does not exists"
             logging.error(msg)
             raise DomainNotExists(message=msg)
 
-    if g.user.role.name not in ['Administrator', 'Operator']:
+    if g.user.role.name not in ["Administrator", "Operator"]:
         # domain list of domain api key should be valid for
         # if not any domain error
         # role of api key, user cannot assign role above for api key
-        if role_name != 'User':
+        if role_name != "User":
             msg = "User cannot assign other role than User"
             logging.error(msg)
             raise NotEnoughPrivileges(message=msg)
@@ -242,33 +239,31 @@ def api_generate_apikey():
             logging.error(msg)
             raise DomainAccessForbidden(message=msg)
 
-    apikey = ApiKey(
-        desc=description,
-        role_name=role_name,
-        domains=domain_obj_list
-    )
+    apikey = ApiKey(desc=description, role_name=role_name, domains=domain_obj_list)
 
     try:
         apikey.create()
     except Exception as e:
-        logging.error('Error: {0}'.format(e))
-        raise ApiKeyCreateFail(message='Api key create failed')
+        logging.error("Error: {0}".format(e))
+        raise ApiKeyCreateFail(message="Api key create failed")
 
     return json.dumps(apikey_plain_schema.dump([apikey])), 201
 
 
 @csrf.exempt
-@api_blueprint.route('/pdnsadmin/apikeys', defaults={'domain_name': None})
-@api_blueprint.route('/pdnsadmin/apikeys/<string:domain_name>')
+@api_blueprint.route("/pdnsadmin/apikeys", defaults={"domain_name": None})
+@api_blueprint.route("/pdnsadmin/apikeys/<string:domain_name>")
 @api_basic_auth
 def api_get_apikeys(domain_name):
     apikeys = []
     logging.debug("Getting apikeys")
 
-    if g.user.role.name not in ['Administrator', 'Operator']:
+    if g.user.role.name not in ["Administrator", "Operator"]:
         if domain_name:
             msg = "Check if domain {0} exists and \
-            is allowed for user." . format(domain_name)
+            is allowed for user.".format(
+                domain_name
+            )
             logging.debug(msg)
             apikeys = g.user.get_apikeys(domain_name)
 
@@ -278,14 +273,14 @@ def api_get_apikeys(domain_name):
             logging.debug(apikey_schema.dump(apikeys))
         else:
             msg_str = "Getting all allowed domains for user {0}"
-            msg = msg_str . format(g.user.username)
+            msg = msg_str.format(g.user.username)
             logging.debug(msg)
 
             try:
                 apikeys = g.user.get_apikeys()
                 logging.debug(apikey_schema.dump(apikeys))
             except Exception as e:
-                logging.error('Error: {0}'.format(e))
+                logging.error("Error: {0}".format(e))
                 abort(500)
     else:
         logging.debug("Getting all domains for administrative user")
@@ -293,14 +288,14 @@ def api_get_apikeys(domain_name):
             apikeys = ApiKey.query.all()
             logging.debug(apikey_schema.dump(apikeys))
         except Exception as e:
-            logging.error('Error: {0}'.format(e))
+            logging.error("Error: {0}".format(e))
             abort(500)
 
     return json.dumps(apikey_schema.dump(apikeys)), 200
 
 
 @csrf.exempt
-@api_blueprint.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
+@api_blueprint.route("/pdnsadmin/apikeys/<int:apikey_id>", methods=["DELETE"])
 @api_basic_auth
 def api_delete_apikey(apikey_id):
     apikey = ApiKey.query.get(apikey_id)
@@ -310,7 +305,7 @@ def api_delete_apikey(apikey_id):
 
     logging.debug(g.user.role.name)
 
-    if g.user.role.name not in ['Administrator', 'Operator']:
+    if g.user.role.name not in ["Administrator", "Operator"]:
         apikeys = g.user.get_apikeys()
         user_domains_obj_list = g.user.get_domain().all()
         apikey_domains_obj_list = apikey.domains
@@ -331,23 +326,23 @@ def api_delete_apikey(apikey_id):
     try:
         apikey.delete()
     except Exception as e:
-        logging.error('Error: {0}'.format(e))
+        logging.error("Error: {0}".format(e))
         abort(500)
 
-    return '', 204
+    return "", 204
 
 
 @csrf.exempt
-@api_blueprint.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['PUT'])
+@api_blueprint.route("/pdnsadmin/apikeys/<int:apikey_id>", methods=["PUT"])
 @api_basic_auth
 def api_update_apikey(apikey_id):
     # if role different and user is allowed to change it, update
     # if apikey domains are different and user is allowed to handle
     # that domains update domains
     data = request.get_json()
-    description = data['description'] if 'description' in data else None
-    role_name = data['role'] if 'role' in data else None
-    domains = data['domains'] if 'domains' in data else None
+    description = data["description"] if "description" in data else None
+    role_name = data["role"] if "role" in data else None
+    domains = data["domains"] if "domains" in data else None
     domain_obj_list = None
 
     apikey = ApiKey.query.get(apikey_id)
@@ -355,20 +350,20 @@ def api_update_apikey(apikey_id):
     if not apikey:
         abort(404)
 
-    logging.debug('Updating apikey with id {0}'.format(apikey_id))
+    logging.debug("Updating apikey with id {0}".format(apikey_id))
 
-    if role_name == 'User' and len(domains) == 0:
+    if role_name == "User" and len(domains) == 0:
         logging.error("Apikey with User role must have domains")
         raise ApiKeyNotUsable()
-    elif role_name == 'User':
+    elif role_name == "User":
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
             msg = "One of supplied domains does not exists"
             logging.error(msg)
             raise DomainNotExists(message=msg)
 
-    if g.user.role.name not in ['Administrator', 'Operator']:
-        if role_name != 'User':
+    if g.user.role.name not in ["Administrator", "Operator"]:
+        if role_name != "User":
             msg = "User cannot assign other role than User"
             logging.error(msg)
             raise NotEnoughPrivileges(message=msg)
@@ -393,7 +388,7 @@ def api_update_apikey(apikey_id):
             raise DomainAccessForbidden(message=msg)
 
         if apikey_id not in apikeys_ids:
-            msg = 'Apikey does not belong to domain to which user has access'
+            msg = "Apikey does not belong to domain to which user has access"
             logging.error(msg)
             raise DomainAccessForbidden()
 
@@ -412,22 +407,18 @@ def api_update_apikey(apikey_id):
 
     try:
         apikey = ApiKey.query.get(apikey_id)
-        apikey.update(
-            role_name=role_name,
-            domains=domains,
-            description=description
-        )
+        apikey.update(role_name=role_name, domains=domains, description=description)
     except Exception as e:
-        logging.error('Error: {0}'.format(e))
+        logging.error("Error: {0}".format(e))
         abort(500)
 
-    return '', 204
+    return "", 204
 
 
 @csrf.exempt
 @api_blueprint.route(
-    '/servers/<string:server_id>/zones/<string:zone_id>/<path:subpath>',
-    methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    "/servers/<string:server_id>/zones/<string:zone_id>/<path:subpath>",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
 )
 @apikey_auth
 @apikey_can_access_domain
@@ -438,8 +429,8 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 
 @csrf.exempt
 @api_blueprint.route(
-    '/servers/<string:server_id>/zones/<string:zone_id>',
-    methods=['GET', 'PUT', 'PATCH', 'DELETE']
+    "/servers/<string:server_id>/zones/<string:zone_id>",
+    methods=["GET", "PUT", "PATCH", "DELETE"],
 )
 @apikey_auth
 @apikey_can_access_domain
@@ -450,10 +441,7 @@ def api_zone_forward(server_id, zone_id):
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_blueprint.route(
-    '/servers',
-    methods=['GET']
-)
+@api_blueprint.route("/servers", methods=["GET"])
 @apikey_auth
 @apikey_is_admin
 def api_server_forward():
@@ -461,10 +449,7 @@ def api_server_forward():
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_blueprint.route(
-    '/servers/<path:subpath>',
-    methods=['GET', 'PUT']
-)
+@api_blueprint.route("/servers/<path:subpath>", methods=["GET", "PUT"])
 @apikey_auth
 @apikey_is_admin
 def api_server_sub_forward(subpath):
@@ -473,7 +458,7 @@ def api_server_sub_forward(subpath):
 
 
 @csrf.exempt
-@api_blueprint.route('/servers/<string:server_id>/zones', methods=['POST'])
+@api_blueprint.route("/servers/<string:server_id>/zones", methods=["POST"])
 @apikey_auth
 def api_create_zone(server_id):
     resp = helper.forward_request()
@@ -483,15 +468,15 @@ def api_create_zone(server_id):
         data = request.get_json(force=True)
 
         history = History(
-            msg='Add domain {0}'.format(data['name'].rstrip('.')),
+            msg="Add domain {0}".format(data["name"].rstrip(".")),
             detail=json.dumps(data),
-            created_by=g.apikey.description
+            created_by=g.apikey.description,
         )
         history.add()
 
-        if g.apikey.role.name not in ['Administrator', 'Operator']:
+        if g.apikey.role.name not in ["Administrator", "Operator"]:
             logging.debug("Apikey is user key, assigning created domain")
-            domain = Domain(name=data['name'].rstrip('.'))
+            domain = Domain(name=data["name"].rstrip("."))
             g.apikey.domains.append(domain)
 
         domain = Domain()
@@ -501,10 +486,10 @@ def api_create_zone(server_id):
 
 
 @csrf.exempt
-@api_blueprint.route('/servers/<string:server_id>/zones', methods=['GET'])
+@api_blueprint.route("/servers/<string:server_id>/zones", methods=["GET"])
 @apikey_auth
 def api_get_zones(server_id):
-    if g.apikey.role.name not in ['Administrator', 'Operator']:
+    if g.apikey.role.name not in ["Administrator", "Operator"]:
         domain_obj_list = g.apikey.domains
     else:
         domain_obj_list = Domain.query.all()

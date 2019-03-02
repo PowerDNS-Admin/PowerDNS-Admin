@@ -8,13 +8,13 @@ class StructuredException(Exception):
 
     def to_dict(self):
         rv = dict()
-        msg = ''
+        msg = ""
         if self.name:
-            msg = '{0} {1}'.format(self.message, self.name)
+            msg = "{0} {1}".format(self.message, self.name)
         else:
             msg = self.message
 
-        rv['msg'] = msg
+        rv["msg"] = msg
         return rv
 
 
@@ -48,8 +48,12 @@ class ApiKeyCreateFail(StructuredException):
 class ApiKeyNotUsable(StructuredException):
     status_code = 1003
 
-    def __init__(self, name=None, message="Api key must have domains or have \
-    administrative role"):
+    def __init__(
+        self,
+        name=None,
+        message="Api key must have domains or have \
+    administrative role",
+    ):
         StructuredException.__init__(self)
         self.message = message
         self.name = name

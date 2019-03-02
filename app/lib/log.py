@@ -1,5 +1,6 @@
 import logging
 
+
 class logger(object):
     def __init__(self, name, level, logfile):
         self.name = name
@@ -10,13 +11,13 @@ class logger(object):
         # define logger and set logging level
         logger = logging.getLogger()
 
-        if self.level == 'CRITICAL':
+        if self.level == "CRITICAL":
             level = logging.CRITICAL
-        elif self.level == 'ERROR':
+        elif self.level == "ERROR":
             level = logging.ERROR
-        elif self.level == 'WARNING':
+        elif self.level == "WARNING":
             level = logging.WARNING
-        elif self.level == 'DEBUG':
+        elif self.level == "DEBUG":
             level = logging.DEBUG
         else:
             level = logging.INFO
@@ -32,7 +33,9 @@ class logger(object):
             logger.addHandler(file_log_handler)
 
             # define logging format for file
-            file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            file_formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             file_log_handler.setFormatter(file_formatter)
 
         # define handler to log into console
@@ -40,7 +43,7 @@ class logger(object):
         logger.addHandler(stderr_log_handler)
 
         # define logging format for console
-        console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
+        console_formatter = logging.Formatter("[%(levelname)s] %(message)s")
         stderr_log_handler.setFormatter(console_formatter)
 
         return logging.getLogger(self.name)

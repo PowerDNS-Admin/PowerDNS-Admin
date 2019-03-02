@@ -1,0 +1,15 @@
+version: "2.1"
+
+services:
+  formatter:
+    image: python:3.6-alpine
+    command: ["sh", "-c", "pip3 install black && black /powerdns-admin"]
+    volumes:
+      # Code
+      - .:/powerdns-admin/
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+    networks:
+      - default

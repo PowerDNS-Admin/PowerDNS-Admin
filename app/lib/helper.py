@@ -8,14 +8,14 @@ logging = logger.getLogger(__name__)
 
 
 def forward_request():
-    pdns_api_url = Setting().get('pdns_api_url')
-    pdns_api_key = Setting().get('pdns_api_key')
+    pdns_api_url = Setting().get("pdns_api_url")
+    pdns_api_key = Setting().get("pdns_api_key")
     headers = {}
     data = None
 
     msg_str = "Sending request to powerdns API {0}"
 
-    if request.method != 'GET' and request.method != 'DELETE':
+    if request.method != "GET" and request.method != "DELETE":
         msg = msg_str.format(request.get_json(force=True))
         logging.debug(msg)
         data = request.get_json(force=True)
@@ -23,21 +23,17 @@ def forward_request():
     verify = False
 
     headers = {
-        'user-agent': 'powerdnsadmin/0',
-        'pragma': 'no-cache',
-        'cache-control': 'no-cache',
-        'accept': 'application/json; q=1',
-        'X-API-KEY': pdns_api_key
+        "user-agent": "powerdnsadmin/0",
+        "pragma": "no-cache",
+        "cache-control": "no-cache",
+        "accept": "application/json; q=1",
+        "X-API-KEY": pdns_api_key,
     }
 
     url = urljoin(pdns_api_url, request.path)
 
     resp = requests.request(
-        request.method,
-        url,
-        headers=headers,
-        verify=verify,
-        json=data
+        request.method, url, headers=headers, verify=verify, json=data
     )
 
     return resp
