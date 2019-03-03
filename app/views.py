@@ -344,9 +344,8 @@ def saml_authorized():
         elif admin_group_name in user_groups:
             uplift_to_admin(user)
         elif admin_attribute_name or group_attribute_name:
-            user_role = Role.query.filter_by(name='User').first().id
-            if user.role_id != user_role:
-                user.role_id = user_role
+            if user.role.name != 'User':
+                user.role_id = Role.query.filter_by(name='User').first().id
                 history = History(msg='Demoting {0} to user'.format(user.username), created_by='SAML Assertion')
                 history.add()
         user.plain_text_password = None
@@ -381,9 +380,8 @@ def handle_account(account_name):
 
 
 def uplift_to_admin(user):
-    admin_role = Role.query.filter_by(name='Administrator').first().id
-    if user.role_id != admin_role:
-        user.role_id = admin_role
+    if user.role.name != 'Administrator':
+        user.role_id = Role.query.filter_by(name='Administrator').first().id
         history = History(msg='Promoting {0} to administrator'.format(user.username), created_by='SAML Assertion')
         history.add()
 
