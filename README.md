@@ -17,6 +17,7 @@ A PowerDNS web interface with advanced features.
 - Dashboard and pdns service statistics
 - DynDNS 2 protocol support
 - Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
+- limited API for manipulating zones and records
 
 ### Running PowerDNS-Admin
 There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment which has PowerDNS-Admin, PowerDNS server and MySQL Back-End Database.
@@ -172,5 +173,9 @@ docker-compose up -d
 ```
 
 ```
-eralchemy -i 'mysql://powerdns_admin:changeme@'$(docker inspect powerdns-admin-mysql|jq -jr '.[0].NetworkSettings.Networks.powerdnsadmin_default.IPAddress')':3306/powerdns_admin' -o /tmp/output.pdf
+source .env
+```
+
+```
+eralchemy -i 'mysql://${PDA_DB_USER}:${PDA_DB_PASSWORD}@'$(docker inspect powerdns-admin-mysql|jq -jr '.[0].NetworkSettings.Networks.powerdnsadmin_default.IPAddress')':3306/powerdns_admin' -o /tmp/output.pdf
 ```
