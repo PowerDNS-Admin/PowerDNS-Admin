@@ -3,14 +3,12 @@ import sys
 import flask_migrate
 import os
 from base64 import b64encode
-from unittest import mock
 
 sys.path.append(os.getcwd())
 
-from app.models import Role, User, Setting, ApiKey, Domain
-from app import app, db
-from app.blueprints.api import api_blueprint
-from app.lib.log import logging
+from powerdns_admin.models import User, Setting, ApiKey, db
+from powerdns_admin.app import app
+from powerdns_admin.lib.log import logging
 
 
 @pytest.fixture

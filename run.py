@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from app import app
+from flask import current_app as app
 from config import PORT
 from config import BIND_ADDRESS
 

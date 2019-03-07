@@ -8,10 +8,10 @@ from collections import namedtuple
 import logging as logger
 
 sys.path.append(os.getcwd())
-import app
-from app.validators import validate_zone
-from app.models import Setting, Domain, ApiKey, Role
-from app.schema import DomainSchema, ApiKeySchema
+from powerdns_admin import app
+from powerdns_admin.validators import validate_zone
+from powerdns_admin.models import Setting, Domain, ApiKey, Role, History
+from powerdns_admin.schema import DomainSchema, ApiKeySchema
 from tests.fixtures import client, initial_data, created_zone_data
 from tests.fixtures import user_apikey, zone_data
 from tests.fixtures import user_apikey_data, load_data
@@ -20,19 +20,21 @@ from tests.fixtures import user_apikey_data, load_data
 class TestUnitApiZoneUserApiKey(object):
     @pytest.fixture
     def common_data_mock(self):
-        self.oauth_setting_patcher = patch("app.oauth.Setting", spec=app.models.Setting)
-        self.views_setting_patcher = patch("app.views.Setting", spec=app.models.Setting)
+        self.oauth_setting_patcher = patch("powerdns_admin.oauth.Setting", spec=Setting)
+        self.views_setting_patcher = patch(
+            "powerdns_admin.blueprints.views.Setting", spec=Setting
+        )
         self.helpers_setting_patcher = patch(
-            "app.lib.helper.Setting", spec=app.models.Setting
+            "powerdns_admin.lib.helper.Setting", spec=Setting
         )
         self.models_setting_patcher = patch(
-            "app.models.Setting", spec=app.models.Setting
+            "powerdns_admin.models.Setting", spec=Setting
         )
         self.mock_apikey_patcher = patch(
-            "app.decorators.ApiKey", spec=app.models.ApiKey
+            "powerdns_admin.decorators.ApiKey", spec=ApiKey
         )
         self.mock_hist_patcher = patch(
-            "app.blueprints.api.History", spec=app.models.History
+            "powerdns_admin.blueprints.api.History", spec=History
         )
 
         self.mock_oauth_setting = self.oauth_setting_patcher.start()
@@ -60,8 +62,8 @@ class TestUnitApiZoneUserApiKey(object):
     def test_create_zone(
         self, client, common_data_mock, zone_data, user_apikey, created_zone_data
     ):
-        with patch("app.lib.helper.requests.request") as mock_post, patch(
-            "app.blueprints.api.Domain"
+        with patch("powerdns_admin.lib.helper.requests.request") as mock_post, patch(
+            "powerdns_admin.blueprints.api.Domain"
         ) as mock_domain:
             mock_post.return_value.status_code = 201
             mock_post.return_value.content = json.dumps(created_zone_data)
@@ -81,7 +83,7 @@ class TestUnitApiZoneUserApiKey(object):
             assert res.status_code == 201
 
     def test_get_multiple_zones(self, client, common_data_mock, zone_data, user_apikey):
-        with patch("app.blueprints.api.Domain") as mock_domain:
+        with patch("powerdns_admin.blueprints.api.Domain") as mock_domain:
             test_domain = Domain(1, name=zone_data["name"].rstrip("."))
             mock_domain.query.all.return_value = [test_domain]
 
@@ -95,8 +97,8 @@ class TestUnitApiZoneUserApiKey(object):
             assert res.status_code == 200
 
     def test_delete_zone(self, client, common_data_mock, zone_data, user_apikey):
-        with patch("app.lib.utils.requests.request") as mock_delete, patch(
-            "app.blueprints.api.Domain"
+        with patch("powerdns_admin.lib.utils.requests.request") as mock_delete, patch(
+            "powerdns_admin.blueprints.api.Domain"
         ) as mock_domain:
             mock_domain.return_value.update.return_value = True
             mock_delete.return_value.status_code = 204

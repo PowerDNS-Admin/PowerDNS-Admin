@@ -2,15 +2,12 @@ import os
 import pytest
 import sys
 import json
-from base64 import b64encode
 from collections import namedtuple
-import logging as logger
 
 sys.path.append(os.getcwd())
-import app
-from app.validators import validate_apikey
-from app.models import Setting
-from app.schema import DomainSchema, ApiKeySchema
+from powerdns_admin.validators import validate_apikey
+from powerdns_admin.models import Setting
+from powerdns_admin.schema import DomainSchema, ApiKeySchema
 from tests.fixtures import client, initial_data, basic_auth_admin_headers
 from tests.fixtures import user_apikey_data, admin_apikey_data, zone_data
 

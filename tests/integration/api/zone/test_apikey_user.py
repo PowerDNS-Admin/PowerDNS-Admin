@@ -6,10 +6,10 @@ from base64 import b64encode
 from collections import namedtuple
 
 sys.path.append(os.getcwd())
-import app
-from app.validators import validate_zone
-from app.models import Setting
-from app.schema import DomainSchema
+from powerdns_admin import app
+from powerdns_admin.validators import validate_zone
+from powerdns_admin.models import Setting
+from powerdns_admin.schema import DomainSchema
 from tests.fixtures import client
 from tests.fixtures import zone_data, initial_apikey_data
 from tests.fixtures import user_apikey_integration

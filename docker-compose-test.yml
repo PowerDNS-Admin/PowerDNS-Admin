@@ -18,9 +18,9 @@ services:
     volumes:
       # Code
       - .:/powerdns-admin/
-      - "./configs/test.py:/powerdns-admin/config.py"
+      #- "./configs/test.py:/powerdns-admin/config.py"
       - powerdns-admin-assets3:/powerdns-admin/logs
-      - ./app/static/custom:/powerdns-admin/app/static/custom
+      - ./powerdns_admin/static/custom:/powerdns-admin/powerdns_admin/static/custom
     logging:
       driver: json-file
       options:
