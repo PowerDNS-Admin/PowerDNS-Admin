@@ -23,7 +23,7 @@ RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-co
 RUN pip3 install robotframework robotframework-requests robotframework-selenium2library==3.0.0
 RUN curl -L https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux64.tar.gz|tar -C /usr/local/bin -xvzf -
 
-COPY ./docker/PowerDNS-Admin/wait-for-pdns.sh /opt
-RUN chmod u+x /opt/wait-for-pdns.sh
+COPY ./docker/PowerDNS-Admin/wait-for-powerdnsadmin.sh /opt
+RUN chmod u+x /opt/wait-for-powerdnsadmin.sh
 
-CMD ["/opt/wait-for-pdns.sh", "robot", "webui.robot" ]
+CMD ["/opt/wait-for-powerdnsadmin.sh", "robot", "webui.robot" ]

@@ -6,14 +6,16 @@ CMD="$1"
 shift
 CMD_ARGS="$@"
 
-LOOPS=10
+LOOPS=100
+COUNTER=1
 until curl -H "X-API-Key: ${PDNS_API_KEY}" "${PDNS_PROTO}://${PDNS_HOST}:${PDNS_PORT}/api/v1/servers"; do
   >&2 echo "PDNS is unavailable - sleeping"
   sleep 1
-  if [ $LOOPS -eq 10 ]
+  if [ $LOOPS -eq $COUNTER ]
   then
-    break
+    exit 134
   fi
+  COUNTER=$(( $COUNTER + 1 ))
 done
 
 sleep 5
