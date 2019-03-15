@@ -44,3 +44,7 @@ node_modules
 app/static/generated
 .venv*
 .pytest_cache
+robot_tests/*.log
+robot_tests/*.xml
+robot_tests/*.html
+robot_tests/*.png
