@@ -1,11 +1,14 @@
 | *** Settings *** |
 |                  |
-| Documentation    | Test Web User interface of PowerDNS-Admin installation
+| Documentation    | Test Domain management By Admin user
 | Library          | OperatingSystem
 | Library          | RequestsLibrary
 | Library          | json
-| Library          | Selenium2Library
-| Resource         | ../resource/basic.robot
+| Library          | Selenium2Library         | run_on_failure=Nothing
+| Resource         | ../resource/domain.robot
+| Resource         | ../resource/user.robot
+| Suite Teardown   | Cleanup
+
 
 | *** Variables ***   |
 |                     |
@@ -19,6 +22,12 @@
 | ${test_server}      | test_server
 | ${test_server_ip}   | 192.168.5.12
 | ${test_server_edit} | test_server_edit
+
+
+| *** Keywords *** |
+|                  |
+| Cleanup          |
+|                  | Close All Browsers
 
 
 | *** Test Cases *** |
