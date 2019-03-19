@@ -1,7 +1,6 @@
 | *** Settings *** |
 |                  |
 | Library          | OperatingSystem
-| Library          | RequestsLibrary
 | Library          | json
 | Library          | Selenium2Library
 
@@ -56,11 +55,11 @@
 |                  | Wait Until Element Is Not Visible | id=button_delete_confirm                       | timeout=5
 |                  | Wait Until Element Is Not Visible | class=modal-backdrop                           | timeout=5
 |                  | Wait Until Element Is Visible     | class=dataTables_empty                         | timeout=5
-| Toggle Setting   |                                   |                                                |                 |
-|                  | [Arguments]                       | ${setting_name}                                | ${target_state} |
-|                  | Click Link                        | xpath://li[@class="treeview"]/a                |                 |
-|                  | Wait Until Element Is Visible     | xpath://a[@href="/admin/setting/basic"]        | timeout=5       |
-|                  | Click Link                        | xpath://a[@href="/admin/setting/basic"]        |                 |
-|                  | Wait Until Element Is Visible     | id:${setting_name}                             | timeout=5       |
-|                  | Click Button                      | id:${setting_name}                             |                 |
-|                  | Wait Until Element Contains       | xpath://table[@id="tbl_settings"]/*/tr[1]/td[2]| ${target_state} | timeout=5
+| Toggle Setting   |                                   |                                                 |                 |
+|                  | [Arguments]                       | ${setting_name}                                 | ${target_state} |
+|                  | Click Link                        | xpath://li[@class="treeview"]/a                 |                 |
+|                  | Wait Until Element Is Visible     | xpath://a[@href="/admin/setting/basic"]         | timeout=5       |
+|                  | Click Link                        | xpath://a[@href="/admin/setting/basic"]         |                 |
+|                  | Wait Until Element Is Visible     | id:${setting_name}                              | timeout=5       |
+|                  | Click Button                      | id:${setting_name}                              |                 |
+|                  | Wait Until Element Contains       | xpath://table[@id="tbl_settings"]/*/tr[1]/td[2] | ${target_state} | timeout=5

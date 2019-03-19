@@ -2,17 +2,16 @@
 |                  |
 | Documentation    | Test Domain management By Admin user
 | Library          | OperatingSystem
-| Library          | RequestsLibrary
 | Library          | json
 | Library          | Selenium2Library         | run_on_failure=Nothing
 | Resource         | ../resource/domain.robot
 | Resource         | ../resource/user.robot
 | Suite Teardown   | Cleanup
-
+| Test Teardown    | Cleanup
 
 | *** Variables ***   |
 |                     |
-| ${base_url}         | http://localhost:9191
+| ${base_url}         | http://powerdns-admin-ui-test:9191
 | ${admin_user}       | admin
 | ${admin_pass}       | admin
 | ${admin_email}      | admin@admin.com

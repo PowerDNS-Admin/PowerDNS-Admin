@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 MAINTAINER Khanh Ngo "k@ndk.name"
 ARG ENVIRONMENT=development
 ENV ENVIRONMENT=${ENVIRONMENT}
-WORKDIR /powerdns-admin/robot_tests
+WORKDIR /powerdns-admin
 
 RUN apt-get update -y
 RUN apt-get install -y apt-transport-https
@@ -12,7 +12,7 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
-RUN apt-get install -y python3-pip python3-dev curl
+RUN apt-get update && apt-get install -y python3-pip python3-dev curl
 
 # lib for building ldap and ssl-based application
 RUN apt-get install -y libsasl2-dev libldap2-dev libssl-dev
@@ -20,10 +20,10 @@ RUN apt-get install -y libsasl2-dev libldap2-dev libssl-dev
 # lib for building python3-saml
 RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config firefox
 
-RUN pip3 install robotframework robotframework-requests robotframework-selenium2library==3.0.0
+RUN pip3 install robotframework robotframework-selenium2library==3.0.0
 RUN curl -L https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux64.tar.gz|tar -C /usr/local/bin -xvzf -
 
 COPY ./docker/PowerDNS-Admin/wait-for-powerdnsadmin.sh /opt
 RUN chmod u+x /opt/wait-for-powerdnsadmin.sh
 
-CMD ["/opt/wait-for-powerdnsadmin.sh", "robot", "webui.robot" ]
+CMD [ "/bin/sh", "-c", "/opt/wait-for-powerdnsadmin.sh && robot -b debug.log --console verbose robot_tests/ 2>&1" ]

@@ -2,17 +2,16 @@
 |                  |
 | Documentation    | Test Domain management By ordinary user
 | Library          | OperatingSystem
-| Library          | RequestsLibrary
 | Library          | json
 | Library          | Selenium2Library         | run_on_failure=Nothing
 | Resource         | ../resource/domain.robot
 | Resource         | ../resource/user.robot
 | Suite Teardown   | Cleanup
-
+| Test Teardown    | Close All Browsers
 
 | *** Variables ***   |
 |                     |
-| ${base_url}         | http://localhost:9191
+| ${base_url}         | http://powerdns-admin-ui-test:9191
 | ${admin_user}       | admin
 | ${admin_pass}       | admin
 | ${admin_email}      | admin@admin.com
@@ -79,11 +78,12 @@
 
 | Delete Records | [Documentation]                   | Test delete domain records by User         |
 |                | Login                             | ${user}                                    | ${pass}
-|                | Click Link                        | xpath=//a[@href="/domain/${test_domain1}"] |
+|                | Click Link                        | xpath://a[@href="/domain/${test_domain1}"] |
 |                | Wait Until Element Is Visible     | id=${test_domain1}                         | timeout=5
 |                | Delete Record                     |                                            |
-|                | Click Link                        | xpath=//a[@href="/dashboard"]              |
-|                | Click Link                        | xpath=//a[@href="/domain/${test_domain1}"] |
+|                | Click Link                        | xpath://a[@href="/dashboard"]              |
+|                | Wait Until Element Is Visible     | xpath://a[@href="/domain/${test_domain1}"] | timeout=5
+|                | Click Link                        | xpath://a[@href="/domain/${test_domain1}"] |
 |                | Wait Until Element Is Visible     | class=dataTables_empty                     | timeout=5
 
 

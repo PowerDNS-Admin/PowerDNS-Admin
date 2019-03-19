@@ -1,15 +1,8 @@
 | *** Settings *** |
 |                  |
 | Library          | OperatingSystem
-| Library          | RequestsLibrary
 | Library          | json
 | Library          | Selenium2Library
-
-
-| *** Variables ***     |
-|                       |
-| ${path_edit_button}   | //tr[td/text() = "${user}"]/td/button[contains(@class, "button_edit")]
-| ${path_delete_button} | //tr[td/text() = "${user}"]/td/button[contains(@class, "button_delete")]
 
 
 | *** Keywords *** |
@@ -48,25 +41,25 @@
 |                  | Input Password                    | name=password                           | ${pass}
 |                  | Click Button                      | css:button[type='submit']               |
 |                  | Wait Until Element Is Visible     | xpath=//td[contains(text(), ${user})]   |
-| Edit User        |                                   |                                              |
-|                  | [Arguments]                       | ${user}                                      | ${user_data}
-|                  | Wait Until Element Is Visible     | xpath://a[@href="/admin/manageuser"]         | timeout=5
-|                  | Click Link                        | xpath://a[@href="/admin/manageuser"]         |
-|                  | Wait Until Element Is Visible     | xpath://table[@id="tbl_users"]               | timeout=5
-|                  | Click Button                      | xpath:${path_edit_button}                    |
-|                  | Wait Until Element Is Visible     | class=form-group                             |
-|                  | Input Text                        | name=firstname                               | ${user_data}
-|                  | Input Text                        | name=lastname                                | ${user_data}
-|                  | Click Button                      | css:button[type='submit']                    |
-|                  | Wait Until Element Is Visible     | xpath://td[contains(text(), ${user_data})]   |
-| Delete User      |                                   |                                              |
-|                  | [Arguments]                       | ${user}                                      | ${user_data}
-|                  | Wait Until Element Is Visible     | xpath://a[@href="/admin/manageuser"]         | timeout=5
-|                  | Click Link                        | xpath://a[@href="/admin/manageuser"]         |
-|                  | Wait Until Element Is Visible     | xpath://table[@id="tbl_users"]               | timeout=5
-|                  | Click Button                      | xpath:${path_delete_button}                  |
-|                  | Wait Until Element Is Visible     | id=button_delete_confirm                     | timeout=5
-|                  | Click Button                      | id=button_delete_confirm                     |
-|                  | Wait Until Element Is Not Visible | class=modal-backdrop                         | timeout=5
-|                  | Wait Until Element Is Visible     | xpath://table[@id="tbl_users"]               | timeout=5
-|                  | Wait Until Element Is Not Visible | xpath://td[contains(text(), "${user_data}")] | timeout=20
+| Edit User        |                                   |                                                                                |
+|                  | [Arguments]                       | ${user}                                                                        | ${user_data}
+|                  | Wait Until Element Is Visible     | xpath://a[@href="/admin/manageuser"]                                           | timeout=5
+|                  | Click Link                        | xpath://a[@href="/admin/manageuser"]                                           |
+|                  | Wait Until Element Is Visible     | xpath://table[@id="tbl_users"]                                                 | timeout=5
+|                  | Click Button                      | xpath://tr[td/text() = "${user}"]/td/button[contains(@class, "button_edit")]   |
+|                  | Wait Until Element Is Visible     | class=form-group                                                               |
+|                  | Input Text                        | name=firstname                                                                 | ${user_data}
+|                  | Input Text                        | name=lastname                                                                  | ${user_data}
+|                  | Click Button                      | css:button[type='submit']                                                      |
+|                  | Wait Until Element Is Visible     | xpath://td[contains(text(), ${user_data})]                                     |
+| Delete User      |                                   |                                                                                |
+|                  | [Arguments]                       | ${user}                                                                        | ${user_data}
+|                  | Wait Until Element Is Visible     | xpath://a[@href="/admin/manageuser"]                                           | timeout=5
+|                  | Click Link                        | xpath://a[@href="/admin/manageuser"]                                           |
+|                  | Wait Until Element Is Visible     | xpath://table[@id="tbl_users"]                                                 | timeout=5
+|                  | Click Button                      | xpath://tr[td/text() = "${user}"]/td/button[contains(@class, "button_delete")] |
+|                  | Wait Until Element Is Visible     | id=button_delete_confirm                                                       | timeout=5
+|                  | Click Button                      | id=button_delete_confirm                                                       |
+|                  | Wait Until Element Is Not Visible | class=modal-backdrop                                                           | timeout=5
+|                  | Wait Until Element Is Visible     | xpath://table[@id="tbl_users"]                                                 | timeout=5
+|                  | Wait Until Element Is Not Visible | xpath://td[contains(text(), "${user_data}")]                                   | timeout=20

@@ -2,10 +2,6 @@
 
 set -e
 
-CMD="$1"
-shift
-CMD_ARGS="$@"
-
 LOOPS=100
 COUNTER=1
 until curl -L "http://${PDA_HOST}:9191"|grep "Create an account "; do
@@ -21,4 +17,3 @@ done
 sleep 5
 
 >&2 echo "PowerDNS Admin is up - executing command"
-exec $CMD $CMD_ARGS
