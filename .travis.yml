@@ -1,6 +1,6 @@
 language: minimal
 script:
   - docker-compose -f docker-compose-test.yml up --exit-code-from powerdns-admin --abort-on-container-exit
-  - docker-compose -f docker-compose-ui-test.yml up --exit-code-from powerdns-admin --abort-on-container-exit
+  - docker-compose -f docker-compose-ui-test.yml up --exit-code-from powerdns-admin-ui-test-tests --abort-on-container-exit
 services:
   - docker
