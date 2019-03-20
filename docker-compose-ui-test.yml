@@ -30,16 +30,6 @@ services:
       - default
     env_file:
       - ./env-ui-test
-    depends_on:
-      powerdns-admin-mysql-ui-test:
-        condition: service_healthy
-      pdns-server-ui-test:
-        condition: service_started
-    healthcheck:
-      test: curl -sS http://localhost:9191 || exit 1
-      interval: 5s
-      timeout: 20s
-      retries: 5
 
   powerdns-admin-mysql-ui-test:
     image: mysql/mysql-server:5.7
