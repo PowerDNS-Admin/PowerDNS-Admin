@@ -10,8 +10,8 @@ services:
         - ENVIRONMENT=development
     image: powerdns-admin-ui-test
     container_name: powerdns-admin-ui-test
-    mem_limit: 256M
-    memswap_limit: 256M
+    mem_limit: 128M
+    memswap_limit: 128M
     ports:
       - "9191:9191"
     volumes:
@@ -61,6 +61,8 @@ services:
       dockerfile: docker/PowerDNS-Admin/Dockerfile.pdns.test
     image: pdns-server-ui-test
     container_name: pdns-server-ui-test
+    mem_limit: 128M
+    memswap_limit: 128M
     ports:
       - "5053:53"
       - "5053:53/udp"
@@ -79,8 +81,6 @@ services:
     env_file:
       - ./env-ui-test
     container_name: powerdns-admin-ui-test-tests
-    mem_limit: 256M
-    memswap_limit: 256M
     volumes:
       - .:/powerdns-admin/
     logging:
