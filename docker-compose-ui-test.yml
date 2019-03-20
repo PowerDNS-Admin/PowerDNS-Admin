@@ -10,8 +10,6 @@ services:
         - ENVIRONMENT=development
     image: powerdns-admin-ui-test
     container_name: powerdns-admin-ui-test
-    mem_limit: 128M
-    memswap_limit: 128M
     ports:
       - "9191:9191"
     volumes:
