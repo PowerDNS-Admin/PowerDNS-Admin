@@ -52,7 +52,7 @@ services:
       - ./env-ui-test
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 10s
+      timeout: 30s
       retries: 5
 
   pdns-server-ui-test:
