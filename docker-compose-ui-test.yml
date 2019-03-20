@@ -32,11 +32,12 @@ services:
       - ./env-ui-test
 
   powerdns-admin-mysql-ui-test:
-    image: mysql/mysql-server:5.7
+    image: mariadb:10.1.38
     hostname: ${PDA_DB_HOST}
     container_name: powerdns-admin-mysql-ui-test
     mem_limit: 256M
     memswap_limit: 256M
+    command: --skip-name-resolve --net-read-timeout=100 --net-write-timeout=100
     expose:
       - 3306
     networks:

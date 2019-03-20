@@ -19,3 +19,4 @@ PDA_HOST=powerdns-admin-ui-test
 MYSQL_DATABASE=powerdns_admin
 MYSQL_USER=powerdns_admin
 MYSQL_PASSWORD=changeme
+MYSQL_ROOT_PASSWORD=root
