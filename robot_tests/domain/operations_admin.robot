@@ -42,25 +42,26 @@
 
 | Create Record      | [Documentation]               | Test create domain records by Admin User   |
 |                    | Login                         | ${admin_user}                              | ${admin_pass}
-|                    | Click Link                    | xpath=//a[@href="/domain/${test_domain1}"] |
+|                    | Click Link                    | xpath://a[@href="/domain/${test_domain1}"] |
 |                    | Wait Until Element Is Visible | id:${test_domain1}                         | timeout=5
 |                    | Add Record                    | ${test_server}                             | ${test_server_ip}
 
 
 | Edit Records       | [Documentation]               | Test edit domain records by Admin User     |
 |                    | Login                         | ${admin_user}                              | ${admin_pass}
-|                    | Click Link                    | xpath=//a[@href="/domain/${test_domain1}"] |
+|                    | Click Link                    | xpath://a[@href="/domain/${test_domain1}"] |
 |                    | Wait Until Element Is Visible | id=${test_domain1}                         | timeout=5
 |                    | Edit Record                   | ${test_server_edit}                        |
 
 
 | Delete Records     | [Documentation]               | Test delete domain records by Admin User   |
 |                    | Login                         | ${admin_user}                              | ${admin_pass}
-|                    | Click Link                    | xpath=//a[@href="/domain/${test_domain1}"] |
+|                    | Wait Until Element Is Visible | xpath://a[@href="/domain/${test_domain1}"] | timeout=10
+|                    | Click Link                    | xpath://a[@href="/domain/${test_domain1}"] |
 |                    | Wait Until Element Is Visible | id=${test_domain1}                         | timeout=5
 |                    | Delete Record                 |                                            |
-|                    | Click Link                    | xpath=//a[@href="/dashboard"]              |
-|                    | Click Link                    | xpath=//a[@href="/domain/${test_domain1}"] |
+|                    | Click Link                    | xpath://a[@href="/dashboard"]              |
+|                    | Click Link                    | xpath://a[@href="/domain/${test_domain1}"] |
 |                    | Wait Until Element Is Visible | class=dataTables_empty                     | timeout=5
 
 
