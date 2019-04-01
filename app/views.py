@@ -18,7 +18,7 @@ from flask import g, request, make_response, jsonify, render_template, session, 
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug import secure_filename
 
-from .models import User, Account, AccountUser, Domain, Record, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
+from .models import User, Account, AccountUser, Domain, Record, RecordEntry, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, csrf
 from app.lib import utils
 from app.oauth import github_oauth, google_oauth, oidc_oauth
@@ -775,7 +775,7 @@ def domain(domain_name):
         for jr in jrecords:
             if jr['type'] in records_allow_to_edit:
                 for subrecord in jr['records']:
-                    record = Record(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'])
+                    record = RecordEntry(name=jr['name'], type=jr['type'], status='Disabled' if subrecord['disabled'] else 'Active', ttl=jr['ttl'], data=subrecord['content'], is_allowed_edit=True)
                     records.append(record)
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
             editable_records = forward_records_allow_to_edit
@@ -785,7 +785,7 @@ def domain(domain_name):
     else:
         for jr in jrecords:
             if jr['type'] in records_allow_to_edit:
-                record = Record(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'])
+                record = RecordEntry(name=jr['name'], type=jr['type'], status='Disabled' if jr['disabled'] else 'Active', ttl=jr['ttl'], data=jr['content'], is_allowed_edit=True)
                 records.append(record)
     if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
         editable_records = forward_records_allow_to_edit
