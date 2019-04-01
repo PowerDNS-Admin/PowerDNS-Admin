@@ -171,7 +171,7 @@ class User(db.Model):
         whether a user is allowed to enter or not
         """
         LDAP_BASE_DN = Setting().get('ldap_base_dn')
-        groupSearchFilter = "(&(objectcategory=group)(member=%s))" % groupDN
+        groupSearchFilter = "(&(objectcategory=group)(member=%s))" % ldap.filter.escape_filter_chars(groupDN)
         result = [groupDN]
         try:
             groups = self.ldap_search(groupSearchFilter, LDAP_BASE_DN)
