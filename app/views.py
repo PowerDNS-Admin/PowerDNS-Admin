@@ -823,7 +823,7 @@ def domain_add():
             d = Domain()
             result = d.add(domain_name=domain_name, domain_type=domain_type, soa_edit_api=soa_edit_api, domain_master_ips=domain_master_ips, account_name=account_name)
             if result['status'] == 'ok':
-                history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips, 'account_id': account_id}), created_by=current_user.username)
+                history = History(msg='Add domain {0}'.format(domain_name), detail=str({'domain_type': domain_type, 'domain_master_ips': domain_master_ips, 'account_id': account_id})[:1000], created_by=current_user.username)
                 history.add()
 
                 # grant user access to the domain
@@ -840,10 +840,10 @@ def domain_add():
                     r = Record()
                     result = r.apply(domain_name, record_data)
                     if result['status'] == 'ok':
-                        history = History(msg='Applying template {0} to {1}, created records successfully.'.format(template.name, domain_name), detail=str(result), created_by=current_user.username)
+                        history = History(msg='Applying template {0} to {1}, created records successfully.'.format(template.name, domain_name), detail=str(result)[:1000], created_by=current_user.username)
                         history.add()
                     else:
-                        history = History(msg='Applying template {0} to {1}, FAILED to created records.'.format(template.name, domain_name), detail=str(result), created_by=current_user.username)
+                        history = History(msg='Applying template {0} to {1}, FAILED to created records.'.format(template.name, domain_name), detail=str(result)[:1000], created_by=current_user.username)
                         history.add()
                 return redirect(url_for('dashboard'))
             else:
@@ -900,7 +900,7 @@ def domain_management(domain_name):
         d = Domain(name=domain_name)
         d.grant_privileges(new_user_list)
 
-        history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list}), created_by=current_user.username)
+        history = History(msg='Change domain {0} access control'.format(domain_name), detail=str({'user_has_access': new_user_list})[:1000], created_by=current_user.username)
         history.add()
 
         return redirect(url_for('domain_management', domain_name=domain_name))
@@ -978,7 +978,7 @@ def record_apply(domain_name):
         result = r.apply(domain_name, submitted_record)
         if result['status'] == 'ok':
             jdata.pop('_csrf_token', None) # don't store csrf token in the history.
-            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(json.dumps(jdata)), created_by=current_user.username)
+            history = History(msg='Apply record changes to domain {0}'.format(domain_name), detail=str(json.dumps(jdata))[:1000], created_by=current_user.username)
             history.add()
             return make_response(jsonify( result ), 200)
         else:
@@ -1127,7 +1127,7 @@ def create_template():
             t = DomainTemplate(name=name, description=description)
             result = t.create()
             if result['status'] == 'ok':
-                history = History(msg='Add domain template {0}'.format(name), detail=str({'name': name, 'description': description}), created_by=current_user.username)
+                history = History(msg='Add domain template {0}'.format(name), detail=str({'name': name, 'description': description})[:1000], created_by=current_user.username)
                 history.add()
                 return redirect(url_for('templates'))
             else:
@@ -1158,7 +1158,7 @@ def create_template_from_zone():
         t = DomainTemplate(name=name, description=description)
         result = t.create()
         if result['status'] == 'ok':
-            history = History(msg='Add domain template {0}'.format(name), detail=str({'name': name, 'description': description}), created_by=current_user.username)
+            history = History(msg='Add domain template {0}'.format(name), detail=str({'name': name, 'description': description})[:1000], created_by=current_user.username)
             history.add()
 
             records = []
@@ -1245,7 +1245,7 @@ def apply_records(template):
         result = t.replace_records(records)
         if result['status'] == 'ok':
             jdata.pop('_csrf_token', None) # don't store csrf token in the history.
-            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(json.dumps(jdata)), created_by=current_user.username)
+            history = History(msg='Apply domain template record changes to domain template {0}'.format(template), detail=str(json.dumps(jdata))[:1000], created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
         else:
@@ -1265,7 +1265,7 @@ def delete_template(template):
         if t is not None:
             result = t.delete_template()
             if result['status'] == 'ok':
-                history = History(msg='Deleted domain template {0}'.format(template), detail=str({'name': template}), created_by=current_user.username)
+                history = History(msg='Deleted domain template {0}'.format(template), detail=str({'name': template})[:1000], created_by=current_user.username)
                 history.add()
                 return redirect(url_for('templates'))
             else:
@@ -1857,7 +1857,7 @@ def dyndns_update():
                 oldip = r.data
                 result = r.update(domain.name, str(ip))
                 if result['status'] == 'ok':
-                    history = History(msg='DynDNS update: updated {0} record {1} in zone {2}, it changed from {3} to {4}'.format(rtype,hostname,domain.name,oldip,str(ip)), detail=str(result), created_by=current_user.username)
+                    history = History(msg='DynDNS update: updated {0} record {1} in zone {2}, it changed from {3} to {4}'.format(rtype,hostname,domain.name,oldip,str(ip)), detail=str(result)[:1000], created_by=current_user.username)
                     history.add()
                     response='good'
                 else:
@@ -1869,7 +1869,7 @@ def dyndns_update():
                 record = Record(name=hostname,type=rtype,data=str(ip),status=False,ttl=3600)
                 result = record.add(domain.name)
                 if result['status'] == 'ok':
-                    history = History(msg='DynDNS update: created record {0} in zone {1}, it now represents {2}'.format(hostname,domain.name,str(ip)), detail=str(result), created_by=current_user.username)
+                    history = History(msg='DynDNS update: created record {0} in zone {1}, it now represents {2}'.format(hostname,domain.name,str(ip)), detail=str(result)[:1000], created_by=current_user.username)
                     history.add()
                     response='good'
         else:

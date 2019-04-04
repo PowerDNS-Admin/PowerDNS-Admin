@@ -99,9 +99,10 @@ def api_login_create_zone():
         logging.debug("Request to powerdns API successful")
         data = request.get_json(force=True)
 
+        history_detail = json.dumps(data)
         history = History(
             msg='Add domain {0}'.format(data['name'].rstrip('.')),
-            detail=json.dumps(data),
+            detail=history_detail[:1000],
             created_by=g.user.username
         )
         history.add()
@@ -481,10 +482,11 @@ def api_create_zone(server_id):
     if resp.status_code == 201:
         logging.debug("Request to powerdns API successful")
         data = request.get_json(force=True)
+        history_detail = json.dumps(data)
 
         history = History(
             msg='Add domain {0}'.format(data['name'].rstrip('.')),
-            detail=json.dumps(data),
+            detail=history_detail[:1000],
             created_by=g.apikey.description
         )
         history.add()
