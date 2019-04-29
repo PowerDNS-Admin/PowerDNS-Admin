@@ -509,3 +509,12 @@ def api_get_zones(server_id):
     else:
         domain_obj_list = Domain.query.all()
     return json.dumps(domain_schema.dump(domain_obj_list)), 200
+
+#endpoint to snychronize Domains in background
+@csrf.exempt
+@api_blueprint.route('/sync_domains', methods=['GET'])
+@apikey_auth
+def sync_domains():
+    domain = Domain()
+    domain.update()
+    return 'Finished synchronization in background', 200

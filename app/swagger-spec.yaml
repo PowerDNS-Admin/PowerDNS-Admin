@@ -42,6 +42,20 @@ paths:
             items:
               $ref: '#/definitions/Server'
 
+  '/sync_domains':
+    get:
+      security:
+        - APIKeyHeader: []
+      summary: Sync PDNS with PDNSAdmin
+      operationId: synchronizeDomains
+      tags:
+        - pdnsadmin_zones
+      responses:
+        '200':
+          description: Synchronize PDNS Domains with PDNSAdmin
+        '403':
+          description: Wrong authentication
+
   '/servers/{server_id}':
     get:
       security:
