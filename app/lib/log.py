@@ -40,7 +40,7 @@ class logger(object):
         logger.addHandler(stderr_log_handler)
 
         # define logging format for console
-        console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
+        console_formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] | %(message)s')
         stderr_log_handler.setFormatter(console_formatter)
 
         return logging.getLogger(self.name)
