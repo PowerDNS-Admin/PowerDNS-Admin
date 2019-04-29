@@ -2331,8 +2331,6 @@ class ApiKey(db.Model):
         Validate user credential
         """
         if method == 'LOCAL':
-            logging.debug(self.plain_text_password)
-            logging.debug(self.get_hashed_password(self.plain_text_password))
             passw_hash = self.get_hashed_password(self.plain_text_password)
             apikey = ApiKey.query \
                            .filter(ApiKey.key == passw_hash.decode('utf-8')) \
