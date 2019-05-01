@@ -1,4 +1,4 @@
-"""Upgrade BD Schema
+"""Upgrade DB Schema
 
 Revision ID: 654298797277
 Revises: 31a4ed468b18

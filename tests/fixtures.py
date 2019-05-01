@@ -91,7 +91,7 @@ def initial_data():
         msg = admin_user.create_local_user()
 
         if not msg:
-            raise Exception("Error occured creating user {0}".format(msg))
+            raise Exception("Error occurred creating user {0}".format(msg))
 
         ordinary_user = User(
                                 username=test_user,
@@ -101,7 +101,7 @@ def initial_data():
         msg = ordinary_user.create_local_user()
 
         if not msg:
-            raise Exception("Error occured creating user {0}".format(msg))
+            raise Exception("Error occurred creating user {0}".format(msg))
 
     except Exception as e:
         logging.error("Unexpected ERROR: {0}".format(e))

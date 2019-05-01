@@ -24,7 +24,7 @@ There are several ways to run PowerDNS-Admin. Following is a simple way to start
 
 Step 1: Changing configuration
 
-The configuration file for developement environment is located at `configs/development.py`, you can override some configs by editing `.env` file.
+The configuration file for development environment is located at `configs/development.py`, you can override some configs by editing the `.env` file.
 
 Step 2: Build docker images
 
@@ -86,7 +86,7 @@ someuser@somehost:~$echo -n 'admin:admin'|base64
 YWRtaW46YWRtaW4=
 ```
 
-we use generated output in basic authentication, we auhtenticate as user,
+we use generated output in basic authentication, we authenticate as user,
 with basic authentication, we can create/delete/get zone and create/delete/get/update apikeys
 
 creating domain:
