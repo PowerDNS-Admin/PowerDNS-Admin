@@ -901,13 +901,14 @@ class Domain(db.Model):
         db_domain = Domain.query.all()
         list_db_domain = [d.name for d in db_domain]
         dict_db_domain = dict((x.name, x) for x in db_domain)
-
+        logging.info("{} Entrys in pdnsADMIN".format(len(list_db_domain)))
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
         try:
             jdata = utils.fetch_json(
                 urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
+            logging.info("{} Entrys in PDNSApi".format(len(list_jdomain)))
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
                 should_removed_db_domain = list(set(list_db_domain).difference(list_jdomain))
@@ -930,6 +931,7 @@ class Domain(db.Model):
                     # then remove domain
                     Domain.query.filter(Domain.name == d).delete()
                     db.session.commit()
+                    logging.info("Removed Domain {0} successfully from pdnsADMIN".format(d))
             except Exception as e:
                 logging.error('Can not delete domain from DB. DETAIL: {0}'.format(e))
                 logging.debug(traceback.format_exc())
@@ -980,8 +982,11 @@ class Domain(db.Model):
                 if changed:
                     try:
                         db.session.commit()
+                        logging.info("synced PDNS-Domain to pdnsADMIN: {0}".format(d.name))
                     except Exception as e:
                         db.session.rollback()
+                        logging.info("Rolledback Domain {0} {1}".format(d.name, e))
+            logging.info('Update finished')
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
         except Exception as e:
             logging.error('Can not update domain table. Error: {0}'.format(e))
@@ -1020,8 +1025,9 @@ class Domain(db.Model):
                 logging.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
+                logging.info('Added domain successfully to PowerDNS: {0}'.format(domain_name))
                 self.update()
-                logging.info('Added domain {0} successfully'.format(domain_name))
+                logging.info('Added domain successfully to PowerDNS and Synced PdnsADMIN: {0}'.format(domain_name))
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
         except Exception as e:
             logging.error('Cannot add domain {0}'.format(domain_name))
@@ -1129,7 +1135,7 @@ class Domain(db.Model):
         try:
             utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                              '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
-            logging.info('Delete domain {0} successfully'.format(domain_name))
+            logging.info('Deleted domain {0} successfully from PowerDNS'.format(domain_name))
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
         except Exception as e:
             logging.error('Cannot delete domain {0}'.format(domain_name))
