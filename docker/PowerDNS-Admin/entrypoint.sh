@@ -73,15 +73,5 @@ mysql -h${PDA_DB_HOST} -u${PDA_DB_USER} -p${PDA_DB_PASSWORD} -P${PDA_DB_PORT} ${
 mysql -h${PDA_DB_HOST} -u${PDA_DB_USER} -p${PDA_DB_PASSWORD} -P${PDA_DB_PORT} ${PDA_DB_NAME} -e "UPDATE setting SET value='${PDNS_PROTO}://${PDNS_HOST}:${PDNS_PORT}' WHERE name='pdns_api_url';"
 mysql -h${PDA_DB_HOST} -u${PDA_DB_USER} -p${PDA_DB_PASSWORD} -P${PDA_DB_PORT} ${PDA_DB_NAME} -e "UPDATE setting SET value='${PDNS_API_KEY}' WHERE name='pdns_api_key';"
 
-echo "===> Assets management"
-echo "---> Running Yarn"
-chown -R www-data:www-data /powerdns-admin/app/static
-[ -d /powerdns-admin/node_modules ] && chown -R www-data:www-data /powerdns-admin/node_modules
-su-exec www-data yarn install --pure-lockfile
-
-echo "---> Running Flask assets"
-chown -R www-data:www-data /powerdns-admin/logs
-su-exec www-data flask assets build
-
 echo "===> Start powerDNS-Admin"
 su-exec www-data /usr/bin/gunicorn -t 120 --workers 4 --bind '0.0.0.0:9191' --log-level info app:app
