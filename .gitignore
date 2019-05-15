@@ -42,3 +42,5 @@ node_modules
 
 .webassets-cache
 app/static/generated
+.venv*
+.pytest_cache

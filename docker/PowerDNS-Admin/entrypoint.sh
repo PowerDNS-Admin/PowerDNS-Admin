@@ -59,7 +59,7 @@ if [ ! -d "${DB_MIGRATION_DIR}" ]; then
 else
   echo "---> Running DB Migration"
   set +e
-  flask db migrate -m "Upgrade BD Schema" --directory ${DB_MIGRATION_DIR}
+  flask db migrate -m "Upgrade DB Schema" --directory ${DB_MIGRATION_DIR}
   flask db upgrade --directory ${DB_MIGRATION_DIR}
   set -e
 fi

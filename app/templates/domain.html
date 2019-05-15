@@ -68,14 +68,14 @@
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
                                     {% if record.is_allowed_edit() %}
-                                        <button type="button" class="btn btn-flat btn-warning button_edit" id="{{ (record.name,domain.name)|display_record_name }}">Edit&nbsp;<i class="fa fa-edit"></i></button>
+                                        <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
                                        {% else %}
                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     {% endif %}
                                     </td>
                                     <td width="6%">
                                     {% if record.is_allowed_delete() %}
-                                        <button type="button" class="btn btn-flat btn-danger button_delete" id="{{ (record.name,domain.name)|display_record_name }}">Delete&nbsp;<i class="fa fa-trash"></i></button>
+                                        <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
                                     {% endif %}
                                 {% else %}
                                     <td width="6%">
@@ -118,7 +118,7 @@
         "ordering" : true,
         "info" : true,
         "autoWidth" : false,
-        {% if SETTING.get('default_record_table_size') in ['5','15','20'] %}
+        {% if SETTING.get('default_record_table_size')|string in ['5','15','20'] %}
         "lengthMenu": [ [5, 15, 20, -1],
                         [5, 15, 20, "All"]],
         {% else %}
@@ -201,6 +201,13 @@
 
     // handle apply changes button
     $(document.body).on("click",".button_apply_changes", function() {
+        if (nNew || nEditing) {
+            var modal = $("#modal_error");
+            modal.find('.modal-body p').text("Previous record not saved. Please save it before applying the changes.");
+            modal.modal('show');
+            return;
+        }
+
         var modal = $("#modal_apply_changes");
         var table = $("#tbl_records").DataTable();
         var domain = $(this).prop('id');
@@ -362,56 +369,92 @@
                 modal.modal('hide');
             })
             modal.modal('show');
-            } else if (record_type == "SOA") {
-                var modal = $("#modal_custom_record");
-                if (record_data.val() == "") {
-                    var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
-                                    <label for=\"soa_adminemail\">Primary Contact</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" placeholder=\"admin.example.com\"> \
-                                    <label for=\"soa_serial\">Serial</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" placeholder=\"2016010101\"> \
-                                    <label for=\"soa_zonerefresh\">Zone refresh timer</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" placeholder=\"86400\"> \
-                                    <label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" placeholder=\"7200\"> \
-                                    <label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" placeholder=\"1209600\"> \
-                                    <label for=\"soa_minimumttl\">Minimum TTL</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
-                                ";
-                } else {
-                    var parts = record_data.val().split(" ");
-                    var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
-                                    <label for=\"soa_adminemail\">Primary Contact</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" value=\"" + parts[1] + "\"> \
-                                    <label for=\"soa_serial\">Serial</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" value=\"" + parts[2] + "\"> \
-                                    <label for=\"soa_zonerefresh\">Zone refresh timer</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" value=\"" + parts[3] + "\"> \
-                                    <label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" value=\"" + parts[4] + "\"> \
-                                    <label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" value=\"" + parts[5] + "\"> \
-                                    <label for=\"soa_minimumttl\">Minimum TTL</label> \
-                                    <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" value=\"" + parts[6] + "\"> \
-                    ";
-                }
-                modal.find('.modal-body p').html(form);
-                modal.find('#button_save').click(function() {
-                    soa_primaryns = modal.find('#soa_primaryns').val();
-                    soa_adminemail = modal.find('#soa_adminemail').val();
-                    soa_serial = modal.find('#soa_serial').val();
-                    soa_zonerefresh = modal.find('#soa_zonerefresh').val();
-                    soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
-                    soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
-                    soa_minimumttl = modal.find('#soa_minimumttl').val();
+        } else if (record_type == "SOA") {
+            var modal = $("#modal_custom_record");
+            if (record_data.val() == "") {
+                var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
+                                <label for=\"soa_adminemail\">Primary Contact</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" placeholder=\"admin.example.com\"> \
+                                <label for=\"soa_serial\">Serial</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" placeholder=\"2016010101\"> \
+                                <label for=\"soa_zonerefresh\">Zone refresh timer</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" placeholder=\"86400\"> \
+                                <label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" placeholder=\"7200\"> \
+                                <label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" placeholder=\"1209600\"> \
+                                <label for=\"soa_minimumttl\">Minimum TTL</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
+                            ";
+            } else {
+                var parts = record_data.val().split(" ");
+                var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
+                                <label for=\"soa_adminemail\">Primary Contact</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" value=\"" + parts[1] + "\"> \
+                                <label for=\"soa_serial\">Serial</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_serial\" id=\"soa_serial\" value=\"" + parts[2] + "\"> \
+                                <label for=\"soa_zonerefresh\">Zone refresh timer</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_zonerefresh\" id=\"soa_zonerefresh\" value=\"" + parts[3] + "\"> \
+                                <label for=\"soa_failedzonerefresh\">Failed refresh retry timer</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_failedzonerefresh\" id=\"soa_failedzonerefresh\" value=\"" + parts[4] + "\"> \
+                                <label for=\"soa_zoneexpiry\">Zone expiry timer</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_zoneexpiry\" id=\"soa_zoneexpiry\" value=\"" + parts[5] + "\"> \
+                                <label for=\"soa_minimumttl\">Minimum TTL</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" value=\"" + parts[6] + "\"> \
+                ";
+            }
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                soa_primaryns = modal.find('#soa_primaryns').val();
+                soa_adminemail = modal.find('#soa_adminemail').val();
+                soa_serial = modal.find('#soa_serial').val();
+                soa_zonerefresh = modal.find('#soa_zonerefresh').val();
+                soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
+                soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
+                soa_minimumttl = modal.find('#soa_minimumttl').val();
 
-                    data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
-                    record_data.val(data);
-                    modal.modal('hide');
-                })
+                data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
+                record_data.val(data);
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        } else if (record_type == "TLSA") {
+            var modal = $("#modal_custom_record");
+            if (record_data.val() == "") {
+                var form = "    <label for=\"tlsa_certificate_usage\">TLSA Certificate Usage</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_certificate_usage\" id=\"tlsa_certificate_usage\" placeholder=\"3\"> \
+                                <label for=\"tlsa_selector\">TLSA-Selector</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_selector\" id=\"tlsa_selector\" placeholder=\"1\"> \
+                                <label for=\"tlsa_matching\"> TLSA Matching Type</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_matching\" id=\"tlsa_matching\" placeholder=\"1\"> \
+                                <label for=\"tlsa_hash\">Hash</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_hash\" id=\"tlsa_hash\" placeholder=\"HASH\"> \
+                ";
+            } else {
+                var parts = record_data.val().split(" ");
+                var form = "    <label for=\"tlsa_certificate_usage\">TLSA Certificate Usage</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_certificate_usage\" id=\"tlsa_certificate_usage\" value=\"" + parts[0] + "\"> \
+                                <label for=\"tlsa_selector\">TLSA-Selector</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_selector\" id=\"tlsa_selector\" value=\"" + parts[1] + "\"> \
+                                <label for=\"tlsa_matching\"> TLSA Matching Type</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_matching\" id=\"tlsa_matching\" value=\"" + parts[2] + "\"> \
+                                <label for=\"tlsa_hash\">Hash</label> \
+                                <input type=\"text\" class=\"form-control\" name=\"tlsa_hash\" id=\"tlsa_hash\" value=\"" + parts[3] + "\"> \
+                ";
+            }
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                tlsa_certificate_usage = modal.find('#tlsa_certificate_usage').val();
+                tlsa_selector = modal.find('#tlsa_selector').val();
+                tlsa_matching = modal.find('#tlsa_matching').val();
+                tlsa_hash = modal.find('#tlsa_hash').val();
+
+                data = tlsa_certificate_usage + " " + tlsa_selector + " " + tlsa_matching + " " + tlsa_hash;
+                record_data.val(data);
+                modal.modal('hide');
+            })
             modal.modal('show');
         } else if (record_type == "TXT") {
             var txt_data = record_data.val().replace(/"/g, '&quot;');
@@ -427,7 +470,28 @@
                 }
                 record_data.val(data);
                 modal.modal('hide');
-            })
+            });
+            modal.modal('show');
+        } else if (record_type == "LUA") {
+            var lua_type = record_data.val().split(" ")[0];
+            var lua_data = record_data.val().substr(record_data.val().indexOf(" ") + 1).replace(/"/g, '&quot;');
+            var modal = $("#modal_custom_record");
+            var form = "    <label for=\"lua_type\">Lua Record Type</label> \
+                            <input type=\"text\" class=\"form-control\" name=\"lua_type\" id=\"lua_type\" placeholder=\"Initial query type. Example: A, CNAME or PTR \" value=\"" + lua_type + "\"> \
+                            <label for=\"lua_record\">Lua Record Data</label> \
+                            <textarea style=\"min-width: 100%;color: #333;\" placeholder=\"Your LUA snippet\" rows=\"5\" id=\"lua_record\" name=\"lua_record\">" + lua_data + "</textarea> \
+                       ";
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+              type = modal.find('#lua_type').val();
+              data = modal.find('#lua_record').val();
+              if (! /^".*"$/.test(data)) {
+                  data = '"' + data + '"';
+              }
+              data = type + ' ' + data;
+              record_data.val(data);
+              modal.modal('hide');
+            });
             modal.modal('show');
         }
     });

@@ -2,35 +2,33 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # BASIC APP CONFIG
-SECRET_KEY = 'We are the world'
-BIND_ADDRESS = '127.0.0.1'
-PORT = 9191
-
+SECRET_KEY = 'changeme'
+LOG_LEVEL = 'DEBUG'
+LOG_FILE = os.path.join(basedir, 'logs/log.txt')
+SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 # TIMEOUT - for large zones
 TIMEOUT = 10
 
-# LOG CONFIG
-#  	- For docker, LOG_FILE=''
-LOG_LEVEL = 'DEBUG'
-LOG_FILE = 'logfile.log'
-SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
-
-# UPLOAD DIRECTORY
+# UPLOAD DIR
 UPLOAD_DIR = os.path.join(basedir, 'upload')
-
-# DATABASE CONFIG
-SQLA_DB_USER = 'pda'
-SQLA_DB_PASSWORD = 'changeme'
-SQLA_DB_HOST = '127.0.0.1'
-SQLA_DB_PORT = 3306
-SQLA_DB_NAME = 'pda'
-SQLALCHEMY_TRACK_MODIFICATIONS = True
-
-# DATABASE - MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+':'+str(SQLA_DB_PORT)+'/'+SQLA_DB_NAME
-
-# DATABASE - SQLite
-# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+TEST_USER_PASSWORD = 'test'
+TEST_USER = 'test'
+TEST_ADMIN_USER = 'admin'
+TEST_ADMIN_PASSWORD = 'admin'
+TEST_USER_APIKEY = 'wewdsfewrfsfsdf'
+TEST_ADMIN_APIKEY = 'nghnbnhtghrtert'
+# DATABASE CONFIG FOR MYSQL
+# DB_HOST = os.environ.get('PDA_DB_HOST')
+# DB_PORT = os.environ.get('PDA_DB_PORT', 3306 )
+# DB_NAME = os.environ.get('PDA_DB_NAME')
+# DB_USER = os.environ.get('PDA_DB_USER')
+# DB_PASSWORD = os.environ.get('PDA_DB_PASSWORD')
+# #MySQL
+# SQLALCHEMY_DATABASE_URI = 'mysql://'+DB_USER+':'+DB_PASSWORD+'@'+DB_HOST+':'+ str(DB_PORT) + '/'+DB_NAME
+# SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
+TEST_DB_LOCATION = '/tmp/testing.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(TEST_DB_LOCATION)
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # SAML Authentication
 SAML_ENABLED = False

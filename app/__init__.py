@@ -43,4 +43,9 @@ if app.config.get('SAML_ENABLED') and app.config.get('SAML_ENCRYPT'):
         certutil.create_self_signed_cert()
 
 from app import models
+
+from app.blueprints.api import api_blueprint
+
+app.register_blueprint(api_blueprint, url_prefix='/api/v1')
+
 from app import views

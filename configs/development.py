@@ -5,7 +5,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 SECRET_KEY = 'changeme'
 LOG_LEVEL = 'DEBUG'
 LOG_FILE = os.path.join(basedir, 'logs/log.txt')
-
+SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 # TIMEOUT - for large zones
 TIMEOUT = 10
 
@@ -62,6 +62,12 @@ SAML_METADATA_CACHE_LIFETIME = 1
 ### Example: urn:oid:2.5.4.4
 #SAML_ATTRIBUTE_SURNAME = 'urn:oid:2.5.4.4'
 
+## Split into Given name and Surname
+## Useful if your IDP only gives a display name
+### Default: none
+### Example: http://schemas.microsoft.com/identity/claims/displayname
+#SAML_ATTRIBUTE_NAME = 'http://schemas.microsoft.com/identity/claims/displayname'
+
 ## Attribute to use for username
 ### Default: Use NameID instead
 ### Example: urn:oid:0.9.2342.19200300.100.1.1
@@ -74,6 +80,22 @@ SAML_METADATA_CACHE_LIFETIME = 1
 ### If not included in assertion, or set to something other than 'true',
 ###  the user is set as a non-administrator user.
 #SAML_ATTRIBUTE_ADMIN = 'https://example.edu/pdns-admin'
+
+## Attribute to get group from
+### Default: Don't use groups from SAML attribute
+### Example: https://example.edu/pdns-admin-group
+#SAML_ATTRIBUTE_GROUP = 'https://example.edu/pdns-admin'
+
+## Group namem to get admin status from
+### Default: Don't control admin with SAML group
+### Example: https://example.edu/pdns-admin
+#SAML_GROUP_ADMIN_NAME = 'powerdns-admin'
+
+## Attribute to get group to account mappings from
+### Default: None
+### If set, the user will be added and removed from accounts to match
+###  what's in the login assertion if they are in the required group
+#SAML_GROUP_TO_ACCOUNT_MAPPING = 'dev-admins=dev,prod-admins=prod'
 
 ## Attribute to get account names from
 ### Default: Don't control accounts with SAML attribute
@@ -88,6 +110,11 @@ SAML_SP_CONTACT_MAIL = '<contact mail>'
 #Configures if SAML tokens should be encrypted.
 #If enabled a new app certificate will be generated on restart
 SAML_SIGN_REQUEST = False
+
+# Configures if you want to request the IDP to sign the message
+# Default is True
+#SAML_WANT_MESSAGE_SIGNED = True
+
 #Use SAML standard logout mechanism retrieved from idp metadata
 #If configured false don't care about SAML session on logout.
 #Logout from PowerDNS-Admin only and keep SAML session authenticated.
