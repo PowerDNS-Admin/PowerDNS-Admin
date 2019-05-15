@@ -1,2 +1,4 @@
-.*
+.env
+.gitlab-ci.yml
 config.py
+docker
