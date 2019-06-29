@@ -19,7 +19,7 @@ class StructuredException(Exception):
 
 
 class DomainNotExists(StructuredException):
-    status_code = 1000
+    status_code = 404
 
     def __init__(self, name=None, message="Domain does not exist"):
         StructuredException.__init__(self)
@@ -28,7 +28,7 @@ class DomainNotExists(StructuredException):
 
 
 class DomainAccessForbidden(StructuredException):
-    status_code = 1001
+    status_code = 403
 
     def __init__(self, name=None, message="Domain access not allowed"):
         StructuredException.__init__(self)
@@ -37,7 +37,7 @@ class DomainAccessForbidden(StructuredException):
 
 
 class ApiKeyCreateFail(StructuredException):
-    status_code = 1002
+    status_code = 500
 
     def __init__(self, name=None, message="Creation of api key failed"):
         StructuredException.__init__(self)
@@ -46,7 +46,7 @@ class ApiKeyCreateFail(StructuredException):
 
 
 class ApiKeyNotUsable(StructuredException):
-    status_code = 1003
+    status_code = 400
 
     def __init__(self, name=None, message="Api key must have domains or have \
     administrative role"):
@@ -56,7 +56,7 @@ class ApiKeyNotUsable(StructuredException):
 
 
 class NotEnoughPrivileges(StructuredException):
-    status_code = 1004
+    status_code = 401
 
     def __init__(self, name=None, message="Not enough privileges"):
         StructuredException.__init__(self)
@@ -65,7 +65,7 @@ class NotEnoughPrivileges(StructuredException):
 
 
 class RequestIsNotJSON(StructuredException):
-    status_code = 1005
+    status_code = 400
 
     def __init__(self, name=None, message="Request is not json"):
         StructuredException.__init__(self)
