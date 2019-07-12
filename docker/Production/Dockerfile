@@ -29,4 +29,4 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 ENV FLASK_APP=app/__init__.py
 EXPOSE 80/tcp
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["gunicorn", "-t", "120", "--workers", "4", "--bind", "0.0.0.0:80", "--log-level", "info" ,"app:app"]
+CMD ["gunicorn","app:app"]
