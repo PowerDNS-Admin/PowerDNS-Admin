@@ -1,3 +1,7 @@
+# defaults for Docker image
+BIND_ADDRESS='0.0.0.0'
+PORT=80
+
 legal_envvars = (
     'SECRET_KEY',
     'BIND_ADDRESS',

@@ -24,6 +24,7 @@ RUN pip3 install -r requirements.txt \
     && rm config.py
 
 COPY ./docker/Production/entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENV FLASK_APP=app/__init__.py
 EXPOSE 80/tcp
