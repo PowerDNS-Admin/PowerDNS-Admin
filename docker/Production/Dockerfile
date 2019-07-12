@@ -8,6 +8,7 @@ RUN apt-get update -y \
     && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
+    && apt-get update -y \
     && apt-get install -y nodejs yarn \
     && apt-get clean -y \
 	&& rm -rf /var/lib/apt/lists/*
@@ -17,7 +18,7 @@ WORKDIR /opt/powerdns-admin
 COPY . .
 RUN pip3 install -r requirements.txt \
     && pip3 install psycopg2-binary \
-    && yarn install \
+    && yarn install --pure-lockfile \
     && flask assets build
 
 COPY ./docker/Production/entrypoint.sh /usr/local/bin/
