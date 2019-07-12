@@ -17,7 +17,7 @@ WORKDIR /opt/powerdns-admin
 COPY . .
 RUN pip3 install -r requirements.txt \
     && pip3 install psycopg2-binary \
-    && yarn install --pure-lockfile \
+    && yarn install \
     && flask assets build
 
 COPY ./docker/Production/entrypoint.sh /usr/local/bin/
