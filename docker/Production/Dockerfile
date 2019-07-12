@@ -19,7 +19,9 @@ COPY . .
 RUN pip3 install -r requirements.txt \
     && pip3 install psycopg2-binary \
     && yarn install --pure-lockfile \
-    && flask assets build
+    && cp config_template.py config.py \
+    && flask assets build \
+    && rm config.py
 
 COPY ./docker/Production/entrypoint.sh /usr/local/bin/
 
