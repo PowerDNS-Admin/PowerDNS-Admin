@@ -3,7 +3,7 @@ Flask-Assets==0.12
 Flask-Login==0.4.1
 Flask-SQLAlchemy==2.3.2
 Flask-Migrate==2.2.1
-SQLAlchemy==1.2.5
+SQLAlchemy==1.3.5
 mysqlclient==1.3.12
 configobj==5.0.6
 bcrypt==3.1.4
@@ -19,9 +19,9 @@ pytz>=2017.3
 cssmin==0.2.0
 jsmin==2.2.2
 Authlib==0.10
-Flask-Seasurf
-pytimeparse
-lima
-pytest
-bravado-core
-PyYAML
+Flask-SeaSurf==0.2.2
+bravado-core==5.13.1
+lima==0.5
+pytest==5.0.1
+pytimeparse==1.1.8
+PyYAML==5.1.1
