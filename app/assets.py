@@ -60,6 +60,7 @@ js_main = Bundle(
     'node_modules/moment/moment.js',
     'node_modules/admin-lte/dist/js/adminlte.js',
     'node_modules/multiselect/js/jquery.multi-select.js',
+    'node_modules/datatables.net-plugins/sorting/natural.js',
     'custom/js/custom.js',
     filters=(ConcatFilter, 'jsmin'),
     output='generated/main.js'
