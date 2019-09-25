@@ -918,7 +918,7 @@ class Domain(db.Model):
             except Exception as e:
                 logging.error('Can not delete domain from DB. DETAIL: {0}'.format(e))
                 logging.debug(traceback.format_exc())
-            
+
             # update/add new domain
             for data in jdata:
                 if 'account' in data:
@@ -933,7 +933,6 @@ class Domain(db.Model):
                 else:
                     # add new domain
                     self.add_domain_to_powerdns_admin(domain=data)
-
 
             logging.info('Update finished')
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
@@ -950,7 +949,7 @@ class Domain(db.Model):
             or domain.last_check != (1 if data['last_check'] else 0)
             or domain.dnssec != data['dnssec']
             or domain.account_id != account_id):
-        
+
             domain.master = str(data['masters'])
             domain.type = data['kind']
             domain.serial = data['serial']
@@ -965,7 +964,6 @@ class Domain(db.Model):
                 db.session.rollback()
                 logging.info("Rolledback Domain {0} {1}".format(domain.name, e))
                 raise
-
 
     def add(self, domain_name, domain_type, soa_edit_api, domain_ns=[], domain_master_ips=[], account_name=None):
         """
@@ -1009,7 +1007,6 @@ class Domain(db.Model):
             logging.debug(traceback.format_exc())
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
-
     def add_domain_to_powerdns_admin(self, domain=None, domain_dict=None):
         """
         Read Domain from PowerDNS and add into PDNS-Admin
@@ -1049,8 +1046,7 @@ class Domain(db.Model):
         except Exception as e:
             db.session.rollback()
             logging.info("Rolledback Domain {0}".format(d.name))
-            raise 
-           
+            raise
 
     def update_soa_setting(self, domain_name, soa_edit_api):
         domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -1147,7 +1143,7 @@ class Domain(db.Model):
     def delete(self, domain_name):
         """
         Delete a single domain name from powerdns
-        """        
+        """
         try:
             self.delete_domain_from_powerdns(domain_name)
             self.delete_domain_from_pdnsadmin(domain_name)
@@ -1156,7 +1152,7 @@ class Domain(db.Model):
             logging.error('Cannot delete domain {0}'.format(domain_name))
             logging.error(e)
             logging.debug(traceback.format_exc())
-            return {'status': 'error', 'msg': 'Cannot delete domain'}     
+            return {'status': 'error', 'msg': 'Cannot delete domain'}
 
     def delete_domain_from_powerdns(self, domain_name):
         """
@@ -1184,7 +1180,7 @@ class Domain(db.Model):
             db.session.commit()
         domain.apikeys[:] = []
         db.session.commit()
-        
+
         # then remove domain
         Domain.query.filter(Domain.name == domain_name).delete()
         db.session.commit()
@@ -1460,7 +1456,6 @@ class Record(object):
     This is not a model, it's just an object
     which be assigned data from PowerDNS API
     """
-
     def __init__(self, name=None, type=None, status=None, ttl=None, data=None):
         self.name = name
         self.type = type
