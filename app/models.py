@@ -909,34 +909,16 @@ class Domain(db.Model):
                 urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones'), headers=headers)
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             logging.info("{} Entrys in PDNSApi".format(len(list_jdomain)))
+
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
                 should_removed_db_domain = list(set(list_db_domain).difference(list_jdomain))
-                for d in should_removed_db_domain:
-                    # revoke permission before delete domain
-                    domain = Domain.query.filter(Domain.name == d).first()
-                    domain_user = DomainUser.query.filter(DomainUser.domain_id == domain.id)
-                    if domain_user:
-                        domain_user.delete()
-                        db.session.commit()
-                    domain_setting = DomainSetting.query.filter(
-                        DomainSetting.domain_id == domain.id)
-                    if domain_setting:
-                        domain_setting.delete()
-                        db.session.commit()
-
-                    domain.apikeys[:] = []
-                    db.session.commit()
-
-                    # then remove domain
-                    Domain.query.filter(Domain.name == d).delete()
-                    db.session.commit()
-                    logging.info("Removed Domain {0} successfully from pdnsADMIN".format(d))
+                for domain_name in should_removed_db_domain:
+                    self.delete_domain_from_pdnsadmin(domain_name)
             except Exception as e:
                 logging.error('Can not delete domain from DB. DETAIL: {0}'.format(e))
                 logging.debug(traceback.format_exc())
-                db.session.rollback()
-
+            
             # update/add new domain
             for data in jdata:
                 if 'account' in data:
@@ -945,57 +927,51 @@ class Domain(db.Model):
                     logging.debug(
                         "No 'account' data found in API result - Unsupported PowerDNS version?")
                     account_id = None
-                d = dict_db_domain.get(data['name'].rstrip('.'), None)
-                changed = False
-                if d:
-                    # existing domain, only update if something actually has changed
-                    if (d.master != str(data['masters'])
-                        or d.type != data['kind']
-                        or d.serial != data['serial']
-                        or d.notified_serial != data['notified_serial']
-                        or d.last_check != (1 if data['last_check'] else 0)
-                        or d.dnssec != data['dnssec']
-                        or d.account_id != account_id):
-
-                        d.master = str(data['masters'])
-                        d.type = data['kind']
-                        d.serial = data['serial']
-                        d.notified_serial = data['notified_serial']
-                        d.last_check = 1 if data['last_check'] else 0
-                        d.dnssec = 1 if data['dnssec'] else 0
-                        d.account_id = account_id
-                        changed = True
-
+                domain = dict_db_domain.get(data['name'].rstrip('.'), None)
+                if domain:
+                    self.update_pdns_admin_domain(domain, account_id, data)
                 else:
                     # add new domain
-                    d = Domain()
-                    d.name = data['name'].rstrip('.')
-                    d.master = str(data['masters'])
-                    d.type = data['kind']
-                    d.serial = data['serial']
-                    d.notified_serial = data['notified_serial']
-                    d.last_check = data['last_check']
-                    d.dnssec = 1 if data['dnssec'] else 0
-                    d.account_id = account_id
-                    db.session.add(d)
-                    changed = True
-                if changed:
-                    try:
-                        db.session.commit()
-                        logging.info("synced PDNS-Domain to pdnsADMIN: {0}".format(d.name))
-                    except Exception as e:
-                        db.session.rollback()
-                        logging.info("Rolledback Domain {0} {1}".format(d.name, e))
+                    self.add_domain_to_powerdns_admin(domain=data)
+
+
             logging.info('Update finished')
             return {'status': 'ok', 'msg': 'Domain table has been updated successfully'}
         except Exception as e:
             logging.error('Can not update domain table. Error: {0}'.format(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
+    def update_pdns_admin_domain(self, domain, account_id, data):
+        # existing domain, only update if something actually has changed
+        if (domain.master != str(data['masters'])
+            or domain.type != data['kind']
+            or domain.serial != data['serial']
+            or domain.notified_serial != data['notified_serial']
+            or domain.last_check != (1 if data['last_check'] else 0)
+            or domain.dnssec != data['dnssec']
+            or domain.account_id != account_id):
+        
+            domain.master = str(data['masters'])
+            domain.type = data['kind']
+            domain.serial = data['serial']
+            domain.notified_serial = data['notified_serial']
+            domain.last_check = 1 if data['last_check'] else 0
+            domain.dnssec = 1 if data['dnssec'] else 0
+            domain.account_id = account_id
+            try:
+                db.session.commit()
+                logging.info("updated PDNS-Admin Domain {0}".format(domain))
+            except Exception as e:
+                db.session.rollback()
+                logging.info("Rolledback Domain {0} {1}".format(domain.name, e))
+                raise
+
+
     def add(self, domain_name, domain_type, soa_edit_api, domain_ns=[], domain_master_ips=[], account_name=None):
         """
         Add a domain to power dns
         """
+
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
@@ -1026,13 +1002,55 @@ class Domain(db.Model):
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 logging.info('Added domain successfully to PowerDNS: {0}'.format(domain_name))
-                self.update()
-                logging.info('Added domain successfully to PowerDNS and Synced PdnsADMIN: {0}'.format(domain_name))
+                self.add_domain_to_powerdns_admin(domain_dict=post_data)
                 return {'status': 'ok', 'msg': 'Added domain successfully'}
         except Exception as e:
-            logging.error('Cannot add domain {0}'.format(domain_name))
+            logging.error('Cannot add domain {0} {1}'.format(domain_name, e))
             logging.debug(traceback.format_exc())
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
+
+
+    def add_domain_to_powerdns_admin(self, domain=None, domain_dict=None):
+        """
+        Read Domain from PowerDNS and add into PDNS-Admin
+        """
+        headers = {}
+        headers['X-API-Key'] = self.PDNS_API_KEY
+        if not domain:
+            try:
+                domain = utils.fetch_json(
+                    urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL + '/servers/localhost/zones/{0}'.format(domain_dict['name'])), headers=headers)
+            except Exception as e:
+                logging.error('Can not read Domain from PDNS')
+                logging.error(e)
+                logging.debug(traceback.format_exc())
+
+        if 'account' in domain:
+            account_id = Account().get_id_by_name(domain['account'])
+        else:
+            logging.debug(
+                "No 'account' data found in API result - Unsupported PowerDNS version?")
+            account_id = None
+        # add new domain
+        d = Domain()
+        d.name = domain['name'].rstrip('.')
+        d.master = str(domain['masters'])
+        d.type = domain['kind']
+        d.serial = domain['serial']
+        d.notified_serial = domain['notified_serial']
+        d.last_check = domain['last_check']
+        d.dnssec = 1 if domain['dnssec'] else 0
+        d.account_id = account_id
+        db.session.add(d)
+        try:
+            db.session.commit()
+            logging.info("Synched PowerDNS Domain to PDNS-Admin: {0}".format(d.name))
+            return {'status': 'ok', 'msg': 'Added Domain successfully to PowerDNS-Admin'}
+        except Exception as e:
+            db.session.rollback()
+            logging.info("Rolledback Domain {0}".format(d.name))
+            raise 
+           
 
     def update_soa_setting(self, domain_name, soa_edit_api):
         domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -1129,18 +1147,48 @@ class Domain(db.Model):
     def delete(self, domain_name):
         """
         Delete a single domain name from powerdns
-        """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        """        
         try:
-            utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                             '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
-            logging.info('Deleted domain {0} successfully from PowerDNS'.format(domain_name))
+            self.delete_domain_from_powerdns(domain_name)
+            self.delete_domain_from_pdnsadmin(domain_name)
             return {'status': 'ok', 'msg': 'Delete domain successfully'}
         except Exception as e:
             logging.error('Cannot delete domain {0}'.format(domain_name))
+            logging.error(e)
             logging.debug(traceback.format_exc())
-            return {'status': 'error', 'msg': 'Cannot delete domain'}
+            return {'status': 'error', 'msg': 'Cannot delete domain'}     
+
+    def delete_domain_from_powerdns(self, domain_name):
+        """
+        Delete a single domain name from powerdns
+        """
+        headers = {}
+        headers['X-API-Key'] = self.PDNS_API_KEY
+
+        utils.fetch_json(urljoin(self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                            '/servers/localhost/zones/{0}'.format(domain_name)), headers=headers, method='DELETE')
+        logging.info('Deleted domain successfully from PowerDNS-Entity: {0}'.format(domain_name))
+        return {'status': 'ok', 'msg': 'Delete domain successfully'}
+
+    def delete_domain_from_pdnsadmin(self, domain_name):
+        # Revoke permission before deleting domain
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        domain_user = DomainUser.query.filter(DomainUser.domain_id == domain.id)
+        if domain_user:
+            domain_user.delete()
+            db.session.commit()
+        domain_setting = DomainSetting.query.filter(
+            DomainSetting.domain_id == domain.id)
+        if domain_setting:
+            domain_setting.delete()
+            db.session.commit()
+        domain.apikeys[:] = []
+        db.session.commit()
+        
+        # then remove domain
+        Domain.query.filter(Domain.name == domain_name).delete()
+        db.session.commit()
+        logging.info("Deleted Domain successfully from pdnsADMIN: {}".format(domain_name))
 
     def get_user(self):
         """
