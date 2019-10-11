@@ -35,7 +35,7 @@
                     </div>
                     <select name="accountid" class="form-control" style="width:15em;">
                         <option value="0">- No Account -</option>
-                        {% for account in accounts %}
+                        {% for account in accounts | sort(attribute='name') %}
                         <option value="{{ account.id }}">{{ account.name }}</option>
                         {% endfor %}
                     </select><br/>
