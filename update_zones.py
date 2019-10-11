@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+#
 ####################################################################################################################################
 # A CLI Script to update list of domains instead from the UI. Can be useful for people who want to execute updates from a cronjob 
 # 
