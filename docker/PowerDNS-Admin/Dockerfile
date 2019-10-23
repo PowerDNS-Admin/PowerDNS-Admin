@@ -12,6 +12,10 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
+RUN rm -rf /var/lib/apt/lists/*
+RUN apt clean
+RUN apt update
+
 RUN apt-get install -y python3-pip python3-dev supervisor curl mysql-client
 
 # Install node 10.x
