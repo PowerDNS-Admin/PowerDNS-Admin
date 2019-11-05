@@ -504,11 +504,9 @@ def api_create_zone(server_id):
 @api_blueprint.route('/servers/<string:server_id>/zones', methods=['GET'])
 @apikey_auth
 def api_get_zones(server_id):
-    if g.apikey.role.name not in ['Administrator', 'Operator']:
-        domain_obj_list = g.apikey.domains
-    else:
-        domain_obj_list = Domain.query.all()
-    return json.dumps(domain_schema.dump(domain_obj_list)), 200
+    resp = helper.forward_request()
+    return resp.content, resp.status_code, resp.headers.items()
+
 
 #endpoint to snychronize Domains in background
 @csrf.exempt
