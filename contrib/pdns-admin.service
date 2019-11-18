@@ -1,0 +1,13 @@
+[Unit]
+Description=PowerDNS Admin
+After=network.target pdns.service
+
+[Service]
+User=nobody
+Group=nobody
+WorkingDirectory=/srv/powerdns-admin
+EnvironmentFile=/srv/powerdns-admin/environment
+ExecStart=/usr/local/bin/gunicorn -t ${GUNICORN_TIMEOUT} --workers ${GUNICORN_WORKERS} --bind ${BIND_ADDRESS} --log-level ${GUNICORN_LOGLEVEL}" app:app
+
+[Install]
+WantedBy=multi-user.target
