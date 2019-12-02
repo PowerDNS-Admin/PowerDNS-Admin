@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% set active_page = "admin_users" %}
+{% block title %}<title>Edit User - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        User
+        <small>{% if create %}New user{% else %}{{ user.username }}{% endif %}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('admin.manage_user') }}">User</a></li>
+        <li class="active">{% if create %}Add{% else %}Edit{% endif %} user</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} user</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post"
+                    action="{% if create %}{{ url_for('admin.edit_user') }}{% else %}{{ url_for('admin.edit_user', user_username=user.username) }}{% endif %}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="create" value="{{ create }}">
+                    <div class="box-body">
+                        {% if error %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                            {{ error }}
+                        </div>
+                        <span class="help-block">{{ error }}</span>
+                        {% endif %}
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="firstname">First Name</label>
+                            <input type="text" class="form-control" placeholder="First Name" name="firstname"
+                                {% if user %}value="{{ user.firstname }}" {% endif %}> <span
+                                class="glyphicon glyphicon-user form-control-feedback"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="lastname">Last Name</label>
+                            <input type="text" class="form-control" placeholder="Last name" name="lastname"
+                                {% if user %}value="{{ user.lastname }}" {% endif %}> <span
+                                class="glyphicon glyphicon-user form-control-feedback"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="email">E-mail address</label>
+                            <input type="email" class="form-control" placeholder="Email" name="email" id="email"
+                                {% if user %}value="{{ user.email }}" {% endif %}> <span
+                                class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                        </div>
+                        <p class="login-box-msg">Enter the account details below</p>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="username">Username</label>
+                            <input type="text" class="form-control" placeholder="Username" name="username"
+                                {% if user %}value="{{ user.username }}" {% endif %}
+                                {% if not create %}disabled{% endif %}> <span
+                                class="glyphicon glyphicon-user form-control-feedback"></span>
+                        </div>
+                        <div class="form-group has-feedback {% if blank_password %}has-error{% endif %}">
+                            <label class="control-label" for="username">Password</label>
+                            <input type="password" class="form-control"
+                                placeholder="Password {% if create %}(Required){% else %}(Leave blank to keep unchanged){% endif %}"
+                                name="password"> <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                            {% if blank_password %}
+                            <span class="help-block">The password cannot be blank.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit"
+                            class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
+                            User</button>
+                    </div>
+                </form>
+            </div>
+            {% if not create %}
+            <div class="box box-secondary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Two Factor Authentication</h3>
+                </div>
+                <div class="box-body">
+                    <p>If two factor authentication was configured and is causing problems due to a lost device or
+                        technical issue, it can be disabled here.</p>
+                    <p>The user will need to reconfigure two factor authentication, to re-enable it.</p>
+                    <p><strong>Beware: This could compromise security!</strong></p>
+                </div>
+                <div class="box-footer">
+                    <button type="button" class="btn btn-flat btn-warning button_otp_disable" id="{{ user.username }}"
+                        {% if not user.otp_secret %}disabled{% endif %}>Disable Two Factor Authentication</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} user
+                    </h3>
+                </div>
+                <div class="box-body">
+                    <p>Fill in all the fields to the in the form to the left.</p>
+                    {% if create %}
+                    <p><strong>Newly created users do not have access to any domains.</strong> You will need to grant
+                        access to the user once it is created via the domain management buttons on the dashboard.</p>
+                    {% else %}
+                    <p><strong>Password</strong> can be left empty to keep the current password.</p>
+                    <p><strong>Username</strong> cannot be changed.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // handle disabling two factor authentication
+    $(document.body).on('click', '.button_otp_disable', function () {
+        var modal = $("#modal_otp_disable");
+        var username = $(this).prop('id');
+        var info = "Are you sure you want to disable two factor authentication for user " + username + "?";
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_otp_disable_confirm').click(function () {
+            var postdata = {
+                'action': 'user_otp_disable',
+                'data': username,
+                '_csrf_token': '{{ csrf_token() }}'
+            }
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', false, true);
+        })
+        modal.modal('show');
+    });
+</script>
+{% endblock %}
+{% block modals %}
+<div class="modal fade modal-warning" id="modal_otp_disable">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_otp_disable_confirm">Disable Two Factor
+                    Authentication</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

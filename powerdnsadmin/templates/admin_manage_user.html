@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% set active_page = "admin_users" %}
+{% block title %}
+<title>User Management - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<section class="content-header">
+    <h1>
+        User <small>Manage user privileges</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">User</li>
+    </ol>
+</section>
+{% endblock %} {% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">User Management</h3>
+                </div>
+                <div class="box-body">
+                    <a href="{{ url_for('admin.edit_user') }}">
+                        <button type="button" class="btn btn-flat btn-primary pull-left button_add_user">
+                            Add User&nbsp;<i class="fa fa-plus"></i>
+                        </button>
+                    </a>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_users" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Privileges</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr class="odd gradeX">
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.firstname }}</td>
+                                <td>{{ user.lastname }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <select id="{{ user.username }}" class="user_role"
+                                        {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
+                                        {% for role in roles %}
+                                        <option value="{{ role.name }}"
+                                            {% if role.id==user.role.id %}selected{% endif %}>{{ role.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td width="6%">
+                                    <button type="button" class="btn btn-flat btn-warning button_revoke"
+                                        id="{{ user.username }}"
+                                        {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
+                                        Revoke&nbsp;<i class="fa fa-lock"></i>
+                                    </button>
+                                </td>
+                                <td width="15%">
+                                    <button type="button" class="btn btn-flat btn-success button_edit"
+                                        onclick="window.location.href='{{ url_for('admin.edit_user', user_username=user.username) }}'"
+                                        {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
+                                        Edit&nbsp;<i class="fa fa-lock"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-flat btn-danger button_delete"
+                                        id="{{ user.username }}"
+                                        {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
+                                        Delete&nbsp;<i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // set up user data table
+    $("#tbl_users").DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": false,
+        "autoWidth": false,
+        "lengthMenu": [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"]
+        ],
+        "pageLength": 10
+    });
+
+    // handle revocation of privileges
+    $(document.body).on('click', '.button_revoke', function () {
+        var modal = $("#modal_revoke");
+        var username = $(this).prop('id');
+        var info = "Are you sure you want to revoke all privileges for " + username +
+            ". They will not able to access any domain.";
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_revoke_confirm').click(function () {
+            var postdata = {
+                'action': 'revoke_user_privileges',
+                'data': username,
+                '_csrf_token': '{{ csrf_token() }}'
+            }
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', true);
+            modal.modal('hide');
+        })
+        modal.modal('show');
+    });
+    // handle deletion of user
+    $(document.body).on('click', '.button_delete', function () {
+        var modal = $("#modal_delete");
+        var username = $(this).prop('id');
+        var info = "Are you sure you want to delete " + username + "?";
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_delete_confirm').click(function () {
+            var postdata = {
+                'action': 'delete_user',
+                'data': username,
+                '_csrf_token': '{{ csrf_token() }}'
+            }
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', false, true);
+            modal.modal('hide');
+        })
+        modal.modal('show');
+
+    });
+
+    // handle user role changing
+    $(document.body).on('change', '.user_role', function () {
+        var role_name = this.value;
+        var username = $(this).prop('id');
+        var postdata = {
+            'action': 'update_user_role',
+            'data': {
+                'username': username,
+                'role_name': role_name
+            },
+            '_csrf_token': '{{ csrf_token() }}'
+        };
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', showResult = true);
+    });
+</script>
+{% endblock %}
+{% block modals %}
+<div class="modal fade modal-warning" id="modal_revoke">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_revoke_confirm">Revoke</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade modal-warning" id="modal_delete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% set active_page = "admin_history" %}
+{% block title %}
+<title>History - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        History <small>Recent events</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">History</li>
+    </ol>
+</section>
+{% endblock %} {% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">History Management</h3>
+                </div>
+                <div class="box-body clearfix">
+                    <button type="button" class="btn btn-flat btn-danger pull-right" data-toggle="modal"
+                        data-target="#modal_clear_history"
+                        {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
+                        Clear History&nbsp;<i class="fa fa-trash"></i>
+                    </button>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_history" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Changed by</th>
+                                <th>Content</th>
+                                <th>Time</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for history in histories %}
+                            <tr class="odd gradeX">
+                                <td>{{ history.created_by }}</td>
+                                <td>{{ history.msg }}</td>
+                                <td>{{ history.created_on }}</td>
+                                <td width="6%">
+                                    <button type="button" class="btn btn-flat btn-primary history-info-button"
+                                        value='{{ history.detail }}'>Info&nbsp;<i class="fa fa-info"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // set up history data table
+    $("#tbl_history").DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "order": [
+            [2, "desc"]
+        ],
+        "columnDefs": [{
+            "type": "time",
+            "render": function (data, type, row) {
+                return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+            },
+            "targets": 2
+        }]
+    });
+    $(document.body).on('click', '.history-info-button', function () {
+        var modal = $("#modal_history_info");
+        var info = $(this).val();
+        $('#modal-code-content').html(json_library.prettyPrint(info));
+        modal.modal('show');
+    });
+</script>
+{% endblock %}
+{% block modals %}
+<!-- Clear History Confirmation Box -->
+<div class="modal fade modal-warning" id="modal_clear_history">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove all history?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger"
+                    onclick="applyChanges({'_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/admin/history', false, true);">Clear
+                    History</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade" id="modal_history_info">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">History Details</h4>
+            </div>
+            <div class="modal-body">
+                <pre><code id="modal-code-content"></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+{% endblock %}

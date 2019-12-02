@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set active_page = "admin_settings" %}
+{% block title %}
+<title>Basic Settings - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Settings <small>PowerDNS-Admin settings</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Setting</a></li>
+        <li class="active">Basic</li>
+    </ol>
+</section>
+{% endblock %} {% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Basic Settings</h3>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_settings" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for setting in settings %}
+                            <tr class="odd ">
+                                <td>{{ setting }}</td>
+                                {% if SETTING.get(setting) in [True, False] %}
+                                <td>{{ SETTING.get(setting)|display_setting_state }}</td>
+                                <td width="6%">
+                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button"
+                                        id="{{ setting }}">
+                                        Toggle&nbsp;<i class="fa fa-info"></i>
+                                    </button>
+                                </td>
+                                {% else %}
+                                <td><input name="value" id="value" value="{{ SETTING.get(setting) }}"></td>
+                                <td width="6%">
+                                    <button type="button" class="btn btn-flat btn-warning setting-save-button"
+                                        id="{{ setting }}">
+                                        Save&nbsp;<i class="fa fa-info"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // set up history data table
+    $("#tbl_settings").DataTable({
+        "paging": false,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false
+    });
+    $(document.body).on('click', '.setting-toggle-button', function () {
+        var setting = $(this).prop('id');
+        applyChanges({
+            '_csrf_token': '{{ csrf_token() }}'
+        }, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
+    });
+
+    $(document.body).on('click', '.setting-save-button', function () {
+        var setting = $(this).prop('id');
+        var value = $(this).parents('tr').find('#value')[0].value;
+        var postdata = {
+            'value': value,
+            '_csrf_token': '{{ csrf_token() }}'
+        };
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
+    });
+</script>
+{% endblock %}

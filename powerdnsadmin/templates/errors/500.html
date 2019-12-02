@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}<title>PowerDNS-Admin - 500 Error</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        500
+        <small>Error</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li>500</li>
+      </ol>
+    </section>
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="error-page">
+        <h2 class="headline text-yellow">500</h2>
+        <div class="error-content">
+            <h3>
+                <i class="fa fa-warning text-yellow"></i> Oops! Something went wrong
+            </h3>
+            <p>
+                Try again later.
+                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+            </p>
+        </div>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
+{% endblock %}

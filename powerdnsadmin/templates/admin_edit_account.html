@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% set active_page = "admin_accounts" %}
+{% block title %}<title>Edit Account - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Account
+        <small>{% if create %}New account{% else %}{{ account.name }}{% endif %}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('admin.manage_account') }}">Accounts</a></li>
+        <li class="active">{% if create %}Add{% else %}Edit{% endif %} account</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} account</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post"
+                    action="{% if create %}{{ url_for('admin.edit_account') }}{% else %}{{ url_for('admin.edit_account', account_name=account.name) }}{% endif %}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="create" value="{{ create }}">
+                    <div class="box-body">
+                        {% if error %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                            {{ error }}
+                        </div>
+                        <span class="help-block">{{ error }}</span>
+                        {% endif %}
+                        <div
+                            class="form-group has-feedback {% if invalid_accountname or duplicate_accountname %}has-error{% endif %}">
+                            <label class="control-label" for="accountname">Name</label>
+                            <input type="text" class="form-control" placeholder="Account Name (required)"
+                                name="accountname" {% if account %}value="{{ account.name }}" {% endif %}
+                                {% if not create %}disabled{% endif %}>
+                            <span class="fa fa-cog form-control-feedback"></span>
+                            {% if invalid_accountname %}
+                            <span class="help-block">Cannot be blank and must only contain alphanumeric
+                                characters.</span>
+                            {% elif duplicate_accountname %}
+                            <span class="help-block">Account name already in use.</span>
+                            {% endif %}
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="accountdescription">Description</label>
+                            <input type="text" class="form-control" placeholder="Account Description (optional)"
+                                name="accountdescription" {% if account %}value="{{ account.description }}" {% endif %}>
+                            <span class="fa fa-industry form-control-feedback"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="accountcontact">Contact Person</label>
+                            <input type="text" class="form-control" placeholder="Contact Person (optional)"
+                                name="accountcontact" {% if account %}value="{{ account.contact }}" {% endif %}>
+                            <span class="fa fa-user form-control-feedback"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="accountmail">Mail Address</label>
+                            <input type="email" class="form-control" placeholder="Mail Address (optional)"
+                                name="accountmail" {% if account %}value="{{ account.mail }}" {% endif %}>
+                            <span class="fa fa-envelope form-control-feedback"></span>
+                        </div>
+                    </div>
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Access Control</h3>
+                    </div>
+                    <div class="box-body">
+                        <p>Users on the right have access to manage records in all domains
+                            associated with the account.</p>
+                        <p>Click on users to move between columns.</p>
+                        <div class="form-group col-xs-2">
+                            <select multiple="multiple" class="form-control" id="account_multi_user"
+                                name="account_multi_user">
+                                {% for user in users %}
+                                <option {% if user.id in account_user_ids %}selected{% endif %}
+                                    value="{{ user.username }}">{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit"
+                            class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
+                            Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help with creating a new account</h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        An account allows grouping of domains belonging to a particular entity, such as a customer or
+                        department.<br />
+                        A domain can be assigned to an account upon domain creation or through the domain administration
+                        page.
+                    </p>
+                    <p>Fill in all the fields to the in the form to the left.</p>
+                    <p>
+                        <strong>Name</strong> is an account identifier. It will be stored as all lowercase letters (no
+                        spaces, special characters etc).<br />
+                        <strong>Description</strong> is a user friendly name for this account.<br />
+                        <strong>Contact person</strong> is the name of a contact person at the account.<br />
+                        <strong>Mail Address</strong> is an e-mail address for the contact person.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    $("#account_multi_user").multiSelect();
+</script>
+{% endblock %}
