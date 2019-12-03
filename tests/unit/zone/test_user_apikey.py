@@ -108,7 +108,7 @@ class TestUnitApiZoneUserApiKey(object):
             mock_domain.query.all.return_value = [test_domain]
 
             res = client.get(
-                "/api/v1/servers/localhost/zones",
+                "/api/v1/servers/powerdns/zones",
                 headers=user_apikey
             )
             data = res.get_json(force=True)

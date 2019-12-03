@@ -80,7 +80,7 @@ class TestUnitApiZoneAdminApiKey(object):
             mock_get.return_value.status_code = 200
 
             res = client.get(
-                "/api/v1/servers/localhost/zones",
+                "/api/v1/servers/powerdns/zones",
                 headers=admin_apikey
             )
 
@@ -127,7 +127,7 @@ class TestUnitApiZoneAdminApiKey(object):
             mock_domain.query.all.return_value = [test_domain]
 
             res = client.get(
-                "/api/v1/servers/localhost/zones",
+                "/api/v1/servers/powerdns/zones",
                 headers=admin_apikey
             )
             data = res.get_json(force=True)
