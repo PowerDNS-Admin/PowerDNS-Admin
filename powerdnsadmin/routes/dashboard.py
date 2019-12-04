@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, jsonify
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, jsonify, redirect
 from flask_login import login_required, current_user
 from sqlalchemy import not_, or_
 
@@ -120,7 +120,7 @@ def domains_custom(boxId):
 def dashboard():
     if not Setting().get('pdns_api_url') or not Setting().get(
             'pdns_api_key') or not Setting().get('pdns_version'):
-        return redirect(url_for('admin_setting_pdns'))
+        return redirect(url_for('admin.setting_pdns'))
 
     BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
     if not BG_DOMAIN_UPDATE:

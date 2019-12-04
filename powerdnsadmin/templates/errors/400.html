@@ -25,8 +25,12 @@
                 <i class="fa fa-warning text-yellow"></i> Oops! Bad request
             </h3>
             <p>
-                The server refused to process your request and return a 400 error.
-                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+                {% if msg %}
+                  {{ msg }}
+                {% else %}
+                  The server refused to process your request and return a 400 error.
+                {% endif %}
+                <br/>You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
             </p>
         </div>
         <!-- /.error-content -->

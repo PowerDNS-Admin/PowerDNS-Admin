@@ -24,7 +24,7 @@ bravado_config = {
     'use_models': True,
 }
 
-dir_path = os.path.dirname(os.path.abspath(__file__))
+dir_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 spec_path = os.path.join(dir_path, "swagger-spec.yaml")
 spec_dict = get_swagger_spec(spec_path)
 spec = Spec.from_dict(spec_dict, config=bravado_config)

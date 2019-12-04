@@ -1,4 +1,4 @@
-# defaults for Docker image
+# Defaults for Docker image
 BIND_ADDRESS='0.0.0.0'
 PORT=80
 
@@ -6,11 +6,8 @@ legal_envvars = (
     'SECRET_KEY',
     'BIND_ADDRESS',
     'PORT',
-    'TIMEOUT',
     'LOG_LEVEL',
-    'LOG_FILE',
     'SALT',
-    'UPLOAD_DIR',
     'SQLALCHEMY_TRACK_MODIFICATIONS',
     'SQLALCHEMY_DATABASE_URI',
     'SAML_ENABLED',
@@ -42,12 +39,12 @@ legal_envvars = (
 
 legal_envvars_int = (
     'PORT',
-    'TIMEOUT',
     'SAML_METADATA_CACHE_LIFETIME',
 )
 
 legal_envvars_bool = (
     'SQLALCHEMY_TRACK_MODIFICATIONS',
+    'HSTS_ENABLED',
     'SAML_ENABLED',
     'SAML_DEBUG',
     'SAML_SIGN_REQUEST',
@@ -66,5 +63,3 @@ for v in legal_envvars:
         if v in legal_envvars_int:
             ret = int(ret)
         sys.modules[__name__].__dict__[v] = ret
-
-

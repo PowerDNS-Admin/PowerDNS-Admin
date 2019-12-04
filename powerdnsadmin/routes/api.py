@@ -281,7 +281,7 @@ def api_get_apikeys(domain_name):
     if current_user.role.name not in ['Administrator', 'Operator']:
         if domain_name:
             msg = "Check if domain {0} exists and \
-            is allowed for user."                                                                                                                                                                                                                                                                        .format(domain_name)
+            is allowed for user."                                                                                                                                                                                                                                                                                                                                          .format(domain_name)
             current_app.logger.debug(msg)
             apikeys = current_user.get_apikeys(domain_name)
 
@@ -502,14 +502,18 @@ def api_create_zone(server_id):
 @api_bp.route('/servers/<string:server_id>/zones', methods=['GET'])
 @apikey_auth
 def api_get_zones(server_id):
-    if g.apikey.role.name not in ['Administrator', 'Operator']:
-        domain_obj_list = g.apikey.domains
+    if server_id == 'powerdns-admin':
+        if g.apikey.role.name not in ['Administrator', 'Operator']:
+            domain_obj_list = g.apikey.domains
+        else:
+            domain_obj_list = Domain.query.all()
+        return json.dumps(domain_schema.dump(domain_obj_list)), 200
     else:
-        domain_obj_list = Domain.query.all()
-    return json.dumps(domain_schema.dump(domain_obj_list)), 200
+        resp = helper.forward_request()
+        return resp.content, resp.status_code, resp.headers.items()
 
 
-#endpoint to snychronize Domains in background
+# The endpoint to snychronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
 @apikey_auth
 def sync_domains():

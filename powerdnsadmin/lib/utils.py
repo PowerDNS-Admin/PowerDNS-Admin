@@ -12,44 +12,6 @@ from datetime import datetime, timedelta
 from threading import Thread
 
 from .certutil import KEY_FILE, CERT_FILE
-# import logging as logger
-
-# logging = logger.getLogger(__name__)
-
-# if app.config['SAML_ENABLED']:
-#     from onelogin.saml2.auth import OneLogin_Saml2_Auth
-#     from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
-#     idp_timestamp = datetime(1970, 1, 1)
-#     idp_data = None
-#     if 'SAML_IDP_ENTITY_ID' in app.config:
-#         idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'], entity_id=app.config.get('SAML_IDP_ENTITY_ID', None), required_sso_binding=app.config['SAML_IDP_SSO_BINDING'])
-#     else:
-#         idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'], entity_id=app.config.get('SAML_IDP_ENTITY_ID', None))
-#     if idp_data is None:
-#         print('SAML: IDP Metadata initial load failed')
-#         exit(-1)
-#     idp_timestamp = datetime.now()
-
-# def get_idp_data():
-#     global idp_data, idp_timestamp
-#     lifetime = timedelta(minutes=app.config['SAML_METADATA_CACHE_LIFETIME'])
-#     if idp_timestamp+lifetime < datetime.now():
-#         background_thread = Thread(target=retrieve_idp_data)
-#         background_thread.start()
-#     return idp_data
-
-# def retrieve_idp_data():
-#     global idp_data, idp_timestamp
-#     if 'SAML_IDP_SSO_BINDING' in app.config:
-#         new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'], entity_id=app.config.get('SAML_IDP_ENTITY_ID', None), required_sso_binding=app.config['SAML_IDP_SSO_BINDING'])
-#     else:
-#         new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(app.config['SAML_METADATA_URL'], entity_id=app.config.get('SAML_IDP_ENTITY_ID', None))
-#     if new_idp_data is not None:
-#         idp_data = new_idp_data
-#         idp_timestamp = datetime.now()
-#         print("SAML: IDP Metadata successfully retrieved from: " + app.config['SAML_METADATA_URL'])
-#     else:
-#         print("SAML: IDP Metadata could not be retrieved")
 
 
 def auth_from_url(url):
@@ -115,6 +77,8 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None, t
 
     if r.status_code == 204:
         return {}
+    elif r.status_code == 409:
+        return {'error': 'Resource already exists or conflict', 'http_code': r.status_code}
 
     try:
         assert ('json' in r.headers['content-type'])

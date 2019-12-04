@@ -1,114 +1,20 @@
-version: "2.1"
+version: "3"
 
 services:
-  powerdns-admin:
+  app:
     build:
       context: .
-      dockerfile: docker/PowerDNS-Admin/Dockerfile
-      args:
-        - ENVIRONMENT=${ENVIRONMENT}
-    image: powerdns-admin
-    container_name: powerdns-admin
-    mem_limit: 256M
-    memswap_limit: 256M
+      dockerfile: docker/Dockerfile
+    image: powerdns-admin:latest
+    container_name: powerdns_admin
     ports:
-      - "9191:9191"
-    volumes:
-      # Code
-      - .:/powerdns-admin/
-      - "./configs/${ENVIRONMENT}.py:/powerdns-admin/config.py"
-      # Assets dir volume
-      - powerdns-admin-assets:/powerdns-admin/app/static
-      - powerdns-admin-assets2:/powerdns-admin/node_modules
-      - powerdns-admin-assets3:/powerdns-admin/logs
-      - ./app/static/custom:/powerdns-admin/app/static/custom
+      - "9191:80"
     logging:
       driver: json-file
       options:
         max-size: 50m
-    networks:
-      - default
     environment:
-      - ENVIRONMENT=${ENVIRONMENT}
-      - PDA_DB_HOST=${PDA_DB_HOST}
-      - PDA_DB_NAME=${PDA_DB_NAME}
-      - PDA_DB_USER=${PDA_DB_USER}
-      - PDA_DB_PASSWORD=${PDA_DB_PASSWORD}
-      - PDA_DB_PORT=${PDA_DB_PORT}
-      - PDNS_HOST=${PDNS_HOST}
-      - PDNS_API_KEY=${PDNS_API_KEY}
-      - FLASK_APP=/powerdns-admin/app/__init__.py
-    depends_on:
-      powerdns-admin-mysql:
-        condition: service_healthy
-
-  powerdns-admin-mysql:
-    image: mysql/mysql-server:5.7
-    hostname: ${PDA_DB_HOST}
-    container_name: powerdns-admin-mysql
-    mem_limit: 256M
-    memswap_limit: 256M
-    expose:
-      - 3306
-    volumes:
-      - powerdns-admin-mysql-data:/var/lib/mysql
-    networks:
-      - default
-    environment:
-      - MYSQL_DATABASE=${PDA_DB_NAME}
-      - MYSQL_USER=${PDA_DB_USER}
-      - MYSQL_PASSWORD=${PDA_DB_PASSWORD}
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 10s
-      retries: 5
-
-  pdns-server:
-    image: psitrax/powerdns
-    hostname: ${PDNS_HOST}
-    ports:
-      - "5053:53"
-      - "5053:53/udp"
-    networks:
-      - default
-    command: --api=yes --api-key=${PDNS_API_KEY} --webserver-address=0.0.0.0 --webserver-allow-from=0.0.0.0/0
-    environment:
-      - MYSQL_HOST=${PDNS_DB_HOST}
-      - MYSQL_USER=${PDNS_DB_USER}
-      - MYSQL_PASS=${PDNS_DB_PASSWORD}
-      - PDNS_API_KEY=${PDNS_API_KEY}
-      - PDNS_WEBSERVER_ALLOW_FROM=${PDNS_WEBSERVER_ALLOW_FROM}
-    depends_on:
-      pdns-mysql:
-        condition: service_healthy
-
-  pdns-mysql:
-    image: mysql/mysql-server:5.7
-    hostname: ${PDNS_DB_HOST}
-    container_name: ${PDNS_DB_HOST}
-    mem_limit: 256M
-    memswap_limit: 256M
-    expose:
-      - 3306
-    volumes:
-      - powerdns-mysql-data:/var/lib/mysql
-    networks:
-      - default
-    environment:
-      - MYSQL_DATABASE=${PDNS_DB_NAME}
-      - MYSQL_USER=${PDNS_DB_USER}
-      - MYSQL_PASSWORD=${PDNS_DB_PASSWORD}
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 10s
-      retries: 5
-
-networks:
-  default:
-
-volumes:
-  powerdns-mysql-data:
-  powerdns-admin-mysql-data:
-  powerdns-admin-assets:
-  powerdns-admin-assets2:
-  powerdns-admin-assets3:
+      - SQLALCHEMY_DATABASE_URI=mysql://pda:changeme@host.docker.internal/pda
+      - GUINCORN_TIMEOUT=60
+      - GUNICORN_WORKERS=2
+      - GUNICORN_LOGLEVEL=DEBUG

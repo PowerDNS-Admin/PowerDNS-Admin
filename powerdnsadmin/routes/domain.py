@@ -111,7 +111,7 @@ def add():
 
             if ' ' in domain_name or not domain_name or not domain_type:
                 return render_template('errors/400.html',
-                                       msg="Please correct your input"), 400
+                                       msg="Please enter a valid domain name"), 400
 
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):

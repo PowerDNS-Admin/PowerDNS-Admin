@@ -243,6 +243,8 @@ class Domain(db.Model):
                 data=post_data)
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
+                if jdata.get('http_code') == 409:
+                    return {'status': 'error', 'msg': 'Domain already exists'}
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 current_app.logger.info(

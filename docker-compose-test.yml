@@ -4,12 +4,12 @@ services:
   powerdns-admin:
     build:
       context: .
-      dockerfile: docker/PowerDNS-Admin/Dockerfile.test
+      dockerfile: docker-test/Dockerfile
       args:
         - ENVIRONMENT=test
     image: powerdns-admin-test
     env_file:
-      - ./env-test
+      - ./docker-test/env
     container_name: powerdns-admin-test
     mem_limit: 256M
     memswap_limit: 256M
@@ -33,7 +33,7 @@ services:
   pdns-server:
     build:
       context: .
-      dockerfile: docker/PowerDNS-Admin/Dockerfile.pdns.test
+      dockerfile: docker-test/Dockerfile.pdns
     image: pdns-server-test
     ports:
       - "5053:53"
@@ -41,7 +41,7 @@ services:
     networks:
       - default
     env_file:
-      - ./env-test
+      - ./docker-test/env
 
 networks:
   default:

@@ -10,7 +10,7 @@
 ##############################################################
 
 ### Imports
-from app.models import Domain
+from powerdnsadmin.models.domain import Domain
 from config import BG_DOMAIN_UPDATES
 
 import sys
