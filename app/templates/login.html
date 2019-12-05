@@ -84,12 +84,16 @@
         <!-- /.col -->
       </div>
     </form>
-    {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') %}
+    {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') or SETTING.get('azure_oauth_enabled') %}
     <div class="social-auth-links text-center">
       <p>- OR -</p>
       {% if SETTING.get('oidc_oauth_enabled') %}
       <a href="{{ url_for('oidc_login') }}" class="btn btn-block btn-social btn-openid btn-flat"><i class="fa fa-openid"></i> Sign in using
         OpenID Connect</a>
+      {% endif %}
+      {% if SETTING.get('azure_oauth_enabled') %}
+      <a href="{{ url_for('azure_login') }}" class="btn btn-block btn-social btn-github btn-flat"><i class="fa fa-azure"></i> Sign in using
+        Microsoft Azure</a>
       {% endif %}
       {% if SETTING.get('github_oauth_enabled') %}
       <a href="{{ url_for('github_login') }}" class="btn btn-block btn-social btn-github btn-flat"><i class="fa fa-github"></i> Sign in using

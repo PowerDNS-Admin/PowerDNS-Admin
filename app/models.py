@@ -2081,7 +2081,7 @@ class Setting(db.Model):
         'azure_oauth_enabled': False,
         'azure_oauth_key': '',
         'azure_oauth_secret': '',
-        'azure_oauth_scope': 'User.Read',
+        'azure_oauth_scope': 'User.Read openid email profile',
         'azure_oauth_api_url': 'https://graph.microsoft.com/v1.0/',
         'azure_oauth_token_url': 'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/token',
         'azure_oauth_authorize_url': 'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/authorize',

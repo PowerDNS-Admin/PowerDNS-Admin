@@ -676,6 +676,40 @@
     {% endif %}
     // END: Github tab js
 
+    // START: Azure tab js
+    // update validation requirement when checkbox is togged
+    $('#azure_oauth_enabled').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    }).on('ifChanged', function(e) {
+        var is_enabled = e.currentTarget.checked;
+        if (is_enabled){
+            $('#azure_oauth_key').prop('required', true);
+            $('#azure_oauth_secret').prop('required', true);
+            $('#azure_oauth_scope').prop('required', true);
+            $('#azure_oauth_api_url').prop('required', true);
+            $('#azure_oauth_token_url').prop('required', true);
+            $('#azure_oauth_authorize_url').prop('required', true);
+        } else {
+            $('#azure_oauth_key').prop('required', false);
+            $('#azure_oauth_secret').prop('required', false);
+            $('#azure_oauth_scope').prop('required', false);
+            $('#azure_oauth_api_url').prop('required', false);
+            $('#azure_oauth_token_url').prop('required', false);
+            $('#azure_oauth_authorize_url').prop('required', false);
+        }
+    });
+    // init validation requirement at first time page load
+    {% if SETTING.get('azure_oauth_enabled') %}
+        $('#azure_oauth_key').prop('required', true);
+        $('#azure_oauth_secret').prop('required', true);
+        $('#azure_oauth_scope').prop('required', true);
+        $('#azure_oauth_api_url').prop('required', true);
+        $('#azure_oauth_token_url').prop('required', true);
+        $('#azure_oauth_authorize_url').prop('required', true);
+    {% endif %}
+    // END: Azure tab js
+
     // START: OIDC tab js
     $('#oidc_oauth_enabled').iCheck({
         checkboxClass : 'icheckbox_square-blue',
