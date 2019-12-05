@@ -21,7 +21,7 @@ from werkzeug import secure_filename
 from .models import User, Account, AccountUser, Domain, Record, RecordEntry, Role, Server, History, Anonymous, Setting, DomainSetting, DomainTemplate, DomainTemplateRecord
 from app import app, login_manager, csrf
 from app.lib import utils
-from app.oauth import github_oauth, google_oauth, oidc_oauth
+from app.oauth import github_oauth, google_oauth, oidc_oauth, azure_oauth
 from app.decorators import admin_role_required, operator_role_required, can_access_domain, can_configure_dnssec, can_create_domain
 from yaml import Loader, load
 
@@ -57,9 +57,11 @@ def register_modules():
     global google
     global github
     global oidc
+    global azure
     google = google_oauth()
     github = github_oauth()
     oidc = oidc_oauth()
+    azure = azure_oauth()
 
 
 # START USER AUTHENTICATION HANDLER
@@ -222,6 +224,15 @@ def github_login():
     else:
         redirect_uri = url_for('github_authorized', _external=True)
         return github.authorize_redirect(redirect_uri)
+
+@app.route('/azure/login')
+def azure_login():
+    if not Setting().get('azure_oauth_enabled') or azure is None:
+        logging.error('Microsoft OAuth is disabled or you have not yet reloaded the pda application after enabling.')
+        return abort(400)
+    else:
+        redirect_uri = url_for('azure_authorized', _external=True, _scheme='https')
+        return azure.authorize_redirect(redirect_uri)
 
 @app.route('/oidc/login')
 def oidc_login():
@@ -444,6 +455,42 @@ def login():
             if not result['status']:
                 session.pop('github_token', None)
                 return redirect(url_for('login'))
+
+        session['user_id'] = user.id
+        session['authentication_type'] = 'OAuth'
+        login_user(user, remember = False)
+        return redirect(url_for('index'))
+
+    if 'azure_token' in session:
+        me = json.loads(azure.get('me').text)
+
+        azure_username = me["userPrincipalName"]
+        azure_givenname = me["givenName"]
+        azure_familyname = me["surname"]
+        if "email" in me:
+            azure_email = me["email"]
+        else:
+            azure_email = ""
+        if not azure_email:
+            azure_email = me["userPrincipalName"]
+        # Handle foreign principals such as guest users
+        azure_email = re.sub( r"#.*$","",azure_email)
+        azure_username = re.sub( r"#.*$","",azure_username)
+
+        user = User.query.filter_by(username=azure_username).first()
+        if not user:
+            user = User(username=azure_username,
+                        plain_text_password=None,
+                        firstname=azure_givenname,
+                        lastname=azure_familyname,
+                        email=azure_email)
+
+            result = user.create_local_user()
+            if not result['status']:
+                logging.warning('Unable to create '+azure_username)
+                session.pop('azure_token', None)
+                # note: a redirect to login results in an endless loop, so render the login page instead
+                return render_template('login.html', saml_enabled=SAML_ENABLED, error=('User '+azure_username+' cannot be created.'))
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
