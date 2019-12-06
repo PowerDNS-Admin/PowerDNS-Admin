@@ -521,6 +521,7 @@ class Domain(db.Model):
             current_app.logger.error(
                 'Cannot revoke user privileges on domain {0}. DETAIL: {1}'.
                 format(self.name, e))
+            current_app.logger.debug(print(traceback.format_exc()))
 
         try:
             for uid in added_ids:
@@ -529,10 +530,10 @@ class Domain(db.Model):
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            print(traceback.format_exc())
             current_app.logger.error(
                 'Cannot grant user privileges to domain {0}. DETAIL: {1}'.
                 format(self.name, e))
+            current_app.logger.debug(print(traceback.format_exc()))
 
     def update_from_master(self, domain_name):
         """

@@ -20,29 +20,23 @@ A PowerDNS web interface with advanced features.
 - limited API for manipulating zones and records
 
 ### Running PowerDNS-Admin
-There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin with docker in development environment which has PowerDNS-Admin, PowerDNS server and MySQL Back-End Database.
+There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin using Docker
 
-Step 1: Changing configuration
-
-The configuration file for development environment is located at `configs/development.py`, you can override some configs by editing the `.env` file.
-
-Step 2: Build docker images
+Step 1: Build docker image
 
 ```$ docker-compose build```
 
-Step 3: Start docker containers
+Step 2: Change the configuration
+
+Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
+
+Step 3: Start docker container
 
 ```$ docker-compose up```
 
 You can now access PowerDNS-Admin at url http://localhost:9191
 
 **NOTE:** For other methods to run PowerDNS-Admin, please take look at WIKI pages.
-
-## Build production docker container image
-
-```
-$ docker build -t powerdns-admin:latest -f docker/Production/Dockerfile .
-```
 
 ### Screenshots
 ![dashboard](https://user-images.githubusercontent.com/6447444/44068603-0d2d81f6-9fa5-11e8-83af-14e2ad79e370.png)

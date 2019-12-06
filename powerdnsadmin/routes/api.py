@@ -132,7 +132,7 @@ def api_login_create_zone():
                 "User is ordinary user, assigning created domain")
             domain = Domain(name=data['name'].rstrip('.'))
             domain.update()
-            domain.grant_privileges([current_user.username])
+            domain.grant_privileges([current_user.id])
 
         domain = Domain()
         domain.update()
@@ -281,7 +281,7 @@ def api_get_apikeys(domain_name):
     if current_user.role.name not in ['Administrator', 'Operator']:
         if domain_name:
             msg = "Check if domain {0} exists and \
-            is allowed for user."                                                                                                                                                                                                                                                                                                                                          .format(domain_name)
+            is allowed for user."                                                                                                                                                                                                                                                                                                                                                                           .format(domain_name)
             current_app.logger.debug(msg)
             apikeys = current_user.get_apikeys(domain_name)
 
@@ -502,7 +502,7 @@ def api_create_zone(server_id):
 @api_bp.route('/servers/<string:server_id>/zones', methods=['GET'])
 @apikey_auth
 def api_get_zones(server_id):
-    if server_id == 'powerdns-admin':
+    if server_id == 'pdnsadmin':
         if g.apikey.role.name not in ['Administrator', 'Operator']:
             domain_obj_list = g.apikey.domains
         else:
