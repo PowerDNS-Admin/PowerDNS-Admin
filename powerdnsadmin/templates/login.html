@@ -87,7 +87,7 @@
           <!-- /.col -->
         </div>
       </form>
-      {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') %}
+      {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') or SETTING.get('azure_oauth_enabled') %}
       <div class="social-auth-links text-center">
         <p>- OR -</p>
         {% if SETTING.get('oidc_oauth_enabled') %}
@@ -102,9 +102,14 @@
         {% endif %}
         {% if SETTING.get('google_oauth_enabled') %}
         <a href="{{ url_for('index.google_login') }}" class="btn btn-block btn-social btn-google btn-flat"><i
-            class="fa fa-google-plus"></i> Sign in using
+            class="fa fa-google"></i> Sign in using
           Google</a>
         {% endif %}
+        {% if SETTING.get('azure_oauth_enabled') %}
+        <a href="{{ url_for('index.azure_login') }}" class="btn btn-block btn-social btn-microsoft btn-flat"><i
+          class="fa fa-windows"></i> Sign in using
+        Microsoft Azure</a>
+      {% endif %}
       </div>
       {% endif %}
 

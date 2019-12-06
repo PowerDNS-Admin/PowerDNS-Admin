@@ -696,6 +696,26 @@ def setting_authentication():
                 'status': True,
                 'msg': 'Saved successfully. Please reload PDA to take effect.'
             }
+        elif conf_type == 'azure':
+            Setting().set(
+                'azure_oauth_enabled',
+                True if request.form.get('azure_oauth_enabled') else False)
+            Setting().set('azure_oauth_key',
+                          request.form.get('azure_oauth_key'))
+            Setting().set('azure_oauth_secret',
+                          request.form.get('azure_oauth_secret'))
+            Setting().set('azure_oauth_scope',
+                          request.form.get('azure_oauth_scope'))
+            Setting().set('azure_oauth_api_url',
+                          request.form.get('azure_oauth_api_url'))
+            Setting().set('azure_oauth_token_url',
+                          request.form.get('azure_oauth_token_url'))
+            Setting().set('azure_oauth_authorize_url',
+                          request.form.get('azure_oauth_authorize_url'))
+            result = {
+                'status': True,
+                'msg': 'Saved successfully. Please reload PDA to take effect.'
+            }
         elif conf_type == 'oidc':
             Setting().set(
                 'oidc_oauth_enabled',
