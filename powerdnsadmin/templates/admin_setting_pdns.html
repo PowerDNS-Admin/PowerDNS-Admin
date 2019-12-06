@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% set active_page = "admin_settings" %}
+{% block title %}
+<title>PDNS Settings - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Settings <small>PowerDNS-Admin settings</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Setting</a></li>
+        <li class="active">PDNS</li>
+    </ol>
+</section>
+{% endblock %}
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">PDNS Settings</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post" data-toggle="validator">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <div class="box-body">
+                        {% if not SETTING.get('pdns_api_url') or not SETTING.get('pdns_api_key') or not SETTING.get('pdns_version') %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                            Please complete your PowerDNS API configuration before continuing
+                        </div>
+                        {% endif %}
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="pdns_api_url">PDNS API URL</label>
+                            <input type="url" class="form-control" placeholder="PowerDNS API url" name="pdns_api_url"
+                                data-error="Please input a valid PowerDNS API URL" required value="{{ pdns_api_url }}">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="pdns_api_key">PDNS API KEY</label>
+                            <input type="password" class="form-control" placeholder="PowerDNS API key"
+                                name="pdns_api_key" data-error="Please input a valid PowerDNS API key" required
+                                value="{{ pdns_api_key }}">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="pdns_version">PDNS VERSION</label>
+                            <input type="text" class="form-control" placeholder="PowerDNS version" name="pdns_version"
+                                data-error="Please input PowerDNS version" required value="{{ pdns_version }}">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-flat btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help</h3>
+                </div>
+                <div class="box-body">
+                    <dl class="dl-horizontal">
+                        <p>You must configure the API connection information before PowerDNS-Admin can query your
+                            PowerDNS data. Following fields are required:</p>
+                        <dt>PDNS API URL</dt>
+                        <dd>Your PowerDNS API URL (eg. http://127.0.0.1:8081/).</dd>
+                        <dt>PDNS API KEY</dt>
+                        <dd>Your PowerDNS API key.</dd>
+                        <dt>PDNS VERSION</dt>
+                        <dd>Your PowerDNS version number (eg. 4.1.1).</dd>
+                    </dl>
+                    <p>Find more details at <a
+                            href="https://doc.powerdns.com/md/httpapi/README/">https://doc.powerdns.com/md/httpapi/README/</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+{% assets "js_validation" -%}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+{% endblock %}

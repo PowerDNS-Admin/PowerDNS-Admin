@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from app import app
-from config import PORT
-from config import BIND_ADDRESS
+from powerdnsadmin import create_app
 
 if __name__ == '__main__':
-    app.run(debug = True, host=BIND_ADDRESS, port=PORT)
+    app = create_app()
+    app.run(debug = True, host=app.config.get('BIND_ADDRESS', '127.0.0.1'), port=app.config.get('PORT', '9191'))

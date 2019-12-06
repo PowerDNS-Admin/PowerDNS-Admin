@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% set active_page = "admin_settings" %}
+{% block title %}
+<title>DNS Records Settings - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Settings <small>PowerDNS-Admin settings</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Setting</a></li>
+        <li class="active">Records</li>
+    </ol>
+</section>
+{% endblock %}
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-5">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">DNS record Settings</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="create" value="{{ create }}">
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 10px">#</th>
+                                <th style="width: 40px">Record</th>
+                                <th>Forward Zone</th>
+                                <th>Reverse Zone</th>
+                            </tr>
+                            {% for record in f_records %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ record }}</td>
+                                <td>
+                                    <input type="checkbox" id="fr_{{ record|lower }}" name="fr_{{ record|lower }}"
+                                        class="checkbox" {% if f_records[record] %}checked{% endif %}>
+                                </td>
+                                <td>
+                                    <input type="checkbox" id="rr_{{ record|lower }}" name="rr_{{ record|lower }}"
+                                        class="checkbox" {% if r_records[record] %}checked{% endif %}>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-flat btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help</h3>
+                </div>
+                <div class="box-body">
+                    <p>Select record types you allow user to edit in the forward zone and reverse zone. Take a look at
+                        <a href="https://doc.powerdns.com/authoritative/appendices/types.html">PowerDNS docs</a> for
+                        full list of supported record types.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    $('.checkbox').iCheck({
+        checkboxClass: 'icheckbox_square-blue',
+        increaseArea: '20%'
+    })
+</script>
+{% endblock %}

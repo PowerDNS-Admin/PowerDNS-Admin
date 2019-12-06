@@ -25,22 +25,17 @@ nosetests.xml
 
 flask
 config.py
+configs/production.py
 logfile.log
-settings.json
-advanced_settings.json
-idp.crt
 log.txt
-
-db_repository/*
-upload/avatar/*
-tmp/*
-.ropeproject
-.sonarlint/*
 pdns.db
+idp.crt
+*.bak
+db_repository/*
+tmp/*
 
 node_modules
-
-.webassets-cache
 app/static/generated
+.webassets-cache
 .venv*
 .pytest_cache

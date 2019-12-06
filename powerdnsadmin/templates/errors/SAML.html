@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}<title>PowerDNS-Admin - SAML Authentication Error</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        SAML
+        <small>Error</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li>SAML</li>
+      </ol>
+    </section>
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="error-page">
+        <div>
+        <h1 class="headline text-yellow" style="font-size:46px;">SAML Authentication Error</h1></div><br/><br/>
+        <div class="error-content">
+            <h3>
+                <i class="fa fa-warning text-yellow"></i> Oops! Something went wrong
+            </h3><br>
+            <p>
+                Login failed.<br>
+                Error(s) when processing SAML Response:<br>
+                <ul>
+                    {% for error in errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+
+                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+            </p>
+        </div>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}<title>PowerDNS-Admin - 400 Error</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        400
+        <small>Error</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li>400</li>
+      </ol>
+    </section>
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="error-page">
+        <h2 class="headline text-yellow">400</h2>
+        <div class="error-content">
+            <h3>
+                <i class="fa fa-warning text-yellow"></i> Oops! Bad request
+            </h3>
+            <p>
+                {% if msg %}
+                  {{ msg }}
+                {% else %}
+                  The server refused to process your request and return a 400 error.
+                {% endif %}
+                <br/>You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+            </p>
+        </div>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
+{% endblock %}

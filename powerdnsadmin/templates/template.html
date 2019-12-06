@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% set active_page = "admin_domain_template" %}
+{% block title %}<title>Templates - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <h1>
+    Templates
+    <small>List</small>
+  </h1>
+  <ol class="breadcrumb">
+    <li><a href="{{ url_for('admin.templates') }}"><i class="fa fa-dashboard"></i> Templates</a></li>
+    <li class="active">List</li>
+  </ol>
+</section>
+{% endblock %}
+{% block content %}
+<!-- Main content -->
+<section class="content">
+  {% with errors = get_flashed_messages(category_filter=["error"]) %} {% if errors %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <h4>
+          <i class="icon fa fa-ban"></i> Error!
+        </h4>
+        <div class="alert-message block-message error">
+          <a class="close" href="#">x</a>
+          <ul>
+            {%- for msg in errors %}
+            <li>{{ msg }}</li> {% endfor -%}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %} {% endwith %}
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="box">
+        <div class="box-header">
+          <h3 class="box-title">Templates</h3>
+        </div>
+        <div class="box-body">
+          <a href="{{ url_for('admin.create_template') }}">
+            <button type="button" class="btn btn-flat btn-primary pull-left">
+              Create Template&nbsp;<i class="fa fa-plus"></i>
+            </button>
+          </a>
+        </div>
+        <div class="box-body">
+          <table id="tbl_template_list" class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Number of Records</th>
+                <th width="20%">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for template in templates %}
+              <tr>
+                <td>
+                  <a
+                    href="{{ url_for('admin.edit_template', template=template.name) }}"><strong>{{ template.name }}</strong></a>
+                </td>
+                <td>
+                  {{ template.description }}
+                </td>
+                <td>
+                  {{ template.records|count }}
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.edit_template', template=template.name) }}">
+                    <button type="button" class="btn btn-flat btn-warning button_edit" id="btn_edit">
+                      Edit&nbsp;<i class="fa fa-edit"></i>
+                    </button>
+                  </a>
+                  <button type="button" class="btn btn-flat btn-danger button_delete" id="{{template.name}}">
+                    Delete&nbsp;<i class="fa fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+    </div>
+    <!-- /.col -->
+  </div>
+  <!-- /.row -->
+</section>
+<!-- /.content -->
+{% endblock %}
+{% block extrascripts %}
+<script>
+  // set up history data table
+  $("#tbl_template_list").DataTable({
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+    "info": false,
+    "autoWidth": false
+  });
+  // handle delete button
+  $(document.body).on("click", ".button_delete", function (e) {
+    var template = $(this).prop('id');
+    $.post($SCRIPT_ROOT + '/admin/template/' + template + '/delete', {
+      '_csrf_token': '{{ csrf_token() }}'
+    }, function () {
+      window.location.href = '{{ url_for('admin.templates') }}';
+    });
+
+  });
+</script>
+{% endblock %}
+{% block modals %}
+{% endblock %}
