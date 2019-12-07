@@ -1,7 +1,7 @@
 import base64
 import binascii
 from functools import wraps
-from flask import g, redirect, url_for, request, abort, current_app, render_template
+from flask import g, request, abort, current_app, render_template
 from flask_login import current_user
 
 from .models import User, ApiKey, Setting, Domain

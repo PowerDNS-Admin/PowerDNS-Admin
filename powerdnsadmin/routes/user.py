@@ -1,12 +1,10 @@
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
 from io import BytesIO
-from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, current_app, session, g
-from flask_login import current_user, login_user, logout_user, login_required
+from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, session
+from flask_login import current_user, login_required
 
-from .base import login_manager
 from ..models.user import User
-from ..models.role import Role
 
 user_bp = Blueprint('user',
                     __name__,

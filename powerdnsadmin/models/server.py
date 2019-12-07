@@ -3,7 +3,6 @@ from flask import current_app
 from urllib.parse import urljoin
 
 from ..lib import utils
-from .base import db
 from .setting import Setting
 
 

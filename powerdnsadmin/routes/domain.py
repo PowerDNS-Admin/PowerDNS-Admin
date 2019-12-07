@@ -1,14 +1,12 @@
 import re
 import json
 import traceback
-import datetime
 from distutils.version import StrictVersion
-from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort, jsonify
-from flask_login import login_user, login_required, current_user
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify
+from flask_login import login_required, current_user
 
-from .base import login_manager
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec
-from ..models.user import User, Anonymous
+from ..models.user import User
 from ..models.account import Account
 from ..models.setting import Setting
 from ..models.history import History

@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, jsonify, redirect
+from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect
 from flask_login import login_required, current_user
-from sqlalchemy import not_, or_
+from sqlalchemy import not_
 
 from ..lib.utils import customBoxes
 from ..models.user import User
@@ -33,7 +33,7 @@ def domains_custom(boxId):
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
             .filter(
-                db.or_(
+                d(
                     DomainUser.user_id == current_user.id,
                     AccountUser.user_id == current_user.id
                 ))
