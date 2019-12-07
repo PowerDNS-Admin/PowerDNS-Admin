@@ -2,10 +2,7 @@ version: "3"
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    image: powerdns-admin:latest
+    image: ngoduykhanh/powerdns-admin:latest
     container_name: powerdns_admin
     ports:
       - "9191:80"
