@@ -1,15 +1,13 @@
 import re
 import json
 import traceback
-import datetime
 from ast import literal_eval
 from distutils.version import StrictVersion
-from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, jsonify, abort
-from flask_login import login_user, login_required, current_user
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort
+from flask_login import login_required, current_user
 
-from .base import login_manager
 from ..decorators import operator_role_required, admin_role_required
-from ..models.user import User, Anonymous
+from ..models.user import User
 from ..models.account import Account
 from ..models.account_user import AccountUser
 from ..models.role import Role

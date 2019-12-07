@@ -13,7 +13,6 @@
 import sys
 import logging
 
-from flask import current_app
 from powerdnsadmin import create_app
 from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.setting import Setting

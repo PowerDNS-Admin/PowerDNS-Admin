@@ -20,4 +20,4 @@ from .record_entry import RecordEntry
 
 def init_app(app):
     db.init_app(app)
-    _migrate = Migrate(app, db)
+    _migrate = Migrate(app, db)  # lgtm [py/unused-import]

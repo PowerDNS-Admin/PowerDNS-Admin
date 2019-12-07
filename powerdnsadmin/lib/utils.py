@@ -9,7 +9,6 @@ import os
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
-from threading import Thread
 
 from .certutil import KEY_FILE, CERT_FILE
 
@@ -58,12 +57,18 @@ def fetch_remote(remote_url,
             r.raise_for_status()
     except Exception as e:
         msg = "Returned status {0} and content {1}"
-        raise RuntimeError('Error while fetching {0}'.format(remote_url))
+        raise RuntimeError('Error while fetching {0}. {1}'.format(
+            remote_url, msg))
 
     return r
 
 
-def fetch_json(remote_url, method='GET', data=None, params=None, headers=None, timeout=None):
+def fetch_json(remote_url,
+               method='GET',
+               data=None,
+               params=None,
+               headers=None,
+               timeout=None):
     r = fetch_remote(remote_url,
                      method=method,
                      data=data,
@@ -78,7 +83,10 @@ def fetch_json(remote_url, method='GET', data=None, params=None, headers=None, t
     if r.status_code == 204:
         return {}
     elif r.status_code == 409:
-        return {'error': 'Resource already exists or conflict', 'http_code': r.status_code}
+        return {
+            'error': 'Resource already exists or conflict',
+            'http_code': r.status_code
+        }
 
     try:
         assert ('json' in r.headers['content-type'])

@@ -2,7 +2,6 @@ import sys
 import pytimeparse
 from ast import literal_eval
 from distutils.util import strtobool
-from distutils.version import StrictVersion
 
 from .base import db
 
