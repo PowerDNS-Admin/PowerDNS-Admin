@@ -9,6 +9,7 @@ from flask_login import AnonymousUserMixin
 
 from .base import db
 from .role import Role
+from .setting import Setting
 from .domain_user import DomainUser
 
 
