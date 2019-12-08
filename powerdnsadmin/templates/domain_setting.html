@@ -19,7 +19,7 @@
 {% endif %}
 <section class="content-header">
     <h1>
-        Manage domain <small>{{ domain.name }}</small>
+        Manage domain <small>{{ domain.name | pretty_domain_name }}</small>
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -42,7 +42,7 @@
                         <div class="row">
                             <div class="col-xs-2">
                                 <p>Users on the right have access to manage the records in
-                                    the {{ domain.name }} domain.</p>
+                                    the {{ domain.name | pretty_domain_name }} domain.</p>
                                 <p>Click on users to move from between columns.</p>
                                 <p>
                                     Users in <font style="color: red;">red</font> are Administrators
@@ -94,7 +94,7 @@
                                     {% endfor %}
                                 </select><br />
                                 <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name }}
+                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name | pretty_domain_name }}
                                 </button>
                             </form>
                         </div>
@@ -170,7 +170,8 @@
                             <option>OFF</option>
                         </select><br />
                         <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                            <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name }}
+                            <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for
+                            {{ domain.name | pretty_domain_name }}
                         </button>
                     </form>
                 </div>
@@ -189,7 +190,7 @@
                         reverted.</p>
                     <button type="button" class="btn btn-flat btn-danger pull-left delete_domain"
                         id="{{ domain.name }}">
-                        <i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name }}
+                        <i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name | pretty_domain_name}}
                     </button>
                 </div>
             </div>

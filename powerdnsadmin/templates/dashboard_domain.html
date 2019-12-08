@@ -1,5 +1,5 @@
 {% macro name(domain) %}
-  <a href="{{ url_for('domain.domain', domain_name=domain.name) }}"><strong>{{ domain.name }}</strong></a>
+  <a href="{{ url_for('domain.domain', domain_name=domain.name) }}"><strong>{{ domain.name | pretty_domain_name }}</strong></a>
 {% endmacro %}
 
 {% macro dnssec(domain) %}

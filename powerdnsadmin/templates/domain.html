@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}<title>{{ domain.name }} - {{ SITE_NAME }}</title>{% endblock %}
+{% block title %}<title>{{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
 <section class="content-header">
     <h1>
-        Manage domain: <b>{{ domain.name }}</b>
+        Manage domain: <b>{{ domain.name | pretty_domain_name }}</b>
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for('dashboard.dashboard') }}"><i
                 class="fa fa-dashboard"></i> Home</a></li>
         <li>Domain</li>
-        <li class="active">{{ domain.name }}</li>
+        <li class="active">{{ domain.name | pretty_domain_name }}</li>
     </ol>
 </section>
 {% endblock %}

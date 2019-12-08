@@ -300,6 +300,24 @@ def validate_ipaddress(address):
     return []
 
 
+def pretty_domain_name(value):
+    """
+    Display domain name in original format.
+    If it is IDN domain (Punycode starts with xn--), do the
+    idna decoding.
+    """
+    if isinstance(value, str):
+        if value.startswith('xn--'):
+            try:
+                return value.encode().decode('idna')
+            except:
+                raise Exception("Cannot decode IDN domain")
+        else:
+            return value
+    else:
+        raise Exception("Require the Punycode in sring format")
+
+
 class customBoxes:
     boxes = {
         "reverse": (" ", " "),

@@ -5,6 +5,7 @@ from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify
 from flask_login import login_required, current_user
 
+from ..lib.utils import pretty_domain_name
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec
 from ..models.user import User
 from ..models.account import Account
@@ -111,6 +112,15 @@ def add():
                 return render_template('errors/400.html',
                                        msg="Please enter a valid domain name"), 400
 
+            try:
+                domain_name = domain_name.encode('idna').decode()
+            except:
+                current_app.logger.error("Cannot encode the domain name {}".format(domain_name))
+                current_app.logger.debug(traceback.format_exc())
+                return render_template(
+                    'errors/400.html',
+                    msg="Please enter a valid domain name"), 400
+
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
                     domain_master_string = request.form.getlist(
@@ -130,7 +140,8 @@ def add():
                            domain_master_ips=domain_master_ips,
                            account_name=account_name)
             if result['status'] == 'ok':
-                history = History(msg='Add domain {0}'.format(domain_name),
+                history = History(msg='Add domain {0}'.format(
+                    pretty_domain_name(domain_name)),
                                   detail=str({
                                       'domain_type': domain_type,
                                       'domain_master_ips': domain_master_ips,
