@@ -287,8 +287,7 @@ class Domain(db.Model):
             account_id = None
         # add new domain
         d = Domain()
-        d.name = domain['name'].rstrip(
-            '.')  # lgtm [py/modification-of-default-value]
+        d.name = domain['name'].rstrip('.')  # lgtm [py/modification-of-default-value]
         d.master = str(domain['masters'])
         d.type = domain['kind']
         d.serial = domain['serial']

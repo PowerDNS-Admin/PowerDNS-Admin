@@ -131,7 +131,7 @@ def api_basic_auth(f):
                     abort(401)
                 else:
                     user = User.query.filter(User.username == username).first()
-                    current_user = user
+                    current_user = user  # lgtm [py/unused-local-variable]
             except Exception as e:
                 current_app.logger.error('Error: {0}'.format(e))
                 abort(401)

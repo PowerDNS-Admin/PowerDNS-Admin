@@ -49,7 +49,7 @@ def create_app(config=None):
     # HSTS
     if app.config.get('HSTS_ENABLED'):
         from flask_sslify import SSLify
-        _sslify = SSLify(app) # lgtm [py/unused-import]
+        _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
 
     # Load app's components
     assets.init_app(app)

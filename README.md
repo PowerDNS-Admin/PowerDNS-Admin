@@ -17,20 +17,16 @@ A PowerDNS web interface with advanced features.
 - Dashboard and pdns service statistics
 - DynDNS 2 protocol support
 - Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
-- limited API for manipulating zones and records
+- Limited API for manipulating zones and records
 
 ### Running PowerDNS-Admin
 There are several ways to run PowerDNS-Admin. Following is a simple way to start PowerDNS-Admin using Docker
 
-Step 1: Build docker image
+Step 1: Update the configuration
 
-```$ docker-compose build```
+Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`. Other environment variables are mentioned in the [legal_envvars](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/configs/docker_config.py#L5-L37).
 
-Step 2: Change the configuration
-
-Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
-
-Step 3: Start docker container
+Step 2: Start docker container
 
 ```$ docker-compose up```
 
