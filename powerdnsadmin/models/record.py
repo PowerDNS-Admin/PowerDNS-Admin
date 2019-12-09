@@ -20,12 +20,19 @@ class Record(object):
     This is not a model, it's just an object
     which be assigned data from PowerDNS API
     """
-    def __init__(self, name=None, type=None, status=None, ttl=None, data=None):
+    def __init__(self,
+                 name=None,
+                 type=None,
+                 status=None,
+                 ttl=None,
+                 data=None,
+                 comment_data=None):
         self.name = name
         self.type = type
         self.status = status
         self.ttl = ttl
         self.data = data
+        self.comment_data = comment_data
         # PDNS configs
         self.PDNS_STATS_URL = Setting().get('pdns_api_url')
         self.PDNS_API_KEY = Setting().get('pdns_api_key')
@@ -48,7 +55,8 @@ class Record(object):
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                 '/servers/localhost/zones/{0}'.format(domain)),
-                                     timeout=int(Setting().get('pdns_api_timeout')),
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
                                      headers=headers)
         except Exception as e:
             current_app.logger.error(
@@ -59,16 +67,24 @@ class Record(object):
         if self.NEW_SCHEMA:
             rrsets = jdata['rrsets']
             for rrset in rrsets:
-                r_name = rrset['name'].rstrip('.')
-                if self.PRETTY_IPV6_PTR:  # only if activated
-                    if rrset['type'] == 'PTR':  # only ptr
-                        if 'ip6.arpa' in r_name:  # only if v6-ptr
-                            r_name = dns.reversename.to_address(
-                                dns.name.from_text(r_name))
+                if rrset['records']:
+                    r_name = rrset['name'].rstrip('.')
+                    if self.PRETTY_IPV6_PTR:  # only if activated
+                        if rrset['type'] == 'PTR':  # only ptr
+                            if 'ip6.arpa' in r_name:  # only if v6-ptr
+                                r_name = dns.reversename.to_address(
+                                    dns.name.from_text(r_name))
 
-                rrset['name'] = r_name
-                rrset['content'] = rrset['records'][0]['content']
-                rrset['disabled'] = rrset['records'][0]['disabled']
+                    rrset['name'] = r_name
+                    rrset['content'] = rrset['records'][0]['content']
+                    rrset['disabled'] = rrset['records'][0]['disabled']
+
+                    # Get the record's comment. PDNS support multiple comments
+                    # per record. However, we are only interested in the 1st
+                    # one, for now.
+                    rrset['comment_data'] = {"content": "", "account": ""}
+                    if rrset['comments']:
+                        rrset['comment_data'] = rrset['comments'][0]
             return {'records': rrsets}
 
         return jdata
@@ -108,7 +124,8 @@ class Record(object):
                     "records": [{
                         "content": self.data,
                         "disabled": self.status,
-                    }]
+                    }],
+                    "comments": [self.comment_data]
                 }]
             }
         else:
@@ -126,7 +143,8 @@ class Record(object):
                         "name": self.name,
                         "ttl": self.ttl,
                         "type": self.type
-                    }]
+                    }],
+                    "comments": [self.comment_data]
                 }]
             }
 
@@ -135,7 +153,8 @@ class Record(object):
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                 '/servers/localhost/zones/{0}'.format(domain)),
                                      headers=headers,
-                                     timeout=int(Setting().get('pdns_api_timeout')),
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
                                      method='PATCH',
                                      data=data)
             current_app.logger.debug(jdata)
@@ -208,6 +227,7 @@ class Record(object):
                 "disabled":
                 True if r['record_status'] == 'Disabled' else False,
                 "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
+                "comment_data": r['comment_data']
             }
             records.append(record)
 
@@ -256,8 +276,10 @@ class Record(object):
                     r['ttl'],
                     "records": [{
                         "content": r['content'],
-                        "disabled": r['disabled'],
-                    }]
+                        "disabled": r['disabled']
+                    }],
+                    "comments":
+                    r['comment_data']
                 }
             else:
                 record = {
@@ -275,7 +297,9 @@ class Record(object):
                         "type": r['type'],
                         "priority":
                         10,  # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
-                    }]
+                    }],
+                    "comments":
+                    r['comment_data']
                 }
 
             records.append(record)
@@ -320,6 +344,7 @@ class Record(object):
                         "content": temp_content,
                         "disabled": temp_disabled
                     })
+                    new_record['comments'] = item['comments']
                 final_records.append(new_record)
 
             else:
@@ -357,14 +382,14 @@ class Record(object):
                                       headers=headers,
                                       method='PATCH',
                                       data=postdata_for_delete)
-            jdata2 = utils.fetch_json(
-                urljoin(
-                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                    '/servers/localhost/zones/{0}'.format(domain)),
-                headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')),
-                method='PATCH',
-                data=postdata_for_new)
+            jdata2 = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                '/servers/localhost/zones/{0}'.format(domain)),
+                                      headers=headers,
+                                      timeout=int(
+                                          Setting().get('pdns_api_timeout')),
+                                      method='PATCH',
+                                      data=postdata_for_new)
 
             if 'error' in jdata1.keys():
                 current_app.logger.error('Cannot apply record changes.')
@@ -471,7 +496,8 @@ class Record(object):
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                 '/servers/localhost/zones/{0}'.format(domain)),
                                      headers=headers,
-                                     timeout=int(Setting().get('pdns_api_timeout')),
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
                                      method='PATCH',
                                      data=data)
             current_app.logger.debug(jdata)
@@ -587,7 +613,8 @@ class Record(object):
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
             '/servers/localhost/zones/{0}'.format(domain)),
                                  headers=headers,
-                                 timeout=int(Setting().get('pdns_api_timeout')),
+                                 timeout=int(
+                                     Setting().get('pdns_api_timeout')),
                                  method='GET')
         serial = jdata['serial']
 

@@ -9,12 +9,14 @@ class RecordEntry(object):
                  status=None,
                  ttl=None,
                  data=None,
+                 comment=None,
                  is_allowed_edit=False):
         self.name = name
         self.type = type
         self.status = status
         self.ttl = ttl
         self.data = data
+        self.comment = comment
         self._is_allowed_edit = is_allowed_edit
         self._is_allowed_delete = is_allowed_edit and self.type != 'SOA'
 
