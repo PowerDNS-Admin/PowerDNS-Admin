@@ -43,6 +43,7 @@
                                 <th>Status</th>
                                 <th>TTL</th>
                                 <th>Data</th>
+                                <th>Comment</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -65,24 +66,28 @@
                                     <td>
                                         {{ record.data }}
                                     </td>
+                                    <td>
+                                        {{ record.comment }}
+                                    </td>
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
-                                    {% if record.is_allowed_edit() %}
-                                        <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
-                                       {% else %}
-                                       <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
-                                    {% endif %}
+                                        {% if record.is_allowed_edit() %}
+                                            <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                        {% endif %}
                                     </td>
                                     <td width="6%">
-                                    {% if record.is_allowed_delete() %}
-                                        <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
-                                    {% endif %}
+                                        {% if record.is_allowed_delete() %}
+                                            <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
+                                        {% endif %}
+                                    </td>
                                 {% else %}
                                     <td width="6%">
                                         <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     </td>
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     </td>
                                 {% endif %}
                                     </td>
@@ -133,20 +138,20 @@
         "columnDefs": [
             {
                 type: 'natural',
-                targets: [0, 4]
+                targets: [0, 5]
             },
             {
                 // hidden column so that we can add new records on top
-                // regardless of whatever sorting is done
+                // regardless of whatever sorting is done. See orderFixed
                 visible: false,
-                targets: [ 7 ]
+                targets: [ 8 ]
             },
             {
                 className: "length-break",
-                targets: [ 4 ]
+                targets: [ 5 ]
             }
         ],
-        "orderFixed": [[7, 'asc']]
+        "orderFixed": [[8, 'asc']]
     });
 
     // handle delete button
@@ -238,7 +243,7 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '0']);
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '', '0']);
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;

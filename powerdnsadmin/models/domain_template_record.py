@@ -8,6 +8,7 @@ class DomainTemplateRecord(db.Model):
     type = db.Column(db.String(64))
     ttl = db.Column(db.Integer)
     data = db.Column(db.Text)
+    comment = db.Column(db.Text)
     status = db.Column(db.Boolean)
     template_id = db.Column(db.Integer, db.ForeignKey('domain_template.id'))
     template = db.relationship('DomainTemplate', back_populates='records')
@@ -21,12 +22,14 @@ class DomainTemplateRecord(db.Model):
                  type=None,
                  ttl=None,
                  data=None,
+                 comment=None,
                  status=None):
         self.id = id
         self.name = name
         self.type = type
         self.ttl = ttl
         self.data = data
+        self.comment = comment
         self.status = status
 
     def apply(self):

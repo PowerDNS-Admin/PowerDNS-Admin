@@ -851,7 +851,8 @@ def create_template_from_zone():
                                     status=True
                                     if subrecord['disabled'] else False,
                                     ttl=jr['ttl'],
-                                    data=subrecord['content'])
+                                    data=subrecord['content'],
+                                    comment=jr['comment_data']['content'])
                                 records.append(record)
                 else:
                     for jr in jrecords:
@@ -863,7 +864,8 @@ def create_template_from_zone():
                                 type=jr['type'],
                                 status=True if jr['disabled'] else False,
                                 ttl=jr['ttl'],
-                                data=jr['content'])
+                                data=jr['content'],
+                                comment=jr['comment_data']['content'])
                             records.append(record)
 
             result_records = t.replace_records(records)
@@ -918,7 +920,8 @@ def edit_template(template):
                         type=jr.type,
                         status='Disabled' if jr.status else 'Active',
                         ttl=jr.ttl,
-                        data=jr.data)
+                        data=jr.data,
+                        comment=jr.comment if jr.comment else '')
                     records.append(record)
 
             return render_template('template_edit.html',
@@ -948,12 +951,14 @@ def apply_records(template):
             name = '@' if j['record_name'] in ['@', ''] else j['record_name']
             type = j['record_type']
             data = j['record_data']
+            comment = j['record_comment']
             disabled = True if j['record_status'] == 'Disabled' else False
             ttl = int(j['record_ttl']) if j['record_ttl'] else 3600
 
             dtr = DomainTemplateRecord(name=name,
                                        type=type,
                                        data=data,
+                                       comment=comment,
                                        status=disabled,
                                        ttl=ttl)
             records.append(dtr)

@@ -59,6 +59,7 @@ def domain(domain_name):
                                          subrecord['disabled'] else 'Active',
                                          ttl=jr['ttl'],
                                          data=subrecord['content'],
+                                         comment=jr['comment_data']['content'],
                                          is_allowed_edit=True)
                     records.append(record)
         if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
@@ -80,6 +81,7 @@ def domain(domain_name):
                     status='Disabled' if jr['disabled'] else 'Active',
                     ttl=jr['ttl'],
                     data=jr['content'],
+                    comment=jr['comment_data']['content'],
                     is_allowed_edit=True)
                 records.append(record)
     if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
@@ -108,8 +110,9 @@ def add():
             account_id = request.form.getlist('accountid')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
-                return render_template('errors/400.html',
-                                       msg="Please enter a valid domain name"), 400
+                return render_template(
+                    'errors/400.html',
+                    msg="Please enter a valid domain name"), 400
 
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
@@ -140,8 +143,7 @@ def add():
                 history.add()
 
                 # grant user access to the domain
-                Domain(name=domain_name).grant_privileges(
-                    [current_user.id])
+                Domain(name=domain_name).grant_privileges([current_user.id])
 
                 # apply template if needed
                 if domain_template != '0':
@@ -157,7 +159,8 @@ def add():
                             'record_name': template_record.name,
                             'record_status': template_record.status,
                             'record_ttl': template_record.ttl,
-                            'record_type': template_record.type
+                            'record_type': template_record.type,
+                            'comment_data': [{'content': template_record.comment, 'account': ''}]
                         }
                         record_data.append(record_row)
                     r = Record()
@@ -340,6 +343,18 @@ def record_apply(domain_name):
                     'msg':
                     'Domain name {0} does not exist'.format(domain_name)
                 }), 404)
+
+        # Modify the record's comment data. We append
+        # the "current_user" into account field as it
+        # a field with user-defined meaning
+        for sr in submitted_record:
+            if sr.get('record_comment'):
+                sr['comment_data'] = [{
+                    'content': sr['record_comment'],
+                    'account': current_user.username
+                }]
+            else:
+                sr['comment_data'] = []
 
         r = Record()
         result = r.apply(domain_name, submitted_record)
