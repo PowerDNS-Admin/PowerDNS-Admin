@@ -21,10 +21,6 @@ function applyChanges(data, url, showResult, refreshPage) {
         },
 
         error : function(jqXHR, status) {
-            // console.log(jqXHR);
-            // var modal = $("#modal_error");
-            // modal.find('.modal-body p').text(jqXHR["responseText"]);
-            // modal.modal('show');
             console.log(jqXHR);
             var modal = $("#modal_error");
             var responseJson = jQuery.parseJSON(jqXHR.responseText);

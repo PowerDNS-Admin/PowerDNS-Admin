@@ -125,7 +125,8 @@ class Record(object):
                         "content": self.data,
                         "disabled": self.status,
                     }],
-                    "comments": [self.comment_data]
+                    "comments":
+                    [self.comment_data] if self.comment_data else []
                 }]
             }
         else:
@@ -144,7 +145,8 @@ class Record(object):
                         "ttl": self.ttl,
                         "type": self.type
                     }],
-                    "comments": [self.comment_data]
+                    "comments":
+                    [self.comment_data] if self.comment_data else []
                 }]
             }
 
@@ -367,8 +369,10 @@ class Record(object):
                 })
 
         postdata_for_new = {"rrsets": final_records}
-        current_app.logger.debug(postdata_for_new)
-        current_app.logger.debug(postdata_for_delete)
+        current_app.logger.debug(
+            "postdata_for_new: {}".format(postdata_for_new))
+        current_app.logger.debug(
+            "postdata_for_delete: {}".format(postdata_for_delete))
         current_app.logger.info(
             urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +

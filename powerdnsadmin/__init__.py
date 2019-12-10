@@ -1,7 +1,8 @@
 import os
-from werkzeug.middleware.proxy_fix import ProxyFix
+import logging
 from flask import Flask
 from flask_seasurf import SeaSurf
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .lib import utils
 
@@ -10,6 +11,18 @@ def create_app(config=None):
     from . import models, routes, services
     from .assets import assets
     app = Flask(__name__)
+
+    # Setting logger
+    logging.basicConfig(
+        format=
+        "[%(asctime)s] [%(filename)s:%(lineno)d] %(levelname)s - %(message)s")
+
+    # If we use Docker + Gunicorn, adjust the
+    # log handler
+    if "GUNICORN_LOGLEVEL" in os.environ:
+        gunicorn_logger = logging.getLogger("gunicorn.error")
+        app.logger.handlers = gunicorn_logger.handlers
+        app.logger.setLevel(gunicorn_logger.level)
 
     # Proxy
     app.wsgi_app = ProxyFix(app.wsgi_app)
