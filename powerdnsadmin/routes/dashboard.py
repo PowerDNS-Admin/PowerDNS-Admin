@@ -33,7 +33,7 @@ def domains_custom(boxId):
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
             .filter(
-                d(
+                db.or_(
                     DomainUser.user_id == current_user.id,
                     AccountUser.user_id == current_user.id
                 ))
