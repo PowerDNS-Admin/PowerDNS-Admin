@@ -1017,7 +1017,7 @@ def delete_template(template):
     return redirect(url_for('admin.templates'))
 
 
-@admin_bp.route('/global-search', methods=['GET', 'POST'])
+@admin_bp.route('/global-search', methods=['GET'])
 @login_required
 @operator_role_required
 def global_search():
