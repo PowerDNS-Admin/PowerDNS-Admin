@@ -355,6 +355,49 @@ class Domain(db.Model):
                 'msg': 'Cannot change soa-edit-api this domain.'
             }
 
+    def update_kind(self, domain_name, kind, masters=[]):
+        """
+        Update zone kind: Native / Master / Slave
+        """
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'Domain doesnt exist.'}
+        headers = {}
+        headers['X-API-Key'] = self.PDNS_API_KEY
+
+        post_data = {"kind": kind, "masters": masters}
+
+        try:
+            jdata = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                '/servers/localhost/zones/{0}'.format(domain.name)),
+                                     headers=headers,
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
+                                     method='PUT',
+                                     data=post_data)
+            if 'error' in jdata.keys():
+                current_app.logger.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+            else:
+                current_app.logger.info(
+                    'Update domain kind for {0} successfully'.format(
+                        domain_name))
+                return {
+                    'status': 'ok',
+                    'msg': 'Domain kind changed successfully'
+                }
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot update kind for domain {0}. Error: {1}'.format(
+                    domain_name, e))
+            current_app.logger.debug(traceback.format_exc())
+
+            return {
+                'status': 'error',
+                'msg': 'Cannot update kind for this domain.'
+            }
+
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
         Check the existing reverse lookup domain,

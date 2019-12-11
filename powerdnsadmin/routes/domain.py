@@ -114,6 +114,7 @@ def add():
                     'errors/400.html',
                     msg="Please enter a valid domain name"), 400
 
+            #TODO: Validate ip addresses input
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
                     domain_master_string = request.form.getlist(
@@ -258,6 +259,47 @@ def setting(domain_name):
         return redirect(url_for('domain.setting', domain_name=domain_name))
 
 
+@domain_bp.route('/setting/<path:domain_name>/change_type',
+                 methods=['POST'])
+@login_required
+@operator_role_required
+def change_type(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+    domain_type = request.form.get('domain_type')
+    if domain_type is None:
+        abort(500)
+    if domain_type == '0':
+        return redirect(url_for('domain.setting', domain_name=domain_name))
+
+    #TODO: Validate ip addresses input
+    domain_master_ips = []
+    if domain_type == 'slave' and request.form.getlist('domain_master_address'):
+            domain_master_string = request.form.getlist(
+                'domain_master_address')[0]
+            domain_master_string = domain_master_string.replace(
+                ' ', '')
+            domain_master_ips = domain_master_string.split(',')
+
+    d = Domain()
+    status = d.update_kind(domain_name=domain_name,
+                           kind=domain_type,
+                           masters=domain_master_ips)
+    if status['status'] == 'ok':
+        history = History(msg='Update type for domain {0}'.format(domain_name),
+                          detail=str({
+                              "domain": domain_name,
+                              "type": domain_type,
+                              "masters": domain_master_ips
+                          }),
+                          created_by=current_user.username)
+        history.add()
+        return redirect(url_for('domain.setting', domain_name = domain_name))
+    else:
+        abort(500)
+
+
 @domain_bp.route('/setting/<path:domain_name>/change_soa_setting',
                  methods=['POST'])
 @login_required
@@ -275,18 +317,16 @@ def change_soa_edit_api(domain_name):
     d = Domain()
     status = d.update_soa_setting(domain_name=domain_name,
                                   soa_edit_api=new_setting)
-    if status['status'] != None:
-        users = User.query.all()
-        accounts = Account.query.all()
-        d = Domain(name=domain_name)
-        domain_user_ids = d.get_user()
-        account = d.get_account()
-        return render_template('domain_setting.html',
-                               domain=domain,
-                               users=users,
-                               domain_user_ids=domain_user_ids,
-                               accounts=accounts,
-                               domain_account=account)
+    if status['status'] == 'ok':
+        history = History(
+            msg='Update soa_edit_api for domain {0}'.format(domain_name),
+            detail=str({
+                "domain": domain_name,
+                "soa_edit_api": new_setting
+            }),
+            created_by=current_user.username)
+        history.add()
+        return redirect(url_for('domain.setting', domain_name = domain_name))
     else:
         abort(500)
 
