@@ -106,6 +106,9 @@
         <li class="{{ 'active' if active_page == 'admin_console' else '' }}">
           <a href="{{ url_for('admin.pdns_stats') }}"><i class="fa fa-info-circle"></i> <span>PDNS</span></a>
         </li>
+        <li class="{{ 'active' if active_page == 'admin_global_search' else '' }}">
+          <a href="{{ url_for('admin.global_search') }}"><i class="fa fa-search"></i> <span>Global Search</span></a>
+        </li>
         <li class="{{ 'active' if active_page == 'admin_history' else '' }}">
           <a href="{{ url_for('admin.history') }}"><i class="fa fa-calendar"></i> <span>History</span></a>
         </li>
