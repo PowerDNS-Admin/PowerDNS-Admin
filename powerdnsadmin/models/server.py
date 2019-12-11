@@ -61,3 +61,26 @@ class Server(object):
                 "Can not get server statistics. DETAIL: {0}".format(e))
             current_app.logger.debug(traceback.format_exc())
             return []
+
+    def global_search(self, object_type='all', query=''):
+        """
+        Search zone/record/comment directly from PDNS API
+        """
+        headers = {}
+        headers['X-API-Key'] = self.PDNS_API_KEY
+
+        try:
+            jdata = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                '/servers/{}/search-data?object_type={}&q={}'.format(
+                    self.server_id, object_type, query)),
+                                     headers=headers,
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
+                                     method='GET')
+            return jdata
+        except Exception as e:
+            current_app.logger.error(
+                "Can not make global search. DETAIL: {0}".format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return []

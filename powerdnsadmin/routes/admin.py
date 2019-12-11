@@ -1015,3 +1015,44 @@ def delete_template(template):
         current_app.logger.debug(traceback.format_exc())
         abort(500)
     return redirect(url_for('admin.templates'))
+
+
+@admin_bp.route('/global-search', methods=['GET'])
+@login_required
+@operator_role_required
+def global_search():
+    if request.method == 'GET':
+        domains = []
+        records = []
+        comments = []
+
+        query = request.args.get('q')
+        if query:
+            server = Server(server_id='localhost')
+            results = server.global_search(object_type='all', query=query)
+
+            # Format the search result
+            for result in results:
+                if result['object_type'] == 'zone':
+                    # Remove the dot at the end of string
+                    result['name'] = result['name'][:-1]
+                    domains.append(result)
+                elif result['object_type'] == 'record':
+                    # Remove the dot at the end of string
+                    result['name'] = result['name'][:-1]
+                    result['zone_id'] = result['zone_id'][:-1]
+                    records.append(result)
+                elif result['object_type'] == 'comment':
+                    # Get the actual record name, exclude the domain part
+                    result['name'] = result['name'].replace(result['zone_id'], '')
+                    if result['name']:
+                        result['name'] = result['name'][:-1]
+                    else:
+                        result['name'] = '@'
+                    # Remove the dot at the end of string
+                    result['zone_id'] = result['zone_id'][:-1]
+                    comments.append(result)
+                else:
+                    pass
+
+        return render_template('admin_global_search.html', domains=domains, records=records, comments=comments)
