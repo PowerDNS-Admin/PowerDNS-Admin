@@ -276,7 +276,7 @@
     //handle update_from_master button
     $(document.body).on("click", ".button_update_from_master", function (e) {
             var domain = $(this).prop('id');
-            applyChanges({'domain': domain, '_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/domain/' + domain + '/update');
+            applyChanges({'domain': domain, '_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
     });
 
     {% if SETTING.get('record_helper') %}

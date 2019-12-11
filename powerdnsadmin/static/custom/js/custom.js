@@ -9,10 +9,15 @@ function applyChanges(data, url, showResult, refreshPage) {
         crossDomain : true,
         dataType : "json",
         success : function(data, status, jqXHR) {
-            console.log("Applied changes successfully.")
+            console.log("Applied changes successfully.");
+            console.log(data);
             if (showResult) {
                 var modal = $("#modal_success");
-                modal.find('.modal-body p').text("Applied changes successfully");
+                if (data['msg']) {
+                    modal.find('.modal-body p').text(data['msg']);
+                } else {
+                    modal.find('.modal-body p').text("Applied changes successfully");
+                }
                 modal.modal('show');
             }
             if (refreshPage) {

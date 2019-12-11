@@ -544,18 +544,15 @@ class Domain(db.Model):
             headers = {}
             headers['X-API-Key'] = self.PDNS_API_KEY
             try:
-                utils.fetch_json(urljoin(
+                r = utils.fetch_json(urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                     '/servers/localhost/zones/{0}/axfr-retrieve'.format(
                         domain.name)),
-                                 headers=headers,
-                                 timeout=int(
-                                     Setting().get('pdns_api_timeout')),
-                                 method='PUT')
-                return {
-                    'status': 'ok',
-                    'msg': 'Update from Master successfully'
-                }
+                                     headers=headers,
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
+                                     method='PUT')
+                return {'status': 'ok', 'msg': r.get('result')}
             except Exception as e:
                 current_app.logger.error(
                     'Cannot update from master. DETAIL: {0}'.format(e))

@@ -35,7 +35,7 @@ db_repository/*
 tmp/*
 
 node_modules
-app/static/generated
+powerdnsadmin/static/generated
 .webassets-cache
 .venv*
 .pytest_cache
