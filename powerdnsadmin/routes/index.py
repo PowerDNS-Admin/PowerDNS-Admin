@@ -27,11 +27,13 @@ from ..services.google import google_oauth
 from ..services.github import github_oauth
 from ..services.azure import azure_oauth
 from ..services.oidc import oidc_oauth
+from ..services.saml import SAML
 
 google = None
 github = None
 azure = None
 oidc = None
+saml = None
 
 index_bp = Blueprint('index',
                      __name__,
@@ -45,10 +47,12 @@ def register_modules():
     global github
     global azure
     global oidc
+    global saml
     google = google_oauth()
     github = github_oauth()
     azure = azure_oauth()
     oidc = oidc_oauth()
+    saml = SAML()
 
 
 @index_bp.before_request
@@ -311,8 +315,8 @@ def logout():
             'SAML_ENABLED'
     ) and 'samlSessionIndex' in session and current_app.config.get(
             'SAML_LOGOUT'):
-        req = utils.prepare_flask_request(request)
-        auth = utils.init_saml_auth(req)
+        req = saml.prepare_flask_request(request)
+        auth = saml.init_saml_auth(req)
         if current_app.config.get('SAML_LOGOUT_URL'):
             return redirect(
                 auth.logout(
@@ -520,8 +524,8 @@ def dyndns_update():
 def saml_login():
     if not current_app.config.get('SAML_ENABLED'):
         abort(400)
-    req = utils.prepare_flask_request(request)
-    auth = utils.init_saml_auth(req)
+    req = saml.prepare_flask_request(request)
+    auth = saml.init_saml_auth(req)
     redirect_url = OneLogin_Saml2_Utils.get_self_url(req) + url_for(
         'saml_authorized')
     return redirect(auth.login(return_to=redirect_url))
@@ -533,8 +537,8 @@ def saml_metadata():
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
 
-    req = utils.prepare_flask_request(request)
-    auth = utils.init_saml_auth(req)
+    req = saml.prepare_flask_request(request)
+    auth = saml.init_saml_auth(req)
     settings = auth.get_settings()
     metadata = settings.get_sp_metadata()
     errors = settings.validate_metadata(metadata)
@@ -553,8 +557,8 @@ def saml_authorized():
     if not current_app.config.get('SAML_ENABLED'):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
-    req = utils.prepare_flask_request(request)
-    auth = utils.init_saml_auth(req)
+    req = saml.prepare_flask_request(request)
+    auth = saml.init_saml_auth(req)
     auth.process_response()
     errors = auth.get_errors()
     if len(errors) == 0:
@@ -705,8 +709,8 @@ def uplift_to_admin(user):
 
 @index_bp.route('/saml/sls')
 def saml_logout():
-    req = utils.prepare_flask_request(request)
-    auth = utils.init_saml_auth(req)
+    req = saml.prepare_flask_request(request)
+    auth = saml.init_saml_auth(req)
     url = auth.process_slo()
     errors = auth.get_errors()
     if len(errors) == 0:
