@@ -1,5 +1,6 @@
 .length-break {
     word-break: break-all !important;
+    width: 70% !important;
 }
 
 table td {
