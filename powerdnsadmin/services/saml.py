@@ -34,19 +34,17 @@ class SAML(object):
                     'SAML: IDP Metadata initial load failed')
                 exit(-1)
 
+
     def get_idp_data(self):
 
-### Currently commented out while throwing exception,
-### will take a look soon
-#        lifetime = timedelta(
-#            minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
-#        if self.idp_timestamp + lifetime < datetime.now():
-#            background_thread = Thread(target=self.retrieve_idp_data)
-#            background_thread.start()
+        lifetime = timedelta(minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
 
+        if self.idp_timestamp + lifetime < datetime.now():
+            background_thread = Thread(target=self.retrieve_idp_data())
+            background_thread.start()
 
-        self.retrieve_idp_data()
         return self.idp_data
+
 
     def retrieve_idp_data(self):
 
