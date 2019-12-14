@@ -10,37 +10,34 @@ class SAML(object):
         if current_app.config['SAML_ENABLED']:
             from onelogin.saml2.auth import OneLogin_Saml2_Auth
             from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
-            idp_timestamp = datetime(1970, 1, 1)
-            idp_data = None
+            self.idp_timestamp = datetime.now()
+            self.idp_data = None
             if 'SAML_IDP_ENTITY_ID' in current_app.config:
-                idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
                     current_app.config['SAML_METADATA_URL'],
                     entity_id=current_app.config.get('SAML_IDP_ENTITY_ID',
                                                      None),
                     required_sso_binding=current_app.
                     config['SAML_IDP_SSO_BINDING'])
             else:
-                idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
                     current_app.config['SAML_METADATA_URL'],
                     entity_id=current_app.config.get('SAML_IDP_ENTITY_ID',
                                                      None))
-            if idp_data is None:
+            if self.idp_data is None:
                 current_app.logger.info(
                     'SAML: IDP Metadata initial load failed')
                 exit(-1)
-            idp_timestamp = datetime.now()
 
-    def get_idp_data():
-        global idp_data, idp_timestamp
+    def get_idp_data(self):
         lifetime = timedelta(
             minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
-        if idp_timestamp + lifetime < datetime.now():
-            background_thread = Thread(target=retrieve_idp_data)
+        if self.idp_timestamp + lifetime < datetime.now():
+            background_thread = Thread(target=self.retrieve_idp_data)
             background_thread.start()
-        return idp_data
+        return self.idp_data
 
-    def retrieve_idp_data():
-        global idp_data, idp_timestamp
+    def retrieve_idp_data(self):
         if 'SAML_IDP_SSO_BINDING' in current_app.config:
             new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
                 current_app.config['SAML_METADATA_URL'],
@@ -52,8 +49,8 @@ class SAML(object):
                 current_app.config['SAML_METADATA_URL'],
                 entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None))
         if new_idp_data is not None:
-            idp_data = new_idp_data
-            idp_timestamp = datetime.now()
+            self.idp_data = new_idp_data
+            self.idp_timestamp = datetime.now()
             current_app.logger.info(
                 "SAML: IDP Metadata successfully retrieved from: " +
                 current_app.config['SAML_METADATA_URL'])
@@ -61,7 +58,7 @@ class SAML(object):
             current_app.logger.info(
                 "SAML: IDP Metadata could not be retrieved")
 
-    def prepare_flask_request(request):
+    def prepare_flask_request(self, request):
         # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
         url_data = urlparse(request.url)
         return {
@@ -76,14 +73,14 @@ class SAML(object):
             'query_string': request.query_string
         }
 
-    def init_saml_auth(req):
+    def init_saml_auth(self, req):
         own_url = ''
         if req['https'] == 'on':
             own_url = 'https://'
         else:
             own_url = 'http://'
         own_url += req['http_host']
-        metadata = get_idp_data()
+        metadata = self.get_idp_data()
         settings = {}
         settings['sp'] = {}
         if 'SAML_NAMEID_FORMAT' in current_app.config:

@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import requests
@@ -8,8 +7,6 @@ import ipaddress
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
-
-from .certutil import KEY_FILE, CERT_FILE
 
 
 def auth_from_url(url):
