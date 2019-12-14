@@ -1,5 +1,5 @@
+import re
 import traceback
-import itertools
 import dns.reversename
 import dns.inet
 import dns.name
@@ -113,7 +113,14 @@ class Record(object):
 
     def add(self, domain_name, rrset):
         """
-        Add a record to a domain (a reverse domain name)
+        Add a record to a domain (Used by auto_ptr and DynDNS)
+
+        Args:
+            domain_name(str): The zone name
+            rrset(dict): The record in PDNS rrset format
+
+        Returns:
+            (dict): A dict contains status code and message
         """
         # Validate record first
         rrsets = self.get_rrsets(domain_name)
@@ -131,46 +138,6 @@ class Record(object):
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
-        # if self.NEW_SCHEMA:
-        #     data = {
-        #         "rrsets": [{
-        #             "name":
-        #             self.name.rstrip('.') + '.',
-        #             "type":
-        #             self.type,
-        #             "changetype":
-        #             "REPLACE",
-        #             "ttl":
-        #             self.ttl,
-        #             "records": [{
-        #                 "content": self.data,
-        #                 "disabled": self.status,
-        #             }],
-        #             "comments":
-        #             [self.comment_data] if self.comment_data else []
-        #         }]
-        #     }
-        # else:
-        #     data = {
-        #         "rrsets": [{
-        #             "name":
-        #             self.name,
-        #             "type":
-        #             self.type,
-        #             "changetype":
-        #             "REPLACE",
-        #             "records": [{
-        #                 "content": self.data,
-        #                 "disabled": self.status,
-        #                 "name": self.name,
-        #                 "ttl": self.ttl,
-        #                 "type": self.type
-        #             }],
-        #             "comments":
-        #             [self.comment_data] if self.comment_data else []
-        #         }]
-        #     }
-
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
@@ -184,8 +151,10 @@ class Record(object):
             return {'status': 'ok', 'msg': 'Record was added successfully'}
         except Exception as e:
             current_app.logger.error(
-                "Cannot add record {0}/{1}/{2} to domain {3}. DETAIL: {4}".
-                format(self.name, self.type, self.data, domain_name, e))
+                "Cannot add record to domain {}. Error: {}".format(
+                    domain_name, e))
+            current_app.logger.debug("Submitted record rrset: \n{}".format(
+                utils.pretty_json(rrset)))
             return {
                 'status': 'error',
                 'msg':
@@ -226,11 +195,26 @@ class Record(object):
         rrsets = []
         for record in submitted_records:
             # Format the record name
-            record_name = "{}.{}.".format(
-                record["record_name"],
-                domain_name) if record["record_name"] not in [
-                    '@', ''
-                ] else domain_name + '.'
+            #
+            # If it is ipv6 reverse zone and PRETTY_IPV6_PTR is enabled,
+            # We convert ipv6 address back to reverse record format
+            # before submitting to PDNS API.
+            if self.PRETTY_IPV6_PTR and re.search(r'ip6\.arpa', domain_name):
+                if record['record_type'] == 'PTR' and ':' in record[
+                        'record_name']:
+                    record_name = dns.reversename.from_address(
+                        record['record_name']).to_text()
+
+            # Else, it is forward zone, then record name should be
+            # in format "<name>.<domain>.". If it is root
+            # domain name (name == '@' or ''), the name should
+            # be in format "<domain>."
+            else:
+                record_name = "{}.{}.".format(
+                    record["record_name"],
+                    domain_name) if record["record_name"] not in [
+                        '@', ''
+                    ] else domain_name + '.'
 
             # Format the record content, it musts end
             # with a dot character if in following types
@@ -249,7 +233,7 @@ class Record(object):
             record_comments = [{
                 "content": record["record_comment"],
                 "account": ""
-            }] if record["record_comment"] else []
+            }] if record.get("record_comment") else []
 
             # Add the formatted record to rrsets list
             rrsets.append({
@@ -267,7 +251,7 @@ class Record(object):
         # Sort the list before using groupby
         rrsets = sorted(rrsets, key=lambda r: (r['name'], r['type']))
         groups = groupby(rrsets, key=lambda r: (r['name'], r['type']))
-        for k, v in groups:
+        for _k, v in groups:
             group = list(v)
             transformed_rrsets.append(self.merge_rrsets(group))
 
@@ -335,38 +319,6 @@ class Record(object):
 
         # Get the list of rrsets to be added and deleted
         new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
-
-        # records = []
-        # for r in deleted_records:
-        #     r_name = r['name'].rstrip(
-        #         '.') + '.' if self.NEW_SCHEMA else r['name']
-        #     r_type = r['type']
-        #     if self.PRETTY_IPV6_PTR:  # only if activated
-        #         if self.NEW_SCHEMA:  # only if new schema
-        #             if r_type == 'PTR':  # only ptr
-        #                 if ':' in r['name']:  # dirty ipv6 check
-        #                     r_name = dns.reversename.from_address(
-        #                         r['name']).to_text()
-
-        #     record = {
-        #         "name": r_name,
-        #         "type": r_type,
-        #         "changetype": "DELETE",
-        #         "records": []
-        #     }
-        #     records.append(record)
-
-        # postdata_for_delete = {"rrsets": records}
-
-        # records = []
-        # for r in new_records:
-        #     if self.NEW_SCHEMA:
-        #         r_name = r['name'].rstrip('.') + '.'
-        #         r_type = r['type']
-        #         if self.PRETTY_IPV6_PTR:  # only if activated
-        #             if r_type == 'PTR':  # only ptr
-        #                 if ':' in r['name']:  # dirty ipv6 check
-        #                     r_name = r['name']
 
         # Submit the changes to PDNS API
         try:

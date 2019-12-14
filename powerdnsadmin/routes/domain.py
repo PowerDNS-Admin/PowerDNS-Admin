@@ -1,6 +1,8 @@
 import re
 import json
 import traceback
+import dns.name
+import dns.reversename
 from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify
 from flask_login import login_required, current_user
@@ -63,15 +65,27 @@ def domain(domain_name):
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for r in rrsets:
             if r['type'] in records_allow_to_edit:
+                r_name = r['name'].rstrip('.')
+
+                # If it is reverse zone and pretty_ipv6_ptr setting
+                # is enabled, we reformat the name for ipv6 records.
+                if Setting().get('pretty_ipv6_ptr') and r[
+                        'type'] == 'PTR' and 'ip6.arpa' in r_name:
+                    r_name = dns.reversename.to_address(
+                        dns.name.from_text(r_name))
+
+                # Create the list of records in format that
+                # PDA jinja2 template can understand.
                 index = 0
                 for record in r['records']:
                     record_entry = RecordEntry(
-                        name=r['name'].rstrip('.'),
+                        name=r_name,
                         type=r['type'],
                         status='Disabled' if record['disabled'] else 'Active',
                         ttl=r['ttl'],
                         data=record['content'],
-                        comment=r['comments'][index]['content'] if r['comments'] else '',
+                        comment=r['comments'][index]['content']
+                        if r['comments'] else '',
                         is_allowed_edit=True)
                     index += 1
                     records.append(record_entry)
@@ -79,7 +93,7 @@ def domain(domain_name):
         # Unsupported version
         abort(500)
 
-    if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
+    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
         editable_records = forward_records_allow_to_edit
     else:
         editable_records = reverse_records_allow_to_edit

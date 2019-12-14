@@ -3,7 +3,7 @@ import json
 import traceback
 from ast import literal_eval
 from distutils.version import StrictVersion
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash
 from flask_login import login_required, current_user
 
 from ..decorators import operator_role_required, admin_role_required
@@ -843,7 +843,7 @@ def create_template_from_zone():
                     for jr in jrecords:
                         if jr['type'] in Setting().get_records_allow_to_edit():
                             name = '@' if jr['name'] == domain_name else re.sub(
-                                '\.{}$'.format(domain_name), '', jr['name'])
+                                r'\.{}$'.format(domain_name), '', jr['name'])
                             for subrecord in jr['records']:
                                 record = DomainTemplateRecord(
                                     name=name,
@@ -858,7 +858,7 @@ def create_template_from_zone():
                     for jr in jrecords:
                         if jr['type'] in Setting().get_records_allow_to_edit():
                             name = '@' if jr['name'] == domain_name else re.sub(
-                                '\.{}$'.format(domain_name), '', jr['name'])
+                                r'\.{}$'.format(domain_name), '', jr['name'])
                             record = DomainTemplateRecord(
                                 name=name,
                                 type=jr['type'],

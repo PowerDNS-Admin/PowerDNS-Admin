@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import traceback
 import datetime
@@ -423,7 +424,7 @@ def dyndns_update():
 
     domain = None
     domain_segments = hostname.split('.')
-    for index in range(len(domain_segments)):
+    for _index in range(len(domain_segments)):
         full_domain = '.'.join(domain_segments)
         potential_domain = Domain.query.filter(
             Domain.name == full_domain).first()
@@ -489,12 +490,23 @@ def dyndns_update():
                     DomainSetting.setting == 'create_via_dyndns').first()
             if (ondemand_creation is not None) and (strtobool(
                     ondemand_creation.value) == True):
-                record = Record(name=hostname,
-                                type=rtype,
-                                data=str(ip),
-                                status=False,
-                                ttl=3600)
-                result = record.add(domain.name)
+
+                # Build the rrset
+                rrset_data = [{
+                    "changetype": "REPLACE",
+                    "name": hostname + '.',
+                    "ttl": 3600,
+                    "type": rtype,
+                    "records": [{
+                        "content": str(ip),
+                        "disabled": False
+                    }],
+                    "comments": []
+                }]
+
+                # Format the rrset
+                rrset = {"rrsets": rrset_data}
+                result = Record().add(domain.name, rrset)
                 if result['status'] == 'ok':
                     history = History(
                         msg=
@@ -679,7 +691,7 @@ def handle_account(account_name):
     clean_name = ''.join(c for c in account_name.lower()
                          if c in "abcdefghijklmnopqrstuvwxyz0123456789")
     if len(clean_name) > Account.name.type.length:
-        logging.error(
+        current_app.logger.error(
             "Account name {0} too long. Truncated.".format(clean_name))
     account = Account.query.filter_by(name=clean_name).first()
     if not account:
