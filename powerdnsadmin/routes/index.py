@@ -527,7 +527,7 @@ def saml_login():
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     redirect_url = OneLogin_Saml2_Utils.get_self_url(req) + url_for(
-        'saml_authorized')
+        'index.saml_authorized')
     return redirect(auth.login(return_to=redirect_url))
 
 

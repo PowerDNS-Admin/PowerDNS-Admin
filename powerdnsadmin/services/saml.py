@@ -1,17 +1,22 @@
 from datetime import datetime, timedelta
 from threading import Thread
 from flask import current_app
+import os
 
 from ..lib.certutil import KEY_FILE, CERT_FILE
-
+from ..lib.utils import urlparse
 
 class SAML(object):
     def __init__(self):
         if current_app.config['SAML_ENABLED']:
             from onelogin.saml2.auth import OneLogin_Saml2_Auth
             from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+
             self.idp_timestamp = datetime.now()
+            self.OneLogin_Saml2_Auth = OneLogin_Saml2_Auth
+            self.OneLogin_Saml2_IdPMetadataParser = OneLogin_Saml2_IdPMetadataParser
             self.idp_data = None
+
             if 'SAML_IDP_ENTITY_ID' in current_app.config:
                 self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
                     current_app.config['SAML_METADATA_URL'],
@@ -30,31 +35,38 @@ class SAML(object):
                 exit(-1)
 
     def get_idp_data(self):
-        lifetime = timedelta(
-            minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
-        if self.idp_timestamp + lifetime < datetime.now():
-            background_thread = Thread(target=self.retrieve_idp_data)
-            background_thread.start()
+
+### Currently commented out while throwing exception,
+### will take a look soon
+#        lifetime = timedelta(
+#            minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
+#        if self.idp_timestamp + lifetime < datetime.now():
+#            background_thread = Thread(target=self.retrieve_idp_data)
+#            background_thread.start()
+
+
+        self.retrieve_idp_data()
         return self.idp_data
 
     def retrieve_idp_data(self):
-        if 'SAML_IDP_SSO_BINDING' in current_app.config:
-            new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+
+       if 'SAML_IDP_SSO_BINDING' in current_app.config:
+            new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
                 current_app.config['SAML_METADATA_URL'],
                 entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None),
                 required_sso_binding=current_app.config['SAML_IDP_SSO_BINDING']
             )
-        else:
-            new_idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+       else:
+            new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
                 current_app.config['SAML_METADATA_URL'],
                 entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None))
-        if new_idp_data is not None:
+       if new_idp_data is not None:
             self.idp_data = new_idp_data
             self.idp_timestamp = datetime.now()
             current_app.logger.info(
                 "SAML: IDP Metadata successfully retrieved from: " +
                 current_app.config['SAML_METADATA_URL'])
-        else:
+       else:
             current_app.logger.info(
                 "SAML: IDP Metadata could not be retrieved")
 
@@ -87,7 +99,7 @@ class SAML(object):
             settings['sp']['NameIDFormat'] = current_app.config[
                 'SAML_NAMEID_FORMAT']
         else:
-            settings['sp']['NameIDFormat'] = idp_data.get('sp', {}).get(
+            settings['sp']['NameIDFormat'] = self.idp_data.get('sp', {}).get(
                 'NameIDFormat',
                 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified')
         settings['sp']['entityId'] = current_app.config['SAML_SP_ENTITY_ID']
@@ -118,7 +130,7 @@ class SAML(object):
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
             'signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-        settings['security']['wantAssertionsEncrypted'] = False
+        settings['security']['wantAssertionsEncrypted'] = True
         settings['security']['wantAttributeStatement'] = True
         settings['security']['wantNameId'] = True
         settings['security']['authnRequestsSigned'] = current_app.config[
@@ -141,13 +153,13 @@ class SAML(object):
             'SAML_SP_CONTACT_MAIL']
         settings['contactPerson']['technical'] = {}
         settings['contactPerson']['technical'][
-            'emailAddress'] = current_app.config['SAML_SP_CONTACT_NAME']
+            'emailAddress'] = current_app.config['SAML_SP_CONTACT_MAIL']
         settings['contactPerson']['technical'][
-            'givenName'] = current_app.config['SAML_SP_CONTACT_MAIL']
+            'givenName'] = current_app.config['SAML_SP_CONTACT_NAME']
         settings['organization'] = {}
         settings['organization']['en-US'] = {}
         settings['organization']['en-US']['displayname'] = 'PowerDNS-Admin'
         settings['organization']['en-US']['name'] = 'PowerDNS-Admin'
         settings['organization']['en-US']['url'] = own_url
-        auth = OneLogin_Saml2_Auth(req, settings)
+        auth = self.OneLogin_Saml2_Auth(req, settings)
         return auth
