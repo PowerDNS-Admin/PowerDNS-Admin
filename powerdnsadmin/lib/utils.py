@@ -5,7 +5,6 @@ import hashlib
 import ipaddress
 import os
 
-# from app import app
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
@@ -298,6 +297,10 @@ def validate_ipaddress(address):
         if isinstance(ip, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
             return [ip]
     return []
+
+
+def pretty_json(data):
+    return json.dumps(data, sort_keys=True, indent=4)
 
 
 class customBoxes:

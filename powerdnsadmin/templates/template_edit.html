@@ -313,6 +313,9 @@
                 mx_server = modal.find('#mx_server').val();
                 mx_priority = modal.find('#mx_priority').val();
                 data = mx_priority + " " + mx_server;
+                if (data && !data.endsWith('.')) {
+                    data = data + '.'
+                }
                 record_data.val(data);
                 modal.modal('hide');
             })
@@ -348,6 +351,9 @@
                 srv_port = modal.find('#srv_port').val();
                 srv_target = modal.find('#srv_target').val();
                 data = srv_priority + " " + srv_weight + " " + srv_port + " " + srv_target;
+                if (data && !data.endsWith('.')) {
+                    data = data + '.'
+                }
                 record_data.val(data);
                 modal.modal('hide');
             })

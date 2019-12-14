@@ -7,6 +7,7 @@ from distutils.version import StrictVersion
 from flask import current_app
 from urllib.parse import urljoin
 from distutils.util import strtobool
+from itertools import groupby
 
 from .. import utils
 from .base import db
@@ -89,14 +90,34 @@ class Record(object):
 
         return jdata
 
-    def add(self, domain):
+    def get_rrsets(self, domain):
         """
-        Add a record to domain
+        Query domain's rrsets via PDNS API
         """
-        # validate record first
-        r = self.get_record_data(domain)
-        records = r['records']
-        check = list(filter(lambda check: check['name'] == self.name, records))
+        headers = {}
+        headers['X-API-Key'] = self.PDNS_API_KEY
+        try:
+            jdata = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                '/servers/localhost/zones/{0}'.format(domain)),
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
+                                     headers=headers)
+        except Exception as e:
+            current_app.logger.error(
+                "Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}"
+                .format(e))
+            return False
+
+        return jdata['rrsets']
+
+    def add(self, domain_name, rrset):
+        """
+        Add a record to a domain (a reverse domain name)
+        """
+        # Validate record first
+        rrsets = self.get_rrsets(domain_name)
+        check = list(filter(lambda check: check['name'] == self.name, rrsets))
         if check:
             r = check[0]
             if r['type'] in ('A', 'AAAA', 'CNAME'):
@@ -106,315 +127,288 @@ class Record(object):
                     'Record already exists with type "A", "AAAA" or "CNAME"'
                 }
 
-        # continue if the record is ready to be added
+        # Continue if the record is ready to be added
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
-        if self.NEW_SCHEMA:
-            data = {
-                "rrsets": [{
-                    "name":
-                    self.name.rstrip('.') + '.',
-                    "type":
-                    self.type,
-                    "changetype":
-                    "REPLACE",
-                    "ttl":
-                    self.ttl,
-                    "records": [{
-                        "content": self.data,
-                        "disabled": self.status,
-                    }],
-                    "comments":
-                    [self.comment_data] if self.comment_data else []
-                }]
-            }
-        else:
-            data = {
-                "rrsets": [{
-                    "name":
-                    self.name,
-                    "type":
-                    self.type,
-                    "changetype":
-                    "REPLACE",
-                    "records": [{
-                        "content": self.data,
-                        "disabled": self.status,
-                        "name": self.name,
-                        "ttl": self.ttl,
-                        "type": self.type
-                    }],
-                    "comments":
-                    [self.comment_data] if self.comment_data else []
-                }]
-            }
+        # if self.NEW_SCHEMA:
+        #     data = {
+        #         "rrsets": [{
+        #             "name":
+        #             self.name.rstrip('.') + '.',
+        #             "type":
+        #             self.type,
+        #             "changetype":
+        #             "REPLACE",
+        #             "ttl":
+        #             self.ttl,
+        #             "records": [{
+        #                 "content": self.data,
+        #                 "disabled": self.status,
+        #             }],
+        #             "comments":
+        #             [self.comment_data] if self.comment_data else []
+        #         }]
+        #     }
+        # else:
+        #     data = {
+        #         "rrsets": [{
+        #             "name":
+        #             self.name,
+        #             "type":
+        #             self.type,
+        #             "changetype":
+        #             "REPLACE",
+        #             "records": [{
+        #                 "content": self.data,
+        #                 "disabled": self.status,
+        #                 "name": self.name,
+        #                 "ttl": self.ttl,
+        #                 "type": self.type
+        #             }],
+        #             "comments":
+        #             [self.comment_data] if self.comment_data else []
+        #         }]
+        #     }
 
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(domain_name)),
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      method='PATCH',
-                                     data=data)
+                                     data=rrset)
             current_app.logger.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
         except Exception as e:
             current_app.logger.error(
                 "Cannot add record {0}/{1}/{2} to domain {3}. DETAIL: {4}".
-                format(self.name, self.type, self.data, domain, e))
+                format(self.name, self.type, self.data, domain_name, e))
             return {
                 'status': 'error',
                 'msg':
                 'There was something wrong, please contact administrator'
             }
 
-    def compare(self, domain_name, new_records):
+    def merge_rrsets(self, rrsets):
         """
-        Compare new records with current powerdns record data
-        Input is a list of hashes (records)
+        Merge the rrsets that has same "name" and
+        "type".
+        Return: a new rrest which has multiple "records"
+        and "comments"
         """
-        # get list of current records we have in powerdns
-        current_records = self.get_record_data(domain_name)['records']
+        if not rrsets:
+            raise Exception("Empty rrsets to merge")
+        elif len(rrsets) == 1:
+            # It is unique rrest already
+            return rrsets[0]
+        else:
+            # Merge rrsets into one
+            rrest = rrsets[0]
+            for r in rrsets[1:]:
+                rrest['records'] = rrest['records'] + r['records']
+                rrest['comments'] = rrest['comments'] + r['comments']
+            return rrest
 
-        # convert them to list of list (just has [name, type]) instead of list of hash
-        # to compare easier
-        list_current_records = [[x['name'], x['type']]
-                                for x in current_records]
-        list_new_records = [[x['name'], x['type']] for x in new_records]
-
-        # get list of deleted records
-        # they are the records which exist in list_current_records but not in list_new_records
-        list_deleted_records = [
-            x for x in list_current_records if x not in list_new_records
-        ]
-
-        # convert back to list of hash
-        deleted_records = [
-            x for x in current_records
-            if [x['name'], x['type']] in list_deleted_records and (
-                x['type'] in Setting().get_records_allow_to_edit()
-                and x['type'] != 'SOA')
-        ]
-
-        # return a tuple
-        return deleted_records, new_records
-
-    def apply(self, domain, post_records):
+    def build_rrsets(self, domain_name, submitted_records):
         """
-        Apply record changes to domain
+        Build rrsets from the datatable's records
+
+        Args:
+            domain_name(str): The zone name
+            submitted_records(list): List of records submitted from PDA datatable
+
+        Returns:
+            transformed_rrsets(list): List of rrests converted from PDA datatable
         """
-        records = []
-        for r in post_records:
-            r_name = domain if r['record_name'] in [
-                '@', ''
-            ] else r['record_name'] + '.' + domain
-            r_type = r['record_type']
-            if self.PRETTY_IPV6_PTR:  # only if activated
-                if self.NEW_SCHEMA:  # only if new schema
-                    if r_type == 'PTR':  # only ptr
-                        if ':' in r['record_name']:  # dirty ipv6 check
-                            r_name = r['record_name']
+        rrsets = []
+        for record in submitted_records:
+            # Format the record name
+            record_name = "{}.{}.".format(
+                record["record_name"],
+                domain_name) if record["record_name"] not in [
+                    '@', ''
+                ] else domain_name + '.'
 
-            r_data = domain if r_type == 'CNAME' and r['record_data'] in [
-                '@', ''
-            ] else r['record_data']
+            # Format the record content, it musts end
+            # with a dot character if in following types
+            if record["record_type"] in [
+                    'MX', 'CNAME', 'SRV', 'NS'
+            ] and record["record_data"].strip()[-1:] != '.':
+                record["record_data"] += '.'
 
-            record = {
-                "name": r_name,
-                "type": r_type,
-                "content": r_data,
+            record_conntent = {
+                "content": record["record_data"],
                 "disabled":
-                True if r['record_status'] == 'Disabled' else False,
-                "ttl": int(r['record_ttl']) if r['record_ttl'] else 3600,
-                "comment_data": r['comment_data']
+                False if record['record_status'] == 'Active' else True
             }
-            records.append(record)
 
-        deleted_records, new_records = self.compare(domain, records)
+            # Format the comment
+            record_comments = [{
+                "content": record["record_comment"],
+                "account": ""
+            }] if record["record_comment"] else []
 
-        records = []
-        for r in deleted_records:
-            r_name = r['name'].rstrip(
-                '.') + '.' if self.NEW_SCHEMA else r['name']
-            r_type = r['type']
-            if self.PRETTY_IPV6_PTR:  # only if activated
-                if self.NEW_SCHEMA:  # only if new schema
-                    if r_type == 'PTR':  # only ptr
-                        if ':' in r['name']:  # dirty ipv6 check
-                            r_name = dns.reversename.from_address(
-                                r['name']).to_text()
+            # Add the formatted record to rrsets list
+            rrsets.append({
+                "name": record_name,
+                "type": record["record_type"],
+                "ttl": int(record["record_ttl"]),
+                "records": [record_conntent],
+                "comments": record_comments
+            })
 
-            record = {
-                "name": r_name,
-                "type": r_type,
-                "changetype": "DELETE",
-                "records": []
-            }
-            records.append(record)
+        # Group the records which has the same name and type.
+        # The rrest then has multiple records inside.
+        transformed_rrsets = []
 
-        postdata_for_delete = {"rrsets": records}
+        # Sort the list before using groupby
+        rrsets = sorted(rrsets, key=lambda r: (r['name'], r['type']))
+        groups = groupby(rrsets, key=lambda r: (r['name'], r['type']))
+        for k, v in groups:
+            group = list(v)
+            transformed_rrsets.append(self.merge_rrsets(group))
 
-        records = []
-        for r in new_records:
-            if self.NEW_SCHEMA:
-                r_name = r['name'].rstrip('.') + '.'
-                r_type = r['type']
-                if self.PRETTY_IPV6_PTR:  # only if activated
-                    if r_type == 'PTR':  # only ptr
-                        if ':' in r['name']:  # dirty ipv6 check
-                            r_name = r['name']
+        return transformed_rrsets
 
-                record = {
-                    "name":
-                    r_name,
-                    "type":
-                    r_type,
-                    "changetype":
-                    "REPLACE",
-                    "ttl":
-                    r['ttl'],
-                    "records": [{
-                        "content": r['content'],
-                        "disabled": r['disabled']
-                    }],
-                    "comments":
-                    r['comment_data']
-                }
-            else:
-                record = {
-                    "name":
-                    r['name'],
-                    "type":
-                    r['type'],
-                    "changetype":
-                    "REPLACE",
-                    "records": [{
-                        "content": r['content'],
-                        "disabled": r['disabled'],
-                        "name": r['name'],
-                        "ttl": r['ttl'],
-                        "type": r['type'],
-                        "priority":
-                        10,  # priority field for pdns 3.4.1. https://doc.powerdns.com/md/authoritative/upgrading/
-                    }],
-                    "comments":
-                    r['comment_data']
-                }
+    def compare(self, domain_name, submitted_records):
+        """
+        Compare the submitted records with PDNS's actual data
 
-            records.append(record)
+        Args:
+            domain_name(str): The zone name
+            submitted_records(list): List of records submitted from PDA datatable
 
-        # Adjustment to add multiple records which described in
-        # https://github.com/ngoduykhanh/PowerDNS-Admin/issues/5#issuecomment-181637576
-        final_records = []
-        records = sorted(records,
-                         key=lambda item:
-                         (item["name"], item["type"], item["changetype"]))
-        for key, group in itertools.groupby(
-                records, lambda item:
-            (item["name"], item["type"], item["changetype"])):
-            if self.NEW_SCHEMA:
-                r_name = key[0]
-                r_type = key[1]
-                r_changetype = key[2]
-
-                if self.PRETTY_IPV6_PTR:  # only if activated
-                    if r_type == 'PTR':  # only ptr
-                        if ':' in r_name:  # dirty ipv6 check
-                            r_name = dns.reversename.from_address(
-                                r_name).to_text()
-
-                new_record = {
-                    "name": r_name,
-                    "type": r_type,
-                    "changetype": r_changetype,
-                    "ttl": None,
-                    "records": []
-                }
-                for item in group:
-                    temp_content = item['records'][0]['content']
-                    temp_disabled = item['records'][0]['disabled']
-                    if key[1] in ['MX', 'CNAME', 'SRV', 'NS']:
-                        if temp_content.strip()[-1:] != '.':
-                            temp_content += '.'
-
-                    if new_record['ttl'] is None:
-                        new_record['ttl'] = item['ttl']
-                    new_record['records'].append({
-                        "content": temp_content,
-                        "disabled": temp_disabled
-                    })
-                    new_record['comments'] = item['comments']
-                final_records.append(new_record)
-
-            else:
-
-                final_records.append({
-                    "name":
-                    key[0],
-                    "type":
-                    key[1],
-                    "changetype":
-                    key[2],
-                    "records": [{
-                        "content": item['records'][0]['content'],
-                        "disabled": item['records'][0]['disabled'],
-                        "name": key[0],
-                        "ttl": item['records'][0]['ttl'],
-                        "type": key[1],
-                        "priority": 10,
-                    } for item in group]
-                })
-
-        postdata_for_new = {"rrsets": final_records}
+        Returns:
+            new_rrsets(list): List of rrests to be added
+            del_rrsets(list): List of rrests to be deleted
+        """
+        # Create submitted rrsets from submitted records
+        submitted_rrsets = self.build_rrsets(domain_name, submitted_records)
         current_app.logger.debug(
-            "postdata_for_new: {}".format(postdata_for_new))
+            "submitted_rrsets_data: \n{}".format(utils.pretty_json(submitted_rrsets)))
+
+        # Current domain's rrsets in PDNS
+        current_rrsets = self.get_rrsets(domain_name)
+        current_app.logger.debug("current_rrsets_data: \n{}".format(
+            utils.pretty_json(current_rrsets)))
+
+        # Remove comment's 'modified_at' key
+        # PDNS API always return the comments with modified_at
+        # info, we have to remove it to be able to do the dict
+        # comparison between current and submitted rrsets
+        for r in current_rrsets:
+            for comment in r['comments']:
+                del comment['modified_at']
+
+        # List of rrsets to be added
+        new_rrsets = {"rrsets": []}
+        for r in submitted_rrsets:
+            if r not in current_rrsets and r['type'] in Setting(
+            ).get_records_allow_to_edit():
+                r['changetype'] = 'REPLACE'
+                new_rrsets["rrsets"].append(r)
+
+        # List of rrsets to be removed
+        del_rrsets = {"rrsets": []}
+        for r in current_rrsets:
+            if r not in submitted_rrsets and r['type'] in Setting(
+            ).get_records_allow_to_edit():
+                r['changetype'] = 'DELETE'
+                del_rrsets["rrsets"].append(r)
+
+        current_app.logger.debug("new_rrsets: \n{}".format(utils.pretty_json(new_rrsets)))
+        current_app.logger.debug("del_rrsets: \n{}".format(utils.pretty_json(del_rrsets)))
+
+        return new_rrsets, del_rrsets
+
+    def apply(self, domain_name, submitted_records):
+        """
+        Apply record changes to a domain. This function
+        will make 2 calls to the PDNS API to DELETE and
+        REPLACE records (rrests)
+        """
         current_app.logger.debug(
-            "postdata_for_delete: {}".format(postdata_for_delete))
-        current_app.logger.info(
-            urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)))
+            "submitted_records: {}".format(submitted_records))
+
+        # Get the list of rrsets to be added and deleted
+        new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
+
+        # records = []
+        # for r in deleted_records:
+        #     r_name = r['name'].rstrip(
+        #         '.') + '.' if self.NEW_SCHEMA else r['name']
+        #     r_type = r['type']
+        #     if self.PRETTY_IPV6_PTR:  # only if activated
+        #         if self.NEW_SCHEMA:  # only if new schema
+        #             if r_type == 'PTR':  # only ptr
+        #                 if ':' in r['name']:  # dirty ipv6 check
+        #                     r_name = dns.reversename.from_address(
+        #                         r['name']).to_text()
+
+        #     record = {
+        #         "name": r_name,
+        #         "type": r_type,
+        #         "changetype": "DELETE",
+        #         "records": []
+        #     }
+        #     records.append(record)
+
+        # postdata_for_delete = {"rrsets": records}
+
+        # records = []
+        # for r in new_records:
+        #     if self.NEW_SCHEMA:
+        #         r_name = r['name'].rstrip('.') + '.'
+        #         r_type = r['type']
+        #         if self.PRETTY_IPV6_PTR:  # only if activated
+        #             if r_type == 'PTR':  # only ptr
+        #                 if ':' in r['name']:  # dirty ipv6 check
+        #                     r_name = r['name']
+
+        # Submit the changes to PDNS API
         try:
             headers = {}
             headers['X-API-Key'] = self.PDNS_API_KEY
-            jdata1 = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
-                                      headers=headers,
-                                      method='PATCH',
-                                      data=postdata_for_delete)
-            jdata2 = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
-                                      headers=headers,
-                                      timeout=int(
-                                          Setting().get('pdns_api_timeout')),
-                                      method='PATCH',
-                                      data=postdata_for_new)
 
-            if 'error' in jdata1.keys():
-                current_app.logger.error('Cannot apply record changes.')
-                current_app.logger.debug(jdata1['error'])
-                return {'status': 'error', 'msg': jdata1['error']}
-            elif 'error' in jdata2.keys():
-                current_app.logger.error('Cannot apply record changes.')
-                current_app.logger.debug(jdata2['error'])
-                return {'status': 'error', 'msg': jdata2['error']}
-            else:
-                self.auto_ptr(domain, new_records, deleted_records)
-                self.update_db_serial(domain)
-                current_app.logger.info('Record was applied successfully.')
-                return {
-                    'status': 'ok',
-                    'msg': 'Record was applied successfully'
-                }
+            if del_rrsets["rrsets"]:
+                jdata1 = utils.fetch_json(urljoin(
+                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                    '/servers/localhost/zones/{0}'.format(domain_name)),
+                                          headers=headers,
+                                          method='PATCH',
+                                          data=del_rrsets)
+                if 'error' in jdata1.keys():
+                    current_app.logger.error(
+                        'Cannot apply record changes with deleting rrsets step. PDNS error: {}'
+                        .format(jdata1['error']))
+                    return {'status': 'error', 'msg': jdata1['error']}
+
+            if new_rrsets["rrsets"]:
+                jdata2 = utils.fetch_json(
+                    urljoin(
+                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                        '/servers/localhost/zones/{0}'.format(domain_name)),
+                    headers=headers,
+                    timeout=int(Setting().get('pdns_api_timeout')),
+                    method='PATCH',
+                    data=new_rrsets)
+                if 'error' in jdata2.keys():
+                    current_app.logger.error(
+                        'Cannot apply record changes with adding rrsets step. PDNS error: {}'
+                        .format(jdata2['error']))
+                    return {'status': 'error', 'msg': jdata2['error']}
+
+            self.auto_ptr(domain_name, new_rrsets, del_rrsets)
+            self.update_db_serial(domain_name)
+            current_app.logger.info('Record was applied successfully.')
+            return {'status': 'ok', 'msg': 'Record was applied successfully', 'data': (new_rrsets, del_rrsets)}
         except Exception as e:
             current_app.logger.error(
                 "Cannot apply record changes to domain {0}. Error: {1}".format(
-                    domain, e))
+                    domain_name, e))
             current_app.logger.debug(traceback.format_exc())
             return {
                 'status': 'error',
@@ -422,48 +416,93 @@ class Record(object):
                 'There was something wrong, please contact administrator'
             }
 
-    def auto_ptr(self, domain, new_records, deleted_records):
+    def auto_ptr(self, domain_name, new_rrsets, del_rrsets):
         """
         Add auto-ptr records
         """
-        domain_obj = Domain.query.filter(Domain.name == domain).first()
-        domain_auto_ptr = DomainSetting.query.filter(
-            DomainSetting.domain == domain_obj).filter(
-                DomainSetting.setting == 'auto_ptr').first()
-        domain_auto_ptr = strtobool(
-            domain_auto_ptr.value) if domain_auto_ptr else False
+        # Check if auto_ptr is enabled for this domain
+        auto_ptr_enabled = False
+        if Setting().get('auto_ptr'):
+            auto_ptr_enabled = True
+        else:
+            domain_obj = Domain.query.filter(Domain.name == domain_name).first()
+            domain_setting = DomainSetting.query.filter(
+                DomainSetting.domain == domain_obj).filter(
+                    DomainSetting.setting == 'auto_ptr').first()
+            auto_ptr_enabled = strtobool(
+                domain_setting.value) if domain_setting else False
 
-        system_auto_ptr = Setting().get('auto_ptr')
-
-        if system_auto_ptr or domain_auto_ptr:
+        # If it is enabled, we create/delete the PTR records automatically
+        if auto_ptr_enabled:
             try:
+                RECORD_TYPE_TO_PTR = ['A', 'AAAA']
+                new_rrsets = new_rrsets['rrsets']
+                del_rrsets = del_rrsets['rrsets']
+
+                if not new_rrsets and not del_rrsets:
+                    msg = 'No changes detected. Skipping auto ptr...'
+                    current_app.logger.info(msg)
+                    return {'status': 'ok', 'msg': msg}
+
+                new_rrsets = [
+                    r for r in new_rrsets if r['type'] in RECORD_TYPE_TO_PTR
+                ]
+                del_rrsets = [
+                    r for r in del_rrsets if r['type'] in RECORD_TYPE_TO_PTR
+                ]
+
                 d = Domain()
-                for r in new_records:
-                    if r['type'] in ['A', 'AAAA']:
-                        r_name = r['name'] + '.'
-                        r_content = r['content']
+                for r in new_rrsets:
+                    for record in r['records']:
+                        # Format the reverse record name
+                        # It is the reverse of forward record's content.
                         reverse_host_address = dns.reversename.from_address(
-                            r_content).to_text()
+                            record['content']).to_text()
+
+                        # Create the reverse domain name in PDNS
                         domain_reverse_name = d.get_reverse_domain_name(
                             reverse_host_address)
-                        d.create_reverse_domain(domain, domain_reverse_name)
-                        self.name = dns.reversename.from_address(
-                            r_content).to_text().rstrip('.')
-                        self.type = 'PTR'
-                        self.status = r['disabled']
-                        self.ttl = r['ttl']
-                        self.data = r_name
-                        self.add(domain_reverse_name)
-                for r in deleted_records:
-                    if r['type'] in ['A', 'AAAA']:
-                        r_content = r['content']
+                        d.create_reverse_domain(domain_name,
+                                                domain_reverse_name)
+
+                        # Build the rrset for reverse zone updating
+                        rrset_data = [{
+                            "changetype":
+                            "REPLACE",
+                            "name":
+                            reverse_host_address,
+                            "ttl":
+                            r['ttl'],
+                            "type":
+                            "PTR",
+                            "records": [{
+                                "content": r['name'],
+                                "disabled": record['disabled']
+                            }],
+                            "comments": []
+                        }]
+
+                        # Format the rrset
+                        rrset = {"rrsets": rrset_data}
+                        self.add(domain_reverse_name, rrset)
+
+                for r in del_rrsets:
+                    for record in r['records']:
+                        # Format the reverse record name
+                        # It is the reverse of forward record's content.
                         reverse_host_address = dns.reversename.from_address(
-                            r_content).to_text()
+                            record['content']).to_text()
+
+                        # Create the reverse domain name in PDNS
                         domain_reverse_name = d.get_reverse_domain_name(
                             reverse_host_address)
+                        d.create_reverse_domain(domain_name,
+                                                domain_reverse_name)
+
+                        # Delete the reverse zone
                         self.name = reverse_host_address
                         self.type = 'PTR'
-                        self.data = r_content
+                        self.data = record['content']
                         self.delete(domain_reverse_name)
                 return {
                     'status': 'ok',
@@ -472,7 +511,7 @@ class Record(object):
             except Exception as e:
                 current_app.logger.error(
                     "Cannot update auto-ptr record changes to domain {0}. Error: {1}"
-                    .format(domain, e))
+                    .format(domain_name, e))
                 current_app.logger.debug(traceback.format_exc())
                 return {
                     'status':
