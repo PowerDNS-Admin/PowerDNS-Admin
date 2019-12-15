@@ -6,6 +6,7 @@ import os
 from ..lib.certutil import KEY_FILE, CERT_FILE
 from ..lib.utils import urlparse
 
+
 class SAML(object):
     def __init__(self):
         if current_app.config['SAML_ENABLED']:
@@ -34,10 +35,10 @@ class SAML(object):
                     'SAML: IDP Metadata initial load failed')
                 exit(-1)
 
-
     def get_idp_data(self):
 
-        lifetime = timedelta(minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
+        lifetime = timedelta(
+            minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
 
         if self.idp_timestamp + lifetime < datetime.now():
             background_thread = Thread(target=self.retrieve_idp_data())
@@ -45,26 +46,25 @@ class SAML(object):
 
         return self.idp_data
 
-
     def retrieve_idp_data(self):
 
-       if 'SAML_IDP_SSO_BINDING' in current_app.config:
+        if 'SAML_IDP_SSO_BINDING' in current_app.config:
             new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
                 current_app.config['SAML_METADATA_URL'],
                 entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None),
                 required_sso_binding=current_app.config['SAML_IDP_SSO_BINDING']
             )
-       else:
+        else:
             new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
                 current_app.config['SAML_METADATA_URL'],
                 entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None))
-       if new_idp_data is not None:
+        if new_idp_data is not None:
             self.idp_data = new_idp_data
             self.idp_timestamp = datetime.now()
             current_app.logger.info(
                 "SAML: IDP Metadata successfully retrieved from: " +
                 current_app.config['SAML_METADATA_URL'])
-       else:
+        else:
             current_app.logger.info(
                 "SAML: IDP Metadata could not be retrieved")
 
