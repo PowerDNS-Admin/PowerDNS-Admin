@@ -663,7 +663,7 @@ def saml_authorized():
         user.update_profile()
         session['authentication_type'] = 'SAML'
         login_user(user, remember=False)
-        return redirect(url_for('index'))
+        return redirect(url_for('index.login'))
     else:
         return render_template('errors/SAML.html', errors=errors)
 
