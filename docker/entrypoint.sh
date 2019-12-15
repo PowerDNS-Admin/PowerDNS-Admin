@@ -1,5 +1,5 @@
-#!/bin/bash
-set -Eeuo pipefail
+#!/bin/sh
+set -euo pipefail
 cd /app
 
 GUNICORN_TIMEOUT="${GUINCORN_TIMEOUT:-120}"
