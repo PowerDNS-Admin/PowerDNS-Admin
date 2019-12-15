@@ -3,14 +3,10 @@ import json
 import requests
 import hashlib
 import ipaddress
-import os
 
-# from app import app
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
-
-from .certutil import KEY_FILE, CERT_FILE
 
 
 def auth_from_url(url):
@@ -183,101 +179,6 @@ def email_to_gravatar_url(email="", size=100):
 
     hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
     return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)
-
-
-def prepare_flask_request(request):
-    # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
-    url_data = urlparse(request.url)
-    return {
-        'https': 'on' if request.scheme == 'https' else 'off',
-        'http_host': request.host,
-        'server_port': url_data.port,
-        'script_name': request.path,
-        'get_data': request.args.copy(),
-        'post_data': request.form.copy(),
-        # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-        'lowercase_urlencoding': True,
-        'query_string': request.query_string
-    }
-
-
-def init_saml_auth(req):
-    own_url = ''
-    if req['https'] == 'on':
-        own_url = 'https://'
-    else:
-        own_url = 'http://'
-    own_url += req['http_host']
-    metadata = get_idp_data()
-    settings = {}
-    settings['sp'] = {}
-    if 'SAML_NAMEID_FORMAT' in app.config:
-        settings['sp']['NameIDFormat'] = app.config['SAML_NAMEID_FORMAT']
-    else:
-        settings['sp']['NameIDFormat'] = idp_data.get('sp', {}).get(
-            'NameIDFormat',
-            'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified')
-    settings['sp']['entityId'] = app.config['SAML_SP_ENTITY_ID']
-    if os.path.isfile(CERT_FILE):
-        cert = open(CERT_FILE, "r").readlines()
-        settings['sp']['x509cert'] = "".join(cert)
-    if os.path.isfile(KEY_FILE):
-        key = open(KEY_FILE, "r").readlines()
-        settings['sp']['privateKey'] = "".join(key)
-    settings['sp']['assertionConsumerService'] = {}
-    settings['sp']['assertionConsumerService'][
-        'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
-    settings['sp']['assertionConsumerService'][
-        'url'] = own_url + '/saml/authorized'
-    settings['sp']['attributeConsumingService'] = {}
-    settings['sp']['singleLogoutService'] = {}
-    settings['sp']['singleLogoutService'][
-        'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-    settings['sp']['singleLogoutService']['url'] = own_url + '/saml/sls'
-    settings['idp'] = metadata['idp']
-    settings['strict'] = True
-    settings['debug'] = app.config['SAML_DEBUG']
-    settings['security'] = {}
-    settings['security'][
-        'digestAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-    settings['security']['metadataCacheDuration'] = None
-    settings['security']['metadataValidUntil'] = None
-    settings['security']['requestedAuthnContext'] = True
-    settings['security'][
-        'signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-    settings['security']['wantAssertionsEncrypted'] = False
-    settings['security']['wantAttributeStatement'] = True
-    settings['security']['wantNameId'] = True
-    settings['security']['authnRequestsSigned'] = app.config[
-        'SAML_SIGN_REQUEST']
-    settings['security']['logoutRequestSigned'] = app.config[
-        'SAML_SIGN_REQUEST']
-    settings['security']['logoutResponseSigned'] = app.config[
-        'SAML_SIGN_REQUEST']
-    settings['security']['nameIdEncrypted'] = False
-    settings['security']['signMetadata'] = True
-    settings['security']['wantAssertionsSigned'] = True
-    settings['security']['wantMessagesSigned'] = app.config.get(
-        'SAML_WANT_MESSAGE_SIGNED', True)
-    settings['security']['wantNameIdEncrypted'] = False
-    settings['contactPerson'] = {}
-    settings['contactPerson']['support'] = {}
-    settings['contactPerson']['support']['emailAddress'] = app.config[
-        'SAML_SP_CONTACT_NAME']
-    settings['contactPerson']['support']['givenName'] = app.config[
-        'SAML_SP_CONTACT_MAIL']
-    settings['contactPerson']['technical'] = {}
-    settings['contactPerson']['technical']['emailAddress'] = app.config[
-        'SAML_SP_CONTACT_NAME']
-    settings['contactPerson']['technical']['givenName'] = app.config[
-        'SAML_SP_CONTACT_MAIL']
-    settings['organization'] = {}
-    settings['organization']['en-US'] = {}
-    settings['organization']['en-US']['displayname'] = 'PowerDNS-Admin'
-    settings['organization']['en-US']['name'] = 'PowerDNS-Admin'
-    settings['organization']['en-US']['url'] = own_url
-    auth = OneLogin_Saml2_Auth(req, settings)
-    return auth
 
 
 def display_setting_state(value):
