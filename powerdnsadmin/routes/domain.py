@@ -168,7 +168,7 @@ def add():
                         record_row = {
                             'record_data': template_record.data,
                             'record_name': template_record.name,
-                            'record_status': template_record.status,
+                            'record_status': 'Active' if template_record.status else 'Disabled',
                             'record_ttl': template_record.ttl,
                             'record_type': template_record.type,
                             'comment_data': [{'content': template_record.comment, 'account': ''}]

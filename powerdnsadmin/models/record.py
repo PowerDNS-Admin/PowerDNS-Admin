@@ -3,7 +3,6 @@ import traceback
 import dns.reversename
 import dns.inet
 import dns.name
-from distutils.version import StrictVersion
 from flask import current_app
 from urllib.parse import urljoin
 from distutils.util import strtobool
@@ -40,55 +39,6 @@ class Record(object):
         self.PDNS_VERSION = Setting().get('pdns_version')
         self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
         self.PRETTY_IPV6_PTR = Setting().get('pretty_ipv6_ptr')
-
-        if StrictVersion(self.PDNS_VERSION) >= StrictVersion('4.0.0'):
-            self.NEW_SCHEMA = True
-        else:
-            self.NEW_SCHEMA = False
-
-    def get_record_data(self, domain):
-        """
-        Query domain's DNS records via API
-        """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
-        try:
-            jdata = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
-                                     timeout=int(
-                                         Setting().get('pdns_api_timeout')),
-                                     headers=headers)
-        except Exception as e:
-            current_app.logger.error(
-                "Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}"
-                .format(e))
-            return False
-
-        if self.NEW_SCHEMA:
-            rrsets = jdata['rrsets']
-            for rrset in rrsets:
-                if rrset['records']:
-                    r_name = rrset['name'].rstrip('.')
-                    if self.PRETTY_IPV6_PTR:  # only if activated
-                        if rrset['type'] == 'PTR':  # only ptr
-                            if 'ip6.arpa' in r_name:  # only if v6-ptr
-                                r_name = dns.reversename.to_address(
-                                    dns.name.from_text(r_name))
-
-                    rrset['name'] = r_name
-                    rrset['content'] = rrset['records'][0]['content']
-                    rrset['disabled'] = rrset['records'][0]['disabled']
-
-                    # Get the record's comment. PDNS support multiple comments
-                    # per record. However, we are only interested in the 1st
-                    # one, for now.
-                    rrset['comment_data'] = {"content": "", "account": ""}
-                    if rrset['comments']:
-                        rrset['comment_data'] = rrset['comments'][0]
-            return {'records': rrsets}
-
-        return jdata
 
     def get_rrsets(self, domain):
         """
@@ -524,17 +474,13 @@ class Record(object):
         """
         Check if record is present within domain records, and if it's present set self to found record
         """
-        jdata = self.get_record_data(domain)
-        jrecords = jdata['records']
-
-        for jr in jrecords:
-            if jr['name'] == self.name and jr['type'] == self.type:
-                self.name = jr['name']
-                self.type = jr['type']
-                self.status = jr['disabled']
-                self.ttl = jr['ttl']
-                self.data = jr['content']
-                self.priority = 10
+        rrsets = self.get_rrsets(domain)
+        for r in rrsets:
+            if r['name'].rstrip('.') == self.name and r['type'] == self.type and r['records']:
+                self.type = r['type']
+                self.status = r['records'][0]['disabled']
+                self.ttl = r['ttl']
+                self.data = r['records'][0]['content']
                 return True
         return False
 
@@ -545,42 +491,23 @@ class Record(object):
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
-        if self.NEW_SCHEMA:
-            data = {
-                "rrsets": [{
-                    "name":
-                    self.name + '.',
-                    "type":
-                    self.type,
-                    "ttl":
-                    self.ttl,
-                    "changetype":
-                    "REPLACE",
-                    "records": [{
-                        "content": content,
-                        "disabled": self.status,
-                    }]
+        data = {
+            "rrsets": [{
+                "name":
+                self.name + '.',
+                "type":
+                self.type,
+                "ttl":
+                self.ttl,
+                "changetype":
+                "REPLACE",
+                "records": [{
+                    "content": content,
+                    "disabled": self.status,
                 }]
-            }
-        else:
-            data = {
-                "rrsets": [{
-                    "name":
-                    self.name,
-                    "type":
-                    self.type,
-                    "changetype":
-                    "REPLACE",
-                    "records": [{
-                        "content": content,
-                        "disabled": self.status,
-                        "name": self.name,
-                        "ttl": self.ttl,
-                        "type": self.type,
-                        "priority": 10
-                    }]
-                }]
-            }
+            }]
+        }
+
         try:
             utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +

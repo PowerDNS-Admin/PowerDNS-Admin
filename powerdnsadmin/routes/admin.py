@@ -2,7 +2,6 @@ import re
 import json
 import traceback
 from ast import literal_eval
-from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash
 from flask_login import login_required, current_user
 
@@ -829,59 +828,42 @@ def create_template_from_zone():
                               created_by=current_user.username)
             history.add()
 
+            # After creating the domain in Domain Template in the,
+            # local DB. We add records into it Record Template.
             records = []
-            r = Record()
             domain = Domain.query.filter(Domain.name == domain_name).first()
             if domain:
-                # query domain info from PowerDNS API
-                zone_info = r.get_record_data(domain.name)
-                if zone_info:
-                    jrecords = zone_info['records']
-
-                if StrictVersion(Setting().get(
-                        'pdns_version')) >= StrictVersion('4.0.0'):
-                    for jr in jrecords:
-                        if jr['type'] in Setting().get_records_allow_to_edit():
-                            name = '@' if jr['name'] == domain_name else re.sub(
-                                r'\.{}$'.format(domain_name), '', jr['name'])
-                            for subrecord in jr['records']:
-                                record = DomainTemplateRecord(
-                                    name=name,
-                                    type=jr['type'],
-                                    status=True
-                                    if subrecord['disabled'] else False,
-                                    ttl=jr['ttl'],
-                                    data=subrecord['content'],
-                                    comment=jr['comment_data']['content'])
-                                records.append(record)
-                else:
-                    for jr in jrecords:
-                        if jr['type'] in Setting().get_records_allow_to_edit():
-                            name = '@' if jr['name'] == domain_name else re.sub(
-                                r'\.{}$'.format(domain_name), '', jr['name'])
-                            record = DomainTemplateRecord(
+                # Query zone's rrsets from PowerDNS API
+                rrsets = Record().get_rrsets(domain.name)
+                if rrsets:
+                    for r in rrsets:
+                        name = '@' if r['name'] == domain_name + '.' else r[
+                            'name'].replace('.{}.'.format(domain_name), '')
+                        for record in r['records']:
+                            t_record = DomainTemplateRecord(
                                 name=name,
-                                type=jr['type'],
-                                status=True if jr['disabled'] else False,
-                                ttl=jr['ttl'],
-                                data=jr['content'],
-                                comment=jr['comment_data']['content'])
-                            records.append(record)
+                                type=r['type'],
+                                status=False if record['disabled'] else True,
+                                ttl=r['ttl'],
+                                data=record['content'])
+                            records.append(t_record)
 
-            result_records = t.replace_records(records)
+            result = t.replace_records(records)
 
-            if result_records['status'] == 'ok':
+            if result['status'] == 'ok':
                 return make_response(
                     jsonify({
                         'status': 'ok',
                         'msg': result['msg']
                     }), 200)
             else:
+                # Revert the domain template (remove it)
+                # ff we cannot add records.
                 t.delete_template()
                 return make_response(
                     jsonify({
                         'status': 'error',
-                        'msg': result_records['msg']
+                        'msg': result['msg']
                     }), 500)
 
         else:
@@ -918,7 +900,7 @@ def edit_template(template):
                     record = DomainTemplateRecord(
                         name=jr.name,
                         type=jr.type,
-                        status='Disabled' if jr.status else 'Active',
+                        status='Active' if jr.status else 'Disabled',
                         ttl=jr.ttl,
                         data=jr.data,
                         comment=jr.comment if jr.comment else '')
@@ -952,14 +934,14 @@ def apply_records(template):
             type = j['record_type']
             data = j['record_data']
             comment = j['record_comment']
-            disabled = True if j['record_status'] == 'Disabled' else False
+            status = 0 if j['record_status'] == 'Disabled' else 1
             ttl = int(j['record_ttl']) if j['record_ttl'] else 3600
 
             dtr = DomainTemplateRecord(name=name,
                                        type=type,
                                        data=data,
                                        comment=comment,
-                                       status=disabled,
+                                       status=status,
                                        ttl=ttl)
             records.append(dtr)
 
