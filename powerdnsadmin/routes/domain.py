@@ -1,10 +1,13 @@
 import re
 import json
 import traceback
+import dns.name
+import dns.reversename
 from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify
 from flask_login import login_required, current_user
 
+from ..lib.utils import pretty_json
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec
 from ..models.user import User
 from ..models.account import Account
@@ -27,17 +30,17 @@ domain_bp = Blueprint('domain',
 @login_required
 @can_access_domain
 def domain(domain_name):
-    r = Record()
+    # Validate the domain existing in the local DB
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
         abort(404)
 
-    # query domain info from PowerDNS API
-    zone_info = r.get_record_data(domain.name)
-    if zone_info:
-        jrecords = zone_info['records']
-    else:
-        # can not get any record, API server might be down
+    # Query domain's rrsets from PowerDNS API
+    rrsets = Record().get_rrsets(domain.name)
+    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+
+    # API server might be down, misconfigured
+    if not rrsets:
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
@@ -49,45 +52,52 @@ def domain(domain_name):
     ttl_options = Setting().get_ttl_options()
     records = []
 
+    # Render the "records" to display in HTML datatable
+    #
+    # BUG: If we have multiple records with the same name
+    # and each record has its own comment, the display of
+    # [record-comment] may not consistent because PDNS API
+    # returns the rrsets (records, comments) has different
+    # order than its database records.
+    # TODO:
+    #   - Find a way to make it consistent, or
+    #   - Only allow one comment for that case
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
-        for jr in jrecords:
-            if jr['type'] in records_allow_to_edit:
-                for subrecord in jr['records']:
-                    record = RecordEntry(name=jr['name'],
-                                         type=jr['type'],
-                                         status='Disabled' if
-                                         subrecord['disabled'] else 'Active',
-                                         ttl=jr['ttl'],
-                                         data=subrecord['content'],
-                                         comment=jr['comment_data']['content'],
-                                         is_allowed_edit=True)
-                    records.append(record)
-        if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
-            editable_records = forward_records_allow_to_edit
-        else:
-            editable_records = reverse_records_allow_to_edit
-        return render_template('domain.html',
-                               domain=domain,
-                               records=records,
-                               editable_records=editable_records,
-                               quick_edit=quick_edit,
-                               ttl_options=ttl_options)
+        for r in rrsets:
+            if r['type'] in records_allow_to_edit:
+                r_name = r['name'].rstrip('.')
+
+                # If it is reverse zone and pretty_ipv6_ptr setting
+                # is enabled, we reformat the name for ipv6 records.
+                if Setting().get('pretty_ipv6_ptr') and r[
+                        'type'] == 'PTR' and 'ip6.arpa' in r_name:
+                    r_name = dns.reversename.to_address(
+                        dns.name.from_text(r_name))
+
+                # Create the list of records in format that
+                # PDA jinja2 template can understand.
+                index = 0
+                for record in r['records']:
+                    record_entry = RecordEntry(
+                        name=r_name,
+                        type=r['type'],
+                        status='Disabled' if record['disabled'] else 'Active',
+                        ttl=r['ttl'],
+                        data=record['content'],
+                        comment=r['comments'][index]['content']
+                        if r['comments'] else '',
+                        is_allowed_edit=True)
+                    index += 1
+                    records.append(record_entry)
     else:
-        for jr in jrecords:
-            if jr['type'] in records_allow_to_edit:
-                record = RecordEntry(
-                    name=jr['name'],
-                    type=jr['type'],
-                    status='Disabled' if jr['disabled'] else 'Active',
-                    ttl=jr['ttl'],
-                    data=jr['content'],
-                    comment=jr['comment_data']['content'],
-                    is_allowed_edit=True)
-                records.append(record)
-    if not re.search('ip6\.arpa|in-addr\.arpa$', domain_name):
+        # Unsupported version
+        abort(500)
+
+    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
         editable_records = forward_records_allow_to_edit
     else:
         editable_records = reverse_records_allow_to_edit
+
     return render_template('domain.html',
                            domain=domain,
                            records=records,
@@ -158,7 +168,7 @@ def add():
                         record_row = {
                             'record_data': template_record.data,
                             'record_name': template_record.name,
-                            'record_status': template_record.status,
+                            'record_status': 'Active' if template_record.status else 'Disabled',
                             'record_ttl': template_record.ttl,
                             'record_type': template_record.type,
                             'comment_data': [{'content': template_record.comment, 'account': ''}]
@@ -276,11 +286,11 @@ def change_type(domain_name):
     #TODO: Validate ip addresses input
     domain_master_ips = []
     if domain_type == 'slave' and request.form.getlist('domain_master_address'):
-            domain_master_string = request.form.getlist(
-                'domain_master_address')[0]
-            domain_master_string = domain_master_string.replace(
-                ' ', '')
-            domain_master_ips = domain_master_string.split(',')
+        domain_master_string = request.form.getlist(
+            'domain_master_address')[0]
+        domain_master_string = domain_master_string.replace(
+            ' ', '')
+        domain_master_ips = domain_master_string.split(',')
 
     d = Domain()
     status = d.update_kind(domain_name=domain_name,
@@ -354,19 +364,16 @@ def change_account(domain_name):
 @login_required
 @can_access_domain
 def record_apply(domain_name):
-    #TODO: filter removed records / name modified records.
-
     try:
         jdata = request.json
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']
         domain = Domain.query.filter(Domain.name == domain_name).first()
-        current_app.logger.debug(
-            'Your submitted serial: {0}'.format(submitted_serial))
-        current_app.logger.debug('Current domain serial: {0}'.format(
-            domain.serial))
 
         if domain:
+            current_app.logger.debug('Current domain serial: {0}'.format(
+                domain.serial))
+
             if int(submitted_serial) != domain.serial:
                 return make_response(
                     jsonify({
@@ -384,26 +391,17 @@ def record_apply(domain_name):
                     'Domain name {0} does not exist'.format(domain_name)
                 }), 404)
 
-        # Modify the record's comment data. We append
-        # the "current_user" into account field as it
-        # a field with user-defined meaning
-        for sr in submitted_record:
-            if sr.get('record_comment'):
-                sr['comment_data'] = [{
-                    'content': sr['record_comment'],
-                    'account': current_user.username
-                }]
-            else:
-                sr['comment_data'] = []
-
         r = Record()
         result = r.apply(domain_name, submitted_record)
         if result['status'] == 'ok':
-            jdata.pop('_csrf_token',
-                      None)  # don't store csrf token in the history.
             history = History(
                 msg='Apply record changes to domain {0}'.format(domain_name),
-                detail=str(json.dumps(jdata)),
+                detail=str(
+                    json.dumps({
+                        "domain": domain_name,
+                        "add_rrests": result['data'][0]['rrsets'],
+                        "del_rrests": result['data'][1]['rrsets']
+                    })),
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)

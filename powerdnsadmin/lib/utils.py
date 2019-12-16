@@ -201,6 +201,10 @@ def validate_ipaddress(address):
     return []
 
 
+def pretty_json(data):
+    return json.dumps(data, sort_keys=True, indent=4)
+
+
 class customBoxes:
     boxes = {
         "reverse": (" ", " "),

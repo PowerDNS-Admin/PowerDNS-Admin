@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import traceback
 import datetime
@@ -161,6 +162,7 @@ def login():
         session['user_id'] = user.id
         login_user(user, remember=False)
         session['authentication_type'] = 'OAuth'
+        signin_history(user.username, 'Google OAuth', True)
         return redirect(url_for('index.index'))
 
     if 'github_token' in session:
@@ -187,6 +189,7 @@ def login():
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
         login_user(user, remember=False)
+        signin_history(user.username, 'Github OAuth', True)
         return redirect(url_for('index.index'))
 
     if 'azure_token' in session:
@@ -225,6 +228,7 @@ def login():
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
         login_user(user, remember=False)
+        signin_history(user.username, 'Azure OAuth', True)
         return redirect(url_for('index.index'))
 
     if 'oidc_token' in session:
@@ -250,6 +254,7 @@ def login():
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
         login_user(user, remember=False)
+        signin_history(user.username, 'OIDC OAuth', True)
         return redirect(url_for('index.index'))
 
     if request.method == 'GET':
@@ -272,6 +277,7 @@ def login():
             auth = user.is_validate(method=auth_method,
                                     src_ip=request.remote_addr)
             if auth == False:
+                signin_history(user.username, 'LOCAL', False)
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        error='Invalid credentials')
@@ -288,6 +294,7 @@ def login():
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
+                    signin_history(user.username, 'LOCAL', False)
                     return render_template('login.html',
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
@@ -297,6 +304,7 @@ def login():
                                        error='Token required')
 
         login_user(user, remember=remember_me)
+        signin_history(user.username, 'LOCAL', True)
         return redirect(session.get('next', url_for('index.index')))
 
 
@@ -307,6 +315,37 @@ def clear_session():
     session.pop('authentication_type', None)
     session.clear()
     logout_user()
+
+
+def signin_history(username, authenticator, success):
+    # Get user ip address
+    if request.headers.getlist("X-Forwarded-For"):
+        request_ip = request.headers.getlist("X-Forwarded-For")[0]
+        request_ip = request_ip.split(',')[0]
+    else:
+        request_ip = request.remote_addr
+
+    # Write log
+    if success:
+        str_success = 'succeeded'
+        current_app.logger.info(
+            "User {} authenticated successfully via {} from {}".format(
+                username, authenticator, request_ip))
+    else:
+        str_success = 'failed'
+        current_app.logger.warning(
+            "User {} failed to authenticate via {} from {}".format(
+                username, authenticator, request_ip))
+
+    # Write history
+    History(msg='User {} authentication {}'.format(username, str_success),
+            detail=str({
+                "username": username,
+                "authenticator": authenticator,
+                "ip_address": request_ip,
+                "success": 1 if success else 0
+            }),
+            created_by='System').add()
 
 
 @index_bp.route('/logout')
@@ -427,7 +466,7 @@ def dyndns_update():
 
     domain = None
     domain_segments = hostname.split('.')
-    for index in range(len(domain_segments)):
+    for _index in range(len(domain_segments)):
         full_domain = '.'.join(domain_segments)
         potential_domain = Domain.query.filter(
             Domain.name == full_domain).first()
@@ -468,7 +507,7 @@ def dyndns_update():
                 # Record content did not change, return 'nochg'
                 history = History(
                     msg=
-                    "DynDNS update: attempted update of {0} but record did not change"
+                    "DynDNS update: attempted update of {0} but record already up-to-date"
                     .format(hostname),
                     created_by=current_user.username)
                 history.add()
@@ -477,10 +516,14 @@ def dyndns_update():
                 result = r.update(domain.name, str(ip))
                 if result['status'] == 'ok':
                     history = History(
-                        msg=
-                        'DynDNS update: updated {0} record {1} in zone {2}, it changed from {3} to {4}'
-                        .format(rtype, hostname, domain.name, oldip, str(ip)),
-                        detail=str(result),
+                        msg='DynDNS update: updated {} successfully'.format(hostname),
+                        detail=str({
+                            "domain": domain.name,
+                            "record": hostname,
+                            "type": rtype,
+                            "old_value": oldip,
+                            "new_value": str(ip)
+                        }),
                         created_by=current_user.username)
                     history.add()
                     response = 'good'
@@ -493,18 +536,33 @@ def dyndns_update():
                     DomainSetting.setting == 'create_via_dyndns').first()
             if (ondemand_creation is not None) and (strtobool(
                     ondemand_creation.value) == True):
-                record = Record(name=hostname,
-                                type=rtype,
-                                data=str(ip),
-                                status=False,
-                                ttl=3600)
-                result = record.add(domain.name)
+
+                # Build the rrset
+                rrset_data = [{
+                    "changetype": "REPLACE",
+                    "name": hostname + '.',
+                    "ttl": 3600,
+                    "type": rtype,
+                    "records": [{
+                        "content": str(ip),
+                        "disabled": False
+                    }],
+                    "comments": []
+                }]
+
+                # Format the rrset
+                rrset = {"rrsets": rrset_data}
+                result = Record().add(domain.name, rrset)
                 if result['status'] == 'ok':
                     history = History(
                         msg=
-                        'DynDNS update: created record {0} in zone {1}, it now represents {2}'
+                        'DynDNS update: created record {0} in zone {1} successfully'
                         .format(hostname, domain.name, str(ip)),
-                        detail=str(result),
+                        detail=str({
+                            "domain": domain.name,
+                            "record": hostname,
+                            "value": str(ip)
+                        }),
                         created_by=current_user.username)
                     history.add()
                     response = 'good'
@@ -663,6 +721,7 @@ def saml_authorized():
         user.update_profile()
         session['authentication_type'] = 'SAML'
         login_user(user, remember=False)
+        signin_history(user.username, 'SAML', True)
         return redirect(url_for('index.login'))
     else:
         return render_template('errors/SAML.html', errors=errors)
@@ -683,7 +742,7 @@ def handle_account(account_name):
     clean_name = ''.join(c for c in account_name.lower()
                          if c in "abcdefghijklmnopqrstuvwxyz0123456789")
     if len(clean_name) > Account.name.type.length:
-        logging.error(
+        current_app.logger.error(
             "Account name {0} too long. Truncated.".format(clean_name))
     account = Account.query.filter_by(name=clean_name).first()
     if not account:
