@@ -3,7 +3,6 @@ import traceback
 from flask import current_app
 from urllib.parse import urljoin
 from distutils.util import strtobool
-from distutils.version import StrictVersion
 
 from ..lib import utils
 from .base import db, domain_apikey
@@ -56,11 +55,6 @@ class Domain(db.Model):
         self.PDNS_API_KEY = Setting().get('pdns_api_key')
         self.PDNS_VERSION = Setting().get('pdns_version')
         self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
-
-        if StrictVersion(self.PDNS_VERSION) >= StrictVersion('4.0.0'):
-            self.NEW_SCHEMA = True
-        else:
-            self.NEW_SCHEMA = False
 
     def __repr__(self):
         return '<Domain {0}>'.format(self.name)
@@ -214,9 +208,8 @@ class Domain(db.Model):
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
-        if self.NEW_SCHEMA:
-            domain_name = domain_name + '.'
-            domain_ns = [ns + '.' for ns in domain_ns]
+        domain_name = domain_name + '.'
+        domain_ns = [ns + '.' for ns in domain_ns]
 
         if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
             soa_edit_api = 'DEFAULT'
