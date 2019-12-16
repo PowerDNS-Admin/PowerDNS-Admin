@@ -183,7 +183,7 @@ def manage_user():
                 # Then delete the user
                 result = user.delete()
                 if result:
-                    history = History(msg='Delete username {0}'.format(data),
+                    history = History(msg='Delete user {0}'.format(data),
                                       created_by=current_user.username)
                     history.add()
                     return make_response(
