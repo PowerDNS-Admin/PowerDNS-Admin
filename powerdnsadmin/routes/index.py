@@ -326,7 +326,6 @@ def signin_history(username, authenticator, success):
         request_ip = request.remote_addr
 
     # Write log
-    str_success = 'succeeded' if success else 'failed'
     if success:
         str_success = 'succeeded'
         current_app.logger.info(

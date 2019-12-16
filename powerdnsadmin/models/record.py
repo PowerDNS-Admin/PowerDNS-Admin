@@ -57,7 +57,7 @@ class Record(object):
             current_app.logger.error(
                 "Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}"
                 .format(e))
-            return False
+            return []
 
         return jdata['rrsets']
 
