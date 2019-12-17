@@ -169,8 +169,6 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    PDNS_VERSION = '{{ SETTING.get("pdns_version") }}';
-
 //SYBPATCH START//
     function setUpDomainList(id ,url){
         $(id).DataTable({
