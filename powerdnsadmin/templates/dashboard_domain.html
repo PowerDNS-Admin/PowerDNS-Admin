@@ -19,12 +19,12 @@
 {% endmacro %}
 
 {% macro master(domain) %}
-    {% if domain.master == '[]'%}N/A{% else %}{{ domain.master|display_master_name }}{% endif %}
+    {% if domain.master == '[]'%}-{% else %}{{ domain.master|display_master_name }}{% endif %}
 {% endmacro %}
 
 {% macro account(domain) %}
     {% if current_user.role.name in ['Administrator', 'Operator'] %}
-      {% if domain.account_description != "" %}{{ domain.account.description }} {% endif %}[{{ domain.account.name }}]
+      {{ domain.account.name if domain.account else '-' }}
     {% endif %}
 {% endmacro %}
 

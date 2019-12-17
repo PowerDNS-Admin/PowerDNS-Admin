@@ -43,9 +43,9 @@ def domains_custom(boxId):
 
     columns = [
         Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master,
-        Domain.account
+        Domain.account_id
     ]
-    # History.created_on.desc()
+
     order_by = []
     for i in range(len(columns)):
         column_index = request.args.get("order[{0}][column]".format(i))
