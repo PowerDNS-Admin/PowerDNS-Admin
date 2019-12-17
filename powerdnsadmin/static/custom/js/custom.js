@@ -268,3 +268,20 @@ json_library = {
             .replace(jsonLine, json_library.replacer);
     }
 };
+
+// set count down in second on an element
+function timer(elToUpdate, maxTime) {
+    elToUpdate.text(maxTime + "s");
+
+    var interval = setInterval(function () {
+        if (maxTime > 0) {
+            maxTime--;
+            elToUpdate.text(maxTime + "s");
+        }
+        else {
+            clearInterval(interval);
+        }
+    }, 1000);
+
+    return interval;
+}

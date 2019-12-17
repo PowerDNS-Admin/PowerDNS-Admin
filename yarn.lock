@@ -701,6 +701,13 @@ jsonparse@^1.2.0:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/jsonparse/-/jsonparse-1.3.1.tgz#3f4dae4a91fac315f71062f8521cc239f1366280"
 
+jtimeout@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/jtimeout/-/jtimeout-3.1.0.tgz#4cd65b28eff8b9f8c61d08889a9ac3abdf5d9893"
+  integrity sha512-xA2TlImMGj4c0yAiM9BUq+8aAFVYVYUX2tkcC8u8das9qoZSs13SxhVcfWqI4cHOsv3huj2D0VRNHeVCLO3mVQ==
+  dependencies:
+    jquery ">=1.7.1 <4.0.0"
+
 jvectormap@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/jvectormap/-/jvectormap-1.2.2.tgz#2e4408b24a60473ff106c1e7243e375ae5ca85da"

@@ -82,6 +82,12 @@ def index():
     return redirect(url_for('dashboard.dashboard'))
 
 
+@index_bp.route('/ping', methods=['GET'])
+@login_required
+def ping():
+    return make_response('ok')
+
+
 @index_bp.route('/google/login')
 def google_login():
     if not Setting().get('google_oauth_enabled') or google is None:
