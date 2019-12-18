@@ -51,6 +51,9 @@ class TestUnitApiZoneAdminApiKey(object):
         self.mock_hist_patcher = patch(
             'powerdnsadmin.routes.api.History',
             spec=powerdnsadmin.models.history.History)
+        self.mock_setting_patcher = patch(
+            'powerdnsadmin.routes.api.Setting',
+            spec=powerdnsadmin.models.setting.Setting)
 
         data = admin_apikey_data()
         api_key = ApiKey(desc=data['description'],
@@ -71,6 +74,7 @@ class TestUnitApiZoneAdminApiKey(object):
         )
         self.mock_apikey = self.mock_apikey_patcher.start()
         self.mock_hist = self.mock_hist_patcher.start()
+        self.mock_setting = self.mock_setting_patcher.start()
 
         self.mock_google_setting.return_value.get.side_effect = load_data
         self.mock_github_setting.return_value.get.side_effect = load_data
