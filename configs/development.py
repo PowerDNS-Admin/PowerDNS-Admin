@@ -82,8 +82,20 @@ SAML_ENABLED = False
 # SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 # SAML_SP_CONTACT_NAME = '<contact name>'
 # SAML_SP_CONTACT_MAIL = '<contact mail>'
-# #Cofigures if SAML tokens should be encrypted.
-# #If enabled a new app certificate will be generated on restart
+
+# Configures the path to certificate file and it's respective private key file
+# This pair is used for signing metadata, encrypting tokens and all other signing/encryption 
+# tasks during communication between iDP and SP
+# NOTE: if this two parameters aren't explicitly provided, self-signed certificate-key pair 
+# will be generated in "PowerDNS-Admin" root directory
+# ###########################################################################################
+# CAUTION: For production use, usage of self-signed certificates it's highly discouraged.
+# Use certificates from trusted CA instead  
+# ###########################################################################################
+# SAML_CERT_FILE = '/etc/pki/powerdns-admin/cert.crt'
+# SAML_CERT_KEY = '/etc/pki/powerdns-admin/key.pem'
+
+# Cofigures if SAML tokens should be encrypted.
 # SAML_SIGN_REQUEST = False
 # #Use SAML standard logout mechanism retreived from idp metadata
 # #If configured false don't care about SAML session on logout.
