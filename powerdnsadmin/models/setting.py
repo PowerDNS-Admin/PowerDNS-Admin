@@ -26,6 +26,7 @@ class Setting(db.Model):
         'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
         'session_timeout': 10,
+        'warn_session_timeout': True,
         'pdns_api_url': '',
         'pdns_api_key': '',
         'pdns_api_timeout': 30,

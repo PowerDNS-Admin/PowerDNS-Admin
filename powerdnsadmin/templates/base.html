@@ -174,8 +174,18 @@
 {% block scripts %}
 {% assets "js_main" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% if SETTING.get('warn_session_timeout') %}
   <script>
+    // close the session warning popup when receive
+    // a boradcast message
+    var bc = new BroadcastChannel('powerdnsadmin');
+    bc.addEventListener('message', function (e) {
+      if (e.data == 'close_session_timeout_modal'){
+        $("#modal_session_warning").modal('hide');
+      }
+    });
 
+    // Stay Signed In button click event
     $(document.body).on("click", ".button_stay_signed_in", function (e) {
       $.get({
           url: $.jTimeout().options.extendUrl,
@@ -184,12 +194,15 @@
               $.jTimeout().resetExpiration();
             }
       });
+      $.jTimeout().options.onClickExtend();
     });
 
+    // Sign Out button click event
     $(document.body).on("click", ".button_sign_out", function (e) {
       window.location.replace("{{ url_for('index.logout') }}");
     });
 
+    // Things happen when session warning popup shown
     $(document).on('show.bs.modal','#modal_session_warning', function () {
       var secondsLeft = jTimeout.getSecondsTillExpiration();
       var t = timer($('#modal-time'), secondsLeft);
@@ -199,32 +212,34 @@
         $('#modal-time').text("");
         $(this).off('hidden.bs.modal');
       });
+
     });
 
+    // jTimeout definition
     $(function(){
       $.jTimeout({
         flashTitle: true,
         flashTitleSpeed: 500,
         flashingTitleText: '**WARNING**',
         originalTitle: document.title,
-
-        timeoutAfter: {{ SETTING.get('session_timeout')|int *60 }},
+        timeoutAfter: {{ SETTING.get('session_timeout')|int * 60 }},
         secondsPrior: 60,
         heartbeat: 1,
-
         extendOnMouseMove: true,
         mouseDebounce: 30,
-
         extendUrl: '{{ url_for("index.ping") }}',
         logoutUrl: '{{ url_for("index.logout") }}',
         loginUrl: '{{ url_for("index.login") }}',
 
-        onClickExtend: function(jTimeout){
-          console.log("onClickExtend!");
+        onClickExtend: function(){
+          // broadcast a message to tell other tabes
+          // close the session warning popup
+          var bc = new BroadcastChannel('powerdnsadmin');
+          bc.postMessage('close_session_timeout_modal');
         },
 
-        onMouseMove: function(jTimeout){
-          // If the mouse is moving while popup is present, we
+        onMouseMove: function(){
+          // if the mouse is moving while popup is present, we
           // don't extend the session.
           if (!$('#modal_session_warning').hasClass('in')) {
             $.get({
@@ -248,10 +263,10 @@
         onSessionExtended:function(jTimeout){
           $("#modal_session_warning").modal('hide');
         }
-
       });
     });
   </script>
+  {% endif %}
 {%- endassets %}
 {% endblock %}
 {% block extrascripts %}

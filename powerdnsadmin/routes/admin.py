@@ -1,7 +1,8 @@
 import json
+import datetime
 import traceback
 from ast import literal_eval
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
 from ..decorators import operator_role_required, admin_role_required
@@ -21,6 +22,16 @@ admin_bp = Blueprint('admin',
                      __name__,
                      template_folder='templates',
                      url_prefix='/admin')
+
+
+@admin_bp.before_request
+def before_request():
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
+
 
 
 @admin_bp.route('/pdns', methods=['GET'])
@@ -489,7 +500,8 @@ def setting_basic():
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
             'pretty_ipv6_ptr', 'dnssec_admins_only',
             'allow_user_create_domain', 'bg_domain_updates', 'site_name',
-            'session_timeout', 'ttl_options', 'pdns_api_timeout'
+            'session_timeout', 'warn_session_timeout', 'ttl_options',
+            'pdns_api_timeout'
         ]
 
         return render_template('admin_setting_basic.html', settings=settings)
