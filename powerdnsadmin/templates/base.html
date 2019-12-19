@@ -174,6 +174,99 @@
 {% block scripts %}
 {% assets "js_main" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% if SETTING.get('warn_session_timeout') %}
+  <script>
+    // close the session warning popup when receive
+    // a boradcast message
+    var bc = new BroadcastChannel('powerdnsadmin');
+    bc.addEventListener('message', function (e) {
+      if (e.data == 'close_session_timeout_modal'){
+        $("#modal_session_warning").modal('hide');
+      }
+    });
+
+    // Stay Signed In button click event
+    $(document.body).on("click", ".button_stay_signed_in", function (e) {
+      $.get({
+          url: $.jTimeout().options.extendUrl,
+          cache: false,
+            success: function(){
+              $.jTimeout().resetExpiration();
+            }
+      });
+      $.jTimeout().options.onClickExtend();
+    });
+
+    // Sign Out button click event
+    $(document.body).on("click", ".button_sign_out", function (e) {
+      window.location.replace("{{ url_for('index.logout') }}");
+    });
+
+    // Things happen when session warning popup shown
+    $(document).on('show.bs.modal','#modal_session_warning', function () {
+      var secondsLeft = jTimeout.getSecondsTillExpiration();
+      var t = timer($('#modal-time'), secondsLeft);
+
+      $(this).on('hidden.bs.modal', function () {
+        clearInterval(t);
+        $('#modal-time').text("");
+        $(this).off('hidden.bs.modal');
+      });
+
+    });
+
+    // jTimeout definition
+    $(function(){
+      $.jTimeout({
+        flashTitle: true,
+        flashTitleSpeed: 500,
+        flashingTitleText: '**WARNING**',
+        originalTitle: document.title,
+        timeoutAfter: {{ SETTING.get('session_timeout')|int * 60 }},
+        secondsPrior: 60,
+        heartbeat: 1,
+        extendOnMouseMove: true,
+        mouseDebounce: 30,
+        extendUrl: '{{ url_for("index.ping") }}',
+        logoutUrl: '{{ url_for("index.logout") }}',
+        loginUrl: '{{ url_for("index.login") }}',
+
+        onClickExtend: function(){
+          // broadcast a message to tell other tabes
+          // close the session warning popup
+          var bc = new BroadcastChannel('powerdnsadmin');
+          bc.postMessage('close_session_timeout_modal');
+        },
+
+        onMouseMove: function(){
+          // if the mouse is moving while popup is present, we
+          // don't extend the session.
+          if (!$('#modal_session_warning').hasClass('in')) {
+            $.get({
+              url: $.jTimeout().options.extendUrl,
+              cache: false,
+              success: function () {
+                $.jTimeout().resetExpiration();
+              }
+            });
+          }
+        },
+
+        onTimeout: function(jTimeout){
+          window.location.replace("{{ url_for('index.logout') }}");
+        },
+
+        onPriorCallback: function(jTimeout){
+          $("#modal_session_warning").modal('show');;
+        },
+
+        onSessionExtended:function(jTimeout){
+          $("#modal_session_warning").modal('hide');
+        }
+      });
+    });
+  </script>
+  {% endif %}
 {%- endassets %}
 {% endblock %}
 {% block extrascripts %}
@@ -225,6 +318,30 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+<!-- /.session-warning-modal -->
+<div class="modal fade modal-warning" data-backdrop="static" id="modal_session_warning">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Session timeout warning</h4>
+      </div>
+      <div class="modal-body">
+        <p>Your session is about to expire. You will be automatically signed out in</p>
+        <h3><span id="modal-time"></span></h3>
+        <p>To coninue your ssession, select <strong>Stay Signed In</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-flat btn-danger pull-left button_stay_signed_in"
+          data-dismiss="modal">Stay Signed In</button>
+        <button type="button" class="btn btn-flat btn-default pull-right button_sign_out"
+          data-dismiss="modal">Sign Out</button>
+      </div>
+    </div>
+    <!-- /.session-warning-modal-content -->
+  </div>
+  <!-- /.session-warning-modal-dialog -->
+</div>
+<!-- /.session-warning-modal -->
 {% endblock %}
 {% block modals %}
 {% endblock %}

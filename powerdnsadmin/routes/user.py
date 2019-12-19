@@ -1,15 +1,37 @@
+import datetime
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
 from io import BytesIO
-from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, session
-from flask_login import current_user, login_required
+from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, g, session, current_app
+from flask_login import current_user, login_required, login_manager
 
-from ..models.user import User
+from ..models.user import User, Anonymous
+from ..models.setting import Setting
 
 user_bp = Blueprint('user',
                     __name__,
                     template_folder='templates',
                     url_prefix='/user')
+
+
+@user_bp.before_request
+def before_request():
+    # Check if user is anonymous
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+
+    # Check site is in maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and current_user.is_authenticated and current_user.role.name not in [
+            'Administrator', 'Operator'
+    ]:
+        return render_template('maintenance.html')
+
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
 
 
 @user_bp.route('/profile', methods=['GET', 'POST'])

@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect
-from flask_login import login_required, current_user
+import datetime
+from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect, g, session
+from flask_login import login_required, current_user, login_manager
 from sqlalchemy import not_
 
 from ..lib.utils import customBoxes
-from ..models.user import User
+from ..models.user import User, Anonymous
 from ..models.account import Account
 from ..models.account_user import AccountUser
 from ..models.domain import Domain
@@ -17,6 +18,26 @@ dashboard_bp = Blueprint('dashboard',
                          __name__,
                          template_folder='templates',
                          url_prefix='/dashboard')
+
+
+@dashboard_bp.before_request
+def before_request():
+    # Check if user is anonymous
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+
+    # Check site is in maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and current_user.is_authenticated and current_user.role.name not in [
+            'Administrator', 'Operator'
+    ]:
+        return render_template('maintenance.html')
+
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
 
 
 @dashboard_bp.route('/domains-custom/<path:boxId>', methods=['GET'])

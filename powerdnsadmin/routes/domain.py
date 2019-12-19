@@ -1,15 +1,16 @@
 import re
 import json
+import datetime
 import traceback
 import dns.name
 import dns.reversename
 from distutils.version import StrictVersion
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session
+from flask_login import login_required, current_user, login_manager
 
 from ..lib.utils import pretty_json
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec
-from ..models.user import User
+from ..models.user import User, Anonymous
 from ..models.account import Account
 from ..models.setting import Setting
 from ..models.history import History
@@ -24,6 +25,26 @@ domain_bp = Blueprint('domain',
                       __name__,
                       template_folder='templates',
                       url_prefix='/domain')
+
+
+@domain_bp.before_request
+def before_request():
+    # Check if user is anonymous
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+
+    # Check site is in maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and current_user.is_authenticated and current_user.role.name not in [
+            'Administrator', 'Operator'
+    ]:
+        return render_template('maintenance.html')
+
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
 
 
 @domain_bp.route('/<path:domain_name>', methods=['GET'])

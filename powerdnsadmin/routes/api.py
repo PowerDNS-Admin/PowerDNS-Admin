@@ -1,6 +1,6 @@
 import json
 from urllib.parse import urljoin
-from flask import Blueprint, g, request, abort, current_app
+from flask import Blueprint, g, request, abort, current_app, make_response, jsonify
 from flask_login import current_user
 
 from ..models.base import db
@@ -88,7 +88,16 @@ def handle_request_is_not_json(err):
 @api_bp.before_request
 @is_json
 def before_request():
-    pass
+    # Check site is in maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and current_user.is_authenticated and current_user.role.name not in [
+            'Administrator', 'Operator'
+    ]:
+        return make_response(
+            jsonify({
+                "status": False,
+                "msg": "Site is in maintenance mode"
+            }))
 
 
 @api_bp.route('/pdnsadmin/zones', methods=['POST'])
@@ -281,7 +290,7 @@ def api_get_apikeys(domain_name):
     if current_user.role.name not in ['Administrator', 'Operator']:
         if domain_name:
             msg = "Check if domain {0} exists and \
-            is allowed for user."                                                                                                                                                                                                                                                                                                                                                                           .format(domain_name)
+            is allowed for user."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               .format(domain_name)
             current_app.logger.debug(msg)
             apikeys = current_user.get_apikeys(domain_name)
 
