@@ -172,7 +172,8 @@ def dashboard():
                            history_number=history_number,
                            uptime=uptime,
                            histories=history,
-                           show_bg_domain_button=BG_DOMAIN_UPDATE)
+                           show_bg_domain_button=BG_DOMAIN_UPDATE,
+                           pdns_version=Setting().get('pdns_version'))
 
 
 @dashboard_bp.route('/domains-updater', methods=['GET', 'POST'])
