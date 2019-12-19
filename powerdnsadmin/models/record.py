@@ -249,7 +249,7 @@ class Record(object):
         del_rrsets = {"rrsets": []}
         for r in current_rrsets:
             if r not in submitted_rrsets and r['type'] in Setting(
-            ).get_records_allow_to_edit():
+            ).get_records_allow_to_edit() and r['type'] != 'SOA':
                 r['changetype'] = 'DELETE'
                 del_rrsets["rrsets"].append(r)
 
@@ -286,7 +286,11 @@ class Record(object):
                     current_app.logger.error(
                         'Cannot apply record changes with deleting rrsets step. PDNS error: {}'
                         .format(jdata1['error']))
-                    return {'status': 'error', 'msg': jdata1['error']}
+                    print(jdata1['error'])
+                    return {
+                        'status': 'error',
+                        'msg': jdata1['error'].replace("'", "")
+                    }
 
             if new_rrsets["rrsets"]:
                 jdata2 = utils.fetch_json(
@@ -301,7 +305,10 @@ class Record(object):
                     current_app.logger.error(
                         'Cannot apply record changes with adding rrsets step. PDNS error: {}'
                         .format(jdata2['error']))
-                    return {'status': 'error', 'msg': jdata2['error']}
+                    return {
+                        'status': 'error',
+                        'msg': jdata2['error'].replace("'", "")
+                    }
 
             self.auto_ptr(domain_name, new_rrsets, del_rrsets)
             self.update_db_serial(domain_name)

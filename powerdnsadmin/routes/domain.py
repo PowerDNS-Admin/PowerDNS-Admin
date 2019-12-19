@@ -199,16 +199,25 @@ def add():
                     result = r.apply(domain_name, record_data)
                     if result['status'] == 'ok':
                         history = History(
-                            msg=
-                            'Applying template {0} to {1}, created records successfully.'
-                            .format(template.name, domain_name),
-                            detail=str(result),
+                            msg='Applying template {0} to {1} successfully.'.
+                            format(template.name, domain_name),
+                            detail=str(
+                                json.dumps({
+                                    "domain":
+                                    domain_name,
+                                    "template":
+                                    template.name,
+                                    "add_rrests":
+                                    result['data'][0]['rrsets'],
+                                    "del_rrests":
+                                    result['data'][1]['rrsets']
+                                })),
                             created_by=current_user.username)
                         history.add()
                     else:
                         history = History(
                             msg=
-                            'Applying template {0} to {1}, FAILED to created records.'
+                            'Failed to apply template {0} to {1}.'
                             .format(template.name, domain_name),
                             detail=str(result),
                             created_by=current_user.username)
