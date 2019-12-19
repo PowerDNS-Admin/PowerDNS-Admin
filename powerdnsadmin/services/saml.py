@@ -3,7 +3,7 @@ from threading import Thread
 from flask import current_app
 import os
 
-from ..lib.certutil import KEY_FILE, CERT_FILE
+from ..lib.certutil import KEY_FILE, CERT_FILE, create_self_signed_cert
 from ..lib.utils import urlparse
 
 
@@ -101,12 +101,32 @@ class SAML(object):
                 'NameIDFormat',
                 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified')
         settings['sp']['entityId'] = current_app.config['SAML_SP_ENTITY_ID']
-        if os.path.isfile(CERT_FILE):
-            cert = open(CERT_FILE, "r").readlines()
-            settings['sp']['x509cert'] = "".join(cert)
-        if os.path.isfile(KEY_FILE):
-            key = open(KEY_FILE, "r").readlines()
-            settings['sp']['privateKey'] = "".join(key)
+
+
+        if ('SAML_CERT_FILE' in current_app.config) and ('SAML_KEY_FILE' in current_app.config):
+
+             saml_cert_file = current_app.config['SAML_CERT_FILE']
+             saml_key_file = current_app.config['SAML_KEY_FILE']
+
+             if os.path.isfile(saml_cert_file):
+                 cert = open(saml_cert_file, "r").readlines()
+                 settings['sp']['x509cert'] = "".join(cert)
+             if os.path.isfile(saml_key_file):
+                 key = open(saml_key_file, "r").readlines()
+                 settings['sp']['privateKey'] = "".join(key)
+
+        else:
+
+             create_self_signed_cert()
+
+             if os.path.isfile(CERT_FILE):
+                 cert = open(CERT_FILE, "r").readlines()
+                 settings['sp']['x509cert'] = "".join(cert)
+             if os.path.isfile(KEY_FILE):
+                 key = open(KEY_FILE, "r").readlines()
+                 settings['sp']['privateKey'] = "".join(key)
+
+
         settings['sp']['assertionConsumerService'] = {}
         settings['sp']['assertionConsumerService'][
             'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
