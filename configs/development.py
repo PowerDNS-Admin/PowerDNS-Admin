@@ -44,6 +44,30 @@ SAML_ENABLED = False
 # ### Example: urn:oid:0.9.2342.19200300.100.1.1
 # #SAML_NAMEID_FORMAT = 'urn:oid:0.9.2342.19200300.100.1.1'
 
+# Following parameter defines RequestedAttributes section in SAML metadata
+# since certain iDPs require explicit attribute request. If not provided section
+# will not be available in metadata.
+# 
+# Possible attributes:
+# name (mandatory), nameFormat, isRequired, friendlyName
+#  
+# NOTE: This parameter requires to be entered in valid JSON format as displayed below
+# and multiple attributes can given
+# 
+# Following example:
+# 
+# SAML_SP_REQUESTED_ATTRIBUTES = '[ \
+# {"name": "urn:oid:0.9.2342.19200300.100.1.3", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "email"}, \
+# {"name": "mail", "isRequired": false, "friendlyName": "test-field"} \
+# ]' 
+# 
+# produces following metadata section:
+# <md:AttributeConsumingService index="1">
+# <md:RequestedAttribute Name="urn:oid:0.9.2342.19200300.100.1.3" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" FriendlyName="email" isRequired="true"/>
+# <md:RequestedAttribute Name="mail" FriendlyName="test-field"/>
+# </md:AttributeConsumingService>
+
+
 # ## Attribute to use for Email address
 # ### Default: email
 # ### Example: urn:oid:0.9.2342.19200300.100.1.3

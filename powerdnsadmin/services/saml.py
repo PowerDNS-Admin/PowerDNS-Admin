@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from threading import Thread
 from flask import current_app
+import json
 import os
 
 from ..lib.certutil import KEY_FILE, CERT_FILE, create_self_signed_cert
@@ -117,14 +118,27 @@ class SAML(object):
 
         else:
 
-             create_self_signed_cert()
-
-             if os.path.isfile(CERT_FILE):
+            if (os.path.isfile(CERT_FILE)) and (os.path.isfile(KEY_FILE)):
                  cert = open(CERT_FILE, "r").readlines()
-                 settings['sp']['x509cert'] = "".join(cert)
-             if os.path.isfile(KEY_FILE):
                  key = open(KEY_FILE, "r").readlines()
-                 settings['sp']['privateKey'] = "".join(key)
+            else:
+                 create_self_signed_cert()
+                 cert = open(CERT_FILE, "r").readlines()
+                 key = open(KEY_FILE, "r").readlines()
+
+            settings['sp']['x509cert'] = "".join(cert)
+            settings['sp']['privateKey'] = "".join(key) 
+
+
+        if 'SAML_SP_REQUESTED_ATTRIBUTES' in current_app.config:
+             saml_req_attr = json.loads(current_app.config['SAML_SP_REQUESTED_ATTRIBUTES'])
+             settings['sp']['attributeConsumingService'] = {
+                "serviceName": "PowerDNSAdmin",
+                "serviceDescription": "PowerDNS-Admin - PowerDNS administration utility",
+                "requestedAttributes": saml_req_attr
+             }
+        else:
+             settings['sp']['attributeConsumingService'] = {}
 
 
         settings['sp']['assertionConsumerService'] = {}
@@ -132,7 +146,6 @@ class SAML(object):
             'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
         settings['sp']['assertionConsumerService'][
             'url'] = own_url + '/saml/authorized'
-        settings['sp']['attributeConsumingService'] = {}
         settings['sp']['singleLogoutService'] = {}
         settings['sp']['singleLogoutService'][
             'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
