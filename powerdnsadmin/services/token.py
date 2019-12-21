@@ -13,6 +13,7 @@ def confirm_token(token, expiration=86400):
         email = serializer.loads(token,
                                  salt=current_app.config['SALT'],
                                  max_age=expiration)
-    except:
+    except Exception as e:
+        current_app.logger.debug(e)
         return False
     return email

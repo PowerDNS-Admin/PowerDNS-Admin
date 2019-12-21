@@ -26,7 +26,7 @@ class User(db.Model):
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
-    confirmed = db.Column(db.Boolean, default=False)
+    confirmed = db.Column(db.SmallInteger, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
     def __init__(self,

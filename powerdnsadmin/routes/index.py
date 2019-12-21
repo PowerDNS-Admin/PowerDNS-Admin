@@ -446,7 +446,7 @@ def confirm_email(token):
         return render_template('email_confirmation.html', status=2)
     else:
         # Confirm email is valid
-        user.update_confirmed(confirmed=True)
+        user.update_confirmed(confirmed=1)
         current_app.logger.info(
             "User email {} confirmed successfully".format(email))
         return render_template('email_confirmation.html', status=1)
