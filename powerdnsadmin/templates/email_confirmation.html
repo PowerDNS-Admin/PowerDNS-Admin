@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}<title>Email verification - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="error-page">
+        <div class="error-content">
+            {% if status == 1 %}
+            <h3>
+                <i class="fa fa-thumbs-o-up text-success"></i> Email verification successful!
+            </h3>
+            <p>
+              You have confirmed your account. <a href="{{ url_for('index.login') }}">Click here</a> to login.
+            </p>
+            {% elif status == 2 %}
+            <h3>
+              <i class="fa fa-hand-stop-o text-info"></i> Already verified!
+            </h3>
+            <p>
+              You have confirmed your account already. <a href="{{ url_for('index.login') }}">Click here</a> to login.
+            </p>
+            {% else %}
+            <h3>
+              <i class="fa fa-warning text-yellow"></i> Email verification failed!
+            </h3>
+            <p>
+              The confirmation link is invalid or has expired. <a href="{{ url_for('index.resend_confirmation_email') }}">Click here</a> if you want to resend a new link.
+            </p>
+            {% endif %}
+        </div>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
+{% endblock %}

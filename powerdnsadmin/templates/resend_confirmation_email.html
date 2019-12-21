@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}<title>Resend confirmation email - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="error-page">
+        <div class="error-content">
+          <h3>
+            <i class="fa fa-hand-o-right text-info"></i> Resend a confirmation email
+          </h3>
+          <p>
+            Enter your email address to get new account confirmation link.
+          </p>
+          <form class="search-form" method="post">
+            <div class="input-group">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+              <input type="text" name="email" class="form-control" placeholder="Email address" data-error="Please input your email" required>
+              <div class="input-group-btn">
+                <button type="submit" name="submit" class="btn btn-success btn-flat"><i class="fa fa-mail-reply"></i>
+                </button>
+              </div>
+            </div>
+            <!-- /.input-group -->
+            <p>
+              {% if status == 0 %}
+                <font color="red">Email not found!</font>
+              {% elif status == 1 %}
+                <font color="red">Email already confirmed!</font>
+              {% elif status == 2 %}
+                <font color="green">Confirmation email sent!</font>
+              {% endif %}
+            </p>
+          </form>
+        </div>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
+{% endblock %}

@@ -26,6 +26,7 @@ class User(db.Model):
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
+    confirmed = db.Column(db.Boolean, default=False)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
     def __init__(self,
@@ -38,6 +39,7 @@ class User(db.Model):
                  role_id=None,
                  email=None,
                  otp_secret=None,
+                 confirmed=False,
                  reload_info=True):
         self.id = id
         self.username = username
@@ -48,6 +50,7 @@ class User(db.Model):
         self.role_id = role_id
         self.email = email
         self.otp_secret = otp_secret
+        self.confirmed = confirmed
 
         if reload_info:
             user_info = self.get_user_info_by_id(
@@ -61,6 +64,7 @@ class User(db.Model):
                 self.email = user_info.email
                 self.role_id = user_info.role_id
                 self.otp_secret = user_info.otp_secret
+                self.confirmed = user_info.confirmed
 
     def is_authenticated(self):
         return True
@@ -523,6 +527,13 @@ class User(db.Model):
         except Exception:
             db.session.rollback()
             return False
+
+    def update_confirmed(self, confirmed):
+        """
+        Update user email confirmation status
+        """
+        self.confirmed = confirmed
+        db.session.commit()
 
     def get_domains(self):
         """

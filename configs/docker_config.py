@@ -1,6 +1,6 @@
 # Defaults for Docker image
-BIND_ADDRESS='0.0.0.0'
-PORT=80
+BIND_ADDRESS = '0.0.0.0'
+PORT = 80
 
 legal_envvars = (
     'SECRET_KEY',
@@ -10,6 +10,14 @@ legal_envvars = (
     'SALT',
     'SQLALCHEMY_TRACK_MODIFICATIONS',
     'SQLALCHEMY_DATABASE_URI',
+    'MAIL_SERVER',
+    'MAIL_PORT',
+    'MAIL_DEBUG',
+    'MAIL_USE_TLS',
+    'MAIL_USE_SSL',
+    'MAIL_USERNAME',
+    'MAIL_PASSWORD',
+    'MAIL_DEFAULT_SENDER',
     'SAML_ENABLED',
     'SAML_DEBUG',
     'SAML_PATH',
@@ -37,14 +45,14 @@ legal_envvars = (
     'SAML_LOGOUT_URL',
 )
 
-legal_envvars_int = (
-    'PORT',
-    'SAML_METADATA_CACHE_LIFETIME',
-)
+legal_envvars_int = ('PORT', 'MAIL_PORT', 'SAML_METADATA_CACHE_LIFETIME')
 
 legal_envvars_bool = (
     'SQLALCHEMY_TRACK_MODIFICATIONS',
     'HSTS_ENABLED',
+    'MAIL_DEBUG',
+    'MAIL_USE_TLS',
+    'MAIL_USE_SSL',
     'SAML_ENABLED',
     'SAML_DEBUG',
     'SAML_SIGN_REQUEST',

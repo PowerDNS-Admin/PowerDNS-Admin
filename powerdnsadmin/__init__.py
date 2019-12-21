@@ -2,6 +2,7 @@ import os
 import logging
 from flask import Flask
 from flask_seasurf import SeaSurf
+from flask_mail import Mail
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .lib import utils
@@ -63,6 +64,9 @@ def create_app(config=None):
     if app.config.get('HSTS_ENABLED'):
         from flask_sslify import SSLify
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
+
+    # SMTP
+    app.mail = Mail(app)
 
     # Load app's components
     assets.init_app(app)

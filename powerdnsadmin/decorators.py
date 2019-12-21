@@ -4,7 +4,7 @@ from functools import wraps
 from flask import g, request, abort, current_app, render_template
 from flask_login import current_user
 
-from .models import User, ApiKey, Setting, Domain
+from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
 from .lib.errors import DomainAccessForbidden
 
@@ -121,6 +121,12 @@ def api_basic_auth(f):
                         plain_text_password=password)
 
             try:
+                if Setting().get('verify_user_email') and user.email and not user.confirmed:
+                    current_app.logger.warning(
+                        'Basic authentication failed for user {} because of unverified email address'
+                        .format(username))
+                    abort(401)
+
                 auth_method = request.args.get('auth_method', 'LOCAL')
                 auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
                 auth = user.is_validate(method=auth_method,
