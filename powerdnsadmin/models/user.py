@@ -508,10 +508,24 @@ class User(db.Model):
 
         user.firstname = self.firstname if self.firstname else user.firstname
         user.lastname = self.lastname if self.lastname else user.lastname
-        user.email = self.email if self.email else user.email
         user.password = self.get_hashed_password(
             self.plain_text_password).decode(
                 "utf-8") if self.plain_text_password else user.password
+
+        if self.email:
+            # Can not update to a new email that
+            # already been used.
+            existing_email = User.query.filter(
+                User.email == self.email,
+                User.username != self.username).first()
+            if existing_email:
+                return False
+            # If need to verify new email,
+            # update the "confirmed" status.
+            if user.email != self.email:
+                user.email = self.email
+                if Setting().get('verify_user_email'):
+                    user.confirmed = 0
 
         if enable_otp is not None:
             user.otp_secret = ""
