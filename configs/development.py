@@ -20,6 +20,16 @@ SQLALCHEMY_TRACK_MODIFICATIONS = True
 ### DATABASE - SQLite
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
+### SMTP config
+# MAIL_SERVER = 'localhost'
+# MAIL_PORT = 25
+# MAIL_DEBUG = False
+# MAIL_USE_TLS = False
+# MAIL_USE_SSL = False
+# MAIL_USERNAME = None
+# MAIL_PASSWORD = None
+# MAIL_DEFAULT_SENDER = ('PowerDNS-Admin', 'noreply@domain.ltd')
+
 # SAML Authnetication
 SAML_ENABLED = False
 # SAML_DEBUG = True
@@ -47,20 +57,20 @@ SAML_ENABLED = False
 # Following parameter defines RequestedAttributes section in SAML metadata
 # since certain iDPs require explicit attribute request. If not provided section
 # will not be available in metadata.
-# 
+#
 # Possible attributes:
 # name (mandatory), nameFormat, isRequired, friendlyName
-#  
+#
 # NOTE: This parameter requires to be entered in valid JSON format as displayed below
 # and multiple attributes can given
-# 
+#
 # Following example:
-# 
+#
 # SAML_SP_REQUESTED_ATTRIBUTES = '[ \
 # {"name": "urn:oid:0.9.2342.19200300.100.1.3", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "email"}, \
 # {"name": "mail", "isRequired": false, "friendlyName": "test-field"} \
-# ]' 
-# 
+# ]'
+#
 # produces following metadata section:
 # <md:AttributeConsumingService index="1">
 # <md:RequestedAttribute Name="urn:oid:0.9.2342.19200300.100.1.3" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" FriendlyName="email" isRequired="true"/>
@@ -108,13 +118,13 @@ SAML_ENABLED = False
 # SAML_SP_CONTACT_MAIL = '<contact mail>'
 
 # Configures the path to certificate file and it's respective private key file
-# This pair is used for signing metadata, encrypting tokens and all other signing/encryption 
+# This pair is used for signing metadata, encrypting tokens and all other signing/encryption
 # tasks during communication between iDP and SP
-# NOTE: if this two parameters aren't explicitly provided, self-signed certificate-key pair 
+# NOTE: if this two parameters aren't explicitly provided, self-signed certificate-key pair
 # will be generated in "PowerDNS-Admin" root directory
 # ###########################################################################################
 # CAUTION: For production use, usage of self-signed certificates it's highly discouraged.
-# Use certificates from trusted CA instead  
+# Use certificates from trusted CA instead
 # ###########################################################################################
 # SAML_CERT_FILE = '/etc/pki/powerdns-admin/cert.crt'
 # SAML_CERT_KEY = '/etc/pki/powerdns-admin/key.pem'

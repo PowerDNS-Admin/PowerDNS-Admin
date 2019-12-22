@@ -29,6 +29,8 @@ from ..services.github import github_oauth
 from ..services.azure import azure_oauth
 from ..services.oidc import oidc_oauth
 from ..services.saml import SAML
+from ..services.token import confirm_token
+from ..services.email import send_account_verification
 
 google = None
 github = None
@@ -280,6 +282,12 @@ def login():
                     plain_text_password=password)
 
         try:
+            if Setting().get('verify_user_email') and user.email and not user.confirmed:
+                return render_template(
+                    'login.html',
+                    saml_enabled=SAML_ENABLED,
+                    error='Please confirm your email address first')
+
             auth = user.is_validate(method=auth_method,
                                     src_ip=request.remote_addr)
             if auth == False:
@@ -411,6 +419,8 @@ def register():
             try:
                 result = user.create_local_user()
                 if result and result['status']:
+                    if Setting().get('verify_user_email'):
+                        send_account_verification(email)
                     return redirect(url_for('index.login'))
                 else:
                     return render_template('register.html',
@@ -419,6 +429,50 @@ def register():
                 return render_template('register.html', error=e)
     else:
         return render_template('errors/404.html'), 404
+
+
+@index_bp.route('/confirm/<token>', methods=['GET'])
+def confirm_email(token):
+    email = confirm_token(token)
+    if not email:
+        # Cannot confirm email
+        return render_template('email_confirmation.html', status=0)
+
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.confirmed:
+        # Already confirmed
+        current_app.logger.info(
+            "User email {} already confirmed".format(email))
+        return render_template('email_confirmation.html', status=2)
+    else:
+        # Confirm email is valid
+        user.update_confirmed(confirmed=1)
+        current_app.logger.info(
+            "User email {} confirmed successfully".format(email))
+        return render_template('email_confirmation.html', status=1)
+
+
+@index_bp.route('/resend-confirmation-email', methods=['GET', 'POST'])
+def resend_confirmation_email():
+    if current_user.is_authenticated:
+        return redirect(url_for('index.index'))
+    if request.method == 'GET':
+        return render_template('resend_confirmation_email.html')
+    elif request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter(User.email == email).first()
+        if not user:
+            # Email not found
+            status = 0
+        elif user.confirmed:
+            # Email already confirmed
+            status = 1
+        else:
+            # Send new confirmed email
+            send_account_verification(user.email)
+            status = 2
+
+        return render_template('resend_confirmation_email.html', status=status)
 
 
 @index_bp.route('/nic/checkip.html', methods=['GET', 'POST'])

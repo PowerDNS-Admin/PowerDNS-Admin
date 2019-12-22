@@ -26,6 +26,7 @@ class User(db.Model):
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
+    confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
     def __init__(self,
@@ -38,6 +39,7 @@ class User(db.Model):
                  role_id=None,
                  email=None,
                  otp_secret=None,
+                 confirmed=False,
                  reload_info=True):
         self.id = id
         self.username = username
@@ -48,6 +50,7 @@ class User(db.Model):
         self.role_id = role_id
         self.email = email
         self.otp_secret = otp_secret
+        self.confirmed = confirmed
 
         if reload_info:
             user_info = self.get_user_info_by_id(
@@ -61,6 +64,7 @@ class User(db.Model):
                 self.email = user_info.email
                 self.role_id = user_info.role_id
                 self.otp_secret = user_info.otp_secret
+                self.confirmed = user_info.confirmed
 
     def is_authenticated(self):
         return True
@@ -504,10 +508,24 @@ class User(db.Model):
 
         user.firstname = self.firstname if self.firstname else user.firstname
         user.lastname = self.lastname if self.lastname else user.lastname
-        user.email = self.email if self.email else user.email
         user.password = self.get_hashed_password(
             self.plain_text_password).decode(
                 "utf-8") if self.plain_text_password else user.password
+
+        if self.email:
+            # Can not update to a new email that
+            # already been used.
+            existing_email = User.query.filter(
+                User.email == self.email,
+                User.username != self.username).first()
+            if existing_email:
+                return False
+            # If need to verify new email,
+            # update the "confirmed" status.
+            if user.email != self.email:
+                user.email = self.email
+                if Setting().get('verify_user_email'):
+                    user.confirmed = 0
 
         if enable_otp is not None:
             user.otp_secret = ""
@@ -523,6 +541,13 @@ class User(db.Model):
         except Exception:
             db.session.rollback()
             return False
+
+    def update_confirmed(self, confirmed):
+        """
+        Update user email confirmation status
+        """
+        self.confirmed = confirmed
+        db.session.commit()
 
     def get_domains(self):
         """

@@ -120,6 +120,10 @@
       {% if SETTING.get('signup_enabled') %}
       <br>
       <a href="{{ url_for('index.register') }}" class="text-center">Create an account </a>
+        {% if SETTING.get('verify_user_email') %}
+          <br/>
+          <a href="{{ url_for('index.resend_confirmation_email') }}" class="text-center">Resend confirmation email</a>
+        {% endif %}
       {% endif %}
     </div>
     <!-- /.login-box-body -->

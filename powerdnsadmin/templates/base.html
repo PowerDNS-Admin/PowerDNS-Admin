@@ -177,7 +177,7 @@
 {% block scripts %}
 {% assets "js_main" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% if SETTING.get('warn_session_timeout') %}
+  {% if SETTING.get('warn_session_timeout') and current_user.is_authenticated %}
   <script>
     // close the session warning popup when receive
     // a boradcast message
