@@ -57,8 +57,10 @@ class ApiKeyCreateFail(StructuredException):
 class ApiKeyNotUsable(StructuredException):
     status_code = 400
 
-    def __init__(self, name=None, message="Api key must have domains or have \
-    administrative role"                        ):
+    def __init__(
+        self,
+        name=None,
+        message="Api key must have domains or have administrative role"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
