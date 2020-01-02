@@ -1,7 +1,7 @@
 import os
 import base64
-import bcrypt
 import traceback
+import bcrypt
 import pyotp
 import ldap
 import ldap.filter
@@ -103,7 +103,7 @@ class User(db.Model):
         return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
 
     def check_password(self, hashed_password):
-        # Check hased password. Using bcrypt, the salt is saved into the hash itself
+        # Check hashed password. Using bcrypt, the salt is saved into the hash itself
         if (self.plain_text_password):
             return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
                                   hashed_password.encode('utf-8'))
@@ -191,7 +191,7 @@ class User(db.Model):
             current_app.logger.exception("Recursive AD Group search error")
             return result
 
-    def is_validate(self, method, src_ip=''):
+    def is_validate(self, method, src_ip='', trust_user=False):
         """
         Validate user credential
         """
@@ -202,8 +202,8 @@ class User(db.Model):
                 User.username == self.username).first()
 
             if user_info:
-                if user_info.password and self.check_password(
-                        user_info.password):
+                if trust_user or (user_info.password and self.check_password(
+                        user_info.password)):
                     current_app.logger.info(
                         'User "{0}" logged in successfully. Authentication request from {1}'
                         .format(self.username, src_ip))
@@ -231,7 +231,7 @@ class User(db.Model):
             LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
             # validate AD user password
-            if Setting().get('ldap_type') == 'ad':
+            if Setting().get('ldap_type') == 'ad' and not trust_user:
                 ldap_username = "{0}@{1}".format(self.username,
                                                  Setting().get('ldap_domain'))
                 if not self.ldap_auth(ldap_username, self.password):
@@ -258,7 +258,7 @@ class User(db.Model):
                     ldap_username = ldap.filter.escape_filter_chars(
                         ldap_result[0][0][0])
 
-                    if Setting().get('ldap_type') != 'ad':
+                    if Setting().get('ldap_type') != 'ad' and not trust_user:
                         # validate ldap user password
                         if not self.ldap_auth(ldap_username, self.password):
                             current_app.logger.error(
