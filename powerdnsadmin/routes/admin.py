@@ -720,6 +720,10 @@ def setting_authentication():
                           request.form.get('azure_oauth_token_url'))
             Setting().set('azure_oauth_authorize_url',
                           request.form.get('azure_oauth_authorize_url'))
+            Setting().set('azure_sg_enabled', True if request.form.get('azure_sg_enabled')=='ON' else False)
+            Setting().set('azure_admin_group', request.form.get('azure_admin_group'))
+            Setting().set('azure_operator_group', request.form.get('azure_operator_group'))
+            Setting().set('azure_user_group', request.form.get('azure_user_group'))
             result = {
                 'status': True,
                 'msg': 'Saved successfully. Please reload PDA to take effect.'

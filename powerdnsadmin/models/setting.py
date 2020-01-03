@@ -73,6 +73,10 @@ class Setting(db.Model):
         'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/token',
         'azure_oauth_authorize_url':
         'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/authorize',
+        'azure_sg_enabled': False,
+        'azure_admin_group': '',
+        'azure_operator_group': '',
+        'azure_user_group': '',
         'oidc_oauth_enabled': False,
         'oidc_oauth_key': '',
         'oidc_oauth_secret': '',
