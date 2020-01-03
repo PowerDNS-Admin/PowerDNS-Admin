@@ -201,12 +201,13 @@ def login():
         return redirect(url_for('index.index'))
 
     if 'azure_token' in session:
-        azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName,preferredName,memberOf').text
-        current_app.logger.info('Azure loginreturned: '+azure_info)
+        azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName,preferredName').text
+        current_app.logger.info('Azure login returned: '+azure_info)
         me = json.loads(azure_info)
 
-        azure_info = azure.post('me/getMemberGroups',json={'securityEnabledOnly': False}).text
-        current_app.logger.info('Azure groups returned: '+azure_info)
+        azure_info = azure.post('me/getMemberGroups',
+                                json={'securityEnabledOnly': False}).text
+        current_app.logger.info('Azure groups returned: ' + azure_info)
         grouplookup = json.loads(azure_info)
         # Groups are in mygroups['value'] which is an array
         if "value" in grouplookup:
@@ -252,20 +253,31 @@ def login():
         # Handle group memberships, if defined
         if Setting().get('azure_sg_enabled'):
             if Setting().get('azure_admin_group') in mygroups:
-                current_app.logger.info('Setting role for user '+azure_username+' to Administrator due to group membership')
+                current_app.logger.info('Setting role for user ' +
+                    azure_username  +
+                    ' to Administrator due to group membership')
                 user.set_role("Administrator")
             else:
                 if Setting().get('azure_operator_group') in mygroups:
-                    current_app.logger.info('Setting role for user '+azure_username+' to Operator due to group membership')
+                    current_app.logger.info('Setting role for user ' +
+                        azure_username +
+                        ' to Operator due to group membership')
                     user.set_role("Operator")
                 else:
                     if Setting().get('azure_user_group') in mygroups:
-                        current_app.logger.info('Setting role for user '+azure_username+' to User due to group membership')
+                        current_app.logger.info('Setting role for user ' +
+                            azure_username +
+                            ' to User due to group membership')
                         user.set_role("User")
                     else:
-                        current_app.logger.warning('User '+azure_username+' has no relevant group memberships')
+                        current_app.logger.warning('User ' +
+                            azure_username +
+                            ' has no relevant group memberships')
                         session.pop('azure_token', None)
-                        return render_template('login.html', saml_enabled=SAML_ENABLED, error=('User '+azure_username+' is not in any authorised groups.'))
+                        return render_template('login.html', 
+                            saml_enabled=SAML_ENABLED, 
+                            error=('User ' + azure_username +
+                                   ' is not in any authorised groups.'))
 
         login_user(user, remember=False)
         signin_history(user.username, 'Azure OAuth', True)
