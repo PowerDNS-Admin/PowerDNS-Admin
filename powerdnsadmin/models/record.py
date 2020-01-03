@@ -149,12 +149,12 @@ class Record(object):
             # If it is ipv6 reverse zone and PRETTY_IPV6_PTR is enabled,
             # We convert ipv6 address back to reverse record format
             # before submitting to PDNS API.
-            if self.PRETTY_IPV6_PTR and re.search(r'ip6\.arpa', domain_name):
-                if record['record_type'] == 'PTR' and ':' in record[
-                        'record_name']:
-                    record_name = dns.reversename.from_address(
-                        record['record_name']).to_text()
-
+            if self.PRETTY_IPV6_PTR and re.search(
+                    r'ip6\.arpa', domain_name
+            ) and record['record_type'] == 'PTR' and ':' in record[
+                    'record_name']:
+                record_name = dns.reversename.from_address(
+                    record['record_name']).to_text()
             # Else, it is forward zone, then record name should be
             # in format "<name>.<domain>.". If it is root
             # domain name (name == '@' or ''), the name should
