@@ -1,6 +1,7 @@
 import os
 import base64
 import bcrypt
+import traceback
 import pyotp
 import ldap
 import ldap.filter
@@ -397,28 +398,6 @@ class User(db.Model):
         else:
             current_app.logger.error('Unsupported authentication method')
             return False
-
-    # def get_apikeys(self, domain_name=None):
-    #     info = []
-    #     apikey_query = db.session.query(ApiKey) \
-    #         .join(Domain.apikeys) \
-    #         .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-    #         .outerjoin(Account, Domain.account_id == Account.id) \
-    #         .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-    #         .filter(
-    #             db.or_(
-    #                 DomainUser.user_id == User.id,
-    #                 AccountUser.user_id == User.id
-    #             )
-    #     ) \
-    #         .filter(User.id == self.id)
-
-    #     if domain_name:
-    #         info = apikey_query.filter(Domain.name == domain_name).all()
-    #     else:
-    #         info = apikey_query.all()
-
-    #     return info
 
     def create_user(self):
         """
