@@ -169,7 +169,7 @@ class Record(object):
             # Format the record content, it musts end
             # with a dot character if in following types
             if record["record_type"] in [
-                    'MX', 'CNAME', 'SRV', 'NS'
+                    'MX', 'CNAME', 'SRV', 'NS', 'PTR'
             ] and record["record_data"].strip()[-1:] != '.':
                 record["record_data"] += '.'
 
