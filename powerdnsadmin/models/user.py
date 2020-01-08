@@ -272,7 +272,7 @@ class User(db.Model):
                         try:
                             if LDAP_TYPE == 'ldap':
                                 groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, ldap_username, LDAP_FILTER_GROUP)
-                                logging.info('groupSearchFilter is {0}'.format(groupSearchFilter))
+                                current_app.logger.debug('Ldap groupSearchFilter {0}'.format(groupSearchFilter))
                                 if (self.ldap_search(groupSearchFilter,
                                                      LDAP_ADMIN_GROUP)):
                                     role_name = 'Administrator'
