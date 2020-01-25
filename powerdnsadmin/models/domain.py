@@ -81,7 +81,8 @@ class Domain(db.Model):
             '/servers/localhost/zones/{0}'.format(domain_name)),
                                  headers=headers,
                                  timeout=int(
-                                     Setting().get('pdns_api_timeout')))
+                                     Setting().get('pdns_api_timeout')),
+                                 verify=Setting().get('verify_ssl_connections'))
         return jdata
 
     def get_domains(self):
@@ -94,7 +95,8 @@ class Domain(db.Model):
             urljoin(self.PDNS_STATS_URL,
                     self.API_EXTENDED_URL + '/servers/localhost/zones'),
             headers=headers,
-            timeout=int(Setting().get('pdns_api_timeout')))
+            timeout=int(Setting().get('pdns_api_timeout')),
+            verify=Setting().get('verify_ssl_connections'))
         return jdata
 
     def get_id_by_name(self, name):
@@ -125,7 +127,8 @@ class Domain(db.Model):
                 urljoin(self.PDNS_STATS_URL,
                         self.API_EXTENDED_URL + '/servers/localhost/zones'),
                 headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')))
+                timeout=int(Setting().get('pdns_api_timeout')),
+                verify=Setting().get('verify_ssl_connections'))
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             current_app.logger.info(
                 "Found {} entrys in PowerDNS server".format(len(list_jdomain)))
@@ -233,6 +236,7 @@ class Domain(db.Model):
                 headers=headers,
                 timeout=int(Setting().get('pdns_api_timeout')),
                 method='POST',
+                verify=Setting().get('verify_ssl_connections'),
                 data=post_data)
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
@@ -265,7 +269,8 @@ class Domain(db.Model):
                         '/servers/localhost/zones/{0}'.format(
                             domain_dict['name'])),
                     headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')))
+                    timeout=int(Setting().get('pdns_api_timeout')),
+                    verify=Setting().get('verify_ssl_connections'))
             except Exception as e:
                 current_app.logger.error('Can not read Domain from PDNS')
                 current_app.logger.error(e)
@@ -325,6 +330,7 @@ class Domain(db.Model):
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      method='PUT',
+                                     verify=Setting().get('verify_ssl_connections'),
                                      data=post_data)
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
@@ -368,6 +374,7 @@ class Domain(db.Model):
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      method='PUT',
+                                     verify=Setting().get('verify_ssl_connections'),
                                      data=post_data)
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
@@ -494,7 +501,8 @@ class Domain(db.Model):
             '/servers/localhost/zones/{0}'.format(domain_name)),
                          headers=headers,
                          timeout=int(Setting().get('pdns_api_timeout')),
-                         method='DELETE')
+                         method='DELETE',
+                         verify=Setting().get('verify_ssl_connections'))
         current_app.logger.info(
             'Deleted domain successfully from PowerDNS-Entity: {0}'.format(
                 domain_name))
@@ -587,7 +595,8 @@ class Domain(db.Model):
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
-                                     method='PUT')
+                                     method='PUT',
+                                     verify=Setting().get('verify_ssl_connections'))
                 return {'status': 'ok', 'msg': r.get('result')}
             except Exception as e:
                 current_app.logger.error(
@@ -617,7 +626,8 @@ class Domain(db.Model):
                             domain.name)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
-                    method='GET')
+                    method='GET',
+                    verify=Setting().get('verify_ssl_connections'))
                 if 'error' in jdata:
                     return {
                         'status': 'error',
@@ -655,6 +665,7 @@ class Domain(db.Model):
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PUT',
+                    verify=Setting().get('verify_ssl_connections'),
                     data=post_data)
                 if 'error' in jdata:
                     return {
@@ -674,6 +685,7 @@ class Domain(db.Model):
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='POST',
+                    verify=Setting().get('verify_ssl_connections'),
                     data=post_data)
                 if 'error' in jdata:
                     return {
@@ -719,7 +731,8 @@ class Domain(db.Model):
                             domain.name, key_id)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
-                    method='DELETE')
+                    method='DELETE',
+                    verify=Setting().get('verify_ssl_connections'))
                 if jdata != True:
                     return {
                         'status':
@@ -740,6 +753,7 @@ class Domain(db.Model):
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PUT',
+                    verify=Setting().get('verify_ssl_connections'),
                     data=post_data)
                 if 'error' in jdata:
                     return {
@@ -796,6 +810,7 @@ class Domain(db.Model):
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      method='PUT',
+                                     verify=Setting().get('verify_ssl_connections'),
                                      data=post_data)
 
             if 'error' in jdata.keys():

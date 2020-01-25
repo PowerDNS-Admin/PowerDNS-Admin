@@ -33,7 +33,8 @@ class Server(object):
                 '/servers/{0}/config'.format(self.server_id)),
                                      headers=headers,
                                      timeout=int(Setting().get('pdns_api_timeout')),
-                                     method='GET')
+                                     method='GET',
+                                     verify=Setting().get('verify_ssl_connections'))
             return jdata
         except Exception as e:
             current_app.logger.error(
@@ -54,7 +55,8 @@ class Server(object):
                 '/servers/{0}/statistics'.format(self.server_id)),
                                      headers=headers,
                                      timeout=int(Setting().get('pdns_api_timeout')),
-                                     method='GET')
+                                     method='GET',
+                                     verify=Setting().get('verify_ssl_connections'))
             return jdata
         except Exception as e:
             current_app.logger.error(
@@ -77,7 +79,8 @@ class Server(object):
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
-                                     method='GET')
+                                     method='GET',
+                                     verify=Setting().get('verify_ssl_connections'))
             return jdata
         except Exception as e:
             current_app.logger.error(
