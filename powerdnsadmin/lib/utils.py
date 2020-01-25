@@ -1,3 +1,4 @@
+import logging
 import re
 import json
 import requests
@@ -49,6 +50,8 @@ def fetch_remote(remote_url,
                          timeout=timeout,
                          data=data,
                          params=params)
+    logging.debug('Querying remote server "{0}" ({1}) finished with code {2} (took {3:.3f}s)'.format(
+        remote_url, method, r.status_code, r.elapsed.total_seconds()))
     try:
         if r.status_code not in (200, 201, 204, 400, 409, 422):
             r.raise_for_status()
