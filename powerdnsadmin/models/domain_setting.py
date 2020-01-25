@@ -1,3 +1,4 @@
+import logging
 from .base import db
 
 
