@@ -261,7 +261,7 @@ def api_generate_apikey():
     elif role_name == 'User':
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
-            msg = "One of supplied domains does not exists"
+            msg = "One of supplied domains does not exist"
             current_app.logger.error(msg)
             raise DomainNotExists(message=msg)
 
@@ -406,7 +406,7 @@ def api_update_apikey(apikey_id):
     elif role_name == 'User':
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
-            msg = "One of supplied domains does not exists"
+            msg = "One of supplied domains does not exist"
             current_app.logger.error(msg)
             raise DomainNotExists(message=msg)
 
