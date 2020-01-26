@@ -13,8 +13,12 @@ def create_app(config=None):
     from .assets import assets
     app = Flask(__name__)
 
+    # Read log level from environment variable
+    log_level_name = os.environ.get('PDNS_ADMIN_LOG_LEVEL', 'WARNING')
+    log_level = logging.getLevelName(log_level_name.upper())
     # Setting logger
     logging.basicConfig(
+       level=log_level,
         format=
         "[%(asctime)s] [%(filename)s:%(lineno)d] %(levelname)s - %(message)s")
 
