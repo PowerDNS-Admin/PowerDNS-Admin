@@ -82,3 +82,57 @@ class RequestIsNotJSON(StructuredException):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
+
+
+class AccountCreateFail(StructuredException):
+    status_code = 500
+
+    def __init__(self, name=None, message="Creation of account failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
+class AccountUpdateFail(StructuredException):
+    status_code = 500
+
+    def __init__(self, name=None, message="Update of account failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
+class AccountDeleteFail(StructuredException):
+    status_code = 500
+
+    def __init__(self, name=None, message="Delete of account failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
+class UserCreateFail(StructuredException):
+    status_code = 500
+
+    def __init__(self, name=None, message="Creation of user failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
+class UserUpdateFail(StructuredException):
+    status_code = 500
+
+    def __init__(self, name=None, message="Update of user failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
+class UserDeleteFail(StructuredException):
+    status_code = 500
+
+    def __init__(self, name=None, message="Delete of user failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
