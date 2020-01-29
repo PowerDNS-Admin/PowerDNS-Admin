@@ -52,7 +52,8 @@ class Record(object):
                 '/servers/localhost/zones/{0}'.format(domain)),
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
-                                     headers=headers)
+                                     headers=headers,
+                                     verify=Setting().get('verify_ssl_connections'))
         except Exception as e:
             current_app.logger.error(
                 "Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}"
@@ -96,6 +97,7 @@ class Record(object):
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      method='PATCH',
+                                     verify=Setting().get('verify_ssl_connections'),
                                      data=rrset)
             current_app.logger.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was added successfully'}
@@ -281,6 +283,7 @@ class Record(object):
                     '/servers/localhost/zones/{0}'.format(domain_name)),
                                           headers=headers,
                                           method='PATCH',
+                                          verify=Setting().get('verify_ssl_connections'),
                                           data=del_rrsets)
                 if 'error' in jdata1.keys():
                     current_app.logger.error(
@@ -300,6 +303,7 @@ class Record(object):
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PATCH',
+                    verify=Setting().get('verify_ssl_connections'),
                     data=new_rrsets)
                 if 'error' in jdata2.keys():
                     current_app.logger.error(
@@ -451,6 +455,7 @@ class Record(object):
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      method='PATCH',
+                                     verify=Setting().get('verify_ssl_connections'),
                                      data=data)
             current_app.logger.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
@@ -522,6 +527,7 @@ class Record(object):
                              headers=headers,
                              timeout=int(Setting().get('pdns_api_timeout')),
                              method='PATCH',
+                             verify=Setting().get('verify_ssl_connections'),
                              data=data)
             current_app.logger.debug("dyndns data: {0}".format(data))
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
@@ -544,7 +550,8 @@ class Record(object):
                                  headers=headers,
                                  timeout=int(
                                      Setting().get('pdns_api_timeout')),
-                                 method='GET')
+                                 method='GET',
+                                 verify=Setting().get('verify_ssl_connections'))
         serial = jdata['serial']
 
         domain = Domain.query.filter(Domain.name == domain).first()

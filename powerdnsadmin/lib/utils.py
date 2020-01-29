@@ -24,11 +24,12 @@ def fetch_remote(remote_url,
                  accept=None,
                  params=None,
                  timeout=None,
-                 headers=None):
+                 headers=None,
+                 verify=True):
     if data is not None and type(data) != str:
         data = json.dumps(data)
 
-    verify = False
+    verify = bool(verify)  # enforce type boolean
 
     our_headers = {
         'user-agent': 'powerdnsadmin/0',
@@ -64,13 +65,15 @@ def fetch_json(remote_url,
                data=None,
                params=None,
                headers=None,
-               timeout=None):
+               timeout=None,
+               verify=True):
     r = fetch_remote(remote_url,
                      method=method,
                      data=data,
                      params=params,
                      headers=headers,
                      timeout=timeout,
+                     verify=verify,
                      accept='application/json; q=1')
 
     if method == "DELETE":

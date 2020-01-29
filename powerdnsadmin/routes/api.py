@@ -144,7 +144,8 @@ def api_login_create_zone():
                                   method='POST',
                                   data=request.get_json(force=True),
                                   headers=headers,
-                                  accept='application/json; q=1')
+                                  accept='application/json; q=1',
+                                  verify=Setting().get('verify_ssl_connections'))
     except Exception as e:
         current_app.logger.error("Cannot create domain. Error: {}".format(e))
         abort(500)
@@ -219,7 +220,8 @@ def api_login_delete_zone(domain_name):
         resp = utils.fetch_remote(urljoin(pdns_api_url, api_full_uri),
                                   method='DELETE',
                                   headers=headers,
-                                  accept='application/json; q=1')
+                                  accept='application/json; q=1',
+                                  verify=Setting().get('verify_ssl_connections'))
 
         if resp.status_code == 204:
             current_app.logger.debug("Request to powerdns API successful")
