@@ -1,3 +1,5 @@
+from flask import current_app
+
 from .base import db
 from .user import User
 from .account_user import AccountUser
@@ -99,7 +101,7 @@ class Account(db.Model):
             return True
         except Exception as e:
             db.session.rollback()
-            logging.error(
+            current_app.logger.error(
                 'Cannot delete account {0} from DB. DETAIL: {1}'.format(
                     self.username, e))
             return False
@@ -140,7 +142,7 @@ class Account(db.Model):
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            logging.error(
+            current_app.logger.error(
                 'Cannot revoke user privileges on account {0}. DETAIL: {1}'.
                 format(self.name, e))
 
@@ -151,7 +153,7 @@ class Account(db.Model):
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            logging.error(
+            current_app.logger.error(
                 'Cannot grant user privileges to account {0}. DETAIL: {1}'.
                 format(self.name, e))
 
@@ -177,7 +179,7 @@ class Account(db.Model):
             return True
         except Exception as e:
             db.session.rollback()
-            logging.error(
+            current_app.logger.error(
                 'Cannot add user privileges on account {0}. DETAIL: {1}'.
                 format(self.name, e))
             return False
@@ -194,7 +196,7 @@ class Account(db.Model):
             return True
         except Exception as e:
             db.session.rollback()
-            logging.error(
+            current_app.logger.error(
                 'Cannot revoke user privileges on account {0}. DETAIL: {1}'.
                 format(self.name, e))
             return False

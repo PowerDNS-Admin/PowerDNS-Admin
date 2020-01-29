@@ -2,6 +2,7 @@ import sys
 import pytimeparse
 from ast import literal_eval
 from distutils.util import strtobool
+from flask import current_app
 
 from .base import db
 
@@ -194,9 +195,9 @@ class Setting(db.Model):
                 db.session.commit()
             return True
         except Exception as e:
-            logging.error('Cannot set maintenance to {0}. DETAIL: {1}'.format(
+            current_app.logger.error('Cannot set maintenance to {0}. DETAIL: {1}'.format(
                 mode, e))
-            logging.debug(traceback.format_exec())
+            current_app.logger.debug(traceback.format_exec())
             db.session.rollback()
             return False
 
@@ -216,9 +217,9 @@ class Setting(db.Model):
             db.session.commit()
             return True
         except Exception as e:
-            logging.error('Cannot toggle setting {0}. DETAIL: {1}'.format(
+            current_app.logger.error('Cannot toggle setting {0}. DETAIL: {1}'.format(
                 setting, e))
-            logging.debug(traceback.format_exec())
+            current_app.logger.debug(traceback.format_exec())
             db.session.rollback()
             return False
 
@@ -236,9 +237,9 @@ class Setting(db.Model):
             db.session.commit()
             return True
         except Exception as e:
-            logging.error('Cannot edit setting {0}. DETAIL: {1}'.format(
+            current_app.logger.error('Cannot edit setting {0}. DETAIL: {1}'.format(
                 setting, e))
-            logging.debug(traceback.format_exec())
+            current_app.logger.debug(traceback.format_exec())
             db.session.rollback()
             return False
 
@@ -252,7 +253,7 @@ class Setting(db.Model):
             else:
                 return self.defaults[setting]
         else:
-            logging.error('Unknown setting queried: {0}'.format(setting))
+            current_app.logger.error('Unknown setting queried: {0}'.format(setting))
 
     def get_records_allow_to_edit(self):
         return list(

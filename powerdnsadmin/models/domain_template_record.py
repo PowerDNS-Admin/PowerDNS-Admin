@@ -1,3 +1,5 @@
+from flask import current_app
+
 from .base import db
 
 
@@ -36,7 +38,7 @@ class DomainTemplateRecord(db.Model):
         try:
             db.session.commit()
         except Exception as e:
-            logging.error(
+            current_app.logger.error(
                 'Can not update domain template table. Error: {0}'.format(e))
             db.session.rollback()
             return {
