@@ -116,7 +116,7 @@ class Domain(db.Model):
         db_domain = Domain.query.all()
         list_db_domain = [d.name for d in db_domain]
         dict_db_domain = dict((x.name, x) for x in db_domain)
-        current_app.logger.info("Found {} entrys in PowerDNS-Admin".format(
+        current_app.logger.info("Found {} entries in PowerDNS-Admin".format(
             len(list_db_domain)))
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
@@ -128,7 +128,7 @@ class Domain(db.Model):
                 timeout=int(Setting().get('pdns_api_timeout')))
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             current_app.logger.info(
-                "Found {} entrys in PowerDNS server".format(len(list_jdomain)))
+                "Found {} entries in PowerDNS server".format(len(list_jdomain)))
 
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
@@ -190,7 +190,7 @@ class Domain(db.Model):
                     domain.name))
             except Exception as e:
                 db.session.rollback()
-                current_app.logger.info("Rolledback Domain {0} {1}".format(
+                current_app.logger.info("Rolled back Domain {0} {1}".format(
                     domain.name, e))
                 raise
 
@@ -267,7 +267,7 @@ class Domain(db.Model):
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')))
             except Exception as e:
-                current_app.logger.error('Can not read Domain from PDNS')
+                current_app.logger.error('Can not read domain from PDNS')
                 current_app.logger.error(e)
                 current_app.logger.debug(traceback.format_exc())
 
@@ -292,20 +292,20 @@ class Domain(db.Model):
         try:
             db.session.commit()
             current_app.logger.info(
-                "Synched PowerDNS Domain to PDNS-Admin: {0}".format(d.name))
+                "Synced PowerDNS Domain to PDNS-Admin: {0}".format(d.name))
             return {
                 'status': 'ok',
                 'msg': 'Added Domain successfully to PowerDNS-Admin'
             }
         except Exception as e:
             db.session.rollback()
-            current_app.logger.info("Rolledback Domain {0}".format(d.name))
+            current_app.logger.info("Rolled back Domain {0}".format(d.name))
             raise
 
     def update_soa_setting(self, domain_name, soa_edit_api):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
-            return {'status': 'error', 'msg': 'Domain doesnt exist.'}
+            return {'status': 'error', 'msg': 'Domain does not exist.'}
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
@@ -345,7 +345,7 @@ class Domain(db.Model):
                     domain_name))
             return {
                 'status': 'error',
-                'msg': 'Cannot change soa-edit-api this domain.'
+                'msg': 'Cannot change soa-edit-api for this domain.'
             }
 
     def update_kind(self, domain_name, kind, masters=[]):
@@ -354,7 +354,7 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
-            return {'status': 'error', 'msg': 'Domain doesnt exist.'}
+            return {'status': 'error', 'msg': 'Domain does not exist.'}
         headers = {}
         headers['X-API-Key'] = self.PDNS_API_KEY
 
@@ -496,7 +496,7 @@ class Domain(db.Model):
                          timeout=int(Setting().get('pdns_api_timeout')),
                          method='DELETE')
         current_app.logger.info(
-            'Deleted domain successfully from PowerDNS-Entity: {0}'.format(
+            'Deleted domain successfully from PowerDNS: {0}'.format(
                 domain_name))
         return {'status': 'ok', 'msg': 'Delete domain successfully'}
 
@@ -520,7 +520,7 @@ class Domain(db.Model):
         Domain.query.filter(Domain.name == domain_name).delete()
         db.session.commit()
         current_app.logger.info(
-            "Deleted Domain successfully from pdnsADMIN: {}".format(
+            "Deleted domain successfully from pdnsADMIN: {}".format(
                 domain_name))
 
     def get_user(self):
@@ -599,7 +599,7 @@ class Domain(db.Model):
                     'There was something wrong, please contact administrator'
                 }
         else:
-            return {'status': 'error', 'msg': 'This domain doesnot exist'}
+            return {'status': 'error', 'msg': 'This domain does not exist'}
 
     def get_domain_dnssec(self, domain_name):
         """
@@ -635,7 +635,7 @@ class Domain(db.Model):
                     'There was something wrong, please contact administrator'
                 }
         else:
-            return {'status': 'error', 'msg': 'This domain doesnot exist'}
+            return {'status': 'error', 'msg': 'This domain does not exist'}
 
     def enable_domain_dnssec(self, domain_name):
         """
@@ -764,7 +764,7 @@ class Domain(db.Model):
                 }
 
         else:
-            return {'status': 'error', 'msg': 'This domain doesnot exist'}
+            return {'status': 'error', 'msg': 'This domain does not exist'}
 
     def assoc_account(self, account_id):
         """
