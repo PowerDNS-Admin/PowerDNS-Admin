@@ -1,3 +1,5 @@
+from flask import current_app
+
 from .base import db
 
 
@@ -26,8 +28,8 @@ class DomainSetting(db.Model):
             db.session.commit()
             return True
         except Exception as e:
-            logging.error(
+            current_app.logger.error(
                 'Unable to set DomainSetting value. DETAIL: {0}'.format(e))
-            logging.debug(traceback.format_exc())
+            current_app.logger.debug(traceback.format_exc())
             db.session.rollback()
             return False
