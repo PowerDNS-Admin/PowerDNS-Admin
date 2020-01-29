@@ -32,6 +32,7 @@ class Setting(db.Model):
         'pdns_api_key': '',
         'pdns_api_timeout': 30,
         'pdns_version': '4.1.1',
+        'verify_ssl_connections': True,
         'local_db_enabled': True,
         'signup_enabled': True,
         'verify_user_email': False,
