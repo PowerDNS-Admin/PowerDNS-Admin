@@ -138,7 +138,7 @@ class Domain(db.Model):
                 should_removed_db_domain = list(
                     set(list_db_domain).difference(list_jdomain))
                 for domain_name in should_removed_db_domain:
-                    self.delete_domain_from_pdnsadmin(domain_name)
+                    self.delete_domain_from_pdnsadmin(domain_name, do_commit=False)
             except Exception as e:
                 current_app.logger.error(
                     'Can not delete domain from DB. DETAIL: {0}'.format(e))
@@ -155,22 +155,24 @@ class Domain(db.Model):
                     account_id = None
                 domain = dict_db_domain.get(data['name'].rstrip('.'), None)
                 if domain:
-                    self.update_pdns_admin_domain(domain, account_id, data)
+                    self.update_pdns_admin_domain(domain, account_id, data, do_commit=False)
                 else:
                     # add new domain
-                    self.add_domain_to_powerdns_admin(domain=data)
+                    self.add_domain_to_powerdns_admin(domain=data, do_commit=False)
 
+            db.session.commit()
             current_app.logger.info('Update domain finished')
             return {
                 'status': 'ok',
                 'msg': 'Domain table has been updated successfully'
             }
         except Exception as e:
+            db.session.rollback()
             current_app.logger.error(
                 'Can not update domain table. Error: {0}'.format(e))
             return {'status': 'error', 'msg': 'Can not update domain table'}
 
-    def update_pdns_admin_domain(self, domain, account_id, data):
+    def update_pdns_admin_domain(self, domain, account_id, data, do_commit=True):
         # existing domain, only update if something actually has changed
         if (domain.master != str(data['masters'])
                 or domain.type != data['kind']
@@ -188,7 +190,8 @@ class Domain(db.Model):
             domain.dnssec = 1 if data['dnssec'] else 0
             domain.account_id = account_id
             try:
-                db.session.commit()
+                if do_commit:
+                    db.session.commit()
                 current_app.logger.info("Updated PDNS-Admin domain {0}".format(
                     domain.name))
             except Exception as e:
@@ -255,7 +258,7 @@ class Domain(db.Model):
             current_app.logger.debug(traceback.format_exc())
             return {'status': 'error', 'msg': 'Cannot add this domain.'}
 
-    def add_domain_to_powerdns_admin(self, domain=None, domain_dict=None):
+    def add_domain_to_powerdns_admin(self, domain=None, domain_dict=None, do_commit=True):
         """
         Read Domain from PowerDNS and add into PDNS-Admin
         """
@@ -295,7 +298,8 @@ class Domain(db.Model):
         d.account_id = account_id
         db.session.add(d)
         try:
-            db.session.commit()
+            if do_commit:
+                db.session.commit()
             current_app.logger.info(
                 "Synced PowerDNS Domain to PDNS-Admin: {0}".format(d.name))
             return {
@@ -508,25 +512,23 @@ class Domain(db.Model):
                 domain_name))
         return {'status': 'ok', 'msg': 'Delete domain successfully'}
 
-    def delete_domain_from_pdnsadmin(self, domain_name):
+    def delete_domain_from_pdnsadmin(self, domain_name, do_commit=True):
         # Revoke permission before deleting domain
         domain = Domain.query.filter(Domain.name == domain_name).first()
         domain_user = DomainUser.query.filter(
             DomainUser.domain_id == domain.id)
         if domain_user:
             domain_user.delete()
-            db.session.commit()
         domain_setting = DomainSetting.query.filter(
             DomainSetting.domain_id == domain.id)
         if domain_setting:
             domain_setting.delete()
-            db.session.commit()
         domain.apikeys[:] = []
-        db.session.commit()
 
         # then remove domain
         Domain.query.filter(Domain.name == domain_name).delete()
-        db.session.commit()
+        if do_commit:
+            db.session.commit()
         current_app.logger.info(
             "Deleted domain successfully from pdnsADMIN: {}".format(
                 domain_name))
