@@ -149,6 +149,16 @@
                                                         <input type="text" class="form-control" name="ldap_filter_group" id="ldap_filter_group" placeholder="e.g. (objectclass=groupOfNames)" data-error="Please input LDAP filter" value="{{ SETTING.get('ldap_filter_group') }}">
                                                         <span class="help-block with-errors"></span>
                                                     </div>
+                                                    <label>Group member matching</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="ldap_group_matching" id="ldap_gr_match_groupofnames" value="groupOfNames" {% if SETTING.get('ldap_group_matching') == "groupOfNames" %}checked{% endif %}> groupOfNames
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="ldap_group_matching" id="ldap_gr-match_posixgroup" value="posixGroup" {% if SETTING.get('ldap_group_matching') == "posixGroup" %}checked{% endif %}> posixGroup
+                                                        </label>
+                                                    </div>
                                                     <div class="form-group">
                                                         <label for="ldap_filter_groupname">Group name field</label>
                                                         <input type="text" class="form-control" name="ldap_filter_groupname" id="ldap_filter_groupname" placeholder="e.g. member" data-error="Please input field for group name filtering" value="{{ SETTING.get('ldap_filter_groupname') }}">
@@ -240,7 +250,10 @@
                                                         Group filter - The filter that will be applied to all LDAP group queries by PDA. (e.g. <i>(objectClass=groupOfNames)</i> for OpenLDAP)
                                                     </li>
                                                     <li>
-                                                        Group name field - The field PDA will look for group names. (e.g. <i>member</i> for OpenLDAP)
+                                                        Group member matching - The field to choose between wether to use <i>groupOfNames</i> or <i>posixGroup</i> group membership matching.
+                                                    </li>
+                                                    <li>
+                                                        Group name field - The field PDA will look for group names. (e.g. <i>member</i> for OpenLDAP with groupOfNames support or <i>memberUid</i> with posixGroup matching)
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -599,6 +612,7 @@
             $('#ldap_filter_group').prop('required', true);
             $('#ldap_filter_username').prop('required', true);
             $('#ldap_filter_groupname').prop('required', true);
+            $('#ldap_group_matching').prop('required', true);
 
             if ($('#ldap_sg_on').is(":checked")) {
                 $('#ldap_admin_group').prop('required', true);
@@ -615,6 +629,7 @@
             $('#ldap_filter_group').prop('required', false);
             $('#ldap_filter_username').prop('required', false);
             $('#ldap_filter_groupname').prop('required', false);
+            $('#ldap_group_matching').prop('required', false);
 
             if ($('#ldap_sg_on').is(":checked")) {
                 $('#ldap_admin_group').prop('required', false);
@@ -667,6 +682,7 @@
         $('#ldap_filter_group').prop('required', true);
         $('#ldap_filter_username').prop('required', true);
         $('#ldap_filter_groupname').prop('required', true);
+        $('#ldap_group_matching').prop('required', true);
 
         if ($('#ldap_sg_on').is(":checked")) {
             $('#ldap_admin_group').prop('required', true);

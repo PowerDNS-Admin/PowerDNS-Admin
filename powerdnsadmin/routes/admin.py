@@ -657,6 +657,8 @@ def setting_authentication():
                               request.form.get('ldap_filter_username'))
                 Setting().set('ldap_filter_groupname',
                               request.form.get('ldap_filter_groupname'))
+                Setting().set('ldap_group_matching',
+                              request.form.get('ldap_group_matching'))
                 Setting().set(
                     'ldap_sg_enabled', True
                     if request.form.get('ldap_sg_enabled') == 'ON' else False)

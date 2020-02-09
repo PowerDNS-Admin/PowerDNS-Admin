@@ -271,7 +271,10 @@ class User(db.Model):
                     if LDAP_GROUP_SECURITY_ENABLED:
                         try:
                             if LDAP_TYPE == 'ldap':
-                                groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, ldap_username, LDAP_FILTER_GROUP)
+                                if Setting().get('ldap_group_matching') == "posixGroup":
+                                    groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, self.username, LDAP_FILTER_GROUP)
+                                else:
+                                    groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, ldap_username, LDAP_FILTER_GROUP)
                                 current_app.logger.debug('Ldap groupSearchFilter {0}'.format(groupSearchFilter))
                                 if (self.ldap_search(groupSearchFilter,
                                                      LDAP_ADMIN_GROUP)):
