@@ -105,7 +105,7 @@ def domain(domain_name):
                         status='Disabled' if record['disabled'] else 'Active',
                         ttl=r['ttl'],
                         data=record['content'],
-                        comment=r['comments'][index]['content']
+                        comment=r['comments'][0]['content']
                         if r['comments'] else '',
                         is_allowed_edit=True)
                     index += 1
