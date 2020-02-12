@@ -27,3 +27,4 @@ pytimeparse==1.1.8
 PyYAML==5.1.1
 Flask-SSLify==0.1.5
 Flask-Mail==0.9.1
+clikit==0.4.0
