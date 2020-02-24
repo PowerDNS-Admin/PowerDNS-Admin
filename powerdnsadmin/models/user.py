@@ -223,7 +223,7 @@ class User(db.Model):
             LDAP_BASE_DN = Setting().get('ldap_base_dn')
             LDAP_FILTER_BASIC = Setting().get('ldap_filter_basic')
             LDAP_FILTER_USERNAME = Setting().get('ldap_filter_username')
-            LDAP_FILTER_GROUP = Setting().get('ldap_filter_group')
+            LDAP_GROUP_MATCHING = Setting().get('ldap_group_matching')
             LDAP_FILTER_GROUPNAME = Setting().get('ldap_filter_groupname')
             LDAP_ADMIN_GROUP = Setting().get('ldap_admin_group')
             LDAP_OPERATOR_GROUP = Setting().get('ldap_operator_group')
@@ -271,10 +271,10 @@ class User(db.Model):
                     if LDAP_GROUP_SECURITY_ENABLED:
                         try:
                             if LDAP_TYPE == 'ldap':
-                                if Setting().get('ldap_group_matching') == "posixGroup":
-                                    groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, self.username, LDAP_FILTER_GROUP)
+                                if LDAP_GROUP_MATCHING == "posixGroup":
+                                    groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, self.username, "(objectClass=posixGroup)")
                                 else:
-                                    groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, ldap_username, LDAP_FILTER_GROUP)
+                                    groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, ldap_username, "(objectClass=groupOfNames)")
                                 current_app.logger.debug('Ldap groupSearchFilter {0}'.format(groupSearchFilter))
                                 if (self.ldap_search(groupSearchFilter,
                                                      LDAP_ADMIN_GROUP)):

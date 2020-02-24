@@ -651,8 +651,6 @@ def setting_authentication():
                               request.form.get('ldap_admin_password'))
                 Setting().set('ldap_filter_basic',
                               request.form.get('ldap_filter_basic'))
-                Setting().set('ldap_filter_group',
-                              request.form.get('ldap_filter_group'))
                 Setting().set('ldap_filter_username',
                               request.form.get('ldap_filter_username'))
                 Setting().set('ldap_filter_groupname',

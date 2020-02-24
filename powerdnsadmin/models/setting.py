@@ -44,7 +44,6 @@ class Setting(db.Model):
         'ldap_admin_username': '',
         'ldap_admin_password': '',
         'ldap_filter_basic': '',
-        'ldap_filter_group': '',
         'ldap_filter_username': '',
         'ldap_filter_groupname': '',
         'ldap_group_matching': 'groupOfNames',
