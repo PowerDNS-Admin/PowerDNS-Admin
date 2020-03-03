@@ -57,7 +57,7 @@ def fetch_remote(remote_url,
         if r.status_code not in (200, 201, 204, 400, 409, 422):
             r.raise_for_status()
     except Exception as e:
-        msg = "Returned status {0} and content {1}"
+        msg = "Returned status {0} and content {1}".format(r.status_code, r.text)
         raise RuntimeError('Error while fetching {0}. {1}'.format(
             remote_url, msg))
 
