@@ -11,6 +11,10 @@ def azure_oauth():
     def fetch_azure_token():
         return session.get('azure_token')
 
+    def update_token(token):
+        session['azure_token'] = token
+        return token
+
     azure = authlib_oauth_client.register(
         'azure',
         client_id=Setting().get('azure_oauth_key'),
@@ -33,6 +37,6 @@ def azure_oauth():
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error'], request.args['error_description'])
         session['azure_token'] = (token)
-        return redirect(url_for('.login', _external=True, _scheme='https'))
+        return redirect(url_for('index.login', _external=True, _scheme='https'))
 
     return azure
