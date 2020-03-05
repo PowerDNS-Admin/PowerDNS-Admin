@@ -12,7 +12,7 @@ def oidc_oauth():
         return session.get('oidc_token')
 
     def update_token(token):
-        session['google_token'] = token
+        session['oidc_token'] = token
         return token
 
     oidc = authlib_oauth_client.register(
