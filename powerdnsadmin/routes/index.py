@@ -297,11 +297,17 @@ def login():
                         firstname=oidc_givenname,
                         lastname=oidc_familyname,
                         email=oidc_email)
-
             result = user.create_local_user()
-            if not result['status']:
-                session.pop('oidc_token', None)
-                return redirect(url_for('index.login'))
+        else:
+            user.firstname = oidc_givenname
+            user.lastname = oidc_familyname
+            user.email = oidc_email
+            user.plain_text_password = None
+            result = user.update_local_user()
+
+        if not result['status']:
+            session.pop('oidc_token', None)
+            return redirect(url_for('index.login'))
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
