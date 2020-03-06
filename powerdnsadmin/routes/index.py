@@ -309,6 +309,17 @@ def login():
             session.pop('oidc_token', None)
             return redirect(url_for('index.login'))
 
+        if Setting().get('oidc_oauth_account_name_property') and Setting().get('oidc_oauth_account_description_property'):
+            name_prop = Setting().get('oidc_oauth_account_name_property')
+            desc_prop = Setting().get('oidc_oauth_account_description_property')
+            if name_prop in me and desc_prop in me:
+                account = handle_account(me[name_prop], me[desc_prop])
+                account.add_user(user)
+                user_accounts = user.get_accounts()
+                for ua in user_accounts:
+                    if ua.name != account.name:
+                        ua.remove_user(user)
+
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
         login_user(user, remember=False)
@@ -879,7 +890,7 @@ def create_group_to_account_mapping():
     return group_to_account_mapping
 
 
-def handle_account(account_name):
+def handle_account(account_name, account_description=""):
     clean_name = ''.join(c for c in account_name.lower()
                          if c in "abcdefghijklmnopqrstuvwxyz0123456789")
     if len(clean_name) > Account.name.type.length:
@@ -888,13 +899,16 @@ def handle_account(account_name):
     account = Account.query.filter_by(name=clean_name).first()
     if not account:
         account = Account(name=clean_name.lower(),
-                          description='',
+                          description=account_description,
                           contact='',
                           mail='')
         account.create_account()
         history = History(msg='Account {0} created'.format(account.name),
-                          created_by='SAML Assertion')
+                          created_by='OIDC/SAML Assertion')
         history.add()
+    else:
+        account.description = account_description
+        account.update_account()
     return account
 
 
