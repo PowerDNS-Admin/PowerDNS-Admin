@@ -12,7 +12,7 @@ def github_oauth():
         return session.get('github_token')
 
     def update_token(token):
-        session['google_token'] = token
+        session['github_token'] = token
         return token
 
     github = authlib_oauth_client.register(
