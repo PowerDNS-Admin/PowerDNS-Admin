@@ -473,7 +473,7 @@ class User(db.Model):
         user.email = self.email
 
         # store new password hash (only if changed)
-        if self.plain_text_password != "":
+        if self.plain_text_password:
             user.password = self.get_hashed_password(
                 self.plain_text_password).decode("utf-8")
 
