@@ -28,7 +28,7 @@ def forward_request():
         'X-API-KEY': pdns_api_key
     }
 
-    url = urljoin(pdns_api_url, request.path)
+    url = urljoin(pdns_api_url, request.full_path)
 
     resp = requests.request(request.method,
                             url,
