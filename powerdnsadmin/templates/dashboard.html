@@ -251,7 +251,7 @@
             data['name'] = modal.find('#template_name').val();
             data['description'] = modal.find('#template_description').val();
             data['domain'] = modal.find('#domain').val();
-            applyChanges(data, $SCRIPT_ROOT + "{{ url_for('admin.create_template_from_zone') }}", true);
+            applyChanges(data, "{{ url_for('admin.create_template_from_zone') }}", true);
             modal.modal('hide');
         })
         modal.find('#button_close').click(function() {
