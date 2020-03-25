@@ -43,6 +43,7 @@ legal_envvars = (
     'SAML_WANT_MESSAGE_SIGNED',
     'SAML_LOGOUT',
     'SAML_LOGOUT_URL',
+    'SAML_ASSERTION_ENCRYPTED',
 )
 
 legal_envvars_int = ('PORT', 'MAIL_PORT', 'SAML_METADATA_CACHE_LIFETIME')
@@ -58,6 +59,7 @@ legal_envvars_bool = (
     'SAML_SIGN_REQUEST',
     'SAML_WANT_MESSAGE_SIGNED',
     'SAML_LOGOUT',
+    'SAML_ASSERTION_ENCRYPTED',
 )
 
 # import everything from environment variables

@@ -138,3 +138,5 @@ SAML_ENABLED = False
 # #Configure to redirect to a different url then PowerDNS-Admin login after SAML logout
 # #for example redirect to google.com after successful saml logout
 # #SAML_LOGOUT_URL = 'https://google.com'
+
+# #SAML_ASSERTION_ENCRYPTED = True
