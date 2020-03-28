@@ -25,6 +25,7 @@ There are several ways to run PowerDNS-Admin. Following is a simple way to start
 Step 1: Update the configuration
 
 Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`. Other environment variables are mentioned in the [legal_envvars](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/configs/docker_config.py#L5-L37).
+To use docker secret feature it is possible to append `_FILE` to the environment variables and point to a file with the value stored in it.
 
 Step 2: Start docker container
 
