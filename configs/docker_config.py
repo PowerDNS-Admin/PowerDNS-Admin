@@ -64,8 +64,21 @@ legal_envvars_bool = (
 import os
 import sys
 for v in legal_envvars:
-    if v in os.environ:
+
+    ret = None
+    # _FILE suffix will allow to read value from file, usefull for Docker's
+    # secrets feature
+    if v + '_FILE' in os.environ:
+        if v in os.environ:
+            raise AttributeError("Both {} and {} are set but are exclusive." .format(v, v + '_FILE'))
+        with open(os.environ[v + '_FILE']) as f:
+            ret = f.read()
+        f.close()
+
+    elif v in os.environ:
         ret = os.environ[v]
+
+    if ret is not None:
         if v in legal_envvars_bool:
             ret = bool(ret)
         if v in legal_envvars_int:
