@@ -12,7 +12,7 @@ python-ldap==3.1.0
 pyotp==2.2.6
 qrcode==6.0
 dnspython==1.15.0
-gunicorn==19.7.1
+gunicorn==20.0.4
 python3-saml
 pyOpenSSL>=0.15
 pytz>=2017.3
