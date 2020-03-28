@@ -1,4 +1,4 @@
-FROM alpine:3.10 AS builder
+FROM alpine:3.11 AS builder
 LABEL maintainer="k@ndk.name"
 
 ARG BUILD_DEPENDENCIES="build-base \
@@ -26,7 +26,8 @@ WORKDIR /build
 COPY ./requirements.txt /build/requirements.txt
 
 # Get application dependencies
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 # Add sources
 COPY . /build
@@ -69,16 +70,16 @@ RUN pip install pip-autoremove && \
 
 
 # Build image
-FROM alpine:3.10
+FROM alpine:3.11
 
 ENV FLASK_APP=/app/powerdnsadmin/__init__.py
 
-RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec && \
+RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata && \
     addgroup -S pda && \
     adduser -S -D -G pda pda
 
 COPY --from=builder /usr/bin/flask /usr/bin/
-COPY --from=builder /usr/lib/python3.7/site-packages /usr/lib/python3.7/site-packages/
+COPY --from=builder /usr/lib/python3.8/site-packages /usr/lib/python3.8/site-packages/
 COPY --from=builder --chown=pda:pda /app /app/
 COPY ./docker/entrypoint.sh /usr/bin/
 
