@@ -63,6 +63,12 @@ legal_envvars_bool = (
 # import everything from environment variables
 import os
 import sys
+
+
+def str2bool(v):
+    return v.lower() in ("true", "yes", "1")
+
+
 for v in legal_envvars:
 
     ret = None
@@ -70,7 +76,9 @@ for v in legal_envvars:
     # secrets feature
     if v + '_FILE' in os.environ:
         if v in os.environ:
-            raise AttributeError("Both {} and {} are set but are exclusive." .format(v, v + '_FILE'))
+            raise AttributeError(
+                "Both {} and {} are set but are exclusive.".format(
+                    v, v + '_FILE'))
         with open(os.environ[v + '_FILE']) as f:
             ret = f.read()
         f.close()
@@ -80,7 +88,7 @@ for v in legal_envvars:
 
     if ret is not None:
         if v in legal_envvars_bool:
-            ret = bool(ret)
+            ret = str2bool(ret)
         if v in legal_envvars_int:
             ret = int(ret)
         sys.modules[__name__].__dict__[v] = ret
