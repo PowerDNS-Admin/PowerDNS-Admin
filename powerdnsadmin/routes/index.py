@@ -722,6 +722,7 @@ def saml_authorized():
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     auth.process_response()
+    current_app.logger.debug( auth.get_attributes() )
     errors = auth.get_errors()
     if len(errors) == 0:
         session['samlUserdata'] = auth.get_attributes()
