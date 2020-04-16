@@ -32,6 +32,7 @@
         {{ error }}
       </div>
       {% endif %}
+      {% if SETTING.get('ldap_enabled') or SETTING.get('local_db_enabled') %}
       <form action="" method="post" data-toggle="validator">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
@@ -87,9 +88,12 @@
           <!-- /.col -->
         </div>
       </form>
+      {% endif %}
       {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') or SETTING.get('azure_oauth_enabled') %}
       <div class="social-auth-links text-center">
+        {% if SETTING.get('ldap_enabled') or SETTING.get('local_db_enabled') %}
         <p>- OR -</p>
+        {% endif %}
         {% if SETTING.get('oidc_oauth_enabled') %}
         <a href="{{ url_for('index.oidc_login') }}" class="btn btn-block btn-social btn-openid btn-flat"><i
             class="fa fa-openid"></i> Sign in using
