@@ -1,6 +1,7 @@
 # Defaults for Docker image
 BIND_ADDRESS = '0.0.0.0'
 PORT = 80
+SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
 
 legal_envvars = (
     'SECRET_KEY',
