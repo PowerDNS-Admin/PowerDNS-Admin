@@ -602,6 +602,20 @@ def setting_records():
         Setting().set('reverse_records_allow_edit', str(rr))
         return redirect(url_for('admin.setting_records'))
 
+def has_an_auth_method(local_db_enabled = None,ldap_enabled = None,google_oauth_enabled = None,github_oauth_enabled = None,oidc_oauth_enabled = None,azure_oauth_enabled = None):
+    if local_db_enabled is None:
+        local_db_enabled = Setting().get('local_db_enabled')
+    if ldap_enabled is None:
+        ldap_enabled = Setting().get('ldap_enabled')
+    if google_oauth_enabled is None:
+        google_oauth_enabled = Setting().get('google_oauth_enabled')
+    if github_oauth_enabled is None:
+        github_oauth_enabled = Setting().get('github_oauth_enabled')
+    if oidc_oauth_enabled is None:
+        oidc_oauth_enabled = Setting().get('oidc_oauth_enabled')
+    if azure_oauth_enabled is None:
+        azure_oauth_enabled = Setting().get('azure_oauth_enabled')
+    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled or azure_oauth_enabled
 
 @admin_bp.route('/setting/authentication', methods=['GET', 'POST'])
 @login_required
@@ -619,12 +633,12 @@ def setting_authentication():
             signup_enabled = True if request.form.get(
                 'signup_enabled', ) else False
 
-            if not local_db_enabled and not Setting().get('ldap_enabled'):
+            if not has_an_auth_method(local_db_enabled=local_db_enabled):
                 result = {
                     'status':
                     False,
                     'msg':
-                    'Local DB and LDAP Authentication can not be disabled at the same time.'
+                    'Must have at least one authentication method enabled.'
                 }
             else:
                 Setting().set('local_db_enabled', local_db_enabled)
@@ -633,12 +647,12 @@ def setting_authentication():
         elif conf_type == 'ldap':
             ldap_enabled = True if request.form.get('ldap_enabled') else False
 
-            if not ldap_enabled and not Setting().get('local_db_enabled'):
+            if not has_an_auth_method(ldap_enabled=ldap_enabled):
                 result = {
                     'status':
-                    False,
+                        False,
                     'msg':
-                    'Local DB and LDAP Authentication can not be disabled at the same time.'
+                        'Must have at least one authentication method enabled.'
                 }
             else:
                 Setting().set('ldap_enabled', ldap_enabled)
@@ -669,88 +683,128 @@ def setting_authentication():
                 Setting().set('ldap_domain', request.form.get('ldap_domain'))
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':
-            Setting().set(
-                'google_oauth_enabled',
-                True if request.form.get('google_oauth_enabled') else False)
-            Setting().set('google_oauth_client_id',
-                          request.form.get('google_oauth_client_id'))
-            Setting().set('google_oauth_client_secret',
-                          request.form.get('google_oauth_client_secret'))
-            Setting().set('google_token_url',
-                          request.form.get('google_token_url'))
-            Setting().set('google_oauth_scope',
-                          request.form.get('google_oauth_scope'))
-            Setting().set('google_authorize_url',
-                          request.form.get('google_authorize_url'))
-            Setting().set('google_base_url',
-                          request.form.get('google_base_url'))
-            result = {
-                'status': True,
-                'msg': 'Saved successfully. Please reload PDA to take effect.'
-            }
+            google_oauth_enabled = True if request.form.get(
+                'google_oauth_enabled') else False
+            if not has_an_auth_method(google_oauth_enabled=google_oauth_enabled):
+                result = {
+                    'status':
+                        False,
+                    'msg':
+                        'Must have at least one authentication method enabled.'
+                }
+            else:
+                Setting().set(
+                    'google_oauth_enabled',
+                    google_oauth_enabled)
+                Setting().set('google_oauth_client_id',
+                              request.form.get('google_oauth_client_id'))
+                Setting().set('google_oauth_client_secret',
+                              request.form.get('google_oauth_client_secret'))
+                Setting().set('google_token_url',
+                              request.form.get('google_token_url'))
+                Setting().set('google_oauth_scope',
+                              request.form.get('google_oauth_scope'))
+                Setting().set('google_authorize_url',
+                              request.form.get('google_authorize_url'))
+                Setting().set('google_base_url',
+                              request.form.get('google_base_url'))
+                result = {
+                    'status': True,
+                    'msg': 'Saved successfully. Please reload PDA to take effect.'
+                }
         elif conf_type == 'github':
-            Setting().set(
-                'github_oauth_enabled',
-                True if request.form.get('github_oauth_enabled') else False)
-            Setting().set('github_oauth_key',
-                          request.form.get('github_oauth_key'))
-            Setting().set('github_oauth_secret',
-                          request.form.get('github_oauth_secret'))
-            Setting().set('github_oauth_scope',
-                          request.form.get('github_oauth_scope'))
-            Setting().set('github_oauth_api_url',
-                          request.form.get('github_oauth_api_url'))
-            Setting().set('github_oauth_token_url',
-                          request.form.get('github_oauth_token_url'))
-            Setting().set('github_oauth_authorize_url',
-                          request.form.get('github_oauth_authorize_url'))
-            result = {
-                'status': True,
-                'msg': 'Saved successfully. Please reload PDA to take effect.'
-            }
+            github_oauth_enabled = True if request.form.get(
+                'github_oauth_enabled') else False
+            if not has_an_auth_method(github_oauth_enabled=github_oauth_enabled):
+                result = {
+                    'status':
+                        False,
+                    'msg':
+                        'Must have at least one authentication method enabled.'
+                }
+            else:
+                Setting().set(
+                    'github_oauth_enabled',
+                    github_oauth_enabled)
+                Setting().set('github_oauth_key',
+                              request.form.get('github_oauth_key'))
+                Setting().set('github_oauth_secret',
+                              request.form.get('github_oauth_secret'))
+                Setting().set('github_oauth_scope',
+                              request.form.get('github_oauth_scope'))
+                Setting().set('github_oauth_api_url',
+                              request.form.get('github_oauth_api_url'))
+                Setting().set('github_oauth_token_url',
+                              request.form.get('github_oauth_token_url'))
+                Setting().set('github_oauth_authorize_url',
+                              request.form.get('github_oauth_authorize_url'))
+                result = {
+                    'status': True,
+                    'msg': 'Saved successfully. Please reload PDA to take effect.'
+                }
         elif conf_type == 'azure':
-            Setting().set(
-                'azure_oauth_enabled',
-                True if request.form.get('azure_oauth_enabled') else False)
-            Setting().set('azure_oauth_key',
-                          request.form.get('azure_oauth_key'))
-            Setting().set('azure_oauth_secret',
-                          request.form.get('azure_oauth_secret'))
-            Setting().set('azure_oauth_scope',
-                          request.form.get('azure_oauth_scope'))
-            Setting().set('azure_oauth_api_url',
-                          request.form.get('azure_oauth_api_url'))
-            Setting().set('azure_oauth_token_url',
-                          request.form.get('azure_oauth_token_url'))
-            Setting().set('azure_oauth_authorize_url',
-                          request.form.get('azure_oauth_authorize_url'))
-            Setting().set('azure_sg_enabled', True if request.form.get('azure_sg_enabled')=='ON' else False)
-            Setting().set('azure_admin_group', request.form.get('azure_admin_group'))
-            Setting().set('azure_operator_group', request.form.get('azure_operator_group'))
-            Setting().set('azure_user_group', request.form.get('azure_user_group'))
-            result = {
-                'status': True,
-                'msg': 'Saved successfully. Please reload PDA to take effect.'
-            }
+            azure_oauth_enabled = True if request.form.get(
+                'azure_oauth_enabled') else False
+            if not has_an_auth_method(azure_oauth_enabled=azure_oauth_enabled):
+                result = {
+                    'status':
+                        False,
+                    'msg':
+                        'Must have at least one authentication method enabled.'
+                }
+            else:
+                Setting().set(
+                    'azure_oauth_enabled',
+                    azure_oauth_enabled)
+                Setting().set('azure_oauth_key',
+                              request.form.get('azure_oauth_key'))
+                Setting().set('azure_oauth_secret',
+                              request.form.get('azure_oauth_secret'))
+                Setting().set('azure_oauth_scope',
+                              request.form.get('azure_oauth_scope'))
+                Setting().set('azure_oauth_api_url',
+                              request.form.get('azure_oauth_api_url'))
+                Setting().set('azure_oauth_token_url',
+                              request.form.get('azure_oauth_token_url'))
+                Setting().set('azure_oauth_authorize_url',
+                              request.form.get('azure_oauth_authorize_url'))
+                Setting().set('azure_sg_enabled', True if request.form.get('azure_sg_enabled')=='ON' else False)
+                Setting().set('azure_admin_group', request.form.get('azure_admin_group'))
+                Setting().set('azure_operator_group', request.form.get('azure_operator_group'))
+                Setting().set('azure_user_group', request.form.get('azure_user_group'))
+                result = {
+                    'status': True,
+                    'msg': 'Saved successfully. Please reload PDA to take effect.'
+                }
         elif conf_type == 'oidc':
-            Setting().set(
-                'oidc_oauth_enabled',
-                True if request.form.get('oidc_oauth_enabled') else False)
-            Setting().set('oidc_oauth_key', request.form.get('oidc_oauth_key'))
-            Setting().set('oidc_oauth_secret',
-                          request.form.get('oidc_oauth_secret'))
-            Setting().set('oidc_oauth_scope',
-                          request.form.get('oidc_oauth_scope'))
-            Setting().set('oidc_oauth_api_url',
-                          request.form.get('oidc_oauth_api_url'))
-            Setting().set('oidc_oauth_token_url',
-                          request.form.get('oidc_oauth_token_url'))
-            Setting().set('oidc_oauth_authorize_url',
-                          request.form.get('oidc_oauth_authorize_url'))
-            result = {
-                'status': True,
-                'msg': 'Saved successfully. Please reload PDA to take effect.'
-            }
+            oidc_oauth_enabled = True if request.form.get(
+                'oidc_oauth_enabled') else False
+            if not has_an_auth_method(oidc_oauth_enabled=oidc_oauth_enabled):
+                result = {
+                    'status':
+                        False,
+                    'msg':
+                        'Must have at least one authentication method enabled.'
+                }
+            else:
+                Setting().set(
+                    'oidc_oauth_enabled',
+                    True if request.form.get('oidc_oauth_enabled') else False)
+                Setting().set('oidc_oauth_key', request.form.get('oidc_oauth_key'))
+                Setting().set('oidc_oauth_secret',
+                              request.form.get('oidc_oauth_secret'))
+                Setting().set('oidc_oauth_scope',
+                              request.form.get('oidc_oauth_scope'))
+                Setting().set('oidc_oauth_api_url',
+                              request.form.get('oidc_oauth_api_url'))
+                Setting().set('oidc_oauth_token_url',
+                              request.form.get('oidc_oauth_token_url'))
+                Setting().set('oidc_oauth_authorize_url',
+                              request.form.get('oidc_oauth_authorize_url'))
+                result = {
+                    'status': True,
+                    'msg': 'Saved successfully. Please reload PDA to take effect.'
+                }
         else:
             return abort(400)
 

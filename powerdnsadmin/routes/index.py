@@ -321,6 +321,12 @@ def login():
             'authentication_type'] = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
         remember_me = True if 'remember' in request.form else False
 
+        if auth_method == 'LOCAL' and not Setting().get('local_db_enabled'):
+            return render_template(
+                'login.html',
+                saml_enabled=SAML_ENABLED,
+                error='Local authentication is disabled')
+
         user = User(username=username,
                     password=password,
                     plain_text_password=password)
