@@ -218,8 +218,8 @@ def login():
         azure_username = me["userPrincipalName"]
         azure_givenname = me["givenName"]
         azure_familyname = me["surname"]
-        if "email" in me:
-            azure_email = me["email"]
+        if "mail" in me:
+            azure_email = me["mail"]
         else:
             azure_email = ""
         if not azure_email:
