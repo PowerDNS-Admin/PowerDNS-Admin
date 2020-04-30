@@ -76,7 +76,9 @@ ENV FLASK_APP=/app/powerdnsadmin/__init__.py
 
 RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata && \
     addgroup -S pda && \
-    adduser -S -D -G pda pda
+    adduser -S -D -G pda pda && \
+    mkdir /data && \
+    chown pda:pda /data
 
 COPY --from=builder /usr/bin/flask /usr/bin/
 COPY --from=builder /usr/lib/python3.8/site-packages /usr/lib/python3.8/site-packages/
