@@ -201,7 +201,7 @@ def login():
         return redirect(url_for('index.index'))
 
     if 'azure_token' in session:
-        azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName,preferredName').text
+        azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName').text
         current_app.logger.info('Azure login returned: '+azure_info)
         me = json.loads(azure_info)
 
