@@ -100,4 +100,9 @@ def create_app(config=None):
         setting = Setting()
         return dict(SETTING=setting)
 
+    @app.context_processor
+    def inject_mode():
+        setting = app.config.get('OFFLINE_MODE', False)
+        return dict(OFFLINE_MODE=setting)
+
     return app

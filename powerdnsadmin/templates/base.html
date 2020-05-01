@@ -4,10 +4,16 @@
   {% block head %}
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="icon" href="/static/img/favicon.png">
   {% block title %}<title>{{ SITE_NAME }}</title>{% endblock %}
   <!--  Get Google Fonts we like -->
+  {% if OFFLINE_MODE %}
+  <link rel="stylesheet" href="/static/assets/css/source_sans_pro.css">
+  <link rel="stylesheet" href="/static/assets/css/roboto_mono.css">
+  {% else %}
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto+Mono:400,300,700">
+  {% endif %}
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   {% assets "css_main" -%}
@@ -22,6 +28,11 @@
   {% endblock %}
 </head>
 <body class="hold-transition skin-blue sidebar-mini {% if not SETTING.get('fullscreen_layout') %}layout-boxed{% endif %}">
+  {% if OFFLINE_MODE %}
+  {% set gravatar_url = "/static/img/gravatar.png" %}
+  {% else %}
+  {% set gravatar_url = current_user.email|email_to_gravatar_url(size=80) %}
+  {% endif %}
 <div class="wrapper">
   {% block pageheader %}
   <header class="main-header">
@@ -45,14 +56,14 @@
           <!-- User Account: style can be found in dropdown.less -->
           <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <img src="{{ current_user.email|email_to_gravatar_url(size=80) }}" class="user-image" alt="User Image"/>
+              <img src="{{ gravatar_url }}" class="user-image {{ 'offline' if OFFLINE_MODE }}" alt="User Image"/>
               <span class="hidden-xs">
                 {{ current_user.firstname }}
               </span>
             </a>
             <ul class="dropdown-menu">
                 <li class="user-header">
-                  <img src="{{ current_user.email|email_to_gravatar_url(size=160) }}" class="img-circle" alt="User Image"/>
+                  <img src="{{ gravatar_url }}" class="img-circle {{ 'offline' if OFFLINE_MODE }}" alt="User Image"/>
                   <p>
                     {{ current_user.firstname }} {{ current_user.lastname }}
                     <small>{{ current_user.role.name }}</small>
@@ -83,7 +94,7 @@
     {% if current_user.id is defined %}
       <div class="user-panel">
         <div class="pull-left image">
-          <img src="{{ current_user.email|email_to_gravatar_url(size=100) }}" class="img-circle" alt="User Image"/>
+          <img src="{{ gravatar_url }}" class="img-circle" alt="User Image"/>
         </div>
         <div class="pull-left info">
           <p>{{ current_user.firstname }} {{ current_user.lastname }}</p>

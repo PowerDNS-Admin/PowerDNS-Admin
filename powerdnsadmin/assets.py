@@ -56,6 +56,7 @@ js_main = Bundle('node_modules/jquery/dist/jquery.js',
                  'node_modules/multiselect/js/jquery.multi-select.js',
                  'node_modules/datatables.net-plugins/sorting/natural.js',
                  'node_modules/jtimeout/src/jTimeout.js',
+                 'node_modules/jquery.quicksearch/src/jquery.quicksearch.js',
                  'custom/js/custom.js',
                  filters=(ConcatFilter, 'jsmin'),
                  output='generated/main.js')
