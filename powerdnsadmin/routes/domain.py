@@ -61,7 +61,7 @@ def domain(domain_name):
     current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
-    if not rrsets:
+    if not rrsets and domain.type != 'Slave':
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
