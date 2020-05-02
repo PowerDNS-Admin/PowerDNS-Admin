@@ -286,8 +286,8 @@ def login():
     if 'oidc_token' in session:
         me = json.loads(oidc.get('userinfo').text)
         oidc_username = me["preferred_username"]
-        oidc_givenname = me["name"]
-        oidc_familyname = ""
+        oidc_givenname = me["given_name"]
+        oidc_familyname = me["family_name"]
         oidc_email = me["email"]
 
         user = User.query.filter_by(username=oidc_username).first()
