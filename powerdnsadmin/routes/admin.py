@@ -811,6 +811,14 @@ def setting_authentication():
                               request.form.get('oidc_oauth_token_url'))
                 Setting().set('oidc_oauth_authorize_url',
                               request.form.get('oidc_oauth_authorize_url'))
+                Setting().set('oidc_oauth_username',
+                              request.form.get('oidc_oauth_username'))
+                Setting().set('oidc_oauth_firstname',
+                              request.form.get('oidc_oauth_firstname'))
+                Setting().set('oidc_oauth_last_name',
+                              request.form.get('oidc_oauth_last_name'))
+                Setting().set('oidc_oauth_email',
+                              request.form.get('oidc_oauth_email'))
                 result = {
                     'status': True,
                     'msg':

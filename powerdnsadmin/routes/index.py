@@ -285,10 +285,10 @@ def login():
 
     if 'oidc_token' in session:
         me = json.loads(oidc.get('userinfo').text)
-        oidc_username = me["preferred_username"]
-        oidc_givenname = me["name"]
-        oidc_familyname = ""
-        oidc_email = me["email"]
+        oidc_username = me[Setting().get('oidc_oauth_username')]
+        oidc_givenname = me[Setting().get('oidc_oauth_firstname')]
+        oidc_familyname = me[Setting().get('oidc_oauth_last_name')]
+        oidc_email = me[Setting().get('oidc_oauth_email')]
 
         user = User.query.filter_by(username=oidc_username).first()
         if not user:
