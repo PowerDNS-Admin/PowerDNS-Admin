@@ -39,3 +39,4 @@ powerdnsadmin/static/generated
 .webassets-cache
 .venv*
 .pytest_cache
+.DS_Store
