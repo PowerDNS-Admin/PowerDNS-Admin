@@ -45,6 +45,15 @@ def create_app(config=None):
     csrf.exempt(routes.api.api_zone_subpath_forward)
     csrf.exempt(routes.api.api_zone_forward)
     csrf.exempt(routes.api.api_create_zone)
+    csrf.exempt(routes.api.api_create_account)
+    csrf.exempt(routes.api.api_delete_account)
+    csrf.exempt(routes.api.api_update_account)
+    csrf.exempt(routes.api.api_create_user)
+    csrf.exempt(routes.api.api_delete_user)
+    csrf.exempt(routes.api.api_update_user)
+    csrf.exempt(routes.api.api_list_account_users)
+    csrf.exempt(routes.api.api_add_account_user)
+    csrf.exempt(routes.api.api_remove_account_user)
 
     # Load config from env variables if using docker
     if os.path.exists(os.path.join(app.root_path, 'docker_config.py')):

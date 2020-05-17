@@ -39,6 +39,16 @@ def load_data(setting_name, *args, **kwargs):
 
 
 @pytest.fixture
+def test_admin_user():
+    return app.config.get('TEST_ADMIN_USER')
+
+
+@pytest.fixture
+def test_user():
+    return app.config.get('TEST_USER')
+
+
+@pytest.fixture
 def basic_auth_admin_headers():
     test_admin_user = app.config.get('TEST_ADMIN_USER')
     test_admin_pass = app.config.get('TEST_ADMIN_PASSWORD')
@@ -284,3 +294,29 @@ def create_apikey_headers(passw):
     user_pass_base64 = b64encode(passw.encode('utf-8'))
     headers = {"X-API-KEY": "{0}".format(user_pass_base64.decode('utf-8'))}
     return headers
+
+
+@pytest.fixture
+def account_data():
+    data = {
+        "name": "test1",
+        "description": "test1 account",
+        "contact": "test1 contact",
+        "mail": "test1@example.com",
+    }
+    return data
+
+
+@pytest.fixture
+def user1_data():
+    data = {
+        "username": "testuser1",
+        "plain_text_password": "ChangeMePlease",
+        "firstname": "firstname1",
+        "lastname": "lastname1",
+        "email": "testuser1@example.com",
+        "otp_secret": "",
+        "confirmed": False,
+        "role_name": "User",
+    }
+    return data

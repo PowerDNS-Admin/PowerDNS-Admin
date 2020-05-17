@@ -25,3 +25,21 @@ class ApiPlainKeySchema(Schema):
     domains = fields.Embed(schema=DomainSchema, many=True)
     description = fields.String()
     plain_key = fields.String()
+
+
+class UserSchema(Schema):
+    id = fields.Integer()
+    username = fields.String()
+    firstname = fields.String()
+    lastname = fields.String()
+    email = fields.String()
+    role = fields.Embed(schema=RoleSchema)
+
+
+class AccountSchema(Schema):
+    id = fields.Integer()
+    name = fields.String()
+    description = fields.String()
+    contact = fields.String()
+    mail = fields.String()
+    domains = fields.Embed(schema=DomainSchema, many=True)
