@@ -52,3 +52,11 @@ You can then access PowerDNS-Admin by pointing your browser to http://localhost:
 
 ## Screenshots
 ![dashboard](https://user-images.githubusercontent.com/6447444/44068603-0d2d81f6-9fa5-11e8-83af-14e2ad79e370.png)
+
+## LICENSE
+MIT. See [LICENSE](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/LICENSE)
+
+## Support
+If you like the project and want to support it, you can *buy me a coffee* ☕
+
+<a href="https://www.buymeacoffee.com/khanhngo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
