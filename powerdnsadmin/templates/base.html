@@ -30,7 +30,7 @@
 <body class="hold-transition skin-blue sidebar-mini {% if not SETTING.get('fullscreen_layout') %}layout-boxed{% endif %}">
   {% if OFFLINE_MODE %}
   {% set gravatar_url = "/static/img/gravatar.png" %}
-  {% else %}
+  {% elif current_user.email is defined %}
   {% set gravatar_url = current_user.email|email_to_gravatar_url(size=80) %}
   {% endif %}
 <div class="wrapper">
