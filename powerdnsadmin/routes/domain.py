@@ -99,14 +99,17 @@ def domain(domain_name):
                 # PDA jinja2 template can understand.
                 index = 0
                 for record in r['records']:
+                    if (len(r['comments'])>index):
+                        c=r['comments'][index]['content']
+                    else:
+                        c=''
                     record_entry = RecordEntry(
                         name=r_name,
                         type=r['type'],
                         status='Disabled' if record['disabled'] else 'Active',
                         ttl=r['ttl'],
                         data=record['content'],
-                        comment=r['comments'][index]['content']
-                        if r['comments'] else '',
+                        comment=c,
                         is_allowed_edit=True)
                     index += 1
                     records.append(record_entry)

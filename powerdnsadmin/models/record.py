@@ -14,6 +14,11 @@ from .setting import Setting
 from .domain import Domain
 from .domain_setting import DomainSetting
 
+def byRecordContent(e):
+    return e['content']
+
+def byRecordContentPair(e):
+    return e[0]['content']
 
 class Record(object):
     """
@@ -60,7 +65,14 @@ class Record(object):
                 .format(e))
             return []
 
-        return jdata['rrsets']
+        rrsets=[]
+        for r in jdata['rrsets']:
+            while len(r['comments'])<len(r['records']):
+                r['comments'].append({"content":"", "account":""})
+            r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'],r['comments']),key=byRecordContentPair)))
+            rrsets.append(r)
+
+        return rrsets
 
     def add(self, domain_name, rrset):
         """
@@ -131,6 +143,11 @@ class Record(object):
             for r in rrsets[1:]:
                 rrest['records'] = rrest['records'] + r['records']
                 rrest['comments'] = rrest['comments'] + r['comments']
+            while len(rrest['comments'])<len(rrest['records']):
+                rrest['comments'].append({"content":"", "account":""})
+            zipped_list = zip(rrest['records'],rrest['comments'])
+            tuples = zip(*sorted(zipped_list,key=byRecordContentPair))
+            rrest['records'], rrest['comments'] = [list(t) for t in tuples]
             return rrest
 
     def build_rrsets(self, domain_name, submitted_records):
@@ -185,7 +202,10 @@ class Record(object):
             record_comments = [{
                 "content": record["record_comment"],
                 "account": ""
-            }] if record.get("record_comment") else []
+            }] if record.get("record_comment") else [{
+                "content": "",
+                "account": ""
+            }]
 
             # Add the formatted record to rrsets list
             rrsets.append({
@@ -237,7 +257,8 @@ class Record(object):
         # comparison between current and submitted rrsets
         for r in current_rrsets:
             for comment in r['comments']:
-                del comment['modified_at']
+                if 'modified_at' in comment:
+                    del comment['modified_at']
 
         # List of rrsets to be added
         new_rrsets = {"rrsets": []}
