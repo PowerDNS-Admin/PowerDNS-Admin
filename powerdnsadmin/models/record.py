@@ -293,6 +293,15 @@ class Record(object):
         # Get the list of rrsets to be added and deleted
         new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
 
+        # Remove blank comments from rrsets for compatability with some backends
+        for r in new_rrsets['rrsets']:
+            if not r['comments']:
+                del r['comments']
+
+        for r in del_rrsets['rrsets']:
+            if not r['comments']:
+                del r['comments']
+
         # Submit the changes to PDNS API
         try:
             headers = {}
