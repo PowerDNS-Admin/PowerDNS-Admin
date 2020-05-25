@@ -130,7 +130,7 @@ SAML_ENABLED = False
 # SAML_CERT_FILE = '/etc/pki/powerdns-admin/cert.crt'
 # SAML_CERT_KEY = '/etc/pki/powerdns-admin/key.pem'
 
-# Cofigures if SAML tokens should be encrypted.
+# Configures if SAML tokens should be encrypted.
 # SAML_SIGN_REQUEST = False
 # #Use SAML standard logout mechanism retreived from idp metadata
 # #If configured false don't care about SAML session on logout.
@@ -141,3 +141,19 @@ SAML_ENABLED = False
 # #SAML_LOGOUT_URL = 'https://google.com'
 
 # #SAML_ASSERTION_ENCRYPTED = True
+
+# Remote authentication settings
+
+# Whether to enable remote user authentication or not
+# Defaults to False
+# REMOTE_USER_ENABLED=True
+
+# If set, users will be redirected to this location on logout
+# Ignore or set to None to avoid redirecting altogether
+# Warning: if REMOTE_USER environment variable is still set after logging out and not cleared by
+# some external module, not defining a custom logout URL might trigger a loop
+# that will just log the user back in right after logging out
+# REMOTE_USER_LOGOUT_URL=https://my.sso.com/cas/logout
+
+# An optional list of remote authentication tied cookies to be removed upon logout
+# REMOTE_USER_COOKIES=['MOD_AUTH_CAS', 'MOD_AUTH_CAS_S']
