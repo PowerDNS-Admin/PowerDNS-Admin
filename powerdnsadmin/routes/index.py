@@ -377,8 +377,9 @@ def clear_session():
     session.pop('github_token', None)
     session.pop('google_token', None)
     session.pop('authentication_type', None)
-    session.clear()
+    session.pop('remote_user', None)
     logout_user()
+    session.clear()
 
 
 def signin_history(username, authenticator, success):
@@ -434,7 +435,30 @@ def logout():
                 "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
                 session_index=session['samlSessionIndex'],
                 name_id=session['samlNameId']))
+
+    # Clean cookies and flask session
     clear_session()
+
+    # If remote user authentication is enabled and a logout URL is configured for it,
+    # redirect users to that instead
+    remote_user_logout_url = current_app.config.get('REMOTE_USER_LOGOUT_URL')
+    if current_app.config.get('REMOTE_USER_ENABLED') and remote_user_logout_url:
+        current_app.logger.debug(
+            'Redirecting remote user "{0}" to logout URL {1}'
+            .format(current_user.username, remote_user_logout_url))
+        # Warning: if REMOTE_USER environment variable is still set and not cleared by
+        # some external module, not defining a custom logout URL will trigger a loop
+        # that will just log the user back in right after logging out
+        res = make_response(redirect(remote_user_logout_url.strip()))
+
+        # Remove any custom cookies the remote authentication mechanism may use
+        # (e.g.: MOD_AUTH_CAS and MOD_AUTH_CAS_S)
+        remote_cookies = current_app.config.get('REMOTE_USER_COOKIES')
+        for r_cookie_name in utils.ensure_list(remote_cookies):
+            res.delete_cookie(r_cookie_name)
+        
+        return res
+
     return redirect(url_for('index.login'))
 
 
