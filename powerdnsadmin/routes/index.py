@@ -274,8 +274,8 @@ def login():
                             azure_username +
                             ' has no relevant group memberships')
                         session.pop('azure_token', None)
-                        return render_template('login.html', 
-                            saml_enabled=SAML_ENABLED, 
+                        return render_template('login.html',
+                            saml_enabled=SAML_ENABLED,
                             error=('User ' + azure_username +
                                    ' is not in any authorised groups.'))
 
@@ -378,8 +378,8 @@ def clear_session():
     session.pop('google_token', None)
     session.pop('authentication_type', None)
     session.pop('remote_user', None)
-    logout_user()
     session.clear()
+    logout_user()
 
 
 def signin_history(username, authenticator, success):
@@ -456,7 +456,7 @@ def logout():
         remote_cookies = current_app.config.get('REMOTE_USER_COOKIES')
         for r_cookie_name in utils.ensure_list(remote_cookies):
             res.delete_cookie(r_cookie_name)
-        
+
         return res
 
     return redirect(url_for('index.login'))
