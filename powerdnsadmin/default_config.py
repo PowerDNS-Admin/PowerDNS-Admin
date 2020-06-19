@@ -16,10 +16,10 @@ SQLA_DB_HOST = '127.0.0.1'
 SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-### DATBASE - MySQL
+### DATABASE - MySQL
 SQLALCHEMY_DATABASE_URI = 'mysql://'+SQLA_DB_USER+':'+SQLA_DB_PASSWORD+'@'+SQLA_DB_HOST+'/'+SQLA_DB_NAME
 
-### DATABSE - SQLite
+### DATABASE - SQLite
 # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
 # SAML Authnetication

@@ -14,11 +14,10 @@ from .setting import Setting
 from .domain import Domain
 from .domain_setting import DomainSetting
 
-def byRecordContent(e):
-    return e['content']
 
-def byRecordContentPair(e):
+def by_record_content_pair(e):
     return e[0]['content']
+
 
 class Record(object):
     """
@@ -49,8 +48,7 @@ class Record(object):
         """
         Query domain's rrsets via PDNS API
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
@@ -68,8 +66,8 @@ class Record(object):
         rrsets=[]
         for r in jdata['rrsets']:
             while len(r['comments'])<len(r['records']):
-                r['comments'].append({"content":"", "account":""})
-            r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'],r['comments']),key=byRecordContentPair)))
+                r['comments'].append({"content": "", "account": ""})
+            r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'], r['comments']), key=by_record_content_pair)))
             rrsets.append(r)
 
         return rrsets
@@ -98,8 +96,7 @@ class Record(object):
                 }
 
         # Continue if the record is ready to be added
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         try:
             jdata = utils.fetch_json(urljoin(
@@ -129,26 +126,26 @@ class Record(object):
         """
         Merge the rrsets that has same "name" and
         "type".
-        Return: a new rrest which has multiple "records"
+        Return: a new rrset which has multiple "records"
         and "comments"
         """
         if not rrsets:
             raise Exception("Empty rrsets to merge")
         elif len(rrsets) == 1:
-            # It is unique rrest already
+            # It is unique rrset already
             return rrsets[0]
         else:
             # Merge rrsets into one
-            rrest = rrsets[0]
+            rrset = rrsets[0]
             for r in rrsets[1:]:
-                rrest['records'] = rrest['records'] + r['records']
-                rrest['comments'] = rrest['comments'] + r['comments']
-            while len(rrest['comments'])<len(rrest['records']):
-                rrest['comments'].append({"content":"", "account":""})
-            zipped_list = zip(rrest['records'],rrest['comments'])
-            tuples = zip(*sorted(zipped_list,key=byRecordContentPair))
-            rrest['records'], rrest['comments'] = [list(t) for t in tuples]
-            return rrest
+                rrset['records'] = rrset['records'] + r['records']
+                rrset['comments'] = rrset['comments'] + r['comments']
+            while len(rrset['comments']) < len(rrset['records']):
+                rrset['comments'].append({"content": "", "account": ""})
+            zipped_list = zip(rrset['records'], rrset['comments'])
+            tuples = zip(*sorted(zipped_list, key=by_record_content_pair))
+            rrset['records'], rrset['comments'] = [list(t) for t in tuples]
+            return rrset
 
     def build_rrsets(self, domain_name, submitted_records):
         """
@@ -159,7 +156,7 @@ class Record(object):
             submitted_records(list): List of records submitted from PDA datatable
 
         Returns:
-            transformed_rrsets(list): List of rrests converted from PDA datatable
+            transformed_rrsets(list): List of rrsets converted from PDA datatable
         """
         rrsets = []
         for record in submitted_records:
@@ -192,7 +189,7 @@ class Record(object):
             ] and record["record_data"].strip()[-1:] != '.':
                 record["record_data"] += '.'
 
-            record_conntent = {
+            record_content = {
                 "content": record["record_data"],
                 "disabled":
                 False if record['record_status'] == 'Active' else True
@@ -212,12 +209,12 @@ class Record(object):
                 "name": record_name,
                 "type": record["record_type"],
                 "ttl": int(record["record_ttl"]),
-                "records": [record_conntent],
+                "records": [record_content],
                 "comments": record_comments
             })
 
         # Group the records which has the same name and type.
-        # The rrest then has multiple records inside.
+        # The rrset then has multiple records inside.
         transformed_rrsets = []
 
         # Sort the list before using groupby
@@ -238,8 +235,8 @@ class Record(object):
             submitted_records(list): List of records submitted from PDA datatable
 
         Returns:
-            new_rrsets(list): List of rrests to be added
-            del_rrsets(list): List of rrests to be deleted
+            new_rrsets(list): List of rrsets to be added
+            del_rrsets(list): List of rrsets to be deleted
         """
         # Create submitted rrsets from submitted records
         submitted_rrsets = self.build_rrsets(domain_name, submitted_records)
@@ -285,7 +282,7 @@ class Record(object):
         """
         Apply record changes to a domain. This function
         will make 2 calls to the PDNS API to DELETE and
-        REPLACE records (rrests)
+        REPLACE records (rrsets)
         """
         current_app.logger.debug(
             "submitted_records: {}".format(submitted_records))
@@ -293,7 +290,7 @@ class Record(object):
         # Get the list of rrsets to be added and deleted
         new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
 
-        # Remove blank comments from rrsets for compatability with some backends
+        # Remove blank comments from rrsets for compatibility with some backends
         for r in new_rrsets['rrsets']:
             if not r['comments']:
                 del r['comments']
@@ -304,8 +301,7 @@ class Record(object):
 
         # Submit the changes to PDNS API
         try:
-            headers = {}
-            headers['X-API-Key'] = self.PDNS_API_KEY
+            headers = {'X-API-Key': self.PDNS_API_KEY}
 
             if del_rrsets["rrsets"]:
                 jdata1 = utils.fetch_json(urljoin(
@@ -467,8 +463,7 @@ class Record(object):
         """
         Delete a record from domain
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         data = {
             "rrsets": [{
                 "name": self.name.rstrip('.') + '.',
@@ -530,8 +525,7 @@ class Record(object):
         """
         Update single record
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         data = {
             "rrsets": [{
@@ -572,8 +566,7 @@ class Record(object):
             }
 
     def update_db_serial(self, domain):
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
             '/servers/localhost/zones/{0}'.format(domain)),

@@ -221,6 +221,7 @@ def ensure_list(l):
 
     yield from l
 
+
 class customBoxes:
     boxes = {
         "reverse": (" ", " "),

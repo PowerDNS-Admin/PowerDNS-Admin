@@ -50,7 +50,7 @@ def profile():
                 'password'] if 'password' in request.form else ''
         else:
             firstname = lastname = email = new_password = ''
-            logging.warning(
+            current_app.logger.warning(
                 'Authenticated externally. User {0} information will not allowed to update the profile'
                 .format(current_user.username))
 
