@@ -91,9 +91,9 @@ class ApiKey(db.Model):
                              current_app.config.get('SALT').encode('utf-8'))
 
     def check_password(self, hashed_password):
-        # Check hased password. Using bcrypt,
+        # Check hashed password. Using bcrypt,
         # the salt is saved into the hash itself
-        if (self.plain_text_password):
+        if self.plain_text_password:
             return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
                                   hashed_password.encode('utf-8'))
         return False
