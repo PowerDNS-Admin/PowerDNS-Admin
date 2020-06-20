@@ -113,9 +113,11 @@
                     <p><input type="checkbox" id="{{ domain.name }}" class="auto_ptr_toggle"
                             {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %}
                             {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
-                        &nbsp;Allow automatic reverse pointer creation on record updates?{% if
-                         SETTING.get('auto_ptr') %}</br><code>Auto-ptr is enabled globally on the PDA
-                            system!</code>{% endif %}</p>
+                        &nbsp;Allow automatic reverse pointer creation on record updates?
+                         {% if SETTING.get('auto_ptr') %}
+                             <br/><code>Auto-ptr is enabled globally on the PDA system!</code>
+                         {% endif %}
+                    </p>
                 </div>
             </div>
         </div>

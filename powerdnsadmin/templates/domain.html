@@ -74,7 +74,7 @@
                                         {% if record.is_allowed_edit() %}
                                             <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
                                         {% else %}
-                                            <button type="button" class="btn btn-flat btn-warning"">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
+                                            <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i></button>
                                         {% endif %}
                                     </td>
                                     <td width="6%">
@@ -243,7 +243,7 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-	    var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', {{ ttl_options | tojson }}[0][0], '', '', '', '', '0']);
+	        var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
