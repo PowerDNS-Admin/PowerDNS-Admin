@@ -29,7 +29,7 @@
 </head>
 <body class="hold-transition skin-blue sidebar-mini {% if not SETTING.get('fullscreen_layout') %}layout-boxed{% endif %}">
   {% if OFFLINE_MODE %}
-  {% set gravatar_url = "{{ url_for('static', filename='img/gravatar.png') }}" %}
+  {% set gravatar_url = url_for('static', filename='img/gravatar.png') %}
   {% elif current_user.email is defined %}
   {% set gravatar_url = current_user.email|email_to_gravatar_url(size=80) %}
   {% endif %}
