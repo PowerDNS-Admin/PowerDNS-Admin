@@ -306,7 +306,7 @@ def login():
                             matches = re.match(description_pattern,group_description)
                             if matches:
                                 current_app.logger.info('Group {} matched regexp'.format(group_description))
-                                group_description = matches.group(0)
+                                group_description = matches.group(1)
                             else:
                                 # Regexp didn't match, continue to next iteration
                                 next
@@ -318,7 +318,7 @@ def login():
                         matches = re.match(pattern,group_name)
                         if matches:
                             current_app.logger.info('Group {} matched regexp'.format(group_name))
-                            group_name = matches.group(0)
+                            group_name = matches.group(1)
                         else:
                             # Regexp didn't match, continue to next iteration
                             next
