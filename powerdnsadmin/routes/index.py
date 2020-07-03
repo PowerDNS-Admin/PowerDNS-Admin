@@ -299,7 +299,19 @@ def login():
                     if description_value in group_info:
                         group_description = group_info[description_value]
 
-                    # Do regex search if enabled
+                        # Do regex search if enabled for group description
+                        description_pattern = Setting().get('azure_group_accounts_description_re')
+                        if description_pattern != '':
+                            current_app.logger.info('Matching group description {} against regex {}'.format(group_description, description_pattern))
+                            matches = re.match(description_pattern,group_description)
+                            if matches:
+                                current_app.logger.info('Group {} matched regexp'.format(group_description))
+                                group_description = matches.group(0)
+                            else:
+                                # Regexp didn't match, continue to next iteration
+                                next
+
+                    # Do regex search if enabled for group name
                     pattern = Setting().get('azure_group_accounts_name_re')
                     if pattern != '':
                         current_app.logger.info('Matching group name {} against regex {}'.format(group_name, pattern))  
@@ -310,6 +322,7 @@ def login():
                         else:
                             # Regexp didn't match, continue to next iteration
                             next
+
                     account = Account()
                     account_id = account.get_id_by_name(account_name=group_name)
 
