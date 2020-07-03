@@ -1,30 +1,52 @@
-{% extends "base.html" %}
-{% block title %}<title>Resend confirmation email - {{ SITE_NAME }}</title>{% endblock %}
+<!DOCTYPE html>
+<html>
 
-{% block dashboard_stat %}
-{% endblock %}
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Resend a confirmation email - {{ SITE_NAME }}</title>
+  <link rel="icon" href="/static/img/favicon.png">
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  {% assets "css_login" -%}
+  <link rel="stylesheet" href="{{ ASSET_URL }}">
+  {%- endassets %}
+  <![endif]-->
+</head>
 
-{% block content %}
-<!-- Main content -->
-<section class="content">
-    <div class="error-page">
-        <div class="error-content">
-          <h3>
-            <i class="fa fa-hand-o-right text-info"></i> Resend a confirmation email
-          </h3>
+<body class="hold-transition register-page">
+  <div class="register-box">
+    <div class="register-logo">
+      <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
+    </div>
+    <div class="register-box-body">
+      {% if error %}
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        {{ error }}
+      </div>
+      {% endif %}
           <p>
-            Enter your email address to get new account confirmation link.
+            Enter your email address to get account confirmation link.
           </p>
-          <form class="search-form" method="post">
-            <div class="input-group">
-              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-              <input type="text" name="email" class="form-control" placeholder="Email address" data-error="Please input your email" required>
-              <div class="input-group-btn">
-                <button type="submit" name="submit" class="btn btn-success btn-flat"><i class="fa fa-mail-reply"></i>
-                </button>
-              </div>
-            </div>
-            <!-- /.input-group -->
+      <form method="post" data-toggle="validator">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group has-feedback">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="email" name="email" class="form-control" placeholder="Email address" data-error="Please input your email" required>
+            <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+            <span class="help-block with-errors"></span>
+        </div>
+        <div class="row">
+          <div class="col-xs-4 pull-left">
+            <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
+          </div>
+          <div class="col-xs-4 pull-right">
+            <button type="submit" class="btn btn-flat btn-primary btn-block">Resend</button>
+          </div>
+          <!-- /.col -->
+        </div>
+        <div class="form-group">
             <p>
               {% if status == 0 %}
                 <font color="red">Email not found!</font>
@@ -34,11 +56,31 @@
                 <font color="green">Confirmation email sent!</font>
               {% endif %}
             </p>
-          </form>
         </div>
-        <!-- /.error-content -->
+      </form>
     </div>
-    <!-- /.error-page -->
-</section>
-<!-- /.content -->
-{% endblock %}
+    <!-- /.form-box -->
+    <div class="login-box-footer">
+      <center>
+        <p>Powered by <a href="https://github.com/ngoduykhanh/PowerDNS-Admin">PowerDNS-Admin</a></p>
+      </center>
+    </div>
+  </div>
+  <!-- /.login-box -->
+
+  {% assets "js_login" -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {%- endassets %}
+  {% assets "js_validation" -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {%- endassets %}
+  <script>
+    $(function () {
+      $('#button_back').click(function () {
+        window.location.href = '{{ url_for('index.login') }}';
+      })
+    });
+  </script>
+</body>
+
+</html>

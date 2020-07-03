@@ -1,4 +1,6 @@
 import sys
+import traceback
+
 import pytimeparse
 from ast import literal_eval
 from distutils.util import strtobool
@@ -93,6 +95,10 @@ class Setting(db.Model):
         'oidc_oauth_api_url': '',
         'oidc_oauth_token_url': '',
         'oidc_oauth_authorize_url': '',
+        'oidc_oauth_username': 'preferred_username',
+        'oidc_oauth_firstname': 'given_name',
+        'oidc_oauth_last_name': 'family_name ',
+        'oidc_oauth_email': 'email',
         'forward_records_allow_edit': {
             'A': True,
             'AAAA': True,

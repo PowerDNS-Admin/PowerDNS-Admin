@@ -5,6 +5,7 @@ import requests
 import hashlib
 import ipaddress
 
+from collections.abc import Iterable
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
@@ -210,6 +211,15 @@ def validate_ipaddress(address):
 
 def pretty_json(data):
     return json.dumps(data, sort_keys=True, indent=4)
+
+
+def ensure_list(l):
+    if not l:
+        l = []
+    elif not isinstance(l, Iterable) or isinstance(l, str):
+        l = [l]
+
+    yield from l
 
 
 class customBoxes:

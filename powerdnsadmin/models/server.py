@@ -24,8 +24,7 @@ class Server(object):
         """
         Get server config
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         try:
             jdata = utils.fetch_json(urljoin(
@@ -46,8 +45,7 @@ class Server(object):
         """
         Get server statistics
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         try:
             jdata = utils.fetch_json(urljoin(
@@ -68,8 +66,7 @@ class Server(object):
         """
         Search zone/record/comment directly from PDNS API
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         try:
             jdata = utils.fetch_json(urljoin(

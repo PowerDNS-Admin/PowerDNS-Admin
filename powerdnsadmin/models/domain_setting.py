@@ -1,3 +1,5 @@
+import traceback
+
 from flask import current_app
 
 from .base import db

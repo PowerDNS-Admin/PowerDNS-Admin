@@ -4,12 +4,12 @@
   {% block head %}
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link rel="icon" href="/static/img/favicon.png">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
   {% block title %}<title>{{ SITE_NAME }}</title>{% endblock %}
   <!--  Get Google Fonts we like -->
   {% if OFFLINE_MODE %}
-  <link rel="stylesheet" href="/static/assets/css/source_sans_pro.css">
-  <link rel="stylesheet" href="/static/assets/css/roboto_mono.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/source_sans_pro.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/roboto_mono.css') }}">
   {% else %}
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto+Mono:400,300,700">
@@ -29,8 +29,8 @@
 </head>
 <body class="hold-transition skin-blue sidebar-mini {% if not SETTING.get('fullscreen_layout') %}layout-boxed{% endif %}">
   {% if OFFLINE_MODE %}
-  {% set gravatar_url = "/static/img/gravatar.png" %}
-  {% else %}
+  {% set gravatar_url = "{{ url_for('static', filename='img/gravatar.png') }}" %}
+  {% elif current_user.email is defined %}
   {% set gravatar_url = current_user.email|email_to_gravatar_url(size=80) %}
   {% endif %}
 <div class="wrapper">
@@ -131,7 +131,7 @@
         </li>
         <li class="{{ 'active' if active_page == 'admin_users' else '' }}">
           <a href="{{ url_for('admin.manage_user') }}"><i class="fa fa-users"></i> <span>Users</span></a>
-        </li>          
+        </li>
         <li class="{{ 'treeview active' if active_page == 'admin_settings' else 'treeview' }}">
           <a href="#">
             <i class="fa fa-cog"></i> <span>Settings</span>

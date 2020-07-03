@@ -74,23 +74,21 @@ class Domain(db.Model):
         """
         Get all domains which has in PowerDNS
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-            '/servers/localhost/zones/{0}'.format(domain_name)),
-                                 headers=headers,
-                                 timeout=int(
-                                     Setting().get('pdns_api_timeout')),
-                                 verify=Setting().get('verify_ssl_connections'))
+                                 '/servers/localhost/zones/{0}'.format(domain_name)),
+            headers=headers,
+            timeout=int(
+                Setting().get('pdns_api_timeout')),
+            verify=Setting().get('verify_ssl_connections'))
         return jdata
 
     def get_domains(self):
         """
         Get all domains which has in PowerDNS
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(
             urljoin(self.PDNS_STATS_URL,
                     self.API_EXTENDED_URL + '/servers/localhost/zones'),
@@ -120,8 +118,7 @@ class Domain(db.Model):
         dict_db_domain = dict((x.name, x) for x in db_domain)
         current_app.logger.info("Found {} entries in PowerDNS-Admin".format(
             len(list_db_domain)))
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
             jdata = utils.fetch_json(
                 urljoin(self.PDNS_STATS_URL,
@@ -211,8 +208,7 @@ class Domain(db.Model):
         Add a domain to power dns
         """
 
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         domain_name = domain_name + '.'
         domain_ns = [ns + '.' for ns in domain_ns]
@@ -262,15 +258,14 @@ class Domain(db.Model):
         """
         Read Domain from PowerDNS and add into PDNS-Admin
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
         if not domain:
             try:
                 domain = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}'.format(
-                            domain_dict['name'])),
+                                             '/servers/localhost/zones/{0}'.format(
+                                                 domain_dict['name'])),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     verify=Setting().get('verify_ssl_connections'))
@@ -315,8 +310,8 @@ class Domain(db.Model):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Domain does not exist.'}
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
             soa_edit_api = 'DEFAULT'
@@ -329,13 +324,13 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain.name)),
-                                     headers=headers,
-                                     timeout=int(
-                                         Setting().get('pdns_api_timeout')),
-                                     method='PUT',
-                                     verify=Setting().get('verify_ssl_connections'),
-                                     data=post_data)
+                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                headers=headers,
+                timeout=int(
+                    Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data=post_data)
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
@@ -365,21 +360,21 @@ class Domain(db.Model):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Domain does not exist.'}
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         post_data = {"kind": kind, "masters": masters}
 
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain.name)),
-                                     headers=headers,
-                                     timeout=int(
-                                         Setting().get('pdns_api_timeout')),
-                                     method='PUT',
-                                     verify=Setting().get('verify_ssl_connections'),
-                                     data=post_data)
+                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                headers=headers,
+                timeout=int(
+                    Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data=post_data)
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
@@ -410,27 +405,27 @@ class Domain(db.Model):
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
         domain_auto_ptr = DomainSetting.query.filter(
             DomainSetting.domain == domain_obj).filter(
-                DomainSetting.setting == 'auto_ptr').first()
+            DomainSetting.setting == 'auto_ptr').first()
         domain_auto_ptr = strtobool(
             domain_auto_ptr.value) if domain_auto_ptr else False
         system_auto_ptr = Setting().get('auto_ptr')
         self.name = domain_name
         domain_id = self.get_id_by_name(domain_reverse_name)
-        if None == domain_id and \
-            (
-                system_auto_ptr or
-                domain_auto_ptr
-            ):
-            result = self.add(domain_reverse_name, 'Master', 'DEFAULT', '', '')
+        if domain_id is None and \
+                (
+                        system_auto_ptr or
+                        domain_auto_ptr
+                ):
+            result = self.add(domain_reverse_name, 'Master', 'DEFAULT', [], [])
             self.update()
             if result['status'] == 'ok':
                 history = History(msg='Add reverse lookup domain {0}'.format(
                     domain_reverse_name),
-                                  detail=str({
-                                      'domain_type': 'Master',
-                                      'domain_master_ips': ''
-                                  }),
-                                  created_by='System')
+                    detail=str({
+                        'domain_type': 'Master',
+                        'domain_master_ips': ''
+                    }),
+                    created_by='System')
                 history.add()
             else:
                 return {
@@ -443,9 +438,9 @@ class Domain(db.Model):
                 self.grant_privileges(domain_user_ids)
                 return {
                     'status':
-                    'ok',
+                        'ok',
                     'msg':
-                    'New reverse lookup domain created with granted privileges'
+                        'New reverse lookup domain created with granted privileges'
                 }
             return {
                 'status': 'ok',
@@ -497,16 +492,15 @@ class Domain(db.Model):
         """
         Delete a single domain name from powerdns
         """
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-            '/servers/localhost/zones/{0}'.format(domain_name)),
-                         headers=headers,
-                         timeout=int(Setting().get('pdns_api_timeout')),
-                         method='DELETE',
-                         verify=Setting().get('verify_ssl_connections'))
+                                 '/servers/localhost/zones/{0}'.format(domain_name)),
+            headers=headers,
+            timeout=int(Setting().get('pdns_api_timeout')),
+            method='DELETE',
+            verify=Setting().get('verify_ssl_connections'))
         current_app.logger.info(
             'Deleted domain successfully from PowerDNS: {0}'.format(
                 domain_name))
@@ -540,8 +534,8 @@ class Domain(db.Model):
         user_ids = []
         query = db.session.query(
             DomainUser, Domain).filter(User.id == DomainUser.user_id).filter(
-                Domain.id == DomainUser.domain_id).filter(
-                    Domain.name == self.name).all()
+            Domain.id == DomainUser.domain_id).filter(
+            Domain.name == self.name).all()
         for q in query:
             user_ids.append(q[0].user_id)
         return user_ids
@@ -566,7 +560,7 @@ class Domain(db.Model):
             db.session.rollback()
             current_app.logger.error(
                 'Cannot revoke user privileges on domain {0}. DETAIL: {1}'.
-                format(self.name, e))
+                    format(self.name, e))
             current_app.logger.debug(print(traceback.format_exc()))
 
         try:
@@ -578,7 +572,7 @@ class Domain(db.Model):
             db.session.rollback()
             current_app.logger.error(
                 'Cannot grant user privileges to domain {0}. DETAIL: {1}'.
-                format(self.name, e))
+                    format(self.name, e))
             current_app.logger.debug(print(traceback.format_exc()))
 
     def update_from_master(self, domain_name):
@@ -587,27 +581,26 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {}
-            headers['X-API-Key'] = self.PDNS_API_KEY
+            headers = {'X-API-Key': self.PDNS_API_KEY}
             try:
                 r = utils.fetch_json(urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                    '/servers/localhost/zones/{0}/axfr-retrieve'.format(
-                        domain.name)),
-                                     headers=headers,
-                                     timeout=int(
-                                         Setting().get('pdns_api_timeout')),
-                                     method='PUT',
-                                     verify=Setting().get('verify_ssl_connections'))
+                                         '/servers/localhost/zones/{0}/axfr-retrieve'.format(
+                                             domain.name)),
+                    headers=headers,
+                    timeout=int(
+                        Setting().get('pdns_api_timeout')),
+                    method='PUT',
+                    verify=Setting().get('verify_ssl_connections'))
                 return {'status': 'ok', 'msg': r.get('result')}
             except Exception as e:
                 current_app.logger.error(
                     'Cannot update from master. DETAIL: {0}'.format(e))
                 return {
                     'status':
-                    'error',
+                        'error',
                     'msg':
-                    'There was something wrong, please contact administrator'
+                        'There was something wrong, please contact administrator'
                 }
         else:
             return {'status': 'error', 'msg': 'This domain does not exist'}
@@ -618,14 +611,13 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {}
-            headers['X-API-Key'] = self.PDNS_API_KEY
+            headers = {'X-API-Key': self.PDNS_API_KEY}
             try:
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}/cryptokeys'.format(
-                            domain.name)),
+                                             '/servers/localhost/zones/{0}/cryptokeys'.format(
+                                                 domain.name)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='GET',
@@ -642,9 +634,9 @@ class Domain(db.Model):
                     'Cannot get domain dnssec. DETAIL: {0}'.format(e))
                 return {
                     'status':
-                    'error',
+                        'error',
                     'msg':
-                    'There was something wrong, please contact administrator'
+                        'There was something wrong, please contact administrator'
                 }
         else:
             return {'status': 'error', 'msg': 'This domain does not exist'}
@@ -655,15 +647,14 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {}
-            headers['X-API-Key'] = self.PDNS_API_KEY
+            headers = {'X-API-Key': self.PDNS_API_KEY}
             try:
                 # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
                 post_data = {"api_rectify": True}
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}'.format(domain.name)),
+                                             '/servers/localhost/zones/{0}'.format(domain.name)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PUT',
@@ -673,7 +664,7 @@ class Domain(db.Model):
                     return {
                         'status': 'error',
                         'msg':
-                        'API-RECTIFY could not be enabled for this domain',
+                            'API-RECTIFY could not be enabled for this domain',
                         'jdata': jdata
                     }
 
@@ -682,8 +673,8 @@ class Domain(db.Model):
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}/cryptokeys'.format(
-                            domain.name)),
+                                             '/servers/localhost/zones/{0}/cryptokeys'.format(
+                                                 domain.name)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='POST',
@@ -692,12 +683,12 @@ class Domain(db.Model):
                 if 'error' in jdata:
                     return {
                         'status':
-                        'error',
+                            'error',
                         'msg':
-                        'Cannot enable DNSSEC for this domain. Error: {0}'.
-                        format(jdata['error']),
+                            'Cannot enable DNSSEC for this domain. Error: {0}'.
+                                format(jdata['error']),
                         'jdata':
-                        jdata
+                            jdata
                     }
 
                 return {'status': 'ok'}
@@ -708,9 +699,9 @@ class Domain(db.Model):
                 current_app.logger.debug(traceback.format_exc())
                 return {
                     'status':
-                    'error',
+                        'error',
                     'msg':
-                    'There was something wrong, please contact administrator'
+                        'There was something wrong, please contact administrator'
                 }
 
         else:
@@ -722,15 +713,14 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {}
-            headers['X-API-Key'] = self.PDNS_API_KEY
+            headers = {'X-API-Key': self.PDNS_API_KEY}
             try:
                 # Deactivate DNSSEC
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                            domain.name, key_id)),
+                                             '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
+                                                 domain.name, key_id)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='DELETE',
@@ -738,12 +728,12 @@ class Domain(db.Model):
                 if jdata != True:
                     return {
                         'status':
-                        'error',
+                            'error',
                         'msg':
-                        'Cannot disable DNSSEC for this domain. Error: {0}'.
-                        format(jdata['error']),
+                            'Cannot disable DNSSEC for this domain. Error: {0}'.
+                                format(jdata['error']),
                         'jdata':
-                        jdata
+                            jdata
                     }
 
                 # Disable API-RECTIFY for domain, AFTER deactivating DNSSEC
@@ -751,7 +741,7 @@ class Domain(db.Model):
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}'.format(domain.name)),
+                                             '/servers/localhost/zones/{0}'.format(domain.name)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PUT',
@@ -761,7 +751,7 @@ class Domain(db.Model):
                     return {
                         'status': 'error',
                         'msg':
-                        'API-RECTIFY could not be disabled for this domain',
+                            'API-RECTIFY could not be disabled for this domain',
                         'jdata': jdata
                     }
 
@@ -774,7 +764,7 @@ class Domain(db.Model):
                 return {
                     'status': 'error',
                     'msg':
-                    'There was something wrong, please contact administrator',
+                        'There was something wrong, please contact administrator',
                     'domain': domain.name,
                     'id': key_id
                 }
@@ -797,8 +787,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': False, 'msg': 'Domain does not exist'}
 
-        headers = {}
-        headers['X-API-Key'] = self.PDNS_API_KEY
+        headers = {'X-API-Key': self.PDNS_API_KEY}
 
         account_name = Account().get_name_by_id(account_id)
 
@@ -807,13 +796,13 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain_name)),
-                                     headers=headers,
-                                     timeout=int(
-                                         Setting().get('pdns_api_timeout')),
-                                     method='PUT',
-                                     verify=Setting().get('verify_ssl_connections'),
-                                     data=post_data)
+                                     '/servers/localhost/zones/{0}'.format(domain_name)),
+                headers=headers,
+                timeout=int(
+                    Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data=post_data)
 
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
@@ -852,7 +841,7 @@ class Domain(db.Model):
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
             .filter(
-                db.or_(
-                    DomainUser.user_id == user_id,
-                    AccountUser.user_id == user_id
-                )).filter(Domain.id == self.id).first()
+            db.or_(
+                DomainUser.user_id == user_id,
+                AccountUser.user_id == user_id
+            )).filter(Domain.id == self.id).first()

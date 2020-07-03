@@ -457,9 +457,9 @@ paths:
             # and replaced with
             # type: string
             # or something like that
-            - $ref: '#/definitions/StatisticItem'
-            - $ref: '#/definitions/MapStatisticItem'
-            - $ref: '#/definitions/RingStatisticItem'
+              $ref: '#/definitions/MapStatisticItem'
+            # - $ref: '#/definitions/StatisticItem'
+            # - $ref: '#/definitions/RingStatisticItem'
 
   '/servers/{server_id}/search-data':
     get:
@@ -897,7 +897,7 @@ paths:
       security:
         - basicAuth: []
       summary: 'Get a specific apikey on the server, hashed'
-      operationId: api_get_apikeys
+      operationId: api_get_apikey_by_id
       tags:
         - apikey
       responses:
@@ -963,6 +963,422 @@ paths:
           description: 'Internal Server Error. Contains error message'
           schema:
             $ref: '#/definitions/Error'
+  '/pdnsadmin/users':
+    get:
+      security:
+        - basicAuth: []
+      summary: 'Get all User entries'
+      operationId: api_list_users
+      tags:
+        - user
+      responses:
+        '200':
+          description: List of User objects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        '500':
+          description: Internal Server Error, users could not be retrieved. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      security:
+        - basicAuth: []
+      summary: Add a User
+      description: This methods adds a new User
+      operationId: api_create_user
+      tags:
+        - user
+      parameters:
+        - in: body
+          name: user
+          description: The user to create
+          schema:
+            type: object
+            required:
+              - username
+              - email
+            properties:
+              username:
+                type: string
+                description: Login name for user (unique, immutable)
+              password:
+                type: string
+                description: Hashed password for authentication
+              plain_text_password:
+                type: string
+                description: Plain text password (will be hashed) for authentication
+              firstname:
+                type: string
+                description: Firstname of user
+              lastname:
+                type: string
+                description: Lastname of user
+              email:
+                type: string
+                description: Email address if user (must be unique)
+              otp_secret:
+                type: string
+                description: OTP secret
+              confirmed:
+                type: string
+                description: Confirmed status
+              role_name:
+                type: string
+                description: Name of role to be assigned to user (default 'User')
+              role_id:
+                type: integer
+                description: Role ID of role to be assigned to user
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/User'
+        '400':
+          description: Unprocessable Entry, the User data provided has issues
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. There was a problem creating the user
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/users/{username}':
+    parameters:
+      - name: username
+        type: string
+        in: path
+        required: true
+        description: The username of the user to retrieve
+    get:
+      security:
+        - basicAuth: []
+      summary: Get a specific User on the server
+      operationId: api_get_user
+      tags:
+        - user
+      responses:
+        '200':
+          description: Retrieve a specific User
+          schema:
+            $ref: '#/definitions/User'
+        '404':
+          description: Not found. The User with the specified username does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error, user could not be retrieved. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/users/{user_id}':
+    parameters:
+      - name: user_id
+        type: integer
+        in: path
+        required: true
+        description: The id of the user to modify or delete
+    put:
+      security:
+        - basicAuth: []
+      summary: Modify a specific User on the server with supplied parameters
+      operationId: api_update_user
+      tags:
+        - user
+      parameters:
+        - in: body
+          name: user
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: Login name for user (unique, immutable)
+              password:
+                type: string
+                description: Hashed password for authentication
+              plain_text_password:
+                type: string
+                description: Plain text password (will be hashed) for authentication
+              firstname:
+                type: string
+                description: Firstname of user
+              lastname:
+                type: string
+                description: Lastname of user
+              email:
+                type: string
+                description: Email address if user (must be unique)
+              otp_secret:
+                type: string
+                description: OTP secret
+              confirmed:
+                type: string
+                description: Confirmed status
+              role_name:
+                type: string
+                description: Name of role to be assigned to user (default 'User')
+              role_id:
+                type: string
+                description: Role id of role to be assigned to user
+      responses:
+        '204':
+          description: OK. User is modified (empty response body)
+        '404':
+          description: Not found. The User with the specified user_id does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      security:
+        - basicAuth: []
+      summary: Delete a specific User
+      operationId: api_delete_user
+      tags:
+        - user
+      responses:
+        '204':
+          description: OK. User is deleted (empty response body)
+        '404':
+          description: Not found. The User with the specified user_id does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/accounts':
+    get:
+      security:
+        - basicAuth: []
+      summary: Get all Account entries
+      operationId: api_list_accounts
+      tags:
+        - account
+      responses:
+        '200':
+          description: List of Account objects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Account'
+        '500':
+          description: Internal Server Error, accounts could not be retrieved. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      security:
+        - basicAuth: []
+      summary: Add an Account
+      description: This methods adds a new Account
+      operationId: api_create_account
+      tags:
+        - account
+      parameters:
+        - in: body
+          name: account
+          schema:
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                description: Name for account (unique, immutable)
+              description:
+                type: string
+                description: Description of account
+              contact:
+                type: string
+                description: Contact information
+              mail:
+                type: string
+                description: Email address for contact
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/Account'
+        '400':
+          description: Unprocessable Entry, the Account data provided has issues.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. There was a problem creating the account
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/accounts/{account_name}':
+    parameters:
+      - name: account_name
+        type: string
+        in: path
+        required: true
+        description: The name of the account to retrieve
+    get:
+      security:
+        - basicAuth: []
+      summary: Get a specific Account on the server
+      operationId: api_get_account_by_name
+      tags:
+        - user
+      responses:
+        '200':
+          description: Retrieve a specific account
+          schema:
+            $ref: '#/definitions/Account'
+        '404':
+          description: Not found. The Account with the specified name does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error, account could not be retrieved. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/accounts/{account_id}':
+    parameters:
+      - name: account_id
+        type: integer
+        in: path
+        required: true
+        description: The id of the account to modify or delete
+    put:
+      security:
+        - basicAuth: []
+      summary: Modify a specific Account on the server with supplied parameters
+      operationId: api_update_account
+      tags:
+        - user
+      parameters:
+        - in: body
+          name: account
+          schema:
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                description: Name for account (unique, immutable)
+              description:
+                type: string
+                description: Description of account
+              contact:
+                type: string
+                description: Contact information
+              mail:
+                type: string
+                description: Email address for contact
+      responses:
+        '204':
+          description: OK. Account is modified (empty response body)
+        '404':
+          description: Not found. The Account with the specified account_id does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      security:
+        - basicAuth: []
+      summary: Delete a specific Account
+      operationId: api_delete_account
+      tags:
+        - user
+      responses:
+        '204':
+          description: OK. Account is deleted (empty response body)
+        '404':
+          description: Not found. The Account with the specified account_id does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/accounts/users/{account_id}':
+    parameters:
+      - name: account_id
+        type: integer
+        in: path
+        required: true
+        description: The id of the account to list users linked to account
+    get:
+      security:
+        - basicAuth: []
+      summary: List users linked to a specific account
+      operationId: api_list_account_users
+      tags:
+        - account
+        - user
+      responses:
+        '200':
+          description: List of User objects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        '404':
+          description: Not found. The Account with the specified account_id does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error, accounts could not be retrieved. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+  '/pdnsadmin/accounts/users/{account_id}/{user_id}':
+    parameters:
+      - name: account_id
+        type: integer
+        in: path
+        required: true
+        description: The id of the account to link/unlink users to account
+      - name: user_id
+        type: integer
+        in: path
+        required: true
+        description: The id of the user to (un)link to/from account
+    put:
+      security:
+        - basicAuth: []
+      summary: Link user to account
+      operationId: api_add_account_user
+      tags:
+        - account
+        - user
+      responses:
+        '204':
+          description: OK. User is linked (empty response body)
+        '404':
+          description: Not found. The Account or User with the specified id does not exist
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      security:
+        - basicAuth: []
+      summary: Unlink user from account
+      operationId: api_remove_account_user
+      tags:
+        - account
+        - user
+      responses:
+        '204':
+          description: OK. User is unlinked (empty response body)
+        '404':
+          description: Not found. The Account or User with the specified id does not exist or user was not linked to account
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal Server Error. Contains error message
+          schema:
+            $ref: '#/definitions/Error'
+
+
 definitions:
   Server:
     title: Server
@@ -1222,6 +1638,72 @@ definitions:
         type: string
         description: 'Some user defined description'
 
+  User:
+    title: User
+    description: User that can access the gui/api
+    properties:
+      id:
+        type: integer
+        description: The ID for this user (unique)
+        readOnly: true
+      username:
+        type: string
+        description: The username for this user (unique, immutable)
+        readOnly: false
+      password:
+        type: string
+        description: The hashed password for this user
+        readOnly: false
+      firstname:
+        type: string
+        description: The firstname of this user
+        readOnly: false
+      lastname:
+        type: string
+        description: The lastname of this user
+        readOnly: false
+      email:
+        type: string
+        description: Email addres for this user
+        readOnly: false
+      otp_secret:
+        type: string
+        description: OTP secret
+        readOnly: false
+      confirmed:
+        type: boolean
+        description: The confirmed status
+        readOnly: false
+      role_id:
+        type: integer
+        description: The ID of the role
+        readOnly: false
+
+  Account:
+    title: Account
+    description: Account that 'owns' zones
+    properties:
+      id:
+        type: integer
+        description: The ID for this account (unique)
+        readOnly: true
+      name:
+        type: string
+        description: The name for this account (unique, immutable)
+        readOnly: false
+      description:
+        type: string
+        description: The description for this account
+        readOnly: false
+      contact:
+        type: string
+        description: The contact details for this account
+        readOnly: false
+      mail:
+        type: string
+        description: The email address of the contact for this account
+        readOnly: false
+
   ConfigSetting:
     title: ConfigSetting
     properties:
@@ -1266,7 +1748,7 @@ definitions:
           type: array
           description: 'named statistic values'
           items:
-            type: array
+            type: object
             properties:
               name:
                 type: string
@@ -1290,7 +1772,7 @@ definitions:
           type: array
           description: 'named ring statistic values'
           items:
-            type: array
+            type: object
             properties:
               name:
                 type: string
