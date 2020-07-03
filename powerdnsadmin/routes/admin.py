@@ -780,6 +780,17 @@ def setting_authentication():
                               request.form.get('azure_operator_group'))
                 Setting().set('azure_user_group',
                               request.form.get('azure_user_group'))
+                Setting().set(
+                    'azure_group_accounts_enabled', True
+                    if request.form.get('azure_group_accounts_enabled') == 'ON' else False)
+                Setting().set('azure_group_accounts_name',
+                              request.form.get('azure_group_accounts_name'))
+                Setting().set('azure_group_accounts_name_re',
+                              request.form.get('azure_group_accounts_name_re'))
+                Setting().set('azure_group_accounts_description',
+                              request.form.get('azure_group_accounts_description'))
+                Setting().set('azure_group_accounts_description_re',
+                              request.form.get('azure_group_accounts_description_re'))
                 result = {
                     'status': True,
                     'msg':

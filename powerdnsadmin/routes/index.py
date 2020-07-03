@@ -279,6 +279,76 @@ def login():
                             error=('User ' + azure_username +
                                    ' is not in any authorised groups.'))
 
+        # Handle account/group creation, if enabled
+        if Setting().get('azure_group_accounts_enabled') and mygroups:
+            current_app.logger.info('Azure group account sync enabled')
+            for azure_group in mygroups:
+
+                name_value = Setting().get('azure_group_accounts_name')
+                description_value = Setting().get('azure_group_accounts_description')
+
+                select_values = name_value
+                if description_value != '':
+                    select_values += ',' + description_value
+                azure_group_info = azure.get('groups/{}?$select={}'.format(azure_group, select_values)).text
+                current_app.logger.info('Group name for {}: {}'.format(azure_group, azure_group_info))
+                group_info = json.loads(azure_group_info)
+                if name_value in group_info:
+                    group_name = group_info[name_value]
+                    group_description = ''
+                    if description_value in group_info:
+                        group_description = group_info[description_value]
+
+                    # Do regex search if enabled
+                    pattern = Setting().get('azure_group_accounts_name_re')
+                    if pattern != '':
+                        current_app.logger.info('Matching group name {} against regex {}'.format(group_name, pattern))  
+                        matches = re.match(pattern,group_name)
+                        if matches:
+                            current_app.logger.info('Group {} matched regexp'.format(group_name))
+                            group_name = matches.group(0)
+                        else:
+                            # Regexp didn't match, continue to next iteration
+                            next
+                    account = Account()
+                    account_id = account.get_id_by_name(account_name=group_name)
+
+                    if account_id:
+                        account = Account.query.get(account_id)
+                        # check if user has permissions
+                        account_users = account.get_user()
+                        current_app.logger.info('Group: {} Users: {}'.format(
+                            group_name, 
+                            account_users))
+                        if user.id in account_users:
+                            current_app.logger.info('User id {} is already in account {}'.format(
+                                user.id, group_name))
+                        else:
+                            account.add_user(user)
+                            history = History(msg='Update account {0}'.format(
+                                account.name),
+                                created_by='System')
+                            history.add()
+                            current_app.logger.info('User {} added to Account {}'.format(
+                                user.username, account.name))
+                    else:
+                        account.name = group_name
+                        account.description = group_description
+                        account.contact = ''
+                        account.mail = ''
+                        account.create_account()
+                        history = History(msg='Create account {0}'.format(
+                            account.name), 
+                            created_by='System')
+                        history.add()
+
+                        account.add_user(user)
+                        history = History(msg='Update account {0}'.format(account.name),
+                                          created_by='System')
+                        history.add()
+                    current_app.logger.warning('group info: {} '.format(account_id))
+
+
         login_user(user, remember=False)
         signin_history(user.username, 'Azure OAuth', True)
         return redirect(url_for('index.index'))
