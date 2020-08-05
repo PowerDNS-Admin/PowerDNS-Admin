@@ -453,6 +453,13 @@ def logout():
                 session_index=session['samlSessionIndex'],
                 name_id=session['samlNameId']))
 
+    redirect_uri = url_for('index.login')
+    oidc_logout = Setting().get('oidc_oauth_logout_url')
+
+    if 'oidc_token' in session and oidc_logout:
+        redirect_uri = "{}?redirect_uri={}".format(
+            oidc_logout, url_for('index.login', _external=True))
+
     # Clean cookies and flask session
     clear_session()
 
@@ -476,7 +483,7 @@ def logout():
 
         return res
 
-    return redirect(url_for('index.login'))
+    return redirect(redirect_uri)
 
 
 @index_bp.route('/register', methods=['GET', 'POST'])
