@@ -1,6 +1,10 @@
+import traceback
 from flask import current_app
+from urllib.parse import urljoin
 
+from ..lib import utils
 from .base import db
+from .setting import Setting
 from .user import User
 from .account_user import AccountUser
 
@@ -19,6 +23,12 @@ class Account(db.Model):
         self.description = description
         self.contact = contact
         self.mail = mail
+
+        # PDNS configs
+        self.PDNS_STATS_URL = Setting().get('pdns_api_url')
+        self.PDNS_API_KEY = Setting().get('pdns_api_key')
+        self.PDNS_VERSION = Setting().get('pdns_version')
+        self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
 
         if self.name is not None:
             self.name = ''.join(c for c in self.name.lower()
@@ -200,3 +210,57 @@ class Account(db.Model):
                 'Cannot revoke user privileges on account {0}. DETAIL: {1}'.
                 format(self.name, e))
             return False
+
+    def update(self):
+        """
+        Fetch accounts from PowerDNS and syncs them into DB
+        """
+        db_accounts = Account.query.all()
+        list_db_accounts = [d.name for d in db_accounts]
+        current_app.logger.info("Found {} accounts in PowerDNS-Admin".format(
+            len(list_db_accounts)))
+        headers = {'X-API-Key': self.PDNS_API_KEY}
+        try:
+            jdata = utils.fetch_json(
+                urljoin(self.PDNS_STATS_URL,
+                        self.API_EXTENDED_URL + '/servers/localhost/zones'),
+                headers=headers,
+                timeout=int(Setting().get('pdns_api_timeout')),
+                verify=Setting().get('verify_ssl_connections'))
+            list_jaccount = set(d['account'] for d in jdata if d['account'])
+
+            try:
+                # Remove accounts that don't exist any more
+                should_removed_db_account = list(
+                    set(list_db_accounts).difference(list_jaccount))
+                for account_name in should_removed_db_account:
+                    account_id = self.get_id_by_name(account_name)
+                    if not account_id:
+                        continue
+                    current_app.logger.info("Deleting account for {0}".format(account_name))
+                    account = Account.query.get(account_id)
+                    db.session.delete(account)
+            except Exception as e:
+                current_app.logger.error(
+                    'Can not delete account from DB. DETAIL: {0}'.format(e))
+                current_app.logger.debug(traceback.format_exc())
+
+            for account_name in list_jaccount:
+                account_id = self.get_id_by_name(account_name)
+                if account_id:
+                    continue
+                current_app.logger.info("Creating account for {0}".format(account_name))
+                account = Account(name=account_name)
+                db.session.add(account)
+
+            db.session.commit()
+            current_app.logger.info('Update accounts finished')
+            return {
+                'status': 'ok',
+                'msg': 'Account table has been updated successfully'
+            }
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(
+                'Cannot update account table. Error: {0}'.format(e))
+            return {'status': 'error', 'msg': 'Cannot update account table'}
