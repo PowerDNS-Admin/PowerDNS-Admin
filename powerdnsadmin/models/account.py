@@ -114,7 +114,7 @@ class Account(db.Model):
             db.session.rollback()
             current_app.logger.error(
                 'Cannot delete account {0} from DB. DETAIL: {1}'.format(
-                    self.username, e))
+                    self.name, e))
             return False
 
     def get_user(self):
