@@ -98,7 +98,7 @@ class Account(db.Model):
         db.session.commit()
         return {'status': True, 'msg': 'Account updated successfully'}
 
-    def delete_account(self):
+    def delete_account(self, commit=True):
         """
         Delete an account
         """
@@ -107,7 +107,8 @@ class Account(db.Model):
 
         try:
             Account.query.filter(Account.name == self.name).delete()
-            db.session.commit()
+            if commit:
+                db.session.commit()
             return True
         except Exception as e:
             db.session.rollback()
@@ -239,7 +240,7 @@ class Account(db.Model):
                         continue
                     current_app.logger.info("Deleting account for {0}".format(account_name))
                     account = Account.query.get(account_id)
-                    db.session.delete(account)
+                    account.delete_account(commit=False)
             except Exception as e:
                 current_app.logger.error(
                     'Can not delete account from DB. DETAIL: {0}'.format(e))
