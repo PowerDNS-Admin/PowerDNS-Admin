@@ -15,7 +15,6 @@ import logging
 
 from powerdnsadmin import create_app
 from powerdnsadmin.models.account import Account
-from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.setting import Setting
 
 app = create_app()
@@ -30,4 +29,3 @@ with app.app_context():
         sys.exit(1)
 
     Account().update()
-    Domain().update()
