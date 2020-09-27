@@ -13,6 +13,7 @@ GUNICORN_ARGS="-t ${GUNICORN_TIMEOUT} --workers ${GUNICORN_WORKERS} --bind ${BIN
 if [ "$1" == gunicorn ]; then
     # run as user pda so that if a SQLite database is generated it is writeable
     # by that user
+    chown pda:pda /data
     su pda -s /bin/sh -c "flask db upgrade"
     exec "$@" $GUNICORN_ARGS
 
