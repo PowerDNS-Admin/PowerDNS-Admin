@@ -1,6 +1,7 @@
 import json
 import datetime
 import traceback
+from base64 import b64encode
 from ast import literal_eval
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
@@ -17,6 +18,11 @@ from ..models.domain import Domain
 from ..models.record import Record
 from ..models.domain_template import DomainTemplate
 from ..models.domain_template_record import DomainTemplateRecord
+from ..models.api_key import ApiKey
+
+from ..lib.schema import ApiPlainKeySchema
+
+apikey_plain_schema = ApiPlainKeySchema(many=True)
 
 admin_bp = Blueprint('admin',
                      __name__,
@@ -127,6 +133,123 @@ def edit_user(user_username=None):
                                create=create,
                                error=result['msg'])
 
+@admin_bp.route('/key/edit/<key_id>', methods=['GET', 'POST'])
+@admin_bp.route('/key/edit', methods=['GET', 'POST'])
+@login_required
+@operator_role_required
+def edit_key(key_id=None):
+    domains = Domain.query.all()
+    roles = Role.query.all()
+    apikey = None
+    create = True
+    plain_key = None
+
+    if key_id:
+        apikey = ApiKey.query.filter(ApiKey.id == key_id).first()
+        create = False
+
+        if not apikey:
+            return render_template('errors/404.html'), 404
+
+    if request.method == 'GET':
+        return render_template('admin_edit_key.html',
+                               key=apikey,
+                               domains=domains,
+                               roles=roles,
+                               create=create)
+
+    if request.method == 'POST':
+        fdata = request.form
+        description = fdata['description']
+        role = fdata.getlist('key_role')[0]
+        doamin_list = fdata.getlist('key_multi_domain')
+
+        # Create new apikey
+        if create:
+            domain_obj_list = Domain.query.filter(Domain.name.in_(doamin_list)).all()
+            apikey = ApiKey(desc=description,
+                            role_name=role,
+                            domains=domain_obj_list)
+            try:
+                apikey.create()
+            except Exception as e:
+                current_app.logger.error('Error: {0}'.format(e))
+                raise ApiKeyCreateFail(message='Api key create failed')
+
+            plain_key = apikey_plain_schema.dump([apikey])[0]["plain_key"]
+            plain_key = b64encode(plain_key.encode('utf-8')).decode('utf-8')
+            history_message =  "Created API key {0}".format(apikey.id)
+
+        # Update existing apikey
+        else:
+            try:
+                apikey.update(role,description,doamin_list)
+                history_message =  "Updated API key {0}".format(apikey.id)
+            except Exception as e:
+                current_app.logger.error('Error: {0}'.format(e))
+
+        history = History(msg=history_message,
+                          detail=str({
+                            'key': apikey.id,
+                            'role': apikey.role.name,
+                            'description': apikey.description,
+                            'domain_acl': [domain.name for domain in apikey.domains]
+                          }),
+                          created_by=current_user.username)
+        history.add()
+        
+        return render_template('admin_edit_key.html',
+                               key=apikey,
+                               domains=domains,
+                               roles=roles,
+                               create=create,
+                               plain_key=plain_key)
+
+@admin_bp.route('/manage-keys', methods=['GET', 'POST'])
+@login_required
+@operator_role_required
+def manage_keys():
+    if request.method == 'GET':
+        try:
+            apikeys = ApiKey.query.all()
+        except Exception as e:
+            current_app.logger.error('Error: {0}'.format(e))
+            abort(500)
+
+        return render_template('admin_manage_keys.html',
+                                keys=apikeys)
+
+    elif request.method == 'POST':
+        jdata = request.json
+        if jdata['action'] == 'delete_key':
+
+            apikey = ApiKey.query.get(jdata['data'])
+            try:
+                history_apikey_id = apikey.id
+                history_apikey_role = apikey.role.name
+                history_apikey_description = apikey.description
+                history_apikey_domains = [ domain.name for domain in apikey.domains]
+                
+                apikey.delete()
+            except Exception as e:
+                current_app.logger.error('Error: {0}'.format(e))
+
+            current_app.logger.info('Delete API key {0}'.format(apikey.id))
+            history = History(msg='Delete API key {0}'.format(apikey.id),
+                              detail=str({
+                                  'key': history_apikey_id,
+                                  'role': history_apikey_role,
+                                  'description': history_apikey_description,
+                                  'domains': history_apikey_domains
+                              }),
+                              created_by=current_user.username)
+            history.add()
+
+            return make_response(
+                        jsonify({
+                            'status': 'ok',
+                            'msg': 'Key has been removed.'
+                        }), 200)
 
 @admin_bp.route('/manage-user', methods=['GET', 'POST'])
 @login_required

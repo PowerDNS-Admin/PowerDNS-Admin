@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% set active_page = "admin_keys" %}
+{% block title %}
+<title>Edit Key - {{ SITE_NAME }}</title>
+{% endblock %}
+{% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Key
+        <small>{% if create %}New key{% else %}{{ key.id }}{% endif %}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('admin.manage_keys') }}">Key</a></li>
+        <li class="active">{% if create %}Add{% else %}Edit{% endif %} key</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} key</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post"
+                    action="{% if create %}{{ url_for('admin.edit_key') }}{% else %}{{ url_for('admin.edit_key', key_id=key.id) }}{% endif %}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="create" value="{{ create }}">
+                    <div class="box-body">
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="role">Role</label>
+                            <select class="key_role form-control" id="key_role" name="key_role">
+                                {% for role in roles %}
+                                <option value="{{ role.name }}"
+                                {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}>{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="description">Description</label>
+                            <input type="text" class="form-control" placeholder="Description" name="description"
+                                {% if key is not none %} value="{{ key.description }}" {% endif %}> <span
+                                class="glyphicon glyphicon-pencil form-control-feedback"></span>
+                        </div>
+                    </div>
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Access Control</h3>
+                    </div>
+                    <div class="box-body">
+                        <p>This key will have acess to the domains on the right.</p>
+                        <p>Click on domains to move between the columns.</p>
+                        <div class="form-group col-xs-2">
+                            <select multiple="multiple" class="form-control" id="key_multi_domain"
+                                name="key_multi_domain">
+                                {% for domain in domains %}
+                                    <option {% if domain in key.domains %}selected{% endif %} value="{{ domain.name }}">{{ domain.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit"
+                            class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
+                            Key</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} key
+                    </h3>
+                </div>
+                <div class="box-body">
+                    <p>Fill in all the fields in the form to the left.</p>
+                    <p><strong>Role</strong> The role of the key.</p>
+                    <p><strong>Description</strong> The key description.</p>
+                    <p><strong>Access Control</strong> The domains which the key has access to.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    $("#key_multi_domain").multiSelect({
+        selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Domain Name'>",
+        selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Domain Name'>",
+        afterInit: function (ms) {
+            var that = this,
+                $selectableSearch = that.$selectableUl.prev(),
+                $selectionSearch = that.$selectionUl.prev(),
+                selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+                selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+
+            that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+                .on('keydown', function (e) {
+                    if (e.which === 40) {
+                        that.$selectableUl.focus();
+                        return false;
+                    }
+                });
+
+            that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+                .on('keydown', function (e) {
+                    if (e.which == 40) {
+                        that.$selectionUl.focus();
+                        return false;
+                    }
+                });
+        },
+        afterSelect: function () {
+            this.qs1.cache();
+            this.qs2.cache();
+        },
+        afterDeselect: function () {
+            this.qs1.cache();
+            this.qs2.cache();
+        }
+    });
+    {% if plain_key %}
+    $(document.body).ready(function () {
+        var modal = $("#modal_show_key");
+        var info = "{{ plain_key }}";
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_key_confirm').click(redirect_modal);
+        modal.find('#button_close_modal').click(redirect_modal);
+        modal.modal('show');
+    });
+
+    function redirect_modal() {
+        window.location.href = '{{ url_for('admin.manage_keys') }}';
+        modal.modal('hide');
+    }
+    {% endif %}
+</script>
+{% endblock %}
+{% block modals %}
+<div class="modal fade" id="modal_show_key">
+    <div class="modal-dialog">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Your API key</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-primary center-block" id="button_key_confirm">
+                    Confirm</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+{% endblock %}
