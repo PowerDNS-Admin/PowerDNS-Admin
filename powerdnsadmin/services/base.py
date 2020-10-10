@@ -1,3 +1,3 @@
-from authlib.flask.client import OAuth
+from authlib.integrations.flask_client import OAuth\
 
 authlib_oauth_client = OAuth()
