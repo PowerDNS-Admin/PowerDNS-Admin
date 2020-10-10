@@ -235,7 +235,7 @@ def add():
             abort(500)
 
     else:
-        accounts = Account.query.all()
+        accounts = Account.query.order_by(Account.name).all()
         return render_template('domain_add.html',
                                templates=templates,
                                accounts=accounts)
@@ -267,7 +267,7 @@ def setting(domain_name):
         if not domain:
             abort(404)
         users = User.query.all()
-        accounts = Account.query.all()
+        accounts = Account.query.order_by(Account.name).all()
 
         # get list of user ids to initialize selection data
         d = Domain(name=domain_name)
