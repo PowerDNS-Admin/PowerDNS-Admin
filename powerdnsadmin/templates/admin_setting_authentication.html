@@ -456,6 +456,41 @@
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
+                                            <fieldset>
+                                                <legend>AZURE GROUP ACCOUNT SYNC/CREATION</legend>
+                                                <div class="form-group">
+                                                    <label for="azure_group_accounts_enabled">Status</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="azure_group_accounts_enabled" id="azure_group_accounts_off" value="OFF" {% if not SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}> OFF
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="azure_group_accounts_enabled" id="azure_group_accounts_on" value="ON" {% if SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}> ON
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="azure_group_accounts_name">Azure group name claim</label>
+                                                    <input type="text" class="form-control" name="azure_group_accounts_name" id="azure_group_accounts_name" placeholder="e.g. displayName" data-error="Please input the Claim for Azure group name" value="{{ SETTING.get('azure_group_accounts_name') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="azure_group_accounts_name_re">Azure group name claim regex</label>
+                                                    <input type="text" class="form-control" name="azure_group_accounts_name_re" id="azure_group_accounts_name_re" placeholder="e.g. (.*)" data-error="Please input the regex for Azure group name" value="{{ SETTING.get('azure_group_accounts_name_re') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="azure_group_accounts_description">Azure group description claim</label>
+                                                    <input type="text" class="form-control" name="azure_group_accounts_description" id="azure_group_accounts_description" placeholder="e.g. description. If empty uses whole string" data-error="Please input the Claim for Azure group description" value="{{ SETTING.get('azure_group_accounts_description') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="azure_group_accounts_name_re">Azure group name description regex</label>
+                                                    <input type="text" class="form-control" name="azure_group_accounts_description_re" id="azure_group_accounts_description_re" placeholder="e.g. (.*). If empty uses whole string" data-error="Please input the regex for Azure group description" value="{{ SETTING.get('azure_group_accounts_description_re') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>                                                
+                                            </fieldset>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-flat btn-primary">Save</button>
                                             </div>
@@ -476,6 +511,7 @@
  <li>For the Scope, use <b>User.Read openid mail profile</b></li>
  <li>Replace the [tenantID] in the default URLs for authorize and token with your Tenant ID.</li>
 </ul></p>
+<p>If <b>AZURE GROUP ACCOUNT SYNC/CREATION</b> is enabled, Accounts will be created automatically based on group membership. If an Account exists, an authenticated user with group membership is added to the Account</p>
 
                                     </div>
                                 </div>
