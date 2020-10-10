@@ -73,22 +73,28 @@ RUN pip install pip-autoremove && \
 # Build image
 FROM alpine:3.12
 
-ENV FLASK_APP=/app/powerdnsadmin/__init__.py
+ENV FLASK_APP=/app/powerdnsadmin/__init__.py \
+    USER=pda
 
-RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata && \
-    addgroup -S pda && \
-    adduser -S -D -G pda pda && \
+RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata libcap && \
+    addgroup -S ${USER} && \
+    adduser -S -D -G ${USER} ${USER} && \
     mkdir /data && \
-    chown pda:pda /data
+    chown ${USER}:${USER} /data && \
+    setcap cap_net_bind_service=+ep $(readlink -f /usr/bin/python3) && \
+    apk del libcap
 
 COPY --from=builder /usr/bin/flask /usr/bin/
 COPY --from=builder /usr/lib/python3.8/site-packages /usr/lib/python3.8/site-packages/
-COPY --from=builder --chown=pda:pda /app /app/
+COPY --from=builder --chown=root:${USER} /app /app/
 COPY ./docker/entrypoint.sh /usr/bin/
 
 WORKDIR /app
+RUN chown ${USER}:${USER} ./configs && \
+    cat ./powerdnsadmin/default_config.py ./configs/docker_config.py > ./powerdnsadmin/docker_config.py
 
 EXPOSE 80/tcp
+USER ${USER}
 HEALTHCHECK CMD ["wget","--output-document=-","--quiet","--tries=1","http://127.0.0.1/"]
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["gunicorn","powerdnsadmin:create_app()","--user","pda","--group","pda"]
+CMD ["gunicorn","powerdnsadmin:create_app()"]
