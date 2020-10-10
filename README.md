@@ -31,7 +31,7 @@ To get started as quickly as possible try option 1. If you want to make modifica
 The easiest is to just run the latest Docker image from Docker Hub:
 ```
 $ docker run -d \
-    -v pda-data:/data
+    -v pda-data:/data \
     -p 9191:80 \
     ngoduykhanh/powerdns-admin:latest
 ```
