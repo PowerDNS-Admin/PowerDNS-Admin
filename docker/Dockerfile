@@ -6,7 +6,6 @@ ARG BUILD_DEPENDENCIES="build-base \
     libxml2-dev \
     mariadb-connector-c-dev \
     openldap-dev \
-    py3-pip \
     python3-dev \
     xmlsec-dev \
     yarn"
@@ -17,7 +16,11 @@ ENV LC_ALL=en_US.UTF-8 \
     FLASK_APP=/build/powerdnsadmin/__init__.py
 
 # Get dependencies
-RUN apk add --no-cache ${BUILD_DEPENDENCIES}
+# py3-pip should not belong to BUILD_DEPENDENCIES. Otherwise, when we remove
+# them with "apk del" at the end of build stage, the python requests module
+# will be removed as well - (Tested with alpine:3.12 and python 3.8.5).
+RUN apk add --no-cache ${BUILD_DEPENDENCIES} && \
+    apk add --no-cache py3-pip
 
 WORKDIR /build
 
@@ -68,7 +71,6 @@ RUN pip install pip-autoremove && \
     pip-autoremove pytest -y && \
     pip uninstall -y pip-autoremove && \
     apk del ${BUILD_DEPENDENCIES}
-
 
 # Build image
 FROM alpine:3.12
