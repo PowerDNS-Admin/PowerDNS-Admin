@@ -8,7 +8,6 @@ import ipaddress
 from collections.abc import Iterable
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
-from datetime import datetime, timedelta
 
 
 def auth_from_url(url):
