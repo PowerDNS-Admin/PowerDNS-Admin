@@ -473,7 +473,7 @@ class User(db.Model):
         user.email = self.email
 
         # store new password hash (only if changed)
-        if self.plain_text_password != "":
+        if self.plain_text_password:
             user.password = self.get_hashed_password(
                 self.plain_text_password).decode("utf-8")
 
@@ -589,3 +589,21 @@ class User(db.Model):
             return {'status': True, 'msg': 'Set user role successfully'}
         else:
             return {'status': False, 'msg': 'Role does not exist'}
+
+    def get_accounts(self):
+        """
+        Get accounts associated with this user
+        """
+        from .account import Account
+        from .account_user import AccountUser
+        accounts = []
+        query = db.session\
+            .query(
+                AccountUser,
+                Account)\
+            .filter(User.id == AccountUser.user_id)\
+            .filter(Account.id == AccountUser.account_id)\
+            .all()
+        for q in query:
+            accounts.append(q[1])
+        return accounts

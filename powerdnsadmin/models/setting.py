@@ -95,10 +95,13 @@ class Setting(db.Model):
         'oidc_oauth_api_url': '',
         'oidc_oauth_token_url': '',
         'oidc_oauth_authorize_url': '',
+        'oidc_oauth_logout_url': '',
         'oidc_oauth_username': 'preferred_username',
         'oidc_oauth_firstname': 'given_name',
         'oidc_oauth_last_name': 'family_name ',
         'oidc_oauth_email': 'email',
+        'oidc_oauth_account_name_property': '',
+        'oidc_oauth_account_description_property': '',
         'forward_records_allow_edit': {
             'A': True,
             'AAAA': True,

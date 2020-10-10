@@ -953,6 +953,10 @@ def setting_authentication():
                               request.form.get('oidc_oauth_last_name'))
                 Setting().set('oidc_oauth_email',
                               request.form.get('oidc_oauth_email'))
+                Setting().set('oidc_oauth_account_name_property',
+                              request.form.get('oidc_oauth_account_name_property'))
+                Setting().set('oidc_oauth_account_description_property',
+                              request.form.get('oidc_oauth_account_description_property'))
                 result = {
                     'status': True,
                     'msg':
