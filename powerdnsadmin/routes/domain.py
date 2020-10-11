@@ -439,6 +439,15 @@ def record_apply(domain_name):
             history.add()
             return make_response(jsonify(result), 200)
         else:
+            history = History(
+                msg='Failed to apply record changes to domain {0}'.format(domain_name),
+                detail=str(
+                    json.dumps({
+                        "domain": domain_name,
+                        "msg": result['msg'],
+                    })),
+                created_by=current_user.username)
+            history.add()
             return make_response(jsonify(result), 400)
     except Exception as e:
         current_app.logger.error(

@@ -278,6 +278,17 @@ class Record(object):
 
         return new_rrsets, del_rrsets
 
+    def apply_rrsets(self, domain_name, rrsets):
+        headers = {'X-API-Key': self.PDNS_API_KEY}
+        jdata = utils.fetch_json(urljoin(
+            self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+            '/servers/localhost/zones/{0}'.format(domain_name)),
+                                  headers=headers,
+                                  method='PATCH',
+                                  verify=Setting().get('verify_ssl_connections'),
+                                  data=rrsets)
+        return jdata
+
     def apply(self, domain_name, submitted_records):
         """
         Apply record changes to a domain. This function
@@ -301,44 +312,43 @@ class Record(object):
 
         # Submit the changes to PDNS API
         try:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
-
             if del_rrsets["rrsets"]:
-                jdata1 = utils.fetch_json(urljoin(
-                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                    '/servers/localhost/zones/{0}'.format(domain_name)),
-                                          headers=headers,
-                                          method='PATCH',
-                                          verify=Setting().get('verify_ssl_connections'),
-                                          data=del_rrsets)
-                if 'error' in jdata1.keys():
+                result = self.apply_rrsets(domain_name, del_rrsets)
+                if 'error' in result.keys():
                     current_app.logger.error(
                         'Cannot apply record changes with deleting rrsets step. PDNS error: {}'
-                        .format(jdata1['error']))
-                    print(jdata1['error'])
+                        .format(result['error']))
                     return {
                         'status': 'error',
-                        'msg': jdata1['error'].replace("'", "")
+                        'msg': result['error'].replace("'", "")
                     }
 
             if new_rrsets["rrsets"]:
-                jdata2 = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                        '/servers/localhost/zones/{0}'.format(domain_name)),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    method='PATCH',
-                    verify=Setting().get('verify_ssl_connections'),
-                    data=new_rrsets)
-                if 'error' in jdata2.keys():
+                result = self.apply_rrsets(domain_name, new_rrsets)
+                if 'error' in result.keys():
                     current_app.logger.error(
                         'Cannot apply record changes with adding rrsets step. PDNS error: {}'
-                        .format(jdata2['error']))
-                    return {
-                        'status': 'error',
-                        'msg': jdata2['error'].replace("'", "")
-                    }
+                        .format(result['error']))
+
+                    # rollback - re-add the removed record if the adding operation is failed.
+                    if del_rrsets["rrsets"]:
+                        rollback_rrests = del_rrsets
+                        for r in del_rrsets["rrsets"]:
+                            r['changetype'] = 'REPLACE'
+                        rollback = self.apply_rrsets(domain_name, rollback_rrests)
+                        if 'error' in rollback.keys():
+                            return dict(status='error',
+                                        msg='Failed to apply changes. Cannot rollback previous failed operation: {}'
+                                        .format(rollback['error'].replace("'", "")))
+                        else:
+                            return dict(status='error',
+                                        msg='Failed to apply changes. Rolled back previous failed operation: {}'
+                                        .format(result['error'].replace("'", "")))
+                    else:
+                        return {
+                            'status': 'error',
+                            'msg': result['error'].replace("'", "")
+                        }
 
             self.auto_ptr(domain_name, new_rrsets, del_rrsets)
             self.update_db_serial(domain_name)
