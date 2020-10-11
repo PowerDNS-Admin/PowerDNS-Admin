@@ -12,7 +12,7 @@ class History(db.Model):
     # detail = db.Column(db.Text().with_variant(db.Text(length=2**24-2), 'mysql'))
     detail = db.Column(db.Text())
     created_by = db.Column(db.String(128))
-    created_on = db.Column(db.DateTime, default=datetime.utcnow)
+    created_on = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     def __init__(self, id=None, msg=None, detail=None, created_by=None):
         self.id = id
