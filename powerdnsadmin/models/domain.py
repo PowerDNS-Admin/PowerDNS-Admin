@@ -116,7 +116,7 @@ class Domain(db.Model):
         db_domain = Domain.query.all()
         list_db_domain = [d.name for d in db_domain]
         dict_db_domain = dict((x.name, x) for x in db_domain)
-        current_app.logger.info("Found {} entries in PowerDNS-Admin".format(
+        current_app.logger.info("Found {} domains in PowerDNS-Admin".format(
             len(list_db_domain)))
         headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
@@ -128,7 +128,7 @@ class Domain(db.Model):
                 verify=Setting().get('verify_ssl_connections'))
             list_jdomain = [d['name'].rstrip('.') for d in jdata]
             current_app.logger.info(
-                "Found {} entries in PowerDNS server".format(len(list_jdomain)))
+                "Found {} zones in PowerDNS server".format(len(list_jdomain)))
 
             try:
                 # domains should remove from db since it doesn't exist in powerdns anymore
@@ -166,8 +166,8 @@ class Domain(db.Model):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
-                'Can not update domain table. Error: {0}'.format(e))
-            return {'status': 'error', 'msg': 'Can not update domain table'}
+                'Cannot update domain table. Error: {0}'.format(e))
+            return {'status': 'error', 'msg': 'Cannot update domain table'}
 
     def update_pdns_admin_domain(self, domain, account_id, data, do_commit=True):
         # existing domain, only update if something actually has changed
