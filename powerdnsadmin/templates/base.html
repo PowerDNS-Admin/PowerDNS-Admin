@@ -16,6 +16,8 @@
   {% endif %}
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <!-- Tell Safari to not recognise telephone numbers -->
+  <meta name="format-detection" content="telephone=no">
   {% assets "css_main" -%}
       <link rel="stylesheet" href="{{ ASSET_URL }}">
   {%- endassets %}
