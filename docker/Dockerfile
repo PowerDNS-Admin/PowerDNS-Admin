@@ -92,7 +92,7 @@ COPY --from=builder --chown=root:${USER} /app /app/
 COPY ./docker/entrypoint.sh /usr/bin/
 
 WORKDIR /app
-RUN chown ${USER}:${USER} ./configs && \
+RUN chown ${USER}:${USER} ./configs /app && \
     cat ./powerdnsadmin/default_config.py ./configs/docker_config.py > ./powerdnsadmin/docker_config.py
 
 EXPOSE 80/tcp
