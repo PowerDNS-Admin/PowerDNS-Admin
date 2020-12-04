@@ -919,15 +919,6 @@ def api_zone_forward(server_id, zone_id):
             history.add()
     return resp.content, resp.status_code, resp.headers.items()
 
-
-@api_bp.route('/servers', methods=['GET'])
-@apikey_auth
-@apikey_is_admin
-def api_server_forward():
-    resp = helper.forward_request()
-    return resp.content, resp.status_code, resp.headers.items()
-
-
 @api_bp.route('/servers/<path:subpath>', methods=['GET', 'PUT'])
 @apikey_auth
 @apikey_is_admin
@@ -976,6 +967,18 @@ def api_get_zones(server_id):
         resp = helper.forward_request()
         return resp.content, resp.status_code, resp.headers.items()
 
+
+@api_bp.route('/servers', methods=['GET'])
+@apikey_auth
+def api_server_forward():
+    resp = helper.forward_request()
+    return resp.content, resp.status_code, resp.headers.items()
+
+@api_bp.route('/servers/<string:server_id>', methods=['GET'])
+@apikey_auth
+def api_server_config_forward(server_id):
+    resp = helper.forward_request()
+    return resp.content, resp.status_code, resp.headers.items()
 
 # The endpoint to snychronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])

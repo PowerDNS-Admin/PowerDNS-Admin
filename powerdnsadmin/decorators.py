@@ -236,7 +236,7 @@ def apikey_can_access_domain(f):
         apikey = g.apikey
         if g.apikey.role.name not in ['Administrator', 'Operator']:
             domains = apikey.domains
-            zone_id = kwargs.get('zone_id')
+            zone_id = kwargs.get('zone_id').rstrip(".")
             domain_names = [item.name for item in domains]
 
             if zone_id not in domain_names:
