@@ -913,7 +913,7 @@ def api_zone_forward(server_id, zone_id):
                                   created_by=g.apikey.description)
                 history.add()
         elif request.method == 'DELETE':
-            history = History(msg='Deleted zone {0}'.format(domain.name),
+            history = History(msg='Deleted zone {0}'.format(zone_id),
                               detail='',
                               created_by=g.apikey.description)
             history.add()
