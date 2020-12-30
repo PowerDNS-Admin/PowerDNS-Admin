@@ -4,6 +4,7 @@ from flask import Flask
 from flask_seasurf import SeaSurf
 from flask_mail import Mail
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_session import Session
 
 from .lib import utils
 
@@ -77,6 +78,11 @@ def create_app(config=None):
     if app.config.get('HSTS_ENABLED'):
         from flask_sslify import SSLify
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
+
+    # Load Flask-Session
+    if app.config.get("SESSION_TYPE") is not None and app.config.get("SESSION_TYPE") != 'null':
+        sess = Session()
+        sess.init_app(app)
 
     # SMTP
     app.mail = Mail(app)
