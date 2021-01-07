@@ -291,3 +291,13 @@ def dyndns_login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+def apikey_or_basic_auth(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_auth_header = request.headers.get('X-API-KEY')
+        if api_auth_header:
+            return apikey_auth(f)(*args, **kwargs)
+        else:
+            return api_basic_auth(f)(*args, **kwargs)
+    return decorated_function
