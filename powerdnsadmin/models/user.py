@@ -431,7 +431,8 @@ class User(db.Model):
             return {'status': False, 'msg': 'Email address is already in use'}
 
         # first register user will be in Administrator role
-        self.role_id = Role.query.filter_by(name='User').first().id
+        if self.role_id is None:
+            self.role_id = Role.query.filter_by(name='User').first().id
         if User.query.count() == 0:
             self.role_id = Role.query.filter_by(
                 name='Administrator').first().id
