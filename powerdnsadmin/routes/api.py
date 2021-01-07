@@ -903,7 +903,7 @@ def api_zone_forward(server_id, zone_id):
     status = resp.status_code
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
-        if request.method != 'GET' and request.method != 'DELETE':
+        if request.method == 'POST':
             data = request.get_json(force=True)
             for rrset_data in data['rrsets']:
                 history = History(msg='{0} zone {1} record of {2}'.format(
@@ -914,6 +914,11 @@ def api_zone_forward(server_id, zone_id):
                 history.add()
         elif request.method == 'DELETE':
             history = History(msg='Deleted zone {0}'.format(zone_id),
+                              detail='',
+                              created_by=g.apikey.description)
+            history.add()
+        elif request.method != 'GET':
+            history = History(msg='Updated zone {0}'.format(zone_id),
                               detail='',
                               created_by=g.apikey.description)
             history.add()
