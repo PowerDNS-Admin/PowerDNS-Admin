@@ -845,7 +845,7 @@ def api_add_account_user(account_id, user_id):
             user.username, account.name))
 
     history = History(
-        msg='Revoke {} user privileges on {}'.format(
+        msg='Add {} user privileges on {}'.format(
             user.username, account.name),
         created_by=current_user.username)
     history.add()
