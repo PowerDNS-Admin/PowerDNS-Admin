@@ -970,7 +970,15 @@ def api_get_zones(server_id):
         return json.dumps(domain_schema.dump(domain_obj_list)), 200
     else:
         resp = helper.forward_request()
-        return resp.content, resp.status_code, resp.headers.items()
+        if (g.apikey.role.name not in ['Administrator', 'Operator']
+            and resp.status_code == 200):
+            domain_list = [d['name']
+                           for d in domain_schema.dump(g.apikey.domains)]
+            content = json.dumps([i for i in json.loads(resp.content)
+                                  if i['name'].rstrip('.') in domain_list])
+            return content, resp.status_code, resp.headers.items()
+        else:
+            return resp.content, resp.status_code, resp.headers.items()
 
 
 @api_bp.route('/servers', methods=['GET'])
