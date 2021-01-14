@@ -905,6 +905,8 @@ paths:
           description: OK.
           schema:
             $ref: '#/definitions/ApiKey'
+        '403':
+          description: 'The authenticated user has User role and is not allowed on any of the domains assigned to the key'
         '404':
           description: 'Not found. The ApiKey with the specified apikey_id does not exist'
           schema:

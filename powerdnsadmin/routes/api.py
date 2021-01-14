@@ -390,6 +390,23 @@ def api_get_apikeys(domain_name):
     return json.dumps(apikey_schema.dump(apikeys)), 200
 
 
+@api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['GET'])
+@api_basic_auth
+def api_get_apikey(apikey_id):
+    apikey = ApiKey.query.get(apikey_id)
+
+    if not apikey:
+        abort(404)
+
+    current_app.logger.debug(current_user.role.name)
+
+    if current_user.role.name not in ['Administrator', 'Operator']:
+        if apikey_id not in [a.id for a in get_user_apikeys()]:
+            raise DomainAccessForbidden()
+
+    return jsonify(apikey_schema.dump([apikey])[0]), 200
+
+
 @api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
 @api_basic_auth
 def api_delete_apikey(apikey_id):
