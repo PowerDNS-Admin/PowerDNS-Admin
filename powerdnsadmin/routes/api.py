@@ -91,62 +91,62 @@ def get_role_id(role_name, role_id=None):
 
 @api_bp.errorhandler(400)
 def handle_400(err):
-    return json.dumps({"msg": "Bad Request"}), 400
+    return jsonify({"msg": "Bad Request"}), 400
 
 
 @api_bp.errorhandler(401)
 def handle_401(err):
-    return json.dumps({"msg": "Unauthorized"}), 401
+    return jsonify({"msg": "Unauthorized"}), 401
 
 
 @api_bp.errorhandler(409)
 def handle_409(err):
-    return json.dumps({"msg": "Conflict"}), 409
+    return jsonify({"msg": "Conflict"}), 409
 
 
 @api_bp.errorhandler(500)
 def handle_500(err):
-    return json.dumps({"msg": "Internal Server Error"}), 500
+    return jsonify({"msg": "Internal Server Error"}), 500
 
 
 @api_bp.errorhandler(StructuredException)
 def handle_StructuredException(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(DomainNotExists)
 def handle_domain_not_exists(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(DomainAlreadyExists)
 def handle_domain_already_exists(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(DomainAccessForbidden)
 def handle_domain_access_forbidden(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(ApiKeyCreateFail)
 def handle_apikey_create_fail(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(ApiKeyNotUsable)
 def handle_apikey_not_usable(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(NotEnoughPrivileges)
 def handle_not_enough_privileges(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.errorhandler(RequestIsNotJSON)
 def handle_request_is_not_json(err):
-    return json.dumps(err.to_dict()), err.status_code
+    return jsonify(err.to_dict()), err.status_code
 
 
 @api_bp.before_request
@@ -229,7 +229,7 @@ def api_login_list_zones():
         domain_obj_list = Domain.query.all()
 
     domain_obj_list = [] if domain_obj_list is None else domain_obj_list
-    return json.dumps(domain_schema.dump(domain_obj_list)), 200
+    return jsonify(domain_schema.dump(domain_obj_list)), 200
 
 
 @api_bp.route('/pdnsadmin/zones/<string:domain_name>', methods=['DELETE'])
@@ -346,7 +346,7 @@ def api_generate_apikey():
         current_app.logger.error('Error: {0}'.format(e))
         raise ApiKeyCreateFail(message='Api key create failed')
 
-    return json.dumps(apikey_plain_schema.dump([apikey])), 201
+    return jsonify(apikey_plain_schema.dump([apikey])), 201
 
 
 @api_bp.route('/pdnsadmin/apikeys', defaults={'domain_name': None})
@@ -387,7 +387,7 @@ def api_get_apikeys(domain_name):
             current_app.logger.error('Error: {0}'.format(e))
             abort(500)
 
-    return json.dumps(apikey_schema.dump(apikeys)), 200
+    return jsonify(apikey_schema.dump(apikeys)), 200
 
 
 @api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
@@ -525,7 +525,7 @@ def api_list_users(username=None):
         if not user_list:
             abort(404)
 
-    return json.dumps(user_schema.dump(user_list)), 200
+    return jsonify(user_schema.dump(user_list)), 200
 
 
 @api_bp.route('/pdnsadmin/users', methods=['POST'])
@@ -598,7 +598,7 @@ def api_create_user():
     history = History(msg='Created user {0}'.format(user.username),
                       created_by=current_user.username)
     history.add()
-    return json.dumps(user_schema.dump([user])), 201
+    return jsonify(user_schema.dump([user])), 201
 
 
 @api_bp.route('/pdnsadmin/users/<int:user_id>', methods=['PUT'])
@@ -718,7 +718,7 @@ def api_list_accounts(account_name):
                 Account.name == account_name).all()
             if not account_list:
                 abort(404)
-    return json.dumps(account_schema.dump(account_list)), 200
+    return jsonify(account_schema.dump(account_list)), 200
 
 
 @api_bp.route('/pdnsadmin/accounts', methods=['POST'])
@@ -752,7 +752,7 @@ def api_create_account():
     history = History(msg='Create account {0}'.format(account.name),
                       created_by=current_user.username)
     history.add()
-    return json.dumps(account_schema.dump([account])), 201
+    return jsonify(account_schema.dump([account])), 201
 
 
 @api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
@@ -825,7 +825,7 @@ def api_list_account_users(account_id):
         abort(404)
     user_list = User.query.join(AccountUser).filter(
         AccountUser.account_id == account_id).all()
-    return json.dumps(user_schema.dump(user_list)), 200
+    return jsonify(user_schema.dump(user_list)), 200
 
 
 @api_bp.route(
@@ -967,7 +967,7 @@ def api_get_zones(server_id):
             domain_obj_list = g.apikey.domains
         else:
             domain_obj_list = Domain.query.all()
-        return json.dumps(domain_schema.dump(domain_obj_list)), 200
+        return jsonify(domain_schema.dump(domain_obj_list)), 200
     else:
         resp = helper.forward_request()
         return resp.content, resp.status_code, resp.headers.items()
