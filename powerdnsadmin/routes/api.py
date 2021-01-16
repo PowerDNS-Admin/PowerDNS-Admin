@@ -24,6 +24,7 @@ from ..lib.errors import (
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
     apikey_is_admin, apikey_can_access_domain, api_role_can,
+    apikey_or_basic_auth,
 )
 import random
 import string
@@ -987,7 +988,7 @@ def api_server_config_forward(server_id):
 
 # The endpoint to snychronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
-@apikey_auth
+@apikey_or_basic_auth
 def sync_domains():
     domain = Domain()
     domain.update()
