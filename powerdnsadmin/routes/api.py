@@ -1,5 +1,6 @@
 import json
 from urllib.parse import urljoin
+from base64 import b64encode
 from flask import (
     Blueprint, g, request, abort, current_app, make_response, jsonify,
 )
@@ -347,6 +348,7 @@ def api_generate_apikey():
         current_app.logger.error('Error: {0}'.format(e))
         raise ApiKeyCreateFail(message='Api key create failed')
 
+    apikey.plain_key = b64encode(apikey.plain_key.encode('utf-8')).decode('utf-8')
     return jsonify(apikey_plain_schema.dump([apikey])), 201
 
 
