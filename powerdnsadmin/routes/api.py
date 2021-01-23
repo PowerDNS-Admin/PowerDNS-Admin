@@ -736,12 +736,20 @@ def api_list_accounts(account_name):
                 Account.name == account_name).all()
             if not account_list:
                 abort(404)
-    return jsonify(account_schema.dump(account_list)), 200
+    if account_name is None:
+        return jsonify(account_schema.dump(account_list)), 200
+    else:
+        return jsonify(account_schema.dump(account_list)[0]), 200
 
 
 @api_bp.route('/pdnsadmin/accounts', methods=['POST'])
 @api_basic_auth
 def api_create_account():
+    account_exists = [] or Account.query.filter(Account.name == account_name).all()
+    if len(account_exists) > 0:
+        msg = "Account name already exists"
+        current_app.logger.debug(msg)
+        raise AccountCreateFail(message=msg)
     if current_user.role.name not in ['Administrator', 'Operator']:
         msg = "{} role cannot create accounts".format(current_user.role.name)
         raise NotEnoughPrivileges(message=msg)
@@ -770,7 +778,7 @@ def api_create_account():
     history = History(msg='Create account {0}'.format(account.name),
                       created_by=current_user.username)
     history.add()
-    return jsonify(account_schema.dump([account])), 201
+    return jsonify(account_schema.dump([account])[0]), 201
 
 
 @api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
