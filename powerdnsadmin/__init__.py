@@ -80,7 +80,8 @@ def create_app(config=None):
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
 
     # Load Flask-Session
-    if app.config.get("SESSION_TYPE") is not None and app.config.get("SESSION_TYPE") != 'null':
+    if app.config.get('FILESYSTEM_SESSIONS_ENABLED'):
+        app.config['SESSION_TYPE'] = 'filesystem'
         sess = Session()
         sess.init_app(app)
 
