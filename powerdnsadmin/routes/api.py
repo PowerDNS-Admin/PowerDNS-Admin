@@ -294,13 +294,23 @@ def api_generate_apikey():
     apikey = None
     domain_obj_list = []
 
-    abort(400) if 'domains' not in data else None
-    abort(400) if not isinstance(data['domains'], (list, )) else None
     abort(400) if 'role' not in data else None
 
+    if 'domains' not in data:
+        domains = []
+    elif not isinstance(data['domains'], (list, )):
+        abort(400)
+    else:
+        domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
+
     description = data['description'] if 'description' in data else None
-    role_name = data['role']
-    domains = data['domains']
+
+    if isinstance(data['role'], str):
+        role_name = data['role']
+    elif isinstance(data['role'], dict) and 'name' in data['role'].keys():
+        role_name = data['role']['name']
+    else:
+        abort(400)
 
     if role_name == 'User' and len(domains) == 0:
         current_app.logger.error("Apikey with User role must have domains")
@@ -347,7 +357,7 @@ def api_generate_apikey():
         current_app.logger.error('Error: {0}'.format(e))
         raise ApiKeyCreateFail(message='Api key create failed')
 
-    return jsonify(apikey_plain_schema.dump([apikey])), 201
+    return jsonify(apikey_plain_schema.dump([apikey])[0]), 201
 
 
 @api_bp.route('/pdnsadmin/apikeys', defaults={'domain_name': None})
@@ -453,9 +463,24 @@ def api_update_apikey(apikey_id):
     # that domains update domains
     data = request.get_json()
     description = data['description'] if 'description' in data else None
-    role_name = data['role'] if 'role' in data else None
-    domains = data['domains'] if 'domains' in data else None
     domain_obj_list = None
+
+    if 'role' in data:
+        if isinstance(data['role'], str):
+            role_name = data['role']
+        elif isinstance(data['role'], dict) and 'name' in data['role'].keys():
+            role_name = data['role']['name']
+        else:
+            abort(400)
+    else:
+        role_name = None
+
+    if 'domains' not in data:
+        domains = None
+    elif not isinstance(data['domains'], (list, )):
+        abort(400)
+    else:
+        domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
 
     apikey = ApiKey.query.get(apikey_id)
 
