@@ -295,13 +295,23 @@ def api_generate_apikey():
     apikey = None
     domain_obj_list = []
 
-    abort(400) if 'domains' not in data else None
-    abort(400) if not isinstance(data['domains'], (list, )) else None
     abort(400) if 'role' not in data else None
 
+    if 'domains' not in data:
+        domains = []
+    elif not isinstance(data['domains'], (list, )):
+        abort(400)
+    else:
+        domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
+
     description = data['description'] if 'description' in data else None
-    role_name = data['role']
-    domains = data['domains']
+
+    if isinstance(data['role'], str):
+        role_name = data['role']
+    elif isinstance(data['role'], dict) and 'name' in data['role'].keys():
+        role_name = data['role']['name']
+    else:
+        abort(400)
 
     if role_name == 'User' and len(domains) == 0:
         current_app.logger.error("Apikey with User role must have domains")
@@ -349,7 +359,7 @@ def api_generate_apikey():
         raise ApiKeyCreateFail(message='Api key create failed')
 
     apikey.plain_key = b64encode(apikey.plain_key.encode('utf-8')).decode('utf-8')
-    return jsonify(apikey_plain_schema.dump([apikey])), 201
+    return jsonify(apikey_plain_schema.dump([apikey])[0]), 201
 
 
 @api_bp.route('/pdnsadmin/apikeys', defaults={'domain_name': None})
@@ -455,9 +465,24 @@ def api_update_apikey(apikey_id):
     # that domains update domains
     data = request.get_json()
     description = data['description'] if 'description' in data else None
-    role_name = data['role'] if 'role' in data else None
-    domains = data['domains'] if 'domains' in data else None
     domain_obj_list = None
+
+    if 'role' in data:
+        if isinstance(data['role'], str):
+            role_name = data['role']
+        elif isinstance(data['role'], dict) and 'name' in data['role'].keys():
+            role_name = data['role']['name']
+        else:
+            abort(400)
+    else:
+        role_name = None
+
+    if 'domains' not in data:
+        domains = None
+    elif not isinstance(data['domains'], (list, )):
+        abort(400)
+    else:
+        domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
 
     apikey = ApiKey.query.get(apikey_id)
 
@@ -738,12 +763,20 @@ def api_list_accounts(account_name):
                 Account.name == account_name).all()
             if not account_list:
                 abort(404)
-    return jsonify(account_schema.dump(account_list)), 200
+    if account_name is None:
+        return jsonify(account_schema.dump(account_list)), 200
+    else:
+        return jsonify(account_schema.dump(account_list)[0]), 200
 
 
 @api_bp.route('/pdnsadmin/accounts', methods=['POST'])
 @api_basic_auth
 def api_create_account():
+    account_exists = [] or Account.query.filter(Account.name == account_name).all()
+    if len(account_exists) > 0:
+        msg = "Account name already exists"
+        current_app.logger.debug(msg)
+        raise AccountCreateFail(message=msg)
     if current_user.role.name not in ['Administrator', 'Operator']:
         msg = "{} role cannot create accounts".format(current_user.role.name)
         raise NotEnoughPrivileges(message=msg)
@@ -772,7 +805,7 @@ def api_create_account():
     history = History(msg='Create account {0}'.format(account.name),
                       created_by=current_user.username)
     history.add()
-    return jsonify(account_schema.dump([account])), 201
+    return jsonify(account_schema.dump([account])[0]), 201
 
 
 @api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
