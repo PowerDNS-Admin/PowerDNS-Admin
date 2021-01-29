@@ -282,46 +282,55 @@ def login():
         # Handle account/group creation, if enabled
         if Setting().get('azure_group_accounts_enabled') and mygroups:
             current_app.logger.info('Azure group account sync enabled')
+            name_value = Setting().get('azure_group_accounts_name')
+            description_value = Setting().get('azure_group_accounts_description')
+            select_values = name_value
+            if description_value != '':
+                select_values += ',' + description_value
+            azure_info = azure.post(
+                'me/memberOf/microsoft.graph.group?$count=false&$select=id,{}'.format(select_values)).text
+            current_app.logger.info('Azure groups returned: ' + azure_info)
+            grouplookup = json.loads(azure_info)
+            if "value" in grouplookup:
+                mygroups = grouplookup["value"]
+            else:
+                mygroups = []
+
+            description_pattern = Setting().get('azure_group_accounts_description_re')
+            pattern = Setting().get('azure_group_accounts_name_re')
             for azure_group in mygroups:
-
-                name_value = Setting().get('azure_group_accounts_name')
-                description_value = Setting().get('azure_group_accounts_description')
-
-                select_values = name_value
-                if description_value != '':
-                    select_values += ',' + description_value
-                azure_group_info = azure.get('groups/{}?$select={}'.format(azure_group, select_values)).text
-                current_app.logger.info('Group name for {}: {}'.format(azure_group, azure_group_info))
-                group_info = json.loads(azure_group_info)
-                if name_value in group_info:
-                    group_name = group_info[name_value]
+                if name_value in azure_group:
+                    group_name = azure_group[name_value]
                     group_description = ''
-                    if description_value in group_info:
-                        group_description = group_info[description_value]
+                    if description_value in azure_group:
+                        group_description = azure_group[description_value]
 
                         # Do regex search if enabled for group description
-                        description_pattern = Setting().get('azure_group_accounts_description_re')
                         if description_pattern != '':
-                            current_app.logger.info('Matching group description {} against regex {}'.format(group_description, description_pattern))
-                            matches = re.match(description_pattern,group_description)
+                            current_app.logger.info('Matching group description {} against regex {}'.format(
+                                group_description, description_pattern))
+                            matches = re.match(
+                                description_pattern, group_description)
                             if matches:
-                                current_app.logger.info('Group {} matched regexp'.format(group_description))
+                                current_app.logger.info(
+                                    'Group {} matched regexp'.format(group_description))
                                 group_description = matches.group(1)
                             else:
                                 # Regexp didn't match, continue to next iteration
-                                next
+                                continue
 
                     # Do regex search if enabled for group name
-                    pattern = Setting().get('azure_group_accounts_name_re')
                     if pattern != '':
-                        current_app.logger.info('Matching group name {} against regex {}'.format(group_name, pattern))  
-                        matches = re.match(pattern,group_name)
+                        current_app.logger.info(
+                            'Matching group name {} against regex {}'.format(group_name, pattern))
+                        matches = re.match(pattern, group_name)
                         if matches:
-                            current_app.logger.info('Group {} matched regexp'.format(group_name))
+                            current_app.logger.info(
+                                'Group {} matched regexp'.format(group_name))
                             group_name = matches.group(1)
                         else:
                             # Regexp didn't match, continue to next iteration
-                            next
+                            continue
 
                     account = Account()
                     account_id = account.get_id_by_name(account_name=group_name)
