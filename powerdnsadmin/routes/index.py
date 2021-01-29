@@ -287,14 +287,9 @@ def login():
             select_values = name_value
             if description_value != '':
                 select_values += ',' + description_value
-            azure_info = azure.post(
-                'me/memberOf/microsoft.graph.group?$count=false&$select=id,{}'.format(select_values)).text
-            current_app.logger.info('Azure groups returned: ' + azure_info)
-            grouplookup = json.loads(azure_info)
-            if "value" in grouplookup:
-                mygroups = grouplookup["value"]
-            else:
-                mygroups = []
+
+            mygroups = get_azure_groups(
+                'me/memberOf/microsoft.graph.group?$count=false&$securityEnabled=true&$select={}'.format(select_values))
 
             description_pattern = Setting().get('azure_group_accounts_description_re')
             pattern = Setting().get('azure_group_accounts_name_re')
@@ -520,6 +515,18 @@ def signin_history(username, authenticator, success):
                 "success": 1 if success else 0
             }),
             created_by='System').add()
+
+def get_azure_groups(uri):
+    azure_info = azure.get(uri).text
+    current_app.logger.info('Azure groups returned: ' + azure_info)
+    grouplookup = json.loads(azure_info)
+    if "value" in grouplookup:
+        mygroups = grouplookup["value"]
+        if "@odata.nextLink" in grouplookup:
+            mygroups.extend(get_azure_groups(grouplookup["@odata.nextLink"]))
+    else:
+        mygroups = []
+    return mygroups
 
 
 @index_bp.route('/logout')
