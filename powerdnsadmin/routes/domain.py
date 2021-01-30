@@ -8,6 +8,7 @@ from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session
 from flask_login import login_required, current_user, login_manager
 
+from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec
 from ..models.user import User, Anonymous
@@ -149,6 +150,17 @@ def add():
                     msg="Please enter a valid domain name"), 400
 
             #TODO: Validate ip addresses input
+
+            # Encode domain name into punycode (IDN)
+            try:
+                domain_name = domain_name.encode('idna').decode()
+            except:
+                current_app.logger.error("Cannot encode the domain name {}".format(domain_name))
+                current_app.logger.debug(traceback.format_exc())
+                return render_template(
+                    'errors/400.html',
+                    msg="Please enter a valid domain name"), 400
+
             if domain_type == 'slave':
                 if request.form.getlist('domain_master_address'):
                     domain_master_string = request.form.getlist(
@@ -168,7 +180,8 @@ def add():
                            domain_master_ips=domain_master_ips,
                            account_name=account_name)
             if result['status'] == 'ok':
-                history = History(msg='Add domain {0}'.format(domain_name),
+                history = History(msg='Add domain {0}'.format(
+                    pretty_domain_name(domain_name)),
                                   detail=str({
                                       'domain_type': domain_type,
                                       'domain_master_ips': domain_master_ips,
@@ -251,7 +264,8 @@ def delete(domain_name):
     if result['status'] == 'error':
         abort(500)
 
-    history = History(msg='Delete domain {0}'.format(domain_name),
+    history = History(msg='Delete domain {0}'.format(
+        pretty_domain_name(domain_name)),
                       created_by=current_user.username)
     history.add()
 
@@ -294,7 +308,8 @@ def setting(domain_name):
         d.grant_privileges(new_user_ids)
 
         history = History(
-            msg='Change domain {0} access control'.format(domain_name),
+            msg='Change domain {0} access control'.format(
+                pretty_domain_name(domain_name)),
             detail=str({'user_has_access': new_user_list}),
             created_by=current_user.username)
         history.add()
@@ -330,7 +345,8 @@ def change_type(domain_name):
                            kind=domain_type,
                            masters=domain_master_ips)
     if status['status'] == 'ok':
-        history = History(msg='Update type for domain {0}'.format(domain_name),
+        history = History(msg='Update type for domain {0}'.format(
+                pretty_domain_name(domain_name)),
                           detail=str({
                               "domain": domain_name,
                               "type": domain_type,
@@ -362,7 +378,8 @@ def change_soa_edit_api(domain_name):
                                   soa_edit_api=new_setting)
     if status['status'] == 'ok':
         history = History(
-            msg='Update soa_edit_api for domain {0}'.format(domain_name),
+            msg='Update soa_edit_api for domain {0}'.format(
+                pretty_domain_name(domain_name)),
             detail=str({
                 "domain": domain_name,
                 "soa_edit_api": new_setting
@@ -421,14 +438,14 @@ def record_apply(domain_name):
                     'status':
                     'error',
                     'msg':
-                    'Domain name {0} does not exist'.format(domain_name)
+                    'Domain name {0} does not exist'.format(pretty_domain_name(domain_name))
                 }), 404)
 
         r = Record()
         result = r.apply(domain_name, submitted_record)
         if result['status'] == 'ok':
             history = History(
-                msg='Apply record changes to domain {0}'.format(domain_name),
+                msg='Apply record changes to domain {0}'.format(pretty_domain_name(domain_name)),
                 detail=str(
                     json.dumps({
                         "domain": domain_name,
@@ -440,7 +457,8 @@ def record_apply(domain_name):
             return make_response(jsonify(result), 200)
         else:
             history = History(
-                msg='Failed to apply record changes to domain {0}'.format(domain_name),
+                msg='Failed to apply record changes to domain {0}'.format(
+                    pretty_domain_name(domain_name)),
                 detail=str(
                     json.dumps({
                         "domain": domain_name,
@@ -566,7 +584,7 @@ def admin_setdomainsetting(domain_name):
                     if setting.set(new_value):
                         history = History(
                             msg='Setting {0} changed value to {1} for {2}'.
-                            format(new_setting, new_value, domain.name),
+                            format(new_setting, new_value, pretty_domain_name(domain_name)),
                             created_by=current_user.username)
                         history.add()
                         return make_response(
@@ -585,7 +603,7 @@ def admin_setdomainsetting(domain_name):
                         history = History(
                             msg=
                             'New setting {0} with value {1} for {2} has been created'
-                            .format(new_setting, new_value, domain.name),
+                            .format(new_setting, new_value, pretty_domain_name(domain_name)),
                             created_by=current_user.username)
                         history.add()
                         return make_response(

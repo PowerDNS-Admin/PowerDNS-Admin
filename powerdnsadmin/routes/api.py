@@ -272,7 +272,8 @@ def api_login_delete_zone(domain_name):
         if resp.status_code == 204:
             current_app.logger.debug("Request to powerdns API successful")
 
-            history = History(msg='Delete domain {0}'.format(domain_name),
+            history = History(msg='Delete domain {0}'.format(
+                pretty_domain_name(domain_name)),
                               detail='',
                               created_by=current_user.username)
             history.add()

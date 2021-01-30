@@ -18,6 +18,7 @@ A PowerDNS web interface with advanced features.
 - DynDNS 2 protocol support
 - Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
 - Limited API for manipulating zones and records
+- Full IDN/Punycode support
 
 ## Running PowerDNS-Admin
 There are several ways to run PowerDNS-Admin. The easiest way is to use Docker.
