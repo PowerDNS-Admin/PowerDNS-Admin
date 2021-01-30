@@ -293,6 +293,8 @@ def login():
 
             description_pattern = Setting().get('azure_group_accounts_description_re')
             pattern = Setting().get('azure_group_accounts_name_re')
+
+            # Loop through users security groups
             for azure_group in mygroups:
                 if name_value in azure_group:
                     group_name = azure_group[name_value]
@@ -516,13 +518,16 @@ def signin_history(username, authenticator, success):
             }),
             created_by='System').add()
 
+# Get a list of Azure security groups the user is a member of
 def get_azure_groups(uri):
     azure_info = azure.get(uri).text
     current_app.logger.info('Azure groups returned: ' + azure_info)
     grouplookup = json.loads(azure_info)
     if "value" in grouplookup:
         mygroups = grouplookup["value"]
+        # If "@odata.nextLink" exists in the results, we need to get more groups
         if "@odata.nextLink" in grouplookup:
+            # The additional groups are added to the existing array
             mygroups.extend(get_azure_groups(grouplookup["@odata.nextLink"]))
     else:
         mygroups = []
