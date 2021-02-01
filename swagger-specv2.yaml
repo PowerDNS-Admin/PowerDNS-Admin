@@ -1299,6 +1299,7 @@ paths:
           description: Internal Server Error. Contains error message
           schema:
             $ref: '#/definitions/Error'
+
   '/pdnsadmin/accounts/{account_id}/users':
     parameters:
       - name: account_id
@@ -1629,10 +1630,7 @@ definitions:
         type: string
         description: 'not used on POST, POSTing to server generates the key material'
       domains:
-        type: array
-        required: false
-        items:
-          $ref: '#/definitions/PDNSAdminZones'
+        $ref: '#/definitions/PDNSAdminZones'
         description: 'domains to which this apikey has access'
       role:
         $ref: '#/definitions/PDNSAdminRole'

@@ -14,6 +14,7 @@ from ..models import (
 from ..lib import utils, helper
 from ..lib.schema import (
     ApiKeySchema, DomainSchema, ApiPlainKeySchema, UserSchema, AccountSchema,
+    UserDetailedSchema,
 )
 from ..lib.errors import (
     StructuredException,
@@ -33,11 +34,14 @@ import string
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
 apikey_schema = ApiKeySchema(many=True)
+apikey_single_schema = ApiKeySchema()
 domain_schema = DomainSchema(many=True)
-apikey_plain_schema = ApiPlainKeySchema(many=True)
+apikey_plain_schema = ApiPlainKeySchema()
 user_schema = UserSchema(many=True)
+user_single_schema = UserSchema()
+user_detailed_schema = UserDetailedSchema()
 account_schema = AccountSchema(many=True)
-
+account_single_schema = AccountSchema()
 
 def get_user_domains():
     domains = db.session.query(Domain) \
@@ -359,7 +363,7 @@ def api_generate_apikey():
         raise ApiKeyCreateFail(message='Api key create failed')
 
     apikey.plain_key = b64encode(apikey.plain_key.encode('utf-8')).decode('utf-8')
-    return jsonify(apikey_plain_schema.dump([apikey])[0]), 201
+    return jsonify(apikey_plain_schema.dump(apikey)), 201
 
 
 @api_bp.route('/pdnsadmin/apikeys', defaults={'domain_name': None})
@@ -417,7 +421,7 @@ def api_get_apikey(apikey_id):
         if apikey_id not in [a.id for a in get_user_apikeys()]:
             raise DomainAccessForbidden()
 
-    return jsonify(apikey_schema.dump([apikey])[0]), 200
+    return jsonify(apikey_single_schema.dump(apikey)), 200
 
 
 @api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
@@ -565,12 +569,12 @@ def api_update_apikey(apikey_id):
 def api_list_users(username=None):
     if username is None:
         user_list = [] or User.query.all()
+        return jsonify(user_schema.dump(user_list)), 200
     else:
-        user_list = [] or User.query.filter(User.username == username).all()
-        if not user_list:
+        user = User.query.filter(User.username == username).first()
+        if user is None:
             abort(404)
-
-    return jsonify(user_schema.dump(user_list)), 200
+        return jsonify(user_detailed_schema.dump(user)), 200
 
 
 @api_bp.route('/pdnsadmin/users', methods=['POST'])
@@ -643,7 +647,7 @@ def api_create_user():
     history = History(msg='Created user {0}'.format(user.username),
                       created_by=current_user.username)
     history.add()
-    return jsonify(user_schema.dump([user])), 201
+    return jsonify(user_single_schema.dump(user)), 201
 
 
 @api_bp.route('/pdnsadmin/users/<int:user_id>', methods=['PUT'])
@@ -758,15 +762,13 @@ def api_list_accounts(account_name):
     else:
         if account_name is None:
             account_list = [] or Account.query.all()
+            return jsonify(account_schema.dump(account_list)), 200
         else:
-            account_list = [] or Account.query.filter(
-                Account.name == account_name).all()
-            if not account_list:
+            account = Account.query.filter(
+                Account.name == account_name).first()
+            if account is None:
                 abort(404)
-    if account_name is None:
-        return jsonify(account_schema.dump(account_list)), 200
-    else:
-        return jsonify(account_schema.dump(account_list)[0]), 200
+            return jsonify(account_single_schema.dump(account)), 200
 
 
 @api_bp.route('/pdnsadmin/accounts', methods=['POST'])
@@ -805,7 +807,7 @@ def api_create_account():
     history = History(msg='Create account {0}'.format(account.name),
                       created_by=current_user.username)
     history.add()
-    return jsonify(account_schema.dump([account])[0]), 201
+    return jsonify(account_single_schema.dump(account)), 201
 
 
 @api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
@@ -870,6 +872,7 @@ def api_delete_account(account_id):
 
 
 @api_bp.route('/pdnsadmin/accounts/users/<int:account_id>', methods=['GET'])
+@api_bp.route('/pdnsadmin/accounts/<int:account_id>/users', methods=['GET'])
 @api_basic_auth
 @api_role_can('list account users')
 def api_list_account_users(account_id):
@@ -883,6 +886,9 @@ def api_list_account_users(account_id):
 
 @api_bp.route(
     '/pdnsadmin/accounts/users/<int:account_id>/<int:user_id>',
+    methods=['PUT'])
+@api_bp.route(
+    '/pdnsadmin/accounts/<int:account_id>/users/<int:user_id>',
     methods=['PUT'])
 @api_basic_auth
 @api_role_can('add user to account')
@@ -907,6 +913,9 @@ def api_add_account_user(account_id, user_id):
 
 @api_bp.route(
     '/pdnsadmin/accounts/users/<int:account_id>/<int:user_id>',
+    methods=['DELETE'])
+@api_bp.route(
+    '/pdnsadmin/accounts/<int:account_id>/users/<int:user_id>',
     methods=['DELETE'])
 @api_basic_auth
 @api_role_can('remove user from account')
