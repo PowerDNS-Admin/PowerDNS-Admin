@@ -774,11 +774,6 @@ def api_list_accounts(account_name):
 @api_bp.route('/pdnsadmin/accounts', methods=['POST'])
 @api_basic_auth
 def api_create_account():
-    account_exists = [] or Account.query.filter(Account.name == account_name).all()
-    if len(account_exists) > 0:
-        msg = "Account name already exists"
-        current_app.logger.debug(msg)
-        raise AccountCreateFail(message=msg)
     if current_user.role.name not in ['Administrator', 'Operator']:
         msg = "{} role cannot create accounts".format(current_user.role.name)
         raise NotEnoughPrivileges(message=msg)
@@ -790,6 +785,12 @@ def api_create_account():
     if not name:
         current_app.logger.debug("Account name missing")
         abort(400)
+
+    account_exists = [] or Account.query.filter(Account.name == name).all()
+    if len(account_exists) > 0:
+        msg = "Account {} already exists".format(name)
+        current_app.logger.debug(msg)
+        raise AccountCreateFail(message=msg)
 
     account = Account(name=name,
                       description=description,
