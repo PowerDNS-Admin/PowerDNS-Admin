@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: "0.0.13"
+  version: "0.0.14"
   title: PowerDNS Admin Authoritative HTTP API
   license:
     name: MIT
@@ -1041,6 +1041,10 @@ paths:
           description: Unprocessable Entry, the User data provided has issues
           schema:
             $ref: '#/definitions/Error'
+        '409':
+          description: Duplicate Entry, either the Name or the Email is already in use
+          schema:
+            $ref: '#/definitions/Error'
         '500':
           description: Internal Server Error. There was a problem creating the user
           schema:
@@ -1204,6 +1208,10 @@ paths:
             $ref: '#/definitions/Account'
         '400':
           description: Unprocessable Entry, the Account data provided has issues.
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Duplicate Entry, the Name is already in use
           schema:
             $ref: '#/definitions/Error'
         '500':
@@ -1629,10 +1637,7 @@ definitions:
         type: string
         description: 'not used on POST, POSTing to server generates the key material'
       domains:
-        type: array
-        required: false
-        items:
-          $ref: '#/definitions/PDNSAdminZones'
+        $ref: '#/definitions/PDNSAdminZones'
         description: 'domains to which this apikey has access'
       role:
         $ref: '#/definitions/PDNSAdminRole'

@@ -21,7 +21,9 @@ from ..lib.errors import (
     DomainNotExists, DomainAlreadyExists, DomainAccessForbidden,
     RequestIsNotJSON, ApiKeyCreateFail, ApiKeyNotUsable, NotEnoughPrivileges,
     AccountCreateFail, AccountUpdateFail, AccountDeleteFail,
-    UserCreateFail, UserUpdateFail, UserDeleteFail,
+    AccountCreateDuplicate,
+    UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
+    UserUpdateFailEmail,
 )
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
@@ -642,7 +644,7 @@ def api_create_user():
     if not result['status']:
         current_app.logger.warning('Create user ({}, {}) error: {}'.format(
             username, email, result['msg']))
-        raise UserCreateFail(message=result['msg'])
+        raise UserCreateDuplicate(message=result['msg'])
 
     history = History(msg='Created user {0}'.format(user.username),
                       created_by=current_user.username)
@@ -711,7 +713,10 @@ def api_update_user(user_id):
     if not result['status']:
         current_app.logger.warning('Update user ({}, {}) error: {}'.format(
             username, email, result['msg']))
-        raise UserCreateFail(message=result['msg'])
+        if result['msg'].startswith('New email'):
+            raise UserUpdateFailEmail(message=result['msg'])
+        else:
+            raise UserCreateFail(message=result['msg'])
 
     history = History(msg='Updated user {0}'.format(user.username),
                       created_by=current_user.username)
@@ -790,7 +795,7 @@ def api_create_account():
     if len(account_exists) > 0:
         msg = "Account {} already exists".format(name)
         current_app.logger.debug(msg)
-        raise AccountCreateFail(message=msg)
+        raise AccountCreateDuplicate(message=msg)
 
     account = Account(name=name,
                       description=description,
