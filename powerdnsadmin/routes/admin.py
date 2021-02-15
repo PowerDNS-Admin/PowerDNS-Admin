@@ -6,7 +6,7 @@ from ast import literal_eval
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
-from ..decorators import operator_role_required, admin_role_required
+from ..decorators import operator_role_required, admin_role_required, history_access_required
 from ..models.user import User
 from ..models.account import Account
 from ..models.account_user import AccountUser
@@ -15,10 +15,12 @@ from ..models.server import Server
 from ..models.setting import Setting
 from ..models.history import History
 from ..models.domain import Domain
+from ..models.domain_user import DomainUser
 from ..models.record import Record
 from ..models.domain_template import DomainTemplate
 from ..models.domain_template_record import DomainTemplateRecord
 from ..models.api_key import ApiKey
+from ..models.base import db
 
 from ..lib.schema import ApiPlainKeySchema
 
@@ -579,7 +581,7 @@ def manage_account():
 
 @admin_bp.route('/history', methods=['GET', 'POST'])
 @login_required
-@operator_role_required
+@history_access_required
 def history():
     if request.method == 'POST':
         if current_user.role.name != 'Administrator':
@@ -608,7 +610,20 @@ def history():
                 }), 500)
 
     if request.method == 'GET':
-        histories = History.query.all()
+        if Setting().get('allow_user_view_history'):
+            histories = db.session.query(History) \
+                .join(Domain, History.domain_id == Domain.id) \
+                .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+                .outerjoin(Account, Domain.account_id == Account.id) \
+                .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+                .filter(
+                db.or_(
+                    DomainUser.user_id == current_user.id,
+                    AccountUser.user_id == current_user.id
+                ))
+        else:
+            histories = History.query.all()
+
         return render_template('admin_history.html', histories=histories)
 
 
@@ -622,7 +637,7 @@ def setting_basic():
             'login_ldap_first', 'default_record_table_size',
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
             'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'bg_domain_updates', 'site_name',
+            'allow_user_create_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email'
         ]

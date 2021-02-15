@@ -174,7 +174,8 @@ def add():
                                       'domain_master_ips': domain_master_ips,
                                       'account_id': account_id
                                   }),
-                                  created_by=current_user.username)
+                                  created_by=current_user.username,
+                                  domain_id=d.id)
                 history.add()
 
                 # grant user access to the domain
@@ -215,7 +216,8 @@ def add():
                                     "del_rrests":
                                     result['data'][1]['rrsets']
                                 })),
-                            created_by=current_user.username)
+                            created_by=current_user.username,
+                            domain_id=d.id)
                         history.add()
                     else:
                         history = History(
@@ -296,7 +298,8 @@ def setting(domain_name):
         history = History(
             msg='Change domain {0} access control'.format(domain_name),
             detail=str({'user_has_access': new_user_list}),
-            created_by=current_user.username)
+            created_by=current_user.username,
+            domain_id=d.id)
         history.add()
 
         return redirect(url_for('domain.setting', domain_name=domain_name))
@@ -336,7 +339,8 @@ def change_type(domain_name):
                               "type": domain_type,
                               "masters": domain_master_ips
                           }),
-                          created_by=current_user.username)
+                          created_by=current_user.username,
+                          domain_id=d.id)
         history.add()
         return redirect(url_for('domain.setting', domain_name = domain_name))
     else:
@@ -367,7 +371,8 @@ def change_soa_edit_api(domain_name):
                 "domain": domain_name,
                 "soa_edit_api": new_setting
             }),
-            created_by=current_user.username)
+            created_by=current_user.username,
+            domain_id=d.id)
         history.add()
         return redirect(url_for('domain.setting', domain_name = domain_name))
     else:
@@ -435,7 +440,8 @@ def record_apply(domain_name):
                         "add_rrests": result['data'][0]['rrsets'],
                         "del_rrests": result['data'][1]['rrsets']
                     })),
-                created_by=current_user.username)
+                created_by=current_user.username,
+                domain_id=domain.id)
             history.add()
             return make_response(jsonify(result), 200)
         else:
@@ -567,7 +573,8 @@ def admin_setdomainsetting(domain_name):
                         history = History(
                             msg='Setting {0} changed value to {1} for {2}'.
                             format(new_setting, new_value, domain.name),
-                            created_by=current_user.username)
+                            created_by=current_user.username,
+                            domain_id=domain.id)
                         history.add()
                         return make_response(
                             jsonify({
@@ -586,7 +593,8 @@ def admin_setdomainsetting(domain_name):
                             msg=
                             'New setting {0} with value {1} for {2} has been created'
                             .format(new_setting, new_value, domain.name),
-                            created_by=current_user.username)
+                            created_by=current_user.username,
+                            domain_id=domain.id)
                         history.add()
                         return make_response(
                             jsonify({

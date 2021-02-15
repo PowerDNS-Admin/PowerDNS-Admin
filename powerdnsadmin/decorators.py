@@ -7,7 +7,7 @@ from flask_login import current_user
 from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
 from .lib.errors import DomainAccessForbidden
-
+from .models.base import db
 
 def admin_role_required(f):
     """
@@ -29,6 +29,21 @@ def operator_role_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.role.name not in ['Administrator', 'Operator']:
+            abort(403)
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def history_access_required(f):
+    """
+    Grant access if user is in Operator role or higher, or Users can view history
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.role.name not in [
+            'Administrator', 'Operator'
+        ] and not Setting().get('allow_user_view_history'):
             abort(403)
         return f(*args, **kwargs)
 

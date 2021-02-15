@@ -1,4 +1,4 @@
-FROM alpine:3.12 AS builder
+FROM alpine:3.13 AS builder
 LABEL maintainer="k@ndk.name"
 
 ARG BUILD_DEPENDENCIES="build-base \
@@ -8,7 +8,8 @@ ARG BUILD_DEPENDENCIES="build-base \
     openldap-dev \
     python3-dev \
     xmlsec-dev \
-    yarn"
+    yarn \
+    cargo"
 
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
@@ -68,12 +69,12 @@ RUN mkdir -p /app && \
 RUN pip install pip-autoremove && \
     pip-autoremove cssmin -y && \
     pip-autoremove jsmin -y && \
-    pip-autoremove pytest -y && \
+    pip-autoremove pytest -y -L packaging && \
     pip uninstall -y pip-autoremove && \
     apk del ${BUILD_DEPENDENCIES}
 
 # Build image
-FROM alpine:3.12
+FROM alpine:3.13
 
 ENV FLASK_APP=/app/powerdnsadmin/__init__.py \
     USER=pda
