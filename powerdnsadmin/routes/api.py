@@ -202,7 +202,7 @@ def api_login_create_zone():
 
         domain = Domain()
         domain.update()
-        domain_id = domain.id
+        domain_id = domain.get_id_by_name(data['name'].rstrip('.'))
 
         history = History(msg='Add domain {0}'.format(
             data['name'].rstrip('.')),
@@ -275,7 +275,7 @@ def api_login_delete_zone(domain_name):
             current_app.logger.debug("Request to powerdns API successful")
 
             domain = Domain()
-            domain_id = domain.id
+            domain_id = domain.get_id_by_name(domain_name)
             domain.update()
 
             history = History(msg='Delete domain {0}'.format(domain_name),
@@ -958,32 +958,31 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
     domain = Domain()
-    domain_id = domain.id
     domain.update()
     status = resp.status_code
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
-        if request.method == 'POST':
+        if request.method in ['POST', 'PATCH'] :
             data = request.get_json(force=True)
             for rrset_data in data['rrsets']:
                 history = History(msg='{0} zone {1} record of {2}'.format(
                     rrset_data['changetype'].lower(), rrset_data['type'],
                     rrset_data['name'].rstrip('.')),
-                                  detail=json.dumps(data),
-                                  created_by=g.apikey.description,
-                                  domain_id=domain_id)
+                                detail=json.dumps(data),
+                                created_by=g.apikey.description,
+                                domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
         elif request.method == 'DELETE':
-            history = History(msg='Deleted zone {0}'.format(zone_id),
+            history = History(msg='Deleted zone {0}'.format(zone_id.rstrip('.')),
                               detail='',
                               created_by=g.apikey.description,
-                              domain_id=domain_id)
+                              domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
             history.add()
         elif request.method != 'GET':
-            history = History(msg='Updated zone {0}'.format(zone_id),
+            history = History(msg='Updated zone {0}'.format(zone_id.rstrip('.')),
                               detail='',
                               created_by=g.apikey.description,
-                              domain_id=domain_id)
+                              domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
             history.add()
     return resp.content, resp.status_code, resp.headers.items()
 
@@ -1011,14 +1010,13 @@ def api_create_zone(server_id):
             g.apikey.domains.append(domain)
 
         domain = Domain()
-        domain_id = domain.id
         domain.update()
 
         history = History(msg='Add domain {0}'.format(
             data['name'].rstrip('.')),
             detail=json.dumps(data),
             created_by=g.apikey.description,
-            domain_id=domain_id)
+            domain_id=domain.get_id_by_name(data['name'].rstrip('.')))
         history.add()
 
     return resp.content, resp.status_code, resp.headers.items()

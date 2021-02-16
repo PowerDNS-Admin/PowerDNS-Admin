@@ -169,8 +169,9 @@ def dashboard():
             db.or_(
                 DomainUser.user_id == current_user.id,
                 AccountUser.user_id == current_user.id
-            )).order_by(History.created_on.desc()).limit(4)
+            )).order_by(History.created_on.desc())
         history_number = history.count()
+        history = history[:4]
         domain_count = db.session.query(Domain) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
             .outerjoin(Account, Domain.account_id == Account.id) \

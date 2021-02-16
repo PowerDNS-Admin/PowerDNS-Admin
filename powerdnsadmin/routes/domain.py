@@ -168,6 +168,7 @@ def add():
                            domain_master_ips=domain_master_ips,
                            account_name=account_name)
             if result['status'] == 'ok':
+                domain_id = Domain().get_id_by_name(domain_name)
                 history = History(msg='Add domain {0}'.format(domain_name),
                                   detail=str({
                                       'domain_type': domain_type,
@@ -175,7 +176,7 @@ def add():
                                       'account_id': account_id
                                   }),
                                   created_by=current_user.username,
-                                  domain_id=d.id)
+                                  domain_id=domain_id)
                 history.add()
 
                 # grant user access to the domain
@@ -217,7 +218,7 @@ def add():
                                     result['data'][1]['rrsets']
                                 })),
                             created_by=current_user.username,
-                            domain_id=d.id)
+                            domain_id=domain_id)
                         history.add()
                     else:
                         history = History(
@@ -340,7 +341,7 @@ def change_type(domain_name):
                               "masters": domain_master_ips
                           }),
                           created_by=current_user.username,
-                          domain_id=d.id)
+                          domain_id=Domain().get_id_by_name(domain_name))
         history.add()
         return redirect(url_for('domain.setting', domain_name = domain_name))
     else:
@@ -372,7 +373,7 @@ def change_soa_edit_api(domain_name):
                 "soa_edit_api": new_setting
             }),
             created_by=current_user.username,
-            domain_id=d.id)
+            domain_id=d.get_id_by_name(domain_name))
         history.add()
         return redirect(url_for('domain.setting', domain_name = domain_name))
     else:

@@ -610,7 +610,12 @@ def history():
                 }), 500)
 
     if request.method == 'GET':
-        if Setting().get('allow_user_view_history'):
+        if current_user.role.name in [ 'Administrator', 'Operator' ]:
+            histories = History.query.all()
+        else:
+            # if the user isn't an administrator or operator, 
+            # allow_user_view_history must be enabled to get here,
+            # so include history for the domains for the user
             histories = db.session.query(History) \
                 .join(Domain, History.domain_id == Domain.id) \
                 .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
@@ -621,8 +626,6 @@ def history():
                     DomainUser.user_id == current_user.id,
                     AccountUser.user_id == current_user.id
                 ))
-        else:
-            histories = History.query.all()
 
         return render_template('admin_history.html', histories=histories)
 
