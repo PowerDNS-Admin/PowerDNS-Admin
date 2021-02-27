@@ -7,7 +7,6 @@ from flask_login import current_user
 from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
 from .lib.errors import DomainAccessForbidden
-from .models.base import db
 
 def admin_role_required(f):
     """
