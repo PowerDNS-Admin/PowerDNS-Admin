@@ -30,7 +30,7 @@ from ..decorators import (
 import random
 import string
 
-api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+api_bp = Blueprint('api', __name__, url_prefix='/')
 
 apikey_schema = ApiKeySchema(many=True)
 domain_schema = DomainSchema(many=True)
@@ -169,7 +169,7 @@ def before_request():
             }))
 
 
-@api_bp.route('/pdnsadmin/zones', methods=['POST'])
+@api_bp.route('/api/v1/pdnsadmin/zones', methods=['POST'])
 @api_basic_auth
 @api_can_create_domain
 def api_login_create_zone():
@@ -222,7 +222,7 @@ def api_login_create_zone():
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_bp.route('/pdnsadmin/zones', methods=['GET'])
+@api_bp.route('/api/v1/pdnsadmin/zones', methods=['GET'])
 @api_basic_auth
 def api_login_list_zones():
     if current_user.role.name not in ['Administrator', 'Operator']:
@@ -234,7 +234,7 @@ def api_login_list_zones():
     return jsonify(domain_schema.dump(domain_obj_list)), 200
 
 
-@api_bp.route('/pdnsadmin/zones/<string:domain_name>', methods=['DELETE'])
+@api_bp.route('/api/v1/pdnsadmin/zones/<string:domain_name>', methods=['DELETE'])
 @api_basic_auth
 @api_can_create_domain
 def api_login_delete_zone(domain_name):
@@ -286,7 +286,7 @@ def api_login_delete_zone(domain_name):
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_bp.route('/pdnsadmin/apikeys', methods=['POST'])
+@api_bp.route('/api/v1/pdnsadmin/apikeys', methods=['POST'])
 @api_basic_auth
 def api_generate_apikey():
     data = request.get_json()
@@ -362,8 +362,8 @@ def api_generate_apikey():
     return jsonify(apikey_plain_schema.dump([apikey])[0]), 201
 
 
-@api_bp.route('/pdnsadmin/apikeys', defaults={'domain_name': None})
-@api_bp.route('/pdnsadmin/apikeys/<string:domain_name>')
+@api_bp.route('/api/v1/pdnsadmin/apikeys', defaults={'domain_name': None})
+@api_bp.route('/api/v1/pdnsadmin/apikeys/<string:domain_name>')
 @api_basic_auth
 def api_get_apikeys(domain_name):
     apikeys = []
@@ -403,7 +403,7 @@ def api_get_apikeys(domain_name):
     return jsonify(apikey_schema.dump(apikeys)), 200
 
 
-@api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['GET'])
+@api_bp.route('/api/v1/pdnsadmin/apikeys/<int:apikey_id>', methods=['GET'])
 @api_basic_auth
 def api_get_apikey(apikey_id):
     apikey = ApiKey.query.get(apikey_id)
@@ -420,7 +420,7 @@ def api_get_apikey(apikey_id):
     return jsonify(apikey_schema.dump([apikey])[0]), 200
 
 
-@api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
+@api_bp.route('/api/v1/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
 @api_basic_auth
 def api_delete_apikey(apikey_id):
     apikey = ApiKey.query.get(apikey_id)
@@ -457,7 +457,7 @@ def api_delete_apikey(apikey_id):
     return '', 204
 
 
-@api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['PUT'])
+@api_bp.route('/api/v1/pdnsadmin/apikeys/<int:apikey_id>', methods=['PUT'])
 @api_basic_auth
 def api_update_apikey(apikey_id):
     # if role different and user is allowed to change it, update
@@ -558,8 +558,8 @@ def api_update_apikey(apikey_id):
     return '', 204
 
 
-@api_bp.route('/pdnsadmin/users', defaults={'username': None})
-@api_bp.route('/pdnsadmin/users/<string:username>')
+@api_bp.route('/api/v1/pdnsadmin/users', defaults={'username': None})
+@api_bp.route('/api/v1/pdnsadmin/users/<string:username>')
 @api_basic_auth
 @api_role_can('list users', allow_self=True)
 def api_list_users(username=None):
@@ -573,7 +573,7 @@ def api_list_users(username=None):
     return jsonify(user_schema.dump(user_list)), 200
 
 
-@api_bp.route('/pdnsadmin/users', methods=['POST'])
+@api_bp.route('/api/v1/pdnsadmin/users', methods=['POST'])
 @api_basic_auth
 @api_role_can('create users', allow_self=True)
 def api_create_user():
@@ -646,7 +646,7 @@ def api_create_user():
     return jsonify(user_schema.dump([user])), 201
 
 
-@api_bp.route('/pdnsadmin/users/<int:user_id>', methods=['PUT'])
+@api_bp.route('/api/v1/pdnsadmin/users/<int:user_id>', methods=['PUT'])
 @api_basic_auth
 @api_role_can('update users', allow_self=True)
 def api_update_user(user_id):
@@ -715,7 +715,7 @@ def api_update_user(user_id):
     return '', 204
 
 
-@api_bp.route('/pdnsadmin/users/<int:user_id>', methods=['DELETE'])
+@api_bp.route('/api/v1/pdnsadmin/users/<int:user_id>', methods=['DELETE'])
 @api_basic_auth
 @api_role_can('delete users')
 def api_delete_user(user_id):
@@ -747,8 +747,8 @@ def api_delete_user(user_id):
     return '', 204
 
 
-@api_bp.route('/pdnsadmin/accounts', defaults={'account_name': None})
-@api_bp.route('/pdnsadmin/accounts/<string:account_name>')
+@api_bp.route('/api/v1/pdnsadmin/accounts', defaults={'account_name': None})
+@api_bp.route('/api/v1/pdnsadmin/accounts/<string:account_name>')
 @api_basic_auth
 @api_role_can('list accounts')
 def api_list_accounts(account_name):
@@ -769,7 +769,7 @@ def api_list_accounts(account_name):
         return jsonify(account_schema.dump(account_list)[0]), 200
 
 
-@api_bp.route('/pdnsadmin/accounts', methods=['POST'])
+@api_bp.route('/api/v1/pdnsadmin/accounts', methods=['POST'])
 @api_basic_auth
 def api_create_account():
     account_exists = [] or Account.query.filter(Account.name == account_name).all()
@@ -808,7 +808,7 @@ def api_create_account():
     return jsonify(account_schema.dump([account])[0]), 201
 
 
-@api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
+@api_bp.route('/api/v1/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
 @api_basic_auth
 @api_role_can('update accounts')
 def api_update_account(account_id):
@@ -848,7 +848,7 @@ def api_update_account(account_id):
     return '', 204
 
 
-@api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['DELETE'])
+@api_bp.route('/api/v1/pdnsadmin/accounts/<int:account_id>', methods=['DELETE'])
 @api_basic_auth
 @api_role_can('delete accounts')
 def api_delete_account(account_id):
@@ -869,7 +869,7 @@ def api_delete_account(account_id):
     return '', 204
 
 
-@api_bp.route('/pdnsadmin/accounts/users/<int:account_id>', methods=['GET'])
+@api_bp.route('/api/v1/pdnsadmin/accounts/users/<int:account_id>', methods=['GET'])
 @api_basic_auth
 @api_role_can('list account users')
 def api_list_account_users(account_id):
@@ -882,7 +882,7 @@ def api_list_account_users(account_id):
 
 
 @api_bp.route(
-    '/pdnsadmin/accounts/users/<int:account_id>/<int:user_id>',
+    '/api/v1/pdnsadmin/accounts/users/<int:account_id>/<int:user_id>',
     methods=['PUT'])
 @api_basic_auth
 @api_role_can('add user to account')
@@ -906,7 +906,7 @@ def api_add_account_user(account_id, user_id):
 
 
 @api_bp.route(
-    '/pdnsadmin/accounts/users/<int:account_id>/<int:user_id>',
+    '/api/v1/pdnsadmin/accounts/users/<int:account_id>/<int:user_id>',
     methods=['DELETE'])
 @api_basic_auth
 @api_role_can('remove user from account')
@@ -936,7 +936,7 @@ def api_remove_account_user(account_id, user_id):
 
 
 @api_bp.route(
-    '/servers/<string:server_id>/zones/<string:zone_id>/<path:subpath>',
+    '/api/v1/servers/<string:server_id>/zones/<string:zone_id>/<path:subpath>',
     methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
 @apikey_can_access_domain
@@ -945,7 +945,7 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_bp.route('/servers/<string:server_id>/zones/<string:zone_id>',
+@api_bp.route('/api/v1/servers/<string:server_id>/zones/<string:zone_id>',
               methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
 @apikey_can_access_domain
@@ -977,7 +977,7 @@ def api_zone_forward(server_id, zone_id):
             history.add()
     return resp.content, resp.status_code, resp.headers.items()
 
-@api_bp.route('/servers/<path:subpath>', methods=['GET', 'PUT'])
+@api_bp.route('/api/v1/servers/<path:subpath>', methods=['GET', 'PUT'])
 @apikey_auth
 @apikey_is_admin
 def api_server_sub_forward(subpath):
@@ -985,7 +985,7 @@ def api_server_sub_forward(subpath):
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_bp.route('/servers/<string:server_id>/zones', methods=['POST'])
+@api_bp.route('/api/v1/servers/<string:server_id>/zones', methods=['POST'])
 @apikey_auth
 def api_create_zone(server_id):
     resp = helper.forward_request()
@@ -1012,7 +1012,7 @@ def api_create_zone(server_id):
     return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_bp.route('/servers/<string:server_id>/zones', methods=['GET'])
+@api_bp.route('/api/v1/servers/<string:server_id>/zones', methods=['GET'])
 @apikey_auth
 def api_get_zones(server_id):
     if server_id == 'pdnsadmin':
@@ -1034,22 +1034,29 @@ def api_get_zones(server_id):
             return resp.content, resp.status_code, resp.headers.items()
 
 
-@api_bp.route('/servers', methods=['GET'])
+@api_bp.route('/api/v1/servers', methods=['GET'])
 @apikey_auth
 def api_server_forward():
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
-@api_bp.route('/servers/<string:server_id>', methods=['GET'])
+@api_bp.route('/api/v1/servers/<string:server_id>', methods=['GET'])
 @apikey_auth
 def api_server_config_forward(server_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
-# The endpoint to snychronize Domains in background
-@api_bp.route('/sync_domains', methods=['GET'])
+# The endpoint to synchronize Domains in background
+@api_bp.route('/api/v1/sync_domains', methods=['GET'])
 @apikey_or_basic_auth
 def sync_domains():
     domain = Domain()
     domain.update()
     return 'Finished synchronization in background', 200
+
+#Endpoint to allow LEGO client to get powerdns api version 
+@api_bp.route('/api', methods=['GET'])
+@apikey_auth
+def api_base_forward():
+    resp = helper.forward_request()
+    return resp.content, resp.status_code, resp.headers.items()
