@@ -7,6 +7,7 @@ import ldap
 import ldap.filter
 from flask import current_app
 from flask_login import AnonymousUserMixin
+from sqlalchemy import orm
 
 from .base import db
 from .role import Role
@@ -29,6 +30,7 @@ class User(db.Model):
     otp_secret = db.Column(db.String(16))
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    accounts = None
 
     def __init__(self,
                  id=None,
@@ -591,6 +593,10 @@ class User(db.Model):
         else:
             return {'status': False, 'msg': 'Role does not exist'}
 
+    @orm.reconstructor
+    def set_account(self):
+        self.accounts = self.get_accounts()
+
     def get_accounts(self):
         """
         Get accounts associated with this user
@@ -602,7 +608,7 @@ class User(db.Model):
             .query(
                 AccountUser,
                 Account)\
-            .filter(User.id == AccountUser.user_id)\
+            .filter(self.id == AccountUser.user_id)\
             .filter(Account.id == AccountUser.account_id)\
             .all()
         for q in query:

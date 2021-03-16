@@ -93,6 +93,15 @@ class AccountCreateFail(StructuredException):
         self.name = name
 
 
+class AccountCreateDuplicate(StructuredException):
+    status_code = 409
+
+    def __init__(self, name=None, message="Creation of account failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
 class AccountUpdateFail(StructuredException):
     status_code = 500
 
@@ -120,8 +129,24 @@ class UserCreateFail(StructuredException):
         self.name = name
 
 
+class UserCreateDuplicate(StructuredException):
+    status_code = 409
+
+    def __init__(self, name=None, message="Creation of user failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
 class UserUpdateFail(StructuredException):
     status_code = 500
+
+    def __init__(self, name=None, message="Update of user failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+class UserUpdateFailEmail(StructuredException):
+    status_code = 409
 
     def __init__(self, name=None, message="Update of user failed"):
         StructuredException.__init__(self)
