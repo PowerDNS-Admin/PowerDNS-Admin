@@ -27,9 +27,11 @@ WORKDIR /build
 # We copy just the requirements.txt first to leverage Docker cache
 COPY ./requirements.txt /build/requirements.txt
 
+# Update pip
+RUN pip install --upgrade pip
+
 # Get application dependencies
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Add sources
 COPY . /build
