@@ -274,6 +274,7 @@ def api_login_delete_zone(domain_name):
         if resp.status_code == 204:
             current_app.logger.debug("Request to powerdns API successful")
 
+<<<<<<< HEAD
             domain = Domain()
             domain_id = domain.get_id_by_name(domain_name)
             domain.update()

@@ -8,6 +8,7 @@ import ipaddress
 from collections.abc import Iterable
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
+from datetime import datetime, timedelta
 
 
 def auth_from_url(url):
@@ -228,3 +229,22 @@ class customBoxes:
         "inaddrarpa": ("in-addr", "%.in-addr.arpa")
     }
     order = ["reverse", "ip6arpa", "inaddrarpa"]
+
+def pretty_domain_name(value):
+    """
+    Display domain name in original format.
+    If it is IDN domain (Punycode starts with xn--), do the
+    idna decoding.
+    Note that any part of the domain name can be individually punycoded
+    """
+    if isinstance(value, str):
+        if value.startswith('xn--') \
+        or value.find('.xn--'):
+            try:
+                return value.encode().decode('idna')
+            except:
+                raise Exception("Cannot decode IDN domain")
+        else:
+            return value
+    else:
+        raise Exception("Require the Punycode in string format")

@@ -576,6 +576,7 @@ def admin_setdomainsetting(domain_name):
                             format(new_setting, new_value, domain.name),
                             created_by=current_user.username,
                             domain_id=domain.id)
+>>>>>>> upstream/master
                         history.add()
                         return make_response(
                             jsonify({
