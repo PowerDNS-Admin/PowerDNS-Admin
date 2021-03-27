@@ -180,13 +180,9 @@ def add():
                            domain_master_ips=domain_master_ips,
                            account_name=account_name)
             if result['status'] == 'ok':
-<<<<<<< HEAD
                 domain_id = Domain().get_id_by_name(domain_name)
-                history = History(msg='Add domain {0}'.format(domain_name),
-=======
                 history = History(msg='Add domain {0}'.format(
                     pretty_domain_name(domain_name)),
->>>>>>> upstream/master
                                   detail=str({
                                       'domain_type': domain_type,
                                       'domain_master_ips': domain_master_ips,
