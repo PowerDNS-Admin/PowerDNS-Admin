@@ -151,10 +151,36 @@ def dashboard():
         current_app.logger.info('Updating domains in background...')
 
     # Stats for dashboard
-    domain_count = Domain.query.count()
+    domain_count = 0
+    history_number = 0
+    history = []
     user_num = User.query.count()
-    history_number = History.query.count()
-    history = History.query.order_by(History.created_on.desc()).limit(4)
+    if current_user.role.name in ['Administrator', 'Operator']:
+        domain_count = Domain.query.count()
+        history_number = History.query.count()
+        history = History.query.order_by(History.created_on.desc()).limit(4)
+    elif Setting().get('allow_user_view_history'):
+        history = db.session.query(History) \
+            .join(Domain, History.domain_id == Domain.id) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+            db.or_(
+                DomainUser.user_id == current_user.id,
+                AccountUser.user_id == current_user.id
+            )).order_by(History.created_on.desc())
+        history_number = history.count()
+        history = history[:4]
+        domain_count = db.session.query(Domain) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+                db.or_(
+                    DomainUser.user_id == current_user.id,
+                    AccountUser.user_id == current_user.id
+                )).count()
     server = Server(server_id='localhost')
     statistics = server.get_statistic()
     if statistics:

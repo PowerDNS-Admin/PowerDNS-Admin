@@ -771,7 +771,8 @@ def dyndns_update():
                     msg=
                     "DynDNS update: attempted update of {0} but record already up-to-date"
                     .format(hostname),
-                    created_by=current_user.username)
+                    created_by=current_user.username,
+                    domain_id=domain.id)
                 history.add()
             else:
                 oldip = r.data
@@ -786,7 +787,8 @@ def dyndns_update():
                             "old_value": oldip,
                             "new_value": str(ip)
                         }),
-                        created_by=current_user.username)
+                        created_by=current_user.username,
+                        domain_id=domain.id)
                     history.add()
                     response = 'good'
                 else:
@@ -825,7 +827,8 @@ def dyndns_update():
                             "record": hostname,
                             "value": str(ip)
                         }),
-                        created_by=current_user.username)
+                        created_by=current_user.username,
+                        domain_id=domain.id)
                     history.add()
                     response = 'good'
         else:

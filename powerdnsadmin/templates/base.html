@@ -153,6 +153,11 @@
             {% endif %}
           </ul>
         </li>
+        {% elif SETTING.get('allow_user_view_history') %}
+        <li class="header">ADMINISTRATION</li>
+        <li class="{{ 'active' if active_page == 'admin_history' else '' }}">
+          <a href="{{ url_for('admin.history') }}"><i class="fa fa-calendar"></i> <span>History</span></a>
+        </li>
         {% endif %}
       </ul>
     {% endif %}
