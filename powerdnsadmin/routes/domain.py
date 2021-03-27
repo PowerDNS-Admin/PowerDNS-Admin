@@ -591,14 +591,10 @@ def admin_setdomainsetting(domain_name):
                     if setting.set(new_value):
                         history = History(
                             msg='Setting {0} changed value to {1} for {2}'.
-<<<<<<< HEAD
-                            format(new_setting, new_value, domain.name),
+                            format(new_setting, new_value,
+                                   pretty_domain_name(domain_name)),
                             created_by=current_user.username,
                             domain_id=domain.id)
-=======
-                            format(new_setting, new_value, pretty_domain_name(domain_name)),
-                            created_by=current_user.username)
->>>>>>> upstream/master
                         history.add()
                         return make_response(
                             jsonify({
@@ -616,14 +612,9 @@ def admin_setdomainsetting(domain_name):
                         history = History(
                             msg=
                             'New setting {0} with value {1} for {2} has been created'
-<<<<<<< HEAD
-                            .format(new_setting, new_value, domain.name),
+                            .format(new_setting, new_value, pretty_domain_name(domain_name)),
                             created_by=current_user.username,
                             domain_id=domain.id)
-=======
-                            .format(new_setting, new_value, pretty_domain_name(domain_name)),
-                            created_by=current_user.username)
->>>>>>> upstream/master
                         history.add()
                         return make_response(
                             jsonify({
