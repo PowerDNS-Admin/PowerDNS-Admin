@@ -311,13 +311,26 @@ class Record(object):
         new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
 
         # Remove blank comments from rrsets for compatibility with some backends
+        def remove_blank_comments(rrset):
+            if not rrset['comments']:
+                del rrset['comments']
+            elif isinstance(rrset['comments'], list):
+                # Merge all non-blank comment values into a list
+                merged_comments = [
+                    v
+                    for c in rrset['comments']
+                    for v in c.values()
+                    if v
+                ]
+                # Delete comment if all values are blank (len(merged_comments) == 0)
+                if not merged_comments:
+                    del rrset['comments']
+
         for r in new_rrsets['rrsets']:
-            if not r['comments']:
-                del r['comments']
+            remove_blank_comments(r)
 
         for r in del_rrsets['rrsets']:
-            if not r['comments']:
-                del r['comments']
+            remove_blank_comments(r)
 
         # Submit the changes to PDNS API
         try:
