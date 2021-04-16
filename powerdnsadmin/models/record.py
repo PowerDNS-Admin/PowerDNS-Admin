@@ -65,6 +65,9 @@ class Record(object):
 
         rrsets=[]
         for r in jdata['rrsets']:
+            if len(r['records']) == 0:
+                continue
+
             while len(r['comments'])<len(r['records']):
                 r['comments'].append({"content": "", "account": ""})
             r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'], r['comments']), key=by_record_content_pair)))
