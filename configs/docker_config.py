@@ -51,6 +51,8 @@ legal_envvars = (
     'SIGNUP_ENABLED',
     'LOCAL_DB_ENABLED',
     'LDAP_ENABLED',
+    'SAML_CERT',
+    'SAML_KEY',
     'FILESYSTEM_SESSIONS_ENABLED'
 )
 
