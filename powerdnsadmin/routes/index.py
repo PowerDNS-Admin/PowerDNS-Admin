@@ -943,7 +943,7 @@ def saml_authorized():
         else:
             user_groups = []
         if admin_attribute_name or group_attribute_name:
-            user_accounts = set(user.get_account())
+            user_accounts = set(user.get_accounts())
             saml_accounts = []
             for group_mapping in group_to_account_mapping:
                 mapping = group_mapping.split('=')
