@@ -519,6 +519,13 @@ class Domain(db.Model):
             domain_setting.delete()
         domain.apikeys[:] = []
 
+        # Remove history for domain
+        domain_history = History.query.filter(
+            History.domain_id == domain.id
+        )
+        if domain_history:
+           domain_history.delete()
+
         # then remove domain
         Domain.query.filter(Domain.name == domain_name).delete()
         if do_commit:
