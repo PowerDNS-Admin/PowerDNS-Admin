@@ -4,6 +4,7 @@ import json
 import requests
 import hashlib
 import ipaddress
+import traceback
 
 from collections.abc import Iterable
 from distutils.version import StrictVersion
@@ -105,6 +106,7 @@ def fetch_json(remote_url,
     try:
         data = json.loads(r.content.decode('utf-8'))
     except Exception as e:
+        traceback.print_exc()
         raise RuntimeError(
             'Error while loading JSON data from {0}'.format(remote_url)) from e
     return data
