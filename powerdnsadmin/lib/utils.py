@@ -105,6 +105,13 @@ def fetch_json(remote_url,
     data = None
     try:
         data = json.loads(r.content.decode('utf-8'))
+    except UnicodeDecodeError:
+        # If the decoding fails, switch to slower but probably working .json()
+        try:
+            logging.warning("UTF-8 content.decode failed, switching to slower .json method")
+            data = r.json()
+        except Exception as e:
+            raise e
     except Exception as e:
         traceback.print_exc()
         raise RuntimeError(
