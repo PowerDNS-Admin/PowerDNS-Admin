@@ -83,7 +83,7 @@ ARG S6_VERSION=v2.2.0.3
 ENV FLASK_APP=/app/powerdnsadmin/__init__.py \
     USER=pda
 
-RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata libcap && \
+RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata libcap apk-cron && \
     addgroup -S ${USER} && \
     adduser -S -D -G ${USER} ${USER} && \
     mkdir /data && \
@@ -99,12 +99,27 @@ COPY ./docker/entrypoint.sh /usr/bin/
 WORKDIR /app
 RUN chown ${USER}:${USER} ./configs /app && \
     cat ./powerdnsadmin/default_config.py ./configs/docker_config.py > ./powerdnsadmin/docker_config.py
+
 # Add s6 overlay, so we can manage multiple processes
 ADD https://github.com/just-containers/s6-overlay/releases/download/$S6_VERSION/s6-overlay-amd64-installer /tmp/
 RUN chmod +x /tmp/s6-overlay-amd64-installer && /tmp/s6-overlay-amd64-installer /
-RUN mkdir /etc/services.d/gunicorn && echo $'#!/usr/bin/execlineb -P\nwith-contenv\n' > /etc/services.d/gunicorn/run && echo "s6-setuidgid $USER" >> /etc/services.d/gunicorn/run && echo $'\n/usr/bin/entrypoint.sh gunicorn powerdnsadmin:create_app()' >> /etc/services.d/gunicorn/run && chmod +x /etc/services.d/gunicorn/run
+
+# Create service script for gunicorn
+RUN mkdir /etc/services.d/gunicorn && \
+    echo $'#!/usr/bin/execlineb -P\nwith-contenv\n' > /etc/services.d/gunicorn/run && \
+    echo "s6-setuidgid $USER" >> /etc/services.d/gunicorn/run && \
+    echo $'\n/usr/bin/entrypoint.sh gunicorn powerdnsadmin:create_app()' >> /etc/services.d/gunicorn/run && \
+    chmod +x /etc/services.d/gunicorn/run
+
+# Create service script for cron
+RUN mkdir /etc/services.d/cron && \
+    echo $'#!/usr/bin/execlineb -P\ncrond -f\n' > /etc/services.d/cron/run && \
+    chmod +x /etc/services.d/cron/run
+
+# Add crontab entries
+RUN echo "*/5  *  *  *  * python3 /app/update_zones.py" >> /etc/crontabs/$USER && \
+    echo "*/5  *  *  *  * python3 /app/update_accounts.py" >> /etc/crontabs/$USER
 
 EXPOSE 80/tcp
-#USER ${USER}
 HEALTHCHECK CMD ["wget","--output-document=-","--quiet","--tries=1","http://127.0.0.1/"]
 ENTRYPOINT ["/init"]
