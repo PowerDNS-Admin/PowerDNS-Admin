@@ -25,7 +25,9 @@ with app.app_context():
 
     ### Check if bg_domain_updates is set to true
     if not status:
-        app.logger.error('Please turn on "bg_domain_updates" setting to run this job.')
-        sys.exit(1)
+        app.logger.debug('"bg_domain_updates" is disabled, exiting')
+        sys.exit(0)
 
+    ### Start the update process
+    app.logger.info('Update accounts from nameserver API')
     Account().update()
