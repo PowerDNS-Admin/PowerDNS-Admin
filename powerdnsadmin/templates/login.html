@@ -46,7 +46,7 @@
             data-error="Please input your password" required {% if password %}value="{{ password }}" {% endif %}>
           <span class="help-block with-errors"></span>
         </div>
-        {% if SETTING.get('otp_token_enabled') %}
+        {% if SETTING.get('otp_field_enabled') %}
         <div class="form-group">
           <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
         </div>
