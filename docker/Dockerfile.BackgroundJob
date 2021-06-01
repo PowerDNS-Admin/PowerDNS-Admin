@@ -113,7 +113,7 @@ RUN mkdir /etc/services.d/gunicorn && \
 
 # Create service script for cron
 RUN mkdir /etc/services.d/cron && \
-    echo $'#!/usr/bin/execlineb -P\ncrond -f\n' > /etc/services.d/cron/run && \
+    echo $'#!/usr/bin/execlineb -P\nwith-contenv\ncrond -f\n' > /etc/services.d/cron/run && \
     chmod +x /etc/services.d/cron/run
 
 # Add crontab entries
