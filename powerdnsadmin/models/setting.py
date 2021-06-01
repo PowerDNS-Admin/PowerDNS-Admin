@@ -180,6 +180,7 @@ class Setting(db.Model):
             'URI': False
         },
         'ttl_options': '1 minute,5 minutes,30 minutes,60 minutes,24 hours',
+        'otp_field_enabled': True,
     }
 
     def __init__(self, id=None, name=None, value=None):
