@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}<title>PowerDNS-Admin - 401 Error</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        401
+        <small>Error</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li>401</li>
+      </ol>
+    </section>
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="error-page">
+        <h2 class="headline text-yellow">401</h2>
+        <div class="error-content">
+            <h3>
+                <i class="fa fa-warning text-yellow"></i> Oops! Unauthorized Access
+            </h3>
+            <p>
+                Sorry {{ username }}, you do not have access to any domains yet.
+                Maybe if you ask the administrator 
+                {% if admin_email %}
+                at {{ admin_email }}            
+                {% endif %}
+                 nicely, you will get permission. </br>
+                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+            </p>
+        </div>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
+{% endblock %}

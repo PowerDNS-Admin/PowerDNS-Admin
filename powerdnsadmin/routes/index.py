@@ -459,6 +459,16 @@ def login():
                                    saml_enabled=SAML_ENABLED,
                                    error=e)
 
+        if user.role_id == 2:
+            result = user.is_authenticated()
+            if result['auth'] == False:
+                signin_history(user.username, 'LOCAL', False)
+                return render_template('errors/401.html',
+                                    saml_enabled=SAML_ENABLED,
+                                    error='Unauthorized',
+                                    username= user.username,
+                                    admin_email= result['admin_email'])
+
         # check if user enabled OPT authentication
         if user.otp_secret:
             if otp_token and otp_token.isdigit():

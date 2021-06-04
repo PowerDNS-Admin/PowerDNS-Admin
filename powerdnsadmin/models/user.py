@@ -405,6 +405,22 @@ class User(db.Model):
             current_app.logger.error('Unsupported authentication method')
             return False
 
+    def is_authenticated(self):
+        """
+        Check if a (type) user has access to at least one domain
+        """
+        if self.role_id == 2 and self.get_user_domains() == []:
+            admins = User.query.filter(User.role_id == 1)
+            admin_email = None
+            for admin in admins:
+                if admin.email:
+                    admin_email = admin.email
+                    break
+            # return False, admin_email
+            return {'auth': False, 'admin_email': admin_email}
+
+        return {'auth': True, 'admin_email': None}
+
     def create_user(self):
         """
         If user logged in successfully via LDAP in the first time
@@ -614,3 +630,24 @@ class User(db.Model):
         for q in query:
             accounts.append(q[1])
         return accounts
+
+    def get_user_domains(self):
+        """
+        Get query for domain to which the user has access permission.
+        This includes direct domain permission AND permission through
+        account membership
+        """
+        from .domain import Domain
+        from .account import Account
+        from .account_user import AccountUser
+        domains = db.session.query(Domain) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+                db.or_(
+                    DomainUser.user_id == self.id,
+                    AccountUser.user_id == self.id
+                )).all()
+        return domains
+
