@@ -640,7 +640,7 @@ def setting_basic():
             'login_ldap_first', 'default_record_table_size',
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
             'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
+            'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled','custom_css'
         ]
