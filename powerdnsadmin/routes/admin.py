@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 
 from ..decorators import operator_role_required, admin_role_required, history_access_required
 from ..models.user import User
+from ..models.user_permissions import UserPermissions
 from ..models.account import Account
 from ..models.account_user import AccountUser
 from ..models.role import Role
@@ -74,6 +75,40 @@ def pdns_stats():
                            history_number=history_number)
 
 
+@admin_bp.route('/userpermissions', methods=['POST'])
+@login_required
+@operator_role_required
+def update_user_permissions():
+    """
+    Endpoint to handle Ajax call from admin_edit_user.html
+    Updates the users permission
+    """
+
+    current_app.logger.debug("update user called")
+
+    fdata = request.get_json()
+    current_app.logger.debug(fdata)
+    user_id = fdata['user_id']
+    remove_domain = fdata['remove_domain']
+    create_domain = fdata['create_domain']
+    current_app.logger.debug(user_id)
+    current_app.logger.debug(remove_domain)
+    current_app.logger.debug(create_domain)
+
+    ## Get permissions the user has
+    userperms = UserPermissions.query.filter(UserPermissions.user_id == user_id).first()
+
+    ## If the user has no permissions yet, create default
+    if not userperms:
+        userperms = UserPermissions(user_id=user_id)
+        userperms.add()
+
+    userperms.update(remove_domain=remove_domain, create_domain=create_domain)
+
+    resp = jsonify(success=True)
+    return resp
+
+
 @admin_bp.route('/user/edit/<user_username>', methods=['GET', 'POST'])
 @admin_bp.route('/user/edit', methods=['GET', 'POST'])
 @login_required
@@ -88,6 +123,15 @@ def edit_user(user_username=None):
 
         if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
             return render_template('errors/401.html'), 401
+
+        # Get permissions the user has
+        userperms = UserPermissions.query.filter(UserPermissions.user_id == user.id).first()
+
+        # If the user has no permissions yet, create default
+        if not userperms:
+            userperms = UserPermissions(user_id=user.id)
+            userperms.add()
+
     else:
         user = None
         create = True
@@ -95,7 +139,8 @@ def edit_user(user_username=None):
     if request.method == 'GET':
         return render_template('admin_edit_user.html',
                                user=user,
-                               create=create)
+                               create=create,
+                               userperms=userperms)
 
     elif request.method == 'POST':
         fdata = request.form
@@ -640,7 +685,7 @@ def setting_basic():
             'login_ldap_first', 'default_record_table_size',
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
             'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
+            'allow_user_create_domain', 'allow_user_remove_domain', 'per_user_permissions', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled','custom_css'
         ]

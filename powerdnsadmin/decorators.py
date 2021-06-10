@@ -4,7 +4,7 @@ from functools import wraps
 from flask import g, request, abort, current_app, render_template
 from flask_login import current_user
 
-from .models import User, ApiKey, Setting, Domain, Setting
+from .models import User, ApiKey, Setting, Domain, Setting, UserPermissions
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
 from .lib.errors import DomainAccessForbidden
 
@@ -93,22 +93,30 @@ def can_configure_dnssec(f):
 
     return decorated_function
 
+
 def can_remove_domain(f):
     """
     Grant access if:
         - user is in Operator role or higher, or
         - allow_user_remove_domain is on
+        - per_user permissions are on and user has permission
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in [
-                'Administrator', 'Operator'
-        ] and not Setting().get('allow_user_remove_domain'):
+        if current_user.role.name in ['Administrator', 'Operator']:
+            return f(*args, **kwargs)
+
+        if not Setting().get('allow_user_remove_domain'):
             abort(403)
+
+        if Setting().get('per_user_permissions'):
+            userperms = UserPermissions.query.filter(UserPermissions.user_id == current_user.id).first()
+            if not userperms.remove_domain:
+                abort(403)
+
         return f(*args, **kwargs)
 
     return decorated_function
-
 
 
 def can_create_domain(f):
@@ -116,13 +124,21 @@ def can_create_domain(f):
     Grant access if:
         - user is in Operator role or higher, or
         - allow_user_create_domain is on
+        - per_user permissions are on and user has permission
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in [
-                'Administrator', 'Operator'
-        ] and not Setting().get('allow_user_create_domain'):
+        if current_user.role.name in ['Administrator', 'Operator']:
+            return f(*args, **kwargs)
+
+        if not Setting().get('allow_user_create_domain'):
             abort(403)
+
+        if Setting().get('per_user_permissions'):
+            userperms = UserPermissions.query.filter(UserPermissions.user_id == current_user.id).first()
+            if not userperms.create_domain:
+                abort(403)
+
         return f(*args, **kwargs)
 
     return decorated_function
