@@ -13,6 +13,7 @@ from .base import db
 from .role import Role
 from .setting import Setting
 from .domain_user import DomainUser
+from .user_permissions import UserPermissions
 
 
 class Anonymous(AnonymousUserMixin):
@@ -418,6 +419,11 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
+        # Create User Permissions as well
+        userperms = UserPermissions(user_id=user.id)
+        userperms.add()
+
+
     def create_local_user(self):
         """
         Create local user witch stores username / password in the DB
@@ -447,6 +453,11 @@ class User(db.Model):
 
         db.session.add(self)
         db.session.commit()
+        
+        # Create User Permissions as well
+        userperms = UserPermissions(user_id=user.id)
+        userperms.add()
+
         return {'status': True, 'msg': 'Created user successfully'}
 
     def update_local_user(self):

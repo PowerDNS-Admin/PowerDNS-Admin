@@ -16,6 +16,7 @@ from .domain_template import DomainTemplate
 from .domain_template_record import DomainTemplateRecord
 from .record import Record
 from .record_entry import RecordEntry
+from .user_permissions import UserPermissions
 
 
 def init_app(app):

@@ -83,6 +83,44 @@
                     </div>
                 </form>
             </div>
+            {% if SETTING.get('per_user_permissions') %}
+            <div class="box box-secondary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">User Permissions</h3>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_keys" class="table table-bordered table-striped">
+                        <tbody>
+                            <tr class="odd gradeX">
+                                <td>Can remove domains</td>
+                                <td>
+				    <label class="switch-wrap">
+					<input id="remove_domain" type="checkbox" {% if userperms.remove_domain %} checked=true {% endif %} />
+                                        <div class="switch"></div>
+                                    </label>
+				</td>
+                            </tr>
+                            <tr class="odd gradeX">
+				    <td>Can create domains </td>
+                                <td>
+       				    <label class="switch-wrap">
+					    <input id="create_domain" type="checkbox" {% if userperms.create_domain %} checked=true {% endif %} />
+                                        <div class="switch"></div>
+                                    </label>
+				</td>
+                            </tr>
+                        </tbody>
+                    </table>
+ 
+                </div>
+                <div class="box-footer">
+		    <button type="button" class="btn btn-flat btn-primary button_user_perms" id="button_user_perms">
+			    Update Permissions
+		    </button>
+
+                </div>
+            </div>
+            {% endif %}
             {% if not create %}
             <div class="box box-secondary">
                 <div class="box-header with-border">
@@ -140,6 +178,20 @@
         })
         modal.modal('show');
     });
+
+    // handle user permissions
+    $(document.body).on('click', '.button_user_perms', function () {
+        var postdata = {
+            '_csrf_token': '{{ csrf_token() }}',
+	    'user_id': '{{ user.id }}' ,
+	    'remove_domain': $('#remove_domain').is(':checked'),
+	    'create_domain': $('#create_domain').is(':checked')
+
+
+        }
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/userpermissions', true, false);
+        });
+
 </script>
 {% endblock %}
 {% block modals %}
