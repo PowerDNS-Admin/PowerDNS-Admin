@@ -107,10 +107,10 @@ def can_remove_domain(f):
 
         if Setting().get('per_user_permissions'):
             userperms = UserPermissions.query.filter(UserPermissions.user_id == current_user.id).first()
-            if not userperms.remove_domain:
-                abort(403)
+            if userperms.remove_domain:
+                return f(*args, **kwargs)
 
-        return f(*args, **kwargs)
+        abort(403)
 
     return decorated_function
 
@@ -127,15 +127,15 @@ def can_create_domain(f):
         if current_user.role.name in ['Administrator', 'Operator']:
             return f(*args, **kwargs)
 
-        if not Setting().get('allow_user_create_domain'):
-            abort(403)
+        if Setting().get('allow_user_create_domain'):
+            return f(*args, **kwargs)
 
         if Setting().get('per_user_permissions'):
             userperms = UserPermissions.query.filter(UserPermissions.user_id == current_user.id).first()
-            if not userperms.create_domain:
-                abort(403)
+            if userperms.create_domain:
+                return f(*args, **kwargs)
 
-        return f(*args, **kwargs)
+        abort(403)
 
     return decorated_function
 
