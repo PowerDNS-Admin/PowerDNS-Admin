@@ -1,5 +1,4 @@
 from .base import db
-from flask import current_app
 
 class UserPermissions(db.Model):
     __tablename__ = 'user_permissions'
