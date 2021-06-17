@@ -138,39 +138,52 @@ def domain(domain_name):
 @login_required
 @can_remove_domain
 def remove():
+    # domains is a list of all the domains a User may access
+    # Admins may access all
+    # Regular users only if they are associated with the domain
+    if current_user.role.name in ['Administrator', 'Operator']:
+        domains = Domain.query.order_by(Domain.name).all()
+    else:
+        # Get query for domain to which the user has access permission.
+        # This includes direct domain permission AND permission through
+        # account membership
+        domains = db.session.query(Domain) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+                db.or_(
+                    DomainUser.user_id == current_user.id,
+                    AccountUser.user_id == current_user.id
+                )).order_by(Domain.name)
+
     if request.method == 'POST':
-        current_app.logger.debug(request.form)
+        # TODO Change name from 'domainid' to something else, its confusing
         domain_name = request.form['domainid']
+
+        # Get domain from Database, might be None
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+
+        # Check if the domain is in domains before removal
+        if domain not in domains:
+            abort(403)
+
+        # Delete
         d = Domain()
         result = d.delete(domain_name)
-    
+
         if result['status'] == 'error':
             abort(500)
-    
+
         history = History(msg='Delete domain {0}'.format(
             pretty_domain_name(domain_name)),
                           created_by=current_user.username)
         history.add()
-    
-        return redirect(url_for('dashboard.dashboard'))
-       
-    else:
 
-        if current_user.role.name in ['Administrator', 'Operator']:
-            domains = Domain.query.order_by(Domain.name).all()
-        else:
-            # Get query for domain to which the user has access permission.
-            # This includes direct domain permission AND permission through
-            # account membership
-            domains = db.session.query(Domain) \
-                .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-                .outerjoin(Account, Domain.account_id == Account.id) \
-                .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-                .filter(
-                    db.or_(
-                        DomainUser.user_id == current_user.id,
-                        AccountUser.user_id == current_user.id
-                    )).order_by(Domain.name)
+        return redirect(url_for('dashboard.dashboard'))
+
+    else:
+        # On GET return the domains we got earlier
         return render_template('domain_remove.html',
                                domainss=domains)
 
