@@ -111,7 +111,7 @@ def can_remove_domain(f):
 
         if Setting().get('per_user_permissions'):
             userperms = UserPermissions.query.filter(UserPermissions.user_id == current_user.id).first()
-            if not userperms.remove_domain:
+            if not userperms or not userperms.remove_domain:
                 abort(403)
 
         return f(*args, **kwargs)
@@ -136,7 +136,7 @@ def can_create_domain(f):
 
         if Setting().get('per_user_permissions'):
             userperms = UserPermissions.query.filter(UserPermissions.user_id == current_user.id).first()
-            if not userperms.create_domain:
+            if not userperms or not userperms.create_domain:
                 abort(403)
 
         return f(*args, **kwargs)
