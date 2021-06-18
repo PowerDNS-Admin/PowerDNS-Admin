@@ -973,8 +973,10 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 @apikey_can_access_domain
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
-    domain = Domain()
-    domain.update()
+    # Respect bg_domain_updates
+    if not Setting.get('bg_domain_updates'):
+        domain = Domain()
+        domain.update()
     status = resp.status_code
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
