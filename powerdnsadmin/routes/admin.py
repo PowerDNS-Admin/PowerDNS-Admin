@@ -485,6 +485,7 @@ def edit_account(account_name=None):
     if request.method == 'GET':
         if account_name is None:
             return render_template('admin_edit_account.html',
+                                   account_user_ids=[],
                                    users=users,
                                    create=1)
 
