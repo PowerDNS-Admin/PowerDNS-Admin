@@ -206,6 +206,17 @@ def add():
                     'errors/400.html',
                     msg="Please enter a valid domain name"), 400
 
+            # If User creates the domain, check some additional stuff
+            if current_user.role.name not in ['Administrator', 'Operator']:
+                # Get all the account_ids of the user
+                user_accounts_ids = current_user.get_accounts()
+                user_accounts_ids = [x.id for x in user_accounts_ids]
+                # User may not create domains without Account
+                if int(account_id) == 0 or int(account_id) not in user_accounts_ids:
+                    return render_template(
+                        'errors/400.html',
+                        msg="Please use a valid Account"), 400
+
             #TODO: Validate ip addresses input
 
             # Encode domain name into punycode (IDN)
@@ -307,8 +318,13 @@ def add():
             current_app.logger.debug(traceback.format_exc())
             abort(500)
 
+    # Get
     else:
-        accounts = Account.query.order_by(Account.name).all()
+        # Admins and Operators can set to any account
+        if current_user.role.name in ['Administrator', 'Operator']:
+            accounts = Account.query.order_by(Account.name).all()
+        else:
+            accounts = current_user.get_accounts()
         return render_template('domain_add.html',
                                templates=templates,
                                accounts=accounts)
