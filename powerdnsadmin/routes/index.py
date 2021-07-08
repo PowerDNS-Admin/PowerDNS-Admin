@@ -459,15 +459,17 @@ def login():
                                    saml_enabled=SAML_ENABLED,
                                    error=e)
 
-        if user.role_id == 2:
-            result = user.is_authenticated()
-            if result['auth'] == False:
-                signin_history(user.username, 'LOCAL', False)
-                return render_template('errors/401.html',
-                                    saml_enabled=SAML_ENABLED,
-                                    error='Unauthorized',
-                                    username= user.username,
-                                    admin_email= result['admin_email'])
+        result = user.is_authenticate()
+        if result['auth'] == False:
+            e="User " + user.username + " does not have any domains registered"
+            current_app.logger.warning(
+                "Unauthorized user: {}".format(e))
+            signin_history(user.username, 'LOCAL', False)
+            return render_template('errors/401.html',
+                                saml_enabled=SAML_ENABLED,
+                                error='Unauthorized',
+                                username= user.username,
+                                admin_email= result['admin_email'])
 
         # check if user enabled OPT authentication
         if user.otp_secret:

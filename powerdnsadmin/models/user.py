@@ -405,18 +405,24 @@ class User(db.Model):
             current_app.logger.error('Unsupported authentication method')
             return False
 
-    def is_authenticated(self):
+    def is_user(self):
+        from ..models.role import Role
+        User_role_id= Role.query.filter_by(name="User").first().id
+        if (self.role_id==User_role_id):
+            return True
+        return False
+
+    def is_authenticate(self):
         """
         Check if a (type) user has access to at least one domain
         """
-        if self.role_id == 2 and self.get_user_domains() == []:
+        if self.is_user() and self.get_user_domains() == []:
             admins = User.query.filter(User.role_id == 1)
             admin_email = None
             for admin in admins:
-                if admin.email:
+                if admin.email:  #admin has an active email
                     admin_email = admin.email
                     break
-            # return False, admin_email
             return {'auth': False, 'admin_email': admin_email}
 
         return {'auth': True, 'admin_email': None}
