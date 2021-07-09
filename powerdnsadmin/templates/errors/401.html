@@ -26,11 +26,11 @@
             </h3>
             <p>
                 Sorry {{ username }}, you do not have access to any domains yet.
-                Maybe if you ask the administrator 
+                Please contact the administrator 
                 {% if admin_email %}
                 at {{ admin_email }}            
                 {% endif %}
-                nicely, you will get permission.
+                for more information.
                 <br/>You may <a href="{{ url_for('index.login') }}">return to the login page</a>.
             </p>
         </div>
