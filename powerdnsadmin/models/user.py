@@ -13,6 +13,7 @@ from .base import db
 from .role import Role
 from .setting import Setting
 from .domain_user import DomainUser
+from .account_user import AccountUser
 
 
 class Anonymous(AnonymousUserMixin):
@@ -130,9 +131,8 @@ class User(db.Model):
         conn.protocol_version = ldap.VERSION3
         return conn
 
-    def ldap_search(self, searchFilter, baseDN):
+    def ldap_search(self, searchFilter, baseDN, retrieveAttributes=None):
         searchScope = ldap.SCOPE_SUBTREE
-        retrieveAttributes = None
 
         try:
             conn = self.ldap_init_conn()
@@ -546,6 +546,25 @@ class User(db.Model):
 
         return self.get_domain_query().all()
 
+
+    def get_user_domains(self):
+        from ..models.base import db
+        from .account import Account
+        from .domain import Domain
+        from .account_user import AccountUser
+        from .domain_user import DomainUser
+
+        domains = db.session.query(Domain) \
+        .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+        .outerjoin(Account, Domain.account_id == Account.id) \
+        .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+        .filter(
+                db.or_(
+                DomainUser.user_id == self.id,
+                AccountUser.user_id == self.id
+                )).all()
+        return domains
+
     def delete(self):
         """
         Delete a user
@@ -563,7 +582,7 @@ class User(db.Model):
                 self.username, e))
             return False
 
-    def revoke_privilege(self):
+    def revoke_privilege(self, update_user=False):
         """
         Revoke all privileges from a user
         """
@@ -573,6 +592,8 @@ class User(db.Model):
             user_id = user.id
             try:
                 DomainUser.query.filter(DomainUser.user_id == user_id).delete()
+                if (update_user)==True:
+                    AccountUser.query.filter(AccountUser.user_id == user_id).delete()
                 db.session.commit()
                 return True
             except Exception as e:
@@ -614,3 +635,172 @@ class User(db.Model):
         for q in query:
             accounts.append(q[1])
         return accounts
+
+
+    def read_entitlements(self, key):
+        """
+        Get entitlements from ldap server associated with this user
+        """
+        LDAP_BASE_DN = Setting().get('ldap_base_dn')
+        LDAP_FILTER_USERNAME = Setting().get('ldap_filter_username')
+        LDAP_FILTER_BASIC = Setting().get('ldap_filter_basic')
+        searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME,
+                                                        self.username,
+                                                        LDAP_FILTER_BASIC)
+        current_app.logger.debug('Ldap searchFilter {0}'.format(searchFilter))
+        ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN, [key])
+        current_app.logger.debug('Ldap search result: {0}'.format(ldap_result))
+        entitlements=[]
+        if ldap_result:
+            dict=ldap_result[0][0][1]
+            if len(dict)!=0:
+                for entitlement in dict[key]:
+                    entitlements.append(entitlement.decode("utf-8"))
+            else:
+                e="Not found value in the autoprovisioning keyword field "
+                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+        return entitlements
+
+    def deleteExtraDomains(self, autoprovision_domains, current_domains):
+        from ..models.domain import Domain
+        user = db.session.query(User).filter(User.username == self.username).first()
+        for current_domain in current_domains:
+            if current_domain not in autoprovision_domains:
+                domain= db.session.query(Domain).filter(Domain.name == current_domain).first()
+                domain.revoke_privileges_by_id(user.id)
+
+    def deleteExtraAccounts(self, autoprovision_accounts, current_accounts):
+        from ..models.account import Account
+        user = db.session.query(User).filter(User.username == self.username).first()
+        for current_account in current_accounts:
+            if current_account not in autoprovision_accounts:
+                account= db.session.query(Account).filter(Account.name == current_account).first()
+                account.revoke_privileges_by_id(user.id)
+
+    def getPersonEntitlements(self, Entitlements):
+        domains=[]
+        accounts=[]
+        role_id=self.role_id
+        role="DEFAULT"
+        for Entitlement in Entitlements:
+            arguments=Entitlement.split(':')
+            #check for typos in every argument
+            if check_for_typos(arguments)==True:
+                continue
+            role= arguments[4]
+            if (role=="User" and len(arguments)>5):
+                if (arguments[5]=="domain_name"):
+                    domains.append(arguments[6])
+                elif (arguments[5]=="account_name"):
+                    accounts.append(arguments[6])
+        if (role=="DEFAULT"):
+            self.revoke_privilege(True)
+            return{}
+        return {'role': role, 'domains': domains, 'accounts': accounts}
+
+    def updateUser(self, dictionary):
+        user = db.session.query(User).filter(User.username == self.username).first()
+        user.set_role(dictionary['role'])
+        if (dictionary['role']=="User"):
+            autoprovision_domains= dictionary['domains']
+            autoprovision_accounts= dictionary['accounts']
+            current_domains=getUserInfo(user.get_user_domains())
+            current_accounts=getUserInfo(user.get_accounts())
+
+            user.deleteExtraDomains(autoprovision_domains, current_domains)
+            user.deleteExtraAccounts(autoprovision_accounts, current_accounts)
+            
+            current_accounts=getUserInfo(user.get_accounts())
+            user.addMissingAccounts (autoprovision_accounts, current_accounts)
+            current_domains=getUserInfo(user.get_user_domains())
+            user.addMissingDomains(autoprovision_domains, current_domains)
+        return
+
+    def addMissingDomains(self, autoprovision_domains, current_domains):
+        from ..models.domain import Domain
+        user = db.session.query(User).filter(User.username == self.username).first()
+        for autoprovision_domain in autoprovision_domains:
+            if autoprovision_domain not in current_domains:
+                domain= db.session.query(Domain).filter(Domain.name == autoprovision_domain).first()
+                domain.add_user(user)
+
+    def addMissingAccounts(self, autoprovision_accounts, current_accounts):
+        from ..models.account import Account
+        user = db.session.query(User).filter(User.username == self.username).first()
+        for autoprovision_account in autoprovision_accounts:
+            if autoprovision_account not in current_accounts:
+                account= db.session.query(Account).filter(Account.name == autoprovision_account).first()
+                account.add_user(user)
+
+def check_for_typos(arguments):
+    from ..models.role import Role
+    urn_value=Setting().get('urn_value')
+    urnArgs=urn_value.split(':')
+    
+    if ('powerdns-admin' in arguments):
+        entArgs=arguments[0:arguments.index('powerdns-admin')]
+        if (entArgs!=urnArgs):
+            e= "Typo in first part of urn value"
+            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            return True
+    else:
+        e="Entry not a PowerDNS-Admin record"
+        current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+        return True
+
+    role=arguments[4]
+    roles= Role.query.all()
+    role_names=get_role_names(roles)
+    if role not in role_names:
+        e="Role given by entry not a role availabe in PowerDNS-Admin. Check for spelling errors"
+        current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+        return True
+
+    if (len(arguments)>5): #urn:mace:uoa.gr:powerdns-admin:arguments[4]:arguments[5]
+        if (role=="User"):
+            if (arguments[5]!="domain_name" and arguments[5]!="account_name"):
+                e="Field that accepts only 'domain_name' or 'account_name' is incorrect"
+                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                return True
+            if (len(arguments)==6):
+                e="Domain name or account name not given"
+                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                return True
+            return checkIfAccountOrDomainDoesntExist(arguments[5], arguments[6])
+        else:               
+            return True
+
+    return False
+
+def checkIfAccountOrDomainDoesntExist(Id, DomainOrAccount):
+    if (Id=="domain_name"):
+        from ..models.domain import Domain
+        domain= db.session.query(Domain).filter(Domain.name == DomainOrAccount)
+        if len(domain.all())==0:
+            e="Domain name given not matching any available in the database"
+            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            return True
+    else:
+        from ..models.account import Account
+        account= db.session.query(Account).filter(Account.name == DomainOrAccount)
+        if len(account.all())==0:
+            e="Account name given not matching any available in the database"
+            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            return True
+    return False
+
+#returns all the roles available in database in string format
+def get_role_names(roles):
+    roles_list=[]
+    for role in roles:
+        roles_list.append(role.name) 
+    return roles_list
+    
+def getUserInfo(DomainsOrAccounts):
+    current=[]
+    for DomainOrAccount in DomainsOrAccounts:
+        current.append(DomainOrAccount.name)
+    return current
+
+        
+

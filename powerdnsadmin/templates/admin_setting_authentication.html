@@ -73,6 +73,7 @@
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-flat btn-primary">Save</button>
                                     </div>
+                                    
                                 </form>
                             </div>
                             <div class="tab-pane active" id="tabs-ldap">
@@ -186,8 +187,46 @@
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
+                                            <fieldset>
+                                                <legend>ADVANCE</legend>
+                                                <div class="form-group">
+                                                    <label>Autoprovision</label>       
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="autoprovisioning" id="autoprovisioning_off" value="OFF" {% if not SETTING.get('autoprovisioning') %}checked{% endif %}> OFF
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="autoprovisioning" id="autoprovisioning_on" value="ON"
+
+                                                             {% if SETTING.get('autoprovisioning') %}checked{% endif %}> ON
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="autoprovisioning_keyword">Autoprovisioning keyword</label>
+                                                    <input type="text" class="form-control" name="autoprovisioning_keyword" id="autoprovisioning_keyword" placeholder="e.g. eduPersonEntitlement"  data-error="    Please input keyword responsible for autoprovisioning" value="{{ SETTING.get('autoprovisioning_keyword') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="urn_value">Urn based value</label>
+                                                    <input type="text" class="form-control" name="urn_value" id="urn_value" placeholder="e.g. urn:mace:<yourOrganization>"  data-error="Please input the corrct prefix for your urn-based value" value="{{ SETTING.get('urn_value') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Reconciliation</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="reconciliation" id="reconciliation_off" value="OFF" {% if not SETTING.get('reconciliation') %}checked{% endif %}> OFF
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="reconciliation" id="reconciliation_on" value="ON" {% if SETTING.get('reconciliation') %}checked{% endif %}> ON
+                                                    </div>
+                                                </div>
+                                            </fieldset>
                                             <div class="form-group">
-                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                                <button type="submit" class="btn btn-flat btn-primary"
+                                                >Save</button>
                                             </div>
                                         </form>
                                     </div>
@@ -258,6 +297,22 @@
                                                     </li>
                                                     <li>
                                                         User group - Your LDAP user group.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>ADVANCE</dt>
+                                            <dd> Just-in-Time provisioning using LDAP server. Alternative to Group Security Role Management.
+                                                <ul>
+                                                    <li>
+                                                        Autoprovision - If toggled on, the associations of users found in the local db will be instantly updated from the LDAP server every time they log-in
+                                                    </li>
+                                                    <li>
+                                                        Autoprovisioning keyword - The field with the urn-based values <br>
+                                                        (e.g. "urn:mace:&ltyourOrganization&gt:powerdns-admin:User:domain_name:example.com" ) <br> where PDA will look for user's domains and accounts based on the LDAP server
+                                                    </li>
+                                                    <li>
+                                                         Reconciliation - If toggled on, users that have no entries to their autoprovisioning keyword, will lose all their associations with any domain or account. <br> If toggled off, in the same scenario they get to keep their existing associations.
+
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -625,7 +680,7 @@
 {%- endassets %}
 
 <script>
-
+    
     $(function() {
         $('#tabs').tabs({
             // add url anchor tags
@@ -645,6 +700,11 @@
     })
 
     $('#signup_enabled').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+
+    $('#autoprovisioning').iCheck({
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
     })
@@ -679,7 +739,10 @@
                 $('#ldap_operator_group').prop('required', true);
                 $('#ldap_user_group').prop('required', true);
             }
-
+            if ($('#autoprovisioning').is(":checked")) {
+                $('#autoprovisioning_keyword').prop('required', true);
+                $('#urn_value').prop('required', true);
+            }
         } else {
             $('#ldap_uri').prop('required', false);
             $('#ldap_base_dn').prop('required', false);
@@ -695,6 +758,10 @@
                 $('#ldap_operator_group').prop('required', false);
                 $('#ldap_user_group').prop('required', false);
             }
+            if ($('#autoprovisioning').is(":checked")) {
+                $('#autoprovisioning_keyword').prop('required', false);
+                $('#urn_value').prop('required', true);
+            }
         }
     });
 
@@ -708,7 +775,74 @@
             $('#ldap_operator_group').prop('required', false);
             $('#ldap_user_group').prop('required', false);
         }
+
+         if ($('#ldap_sg_on').is(":checked") && $('#autoprovisioning_on').is(":checked")){
+             document.getElementById('ldap_sg_on').checked=false;
+             document.getElementById('ldap_sg_off').checked=true;
+             var modal = $("#modal_warning");
+
+             var info = "Group Security:Status and Advance:Autoprovision can not be both enabled at the same time. Please turn off Advance:Autoprovision first" ;
+             modal.find('.modal-body p').text(info);
+              modal.find('#button_warning_confirm').click(function () {
+                  modal.modal('hide');
+              })
+              modal.find('#warning_X').click(function () {
+                 modal.modal('hide');
+             })
+             modal.modal('show');
+        }
     });
+
+    $("input[name='autoprovisioning']" ).change(function(){
+        if ($('#autoprovisioning_on').is(":checked") && $('#ldap_enabled').is(":checked")) {
+            $('#autoprovisioning_keyword').prop('required', true);
+            $('#urn_value').prop('required', true);
+            $('#reconciliation').prop('required', true);
+        }
+        else{
+            $('#autoprovisioning_keyword').prop('required', false);
+            $('#urn_value').prop('required', false);
+            $('#reconciliation').prop('required', false);
+        }
+        if ($('#ldap_sg_on').is(":checked") && $('#autoprovisioning_on').is(":checked")){
+             document.getElementById('autoprovisioning_on').checked=false;
+             document.getElementById('autoprovisioning_off').checked=true;
+             var modal = $("#modal_warning");
+             var info = "Group Security:Status and Advance:Autoprovision can not be both enabled at the same time. Please turn off Group Security:Status first" ;
+             modal.find('.modal-body p').text(info);
+              modal.find('#button_warning_confirm').click(function () {
+                  
+                  modal.modal('hide');
+              })
+              modal.find('#warning_X').click(function () {
+                 modal.modal('hide');
+             })
+             modal.modal('show');
+             
+        }
+    });
+
+     $("input[name='reconciliation']" ).change(function(){
+         if ($("#reconciliation_on").is(":checked")){
+            document.getElementById('reconciliation_on').checked=false;
+            document.getElementById('reconciliation_off').checked=true;
+             var modal = $("#modal_confirm");
+             var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning keyword prepopulated." ;
+             modal.find('.modal-body p').text(info);
+             modal.find('#button_confirm').click(function () {
+                document.getElementById('reconciliation_on').checked=true;
+                document.getElementById('reconciliation_off').checked=false;
+                 modal.modal('hide');
+             })
+             modal.find('#button_cancel').click(function () {
+                 modal.modal('hide');
+             })
+             modal.find('#X').click(function () {
+                 modal.modal('hide');
+             })
+             modal.modal('show');
+         }
+     });
 
     $("input[name='ldap_type']" ).change(function(){
         if ($('#ldap').is(":checked") && $('#ldap_enabled').is(":checked")) {
@@ -747,7 +881,14 @@
             $('#ldap_operator_group').prop('required', true);
             $('#ldap_user_group').prop('required', true);
         }
+
+        if ($('#autoprovisioning_on').is(":checked")) {
+            $('#autoprovisioning_keyword').prop('required', true);
+            $('#urn_value').prop('required', true);
+        }
+
     {% endif %}
+
     // END: LDAP tab js
 
     // START: Google tab js
@@ -783,6 +924,9 @@
         $('#google_authorize_url').prop('required', true);
         $('#google_base_url').prop('required', true);
     {% endif %}
+
+
+
     // END: Google tab js
 
     // START: Github tab js
@@ -899,4 +1043,52 @@
     //END: OIDC Tab JS
 
 </script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade modal-warning" id="modal_confirm" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="X" >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" id="button_cancel" name="reconciliation" value="OFF" data-dismiss="modal" >Cancel</button>
+                <button type="button" class="btn btn-flat btn-success" id="button_confirm">Confirm</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<div class="modal fade modal-warning" id="modal_warning" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="warning_X" >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Warning</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-success" id="button_warning_confirm">Yes I understand</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
 {% endblock %}

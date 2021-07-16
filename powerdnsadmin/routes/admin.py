@@ -829,6 +829,17 @@ def setting_authentication():
                 Setting().set('ldap_user_group',
                               request.form.get('ldap_user_group'))
                 Setting().set('ldap_domain', request.form.get('ldap_domain'))
+                Setting().set(
+                    'autoprovisioning', True
+                    if request.form.get('autoprovisioning') == 'ON' else False)
+                Setting().set('autoprovisioning_keyword',
+                              request.form.get('autoprovisioning_keyword'))
+                Setting().set('urn_value',
+                              request.form.get('urn_value'))
+                Setting().set('reconciliation', True
+                    if request.form.get('reconciliation') == 'ON' else False)
+
+
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':
             google_oauth_enabled = True if request.form.get(
