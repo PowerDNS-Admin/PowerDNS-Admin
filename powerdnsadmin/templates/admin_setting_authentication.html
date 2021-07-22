@@ -79,6 +79,13 @@
                             <div class="tab-pane active" id="tabs-ldap">
                                 <div class="row">
                                     <div class="col-md-4">
+                                        {% if error %}
+                                                <div class="alert alert-danger alert-dismissible">
+                                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                                    <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                                                    {{ error }}
+                                                </div>
+                                                {% endif %}
                                         <form role="form" method="post" data-toggle="validator">
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="ldap" name="config_tab" />
@@ -189,6 +196,7 @@
                                             </fieldset>
                                             <fieldset>
                                                 <legend>ADVANCE</legend>
+
                                                 <div class="form-group">
                                                     <label>Autoprovision</label>       
                                                     <div class="radio">
@@ -207,10 +215,13 @@
                                                     <input type="text" class="form-control" name="autoprovisioning_keyword" id="autoprovisioning_keyword" placeholder="e.g. eduPersonEntitlement"  data-error="    Please input keyword responsible for autoprovisioning" value="{{ SETTING.get('autoprovisioning_keyword') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
-                                                <div class="form-group">
+
+                                                <div class="form-group {% if error %}has-error{% endif %}">
                                                     <label for="urn_value">Urn based value</label>
-                                                    <input type="text" class="form-control" name="urn_value" id="urn_value" placeholder="e.g. urn:mace:<yourOrganization>"  data-error="Please input the corrct prefix for your urn-based value" value="{{ SETTING.get('urn_value') }}">
-                                                    <span class="help-block with-errors"></span>
+                                                    <input type="text" class="form-control" name="urn_value" id="urn_value" placeholder="e.g. urn:mace:<yourOrganization>"   data-error="Please fill this field" value="{{ SETTING.get('urn_value') }}">
+                                                    {% if error %}
+                                                        <span class="help-block with-errors">Please input the correct prefix for your urn-based value</span>
+                                                    {% endif %}
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Reconciliation</label>
@@ -309,6 +320,9 @@
                                                     <li>
                                                         Autoprovisioning keyword - The field with the urn-based values <br>
                                                         (e.g. "urn:mace:&ltyourOrganization&gt:powerdns-admin:User:domain_name:example.com" ) <br> where PDA will look for user's domains and accounts based on the LDAP server
+                                                    </li>
+                                                    <li>
+                                                        Urn based value - 
                                                     </li>
                                                     <li>
                                                          Reconciliation - If toggled on, users that have no entries to their autoprovisioning keyword, will lose all their associations with any domain or account. <br> If toggled off, in the same scenario they get to keep their existing associations.

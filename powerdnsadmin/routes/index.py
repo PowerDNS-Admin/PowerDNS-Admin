@@ -473,7 +473,7 @@ def login():
                                        saml_enabled=SAML_ENABLED,
                                        error='Token required')
 
-        if Setting().get('autoprovisioning') and auth_method!='LOCAL':
+        if Setting().get('autoprovisioning') and auth_method!='LOCAL': 
             urn_value=Setting().get('urn_value')
             Entitlements=user.read_entitlements(Setting().get('autoprovisioning_keyword'))
             if len(Entitlements)==0 and Setting().get('reconciliation'):
@@ -482,29 +482,27 @@ def login():
                 
             elif len(Entitlements)!=0:
                 if checkForPDAEntries(Entitlements, urn_value):
-                    dictionary=user.getPersonEntitlements(Entitlements)
-                    if len(dictionary)!= 0:
-                        user.updateUser(dictionary)
+                    user.updateUser(Entitlements)
                 else:
                     current_app.logger.warning('Not a single powerdns-admin record was found')
                     if Setting().get('reconciliation'):
                         user.set_role("User")
                         user.revoke_privilege(True)
-                        current_app.logger.warning('Procceding to revoke every privilige from ' + user.id + '.' )
+                        current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.' )
 
         login_user(user, remember=remember_me)
         signin_history(user.username, 'LOCAL', True)
         return redirect(session.get('next', url_for('index.index')))
 
 def checkForPDAEntries(Entitlements, urn_value):
-    urnArguments=urn_value.split(':')
+    urnArguments=[x.lower() for x in urn_value.split(':')]
     for Entitlement in Entitlements:
         entArguments=Entitlement.split(':powerdns-admin')
-        entArguments=entArguments[0].split(':')
+        entArguments=[x.lower() for x in entArguments[0].split(':')]
         if (entArguments==urnArguments):
             return True
-
     return False
+
 
 def clear_session():
     session.pop('user_id', None)
