@@ -664,127 +664,111 @@ class User(db.Model):
                 current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
         return entitlements
 
-    def deleteExtraDomains(self, autoprovision_domains, current_domains):
-        from ..models.domain import Domain
-        user = db.session.query(User).filter(User.username == self.username).first()
-        for current_domain in current_domains:
-            if current_domain not in autoprovision_domains:
-                domain= db.session.query(Domain).filter(Domain.name == current_domain).first()
-                domain.revoke_privileges_by_id(user.id)
-
-    def deleteExtraAccounts(self, autoprovision_accounts, current_accounts):
-        from ..models.account import Account
-        user = db.session.query(User).filter(User.username == self.username).first()
-        for current_account in current_accounts:
-            if current_account not in autoprovision_accounts:
-                account= db.session.query(Account).filter(Account.name == current_account).first()
-                account.revoke_privileges_by_id(user.id)
-
     def updateUser(self, Entitlements):
-        for Entitlement in Entitlements:
-            arguments=Entitlement.split(':')
-            if check_for_typos(arguments)==True:
-                continue
-            entArgs=arguments[arguments.index('powerdns-admin')+1:]
-            role= entArgs[0]
-            self.set_role(role)
-            if (role!="User"):
-                self.revoke_privilege(True)
-            else:
-                current_domains=getUserInfo(self.get_user_domains())
-                current_accounts=getUserInfo(self.get_accounts())
-                if len(entArgs)>1:
-                    if (entArgs[1]=="domain_name"):
-                        self.addMissingDomain(entArgs[2], current_domains)
-                    elif (entArgs[1]=="account_name"):
+        entitlements= getCorrectEntitlements(Entitlements)
+        if len(entitlements)!=0:
+            self.revoke_privilege(True)
+            for entitlement in entitlements:
+                arguments=entitlement.split(':')
+                entArgs=arguments[arguments.index('powerdns-admin')+1:]
+                role= entArgs[0]
+                self.set_role(role)
+                if (role=="User") and len(entArgs)>1:
+                    current_domains=getUserInfo(self.get_user_domains())
+                    current_accounts=getUserInfo(self.get_accounts())
+                    self.addMissingDomain(entArgs[1], current_domains)
+                    if len(entArgs)>2:
                         self.addMissingAccount(entArgs[2], current_accounts)
-                else:
-                    self.revoke_privilege(True)
-
 
     def addMissingDomain(self, autoprovision_domain, current_domains):
         from ..models.domain import Domain
         user = db.session.query(User).filter(User.username == self.username).first()
-
         if autoprovision_domain not in current_domains:
             domain= db.session.query(Domain).filter(Domain.name == autoprovision_domain).first()
-            domain.add_user(user)
+            if domain!=None:
+                domain.add_user(user)
 
     def addMissingAccount(self, autoprovision_account, current_accounts):
         from ..models.account import Account
         user = db.session.query(User).filter(User.username == self.username).first()
-
         if autoprovision_account not in current_accounts:
             account= db.session.query(Account).filter(Account.name == autoprovision_account).first()
-            account.add_user(user)
+            if account!=None:
+                account.add_user(user)
 
-def check_for_typos(arguments):
+def getCorrectEntitlements(Entitlements):
     from ..models.role import Role
     urn_value=Setting().get('urn_value')
     urnArgs=[x.lower() for x in urn_value.split(':')]
-    
-    if ('powerdns-admin' in arguments):
-        prefix=arguments[0:arguments.index('powerdns-admin')]
-        prefix=[x.lower() for x in prefix]
+    entitlements=[]
+    for Entitlement in Entitlements:
+        check=False
+        arguments=Entitlement.split(':')
 
-        if (prefix!=urnArgs):
-            e= "Typo in first part of urn value"
+        if ('powerdns-admin' in arguments):
+            prefix=arguments[0:arguments.index('powerdns-admin')]
+            prefix=[x.lower() for x in prefix]
+            if (prefix!=urnArgs):
+                e= "Typo in first part of urn value"
+                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                continue
+
+        else:
+            e="Entry not a PowerDNS-Admin record"
             current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-            return True
-    else:
-        e="Entry not a PowerDNS-Admin record"
+            continue
+
+        if len(arguments)<=len(urnArgs)+1: #prefix:powerdns-admin
+            continue
+
+        entArgs=arguments[arguments.index('powerdns-admin')+1:]
+        role=entArgs[0]
+        roles= Role.query.all()
+        role_names=get_role_names(roles)
+
+        if role not in role_names:
+            e="Role given by entry not a role availabe in PowerDNS-Admin. Check for spelling errors"
+            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            continue
+
+        if len(entArgs)>1:
+            if (role!="User"):
+                e="Too many arguments for Admin or Operator"
+                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            else:
+                if len(entArgs)==2 or len(entArgs)==3:
+                    if entArgs[1] and not checkIfDomainExists(entArgs[1]):
+                        continue
+                    if len(entArgs)==3:
+                        if entArgs[2] and not checkIfAccountExists(entArgs[2]):
+                            continue
+                else:
+                    e="Too many arguments"
+                    current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                    continue
+
+        entitlements.append(Entitlement)
+
+    return entitlements
+
+
+def checkIfDomainExists(domainName):
+    from ..models.domain import Domain
+    domain= db.session.query(Domain).filter(Domain.name == domainName)
+    if len(domain.all())==0:
+        e= domainName + " is not found in the database"
         current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-        return True
+        return False
+    return True
 
-    if len(arguments)<=len(urnArgs)+1: #urn:mace:uoa.gr:powerdns-admin
-        return True
-
-    entArgs=arguments[arguments.index('powerdns-admin')+1:]
-    role=entArgs[0]
-    roles= Role.query.all()
-    role_names=get_role_names(roles)
-
-    if role not in role_names:
-        e="Role given by entry not a role availabe in PowerDNS-Admin. Check for spelling errors"
+def checkIfAccountExists(accountName):
+    from ..models.account import Account
+    account= db.session.query(Account).filter(Account.name == accountName)
+    if len(account.all())==0:
+        e= accountName + " is not found in the database"
         current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-        return True
-
-    if (len(entArgs)>1): #urn:mace:uoa.gr:powerdns-admin:arguments[4]:arguments[5]
-        if (role=="User"):
-            if (entArgs[1]!="domain_name" and entArgs[1]!="account_name"):
-                e="Field that accepts only 'domain_name' or 'account_name' is incorrect"
-                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-                return True
-            if (len(entArgs)==2):
-                e="Domain name or account name not given"
-                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-                return True
-            if (len(entArgs)>3):
-                e="More than one domain names or account names were given"
-                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-                return True
-            return checkIfAccountOrDomainDoesntExist(entArgs[1], entArgs[2])
-
-        else:               
-            return True
-    return False
-
-def checkIfAccountOrDomainDoesntExist(Id, DomainOrAccount):
-    if (Id=="domain_name"):
-        from ..models.domain import Domain
-        domain= db.session.query(Domain).filter(Domain.name == DomainOrAccount)
-        if len(domain.all())==0:
-            e="Domain name given not matching any available in the database"
-            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-            return True
-    else:
-        from ..models.account import Account
-        account= db.session.query(Account).filter(Account.name == DomainOrAccount)
-        if len(account.all())==0:
-            e="Account name given not matching any available in the database"
-            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
-            return True
-    return False
+        return False
+    return True
 
 #returns all the roles available in database in string format
 def get_role_names(roles):
