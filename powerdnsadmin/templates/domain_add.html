@@ -57,6 +57,7 @@
                                 </label>
                             </div>
                         </div>
+{% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('hide_templates') %}
                         <div class="form-group">
                             <label>Select a template</label>
                             <select class="form-control" id="domain_template" name="domain_template">
@@ -66,6 +67,7 @@
                                 {% endfor %}
                             </select>
                         </div>
+{% endif %}
                         <div class="form-group" style="display: none;" id="domain_master_address_div">
                             <input type="text" class="form-control" name="domain_master_address"
                                 id="domain_master_address"
