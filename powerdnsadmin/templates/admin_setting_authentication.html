@@ -196,9 +196,8 @@
                                             </fieldset>
                                             <fieldset>
                                                 <legend>ADVANCE</legend>
-
                                                 <div class="form-group">
-                                                    <label>Autoprovision</label>       
+                                                    <label>Autoprovisioning</label>
                                                     <div class="radio">
                                                         <label>
                                                             <input type="radio" name="autoprovisioning" id="autoprovisioning_off" value="OFF" {% if not SETTING.get('autoprovisioning') %}checked{% endif %}> OFF
@@ -217,7 +216,7 @@
                                                 </div>
 
                                                 <div class="form-group {% if error %}has-error{% endif %}">
-                                                    <label for="urn_value">Urn based value</label>
+                                                    <label for="urn_value">Urn based value prefix</label>
                                                     <input type="text" class="form-control" name="urn_value" id="urn_value" placeholder="e.g. urn:mace:<yourOrganization>"   data-error="Please fill this field" value="{{ SETTING.get('urn_value') }}">
                                                     {% if error %}
                                                         <span class="help-block with-errors">Please input the correct prefix for your urn-based value</span>
@@ -315,17 +314,16 @@
                                             <dd> Just-in-Time provisioning using LDAP server. Alternative to Group Security Role Management.
                                                 <ul>
                                                     <li>
-                                                        Autoprovision - If toggled on, the associations of users found in the local db will be instantly updated from the LDAP server every time they log-in
+                                                        Autoprovisioning - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the LDAP server every time they log in.
                                                     </li>
                                                     <li>
-                                                        Autoprovisioning keyword - The field with the urn-based values <br>
-                                                        (e.g. "urn:mace:&ltyourOrganization&gt:powerdns-admin:User:domain_name:example.com" ) <br> where PDA will look for user's domains and accounts based on the LDAP server
+                                                        Autoprovisioning keyword - The field in the ldap server populated by the urn-based values where PDA will look for a new Role and/or new associations to domains/accounts.
                                                     </li>
                                                     <li>
-                                                        Urn based value - 
+                                                        Urn based value prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the ldap server. Must comply with RFC no.8141.
                                                     </li>
                                                     <li>
-                                                         Reconciliation - If toggled on, users that have no entries to their autoprovisioning keyword, will lose all their associations with any domain or account. <br> If toggled off, in the same scenario they get to keep their existing associations.
+                                                         Reconciliation - If toggled on, ldap entries that have no valid "powerdns-admin" records to their autoprovisioning keyword, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
 
                                                     </li>
                                                 </ul>
@@ -795,7 +793,7 @@
              document.getElementById('ldap_sg_off').checked=true;
              var modal = $("#modal_warning");
 
-             var info = "Group Security:Status and Advance:Autoprovision can not be both enabled at the same time. Please turn off Advance:Autoprovision first" ;
+             var info = "Group Security:Status and Advance:Autoprovisioning can not be both enabled at the same time. Please turn off Advance:Autoprovisioning first" ;
              modal.find('.modal-body p').text(info);
               modal.find('#button_warning_confirm').click(function () {
                   modal.modal('hide');
@@ -822,7 +820,7 @@
              document.getElementById('autoprovisioning_on').checked=false;
              document.getElementById('autoprovisioning_off').checked=true;
              var modal = $("#modal_warning");
-             var info = "Group Security:Status and Advance:Autoprovision can not be both enabled at the same time. Please turn off Group Security:Status first" ;
+             var info = "Group Security:Status and Advance:Autoprovisioning can not be both enabled at the same time. Please turn off Group Security:Status first" ;
              modal.find('.modal-body p').text(info);
               modal.find('#button_warning_confirm').click(function () {
                   

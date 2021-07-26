@@ -495,6 +495,9 @@ def login():
         return redirect(session.get('next', url_for('index.index')))
 
 def checkForPDAEntries(Entitlements, urn_value):
+    """
+    Run through every record located in the ldap attribute given and determine if there are any valid powerdns-admin records
+    """
     urnArguments=[x.lower() for x in urn_value.split(':')]
     for Entitlement in Entitlements:
         entArguments=Entitlement.split(':powerdns-admin')

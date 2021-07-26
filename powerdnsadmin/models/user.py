@@ -665,6 +665,9 @@ class User(db.Model):
         return entitlements
 
     def updateUser(self, Entitlements):
+        """
+        Update user associations based on ldap attribute
+        """
         entitlements= getCorrectEntitlements(Entitlements)
         if len(entitlements)!=0:
             self.revoke_privilege(True)
@@ -676,11 +679,16 @@ class User(db.Model):
                 if (role=="User") and len(entArgs)>1:
                     current_domains=getUserInfo(self.get_user_domains())
                     current_accounts=getUserInfo(self.get_accounts())
-                    self.addMissingDomain(entArgs[1], current_domains)
+                    domain=entArgs[1]
+                    self.addMissingDomain(domain, current_domains)
                     if len(entArgs)>2:
-                        self.addMissingAccount(entArgs[2], current_accounts)
+                        account=entArgs[2]
+                        self.addMissingAccount(account, current_accounts)
 
     def addMissingDomain(self, autoprovision_domain, current_domains):
+        """
+        Add domain gathered by autoprovisioning to the current domains list of a user
+        """
         from ..models.domain import Domain
         user = db.session.query(User).filter(User.username == self.username).first()
         if autoprovision_domain not in current_domains:
@@ -689,6 +697,9 @@ class User(db.Model):
                 domain.add_user(user)
 
     def addMissingAccount(self, autoprovision_account, current_accounts):
+        """
+        Add account gathered by autoprovisioning to the current accounts list of a user
+        """
         from ..models.account import Account
         user = db.session.query(User).filter(User.username == self.username).first()
         if autoprovision_account not in current_accounts:
@@ -697,6 +708,9 @@ class User(db.Model):
                 account.add_user(user)
 
 def getCorrectEntitlements(Entitlements):
+    """
+    Gather a list of valid records from the ldap attribute given
+    """
     from ..models.role import Role
     urn_value=Setting().get('urn_value')
     urnArgs=[x.lower() for x in urn_value.split(':')]
@@ -710,12 +724,12 @@ def getCorrectEntitlements(Entitlements):
             prefix=[x.lower() for x in prefix]
             if (prefix!=urnArgs):
                 e= "Typo in first part of urn value"
-                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
                 continue
 
         else:
             e="Entry not a PowerDNS-Admin record"
-            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
             continue
 
         if len(arguments)<=len(urnArgs)+1: #prefix:powerdns-admin
@@ -728,15 +742,16 @@ def getCorrectEntitlements(Entitlements):
 
         if role not in role_names:
             e="Role given by entry not a role availabe in PowerDNS-Admin. Check for spelling errors"
-            current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+            current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
             continue
 
         if len(entArgs)>1:
             if (role!="User"):
                 e="Too many arguments for Admin or Operator"
-                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+                continue
             else:
-                if len(entArgs)==2 or len(entArgs)==3:
+                if len(entArgs)<=3:
                     if entArgs[1] and not checkIfDomainExists(entArgs[1]):
                         continue
                     if len(entArgs)==3:
@@ -744,7 +759,7 @@ def getCorrectEntitlements(Entitlements):
                             continue
                 else:
                     e="Too many arguments"
-                    current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                    current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
                     continue
 
         entitlements.append(Entitlement)
@@ -757,7 +772,7 @@ def checkIfDomainExists(domainName):
     domain= db.session.query(Domain).filter(Domain.name == domainName)
     if len(domain.all())==0:
         e= domainName + " is not found in the database"
-        current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+        current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
         return False
     return True
 
@@ -766,12 +781,15 @@ def checkIfAccountExists(accountName):
     account= db.session.query(Account).filter(Account.name == accountName)
     if len(account.all())==0:
         e= accountName + " is not found in the database"
-        current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+        current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
         return False
     return True
 
-#returns all the roles available in database in string format
+
 def get_role_names(roles):
+    """
+    returns all the roles available in database in string format
+    """
     roles_list=[]
     for role in roles:
         roles_list.append(role.name) 
