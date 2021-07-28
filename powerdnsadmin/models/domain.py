@@ -609,7 +609,6 @@ class Domain(db.Model):
                 format(self.name, e))
             return False
 
-
     def update_from_master(self, domain_name):
         """
         Update records from Master DNS server

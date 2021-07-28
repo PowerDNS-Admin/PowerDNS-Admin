@@ -1309,9 +1309,6 @@ def global_search():
 
         return render_template('admin_global_search.html', domains=domains, records=records, comments=comments)
 
-
-
-
 def validateURN(value):
     NID_PATTERN = re.compile(r'^[0-9a-z][0-9a-z-]{1,31}$', flags=re.IGNORECASE)
     NSS_PCHAR = '[a-z0-9-._~]|%[a-f0-9]{2}|[!$&\'()*+,;=]|:|@'

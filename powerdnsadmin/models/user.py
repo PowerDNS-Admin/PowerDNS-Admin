@@ -449,8 +449,6 @@ class User(db.Model):
         db.session.commit()
         return {'status': True, 'msg': 'Created user successfully'}
 
-
-
     def update_local_user(self):
         """
         Update local user
@@ -485,12 +483,10 @@ class User(db.Model):
         db.session.commit()
         return {'status': True, 'msg': 'User updated successfully'}
 
-
     def update_profile(self, enable_otp=None):
         """
         Update user profile
         """
-
         user = User.query.filter(User.username == self.username).first()
         if not user:
             return False
@@ -546,9 +542,7 @@ class User(db.Model):
         Note: This doesn't include the permission granting from Account
         which user belong to
         """
-
         return self.get_domain_query().all()
-
 
     def get_user_domains(self):
         from ..models.base import db
@@ -716,7 +710,6 @@ def getCorrectEntitlements(Entitlements):
     urnArgs=[x.lower() for x in urn_value.split(':')]
     entitlements=[]
     for Entitlement in Entitlements:
-        check=False
         arguments=Entitlement.split(':')
 
         if ('powerdns-admin' in arguments):
@@ -786,7 +779,6 @@ def checkIfAccountExists(accountName):
         current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
         return False
     return True
-
 
 def get_role_names(roles):
     """
