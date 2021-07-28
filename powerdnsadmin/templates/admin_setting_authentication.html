@@ -197,7 +197,7 @@
                                             <fieldset>
                                                 <legend>ADVANCE</legend>
                                                 <div class="form-group">
-                                                    <label>Autoprovisioning</label>
+                                                    <label>Roles Autoprovisioning</label>
                                                     <div class="radio">
                                                         <label>
                                                             <input type="radio" name="autoprovisioning" id="autoprovisioning_off" value="OFF" {% if not SETTING.get('autoprovisioning') %}checked{% endif %}> OFF
@@ -210,27 +210,27 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="autoprovisioning_keyword">Autoprovisioning keyword</label>
-                                                    <input type="text" class="form-control" name="autoprovisioning_keyword" id="autoprovisioning_keyword" placeholder="e.g. eduPersonEntitlement"  data-error="    Please input keyword responsible for autoprovisioning" value="{{ SETTING.get('autoprovisioning_keyword') }}">
+                                                    <label for="autoprovisioning_attribute">Roles provisioning field</label>
+                                                    <input type="text" class="form-control" name="autoprovisioning_attribute" id="autoprovisioning_attribute" placeholder="e.g. eduPersonEntitlement"  data-error="    Please input field responsible for autoprovisioning" value="{{ SETTING.get('autoprovisioning_attribute') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
 
                                                 <div class="form-group {% if error %}has-error{% endif %}">
-                                                    <label for="urn_value">Urn based value prefix</label>
+                                                    <label for="urn_value">Urn prefix</label>
                                                     <input type="text" class="form-control" name="urn_value" id="urn_value" placeholder="e.g. urn:mace:<yourOrganization>"   data-error="Please fill this field" value="{{ SETTING.get('urn_value') }}">
                                                     {% if error %}
-                                                        <span class="help-block with-errors">Please input the correct prefix for your urn-based value</span>
+                                                        <span class="help-block with-errors">Please input the correct prefix for your urn value</span>
                                                     {% endif %}
                                                 </div>
                                                 <div class="form-group">
-                                                    <label>Reconciliation</label>
+                                                    <label>Purge Roles If Empty</label>
                                                     <div class="radio">
                                                         <label>
-                                                            <input type="radio" name="reconciliation" id="reconciliation_off" value="OFF" {% if not SETTING.get('reconciliation') %}checked{% endif %}> OFF
+                                                            <input type="radio" name="purge" id="purge_off" value="OFF" {% if not SETTING.get('purge') %}checked{% endif %}> OFF
                                                         </label>
                                                         &nbsp;&nbsp;&nbsp;
                                                         <label>
-                                                            <input type="radio" name="reconciliation" id="reconciliation_on" value="ON" {% if SETTING.get('reconciliation') %}checked{% endif %}> ON
+                                                            <input type="radio" name="purge" id="purge_on" value="ON" {% if SETTING.get('purge') %}checked{% endif %}> ON
                                                     </div>
                                                 </div>
                                             </fieldset>
@@ -311,19 +311,19 @@
                                                 </ul>
                                             </dd>
                                             <dt>ADVANCE</dt>
-                                            <dd> Just-in-Time provisioning using LDAP server. Alternative to Group Security Role Management.
+                                            <dd> Provision PDA user privileges based on LDAP Object Attributes. Alternative to Group Security Role Management.
                                                 <ul>
                                                     <li>
-                                                        Autoprovisioning - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the LDAP server every time they log in.
+                                                        Roles Autoprovisioning - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the LDAP server every time they log in.
                                                     </li>
                                                     <li>
-                                                        Autoprovisioning keyword - The field in the ldap server populated by the urn-based values where PDA will look for a new Role and/or new associations to domains/accounts.
+                                                        Roles provisioning field - The attribute in the ldap server populated by the urn values where PDA will look for a new Role and/or new associations to domains/accounts.
                                                     </li>
                                                     <li>
-                                                        Urn based value prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the ldap server. Must comply with RFC no.8141.
+                                                        Urn prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the ldap server. Must comply with RFC no.8141.
                                                     </li>
                                                     <li>
-                                                         Reconciliation - If toggled on, ldap entries that have no valid "powerdns-admin" records to their autoprovisioning keyword, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
+                                                         Purge Roles If Empty - If toggled on, ldap entries that have no valid "powerdns-admin" records to their autoprovisioning field, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
 
                                                     </li>
                                                 </ul>
@@ -752,7 +752,7 @@
                 $('#ldap_user_group').prop('required', true);
             }
             if ($('#autoprovisioning').is(":checked")) {
-                $('#autoprovisioning_keyword').prop('required', true);
+                $('#autoprovisioning_attribute').prop('required', true);
                 $('#urn_value').prop('required', true);
             }
         } else {
@@ -771,7 +771,7 @@
                 $('#ldap_user_group').prop('required', false);
             }
             if ($('#autoprovisioning').is(":checked")) {
-                $('#autoprovisioning_keyword').prop('required', false);
+                $('#autoprovisioning_attribute').prop('required', false);
                 $('#urn_value').prop('required', true);
             }
         }
@@ -807,14 +807,14 @@
 
     $("input[name='autoprovisioning']" ).change(function(){
         if ($('#autoprovisioning_on').is(":checked") && $('#ldap_enabled').is(":checked")) {
-            $('#autoprovisioning_keyword').prop('required', true);
+            $('#autoprovisioning_attribute').prop('required', true);
             $('#urn_value').prop('required', true);
-            $('#reconciliation').prop('required', true);
+            $('#purge').prop('required', true);
         }
         else{
-            $('#autoprovisioning_keyword').prop('required', false);
+            $('#autoprovisioning_attribute').prop('required', false);
             $('#urn_value').prop('required', false);
-            $('#reconciliation').prop('required', false);
+            $('#purge').prop('required', false);
         }
         if ($('#ldap_sg_on').is(":checked") && $('#autoprovisioning_on').is(":checked")){
              document.getElementById('autoprovisioning_on').checked=false;
@@ -834,16 +834,16 @@
         }
     });
 
-     $("input[name='reconciliation']" ).change(function(){
-         if ($("#reconciliation_on").is(":checked")){
-            document.getElementById('reconciliation_on').checked=false;
-            document.getElementById('reconciliation_off').checked=true;
+     $("input[name='purge']" ).change(function(){
+         if ($("#purge_on").is(":checked")){
+            document.getElementById('purge_on').checked=false;
+            document.getElementById('purge_off').checked=true;
              var modal = $("#modal_confirm");
-             var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning keyword prepopulated." ;
+             var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning field prepopulated." ;
              modal.find('.modal-body p').text(info);
              modal.find('#button_confirm').click(function () {
-                document.getElementById('reconciliation_on').checked=true;
-                document.getElementById('reconciliation_off').checked=false;
+                document.getElementById('purge_on').checked=true;
+                document.getElementById('purge_off').checked=false;
                  modal.modal('hide');
              })
              modal.find('#button_cancel').click(function () {
@@ -895,7 +895,7 @@
         }
 
         if ($('#autoprovisioning_on').is(":checked")) {
-            $('#autoprovisioning_keyword').prop('required', true);
+            $('#autoprovisioning_attribute').prop('required', true);
             $('#urn_value').prop('required', true);
         }
 
@@ -1071,7 +1071,7 @@
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" id="button_cancel" name="reconciliation" value="OFF" data-dismiss="modal" >Cancel</button>
+                <button type="button" class="btn btn-flat btn-default pull-left" id="button_cancel" name="purge" value="OFF" data-dismiss="modal" >Cancel</button>
                 <button type="button" class="btn btn-flat btn-success" id="button_confirm">Confirm</button>
             </div>
         </div>

@@ -475,8 +475,8 @@ def login():
 
         if Setting().get('autoprovisioning') and auth_method!='LOCAL': 
             urn_value=Setting().get('urn_value')
-            Entitlements=user.read_entitlements(Setting().get('autoprovisioning_keyword'))
-            if len(Entitlements)==0 and Setting().get('reconciliation'):
+            Entitlements=user.read_entitlements(Setting().get('autoprovisioning_attribute'))
+            if len(Entitlements)==0 and Setting().get('purge'):
                 user.set_role("User")
                 user.revoke_privilege(True)
                 
@@ -484,8 +484,8 @@ def login():
                 if checkForPDAEntries(Entitlements, urn_value):
                     user.updateUser(Entitlements)
                 else:
-                    current_app.logger.warning('Not a single powerdns-admin record was found')
-                    if Setting().get('reconciliation'):
+                    current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
+                    if Setting().get('purge'):
                         user.set_role("User")
                         user.revoke_privilege(True)
                         current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.' )

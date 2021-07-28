@@ -833,8 +833,8 @@ def setting_authentication():
                 Setting().set(
                     'autoprovisioning', True
                     if request.form.get('autoprovisioning') == 'ON' else False)
-                Setting().set('autoprovisioning_keyword',
-                              request.form.get('autoprovisioning_keyword'))
+                Setting().set('autoprovisioning_attribute',
+                              request.form.get('autoprovisioning_attribute'))
 
                 if request.form.get('autoprovisioning')=='ON':
                     if  validateURN(request.form.get('urn_value')):
@@ -847,8 +847,8 @@ def setting_authentication():
                     Setting().set('urn_value',
                                        request.form.get('urn_value'))
 
-                Setting().set('reconciliation', True
-                    if request.form.get('reconciliation') == 'ON' else False)
+                Setting().set('purge', True
+                    if request.form.get('purge') == 'ON' else False)
 
 
                 result = {'status': True, 'msg': 'Saved successfully'}

@@ -660,8 +660,8 @@ class User(db.Model):
                 for entitlement in dict[key]:
                     entitlements.append(entitlement.decode("utf-8"))
             else:
-                e="Not found value in the autoprovisioning keyword field "
-                current_app.logger.error("Cannot apply autoprovising on user: {}".format(e))
+                e="Not found value in the autoprovisioning attribute field "
+                current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
         return entitlements
 
     def updateUser(self, Entitlements):
@@ -724,15 +724,17 @@ def getCorrectEntitlements(Entitlements):
             prefix=[x.lower() for x in prefix]
             if (prefix!=urnArgs):
                 e= "Typo in first part of urn value"
-                current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+                current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
                 continue
 
         else:
             e="Entry not a PowerDNS-Admin record"
-            current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+            current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
             continue
 
         if len(arguments)<=len(urnArgs)+1: #prefix:powerdns-admin
+            e="No value given after the prefix"
+            current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
             continue
 
         entArgs=arguments[arguments.index('powerdns-admin')+1:]
@@ -742,13 +744,13 @@ def getCorrectEntitlements(Entitlements):
 
         if role not in role_names:
             e="Role given by entry not a role availabe in PowerDNS-Admin. Check for spelling errors"
-            current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+            current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
             continue
 
         if len(entArgs)>1:
             if (role!="User"):
                 e="Too many arguments for Admin or Operator"
-                current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+                current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
                 continue
             else:
                 if len(entArgs)<=3:
@@ -759,7 +761,7 @@ def getCorrectEntitlements(Entitlements):
                             continue
                 else:
                     e="Too many arguments"
-                    current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+                    current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
                     continue
 
         entitlements.append(Entitlement)
@@ -772,7 +774,7 @@ def checkIfDomainExists(domainName):
     domain= db.session.query(Domain).filter(Domain.name == domainName)
     if len(domain.all())==0:
         e= domainName + " is not found in the database"
-        current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+        current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
         return False
     return True
 
@@ -781,7 +783,7 @@ def checkIfAccountExists(accountName):
     account= db.session.query(Account).filter(Account.name == accountName)
     if len(account.all())==0:
         e= accountName + " is not found in the database"
-        current_app.logger.warning("Cannot apply autoprovising on user: {}".format(e))
+        current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
         return False
     return True
 
