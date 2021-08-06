@@ -197,7 +197,10 @@ def add():
         try:
             domain_name = request.form.getlist('domain_name')[0]
             domain_type = request.form.getlist('radio_type')[0]
-            domain_template = request.form.getlist('domain_template')[0]
+            try:
+                domain_template = request.form.getlist('domain_template')[0]
+            except IndexError:
+                domain_template = '0'
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
             account_id = request.form.getlist('accountid')[0]
 
