@@ -43,6 +43,11 @@ index_bp = Blueprint('index',
                      template_folder='templates',
                      url_prefix='/')
 
+def Diff(li1, li2):
+    """
+    A function that calculates the differences between two lists.
+    """
+    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
 
 @index_bp.before_app_first_request
 def register_modules():
@@ -398,16 +403,56 @@ def login():
             session.pop('oidc_token', None)
             return redirect(url_for('index.login'))
 
+        #This checks if the account_name_property and account_description property were included in settings.
         if Setting().get('oidc_oauth_account_name_property') and Setting().get('oidc_oauth_account_description_property'):
+
+            #Gets the name_property and description_property.
             name_prop = Setting().get('oidc_oauth_account_name_property')
             desc_prop = Setting().get('oidc_oauth_account_description_property')
-            if name_prop in me and desc_prop in me:
-                account = handle_account(me[name_prop], me[desc_prop])
-                account.add_user(user)
+
+        #Calculates the length of the list we get from name_prop (How many groups the user is in).
+        #and create an empty list for his accounts.
+        group_amount = len(me[name_prop])
+        acc_list = []
+
+
+	    #If the name_property and desc_property exist in me (A variable that contains all the userinfo from the IdP).
+        if name_prop in me and desc_prop in me:
+	    
+            #Run on all groups the user is in by the index num.
+            for index in range(group_amount):
+
+                #This whole block is used to make sure both lists and strings work.
+                #If the name is a string and list is a description it won't work.
+                #This won't work because a list of descriptions on 1 string name is useless.
+                if type(me[name_prop]) != list:
+                    account = handle_account(me[name_prop][0:], me[desc_prop][0:])
+
+                else:
+                    if type(me[desc_prop]) != list:
+                        account = handle_account(me[name_prop][index], me[desc_prop][0:])
+
+                    else:
+                        account = handle_account(me[name_prop][index], me[desc_prop][index])
+
+                #Append the account he is a part of into the acc_list variable and get all accounts the user is a part off.
+                acc_list.append(account)
                 user_accounts = user.get_accounts()
-                for ua in user_accounts:
-                    if ua.name != account.name:
-                        ua.remove_user(user)
+
+
+            #Get the user accounts and calculate the differences between two lists:
+            #acc_list is a list the list that contains the groups in the supplied list by the oidc
+            #user_accounts is a list of accounts that the user is a part of now.
+            user_accounts = user.get_accounts()
+            acc_to_remove = Diff(acc_list, user_accounts)
+            
+            #If the user isn't apart of the account we got then add him to it. 
+            if account not in user_accounts:
+                account.add_user(user)
+
+            #Any account that is added to acc_to_remove is an account that the user needs to be removed form and thus removed:
+            for acc in acc_to_remove:
+                acc.remove_user(user)
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
