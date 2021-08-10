@@ -443,7 +443,6 @@ def login():
             #Get the user accounts and calculate the differences between two lists:
             #acc_list is a list the list that contains the groups in the supplied list by the oidc
             #user_accounts is a list of accounts that the user is a part of now.
-            user_accounts = user.get_accounts()
             acc_to_remove = Diff(acc_list, user_accounts)
             
             #If the user isn't apart of the account we got then add him to it. 
