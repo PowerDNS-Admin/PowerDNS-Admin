@@ -18,3 +18,70 @@ Now you can enable the OAuth in PowerDNS-Admin.
 * Restart PowerDNS-Admin
 
 This should allow you to log in using OAuth.
+
+#### OpenID Connect OAuth
+To link to oidc service for authentication you will need to register your PowerDNS-Admin in the OIDC Provider.
+This means you will need to have a client key, client secret a redirect URI that is registered.
+
+After you have talked to your oidc provider or created it yourself you will need to enter the following credits:
+Make sure you Enable OpenID Connect OAuth option.
+* Client key, This will be your client ID and essentially your "authentication" against the IdP.
+* Client secret, Essentially a password to your user.
+* Scope, The scope of the userinfo data you get.
+* API URL, <oidc_provider>/auth (Each one will be different but usually this is the standard)
+* Token URL, <oidc_provider>/token 
+* Authorize URL, <oidc_provider>/auth
+* Logout URL, <oidc_provider>/logout
+
+* Username, This will be the claim that will be used as the username. (Usually preferred_username)
+* First Name, This will be the firstname of the user. (Usually given_name)
+* Last Name, This will be the lastname of the user. (Usually family_name)
+* Email, This will be the email of the user. (Usually email)
+
+#####To create accounts on oidc login we will need to use the following properties:
+* Autoprovision Account Name Property, This property will set the name of the created account.
+  This property can be either a string or a list.
+* Autoprovision Account Description Property, This property will set the description of the created account.
+  This property can also be either a string or a list.
+
+We can use the properties in the following configurations:
+```
+Account Name Property: list
+Account Description Property: list
+
+Account Name Property: list
+Account Description Property: string
+
+Account Name Property: string
+Account Name Property: string
+```
+
+Let's say we get a variable named "groups" from our IdP.
+This variable contains groups that the user is a part from.
+We will put the variable name "groups" in both properties and it will result in the following account:
+Example:
+Input we get from the Idp:
+```
+{
+	"preferred_username": "customer_username",
+	"given_name": "customer_firstame",
+	"family_name": "customer_lastname",
+	"email": "customer_email",
+	"groups": ["github", "gitlab"]
+}
+```
+
+The user created will be:
+```
+Username: customer_username
+First Name: customer_firstame
+Last Name: customer_lastname
+Email: customer_email
+Role: User
+```
+
+The groups created will be:
+```
+Name: github Description: github Members: customer_username
+Name: gitlab Description: gitlab Members: customer_username
+```	
