@@ -43,12 +43,6 @@ index_bp = Blueprint('index',
                      template_folder='templates',
                      url_prefix='/')
 
-def Diff(li1, li2):
-    """
-    A function that calculates the differences between two lists.
-    """
-    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
-
 @index_bp.before_app_first_request
 def register_modules():
     global google
