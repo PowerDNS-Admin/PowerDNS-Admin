@@ -410,48 +410,31 @@ def login():
             name_prop = Setting().get('oidc_oauth_account_name_property')
             desc_prop = Setting().get('oidc_oauth_account_description_property')
 
-        #Calculates the length of the list we get from name_prop (How many groups the user is in).
-        #and create an empty list for his accounts.
-        group_amount = len(me[name_prop])
-        acc_list = []
-
-
+            account_to_add = []
 	    #If the name_property and desc_property exist in me (A variable that contains all the userinfo from the IdP).
-        if name_prop in me and desc_prop in me:
-	    
-            #Run on all groups the user is in by the index num.
-            for index in range(group_amount):
+            if name_prop in me and desc_prop in me:
+                accounts_name_prop = [me[name_prop]] if type(me[name_prop]) is not list else me[name_prop]
+                accounts_desc_prop = [me[desc_prop]] if type(me[desc_prop]) is not list else me[desc_prop]
+		
+                #Run on all groups the user is in by the index num.
+                for i in range(len(accounts_name_prop)):
+                    desc_ss = ''
+                    if i < len(accounts_desc_prop):
+                        desc_ss = accounts_desc_prop[i]
+                    account = handle_account(accounts_name_prop[i], desc_ss)
 
-                #This whole block is used to make sure both lists and strings work.
-                #If the name is a string and list is a description it won't work.
-                #This won't work because a list of descriptions on 1 string name is useless.
-                if type(me[name_prop]) != list:
-                    account = handle_account(me[name_prop][0:], me[desc_prop][0:])
-
-                else:
-                    if type(me[desc_prop]) != list:
-                        account = handle_account(me[name_prop][index], me[desc_prop][0:])
-
-                    else:
-                        account = handle_account(me[name_prop][index], me[desc_prop][index])
-
-                #Append the account he is a part of into the acc_list variable and get all accounts the user is a part off.
-                acc_list.append(account)
+                    account_to_add.append(account)
                 user_accounts = user.get_accounts()
+                
+		# Add accounts
+                for account in account_to_add:
+                    if account not in user_accounts:
+                        account.add_user(user)
 
-
-            #Get the user accounts and calculate the differences between two lists:
-            #acc_list is a list the list that contains the groups in the supplied list by the oidc
-            #user_accounts is a list of accounts that the user is a part of now.
-            acc_to_remove = Diff(acc_list, user_accounts)
-            
-            #If the user isn't apart of the account we got then add him to it. 
-            if account not in user_accounts:
-                account.add_user(user)
-
-            #Any account that is added to acc_to_remove is an account that the user needs to be removed form and thus removed:
-            for acc in acc_to_remove:
-                acc.remove_user(user)
+                # Remove accounts
+                for account in user_accounts:
+                    if account not in account_to_add:
+                         account.remove_user(user)
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
