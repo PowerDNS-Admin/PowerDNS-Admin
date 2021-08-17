@@ -644,7 +644,8 @@ def setting_basic():
             'pretty_ipv6_ptr', 'dnssec_admins_only',
             'allow_user_create_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
-            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email'
+            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
+	    'delete_sso_accounts'
         ]
 
         return render_template('admin_setting_basic.html', settings=settings)

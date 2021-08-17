@@ -27,6 +27,7 @@ class Setting(db.Model):
         'dnssec_admins_only': False,
         'allow_user_create_domain': False,
         'allow_user_view_history': False,
+	'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
         'site_url': 'http://localhost:9191',

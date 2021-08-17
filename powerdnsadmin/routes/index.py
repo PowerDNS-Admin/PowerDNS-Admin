@@ -425,10 +425,11 @@ def login():
                     if account not in user_accounts:
                         account.add_user(user)
 
-                # Remove accounts
-                for account in user_accounts:
-                    if account not in account_to_add:
-                         account.remove_user(user)
+                # Remove accounts if the setting is enabled
+                if Setting().get('delete_sso_accounts'):
+                    for account in user_accounts:
+                        if account not in account_to_add:
+                              account.remove_user(user)
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
