@@ -44,23 +44,12 @@ Make sure you Enable OpenID Connect OAuth option.
 * Autoprovision Account Description Property, This property will set the description of the created account.
   This property can also be either a string or a list.
 
-We can use the properties in the following configurations:
-```
-Account Name Property: list
-Account Description Property: list
-
-Account Name Property: list
-Account Description Property: string
-
-Account Name Property: string
-Account Name Property: string
-```
-
 Let's say we get a variable named "groups" from our IdP.
 This variable contains groups that the user is a part from.
 We will put the variable name "groups" in both properties and it will result in the following account:
 Example:
 Input we get from the Idp:
+
 ```
 {
 	"preferred_username": "customer_username",
@@ -85,3 +74,5 @@ The groups created will be:
 Name: github Description: github Members: customer_username
 Name: gitlab Description: gitlab Members: customer_username
 ```	
+
+If the user gets removed from one of the groups he will also get removed from that group account.
