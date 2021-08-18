@@ -412,10 +412,10 @@ def login():
 		
                 #Run on all groups the user is in by the index num.
                 for i in range(len(accounts_name_prop)):
-                    desc_ss = ''
+                    description = ''
                     if i < len(accounts_desc_prop):
-                        desc_ss = accounts_desc_prop[i]
-                    account = handle_account(accounts_name_prop[i], desc_ss)
+                        description = accounts_desc_prop[i]
+                    account = handle_account(accounts_name_prop[i], description)
 
                     account_to_add.append(account)
                 user_accounts = user.get_accounts()

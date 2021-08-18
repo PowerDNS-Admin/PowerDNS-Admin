@@ -66,7 +66,6 @@ def update_data():
             {'id': 39, 'name': 'google_token_params', 'value': "{'scope': 'email profile'}", 'view': 'authentication'},
             {'id': 40, 'name': 'google_authorize_url', 'value': 'https://accounts.google.com/o/oauth2/auth', 'view': 'authentication'},
             {'id': 41, 'name': 'google_base_url', 'value': 'https://www.googleapis.com/oauth2/v1/', 'view': 'authentication'},
-	    {'id': 42, 'name': 'delete_sso_accounts', 'value': 'False', 'view': 'basic'},
         ]
     )
 
