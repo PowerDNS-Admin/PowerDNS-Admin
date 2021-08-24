@@ -977,9 +977,9 @@ def api_zone_forward(server_id, zone_id):
         domain = Domain()
         domain.update()
     status = resp.status_code
-    if Setting().get('enable_api_rr_history'):
-        if 200 <= status < 300:
-            current_app.logger.debug("Request to powerdns API successful")
+    if 200 <= status < 300:
+        current_app.logger.debug("Request to powerdns API successful")
+        if Setting().get('enable_api_rr_history'):
             if request.method in ['POST', 'PATCH'] :
                 data = request.get_json(force=True)
                 for rrset_data in data['rrsets']:
