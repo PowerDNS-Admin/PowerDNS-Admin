@@ -36,9 +36,13 @@
                         </div>
                         <select name="accountid" class="form-control" style="width:15em;">
                             <option value="0">- No Account -</option>
+                            {% if accounts | length == 1  %}
+                            <option value="{{ accounts[0].id }}" selected>{{ accounts[0].name }}</option>
+                            {% else %}
                             {% for account in accounts %}
                             <option value="{{ account.id }}">{{ account.name }}</option>
                             {% endfor %}
+                            {% endif %}
                         </select><br />
                         <div class="form-group">
                             <label>Type</label>
