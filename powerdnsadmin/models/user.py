@@ -420,7 +420,7 @@ class User(db.Model):
         db.session.commit()
 
         # Create User Permissions as well
-        userperms = UserPermissions(user_id=user.id)
+        userperms = UserPermissions(user_id=self.id)
         userperms.add()
 
 
