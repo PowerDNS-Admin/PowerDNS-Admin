@@ -333,6 +333,7 @@ def add():
                                accounts=accounts)
 
 
+
 @domain_bp.route('/setting/<path:domain_name>/delete', methods=['POST'])
 @login_required
 @operator_role_required

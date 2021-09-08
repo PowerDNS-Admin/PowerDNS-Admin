@@ -974,7 +974,7 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
     # Respect bg_domain_updates
-    if not Setting.get('bg_domain_updates'):
+    if not Setting().get('bg_domain_updates'):
         domain = Domain()
         domain.update()
     status = resp.status_code
