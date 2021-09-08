@@ -973,10 +973,7 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 @apikey_can_access_domain
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
-<<<<<<< HEAD
     # Respect bg_domain_updates
-=======
->>>>>>> 993e02b635ed271f855e02aeab3e2f8c18d0554f
     if not Setting().get('bg_domain_updates'):
         domain = Domain()
         domain.update()
