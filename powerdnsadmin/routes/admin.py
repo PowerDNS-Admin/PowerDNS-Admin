@@ -998,6 +998,25 @@ def setting_authentication():
                               request.form.get('oidc_oauth_account_name_property'))
                 Setting().set('oidc_oauth_account_description_property',
                               request.form.get('oidc_oauth_account_description_property'))
+                Setting().set('autoprovisioning_oidc', True
+                    if request.form.get('autoprovisioning_oidc') == 'ON' else False)
+                Setting().set('autoprovisioning_attribute_oidc',
+                              request.form.get('autoprovisioning_attribute_oidc'))
+
+                if request.form.get('autoprovisioning_oidc')=='ON':
+                    if  validateURN(request.form.get('urn_value_oidc')):
+                        Setting().set('urn_value_oidc',
+                                       request.form.get('urn_value_oidc'))
+                    else:
+                        return render_template('admin_setting_authentication.html',
+                                    error="Invalid urn")
+                else:
+                    Setting().set('urn_value_oidc',
+                                       request.form.get('urn_value_oidc'))
+
+                Setting().set('purge_oidc', True
+                    if request.form.get('purge_oidc') == 'ON' else False)
+
                 result = {
                     'status': True,
                     'msg':

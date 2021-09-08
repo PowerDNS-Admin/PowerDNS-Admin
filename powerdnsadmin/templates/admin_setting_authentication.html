@@ -656,6 +656,42 @@
                                             <fieldset>
                                                 <legend>ADVANCE</legend>
                                                 <div class="form-group">
+                                                    <label>Roles Autoprovisioning</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="autoprovisioning_oidc" id="autoprovisioning_oidc_off" value="OFF" {% if not SETTING.get('autoprovisioning_oidc') %}checked{% endif %}> OFF
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="autoprovisioning_oidc" id="autoprovisioning_oidc_on" value="ON"
+
+                                                             {% if SETTING.get('autoprovisioning_oidc') %}checked{% endif %}> ON
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="autoprovisioning_attribute_oidc">Roles provisioning field</label>
+                                                    <input type="text" class="form-control" name="autoprovisioning_attribute_oidc" id="autoprovisioning_attribute_oidc" placeholder="e.g. eduPersonEntitlement"  data-error="    Please input field responsible for autoprovisioning" value="{{ SETTING.get('autoprovisioning_attribute_oidc') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group {% if error %}has-error{% endif %}">
+                                                    <label for="urn_value_oidc">Urn prefix</label>
+                                                    <input type="text" class="form-control" name="urn_value_oidc" id="urn_value_oidc" placeholder="e.g. urn:mace:<yourOrganization>"   data-error="Please fill this field" value="{{ SETTING.get('urn_value_oidc') }}">
+                                                    {% if error %}
+                                                        <span class="help-block with-errors">Please input the correct prefix for your urn value</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Purge Roles If Empty</label>
+                                                    <div class="radio">
+                                                        <label>
+                                                            <input type="radio" name="purge_oidc" id="purge_oidc_off" value="OFF" {% if not SETTING.get('purge_oidc') %}checked{% endif %}> OFF
+                                                        </label>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                        <label>
+                                                            <input type="radio" name="purge_oidc" id="purge_oidc_on" value="ON" {% if SETTING.get('purge_oidc') %}checked{% endif %}> ON
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
                                                     <label for="oidc_oauth_account_name_property">Autoprovision Account Name property</label>
                                                     <input type="text" class="form-control" name="oidc_oauth_account_name_property" id="oidc_oauth_account_name_property" placeholder="e.g. account_name" data-error="Please input property containing account_name" value="{{ SETTING.get('oidc_oauth_account_name_property') }}">
                                                     <span class="help-block with-errors"></span>
@@ -1022,6 +1058,12 @@
             $('#oidc_oauth_firstname').prop('required', true);
             $('#oidc_oauth_last_name').prop('required', true);
             $('#oidc_oauth_email').prop('required', true);
+
+            if ($('#autoprovisioning_oidc').is(":checked")) {
+                $('#autoprovisioning_attribute_oidc').prop('required', true);
+                $('#urn_value_oidc').prop('required', true);
+            }
+
         } else {
             $('#oidc_oauth_key').prop('required', false);
             $('#oidc_oauth_secret').prop('required', false);
@@ -1033,8 +1075,27 @@
             $('#oidc_oauth_firstname').prop('required', false);
             $('#oidc_oauth_last_name').prop('required', false);
             $('#oidc_oauth_email').prop('required', false);
+
+            if ($('#autoprovisioning_oidc').is(":checked")) {
+                $('#autoprovisioning_attribute_oidc').prop('required', false);
+                $('#urn_value_oidc').prop('required', true);
+            }
         }
     });
+
+    $("input[name='autoprovisioning_oidc']" ).change(function(){
+        if ($('#autoprovisioning_oidc_on').is(":checked") && $('#oidc_oauth_enabled').is(":checked")) {
+            $('#autoprovisioning_attribute_oidc').prop('required', true);
+            $('#urn_value_oidc').prop('required', true);
+            $('#purge_oidc').prop('required', true);
+        }
+        else{
+            $('#autoprovisioning_attribute_oidc').prop('required', false);
+            $('#urn_value_oidc').prop('required', false);
+            $('#purge_oidc').prop('required', false);
+        }
+    });
+
         // init validation requirement at first time page load
         {% if SETTING.get('oidc_oauth_enabled') %}
         $('#oidc_oauth_key').prop('required', true);
@@ -1047,7 +1108,35 @@
         $('#oidc_oauth_firstname').prop('required', true);
         $('#oidc_oauth_last_name').prop('required', true);
         $('#oidc_oauth_email').prop('required', true);
+
+        if ($('#autoprovisioning_oidc_on').is(":checked")) {
+            $('#autoprovisioning_attribute_oidc').prop('required', true);
+            $('#urn_value_oidc').prop('required', true);
+        }
     {% endif %}
+
+    $("input[name='purge_oidc']" ).change(function(){
+         if ($("#purge_oidc_on").is(":checked")){
+            document.getElementById('purge_oidc_on').checked=false;
+            document.getElementById('purge_oidc_off').checked=true;
+             var modal = $("#modal_confirm_oidc");
+             var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning field prepopulated." ;
+             modal.find('.modal-body p').text(info);
+             modal.find('#button_confirm').click(function () {
+                document.getElementById('purge_oidc_on').checked=true;
+                document.getElementById('purge_oidc_off').checked=false;
+                 modal.modal('hide');
+             })
+             modal.find('#button_cancel').click(function () {
+                 modal.modal('hide');
+             })
+             modal.find('#X').click(function () {
+                 modal.modal('hide');
+             })
+             modal.modal('show');
+         }
+     });
+
     //END: OIDC Tab JS
 
 </script>
@@ -1076,6 +1165,28 @@
     <!-- /.modal-dialog -->
 </div>
 
+
+<div class="modal fade modal-warning" id="modal_confirm_oidc" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="X" >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" id="button_cancel" name="purge_oidc" value="OFF" data-dismiss="modal" >Cancel</button>
+                <button type="button" class="btn btn-flat btn-success" id="button_confirm">Confirm</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
 
 <div class="modal fade modal-warning" id="modal_warning" data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog">

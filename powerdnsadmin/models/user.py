@@ -658,11 +658,14 @@ class User(db.Model):
                 current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
         return entitlements
 
-    def updateUser(self, Entitlements):
+    def updateUser(self, Entitlements, oidc=False):
         """
         Update user associations based on ldap attribute
         """
-        entitlements= getCorrectEntitlements(Entitlements)
+        if oidc==False:
+            entitlements = getCorrectEntitlements(Entitlements)
+        else:
+            entitlements = getCorrectEntitlements(Entitlements, oidc)
         if len(entitlements)!=0:
             self.revoke_privilege(True)
             for entitlement in entitlements:
@@ -701,12 +704,15 @@ class User(db.Model):
             if account!=None:
                 account.add_user(user)
 
-def getCorrectEntitlements(Entitlements):
+def getCorrectEntitlements(Entitlements, oidc=False):
     """
     Gather a list of valid records from the ldap attribute given
     """
     from ..models.role import Role
-    urn_value=Setting().get('urn_value')
+    if (oidc == False):
+        urn_value=Setting().get('urn_value')
+    else:
+        urn_value=Setting().get('urn_value_oidc')
     urnArgs=[x.lower() for x in urn_value.split(':')]
     entitlements=[]
     for Entitlement in Entitlements:
