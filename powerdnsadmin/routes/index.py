@@ -473,9 +473,38 @@ def login():
                                        saml_enabled=SAML_ENABLED,
                                        error='Token required')
 
+        if Setting().get('autoprovisioning') and auth_method!='LOCAL': 
+            urn_value=Setting().get('urn_value')
+            Entitlements=user.read_entitlements(Setting().get('autoprovisioning_attribute'))
+            if len(Entitlements)==0 and Setting().get('purge'):
+                user.set_role("User")
+                user.revoke_privilege(True)
+                
+            elif len(Entitlements)!=0:
+                if checkForPDAEntries(Entitlements, urn_value):
+                    user.updateUser(Entitlements)
+                else:
+                    current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
+                    if Setting().get('purge'):
+                        user.set_role("User")
+                        user.revoke_privilege(True)
+                        current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.' )
+
         login_user(user, remember=remember_me)
         signin_history(user.username, 'LOCAL', True)
         return redirect(session.get('next', url_for('index.index')))
+
+def checkForPDAEntries(Entitlements, urn_value):
+    """
+    Run through every record located in the ldap attribute given and determine if there are any valid powerdns-admin records
+    """
+    urnArguments=[x.lower() for x in urn_value.split(':')]
+    for Entitlement in Entitlements:
+        entArguments=Entitlement.split(':powerdns-admin')
+        entArguments=[x.lower() for x in entArguments[0].split(':')]
+        if (entArguments==urnArguments):
+            return True
+    return False
 
 
 def clear_session():

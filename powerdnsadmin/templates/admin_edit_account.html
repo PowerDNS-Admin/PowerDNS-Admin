@@ -84,7 +84,7 @@
                             <select multiple="multiple" class="form-control" id="account_multi_user"
                                 name="account_multi_user">
                                 {% for user in users %}
-                                <option {% if user.id in account_user_ids %}selected{% endif %}
+                                <option {% if user.id in account_user_ids|default([]) %}selected{% endif %}
                                     value="{{ user.username }}">{{ user.username }}</option>
                                 {% endfor %}
                             </select>
