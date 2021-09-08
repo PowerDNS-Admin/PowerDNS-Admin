@@ -14,10 +14,7 @@ from .role import Role
 from .setting import Setting
 from .domain_user import DomainUser
 from .account_user import AccountUser
-<<<<<<< HEAD
 from .user_permissions import UserPermissions
-=======
->>>>>>> 993e02b635ed271f855e02aeab3e2f8c18d0554f
 
 
 class Anonymous(AnonymousUserMixin):
@@ -647,10 +644,6 @@ class User(db.Model):
             accounts.append(q[1])
         return accounts
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 993e02b635ed271f855e02aeab3e2f8c18d0554f
     def read_entitlements(self, key):
         """
         Get entitlements from ldap server associated with this user
@@ -805,20 +798,11 @@ def get_role_names(roles):
     for role in roles:
         roles_list.append(role.name) 
     return roles_list
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 993e02b635ed271f855e02aeab3e2f8c18d0554f
 def getUserInfo(DomainsOrAccounts):
     current=[]
     for DomainOrAccount in DomainsOrAccounts:
         current.append(DomainOrAccount.name)
     return current
 
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> 993e02b635ed271f855e02aeab3e2f8c18d0554f
 
