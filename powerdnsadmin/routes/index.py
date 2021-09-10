@@ -373,8 +373,7 @@ def login():
         return redirect(url_for('index.index'))
 
     if 'oidc_token' in session:
-        me = json.loads(oidc.get('profile').text)
-        # me = json.loads(oidc.get('userinfo').text)
+        me = json.loads(oidc.get('userinfo').text)
         oidc_username = me[Setting().get('oidc_oauth_username')]
         oidc_givenname = me[Setting().get('oidc_oauth_firstname')]
         oidc_familyname = me[Setting().get('oidc_oauth_last_name')]
@@ -411,26 +410,22 @@ def login():
                         ua.remove_user(user)
 
         if Setting().get('autoprovisioning_oidc'):
-            Entitlements=[]
             urn_value=Setting().get('urn_value_oidc')
             key=Setting().get('autoprovisioning_attribute_oidc')
-            Entitlements=me['attributes'][key]
-            #Entitlements=user.read_entitlements_oidc(Setting().get('autoprovisioning_attribute_oidc'), me)
-            if len(Entitlements)==0 and Setting().get('purge_oidc'):
-                user.set_role("User")
-                user.revoke_privilege(True)
-            elif len(Entitlements)!=0:
-                if isinstance(Entitlements, str):
-                    Entitlements=[Entitlements]
-                if checkForPDAEntries(Entitlements, urn_value):
-                    user.updateUser(Entitlements, True)
-                else:
-                    current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
-                    if Setting().get('purge_oidc'):
-                        user.set_role("User")
-                        user.revoke_privilege(True)
-                        current_app.logger.warning('Procceding to revoke every privilige from ' +  user.username + '.' )
-
+            if key in me:
+                Entitlements=[me[key]] if type(me[key]) is not list else me[key]
+                if len(Entitlements)==0 and Setting().get('purge_oidc'):
+                    user.set_role("User")
+                    user.revoke_privilege(True)
+                elif len(Entitlements)!=0:
+                    if checkForPDAEntries(Entitlements, urn_value):
+                        user.updateUser(Entitlements, True)
+                    else:
+                        current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
+                        if Setting().get('purge_oidc'):
+                            user.set_role("User")
+                            user.revoke_privilege(True)
+                            current_app.logger.warning('Procceding to revoke every privilige from ' +  user.username + '.' )
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'

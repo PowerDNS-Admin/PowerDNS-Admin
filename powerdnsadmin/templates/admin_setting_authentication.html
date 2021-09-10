@@ -656,6 +656,17 @@
                                             <fieldset>
                                                 <legend>ADVANCE</legend>
                                                 <div class="form-group">
+                                                    <label for="oidc_oauth_account_name_property">Autoprovision Account Name property</label>
+                                                    <input type="text" class="form-control" name="oidc_oauth_account_name_property" id="oidc_oauth_account_name_property" placeholder="e.g. account_name" data-error="Please input property containing account_name" value="{{ SETTING.get('oidc_oauth_account_name_property') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="oidc_oauth_account_description_property">Autoprovision Account Description property</label>
+                                                    <input type="text" class="form-control" name="oidc_oauth_account_description_property" id="oidc_oauth_account_description_property" placeholder="e.g. account_description" data-error="Please input property containing account_description" value="{{ SETTING.get('oidc_oauth_account_description_property') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <legend></legend>
+                                                <div class="form-group">
                                                     <label>Roles Autoprovisioning</label>
                                                     <div class="radio">
                                                         <label>
@@ -690,16 +701,6 @@
                                                         <label>
                                                             <input type="radio" name="purge_oidc" id="purge_oidc_on" value="ON" {% if SETTING.get('purge_oidc') %}checked{% endif %}> ON
                                                     </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="oidc_oauth_account_name_property">Autoprovision Account Name property</label>
-                                                    <input type="text" class="form-control" name="oidc_oauth_account_name_property" id="oidc_oauth_account_name_property" placeholder="e.g. account_name" data-error="Please input property containing account_name" value="{{ SETTING.get('oidc_oauth_account_name_property') }}">
-                                                    <span class="help-block with-errors"></span>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="oidc_oauth_account_description_property">Autoprovision Account Description property</label>
-                                                    <input type="text" class="form-control" name="oidc_oauth_account_description_property" id="oidc_oauth_account_description_property" placeholder="e.g. account_description" data-error="Please input property containing account_description" value="{{ SETTING.get('oidc_oauth_account_description_property') }}">
-                                                    <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
                                             <div class="form-group">
@@ -1062,6 +1063,8 @@
             if ($('#autoprovisioning_oidc').is(":checked")) {
                 $('#autoprovisioning_attribute_oidc').prop('required', true);
                 $('#urn_value_oidc').prop('required', true);
+                $('#oidc_oauth_account_name_property').prop('readonly', true);
+                $('#oidc_oauth_account_description_property').prop('readonly', true);
             }
 
         } else {
@@ -1079,11 +1082,31 @@
             if ($('#autoprovisioning_oidc').is(":checked")) {
                 $('#autoprovisioning_attribute_oidc').prop('required', false);
                 $('#urn_value_oidc').prop('required', true);
+                $('#oidc_oauth_account_name_property').prop('readonly', true);
+                $('#oidc_oauth_account_description_property').prop('readonly', true);
             }
         }
     });
 
+    var handler= function(event, variable){
+        if( variable.is('[readonly]') ){
+            variable.click( function () {
+                var modal = $("#modal_warning");
+                var info = "Roles autoprovisioning is enabled, to use this feature disable it first." ;
+                modal.find('.modal-body p').text(info);
+                modal.find('#button_warning_confirm').click(function () {
+                    modal.modal('hide');
+                })
+                modal.find('#warning_X').click(function () {
+                    modal.modal('hide');
+                })
+                modal.modal('show');
+            });
+        }
+    }
+
     $("input[name='autoprovisioning_oidc']" ).change(function(){
+
         if ($('#autoprovisioning_oidc_on').is(":checked") && $('#oidc_oauth_enabled').is(":checked")) {
             $('#autoprovisioning_attribute_oidc').prop('required', true);
             $('#urn_value_oidc').prop('required', true);
@@ -1093,11 +1116,48 @@
             $('#autoprovisioning_attribute_oidc').prop('required', false);
             $('#urn_value_oidc').prop('required', false);
             $('#purge_oidc').prop('required', false);
+            $('#oidc_oauth_account_name_property').prop('readonly', false);
+            $('#oidc_oauth_account_description_property').prop('readonly', false);
+            $('#oidc_oauth_account_name_property').mouseover( function () {
+                 $(this).css("cursor", "text")
+            });
+            $('#oidc_oauth_account_description_property').mouseover( function () {
+                 $(this).css("cursor", "text")
+            });
+            $('#oidc_oauth_account_name_property').off("click");
+            $('#oidc_oauth_account_description_property').off("click");
+        }
+
+        if ($('#autoprovisioning_oidc_on').is(":checked")){
+            document.getElementById('autoprovisioning_oidc_on').checked=false;
+            document.getElementById('autoprovisioning_oidc_off').checked=true;
+            var modal= $("#modal_confirm_oidc");
+            var info = "Are you sure you want to do this? By enabling Roles autoprovisioning you are disabling the feature above" ;
+            modal.find('.modal-body p').text(info);
+            modal.find('#button_confirm').click(function () {
+                document.getElementById('autoprovisioning_oidc_on').checked=true;
+                document.getElementById('autoprovisioning_oidc_off').checked=false;
+                $('#oidc_oauth_account_name_property').prop('readonly', true);
+                $('#oidc_oauth_account_description_property').prop('readonly', true);
+                $('#oidc_oauth_account_name_property').mouseover( function () {
+                    $(this).css("cursor", "not-allowed")
+                });
+                $('#oidc_oauth_account_description_property').mouseover( function () {
+                    $(this).css("cursor", "not-allowed")
+                });
+                 modal.modal('hide');
+             })
+             modal.find('#button_cancel').click(function () {
+                 modal.modal('hide');
+             })
+             modal.find('#X').click(function () {
+                 modal.modal('hide');
+             })
+             modal.modal('show');
         }
     });
-
         // init validation requirement at first time page load
-        {% if SETTING.get('oidc_oauth_enabled') %}
+    {% if SETTING.get('oidc_oauth_enabled') %}
         $('#oidc_oauth_key').prop('required', true);
         $('#oidc_oauth_secret').prop('required', true);
         $('#oidc_oauth_scope').prop('required', true);
@@ -1112,6 +1172,16 @@
         if ($('#autoprovisioning_oidc_on').is(":checked")) {
             $('#autoprovisioning_attribute_oidc').prop('required', true);
             $('#urn_value_oidc').prop('required', true);
+            $('#oidc_oauth_account_name_property').prop('readonly', true);
+            $('#oidc_oauth_account_description_property').prop('readonly', true);
+            $('#oidc_oauth_account_name_property').mouseover( function () {
+                 $(this).css("cursor", "not-allowed")
+            });
+            $('#oidc_oauth_account_description_property').mouseover( function () {
+                 $(this).css("cursor", "not-allowed")
+            });
+            $('#oidc_oauth_account_name_property').on("click", handler(event, $('#oidc_oauth_account_name_property')));
+            $('#oidc_oauth_account_description_property').on("click", handler(event, $('#oidc_oauth_account_description_property')));
         }
     {% endif %}
 
@@ -1136,7 +1206,6 @@
              modal.modal('show');
          }
      });
-
     //END: OIDC Tab JS
 
 </script>
