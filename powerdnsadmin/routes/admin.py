@@ -1,6 +1,7 @@
 import json
 import datetime
 import traceback
+import re
 from base64 import b64encode
 from ast import literal_eval
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
@@ -440,6 +441,7 @@ def edit_account(account_name=None):
     if request.method == 'GET':
         if account_name is None:
             return render_template('admin_edit_account.html',
+                                   account_user_ids=[],
                                    users=users,
                                    create=1)
 
@@ -829,6 +831,27 @@ def setting_authentication():
                 Setting().set('ldap_user_group',
                               request.form.get('ldap_user_group'))
                 Setting().set('ldap_domain', request.form.get('ldap_domain'))
+                Setting().set(
+                    'autoprovisioning', True
+                    if request.form.get('autoprovisioning') == 'ON' else False)
+                Setting().set('autoprovisioning_attribute',
+                              request.form.get('autoprovisioning_attribute'))
+
+                if request.form.get('autoprovisioning')=='ON':
+                    if  validateURN(request.form.get('urn_value')):
+                        Setting().set('urn_value',
+                                       request.form.get('urn_value'))
+                    else:
+                        return render_template('admin_setting_authentication.html',
+                                    error="Invalid urn")
+                else:
+                    Setting().set('urn_value',
+                                       request.form.get('urn_value'))
+
+                Setting().set('purge', True
+                    if request.form.get('purge') == 'ON' else False)
+
+
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'google':
             google_oauth_enabled = True if request.form.get(
@@ -1286,3 +1309,29 @@ def global_search():
                     pass
 
         return render_template('admin_global_search.html', domains=domains, records=records, comments=comments)
+
+def validateURN(value):
+    NID_PATTERN = re.compile(r'^[0-9a-z][0-9a-z-]{1,31}$', flags=re.IGNORECASE)
+    NSS_PCHAR = '[a-z0-9-._~]|%[a-f0-9]{2}|[!$&\'()*+,;=]|:|@'
+    NSS_PATTERN = re.compile(fr'^({NSS_PCHAR})({NSS_PCHAR}|/|\?)*$', re.IGNORECASE)
+
+    prefix=value.split(':')
+    if (len(prefix)<3):
+        current_app.logger.warning( "Too small urn prefix" )
+        return False
+
+    urn=prefix[0]
+    nid=prefix[1]
+    nss=value.replace(urn+":"+nid+":", "")
+
+    if not urn.lower()=="urn":
+        current_app.logger.warning( urn + ' contains invalid characters ' )
+        return False
+    if not re.match(NID_PATTERN, nid.lower()):
+        current_app.logger.warning( nid + ' contains invalid characters ' )
+        return False
+    if not re.match(NSS_PATTERN, nss):
+        current_app.logger.warning( nss + ' contains invalid characters ' )
+        return False
+
+    return True
