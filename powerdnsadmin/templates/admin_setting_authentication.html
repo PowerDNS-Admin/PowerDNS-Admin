@@ -310,19 +310,33 @@
                                                 </ul>
                                             </dd>
                                             <dt>ADVANCE</dt>
-                                            <dd> Provision PDA user privileges based on LDAP Object Attributes. Alternative to Group Security Role Management.
+                                            <dd> Provision PDA user privileges based on LDAP Object Attributes.
                                                 <ul>
                                                     <li>
                                                         Roles Autoprovisioning - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the LDAP server every time they log in.
                                                     </li>
                                                     <li>
-                                                        Roles provisioning field - The attribute in the ldap server populated by the urn values where PDA will look for a new Role and/or new associations to domains/accounts.
+                                                        Roles provisioning field - The attribute in the LDAP server populated by the urn values where PDA will look for a new Role and/or new associations to domains/accounts. The allowed syntax for records inside this attribute <b> in your LDAP server </b> is: <br>
+                                                        <i> if  PDA-Role∈[Administrator, Operator]:
+                                                        <ul>
+                                                            <li>
+                                                                syntax:=prefix:"powerdns-admin":PDA-Role
+                                                            </li>
+                                                        </ul>
+                                                        else: <br>
+                                                        <ul>
+                                                            <li>
+                                                                syntax:=prefix:"powerdns-admin":PDA-Role:&ltdomain&gt:&ltaccount&gt
+                                                            </li>
+                                                        </ul>
+                                                        where prefix is given in the field "Urn prefix".
+                                                        </i>
                                                     </li>
                                                     <li>
-                                                        Urn prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the ldap server. Must comply with RFC no.8141.
+                                                        Urn prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the LDAP server. Must comply with RFC no.8141.
                                                     </li>
                                                     <li>
-                                                         Purge Roles If Empty - If toggled on, ldap entries that have no valid "powerdns-admin" records to their autoprovisioning field, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
+                                                         Purge Roles If Empty - If toggled on, LDAP entries that have no valid "powerdns-admin" records to their autoprovisioning field, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
 
                                                     </li>
                                                 </ul>
@@ -710,7 +724,41 @@
                                     </div>
                                     <div class="col-md-8">
                                         <legend>Help</legend>
-                                        <p>Fill in all the fields in the left form.</p>
+                                        <dl class="dl-horizontal">
+                                            <dt>ADVANCE</dt>
+                                            <p>Fill in all the fields in the left form.</p>
+                                            <dd> Provision PDA user privileges based on OIDC Object Attributes.
+                                                <ul>
+                                                    <li>
+                                                        Roles Autoprovisioning - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the OIDC server every time they log in.
+                                                    </li>
+                                                    <li>
+                                                        Roles provisioning field - The attribute in the OIDC server populated by the urn values where PDA will look for a new Role and/or new associations to domains/accounts. The allowed syntax for records inside this attribute <b> in your OIDC server </b> is: <br>
+                                                        <i> if  PDA-Role∈[Administrator, Operator]:
+                                                        <ul>
+                                                            <li>
+                                                                syntax:=prefix:"powerdns-admin":PDA-Role
+                                                            </li>
+                                                        </ul>
+                                                        else: <br>
+                                                        <ul>
+                                                            <li>
+                                                                syntax:=prefix:"powerdns-admin":PDA-Role:&ltdomain&gt:&ltaccount&gt
+                                                            </li>
+                                                        </ul>
+                                                        where prefix is given in the field "Urn prefix".
+                                                        </i>
+                                                    </li>
+                                                    <li>
+                                                        Urn prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the OIDC server. Must comply with RFC no.8141.
+                                                    </li>
+                                                    <li>
+                                                         Purge Roles If Empty - If toggled on, OIDC entries that have no valid "powerdns-admin" records to their autoprovisioning field, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
+
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                        </dl>
                                     </div>
                                 </div>
                             </div>
@@ -1092,7 +1140,7 @@
         if( variable.is('[readonly]') ){
             variable.click( function () {
                 var modal = $("#modal_warning");
-                var info = "Roles autoprovisioning is enabled, to use this feature disable it first." ;
+                var info = "Roles Autoprovisioning is enabled, to use this feature disable it first." ;
                 modal.find('.modal-body p').text(info);
                 modal.find('#button_warning_confirm').click(function () {
                     modal.modal('hide');
@@ -1132,7 +1180,7 @@
             document.getElementById('autoprovisioning_oidc_on').checked=false;
             document.getElementById('autoprovisioning_oidc_off').checked=true;
             var modal= $("#modal_confirm_oidc");
-            var info = "Are you sure you want to do this? By enabling Roles autoprovisioning you are disabling the feature above" ;
+            var info = "Are you sure you want to do this? By enabling Roles Autoprovisioning you are disabling the feature above" ;
             modal.find('.modal-body p').text(info);
             modal.find('#button_confirm').click(function () {
                 document.getElementById('autoprovisioning_oidc_on').checked=true;
