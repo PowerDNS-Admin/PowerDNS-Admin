@@ -297,7 +297,7 @@ class User(db.Model):
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows manager access to PowerDNS-Admin'
                                         .format(self.username,
-                                                LDAP_OPERATOR_GROUP))
+                                                LDAP_MANAGER_GROUP))
                                 elif (self.ldap_search(groupSearchFilter,
                                                        LDAP_USER_GROUP)):
                                     current_app.logger.info(
