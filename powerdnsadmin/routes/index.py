@@ -419,7 +419,7 @@ def login():
                     user.revoke_privilege(True)
                 elif len(Entitlements)!=0:
                     if checkForPDAEntries(Entitlements, urn_value):
-                        user.updateUser(Entitlements, True)
+                        user.updateUser(Entitlements, urn_value)
                     else:
                         current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
                         if Setting().get('purge_oidc'):
@@ -500,7 +500,7 @@ def login():
                 
             elif len(Entitlements)!=0:
                 if checkForPDAEntries(Entitlements, urn_value):
-                    user.updateUser(Entitlements)
+                    user.updateUser(Entitlements, urn_value)
                 else:
                     current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
                     if Setting().get('purge'):
@@ -516,7 +516,6 @@ def checkForPDAEntries(Entitlements, urn_value):
     """
     Run through every record located in the ldap attribute given and determine if there are any valid powerdns-admin records
     """
-
     urnArguments=[x.lower() for x in urn_value.split(':')]
     for Entitlement in Entitlements:
         entArguments=Entitlement.split(':powerdns-admin')
