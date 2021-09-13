@@ -233,7 +233,7 @@ def api_login_create_zone():
 @api_bp.route('/pdnsadmin/zones', methods=['GET'])
 @api_basic_auth
 def api_login_list_zones():
-    if current_user.role.name not in ['Administrator', 'Operator']:
+    if current_user.role.name not in ['Administrator', 'Operator', 'Manager']:
         domain_obj_list = get_user_domains()
     else:
         domain_obj_list = Domain.query.all()

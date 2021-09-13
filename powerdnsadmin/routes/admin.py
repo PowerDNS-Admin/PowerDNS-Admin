@@ -873,6 +873,8 @@ def setting_authentication():
                               request.form.get('ldap_admin_group'))
                 Setting().set('ldap_operator_group',
                               request.form.get('ldap_operator_group'))
+                Setting().set('ldap_manager_group',
+                              request.form.get('ldap_manager_group'))
                 Setting().set('ldap_user_group',
                               request.form.get('ldap_user_group'))
                 Setting().set('ldap_domain', request.form.get('ldap_domain'))

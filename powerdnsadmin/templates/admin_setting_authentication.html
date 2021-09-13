@@ -189,6 +189,11 @@
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                                 <div class="form-group">
+                                                    <label for="ldap_manager_group">Manager group</label>
+                                                    <input type="text" class="form-control" name="ldap_manager_group" id="ldap_manager_group" placeholder="e.g. cn=managers,dc=mydomain,dc=com" data-error="Please input LDAP DN for Manager group" value="{{ SETTING.get('ldap_manager_group') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
                                                     <label for="ldap_user_group">User group</label>
                                                     <input type="text" class="form-control" name="ldap_user_group" id="ldap_user_group" placeholder="e.g. cn=users,dc=mydomain,dc=com" data-error="Please input LDAP DN for User group" value="{{ SETTING.get('ldap_user_group') }}">
                                                     <span class="help-block with-errors"></span>

@@ -43,7 +43,7 @@ def before_request():
 @dashboard_bp.route('/domains-custom/<path:boxId>', methods=['GET'])
 @login_required
 def domains_custom(boxId):
-    if current_user.role.name in ['Administrator', 'Operator']:
+    if current_user.role.name in ['Administrator', 'Operator', 'Manager']:
         domains = Domain.query
     else:
         # Get query for domain to which the user has access permission.
@@ -155,7 +155,7 @@ def dashboard():
     history_number = 0
     history = []
     user_num = User.query.count()
-    if current_user.role.name in ['Administrator', 'Operator']:
+    if current_user.role.name in ['Administrator', 'Operator', 'Manager']:
         domain_count = Domain.query.count()
         history_number = History.query.count()
         history = History.query.order_by(History.created_on.desc()).limit(4)

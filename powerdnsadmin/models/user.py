@@ -230,6 +230,7 @@ class User(db.Model):
             LDAP_FILTER_GROUPNAME = Setting().get('ldap_filter_groupname')
             LDAP_ADMIN_GROUP = Setting().get('ldap_admin_group')
             LDAP_OPERATOR_GROUP = Setting().get('ldap_operator_group')
+            LDAP_MANAGER_GROUP = Setting().get('ldap_manager_group')
             LDAP_USER_GROUP = Setting().get('ldap_user_group')
             LDAP_GROUP_SECURITY_ENABLED = Setting().get('ldap_sg_enabled')
 
@@ -270,7 +271,7 @@ class User(db.Model):
                             return False
 
                     # check if LDAP_GROUP_SECURITY_ENABLED is True
-                    # user can be assigned to ADMIN or USER role.
+                    # user can be assigned to ADMIN,OPERATOR, MANAGER or USER role.
                     if LDAP_GROUP_SECURITY_ENABLED:
                         try:
                             if LDAP_TYPE == 'ldap':
@@ -288,6 +289,13 @@ class User(db.Model):
                                     role_name = 'Operator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'
+                                        .format(self.username,
+                                                LDAP_OPERATOR_GROUP))
+                                elif (self.ldap_search(groupSearchFilter,
+                                                       LDAP_MANAGER_GROUP)):
+                                    role_name = 'Manager'
+                                    current_app.logger.info(
+                                        'User {0} is part of the "{1}" group that allows manager access to PowerDNS-Admin'
                                         .format(self.username,
                                                 LDAP_OPERATOR_GROUP))
                                 elif (self.ldap_search(groupSearchFilter,
@@ -332,6 +340,12 @@ class User(db.Model):
                                     role_name = 'Operator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'
+                                        .format(self.username,
+                                                LDAP_OPERATOR_GROUP))
+                                elif (LDAP_MANAGER_GROUP in user_ldap_groups):
+                                    role_name = 'Manager'
+                                    current_app.logger.info(
+                                        'User {0} is part of the "{1}" group that allows manager access to PowerDNS-Admin'
                                         .format(self.username,
                                                 LDAP_OPERATOR_GROUP))
                                 elif (LDAP_USER_GROUP in user_ldap_groups):

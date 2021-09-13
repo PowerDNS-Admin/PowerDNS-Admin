@@ -52,13 +52,13 @@ def history_access_required(f):
 def can_access_domain(f):
     """
     Grant access if:
-        - user is in Operator role or higher, or
+        - user is in Manager role or higher, or
         - user is in granted Account, or
         - user is in granted Domain
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in ['Administrator', 'Operator']:
+        if current_user.role.name not in ['Administrator', 'Operator','Manager']:
             domain_name = kwargs.get('domain_name')
             domain = Domain.query.filter(Domain.name == domain_name).first()
 
@@ -281,7 +281,7 @@ def apikey_can_access_domain(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         apikey = g.apikey
-        if g.apikey.role.name not in ['Administrator', 'Operator']:
+        if g.apikey.role.name not in ['Administrator', 'Operator', 'Manager']:
             domains = apikey.domains
             zone_id = kwargs.get('zone_id').rstrip(".")
             domain_names = [item.name for item in domains]

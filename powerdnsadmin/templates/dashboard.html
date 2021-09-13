@@ -19,7 +19,7 @@
 {% block content %}
  <!-- Main content -->
     <section class="content">
-      {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+      {% if current_user.role.name in ['Administrator', 'Operator', 'Manager'] or SETTING.get('allow_user_view_history') %}
       <div class="row">
         <div class="col-xs-3">
             <div class="box">
@@ -70,7 +70,7 @@
                       </div>
                       </a>
                     </div>
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    {% if current_user.role.name in ['Administrator', 'Operator', 'Manager'] %}
                     <div class="col-lg-6">
                       <a href="{{ url_for('admin.pdns_stats') }}">
                       <div class="small-box bg-green">

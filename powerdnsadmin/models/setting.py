@@ -59,6 +59,7 @@ class Setting(db.Model):
         'ldap_sg_enabled': False,
         'ldap_admin_group': '',
         'ldap_operator_group': '',
+        'ldap_manager_group': '',
         'ldap_user_group': '',
         'ldap_domain': '',
         'github_oauth_enabled': False,
