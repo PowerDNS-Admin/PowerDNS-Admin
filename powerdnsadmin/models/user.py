@@ -416,13 +416,18 @@ class User(db.Model):
         """
         Check if a (type) user has access to at least one domain
         """
-        if self.is_user() and self.get_user_domains() == []:
+        user = User.query.filter(User.id == self.id).first()
+        if user.is_user() and user.get_user_domains() == []:
             admins = User.query.filter(User.role_id == 1)
             admin_email = None
             for admin in admins:
                 if admin.email:  #admin has an active email
                     admin_email = admin.email
                     break
+
+            e="User " + user.username + " does not have any domains registered"
+            current_app.logger.warning(
+                "Unauthorized user: {}".format(e))
             return {'auth': False, 'admin_email': admin_email}
 
         return {'auth': True, 'admin_email': None}
