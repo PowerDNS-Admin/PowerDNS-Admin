@@ -112,12 +112,12 @@
         <li class="{{ 'active' if active_page == 'dashboard' else '' }}">
           <a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
         </li>
-        {% if SETTING.get('allow_user_create_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
+        {% if (SETTING.get('allow_user_create_domain') and not current_user.role.name in ['Manager']) or current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="{{ 'active' if active_page == 'new_domain' else '' }}">
           <a href="{{ url_for('domain.add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a>
         </li>
         {% endif %}
-        {% if SETTING.get('allow_user_remove_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
+        {% if (SETTING.get('allow_user_remove_domain') and not current_user.role.name in ['Manager']) or current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="{{ 'active' if active_page == 'remove_domain' else '' }}">
           <a href="{{ url_for('domain.remove') }}"><i class="fa fa-trash-o"></i> <span>Remove Domain</span></a>
         </li>
