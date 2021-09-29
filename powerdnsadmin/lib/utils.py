@@ -246,7 +246,7 @@ def pretty_domain_name(value):
     """
     if isinstance(value, str):
         if value.startswith('xn--') \
-        or value.find('.xn--'):
+        or value.find('.xn--')!= -1:
             try:
                 return value.encode().decode('idna')
             except:
