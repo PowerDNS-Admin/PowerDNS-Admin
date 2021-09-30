@@ -150,6 +150,16 @@ def dashboard():
     else:
         current_app.logger.info('Updating domains in background...')
 
+    if current_user.role.name == 'User' and not Setting().get(
+            'allow_user_create_domain') and not Setting().get('allow_user_view_history'):
+        result = current_user.is_authenticate()
+        if result['auth'] == False:
+            return render_template('errors/401.html',
+                                saml_enabled=current_app.config.get('SAML_ENABLED'),
+                                error='Unauthorized',
+                                username= current_user.username,
+                                admin_email= result['admin_email'])
+
     # Stats for dashboard
     domain_count = 0
     history_number = 0
