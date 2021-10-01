@@ -304,36 +304,46 @@ class User(db.Model):
                                                 LDAP_USER_GROUP))
                                     return False
                             elif LDAP_TYPE == 'ad':
-                                user_ldap_groups = []
+                                if LDAP_ADMIN_GROUP:
+                                    ldap_admin_group_filter = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_ADMIN_GROUP)
+                                else:
+                                    ldap_admin_group_filter = ""
+                                if LDAP_OPERATOR_GROUP:
+                                    ldap_operator_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_OPERATOR_GROUP)
+                                else:
+                                    ldap_operator_group = ""
+                                if LDAP_USER_GROUP:
+                                    ldap_user_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_USER_GROUP)
+                                else:
+                                    ldap_user_group = ""
+                                searchFilter = "(&({0}={1})(|{2}{3}{4}))".format(LDAP_FILTER_USERNAME, self.username, LDAP_FILTER_GROUP, ldap_admin_group_filter, ldap_operator_group, ldap_user_group)
+                                ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
+
+
                                 user_ad_member_of = ldap_result[0][0][1].get(
                                     'memberOf')
-
                                 if not user_ad_member_of:
                                     current_app.logger.error(
                                         'User {0} does not belong to any group while LDAP_GROUP_SECURITY_ENABLED is ON'
                                         .format(self.username))
                                     return False
 
-                                for group in [
-                                        g.decode("utf-8")
-                                        for g in user_ad_member_of
-                                ]:
-                                    user_ldap_groups += self.ad_recursive_groups(
-                                        group)
+                                for i in  range(len(user_ad_member_of)):
+                                    user_ad_member_of[i] = user_ad_member_of[i].decode("utf-8")
 
-                                if (LDAP_ADMIN_GROUP in user_ldap_groups):
+                                if (LDAP_ADMIN_GROUP in user_ad_member_of):
                                     role_name = 'Administrator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'
                                         .format(self.username,
                                                 LDAP_ADMIN_GROUP))
-                                elif (LDAP_OPERATOR_GROUP in user_ldap_groups):
+                                elif (LDAP_OPERATOR_GROUP in user_ad_member_of):
                                     role_name = 'Operator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'
                                         .format(self.username,
                                                 LDAP_OPERATOR_GROUP))
-                                elif (LDAP_USER_GROUP in user_ldap_groups):
+                                elif (LDAP_USER_GROUP in user_ad_member_of):
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'
                                         .format(self.username,
@@ -786,14 +796,12 @@ def get_role_names(roles):
     """
     roles_list=[]
     for role in roles:
-        roles_list.append(role.name) 
+        roles_list.append(role.name)
     return roles_list
-    
+
 def getUserInfo(DomainsOrAccounts):
     current=[]
     for DomainOrAccount in DomainsOrAccounts:
         current.append(DomainOrAccount.name)
     return current
-
-        
 
