@@ -41,13 +41,10 @@ def profile():
         return render_template('user_profile.html')
     if request.method == 'POST':
         if session['authentication_type'] == 'LOCAL':
-            firstname = request.form[
-                'firstname'] if 'firstname' in request.form else ''
-            lastname = request.form[
-                'lastname'] if 'lastname' in request.form else ''
-            email = request.form['email'] if 'email' in request.form else ''
-            new_password = request.form[
-                'password'] if 'password' in request.form else ''
+            firstname = request.form.get('firstname', '').strip()
+            lastname = request.form.get('lastname', '').strip()
+            email = request.form.get('email', '').strip()
+            new_password = request.form.get('password', '')
         else:
             firstname = lastname = email = new_password = ''
             current_app.logger.warning(
