@@ -264,13 +264,23 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in self.defaults:
-            result = self.query.filter(Setting.name == setting).first()
-            if result is not None:
-                return strtobool(result.value) if result.value in [
-                    'True', 'False'
-                ] else result.value
+            if ('PDNS_API_URL' in current_app.config) and (setting == 'oidc_oauth_api_url'):
+                result = current_app.config['PDNS_API_URL']
+                return result
+            elif ('PDNS_AUTH_URL' in current_app.config) and (setting == 'oidc_oauth_authorize_url'):
+                result = current_app.config['PDNS_AUTH_URL']
+                return result
+            if ('PDNS_TOKEN_URL' in current_app.config) and (setting == 'oidc_oauth_token_url'):
+                result = current_app.config['PDNS_TOKEN_URL']
+                return result
             else:
-                return self.defaults[setting]
+                result = self.query.filter(Setting.name == setting).first()
+                if result is not None:
+                    return strtobool(result.value) if result.value in [
+                        'True', 'False'
+                    ] else result.value
+                else:
+                    return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
 
