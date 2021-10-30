@@ -26,6 +26,7 @@ class Setting(db.Model):
         'pretty_ipv6_ptr': False,
         'dnssec_admins_only': False,
         'allow_user_create_domain': False,
+        'allow_user_remove_domain': False,
         'allow_user_view_history': False,
         'bg_domain_updates': False,
         'site_name': 'PowerDNS-Admin',
