@@ -15,7 +15,7 @@
 {% endmacro %}
 
 {% macro serial(domain) %}
-    {% if domain.serial == 0 %}{{ domain.notified_serial }}{% else %}{{ domain.serial }}{% endif %}
+    {% if domain.serial == '0' %}{{ domain.notified_serial }}{% else %}{{ domain.serial }}{% endif %}
 {% endmacro %}
 
 {% macro master(domain) %}
