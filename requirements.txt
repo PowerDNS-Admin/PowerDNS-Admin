@@ -17,7 +17,7 @@ python3-saml
 pyOpenSSL==19.1.0
 pytz==2020.1
 cssmin==0.2.0
-jsmin==2.2.2
+jsmin==3.0.0
 Authlib==0.15
 Flask-SeaSurf==0.2.2
 bravado-core==5.17.0
