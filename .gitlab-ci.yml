@@ -1,4 +1,0 @@
-include:
-  - project: 'powerdns-admin/ci'
-    ref: main
-    file: '.build-docker-images.yml'
