@@ -39,7 +39,7 @@ jobs:
         uses: docker/build-push-action@v2
         if: github.ref == 'refs/heads/master'
         with:
-          context: .
+          context: ./docker
           push: true
           tags: ngoduykhanh/powerdns-admin:latest
 
@@ -47,6 +47,6 @@ jobs:
         uses: docker/build-push-action@v2
         if: ${{ github.event_name == 'create' && github.event.ref_type == 'tag' }}
         with:
-          context: .
+          context: ./docker
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
