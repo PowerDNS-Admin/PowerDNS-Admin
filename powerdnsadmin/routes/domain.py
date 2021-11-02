@@ -10,7 +10,7 @@ from flask_login import login_required, current_user, login_manager
 
 from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
-from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec
+from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec, can_remove_domain
 from ..models.user import User, Anonymous
 from ..models.account import Account
 from ..models.setting import Setting
@@ -21,6 +21,9 @@ from ..models.record_entry import RecordEntry
 from ..models.domain_template import DomainTemplate
 from ..models.domain_template_record import DomainTemplateRecord
 from ..models.domain_setting import DomainSetting
+from ..models.base import db
+from ..models.domain_user import DomainUser
+from ..models.account_user import AccountUser
 
 domain_bp = Blueprint('domain',
                       __name__,
@@ -129,6 +132,60 @@ def domain(domain_name):
                            editable_records=editable_records,
                            quick_edit=quick_edit,
                            ttl_options=ttl_options)
+
+
+@domain_bp.route('/remove', methods=['GET', 'POST'])
+@login_required
+@can_remove_domain
+def remove():
+    # domains is a list of all the domains a User may access
+    # Admins may access all
+    # Regular users only if they are associated with the domain
+    if current_user.role.name in ['Administrator', 'Operator']:
+        domains = Domain.query.order_by(Domain.name).all()
+    else:
+        # Get query for domain to which the user has access permission.
+        # This includes direct domain permission AND permission through
+        # account membership
+        domains = db.session.query(Domain) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+                db.or_(
+                    DomainUser.user_id == current_user.id,
+                    AccountUser.user_id == current_user.id
+                )).order_by(Domain.name)
+
+    if request.method == 'POST':
+        # TODO Change name from 'domainid' to something else, its confusing
+        domain_name = request.form['domainid']
+
+        # Get domain from Database, might be None
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+
+        # Check if the domain is in domains before removal
+        if domain not in domains:
+            abort(403)
+
+        # Delete
+        d = Domain()
+        result = d.delete(domain_name)
+
+        if result['status'] == 'error':
+            abort(500)
+
+        history = History(msg='Delete domain {0}'.format(
+            pretty_domain_name(domain_name)),
+                          created_by=current_user.username)
+        history.add()
+
+        return redirect(url_for('dashboard.dashboard'))
+
+    else:
+        # On GET return the domains we got earlier
+        return render_template('domain_remove.html',
+                               domainss=domains)
 
 
 @domain_bp.route('/add', methods=['GET', 'POST'])

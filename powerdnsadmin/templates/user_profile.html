@@ -51,7 +51,7 @@
                                             {%  if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                     </div>
                                     <div class="form-group">
-                                        <label for="email">E-mail</label> <input type="text" class="form-control"
+                                        <label for="email">E-mail</label> <input type="email" class="form-control"
                                             name="email" id="email" placeholder="{{ current_user.email }}"
                                             {%  if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                     </div>{%  if session['authentication_type'] == 'LOCAL' %}

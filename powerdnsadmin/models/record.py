@@ -65,6 +65,9 @@ class Record(object):
 
         rrsets=[]
         for r in jdata['rrsets']:
+            if len(r['records']) == 0:
+                continue
+
             while len(r['comments'])<len(r['records']):
                 r['comments'].append({"content": "", "account": ""})
             r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'], r['comments']), key=by_record_content_pair)))
@@ -162,6 +165,8 @@ class Record(object):
         for record in submitted_records:
             # Format the record name
             #
+            # Translate template placeholders into proper record data
+            record['record_data'] = record['record_data'].replace('[ZONE]', domain_name)
             # Translate record name into punycode (IDN) as that's the only way
             # to convey non-ascii records to the dns server
             record['record_name'] = record['record_name'].encode('idna').decode()

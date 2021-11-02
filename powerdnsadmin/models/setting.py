@@ -26,6 +26,7 @@ class Setting(db.Model):
         'pretty_ipv6_ptr': False,
         'dnssec_admins_only': False,
         'allow_user_create_domain': False,
+        'allow_user_remove_domain': False,
         'allow_user_view_history': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
@@ -185,6 +186,8 @@ class Setting(db.Model):
             'URI': False
         },
         'ttl_options': '1 minute,5 minutes,30 minutes,60 minutes,24 hours',
+        'otp_field_enabled': True,
+        'custom_css': '',
     }
 
     def __init__(self, id=None, name=None, value=None):
