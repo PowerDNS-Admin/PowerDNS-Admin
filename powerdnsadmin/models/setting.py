@@ -264,26 +264,23 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in self.defaults:
-            if ('PDNS_API_URL' in current_app.config) and (setting == 'oidc_oauth_api_url'):
-                result = current_app.config['PDNS_API_URL']
-                return result
-            elif ('PDNS_AUTH_URL' in current_app.config) and (setting == 'oidc_oauth_authorize_url'):
-                result = current_app.config['PDNS_AUTH_URL']
-                return result
-            if ('PDNS_TOKEN_URL' in current_app.config) and (setting == 'oidc_oauth_token_url'):
-                result = current_app.config['PDNS_TOKEN_URL']
-                return result
+ 
+            if setting.upper() in current_app.config:
+                result = current_app.config[setting.upper()]
             else:
                 result = self.query.filter(Setting.name == setting).first()
-                if result is not None:
-                    return strtobool(result.value) if result.value in [
-                        'True', 'False'
-                    ] else result.value
-                else:
-                    return self.defaults[setting]
+ 
+            if result is not None:
+                if hasattr(result,'value'):
+                    result = result.value 
+                return strtobool(result) if result in [
+                    'True', 'False'
+                ] else result
+            else:
+                return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
-
+            
     def get_records_allow_to_edit(self):
         return list(
             set(self.get_forward_records_allow_to_edit() +
