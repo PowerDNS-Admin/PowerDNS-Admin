@@ -7,7 +7,7 @@ legal_envvars = (
     'SECRET_KEY',
     'OIDC_OAUTH_API_URL',
     'OIDC_OAUTH_TOKEN_URL',
-    'PDNS_AUTH_URL',
+    'OIDC_OAUTH_AUTHORIZE_URL',
     'BIND_ADDRESS',
     'PORT',
     'LOG_LEVEL',
