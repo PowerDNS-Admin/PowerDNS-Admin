@@ -1,6 +1,6 @@
 import datetime
 from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect, g, session
-from flask_login import login_required, current_user, login_manager
+from flask_login import login_required, current_user, login_manager, logout_user
 from sqlalchemy import not_
 
 from ..lib.utils import customBoxes
@@ -150,15 +150,17 @@ def dashboard():
     else:
         current_app.logger.info('Updating domains in background...')
 
-    if current_user.role.name == 'User' and not Setting().get(
-            'allow_user_create_domain') and not Setting().get('allow_user_view_history'):
-        result = current_user.is_authenticate()
-        if result['auth'] == False:
-            return render_template('errors/401.html',
-                                saml_enabled=current_app.config.get('SAML_ENABLED'),
-                                error='Unauthorized',
-                                username= current_user.username,
-                                admin_email= result['admin_email'])
+    result = current_user.is_authenticate()
+    if result['auth'] == False:
+        username=current_user.username
+        history_unauthorized_log(username)
+        logout_user()
+        return render_template('errors/401.html',
+                            saml_enabled=current_app.config.get('SAML_ENABLED'),
+                            error='Unauthorized',
+                            username= username,
+                    admin_email= result['admin_email'])
+
 
     # Stats for dashboard
     domain_count = 0
@@ -222,3 +224,18 @@ def domains_updater():
         "result": d,
     }
     return jsonify(response_data)
+
+def history_unauthorized_log(username):
+    if request.headers.getlist("X-Forwarded-For"):
+        request_ip = request.headers.getlist("X-Forwarded-For")[0]
+        request_ip = request_ip.split(',')[0]
+    else:
+        request_ip = request.remote_addr
+
+    current_app.logger.info("User {} failed to be authorized from {}".format(username, request_ip))
+    History(msg='User {} was not authorized to access Powerdns-Admin'.format(username),
+            detail=str({
+                "username": username,
+                "ip_address": request_ip,
+            }),
+            created_by='System').add()

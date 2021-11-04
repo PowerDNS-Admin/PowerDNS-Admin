@@ -417,7 +417,8 @@ class User(db.Model):
         Check if a (type) user has access to at least one domain
         """
         user = User.query.filter(User.id == self.id).first()
-        if user.is_user() and user.get_user_domains() == []:
+        if user.is_user() and user.get_user_domains() == [] and \
+        (user.get_accounts()==[] or not Setting().get('allow_user_create_domain')):
             admins = User.query.filter(User.role_id == 1)
             admin_email = None
             for admin in admins:
