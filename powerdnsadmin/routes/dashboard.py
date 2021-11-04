@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, url_for, current_app, request, jso
 from flask_login import login_required, current_user, login_manager, logout_user
 from sqlalchemy import not_
 
+from ..decorators import operator_role_required
 from ..lib.utils import customBoxes
 from ..models.user import User, Anonymous
 from ..models.account import Account
@@ -149,7 +150,11 @@ def dashboard():
         Domain().update()
     else:
         current_app.logger.info('Updating domains in background...')
-
+    
+    show_bg_domain_button = BG_DOMAIN_UPDATE
+    if BG_DOMAIN_UPDATE and current_user.role.name not in ['Administrator', 'Operator']:
+        show_bg_domain_button = False
+    
     result = current_user.is_authenticate()
     if result['auth'] == False:
         username=current_user.username
@@ -160,7 +165,6 @@ def dashboard():
                             error='Unauthorized',
                             username= username,
                     admin_email= result['admin_email'])
-
 
     # Stats for dashboard
     domain_count = 0
@@ -210,12 +214,13 @@ def dashboard():
                            history_number=history_number,
                            uptime=uptime,
                            histories=history,
-                           show_bg_domain_button=BG_DOMAIN_UPDATE,
+                           show_bg_domain_button=show_bg_domain_button,
                            pdns_version=Setting().get('pdns_version'))
 
 
 @dashboard_bp.route('/domains-updater', methods=['GET', 'POST'])
 @login_required
+@operator_role_required
 def domains_updater():
     current_app.logger.debug('Update domains in background')
     d = Domain().update()

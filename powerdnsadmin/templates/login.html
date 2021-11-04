@@ -11,7 +11,9 @@
   {% assets "css_login" -%}
   <link rel="stylesheet" href="{{ ASSET_URL }}">
   {%- endassets %}
-
+{% if SETTING.get('custom_css') %}
+  <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
+{% endif %}
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -46,9 +48,11 @@
             data-error="Please input your password" required {% if password %}value="{{ password }}" {% endif %}>
           <span class="help-block with-errors"></span>
         </div>
+        {% if SETTING.get('otp_field_enabled') %}
         <div class="form-group">
           <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
         </div>
+        {% endif %}
         {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
         <div class="form-group">
           <select class="form-control" name="auth_method">

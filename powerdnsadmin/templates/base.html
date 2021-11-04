@@ -21,6 +21,9 @@
   {% assets "css_main" -%}
       <link rel="stylesheet" href="{{ ASSET_URL }}">
   {%- endassets %}
+{% if SETTING.get('custom_css') %}
+  <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
+{% endif %}
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -112,6 +115,11 @@
         {% if SETTING.get('allow_user_create_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
         <li class="{{ 'active' if active_page == 'new_domain' else '' }}">
           <a href="{{ url_for('domain.add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a>
+        </li>
+        {% endif %}
+        {% if SETTING.get('allow_user_remove_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
+        <li class="{{ 'active' if active_page == 'remove_domain' else '' }}">
+          <a href="{{ url_for('domain.remove') }}"><i class="fa fa-trash-o"></i> <span>Remove Domain</span></a>
         </li>
         {% endif %}
         {% if current_user.role.name in ['Administrator', 'Operator'] %}
