@@ -979,28 +979,29 @@ def api_zone_forward(server_id, zone_id):
     status = resp.status_code
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
-        if request.method in ['POST', 'PATCH'] :
-            data = request.get_json(force=True)
-            for rrset_data in data['rrsets']:
-                history = History(msg='{0} zone {1} record of {2}'.format(
-                    rrset_data['changetype'].lower(), rrset_data['type'],
-                    rrset_data['name'].rstrip('.')),
-                                detail=json.dumps(data),
-                                created_by=g.apikey.description,
-                                domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
+        if Setting().get('enable_api_rr_history'):
+            if request.method in ['POST', 'PATCH'] :
+                data = request.get_json(force=True)
+                for rrset_data in data['rrsets']:
+                    history = History(msg='{0} zone {1} record of {2}'.format(
+                        rrset_data['changetype'].lower(), rrset_data['type'],
+                        rrset_data['name'].rstrip('.')),
+                                    detail=json.dumps(data),
+                                    created_by=g.apikey.description,
+                                    domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
+                    history.add()
+            elif request.method == 'DELETE':
+                history = History(msg='Deleted zone {0}'.format(zone_id.rstrip('.')),
+                                  detail='',
+                                  created_by=g.apikey.description,
+                                  domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
-        elif request.method == 'DELETE':
-            history = History(msg='Deleted zone {0}'.format(zone_id.rstrip('.')),
-                              detail='',
-                              created_by=g.apikey.description,
-                              domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
-            history.add()
-        elif request.method != 'GET':
-            history = History(msg='Updated zone {0}'.format(zone_id.rstrip('.')),
-                              detail='',
-                              created_by=g.apikey.description,
-                              domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
-            history.add()
+            elif request.method != 'GET':
+                history = History(msg='Updated zone {0}'.format(zone_id.rstrip('.')),
+                                  detail='',
+                                  created_by=g.apikey.description,
+                                  domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
+                history.add()
     return resp.content, resp.status_code, resp.headers.items()
 
 @api_bp.route('/servers/<path:subpath>', methods=['GET', 'PUT'])
