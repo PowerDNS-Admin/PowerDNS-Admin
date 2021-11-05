@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% set active_page = "admin_history" %}
-{% import 'applied_change_macro.html' as applied_change_macro %}
 {% block title %}
 <title>History - {{ SITE_NAME }}</title>
 {% endblock %} {% block dashboard_stat %}
@@ -42,7 +41,9 @@
                                 <li id="activity_tab" class="active"><a href="#tabs-act"    data-toggle="tab">Search for All Activity</a></li>
                                 <li id="domain_tab"><a href="#tabs-domain"   data-toggle="tab">Search By Domain</a></li>
                                 <li id="account_tab"><a href="#tabs-account" data-toggle="tab">Search By Account</a></li>
+                                {% if current_user.role.name != 'User' %}
                                 <li id="user_auth_tab"><a href="#tabs-auth"  data-toggle="tab">Search for User Authentication</a></li>
+                                {% endif %}
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane" id="tabs-act">
@@ -171,30 +172,30 @@
 {% block extrascripts %}
 <script>
 
+    /* Don't let user search with a blank main field */
+    var canSearch=true;
+    
     $(document).ready(function () {
-
         $.ajax({
             url: "/admin/history_table",
             type: "get",
             success: function(response) {
+                console.log('Submission was successful.');
                 $("#table_from_ajax").html(response);
             },
             error: function(xhr) {
-                console.log("Error: Unable to fetch the data from the query")
+                console.log("Sending data: ", data, " failed")
             }
         });
         
-        
-        // Don't let user search with a blank main field
-        var canSearch=true;
         var main_field=""
         var minDate = $('#min');
         var maxDate = $('#max');
         var domain_name = $('#domain_name_filter');
-        var domain_changelog = $('domain_changelog_only_checkbox');
+        domain_changelog = $('domain_changelog_only_checkbox');
 
         // Show/hide filters
-        $('#domain_name_filter, #account_name_filter, #auth_name_filter').on('keyup change', function (e) {
+        $('#domain_name_filter, #account_name_filter, #auth_name_filter').on('keyup change', function (e) {            
             if ( $('#domain_name_filter').val() == "" && $('#account_name_filter').val() == "" && $('#auth_name_filter').val() == "")
                 canSearch=false;
             else
@@ -402,6 +403,7 @@
     autocomplete(document.getElementById("auth_name_filter"), all_usernames);
     autocomplete(document.getElementById("user_name_filter"), all_usernames);
 
+
     //  prevent multiple filter field at the same time
     $('#domain_tab').click(function() {
             $('#account_name_filter').val('');
@@ -463,16 +465,18 @@
                     type: "get",
                     data: form.serialize() + "&tzoffset=" + tzoffset,
                     success: function(response) {
+                        console.log('Submission was successful.');
                         $("#table_from_ajax").html(response);
+
                     },
                     error: function(xhr) {
-                        console.log("Error: Unable to fetch the data from the query")
+                        console.log("Sending data: ", data, " failed")
                     }
                 });
             }
         });
         
-</script>\
+</script>
 {% endblock %}
 {% block modals %}
 <!-- Clear History Confirmation Box -->

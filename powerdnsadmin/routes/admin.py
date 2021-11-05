@@ -1,5 +1,6 @@
 import json
 import datetime
+from datetime import timedelta
 import traceback
 import re
 from base64 import b64encode
@@ -896,7 +897,6 @@ def history():
 		if current_user.role.name in [ 'Administrator', 'Operator' ]:
 			# by default, send the lim latest, without a filter
 			base_query = History.query
-			# histories = []
 		else:
 			# if the user isn't an administrator or operator, 
 			# allow_user_view_history must be enabled to get here,
@@ -1078,133 +1078,133 @@ def history_table():    # ajax call data
 		doms = ""
 		accounts = ""
 		users = ""
+
+		# users cannot search for authentication
+		if user_name != None and current_user.role.name not in [ 'Administrator', 'Operator']:
+			histories = []
 		
-		if current_user.role.name in [ 'Administrator', 'Operator', 'User' ]:
-			# for admin only
-			# only one search filter can be executed at a time. (Domain, Account, Auth)
+		if domain_name != None:
 
-			if domain_name != None:
+			if not changelog_only:
+				histories = base_query \
+				.filter(
+					db.and_(
+						db.or_(
+							History.msg.like("%domain "+ domain_name) if domain_name != "*" else History.msg.like("%domain%"),
+							History.msg.like("%domain "+ domain_name + " access control") if domain_name != "*" else History.msg.like("%domain%access control")
+						),
+						History.created_on <= max_date  if max_date != None else True,
+						History.created_on >= min_date if min_date != None else True,
+						History.created_by == changed_by if changed_by != None else True
+					)
+				).order_by(History.created_on.desc()).limit(lim).all()
+			else:
+				# search for records changes only
+				histories = base_query \
+							.filter(
+								db.and_(
+									History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
+																			else History.msg.like("Apply record changes to domain%"),
+									History.created_on <= max_date  if max_date != None else True,
+									History.created_on >= min_date if min_date != None else True,
+									History.created_by == changed_by if changed_by != None else True
 
-				if not changelog_only:
-					histories = base_query \
+								)
+							).order_by(History.created_on.desc()) \
+							.limit(lim).all()
+		elif account_name != None:
+			histories = base_query \
+						.join(Domain, History.domain_id == Domain.id) \
+						.outerjoin(Account, Domain.account_id == Account.id) \
+						.filter(
+							db.and_(
+								Account.id == Domain.account_id,
+								account_name == Account.name if account_name != "*" else True,
+								History.created_on <= max_date if max_date != None else True,
+								History.created_on >= min_date if min_date != None else True,
+								History.created_by == changed_by if changed_by != None else True
+							)
+						).order_by(History.created_on.desc()) \
+						.limit(lim).all()
+		elif user_name != None and current_user.role.name in [ 'Administrator', 'Operator']: # only admins can see the user login-logouts
+
+			histories = History.query \
 					.filter(
 						db.and_(
 							db.or_(
-								History.msg.like("%domain "+ domain_name) if domain_name != "*" else History.msg.like("%domain%"),
-								History.msg.like("%domain "+ domain_name + " access control") if domain_name != "*" else History.msg.like("%domain%access control")
+								History.msg.like("User "+ user_name + " authentication%") if user_name != "*" else History.msg.like("User%authentication%"),
+								History.msg.like("User "+ user_name + " was not authorized%") if user_name != "*" else History.msg.like("User "+ user_name + " was not authorized%")
 							),
+							History.created_on <= max_date if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					) \
+					.order_by(History.created_on.desc()).limit(lim).all()
+			temp = []
+			for h in histories:
+				for method in auth_methods:
+					if method in h.detail:
+						temp.append(h)
+			histories = temp
+		elif (changed_by != None or max_date != None) and current_user.role.name in [ 'Administrator', 'Operator'] :   # select changed by and date filters only
+			histories = History.query \
+					.filter(
+						db.and_(
 							History.created_on <= max_date  if max_date != None else True,
 							History.created_on >= min_date if min_date != None else True,
 							History.created_by == changed_by if changed_by != None else True
 						)
-					).order_by(History.created_on.desc()).limit(lim).all()
-				else:
-					# search for records changes only
-					histories = base_query \
-								.filter(
-									db.and_(
-										History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
-																				else History.msg.like("Apply record changes to domain%"),
-										History.created_on <= max_date  if max_date != None else True,
-										History.created_on >= min_date if min_date != None else True,
-										History.created_by == changed_by if changed_by != None else True
-
-									)
-								).order_by(History.created_on.desc()) \
-								.limit(lim).all()
-			elif account_name != None:
-				histories = base_query \
-							.join(Domain, History.domain_id == Domain.id) \
-							.outerjoin(Account, Domain.account_id == Account.id) \
-							.filter(
-								db.and_(
-									Account.id == Domain.account_id,
-									account_name == Account.name if account_name != "*" else True,
-									History.created_on <= max_date if max_date != None else True,
-									History.created_on >= min_date if min_date != None else True,
-									History.created_by == changed_by if changed_by != None else True
-								)
-							).order_by(History.created_on.desc()) \
-							.limit(lim).all()
-			elif user_name != None and current_user.role.name in [ 'Administrator', 'Operator']: # only admins can see the user login-logouts
-
-				histories = History.query \
-						.filter(
-							db.and_(
-								db.or_(
-									History.msg.like("User "+ user_name + " authentication%") if user_name != "*" else History.msg.like("User%authentication%"),
-									History.msg.like("User "+ user_name + " was not authorized%") if user_name != "*" else History.msg.like("User "+ user_name + " was not authorized%")
-								),
-								History.created_on <= max_date if max_date != None else True,
-								History.created_on >= min_date if min_date != None else True,
-								History.created_by == changed_by if changed_by != None else True
-							)
-						) \
-						.order_by(History.created_on.desc()).limit(lim).all()
-				temp = []
-				for h in histories:
-					for method in auth_methods:
-						if method in h.detail:
-							temp.append(h)
-				histories = temp
-			elif (changed_by != None or max_date != None) and current_user.role.name in [ 'Administrator', 'Operator'] :   # select changed by and date filters only
-				histories = History.query \
-						.filter(
-							db.and_(
-								History.created_on <= max_date  if max_date != None else True,
-								History.created_on >= min_date if min_date != None else True,
-								History.created_by == changed_by if changed_by != None else True
-							)
-						) \
-						.order_by(History.created_on.desc()).limit(lim).all()
-			elif (changed_by != None or max_date != None): # special filtering for user because one user does not have access to log-ins logs
-				histories = base_query \
-						.filter(
+					) \
+					.order_by(History.created_on.desc()).limit(lim).all()
+		elif (changed_by != None or max_date != None): # special filtering for user because one user does not have access to log-ins logs
+			histories = base_query \
+					.filter(
+						db.and_(
+							History.created_on <= max_date if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					) \
+					.order_by(History.created_on.desc()).limit(lim).all()
+		elif max_date != None:  # if changed by == null and only date is applied
+			histories = base_query.filter(
 							db.and_(
 								History.created_on <= max_date if max_date != None else True,
 								History.created_on >= min_date if min_date != None else True,
-								History.created_by == changed_by if changed_by != None else True
 							)
-						) \
-						.order_by(History.created_on.desc()).limit(lim).all()
-			elif max_date != None:  # if changed by == null and only date is applied
-				histories = base_query.filter(
-								db.and_(
-									History.created_on <= max_date if max_date != None else True,
-									History.created_on >= min_date if min_date != None else True,
-								)
-				).order_by(History.created_on.desc()).limit(lim).all()
-			else:  # default view
-				if current_user.role.name in [ 'Administrator', 'Operator']:
-					histories = History.query.order_by(History.created_on.desc()).limit(lim).all()
-				else:
-					histories = db.session.query(History) \
-						.join(Domain, History.domain_id == Domain.id) \
-						.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-						.outerjoin(Account, Domain.account_id == Account.id) \
-						.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-						.order_by(History.created_on.desc()) \
-						.filter(
-						db.or_(
-							DomainUser.user_id == current_user.id,
-							AccountUser.user_id == current_user.id
-						)).limit(lim).all()
+			).order_by(History.created_on.desc()).limit(lim).all()
+		else:  # default view
+			if current_user.role.name in [ 'Administrator', 'Operator']:
+				histories = History.query.order_by(History.created_on.desc()).limit(lim).all()
+			else:
+				histories = db.session.query(History) \
+					.join(Domain, History.domain_id == Domain.id) \
+					.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+					.outerjoin(Account, Domain.account_id == Account.id) \
+					.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+					.order_by(History.created_on.desc()) \
+					.filter(
+					db.or_(
+						DomainUser.user_id == current_user.id,
+						AccountUser.user_id == current_user.id
+					)).limit(lim).all()
 
-			detailedHistories = convert_histories(histories)
+		detailedHistories = convert_histories(histories)
 
-			# Remove dates from previous or next day that were brought over
-			if tzoffset != None:
-				if min_date != None:
-					min_date_split = min_date.split()[0]
-				if max_date != None:
-					max_date_split = max_date.split()[0]
-				for i, history_rec in enumerate(detailedHistories):
-					local_date = str(from_utc_to_local(int(tzoffset), history_rec.history.created_on).date())
-					if (min_date != None and local_date == min_date_split) or (max_date != None and local_date == max_date_split):
-						detailedHistories[i] = None
+		# Remove dates from previous or next day that were brought over
+		if tzoffset != None:
+			if min_date != None:
+				min_date_split = min_date.split()[0]
+			if max_date != None:
+				max_date_split = max_date.split()[0]
+			for i, history_rec in enumerate(detailedHistories):
+				local_date = str(from_utc_to_local(int(tzoffset), history_rec.history.created_on).date())
+				if (min_date != None and local_date == min_date_split) or (max_date != None and local_date == max_date_split):
+					detailedHistories[i] = None
 
-			# Remove elements previously flagged as None
-			detailedHistories = [h for h in detailedHistories if h is not None]
+		# Remove elements previously flagged as None
+		detailedHistories = [h for h in detailedHistories if h is not None]
 
 		return render_template('admin_history_table.html', histories=detailedHistories, len_histories=len(detailedHistories), lim=lim)
 

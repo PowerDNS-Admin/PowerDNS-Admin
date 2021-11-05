@@ -103,7 +103,7 @@
                                     {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                                     <td width="6%">
                                         <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-flat btn-primary">&nbsp;&nbsp;
-                                                            <i class="fa fa-history" aria-hidden="true"></i>&nbsp;&nbsp;
+                                                            <i class="fa fa-history" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;
                                         </button>
                                     </td>
                                     {% endif %}
