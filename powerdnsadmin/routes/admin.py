@@ -102,17 +102,17 @@ def edit_user(user_username=None):
         fdata = request.form
 
         if create:
-            user_username = fdata['username']
+            user_username = fdata.get('username', '').strip()
 
         user = User(username=user_username,
-                    plain_text_password=fdata['password'],
-                    firstname=fdata['firstname'],
-                    lastname=fdata['lastname'],
-                    email=fdata['email'],
+                    plain_text_password=fdata.get('password', ''),
+                    firstname=fdata.get('firstname', '').strip(),
+                    lastname=fdata.get('lastname', '').strip(),
+                    email=fdata.get('email', '').strip(),
                     reload_info=False)
 
         if create:
-            if fdata['password'] == "":
+            if not fdata.get('password', ''):
                 return render_template('admin_edit_user.html',
                                        user=user,
                                        create=create,
