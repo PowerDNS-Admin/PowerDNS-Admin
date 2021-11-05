@@ -6,6 +6,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
   {% block title %}<title>{{ SITE_NAME }}</title>{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/style.css') }}">
+  <!-- jquery UI -->
+  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css"/>
   <!--  Get Google Fonts we like -->
   {% if OFFLINE_MODE %}
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/source_sans_pro.css') }}">

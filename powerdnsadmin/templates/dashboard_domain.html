@@ -40,12 +40,22 @@
       <button type="button" class="btn btn-flat btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
         Admin&nbsp;<i class="fa fa-cog"></i>
       </button>
+      <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
+        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
+        </i>
+      </button>
     </td>
     {% else %}
     <td width="6%">
       <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
         Manage&nbsp;<i class="fa fa-cog"></i>
       </button>
+      {% if allow_user_view_history %}
+      <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
+        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
+        </i>
+      </button>
+      {% endif %}
     </td>
-  {% endif %}
+  {% endif %}  
 {% endmacro %}
