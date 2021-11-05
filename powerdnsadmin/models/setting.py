@@ -268,16 +268,23 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in self.defaults:
-            result = self.query.filter(Setting.name == setting).first()
+ 
+            if setting.upper() in current_app.config:
+                result = current_app.config[setting.upper()]
+            else:
+                result = self.query.filter(Setting.name == setting).first()
+ 
             if result is not None:
-                return strtobool(result.value) if result.value in [
+                if hasattr(result,'value'):
+                    result = result.value 
+                return strtobool(result) if result in [
                     'True', 'False'
-                ] else result.value
+                ] else result
             else:
                 return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
-
+            
     def get_records_allow_to_edit(self):
         return list(
             set(self.get_forward_records_allow_to_edit() +

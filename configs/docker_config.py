@@ -5,6 +5,9 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
 
 legal_envvars = (
     'SECRET_KEY',
+    'OIDC_OAUTH_API_URL',
+    'OIDC_OAUTH_TOKEN_URL',
+    'OIDC_OAUTH_AUTHORIZE_URL',
     'BIND_ADDRESS',
     'PORT',
     'LOG_LEVEL',
