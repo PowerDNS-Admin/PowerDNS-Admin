@@ -90,6 +90,8 @@ def get_record_changes(del_rrest, add_rrest):
 # a HistoryRecordEntry represents a pair of add_rrest and del_rrest
 def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_num, record_name=None, record_type=None):
 
+    if history_entry.detail == None:
+        return
 
     detail_dict = json.loads(history_entry.detail.replace("'", '"'))
     if "add_rrests" not in detail_dict:
@@ -1082,8 +1084,7 @@ def history_table():    # ajax call data
 		# users cannot search for authentication
 		if user_name != None and current_user.role.name not in [ 'Administrator', 'Operator']:
 			histories = []
-		
-		if domain_name != None:
+		elif domain_name != None:
 
 			if not changelog_only:
 				histories = base_query \
@@ -1222,7 +1223,7 @@ def setting_basic():
             'pretty_ipv6_ptr', 'dnssec_admins_only',
             'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
-            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled', 'custom_css'
+            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled', 'custom_css', 'max_history_records'
         ]
 
         return render_template('admin_setting_basic.html', settings=settings)
