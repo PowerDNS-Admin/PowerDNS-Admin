@@ -46,9 +46,8 @@ jobs:
 
       - name: Build release image
         uses: docker/build-push-action@v2
-        if: ${{ github.event_name == 'create' && github.event.ref_type == 'tag' }}
         with:
           context: ./
           file: ./docker/Dockerfile
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
