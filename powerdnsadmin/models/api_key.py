@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 import bcrypt
 from flask import current_app
@@ -26,7 +26,7 @@ class ApiKey(db.Model):
         self.domains[:] = domains
         if not key:
             rand_key = ''.join(
-                random.choice(string.ascii_letters + string.digits)
+                secrets.choice(string.ascii_letters + string.digits)
                 for _ in range(15))
             self.plain_key = rand_key
             self.key = self.get_hashed_password(rand_key).decode('utf-8')
