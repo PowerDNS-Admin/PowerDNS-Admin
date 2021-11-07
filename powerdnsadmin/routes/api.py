@@ -30,7 +30,7 @@ from ..decorators import (
     apikey_is_admin, apikey_can_access_domain, api_role_can,
     apikey_or_basic_auth,
 )
-import random
+import secrets
 import string
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
@@ -687,7 +687,7 @@ def api_create_user():
 
     if not plain_text_password and not password:
         plain_text_password = ''.join(
-            random.choice(string.ascii_letters + string.digits)
+            secrets.choice(string.ascii_letters + string.digits)
             for _ in range(15))
     if not role_name and not role_id:
         role_name = 'User'
