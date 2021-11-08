@@ -843,7 +843,24 @@ class DetailedHistory():
 				</table>
 			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'])
 
+# convert a list of History objects into DetailedHistory objects
+def convert_histories(histories):
+	changes_set = dict()
+	detailedHistories = []
+	j = 0
+	for i in range(len(histories)):
+		# if histories[i].detail != None and 'add_rrests' in json.loads(histories[i].detail.replace("'", '"')):
+		if histories[i].detail != None and ('add_rrests' in json.loads(histories[i].detail.replace("'", '"')) or 'del_rrests' in json.loads(histories[i].detail.replace("'", '"'))):
+			extract_changelogs_from_a_history_entry(changes_set, histories[i], j)
+			if j in changes_set:
+				detailedHistories.append(DetailedHistory(histories[i], changes_set[j]))
+			else: # no changes were found
+				detailedHistories.append(DetailedHistory(histories[i], None))
+			j += 1
 
+		else:
+			detailedHistories.append(DetailedHistory(histories[i], None))
+	return detailedHistories
 
 @admin_bp.route('/history', methods=['GET', 'POST'])
 @login_required
