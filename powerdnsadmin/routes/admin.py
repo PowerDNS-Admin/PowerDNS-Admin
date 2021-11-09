@@ -738,6 +738,112 @@ def manage_account():
                 }), 400)
 
 
+class DetailedHistory():
+	def __init__(self, history, change_set):
+		self.history = history
+		self.detailed_msg = ""
+		self.change_set = change_set
+		
+		if history.detail == None:
+			self.detailed_msg = ""
+			# if 'Create account' in history.msg:
+			#     account = Account.query.filter(
+			#         Account.name == history.msg.split(' ')[2]).first()
+			#     self.detailed_msg = str(account.get_user())
+			# # WRONG, cannot do query afterwards, db may have changed
+			return
+
+		detail_dict = json.loads(history.detail.replace("'", '"'))
+		if 'domain_type' in detail_dict.keys():  # this is a domain creation
+			self.detailed_msg = """
+				<table class="table table-bordered table-striped"><tr><td>Domain type:</td><td>{0}</td></tr> <tr><td>Account:</td><td>{1}</td></tr></table>
+				""".format(detail_dict['domain_type'], 
+						Account.get_name_by_id(self=None, account_id=detail_dict['account_id']) if detail_dict['account_id'] != "0" else "None")
+		elif 'authenticator' in detail_dict.keys(): # this is a user authentication
+			self.detailed_msg = """
+			<table class="table table-bordered table-striped" style="width:565px;">
+			<thead>
+			<tr>
+			<th colspan="3" style="background: 
+			"""
+			
+			# Change table header background colour depending on auth success or failure
+			if detail_dict['success'] == 1:
+				self.detailed_msg+= """
+				rgba(68,157,68);"> <p style="color:white;">
+				User {0} authentication success
+				</p></th>
+				""".format(detail_dict['username'])
+
+			else:
+				self.detailed_msg+= """
+				rgba(201,48,44);"> <p style="color:white;">
+				User {0} authentication failure
+				</th>
+				""".format(detail_dict['username'])
+
+			self.detailed_msg+= """
+			</tr>
+			</thead>  
+			<tbody>
+			<tr>
+			<td>Authenticator Type:</td>
+			<td colspan="2">{0}</td>
+			</tr>
+			<tr>
+			<td>IP Address</td>
+			<td colspan="2">{1}</td>
+			</tr>
+			</tbody>
+			</table>
+			""".format(detail_dict['authenticator'], detail_dict['ip_address'])
+
+		elif 'add_rrests' in detail_dict.keys(): # this is a domain record change
+			# changes_set = []
+			self.detailed_msg = ""
+			# extract_changelogs_from_a_history_entry(changes_set, history, 0)
+		elif 'name' in detail_dict.keys() and 'template' in history.msg: # template creation
+			self.detailed_msg = """
+				<table class="table table-bordered table-striped"><tr><td>Template name:</td><td>{0}</td></tr> <tr><td>Description:</td><td>{1}</td></tr></table>
+				""".format(detail_dict['name'], detail_dict['description'])
+		elif 'Change domain' in history.msg and 'access control' in history.msg: # added or removed a user from a domain
+			self.detailed_msg = """
+			<table class="table table-bordered table-striped"><tr><td>Users with access to this domain</td><td>{0}</td></tr><tr><td>Number of users:</td><td>{1}</td><tr></table>
+				""".format(str(detail_dict['user_has_access']).replace("]","").replace("[", ""), len((detail_dict['user_has_access'])))
+		elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
+			self.detailed_msg = """
+				<table class="table table-bordered table-striped">
+					<tr><td>Key: </td><td>{0}</td></tr> 
+					<tr><td>Role:</td><td>{1}</td></tr>
+					<tr><td>Description:</td><td>{2}</td></tr>
+					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
+				</table>
+				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domain_acl']).replace("]","").replace("[", ""))
+		elif 'Update type for domain' in history.msg:
+			self.detailed_msg = """
+				<table class="table table-bordered table-striped">
+					<tr><td>Domain: </td><td>{0}</td></tr> 
+					<tr><td>Domain type:</td><td>{1}</td></tr>
+					<tr><td>Masters:</td><td>{2}</td></tr>
+				</table>
+			""".format(detail_dict['domain'], detail_dict['type'], str(detail_dict['masters']).replace("]","").replace("[", ""))
+		elif 'Delete API key' in history.msg:
+			self.detailed_msg = """
+				<table class="table table-bordered table-striped">
+					<tr><td>Key: </td><td>{0}</td></tr> 
+					<tr><td>Role:</td><td>{1}</td></tr>
+					<tr><td>Description:</td><td>{2}</td></tr>
+					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
+				</table>
+				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domains']).replace("]","").replace("[", ""))
+		elif 'reverse' in history.msg:
+			self.detailed_msg = """
+			<table class="table table-bordered table-striped">
+					<tr><td>Domain Type: </td><td>{0}</td></tr> 
+					<tr><td>Domain Master IPs:</td><td>{1}</td></tr>
+				</table>
+			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'])
+
 # convert a list of History objects into DetailedHistory objects
 def convert_histories(histories):
 	changes_set = dict()
