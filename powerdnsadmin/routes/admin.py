@@ -1062,13 +1062,13 @@ def history_table():    # ajax call data
 														and request.args.get('auth_oauth_only_checkbox') == None \
 														and request.args.get('auth_saml_only_checkbox') == None and request.args.get('auth_all_checkbox') == None):
 			auth_methods = []
-		elif request.args.get('auth_all_checkbox') == "on":
+		if request.args.get('auth_all_checkbox') == "on":
 			auth_methods.append("")
-		elif request.args.get('auth_local_only_checkbox') == "on":
+		if request.args.get('auth_local_only_checkbox') == "on":
 			auth_methods.append("LOCAL")
-		elif request.args.get('auth_oauth_only_checkbox') == "on":
+		if request.args.get('auth_oauth_only_checkbox') == "on":
 			auth_methods.append("OAuth")
-		elif request.args.get('auth_saml_only_checkbox') == "on":
+		if request.args.get('auth_saml_only_checkbox') == "on":
 			auth_methods.append("SAML")
 
 		if request.args.get('domain_changelog_only_checkbox') != None:
@@ -1157,6 +1157,7 @@ def history_table():    # ajax call data
 					) \
 					.order_by(History.created_on.desc()).limit(lim).all()
 			temp = []
+			print("Auth methods = ", auth_methods)
 			for h in histories:
 				for method in auth_methods:
 					if method in h.detail:
