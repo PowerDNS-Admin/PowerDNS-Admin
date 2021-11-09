@@ -1115,19 +1115,32 @@ def history_table():    # ajax call data
 							).order_by(History.created_on.desc()) \
 							.limit(lim).all()
 		elif account_name != None:
-			histories = base_query \
-						.join(Domain, History.domain_id == Domain.id) \
-						.outerjoin(Account, Domain.account_id == Account.id) \
-						.filter(
-							db.and_(
-								Account.id == Domain.account_id,
-								account_name == Account.name if account_name != "*" else True,
-								History.created_on <= max_date if max_date != None else True,
-								History.created_on >= min_date if min_date != None else True,
-								History.created_by == changed_by if changed_by != None else True
-							)
-						).order_by(History.created_on.desc()) \
-						.limit(lim).all()
+			if current_user.role.name in ['Administrator', 'Operator']:
+				histories = base_query \
+					.join(Domain, History.domain_id == Domain.id) \
+					.outerjoin(Account, Domain.account_id == Account.id) \
+					.filter(
+						db.and_(
+							Account.id == Domain.account_id,
+							account_name == Account.name if account_name != "*" else True,
+							History.created_on <= max_date if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					).order_by(History.created_on.desc()) \
+					.limit(lim).all()
+			else:
+				histories = base_query \
+							.filter(
+								db.and_(
+									Account.id == Domain.account_id,
+									account_name == Account.name if account_name != "*" else True,
+									History.created_on <= max_date if max_date != None else True,
+									History.created_on >= min_date if min_date != None else True,
+									History.created_by == changed_by if changed_by != None else True
+								)
+							).order_by(History.created_on.desc()) \
+							.limit(lim).all()
 		elif user_name != None and current_user.role.name in [ 'Administrator', 'Operator']: # only admins can see the user login-logouts
 
 			histories = History.query \
