@@ -259,17 +259,17 @@ def edit_user(user_username=None):
         fdata = request.form
 
         if create:
-            user_username = fdata['username']
+            user_username = fdata.get('username', '').strip()
 
         user = User(username=user_username,
-                    plain_text_password=fdata['password'],
-                    firstname=fdata['firstname'],
-                    lastname=fdata['lastname'],
-                    email=fdata['email'],
+                    plain_text_password=fdata.get('password', ''),
+                    firstname=fdata.get('firstname', '').strip(),
+                    lastname=fdata.get('lastname', '').strip(),
+                    email=fdata.get('email', '').strip(),
                     reload_info=False)
 
         if create:
-            if fdata['password'] == "":
+            if not fdata.get('password', ''):
                 return render_template('admin_edit_user.html',
                                        user=user,
                                        create=create,
@@ -1224,7 +1224,7 @@ def setting_basic():
             'pretty_ipv6_ptr', 'dnssec_admins_only',
             'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
-            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled', 'custom_css', 'max_history_records'
+            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
         ]
 
         return render_template('admin_setting_basic.html', settings=settings)
@@ -1566,6 +1566,8 @@ def setting_authentication():
                               request.form.get('oidc_oauth_token_url'))
                 Setting().set('oidc_oauth_authorize_url',
                               request.form.get('oidc_oauth_authorize_url'))
+                Setting().set('oidc_oauth_logout_url',
+                              request.form.get('oidc_oauth_logout_url'))
                 Setting().set('oidc_oauth_username',
                               request.form.get('oidc_oauth_username'))
                 Setting().set('oidc_oauth_firstname',

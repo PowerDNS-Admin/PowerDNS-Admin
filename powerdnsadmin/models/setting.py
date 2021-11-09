@@ -29,6 +29,7 @@ class Setting(db.Model):
         'allow_user_remove_domain': False,
         'allow_user_view_history': False,
         'bg_domain_updates': False,
+        'enable_api_rr_history': True,
         'site_name': 'PowerDNS-Admin',
         'site_url': 'http://localhost:9191',
         'session_timeout': 10,
@@ -268,16 +269,23 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in self.defaults:
-            result = self.query.filter(Setting.name == setting).first()
+ 
+            if setting.upper() in current_app.config:
+                result = current_app.config[setting.upper()]
+            else:
+                result = self.query.filter(Setting.name == setting).first()
+ 
             if result is not None:
-                return strtobool(result.value) if result.value in [
+                if hasattr(result,'value'):
+                    result = result.value 
+                return strtobool(result) if result in [
                     'True', 'False'
-                ] else result.value
+                ] else result
             else:
                 return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
-
+            
     def get_records_allow_to_edit(self):
         return list(
             set(self.get_forward_records_allow_to_edit() +
