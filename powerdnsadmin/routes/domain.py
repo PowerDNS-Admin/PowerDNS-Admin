@@ -189,6 +189,97 @@ def remove():
         return render_template('domain_remove.html',
                                domainss=domains)
 
+@domain_bp.route('/<path:domain_name>/changelog', methods=['GET'])
+@login_required
+@can_access_domain
+@history_access_required
+def changelog(domain_name):
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    # Query domain's rrsets from PowerDNS API
+    rrsets = Record().get_rrsets(domain.name)
+    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+
+    # API server might be down, misconfigured
+    if not rrsets and domain.type != 'Slave':
+        abort(500)
+
+    quick_edit = Setting().get('record_quick_edit')
+    records_allow_to_edit = Setting().get_records_allow_to_edit()
+    forward_records_allow_to_edit = Setting(
+    ).get_forward_records_allow_to_edit()
+    reverse_records_allow_to_edit = Setting(
+    ).get_reverse_records_allow_to_edit()
+    ttl_options = Setting().get_ttl_options()
+    records = []
+
+    # get all changelogs for this domain, in descening order
+    if current_user.role.name in [ 'Administrator', 'Operator' ]:
+        histories = History.query.filter(History.domain_id == domain.id).order_by(History.created_on.desc()).all()
+    else:
+        # if the user isn't an administrator or operator,
+        # allow_user_view_history must be enabled to get here,
+        # so include history for the domains for the user
+        histories = db.session.query(History) \
+            .join(Domain, History.domain_id == Domain.id) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .order_by(History.created_on.desc()) \
+            .filter(
+                db.and_(db.or_(
+                                DomainUser.user_id == current_user.id,
+                                AccountUser.user_id == current_user.id
+                        ),
+                        History.domain_id == domain.id
+                )
+            ).all()
+
+    if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
+        for r in rrsets:
+            if r['type'] in records_allow_to_edit:
+                r_name = r['name'].rstrip('.')
+
+                # If it is reverse zone and pretty_ipv6_ptr setting
+                # is enabled, we reformat the name for ipv6 records.
+                if Setting().get('pretty_ipv6_ptr') and r[
+                        'type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+                    r_name = dns.reversename.to_address(
+                        dns.name.from_text(r_name))
+
+                # Create the list of records in format that
+                # PDA jinja2 template can understand.
+                index = 0
+                for record in r['records']:
+                    if (len(r['comments'])>index):
+                        c=r['comments'][index]['content']
+                    else:
+                        c=''
+                    record_entry = RecordEntry(
+                        name=r_name,
+                        type=r['type'],
+                        status='Disabled' if record['disabled'] else 'Active',
+                        ttl=r['ttl'],
+                        data=record['content'],
+                        comment=c,
+                        is_allowed_edit=True)
+                    index += 1
+                    records.append(record_entry)
+    else:
+        # Unsupported version
+        abort(500)
+
+    changes_set = dict()
+    for i in range(len(histories)):
+        extract_changelogs_from_a_history_entry(changes_set, histories[i], i)
+        if i in changes_set and len(changes_set[i]) == 0: # if empty, then remove the key
+            changes_set.pop(i)
+    return render_template('domain_changelog.html', domain=domain, allHistoryChanges=changes_set)
+
 """
 Returns a changelog for a specific pair of (record_name, record_type)
 """
