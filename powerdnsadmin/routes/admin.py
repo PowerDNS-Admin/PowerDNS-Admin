@@ -754,7 +754,7 @@ class DetailedHistory():
 			return
 
 		detail_dict = json.loads(history.detail.replace("'", '"'))
-		if 'domain_type' in detail_dict.keys():  # this is a domain creation
+		if 'domain_type' in detail_dict.keys() and 'account_id' in detail_dict.keys():  # this is a domain creation
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped"><tr><td>Domain type:</td><td>{0}</td></tr> <tr><td>Account:</td><td>{1}</td></tr></table>
 				""".format(detail_dict['domain_type'], 
