@@ -1147,8 +1147,8 @@ def history_table():    # ajax call data
 					.filter(
 						db.and_(
 							db.or_(
-								History.msg.like("User "+ user_name + " authentication%") if user_name != "*" else History.msg.like("User%authentication%"),
-								History.msg.like("User "+ user_name + " was not authorized%") if user_name != "*" else History.msg.like("User "+ user_name + " was not authorized%")
+								History.msg.like("User "+ user_name + " authentication%") if user_name != "*" and user_name != None else History.msg.like("%authentication%"),
+								History.msg.like("User "+ user_name + " was not authorized%") if user_name != "*" and user_name != None else History.msg.like("User%was not authorized%")
 							),
 							History.created_on <= max_date if max_date != None else True,
 							History.created_on >= min_date if min_date != None else True,
@@ -1161,6 +1161,7 @@ def history_table():    # ajax call data
 				for method in auth_methods:
 					if method in h.detail:
 						temp.append(h)
+						break
 			histories = temp
 		elif (changed_by != None or max_date != None) and current_user.role.name in [ 'Administrator', 'Operator'] :   # select changed by and date filters only
 			histories = History.query \
