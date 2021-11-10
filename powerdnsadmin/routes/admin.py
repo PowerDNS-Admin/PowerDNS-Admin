@@ -1157,7 +1157,6 @@ def history_table():    # ajax call data
 					) \
 					.order_by(History.created_on.desc()).limit(lim).all()
 			temp = []
-			print("Auth methods = ", auth_methods)
 			for h in histories:
 				for method in auth_methods:
 					if method in h.detail:
