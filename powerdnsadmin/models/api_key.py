@@ -87,6 +87,15 @@ class ApiKey(db.Model):
         else:
             pw = self.plain_text_password
 
+        # The salt value is currently re-used here intentionally because
+        # the implementation relies on just the API key's value itself
+        # for database lookup: ApiKey.is_validate() would have no way of
+        # discerning whether any given key is valid if bcrypt.gensalt()
+        # was used. As far as is known, this is fine as long as the
+        # value of new API keys is randomly generated in a
+        # cryptographically secure fashion, as this then makes
+        # expendable as an exception the otherwise vital protection of
+        # proper salting as provided by bcrypt.gensalt().
         return bcrypt.hashpw(pw.encode('utf-8'),
                              current_app.config.get('SALT').encode('utf-8'))
 
