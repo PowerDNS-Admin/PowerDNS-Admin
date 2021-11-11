@@ -42,7 +42,6 @@
       </button>
       <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
         Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-        </i>
       </button>
     </td>
     {% else %}
@@ -53,7 +52,6 @@
       {% if allow_user_view_history %}
       <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
         Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-        </i>
       </button>
       {% endif %}
     </td>
