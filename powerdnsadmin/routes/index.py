@@ -647,12 +647,12 @@ def register():
         if request.method == 'GET':
             return render_template('register.html')
         elif request.method == 'POST':
-            username = request.form['username']
-            password = request.form['password']
-            firstname = request.form.get('firstname')
-            lastname = request.form.get('lastname')
-            email = request.form.get('email')
-            rpassword = request.form.get('rpassword')
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            firstname = request.form.get('firstname', '').strip()
+            lastname = request.form.get('lastname', '').strip()
+            email = request.form.get('email', '').strip()
+            rpassword = request.form.get('rpassword', '')
 
             if not username or not password or not email:
                 return render_template(
