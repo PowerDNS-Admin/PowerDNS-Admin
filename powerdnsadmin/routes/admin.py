@@ -1,6 +1,5 @@
 import json
 import datetime
-from datetime import timedelta
 import traceback
 import re
 from base64 import b64encode
@@ -90,7 +89,7 @@ def get_record_changes(del_rrest, add_rrest):
 # a HistoryRecordEntry represents a pair of add_rrest and del_rrest
 def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_num, record_name=None, record_type=None):
 
-    if history_entry.detail == None:
+    if history_entry.detail is None:
         return
 
     detail_dict = json.loads(history_entry.detail.replace("'", '"'))
@@ -194,8 +193,10 @@ class HistoryRecordEntry:
 def before_request():
     # Manage session timeout
     session.permanent = True
+    # current_app.permanent_session_lifetime = datetime.timedelta(
+    #     minutes=int(Setting().get('session_timeout')))
     current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
+    minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
 
@@ -744,7 +745,7 @@ class DetailedHistory():
 		self.detailed_msg = ""
 		self.change_set = change_set
 		
-		if history.detail == None:
+		if history.detail is None:
 			self.detailed_msg = ""
 			# if 'Create account' in history.msg:
 			#     account = Account.query.filter(
@@ -893,28 +894,8 @@ def history():
 					'msg': 'Can not remove histories.'
 				}), 500)
 
-	detailedHistories = []
-	lim = int(Setting().get('max_history_records'))  # max num of records
 
-	if request.method == 'GET':
-		if current_user.role.name in [ 'Administrator', 'Operator' ]:
-			# by default, send the lim latest, without a filter
-			base_query = History.query
-		else:
-			# if the user isn't an administrator or operator, 
-			# allow_user_view_history must be enabled to get here,
-			# so include history for the domains for the user
-			base_query = db.session.query(History) \
-				.join(Domain, History.domain_id == Domain.id) \
-				.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-				.outerjoin(Account, Domain.account_id == Account.id) \
-				.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-				.filter(
-				db.or_(
-					DomainUser.user_id == current_user.id,
-					AccountUser.user_id == current_user.id
-				))
-
+	if request.method == 'GET': 
 		doms = accounts = users = ""
 		if current_user.role.name in [ 'Administrator', 'Operator']:
 			all_domain_names = Domain.query.all()
@@ -983,7 +964,7 @@ def history():
 def from_utc_to_local(local_offset, timeframe):
 	offset = str(local_offset *(-1))
 	date_split = str(timeframe).split(".")[0]
-	date_converted = datetime.datetime.strptime(date_split, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=int(offset))
+	date_converted = datetime.datetime.strptime(date_split, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(minutes=int(offset))
 	return date_converted
 
 @admin_bp.route('/history_table', methods=['GET', 'POST'])
@@ -1047,10 +1028,10 @@ def history_table():    # ajax call data
 
 		min_date = request.args.get('min') if request.args.get('min') != None and len( request.args.get('min')) != 0 else None
 		if min_date != None:    # get 1 day earlier, to check for timezone errors
-			min_date = str(datetime.datetime.strptime(min_date, '%Y-%m-%d') - timedelta(days=1))
+			min_date = str(datetime.datetime.strptime(min_date, '%Y-%m-%d') - datetime.timedelta(days=1))
 		max_date = request.args.get('max') if request.args.get('max') != None and len( request.args.get('max')) != 0 else None
 		if max_date != None:    # get 1 day later, to check for timezone errors
-			max_date = str(datetime.datetime.strptime(max_date, '%Y-%m-%d') + timedelta(days=1))
+			max_date = str(datetime.datetime.strptime(max_date, '%Y-%m-%d') + datetime.timedelta(days=1))
 		tzoffset = request.args.get('tzoffset') if request.args.get('tzoffset') != None and len(request.args.get('tzoffset')) != 0 else None
 		changed_by = request.args.get('user_name_filter') if  request.args.get('user_name_filter') != None \
 															and len(request.args.get('user_name_filter')) != 0 else None
@@ -1058,9 +1039,9 @@ def history_table():    # ajax call data
 			Auth methods: LOCAL, Github OAuth, Azure OAuth, SAML, OIDC OAuth, Google OAuth
 		"""
 		auth_methods = []
-		if (request.args.get('auth_local_only_checkbox') == None \
-														and request.args.get('auth_oauth_only_checkbox') == None \
-														and request.args.get('auth_saml_only_checkbox') == None and request.args.get('auth_all_checkbox') == None):
+		if (request.args.get('auth_local_only_checkbox') is None \
+														and request.args.get('auth_oauth_only_checkbox') is None \
+														and request.args.get('auth_saml_only_checkbox') is None and request.args.get('auth_all_checkbox') is None):
 			auth_methods = []
 		if request.args.get('auth_all_checkbox') == "on":
 			auth_methods.append("")
@@ -1078,9 +1059,6 @@ def history_table():    # ajax call data
 
 
 
-		doms = ""
-		accounts = ""
-		users = ""
 
 		# users cannot search for authentication
 		if user_name != None and current_user.role.name not in [ 'Administrator', 'Operator']:

@@ -24,7 +24,7 @@ from ..models.domain_setting import DomainSetting
 from ..models.base import db
 from ..models.domain_user import DomainUser
 from ..models.account_user import AccountUser
-from .admin import extract_changelogs_from_a_history_entry, HistoryRecordEntry, get_record_changes
+from .admin import extract_changelogs_from_a_history_entry
 from ..decorators import history_access_required
 domain_bp = Blueprint('domain',
                       __name__,
@@ -208,13 +208,7 @@ def changelog(domain_name):
     if not rrsets and domain.type != 'Slave':
         abort(500)
 
-    quick_edit = Setting().get('record_quick_edit')
     records_allow_to_edit = Setting().get_records_allow_to_edit()
-    forward_records_allow_to_edit = Setting(
-    ).get_forward_records_allow_to_edit()
-    reverse_records_allow_to_edit = Setting(
-    ).get_reverse_records_allow_to_edit()
-    ttl_options = Setting().get_ttl_options()
     records = []
 
     # get all changelogs for this domain, in descening order
@@ -301,15 +295,6 @@ def record_changelog(domain_name, record_name, record_type):
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
         abort(500)
-
-    quick_edit = Setting().get('record_quick_edit')
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
-    forward_records_allow_to_edit = Setting(
-    ).get_forward_records_allow_to_edit()
-    reverse_records_allow_to_edit = Setting(
-    ).get_reverse_records_allow_to_edit()
-    ttl_options = Setting().get_ttl_options()
-    records = []
 
     # get all changelogs for this domain, in descening order
     if current_user.role.name in [ 'Administrator', 'Operator' ]:

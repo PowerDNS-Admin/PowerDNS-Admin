@@ -189,10 +189,8 @@
             }
         });
         
-        var main_field=""
         var minDate = $('#min');
         var maxDate = $('#max');
-        var domain_name = $('#domain_name_filter');
         domain_changelog = $('domain_changelog_only_checkbox');
 
         // Show/hide filters
@@ -274,12 +272,12 @@
         $('#auth_all_checkbox').iCheck('uncheck');
     });
 
-    $(document.body).on('click', '.history-info-button', function () {
-        var modal = $("#modal_history_info");
-        var info = $(this).val();
-        $('#modal-info-content').html(info);
-        modal.modal('show');
-    });
+    // $(document.body).on('click', '.history-info-button', function () {
+    //     var modal = $("#modal_history_info");
+    //     var info = $.find(this).val();
+    //     $('#modal-info-content').html(info);
+    //     modal.modal('show');
+    // });
     
     $(document.body).on("click", ".button-clearf", function (e) {
         e.preventDefault();
