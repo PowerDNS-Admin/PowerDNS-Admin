@@ -8,6 +8,7 @@ from .account_user import AccountUser
 from .server import Server
 from .history import History
 from .api_key import ApiKey
+from .api_key_account import ApiKeyAccount
 from .setting import Setting
 from .domain import Domain
 from .domain_setting import DomainSetting

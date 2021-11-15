@@ -1598,7 +1598,7 @@ definitions:
 
   PDNSAdminZones:
     title: PDNSAdminZones
-    description: A ApiKey that can be used to manage domains through API
+    description: 'A list of domains'
     type: array
     items:
       properties:
@@ -1624,7 +1624,7 @@ definitions:
 
   ApiKey:
     title: ApiKey
-    description: A ApiKey that can be used to manage domains through API
+    description: 'An ApiKey that can be used to manage domains through API'
     properties:
       id:
         type: integer
@@ -1641,6 +1641,23 @@ definitions:
         description: 'domains to which this apikey has access'
       role:
         $ref: '#/definitions/PDNSAdminRole'
+      description:
+        type: string
+        description: 'Some user defined description'
+      accounts:
+        type: array
+        description: 'A list of accounts bound to this ApiKey'
+        items:
+          $ref: '#/definitions/AccountSummary'
+
+  ApiKeySummary:
+    title: ApiKeySummary
+    description: Summary of an ApiKey
+    properties:
+      id:
+        type: integer
+        description: 'The ID for this key, used in the ApiKey URL endpoint.'
+        readOnly: true
       description:
         type: string
         description: 'Some user defined description'
@@ -1751,6 +1768,12 @@ definitions:
         type: string
         description: The email address of the contact for this account
         readOnly: false
+      apikeys:
+        type: array
+        description: A list of API Keys bound to this account
+        readOnly: true
+        items:
+          $ref: '#/definitions/ApiKeySummary'
 
   AccountSummary:
     title: AccountSummry
@@ -1764,6 +1787,12 @@ definitions:
         type: string
         description: The name for this account (unique, immutable)
         readOnly: false
+      domains:
+        type: array
+        description: The list of domains owned by this account
+        readOnly: true
+        items:
+          $ref: '#/definitions/PDNSAdminZones'
 
   ConfigSetting:
     title: ConfigSetting

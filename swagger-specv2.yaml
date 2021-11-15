@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: "0.0.13"
+  version: "0.0.14"
   title: PowerDNS Admin Authoritative HTTP API
   license:
     name: MIT
@@ -1041,6 +1041,10 @@ paths:
           description: Unprocessable Entry, the User data provided has issues
           schema:
             $ref: '#/definitions/Error'
+        '409':
+          description: Duplicate Entry, either the Name or the Email is already in use
+          schema:
+            $ref: '#/definitions/Error'
         '500':
           description: Internal Server Error. There was a problem creating the user
           schema:
@@ -1206,6 +1210,10 @@ paths:
           description: Unprocessable Entry, the Account data provided has issues.
           schema:
             $ref: '#/definitions/Error'
+        '409':
+          description: Duplicate Entry, the Name is already in use
+          schema:
+            $ref: '#/definitions/Error'
         '500':
           description: Internal Server Error. There was a problem creating the account
           schema:
@@ -1299,7 +1307,6 @@ paths:
           description: Internal Server Error. Contains error message
           schema:
             $ref: '#/definitions/Error'
-
   '/pdnsadmin/accounts/{account_id}/users':
     parameters:
       - name: account_id
@@ -1591,7 +1598,7 @@ definitions:
 
   PDNSAdminZones:
     title: PDNSAdminZones
-    description: A ApiKey that can be used to manage domains through API
+    description: 'A list of domains'
     type: array
     items:
       properties:
@@ -1617,7 +1624,7 @@ definitions:
 
   ApiKey:
     title: ApiKey
-    description: A ApiKey that can be used to manage domains through API
+    description: 'An ApiKey that can be used to manage domains through API'
     properties:
       id:
         type: integer
@@ -1634,6 +1641,23 @@ definitions:
         description: 'domains to which this apikey has access'
       role:
         $ref: '#/definitions/PDNSAdminRole'
+      description:
+        type: string
+        description: 'Some user defined description'
+      accounts:
+        type: array
+        description: 'A list of accounts bound to this ApiKey'
+        items:
+          $ref: '#/definitions/AccountSummary'
+
+  ApiKeySummary:
+    title: ApiKeySummary
+    description: Summary of an ApiKey
+    properties:
+      id:
+        type: integer
+        description: 'The ID for this key, used in the ApiKey URL endpoint.'
+        readOnly: true
       description:
         type: string
         description: 'Some user defined description'
@@ -1744,6 +1768,12 @@ definitions:
         type: string
         description: The email address of the contact for this account
         readOnly: false
+      apikeys:
+        type: array
+        description: A list of API Keys bound to this account
+        readOnly: true
+        items:
+          $ref: '#/definitions/ApiKeySummary'
 
   AccountSummary:
     title: AccountSummry
@@ -1757,6 +1787,12 @@ definitions:
         type: string
         description: The name for this account (unique, immutable)
         readOnly: false
+      domains:
+        type: array
+        description: The list of domains owned by this account
+        readOnly: true
+        items:
+          $ref: '#/definitions/PDNSAdminZones'
 
   ConfigSetting:
     title: ConfigSetting

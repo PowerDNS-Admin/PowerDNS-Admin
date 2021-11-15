@@ -50,7 +50,23 @@
                         </div>
                     </div>
                     <div class="box-header with-border">
-                        <h3 class="box-title">Access Control</h3>
+                      <h3 class="box-title">Accounts Access Control</h3>
+                  </div>
+                    <div class="box-body">
+                      <p>This key will be linked to the accounts on the right,</p>
+                      <p>thus granting access to domains owned by the selected accounts.</p>
+                      <p>Click on accounts to move between the columns.</p>
+                      <div class="form-group col-xs-2">
+                          <select multiple="multiple" class="form-control" id="key_multi_account"
+                              name="key_multi_account">
+                              {% for account in accounts %}
+                                  <option {% if key and account in key.accounts %}selected{% endif %} value="{{ account.name }}">{{ account.name }}</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                  </div>
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Domain Access Control</h3>
                     </div>
                     <div class="box-body">
                         <p>This key will have acess to the domains on the right.</p>
@@ -82,7 +98,7 @@
                     <p>Fill in all the fields in the form to the left.</p>
                     <p><strong>Role</strong> The role of the key.</p>
                     <p><strong>Description</strong> The key description.</p>
-                    <p><strong>Access Control</strong> The domains which the key has access to.</p>
+                    <p><strong>Access Control</strong> The domains or accounts which the key has access to.</p>
                 </div>
             </div>
         </div>
@@ -94,6 +110,41 @@
     $("#key_multi_domain").multiSelect({
         selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Domain Name'>",
         selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Domain Name'>",
+        afterInit: function (ms) {
+            var that = this,
+                $selectableSearch = that.$selectableUl.prev(),
+                $selectionSearch = that.$selectionUl.prev(),
+                selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+                selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+
+            that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+                .on('keydown', function (e) {
+                    if (e.which === 40) {
+                        that.$selectableUl.focus();
+                        return false;
+                    }
+                });
+
+            that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+                .on('keydown', function (e) {
+                    if (e.which == 40) {
+                        that.$selectionUl.focus();
+                        return false;
+                    }
+                });
+        },
+        afterSelect: function () {
+            this.qs1.cache();
+            this.qs2.cache();
+        },
+        afterDeselect: function () {
+            this.qs1.cache();
+            this.qs2.cache();
+        }
+    });
+    $("#key_multi_account").multiSelect({
+        selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Account Name'>",
+        selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Account Name'>",
         afterInit: function (ms) {
             var that = this,
                 $selectableSearch = that.$selectableUl.prev(),
