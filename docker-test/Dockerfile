@@ -1,10 +1,13 @@
-FROM debian:stretch-slim
+FROM debian:buster-slim
 LABEL maintainer="k@ndk.name"
 
 ENV LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
 
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends apt-transport-https locales locales-all python3-pip python3-setuptools python3-dev curl libsasl2-dev libldap2-dev libssl-dev libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev build-essential libmariadb-dev-compat \
+    && apt-get install -y --no-install-recommends apt-transport-https locales locales-all \
+    python3-pip python3-setuptools python3-dev curl libsasl2-dev libldap2-dev libssl-dev \
+    libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev build-essential libmariadb-dev-compat \
+    pkg-config  libxmlsec1-openssl \
     && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \

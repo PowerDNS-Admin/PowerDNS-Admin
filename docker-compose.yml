@@ -2,8 +2,11 @@ version: "3"
 
 services:
   app:
-    image: ngoduykhanh/powerdns-admin:latest
-    container_name: powerdns_admin
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: powerdns-admin-dev
+    container_name: powerdns_admin_dev
     ports:
       - "9191:80"
     logging:
@@ -11,8 +14,36 @@ services:
       options:
         max-size: 50m
     environment:
-      - SQLALCHEMY_DATABASE_URI=mysql://pda:changeme@host.docker.internal/pda
+      #- SQLALCHEMY_DATABASE_URI=mysql://pda:changeme@host.docker.internal/pda
       - GUNICORN_TIMEOUT=60
       - GUNICORN_WORKERS=2
       - GUNICORN_LOGLEVEL=DEBUG
       - OFFLINE_MODE=False # True for offline, False for external resources
+    volumes:
+      - $PWD/:/develop
+      - data:/data
+
+    networks:
+      - default
+    env_file:
+      - ./docker-test/env
+    depends_on:
+      - pdns-server
+
+  pdns-server:
+    build:
+      context: .
+      dockerfile: docker-test/Dockerfile.pdns
+    image: pdns-server-test
+    container_name: powerdns_admin_dev_pdns
+    ports:
+      - "5053:53"
+      - "5053:53/udp"
+      - "8081:8081"
+    networks:
+      - default
+    env_file:
+      - ./docker-test/env
+
+volumes:
+  data:
