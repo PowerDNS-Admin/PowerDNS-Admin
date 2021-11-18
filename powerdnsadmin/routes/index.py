@@ -331,7 +331,7 @@ def login():
                         # check if user has permissions
                         account_users = account.get_user()
                         current_app.logger.info('Group: {} Users: {}'.format(
-                            group_name, 
+                            group_name,
                             account_users))
                         if user.id in account_users:
                             current_app.logger.info('User id {} is already in account {}'.format(
@@ -351,7 +351,7 @@ def login():
                         account.mail = ''
                         account.create_account()
                         history = History(msg='Create account {0}'.format(
-                            account.name), 
+                            account.name),
                             created_by='System')
                         history.add()
 
@@ -485,13 +485,13 @@ def login():
                                        saml_enabled=SAML_ENABLED,
                                        error='Token required')
 
-        if Setting().get('autoprovisioning') and auth_method!='LOCAL': 
+        if Setting().get('autoprovisioning') and auth_method!='LOCAL':
             urn_value=Setting().get('urn_value')
             Entitlements=user.read_entitlements(Setting().get('autoprovisioning_attribute'))
             if len(Entitlements)==0 and Setting().get('purge'):
                 user.set_role("User")
                 user.revoke_privilege(True)
-                
+
             elif len(Entitlements)!=0:
                 if checkForPDAEntries(Entitlements, urn_value):
                     user.updateUser(Entitlements)
@@ -1093,7 +1093,7 @@ def create_group_to_account_mapping():
 
 def handle_account(account_name, account_description=""):
     clean_name = ''.join(c for c in account_name.lower()
-                         if c in "abcdefghijklmnopqrstuvwxyz0123456789")
+                         if c in "abcdefghijklmnopqrstuvwxyz0123456789_-")
     if len(clean_name) > Account.name.type.length:
         current_app.logger.error(
             "Account name {0} too long. Truncated.".format(clean_name))

@@ -35,7 +35,7 @@ class Account(db.Model):
 
         if self.name is not None:
             self.name = ''.join(c for c in self.name.lower()
-                                if c in "abcdefghijklmnopqrstuvwxyz0123456789")
+                                if c in "abcdefghijklmnopqrstuvwxyz0123456789_-")
 
     def __repr__(self):
         return '<Account {0}r>'.format(self.name)
