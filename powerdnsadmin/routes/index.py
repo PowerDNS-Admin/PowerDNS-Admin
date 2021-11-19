@@ -4,6 +4,7 @@ import json
 import traceback
 import datetime
 import ipaddress
+import base64
 from distutils.util import strtobool
 from yaml import Loader, load
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
@@ -11,6 +12,7 @@ from flask import Blueprint, render_template, make_response, url_for, current_ap
 from flask_login import login_user, logout_user, login_required, current_user
 
 from .base import login_manager
+from .user import qrcode
 from ..lib import utils
 from ..decorators import dyndns_login_required
 from ..models.base import db
@@ -652,7 +654,18 @@ def register():
                 if result and result['status']:
                     if Setting().get('verify_user_email'):
                         send_account_verification(email)
-                    return redirect(url_for('index.login'))
+                    # if Setting to enable OTP on first login is enabaled,
+                    # and OTP field is enabled,
+                    # login user, enable OTP, get QR code,
+                    # logout user and display QR code.
+                    if Setting().get('otp_first_login') and Setting().get('otp_field_enabled'):
+                        login_user(user)
+                        user.update_profile(enable_otp=True)
+                        encoded_img_data = base64.b64encode(qrcode()[0])
+                        logout_user()
+                        return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user)
+                    else:
+                        return redirect(url_for('index.login'))
                 else:
                     return render_template('register.html',
                                            error=result['msg'])

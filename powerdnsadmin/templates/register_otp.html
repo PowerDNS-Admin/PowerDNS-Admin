@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Register - {{ SITE_NAME }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {% assets "css_login" -%}
+    <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
+  </head>
+
+  <body class="hold-transition register-page">
+    <div class="register-box">
+      <div class="register-logo">
+        <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
+      </div>
+      <div class="register-box-body">
+        Welcome, {{user.firstname}}! <br />
+        You will need a Token on login. Your QR code is:
+        <div id="token_information">
+          <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{qrcode_image}}"></p>
+          You can use Google Authenticator (<a target="_blank"
+              href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android</a>
+          - <a target="_blank"
+              href="https://apps.apple.com/us/app/google-authenticator/id388497605">iOS</a>)
+          <br />
+          or FreeOTP (<a target="_blank"
+              href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en">Android</a>
+          - <a target="_blank"
+              href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>)
+          on your smartphone <br /> to scan the QR code.
+          <br /> <br />
+          <font color="red"><strong><i>Make sure only you can see this QR Code
+          <br />  and nobody can capture it.</i></strong></font>
+        </div>
+        </br>
+        <button type="button" class="btn btn-flat btn-primary"
+          onclick="window.location.href='{{ url_for('index.index') }}'">
+          Continue
+        </button>
+      </div>
+    </div>
+  </body>
+</html>
