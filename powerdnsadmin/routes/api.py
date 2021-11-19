@@ -773,7 +773,7 @@ def api_list_accounts(account_name):
         raise NotEnoughPrivileges(message=msg)
     else:
         if account_name is None:
-            account_list = [] or Account.query.all()
+            account_list = [] or Account.query.order_by(Account.name).all()
             return jsonify(account_schema.dump(account_list)), 200
         else:
             account = Account.query.filter(
