@@ -22,7 +22,11 @@
         Welcome, {{user.firstname}}! <br />
         You will need a Token on login. Your QR code is:
         <div id="token_information">
+          {% if qrcode_image == None %}
+          <p><img id="qrcode" src="{{ url_for('user.qrcode') }}"></p>
+          {% else %}
           <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{qrcode_image}}"></p>
+          {% endif %}
           You can use Google Authenticator (<a target="_blank"
               href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android</a>
           - <a target="_blank"
