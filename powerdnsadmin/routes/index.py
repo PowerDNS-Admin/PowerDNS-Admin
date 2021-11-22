@@ -172,7 +172,7 @@ def login():
         login_user(user, remember=False)
         session['authentication_type'] = 'OAuth'
         signin_history(user.username, 'Google OAuth', True)
-        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret == None):
+        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret is None):
             user.update_profile(enable_otp=True)        # if Setting for OTP on first login is enabled, and OTP field is also enabled, but user
             return render_template('register_otp.html', qrcode_image=None, user=user) # isn't using it yet, enable OTP, get QR code and display it.
         return redirect(url_for('index.index'))
@@ -202,7 +202,7 @@ def login():
         session['authentication_type'] = 'OAuth'
         login_user(user, remember=False)
         signin_history(user.username, 'Github OAuth', True)
-        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret == None):
+        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret is None):
             user.update_profile(enable_otp=True)        # if Setting for OTP on first login is enabled, and OTP field is also enabled, but user
             return render_template('register_otp.html', qrcode_image=None, user=user) # isn't using it yet, enable OTP, get QR code and display it.
         return redirect(url_for('index.index'))
@@ -377,7 +377,7 @@ def login():
 
         login_user(user, remember=False)
         signin_history(user.username, 'Azure OAuth', True)
-        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret == None):
+        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret is None):
             user.update_profile(enable_otp=True)        # if Setting for OTP on first login is enabled, and OTP field is also enabled, but user
             return render_template('register_otp.html', qrcode_image=None, user=user) # isn't using it yet, enable OTP, get QR code and display it.
         return redirect(url_for('index.index'))
@@ -446,7 +446,7 @@ def login():
         session['authentication_type'] = 'OAuth'
         login_user(user, remember=False)
         signin_history(user.username, 'OIDC OAuth', True)
-        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret == None):
+        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret is None):
             user.update_profile(enable_otp=True)        # if Setting for OTP on first login is enabled, and OTP field is also enabled, but user
             return render_template('register_otp.html', qrcode_image=None, user=user) # isn't using it yet, enable OTP, get QR code and display it.
         return redirect(url_for('index.index'))
@@ -528,7 +528,7 @@ def login():
 
         login_user(user, remember=remember_me)
         signin_history(user.username, 'LOCAL', True)
-        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret == None):
+        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret is None):
             user.update_profile(enable_otp=True)        # if Setting for OTP on first login is enabled, and OTP field is also enabled, but user
             return render_template('register_otp.html', qrcode_image=None, user=user) # isn't using it yet, enable OTP, get QR code and display it.
         return redirect(session.get('next', url_for('index.index')))
@@ -1063,7 +1063,7 @@ def saml_authorized():
         session['authentication_type'] = 'SAML'
         login_user(user, remember=False)
         signin_history(user.username, 'SAML', True)
-        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret == None):
+        if Setting().get('otp_first_login') and Setting().get('otp_field_enabled') and (user.otp_secret == "" or user.otp_secret is None):
             user.update_profile(enable_otp=True)        # if Setting for OTP on first login is enabled, and OTP field is also enabled, but user
             return render_template('register_otp.html', qrcode_image=None, user=user) # isn't using it yet, enable OTP, get QR code and display it.
         return redirect(url_for('index.login'))
