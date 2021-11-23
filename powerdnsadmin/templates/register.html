@@ -36,34 +36,34 @@
       <form action="{{ url_for('index.register') }}" method="post" data-toggle="validator">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="First Name" name="firstname"
+          <input type="text" class="form-control" placeholder="First Name" id="firstname" name="firstname"
             data-error="Please input your first name" required>
           <span class="glyphicon glyphicon-user form-control-feedback"></span>
           <span class="help-block with-errors"></span>
         </div>
         <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="Last name" name="lastname"
+          <input type="text" class="form-control" placeholder="Last name" id="lastname" name="lastname"
             data-error="Please input your last name" required>
           <span class="glyphicon glyphicon-user form-control-feedback"></span>
           <span class="help-block with-errors"></span>
         </div>
         <div class="form-group has-feedback">
-          <input type="email" class="form-control" placeholder="Email" name="email"
+          <input type="email" class="form-control" placeholder="Email" id="email" name="email"
             data-error="Please input your valid email address" required>
           <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
           <span class="help-block with-errors"></span>
         </div>
         <p class="login-box-msg">Enter your account details below</p>
         <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="Username" name="username"
+          <input type="text" class="form-control" placeholder="Username" id="username" name="username"
             data-error="Please input your username" required>
           <span class="glyphicon glyphicon-user form-control-feedback"></span>
           <span class="help-block with-errors"></span>
         </div>
-        <div class="form-group has-feedback">
+        <div id="pass-feedback" class="form-group">
           <input type="password" class="form-control" placeholder="Password" id="password" name="password"
-            data-error="Please input your password" required>
-          <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+            required>
+          <div id="policy-err" style='color: #df5948;'></div>
         </div>
         <div class="form-group has-feedback">
           <input type="password" class="form-control" placeholder="Retype password" name="rpassword"
@@ -76,7 +76,7 @@
             <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
           </div>
           <div class="col-xs-4 pull-right">
-            <button type="submit" class="btn btn-flat btn-primary btn-block">Register</button>
+            <button type="submit" id="register" class="btn btn-flat btn-primary btn-block">Register</button>
           </div>
           <!-- /.col -->
         </div>
@@ -103,6 +103,70 @@
         window.location.href = '{{ url_for('index.login') }}';
       })
     });
+
+    // handling password complexity requirements message
+    $(':input').on('keyup', function() {
+
+      var input = document.getElementById('password');
+      var pass = input.value;
+      var pwd_len = parseInt("{{ SETTING.get('pwd_min_len') }}");
+      var n_upper = parseInt("{{ SETTING.get('pwd_min_uppercase') }}");
+      var n_lower = parseInt("{{ SETTING.get('pwd_min_lowercase') }}");
+      var n_digits = parseInt("{{ SETTING.get('pwd_min_digits') }}");
+      var n_special = parseInt("{{ SETTING.get('pwd_min_special') }}");
+      var must_not_contain = "{{ SETTING.get('pwd_must_not_contain') }}";
+      var pattern = "^(?=(?:.*[0-9]){" + n_digits + ",})(?=(?:.*[a-z]){" + n_lower + ",})(?=(?:.*[A-Z]){" + n_upper + ",})(?=(?:.*[[!@#$%^&*()_+]){" + n_special + ",}).+$";
+
+      var PasswordRegEx = new RegExp(pattern, 'm');
+      var upper_found = 0;
+      var lower_found = 0;
+      var digits_found = 0;
+      var special_found = 0;
+      var lower_pattern = /[a-z]/g;
+      var upper_pattern = /[A-Z]/g;
+      var digits_pattern = /[0-9]/g;
+      var special_pattern = /[[!@#$%^&*()_+]/g;
+      for (var i = 0; i < pass.length; i++) {
+        if (pass[i].match(special_pattern)) special_found++;
+        else if (pass[i].match(lower_pattern)) lower_found++;
+        else if (pass[i].match(upper_pattern)) upper_found++;
+        else if (pass[i].match(digits_pattern)) digits_found++;
+      }
+      var msg = "";
+      if (pass.length < pwd_len) msg += 'at least ' + pwd_len + ' character(s)<br>'
+      if (lower_found < n_lower) msg += 'at least ' + n_lower + ' lowercase character(s)<br>';
+      if (upper_found < n_upper) msg += 'at least ' + n_upper + ' uppercase character(s)<br>';
+      if (digits_found < n_digits) msg += 'at least ' + n_digits + ' digit(s)<br>';
+      if (special_found < n_special) msg += 'at least ' + n_special + ' special character(s)<br>';
+      if (msg.length != 0) msg = "Password must have: <br>" + msg;
+
+      // must not contain
+      must_not_contain_msg = "";
+      var fname = document.getElementById('firstname').value;
+      var lname = document.getElementById('lastname').value;
+      var email = document.getElementById('email').value;
+      var username = document.getElementById('username').value;
+      if (must_not_contain.search("username") != -1 && pass.search(username) != -1) must_not_contain_msg += " username<br>"
+      if (must_not_contain.search("firstname") != -1 && pass.search(fname) != -1) must_not_contain_msg += " firstname<br>"
+      if (must_not_contain.search("lastname") != -1 && pass.search(lname) != -1) must_not_contain_msg += " lastname<br>"
+      if (must_not_contain.search("email") != -1 && pass.search(email) != -1) must_not_contain_msg += " email<br>"
+      if (must_not_contain_msg.length != 0) must_not_contain_msg = "Password must not contain: <br>" + must_not_contain_msg
+
+
+
+
+      var x = document.getElementById('policy-err');
+      x.innerHTML = msg + must_not_contain_msg
+      if (msg != "") {
+        document.getElementById('register').disabled = true; 
+        $('#pass-feedback').addClass("has-error");
+      }
+      else if (msg.length == 0 && pass.length != 0){ 
+        document.getElementById('register').disabled = false;
+        $('#pass-feedback').addClass("has-success");
+      }
+    });
+
   </script>
 </body>
 

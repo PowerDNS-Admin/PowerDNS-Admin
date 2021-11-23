@@ -38,7 +38,7 @@ def before_request():
 @login_required
 def profile():
     if request.method == 'GET':
-        return render_template('user_profile.html')
+        return render_template('user_profile.html',user_info = current_user.get_user_info_by_username() )
     if request.method == 'POST':
         if session['authentication_type'] == 'LOCAL':
             firstname = request.form.get('firstname', '').strip()
@@ -85,7 +85,7 @@ def profile():
                     reload_info=False)
         user.update_profile()
 
-        return render_template('user_profile.html')
+        return render_template('user_profile.html', user_info = current_user.get_user_info_by_username())
 
 
 @user_bp.route('/qrcode')

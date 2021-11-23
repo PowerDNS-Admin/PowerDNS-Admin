@@ -65,18 +65,25 @@
                                 {% if not current_user.password %}
                                 Your account password is managed via LDAP which isn't supported to change here.
                                 {% else %}
-                                <form action="{{ user_profile }}" method="post">
+                                <form action="{{ user_profile }}" method="post" data-toggle="validator">
                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     <div class="form-group">
-                                        <label for="password">New Password</label> <input type="password"
+                                        <label for="password">New Password</label> 
+                                            <input type="password"
                                             class="form-control" name="password" id="newpassword" />
                                     </div>
-                                    <div class="form-group">
-                                        <label for="rpassword">Re-type New Password</label> <input type="password"
+                                    <div id="policy-err" style='color: #df5948;'></div>
+                                    <div class="form-group has-feedback">
+                                        <label for="rpassword">Re-type New Password</label> 
+                                        <input type="password"
+                                            data-match="#newpassword" data-match-error="Password confirmation does not match"
                                             class="form-control" name="rpassword" id="rpassword" />
+                                            <span class="help-block with-errors"></span>
+                                            <span class="glyphicon form-control-feedback"></span>
+
                                     </div>
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-flat btn-primary">Change Password</button>
+                                        <button type="submit" id="pwd-submit" class="btn btn-flat btn-primary btn-block">Change Password</button>
                                     </div>
                                 </form>
                                 {% endif %}
@@ -119,6 +126,12 @@
     </div>
 </section>
 {% endblock %}
+{% assets "js_login" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+{% assets "js_validation" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
 {% block extrascripts %}
 <!-- TODO: add password and password confirmation comparison check -->
 <script>
@@ -151,6 +164,70 @@
             '_csrf_token': '{{ csrf_token() }}'
         };
         applyChanges(postdata, $SCRIPT_ROOT + '/user/profile', false, true);
+    });
+    
+    // handling password complexity requirements message
+    $(':input').on('keyup', function() {
+
+        var input = document.getElementById('newpassword');
+        var pass = input.value;
+        var pwd_len = parseInt("{{ SETTING.get('pwd_min_len') }}");
+        var n_upper = parseInt("{{ SETTING.get('pwd_min_uppercase') }}");
+        var n_lower = parseInt("{{ SETTING.get('pwd_min_lowercase') }}");
+        var n_digits = parseInt("{{ SETTING.get('pwd_min_digits') }}");
+        var n_special = parseInt("{{ SETTING.get('pwd_min_special') }}");
+        var must_not_contain = "{{ SETTING.get('pwd_must_not_contain') }}";
+        var pattern = "^(?=(?:.*[0-9]){" + n_digits + ",})(?=(?:.*[a-z]){" + n_lower + ",})(?=(?:.*[A-Z]){" + n_upper + ",})(?=(?:.*[[!@#$%^&*()_+]){" + n_special + ",}).+$";
+
+        var PasswordRegEx = new RegExp(pattern, 'm');
+        var upper_found = 0;
+        var lower_found = 0;
+        var digits_found = 0;
+        var special_found = 0;
+        var lower_pattern = /[a-z]/g;
+        var upper_pattern = /[A-Z]/g;
+        var digits_pattern = /[0-9]/g;
+        var special_pattern = /[[!@#$%^&*()_+]/g;
+        for (var i = 0; i < pass.length; i++) {
+        if (pass[i].match(special_pattern)) special_found++;
+        else if (pass[i].match(lower_pattern)) lower_found++;
+        else if (pass[i].match(upper_pattern)) upper_found++;
+        else if (pass[i].match(digits_pattern)) digits_found++;
+        }
+        var msg = "";
+        if (pass.length < pwd_len) msg += 'at least ' + pwd_len + ' character(s)<br>'
+        if (lower_found < n_lower) msg += 'at least ' + n_lower + ' lowercase character(s)<br>';
+        if (upper_found < n_upper) msg += 'at least ' + n_upper + ' uppercase character(s)<br>';
+        if (digits_found < n_digits) msg += 'at least ' + n_digits + ' digit(s)<br>';
+        if (special_found < n_special) msg += 'at least ' + n_special + ' special character(s)<br>';
+        if (msg.length != 0) msg = "Password must have: <br>" + msg;
+
+        // must not contain
+        must_not_contain_msg = "";
+        var fname = "{{ user_info.firstname }}";
+        console.log('first name = ', fname);
+        var lname = "{{ user_info.lastname }}";
+        var email = "{{ user_info.email }}";
+        var username = "{{ user_info.username }}";
+        if (must_not_contain.search("username") != -1 && pass.search(username) != -1) must_not_contain_msg += " username<br>"
+        if (must_not_contain.search("firstname") != -1 && pass.search(fname) != -1) must_not_contain_msg += " firstname<br>"
+        if (must_not_contain.search("lastname") != -1 && pass.search(lname) != -1) must_not_contain_msg += " lastname<br>"
+        if (must_not_contain.search("email") != -1 && pass.search(email) != -1) must_not_contain_msg += " email<br>"
+        if (must_not_contain_msg.length != 0) must_not_contain_msg = "Password must not contain: <br>" + must_not_contain_msg
+
+
+
+
+        var x = document.getElementById('policy-err');
+        x.innerHTML = msg + must_not_contain_msg
+        if (msg != "") {
+            document.getElementById('pwd-submit').disabled = true; 
+            $('#pass-feedback').addClass("has-error");
+        }
+        else if (msg.length == 0 && pass.length != 0){ 
+            document.getElementById('pwd-submit').disabled = false;
+            $('#pass-feedback').addClass("has-success");
+        }
     });
 </script>
 {% endblock %}

@@ -59,21 +59,66 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tabs-general">
-                                <form role="form" method="post">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                    <input type="hidden" value="general" name="config_tab" />
-                                    <div class="form-group">
-                                        <input type="checkbox" id="local_db_enabled" name="local_db_enabled" class="checkbox" {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
-                                        <label for="local_db_enabled">Local DB Authentication</label>
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="checkbox" id="signup_enabled" name="signup_enabled" class="checkbox" {% if SETTING.get('signup_enabled') %}checked{% endif %}>
-                                        <label for="signup_enabled">Allow users to sign up</label>
-                                    </div>
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-flat btn-primary">Save</button>
-                                    </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <form role="form" method="post" >
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" value="general" name="config_tab" />
+                                            <div class="form-group">
+                                                <input type="checkbox" id="local_db_enabled" name="local_db_enabled" class="checkbox" {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
+                                                <label for="local_db_enabled">Local DB Authentication</label>
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="checkbox" id="signup_enabled" name="signup_enabled" class="checkbox" {% if SETTING.get('signup_enabled') %}checked{% endif %}>
+                                                <label for="signup_enabled">Allow users to sign up</label>
+                                            </div>
+
+                                            <legend>Password Policy </br>(database authentication)</legend>
+                                            <div class="form-group">
+                                                <label for="min_len">Minimum length</label>
+                                                <input type="text" class="form-control" name="min_len" id="min_len"  value="{{ SETTING.get('pwd_min_len') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="min_lowercase">Minimum number of lowercase letters</label>
+                                                <input type="text" class="form-control" name="min_lowercase" id="min_lowercase"  value="{{ SETTING.get('pwd_min_lowercase') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="min_uppercase">Minimum number of uppercase letters</label>
+                                                <input type="text" class="form-control" name="min_uppercase" id="min_uppercase"  value="{{ SETTING.get('pwd_min_uppercase') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="min_digits">Minimum number of digits</label>
+                                                <input type="text" class="form-control" name="min_digits" id="min_digits"  value="{{ SETTING.get('pwd_min_digits') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="min_special">Minimum number of special characters</label>
+                                                <input type="text" class="form-control" name="min_special" id="min_special"  value="{{ SETTING.get('pwd_min_special') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="min_special">Must not contain</label>
+                                                <input type="text" class="form-control" name="min_special" id="min_special" placeholder="username,firstname,lastname,email"  value="{{ SETTING.get('pwd_must_not_contain') }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                            </div>
+                                        </div>
                                     
+                                        <div class="col-md-8">
+                                            <legend>Help</legend>
+                                            <dl class="dl-horizontal">
+                                                <dt>Password Policy</dt>
+                                                <dd>Define the password policy - character composition of the users' password
+                                                    <ul>
+                                                        <li>
+                                                            Must not contain - This field must contain the attributes which must not be part of the user's password
+                                                            .<br> The available attributes are 'username', 'firstname', 'lastname' and 'email'. <br>The attributes must be seperated
+                                                            by comma ',' character. (eg. 'firstname,lastname,username')
+                                                        </li>
+                                                    </ul>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
                             <div class="tab-pane active" id="tabs-ldap">
