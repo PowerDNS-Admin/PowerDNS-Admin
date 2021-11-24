@@ -80,8 +80,8 @@
                                             class="form-control" name="rpassword" id="rpassword" />
                                             <span class="help-block with-errors"></span>
                                             <span class="glyphicon form-control-feedback"></span>
-
                                     </div>
+                                    <div id="retype-err" style='color: #df5948;'></div>
                                     <div class="form-group">
                                         <button type="submit" id="pwd-submit" class="btn btn-flat btn-primary btn-block">Change Password</button>
                                     </div>
@@ -126,12 +126,6 @@
     </div>
 </section>
 {% endblock %}
-{% assets "js_login" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
-{% assets "js_validation" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
 {% block extrascripts %}
 <!-- TODO: add password and password confirmation comparison check -->
 <script>
@@ -166,11 +160,18 @@
         applyChanges(postdata, $SCRIPT_ROOT + '/user/profile', false, true);
     });
     
-    // handling password complexity requirements message
+    // handling password complexity requirements message and password comparison
     $(':input').on('keyup', function() {
-
+        var rpass = document.getElementById('rpassword').value;
         var input = document.getElementById('newpassword');
         var pass = input.value;
+        if (rpass != pass) {
+            document.getElementById('pwd-submit').disabled = true;
+            document.getElementById('retype-err').innerHTML = 'Passwords not match';
+        }
+        else {
+            document.getElementById('retype-err').innerHTML = '';
+        }
         var pwd_len = parseInt("{{ SETTING.get('pwd_min_len') }}");
         var n_upper = parseInt("{{ SETTING.get('pwd_min_uppercase') }}");
         var n_lower = parseInt("{{ SETTING.get('pwd_min_lowercase') }}");
@@ -214,19 +215,13 @@
         if (must_not_contain.search("lastname") != -1 && pass.search(lname) != -1) must_not_contain_msg += " lastname<br>"
         if (must_not_contain.search("email") != -1 && pass.search(email) != -1) must_not_contain_msg += " email<br>"
         if (must_not_contain_msg.length != 0) must_not_contain_msg = "Password must not contain: <br>" + must_not_contain_msg
-
-
-
-
         var x = document.getElementById('policy-err');
         x.innerHTML = msg + must_not_contain_msg
         if (msg != "") {
             document.getElementById('pwd-submit').disabled = true; 
-            $('#pass-feedback').addClass("has-error");
         }
-        else if (msg.length == 0 && pass.length != 0){ 
+        else if (msg.length == 0 && pass.length != 0 && rpass == pass){ 
             document.getElementById('pwd-submit').disabled = false;
-            $('#pass-feedback').addClass("has-success");
         }
     });
 </script>
