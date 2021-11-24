@@ -644,12 +644,6 @@ def logout():
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if Setting().get('signup_enabled'):
-        # pwd_min_len = Setting.get('pwd_min_len')
-        # pwd_min_lowercase = Setting.get('pwd_min_lowercase')
-        # pwd_min_uppercase = Setting.get('pwd_min_uppercase')
-        # pwd_min_digits = Setting.get('pwd_min_digits')
-        # pwd_min_special = Setting.get('pwd_min_special')
-        # pwd_must_not_contain = Setting.get('pwd_must_not_contain')
         if request.method == 'GET':
             return render_template('register.html')
         elif request.method == 'POST':
