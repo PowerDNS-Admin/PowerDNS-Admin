@@ -95,8 +95,8 @@
                                                 <input type="text" class="form-control" name="min_special" id="min_special"  value="{{ SETTING.get('pwd_min_special') }}">
                                             </div>
                                             <div class="form-group">
-                                                <label for="min_special">Must not contain</label>
-                                                <input type="text" class="form-control" name="min_special" id="min_special" placeholder="username,firstname,lastname,email"  value="{{ SETTING.get('pwd_must_not_contain') }}">
+                                                <label for="must_not_contain">Must not contain</label>
+                                                <input type="text" class="form-control" name="must_not_contain" id="must_not_contain" placeholder="username,firstname,lastname,email"  value="{{ SETTING.get('pwd_must_not_contain') }}">
                                             </div>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-flat btn-primary">Save</button>
@@ -111,8 +111,17 @@
                                                     <ul>
                                                         <li>
                                                             Must not contain - This field must contain the attributes which must not be part of the user's password
-                                                            .<br> The available attributes are 'username', 'firstname', 'lastname' and 'email'. <br>The attributes must be seperated
+                                                            .
+                                                        </li>
+                                                        <li>
+                                                        The available attributes are 'username', 'firstname', 'lastname' and 'email'. 
+                                                        </li>
+                                                        <li>
+                                                            The attributes must be seperated
                                                             by comma ',' character. (eg. 'firstname,lastname,username')
+                                                        </li>
+                                                        <li>
+                                                            Acceptable special characters are: [!@#$%^&*()_+
                                                         </li>
                                                     </ul>
                                                 </dd>

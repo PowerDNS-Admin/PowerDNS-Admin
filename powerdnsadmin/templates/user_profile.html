@@ -65,25 +65,25 @@
                                 {% if not current_user.password %}
                                 Your account password is managed via LDAP which isn't supported to change here.
                                 {% else %}
-                                <form action="{{ user_profile }}" method="post" data-toggle="validator">
+                                <form action="{{ user_profile }}" method="post">
                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     <div class="form-group">
                                         <label for="password">New Password</label> 
                                             <input type="password"
-                                            class="form-control" name="password" id="newpassword" />
+                                            class="form-control" name="password" id="newpassword" required />
                                     </div>
                                     <div id="policy-err" style='color: #df5948;'></div>
                                     <div class="form-group has-feedback">
                                         <label for="rpassword">Re-type New Password</label> 
                                         <input type="password"
                                             data-match="#newpassword" data-match-error="Password confirmation does not match"
-                                            class="form-control" name="rpassword" id="rpassword" />
+                                            class="form-control" name="rpassword" id="rpassword" required />
                                             <span class="help-block with-errors"></span>
                                             <span class="glyphicon form-control-feedback"></span>
                                     </div>
                                     <div id="retype-err" style='color: #df5948;'></div>
                                     <div class="form-group">
-                                        <button type="submit" id="pwd-submit" class="btn btn-flat btn-primary btn-block">Change Password</button>
+                                        <button type="submit" id="pwd-submit" class="btn btn-flat btn-primary btn-block" disabled>Change Password</button>
                                     </div>
                                 </form>
                                 {% endif %}
@@ -127,7 +127,6 @@
 </section>
 {% endblock %}
 {% block extrascripts %}
-<!-- TODO: add password and password confirmation comparison check -->
 <script>
     $(function () {
         $('#tabs').tabs({
@@ -167,7 +166,7 @@
         var pass = input.value;
         if (rpass != pass) {
             document.getElementById('pwd-submit').disabled = true;
-            document.getElementById('retype-err').innerHTML = 'Passwords not match';
+            document.getElementById('retype-err').innerHTML = 'Password confirmation does not match';
         }
         else {
             document.getElementById('retype-err').innerHTML = '';
@@ -206,7 +205,6 @@
         // must not contain
         must_not_contain_msg = "";
         var fname = "{{ user_info.firstname }}";
-        console.log('first name = ', fname);
         var lname = "{{ user_info.lastname }}";
         var email = "{{ user_info.email }}";
         var username = "{{ user_info.username }}";
