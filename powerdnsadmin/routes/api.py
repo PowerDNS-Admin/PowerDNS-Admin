@@ -922,7 +922,7 @@ def api_update_account(account_id):
         "Updating account {} ({})".format(account_id, account.name))
     result = account.update_account()
     if not result['status']:
-        raise AccountDeleteFail(message=result['msg'])
+        raise AccountUpdateFail(message=result['msg'])
     history = History(msg='Update account {0}'.format(account.name),
                       created_by=current_user.username)
     history.add()
