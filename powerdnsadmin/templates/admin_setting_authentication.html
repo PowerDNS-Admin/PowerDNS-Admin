@@ -56,6 +56,7 @@
                             <li><a href="#tabs-github" data-toggle="tab">Github OAuth</a></li>
                             <li><a href="#tabs-azure" data-toggle="tab">Microsoft OAuth</a></li>
                             <li><a href="#tabs-oidc" data-toggle="tab">OpenID Connect OAuth</a></li>
+                            <li><a href="#tabs-saml" data-toggle="tab">SAML</a></li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tabs-general">
@@ -677,6 +678,270 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="tab-pane" id="tabs-saml">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <form role="form" method="post" data-toggle="validator">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" value="saml" name="config_tab" />
+                                            <fieldset>
+                                                <legend>GENERAL</legend>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_enabled" name="saml_enabled" class="checkbox" {% if SETTING.get('saml_enabled') %}checked{% endif %}>
+                                                    <label for="saml_enabled">Enable SAML</label>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>METADATA</legend>
+                                                <div class="form-group">
+                                                    <label for="saml_metadata_url">Metadata URL</label>
+                                                    <input type="text" class="form-control" name="saml_metadata_url" id="saml_metadata_url" placeholder="SAML Metadata URL" data-error="Please input SAML Metadata URL" value="{{ SETTING.get('saml_metadata_url') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_metadata_cache_lifetime">Metadata Cache Lifetime</label>
+                                                    <input type="text" class="form-control" name="saml_metadata_cache_lifetime" id="saml_metadata_cache_lifetime" placeholder="SAML Metadata Cache Lifetime" data-error="Please input SAML Metadata Cache Lifetime" value="{{ SETTING.get('saml_metadata_cache_lifetime') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>IDP</legend>
+                                                <div class="form-group">
+                                                    <label for="saml_idp_sso_binding">IDP SSO Binding</label>
+                                                    <input type="text" class="form-control" name="saml_idp_sso_binding" id="saml_idp_sso_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" data-error="Please input SAML IDP SSO Binding" value="{{ SETTING.get('saml_idp_sso_binding') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_idp_entity_id">IDP Entity ID</label>
+                                                    <input type="text" class="form-control" name="saml_idp_entity_id" id="saml_idp_entity_id" placeholder="e.g. https://idp.example.edu/idp" data-error="Please input SAML IDP Entity ID" value="{{ SETTING.get('saml_idp_entity_id') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_nameid_format">NameID Format</label>
+                                                    <input type="text" class="form-control" name="saml_nameid_format" id="saml_nameid_format" placeholder="e.g. urn:oid:0.9.2342.19200300.100.1.1" data-error="Please input NameID Format" value="{{ SETTING.get('saml_nameid_format') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>ATTRIBUTES</legend>
+                                                <div class="form-group">
+                                                    <label for="saml_sp_requested_attributes">Requested Attributes</label>
+                                                    <input type="text" class="form-control" name="saml_sp_requested_attributes" id="saml_sp_requested_attributes" placeholder="must be valid JSON" data-error="Plesae input Requested Attributes" value="{{ SETTING.get('saml_sp_requested_attributes') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_attribute_email">Email</label>
+                                                    <input type="text" class="form-control" name="saml_attribute_email" id="saml_attribute_email" placeholder="e.g. urn:oid:0.9.2342.19200300.100.1.3" data-error="Please input SAML Email Attribute" value="{{ SETTING.get('saml_attribute_email') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_attribute_givenname">Given Name</label>
+                                                    <input type="text" class="form-control" name="saml_attribute_givenname" id="saml_attribute_givenname" placeholder="e.g. urn:oid:2.5.4.42" data-error="Please input SAML Given Name Attribute" value="{{ SETTING.get('saml_attribute_givenname') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_attribute_surname">Surname</label>
+                                                    <input type="text" class="form-control" name="saml_attribute_surname" id="saml_attribute_surname" placeholder="e.g. urn:oid:2.5.4.4" data-error="Please input SAML Surname Attribute" value="{{ SETTING.get('saml_attribute_surname') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_attribute_username">Username</label>
+                                                    <input type="text" class="form-control" name="saml_attribute_username" id="saml_attribute_username" placeholder="e.g. urn:oid:0.9.2342.19200300.100.1.1" data-error="Please input SAML Username Attribute" value="{{ SETTING.get('saml_attribute_username') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_attribute_admin">Admin</label>
+                                                    <input type="text" class="form-control" name="saml_attribute_admin" id="saml_attribute_admin" placeholder="e.g. https://example.edu/pdns-admin" data-error="Please input SAML Admin Attribute" value="{{ SETTING.get('saml_attribute_admin') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_attribute_account">Account</label>
+                                                    <input type="text" class="form-control" name="saml_attribute_account" id="saml_attribute_account" placeholder="e.g. https://example.edu/pdns-account" data-error="Please input SAML Account Attribute" value="{{ SETTING.get('saml_attribute_account') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_sp_entity_id">SP Entity ID</label>
+                                                    <input type="text" class="form-control" name="saml_sp_entity_id" id="saml_sp_entity_id" placeholder="http://<SAML SP Entity ID>" data-error="Please input SAML SP Entity ID" value="{{ SETTING.get('saml_sp_entity_id') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_sp_contact_name">SP Contact Name</label>
+                                                    <input type="text" class="form-control" name="saml_sp_contact_name" id="saml_sp_contact_name" placeholder="<contact name>" data-error="Please input SAML SP contact name" value="{{ SETTING.get('saml_sp_entity_name') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_sp_contact_mail">SP Contact Mail</label>
+                                                    <input type="text" class="form-control" name="saml_sp_contact_mail" id="saml_sp_contact_mail" placeholder="<contact mail>" data-error="Please input SAML SP contact mail" value="{{ SETTING.get('saml_sp_entity_mail') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>CERTIFICATE</legend>
+                                                <div class="form-group">
+                                                    <label for="saml_cert_file">Cert File</label>
+                                                    <input type="text" class="form-control" name="saml_cert_file" id="saml_cert_file" placeholder="e.g. opt/web/PowerDNS-Admin/cert.crt" data-error="Please input SAML cert file path" value="{{ SETTING.get('saml_cert_file') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_cert_key">Cert Key</label>
+                                                    <input type="text" class="form-control" name="saml_cert_key" id="saml_cert_key" placeholder="e.g. opt/web/PowerDNS-Admin/key.pem" data-error="Please input SAML key file path" value="{{ SETTING.get('saml_cert_key') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_sign_request" name="saml_sign_request" class="checkbox" {% if SETTING.get('saml_sign_request') %}checked{% endif %}>
+                                                    <label for="saml_sign_request">Sign Request</label>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>LOGOUT</legend>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_logout" name="saml_logout" class="checkbox" {% if SETTING.get('saml_logout') %}checked{% endif %}>
+                                                    <label for="saml_logout">SAML Logout</label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_logout_url">Logout URL</label>
+                                                    <input type="text" class="form-control" name="saml_saml_logout_url" id="saml_logout_url" placeholder="must be a valid logout URL" data-error="Please input SAML logout URL" value="{{ SETTING.get('saml_logout_url') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>ADVANCED</legend>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_assertion_encrypted" name="saml_assertion_encrypted" class="checkbox" {% if SETTING.get('saml_assertion_encrypted') %}checked{% endif %}>
+                                                    <label for="saml_assertion_encrypted">Encrypted Assertion</label>
+                                                </div>
+                                            </fieldset>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <legend>Help</legend>
+                                        <dl class="dl-horizontal">
+                                            <dt>METADATA</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>Metadata URL</b> - 
+                                                    </li>
+                                                    <li>
+                                                        <b>Metadata Cache Lifetime</b> - Cache Lifetime in Seconds
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>IDP</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>IDP SSO Binding</b> - SAML SSO binding format to use
+                                                    </li>
+                                                    <li>
+                                                        <b>IDP Entity ID</b> - EntityID of the IdP to use. Only needed if more than one IdP is in the SAML_METADATA_URL
+                                                    </li>
+                                                    <li>
+                                                        <b>NameID Format</b> - NameID format to request
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>ATTRIBUTES</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>Requested Attributes</b> - Following parameter defines RequestedAttributes section in SAML metadata
+                                                        since certain iDPs require explicit attribute request. If not provided section
+                                                        will not be available in metadata.
+                                                        <br>
+                                                        <u>Possible attributes</u>:<br>
+                                                        <i>name (mandatory), nameFormat, isRequired, friendlyName</i>
+                                                        <br>
+                                                        <b>NOTE:</b> This parameter requires to be entered in valid JSON format as displayed below
+                                                        and multiple attributes can be given.
+                                                        <br>
+                                                        Following <i>example</i>:
+                                                        <br>
+                                                        <code>SAML_SP_REQUESTED_ATTRIBUTES = '[ <br>
+                                                        {"name": "urn:oid:0.9.2342.19200300.100.1.3", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "email"}, <br>
+                                                        {"name": "mail", "isRequired": false, "friendlyName": "test-field"} <br>
+                                                        ]'</code>
+                                                        <br>
+                                                        produces following <i>metadata section</i>:
+                                                        <br><code>
+                                                         &ltmd:AttributeConsumingService index="1"&gt<br>
+                                                         &ltmd:RequestedAttribute Name="urn:oid:0.9.2342.19200300.100.1.3" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" FriendlyName="email" isRequired="true"/&gt<br>
+                                                         &ltmd:RequestedAttribute Name="mail" FriendlyName="test-field"/&gt<br>
+                                                         &lt/md:AttributeConsumingService&gt</code>
+                                                    </li>
+                                                    <li>
+                                                        <b>Email</b> - Attribute to use for Email address.
+                                                    </li>
+                                                    <li>
+                                                        <b>Given Name</b> - Attribute to use for Given name.
+                                                    </li>
+                                                    <li>
+                                                        <b>Surname</b> - Attribute to use for Surname.
+                                                    </li>
+                                                    <li>
+                                                        <b>Username</b> - Attribute to use for username.
+                                                    </li>
+                                                    <li>
+                                                        <b>Admin</b> - Attribute to get admin status from.<br>
+                                                        If set, look for the value 'true' to set a user as an administrator.<br>
+                                                        If not included in assertion, or set to something other than 'true',
+                                                        the user is set as a non-administrator user.
+                                                    </li>
+                                                    <li>
+                                                        <b>Account</b> - Attribute to get account names from.<br>
+                                                        If set, the user will be added and removed from accounts to match
+                                                        what's in the login assertion.<br>Accounts that don't exist will
+                                                        be created and the user added to them.
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Entity ID</b> - 
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Entity Name</b> - 
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Entity Mail</b> - 
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>CERTIFICATE</dt>
+                                            <dd> Configures the path to certificate file and it's respective private key file.
+                                                <ul>
+                                                    <li>
+                                                        The <b>Cert File</b> - <b>Cert Key</b> pair is used for signing metadata, encrypting tokens and all other signing/encryption
+                                                        tasks during communication between iDP and SP.<br>
+                                                        <b>NOTE</b>: If these two parameters aren't explicitly provided, a self-signed certificate-key pair
+                                                        will be generated in "PowerDNS-Admin" root directory.<br>
+                                                        <b style="color:red;">CAUTION</b>: For production use, usage of self-signed certificates is highly discouraged.
+                                                        Use certificates from trusted CA instead.
+                                                    </li>
+                                                    <li>
+                                                        <b>Sign Request</b> - Configures if SAML tokens should be encrypted.<br>
+                                                        If enabled a new app certificate will be generated on restart.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>LOGOUT</dt>
+                                            <dd>
+                                                Choose whether user is logged out of SAML session and possibly redirect them elsewhere.
+                                                <ul>
+                                                    <li>
+                                                        <b>SAML Logout</b> - Use SAML standard logout mechanism retreived from idp metadata.<br>
+                                                        If configured false don't care about SAML session on logout.<br>
+                                                        Logout from PowerDNS-Admin only and keep SAML session authenticated.
+                                                    </li>
+                                                    <li>
+                                                        <b>Logout URL</b> - Configure to redirect to a url different than PowerDNS-Admin login after a successful SAML logout.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1049,6 +1314,91 @@
         $('#oidc_oauth_email').prop('required', true);
     {% endif %}
     //END: OIDC Tab JS
+
+    // START: OIDC tab js
+    $('#saml_enabled').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    }).on('ifChanged', function(e) {
+        var is_enabled = e.currentTarget.checked;
+        if (is_enabled){
+            $('#saml_metadata_url').prop('required', true);
+            $('#saml_metadata_cache_lifetime').prop('required', true);
+            $('#saml_idp_sso_binding').prop('required', true);
+            $('#saml_idp_entity_id').prop('required', true);
+            $('#saml_nameid_format').prop('required', true);
+            $('#saml_sp_requested_attributes').prop('required', true);
+            $('#saml_attribute_email').prop('required', true);
+            $('#saml_attribute_givenname').prop('required', true);
+            $('#saml_attribute_surname').prop('required', true);
+            $('#saml_attribute_username').prop('required', true);
+            $('#saml_attribute_admin').prop('required', true);
+            $('#saml_attribute_account').prop('required', true);
+            $('#saml_sp_entity_id').prop('required', true);
+            $('#saml_sp_contact_name').prop('required', true);
+            $('#saml_sp_contact_mail').prop('required', true);
+            $('#saml_cert_file').prop('required', true);
+            $('#saml_cert_key').prop('required', true);
+            $('#saml_logout_url').prop('required', true);
+        } else {
+            $('#saml_metadata_url').prop('required', false);
+            $('#saml_metadata_cache_lifetime').prop('required', false);
+            $('#saml_idp_sso_binding').prop('required', false);
+            $('#saml_idp_entity_id').prop('required', false);
+            $('#saml_nameid_format').prop('required', false);
+            $('#saml_sp_requested_attributes').prop('required', false);
+            $('#saml_attribute_email').prop('required', false);
+            $('#saml_attribute_givenname').prop('required', false);
+            $('#saml_attribute_surname').prop('required', false);
+            $('#saml_attribute_username').prop('required', false);
+            $('#saml_attribute_admin').prop('required', false);
+            $('#saml_attribute_account').prop('required', false);
+            $('#saml_sp_entity_id').prop('required', false);
+            $('#saml_sp_contact_name').prop('required', false);
+            $('#saml_sp_contact_mail').prop('required', false);
+            $('#saml_cert_file').prop('required', false);
+            $('#saml_cert_key').prop('required', false);
+            $('#saml_logout_url').prop('required', false);
+        }
+    });
+    // init validation requirement at first time page load
+    {% if SETTING.get('saml_enabled') %}
+        $('#saml_metadata_url').prop('required', true);
+        $('#saml_metadata_cache_lifetime').prop('required', true);
+        $('#saml_idp_sso_binding').prop('required', true);
+        $('#saml_idp_entity_id').prop('required', true);
+        $('#saml_nameid_format').prop('required', true);
+        $('#saml_sp_requested_attributes').prop('required', true);
+        $('#saml_attribute_email').prop('required', true);
+        $('#saml_attribute_givenname').prop('required', true);
+        $('#saml_attribute_surname').prop('required', true);
+        $('#saml_attribute_username').prop('required', true);
+        $('#saml_attribute_admin').prop('required', true);
+        $('#saml_attribute_account').prop('required', true);
+        $('#saml_sp_entity_id').prop('required', true);
+        $('#saml_sp_contact_name').prop('required', true);
+        $('#saml_sp_contact_mail').prop('required', true);
+        $('#saml_cert_file').prop('required', true);
+        $('#saml_cert_key').prop('required', true);
+        $('#saml_sign_request').prop('required', true);
+        $('#saml_logout').prop('required', true);
+        $('#saml_logout_url').prop('required', true);
+        $('#saml_assertion_encrypted').prop('required', true);
+    {% endif %}
+
+    $('#saml_sign_request').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+    $('#saml_logout').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+    $('#saml_assertion_encrypted').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+    // END: OIDC Tab js
 
 </script>
 {% endblock %}
