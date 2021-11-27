@@ -246,6 +246,45 @@ def api_can_create_domain(f):
     return decorated_function
 
 
+def apikey_can_create_domain(f):
+    """
+    Grant access if:
+        - user is in Operator role or higher, or
+        - allow_user_create_domain is on
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.apikey.role.name not in [
+                'Administrator', 'Operator'
+        ] and not Setting().get('allow_user_create_domain'):
+            msg = "ApiKey #{0} does not have enough privileges to create domain"
+            current_app.logger.error(msg.format(g.apikey.id))
+            raise NotEnoughPrivileges()
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def apikey_can_remove_domain(f):
+    """
+    Grant access if:
+        - user is in Operator role or higher, or
+        - allow_user_remove_domain is on
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if (request.method == 'DELETE' and
+            g.apikey.role.name not in [
+                'Administrator', 'Operator'
+        ] and not Setting().get('allow_user_remove_domain')):
+            msg = "ApiKey #{0} does not have enough privileges to remove domain"
+            current_app.logger.error(msg.format(g.apikey.id))
+            raise NotEnoughPrivileges()
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 def apikey_is_admin(f):
     """
     Grant access if user is in Administrator role

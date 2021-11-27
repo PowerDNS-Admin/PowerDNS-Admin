@@ -27,8 +27,9 @@ from ..lib.errors import (
 )
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
-    apikey_is_admin, apikey_can_access_domain, api_role_can,
-    apikey_or_basic_auth,
+    apikey_can_create_domain, apikey_can_remove_domain,
+    apikey_is_admin, apikey_can_access_domain,
+    api_role_can, apikey_or_basic_auth,
 )
 import random
 import string
@@ -971,6 +972,7 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
               methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
 @apikey_can_access_domain
+@apikey_can_remove_domain
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
     if not Setting().get('bg_domain_updates'):
@@ -1014,6 +1016,7 @@ def api_server_sub_forward(subpath):
 
 @api_bp.route('/servers/<string:server_id>/zones', methods=['POST'])
 @apikey_auth
+@apikey_can_create_domain
 def api_create_zone(server_id):
     resp = helper.forward_request()
 
