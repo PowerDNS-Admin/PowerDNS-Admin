@@ -39,16 +39,25 @@ $ docker run -d \
 This creates a volume called `pda-data` to persist the SQLite database with the configuration.
 
 #### Option 2: Using docker-compose
-1. Update the configuration   
-   Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
+1. Update the configuration if needed
    Other environment variables are mentioned in the [legal_envvars](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/configs/docker_config.py#L5-L46).
    To use the Docker secrets feature it is possible to append `_FILE` to the environment variables and point to a file with the values stored in it.   
    Make sure to set the environment variable `SECRET_KEY` to a long random string (https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY)
 
 2. Start docker container
    ```
-   $ docker-compose up
+   $ SQLALCHEMY_DATABASE_URI="<your-database-uri>" docker-compose up
    ```
+
+   Where `<your-data-base-uri>` contains the database url to be used for PowerDNS Admin (not the DNS server itself). 
+
+Note: If you want to run the docker-compose stack in the background you can use the following command:
+```
+$ SQLALCHEMY_DATABASE_URI="<your-database-uri>" docker-compose up -d
+```
+
+The docker-compose stack is configured so that PowerDNS Admin will be restarted across system reboots if needed.
+
 
 You can then access PowerDNS-Admin by pointing your browser to http://localhost:9191.
 

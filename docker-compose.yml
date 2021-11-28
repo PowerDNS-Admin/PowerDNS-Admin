@@ -3,6 +3,7 @@ version: "3"
 services:
   app:
     image: ngoduykhanh/powerdns-admin:latest
+    restart: always
     container_name: powerdns_admin
     ports:
       - "9191:80"
@@ -11,7 +12,7 @@ services:
       options:
         max-size: 50m
     environment:
-      - SQLALCHEMY_DATABASE_URI=mysql://pda:changeme@host.docker.internal/pda
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URL:-mysql://pda:changeme@host.docker.internal/pda}
       - GUNICORN_TIMEOUT=60
       - GUNICORN_WORKERS=2
       - GUNICORN_LOGLEVEL=DEBUG
