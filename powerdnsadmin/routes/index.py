@@ -640,6 +640,40 @@ def logout():
 
     return redirect(redirect_uri)
 
+def password_quality_check(user, password):
+    import string
+    specialchars_vocab = "[!@#$%^&*()_+"
+    def is_satisfied(setting_name, vocab):
+        n_required_chars = int(Setting().get(setting_name))
+        n_found_chars = 0
+        for c in password:
+            if c in vocab:
+                n_found_chars += 1
+        return n_found_chars >= n_required_chars
+    
+    if len(password) < int(Setting().get('pwd_min_len')):
+        return False
+    if not is_satisfied('pwd_min_digits', string.digits) or \
+                not is_satisfied('pwd_min_lowercase', string.ascii_lowercase) or \
+                not is_satisfied('pwd_min_uppercase', string.ascii_uppercase) or \
+                not is_satisfied('pwd_min_special', specialchars_vocab):
+        return False
+    must_not_contain_fields_str = Setting().get('pwd_must_not_contain')
+    must_not_contain_fields = must_not_contain_fields_str.split(",")
+    for contains in must_not_contain_fields:
+        if "username" == contains:
+            if re.search(user.username, password):
+                return False
+        elif "firstname" == contains:
+            if re.search(user.firstname, password):
+                return False
+        elif "lastname" == contains:
+            if re.search(user.lastname, password):
+                return False
+        elif "email" == contains:
+            if re.search(user.email, password):
+                return False
+    return True
 
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -669,6 +703,8 @@ def register():
                         lastname=lastname,
                         email=email)
 
+            if not password_quality_check(user, password):
+                return render_template('register.html', error="Password does not meet the policy requirements")
             try:
                 result = user.create_local_user()
                 if result and result['status']:

@@ -61,7 +61,14 @@
                                 </form>
                             </div>
                             {% if session['authentication_type'] == 'LOCAL' %}
+
                             <div class="tab-pane" id="tabs-password">
+                                {% if error %}
+                                <div class="alert alert-danger alert-dismissible">
+                                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                  {{ error }}
+                                </div>
+                                {% endif %}
                                 {% if not current_user.password %}
                                 Your account password is managed via LDAP which isn't supported to change here.
                                 {% else %}
@@ -128,17 +135,24 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    $(function () {
-        // $('#tabs').tabs({
-        //     // add url anchor tags
-        //     activate: function (event, ui) {
-        //         window.location.hash = ui.newPanel.attr('id');
-        //     }
-        // });
-        // re-set active tab (ui)
-        var activeTabIdx = $('#tabs').tabs('option', 'active');
-        $('#tabs li:eq(' + activeTabIdx + ')').tab('show')
-    });
+    {% if change_pass_tab %}
+        {% if change_pass_tab == True %}
+            $('#tabs a[href="#tabs-password"]').tab('show')
+        {% endif %}
+    {% else %}
+        $(function () {
+            // $('#tabs').tabs({
+            //     // add url anchor tags
+            //     activate: function (event, ui) {
+            //         window.location.hash = ui.newPanel.attr('id');
+            //     }
+            // });
+            // re-set active tab (ui)
+            var activeTabIdx = $('#tabs').tabs('option', 'active');
+            $('#tabs li:eq(' + activeTabIdx + ')').tab('show')
+        });
+    {% endif %}
+
 
     // initialize pretty checkboxes
     $('.otp_toggle').iCheck({

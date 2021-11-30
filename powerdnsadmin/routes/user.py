@@ -7,6 +7,7 @@ from flask_login import current_user, login_required, login_manager
 
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
+from .index import password_quality_check
 
 user_bp = Blueprint('user',
                     __name__,
@@ -45,6 +46,9 @@ def profile():
             lastname = request.form.get('lastname', '').strip()
             email = request.form.get('email', '').strip()
             new_password = request.form.get('password', '')
+            if not password_quality_check(current_user, new_password):
+                # return render_template('errors/400.html', msg="Password does not meet the policy requirements")
+                return render_template('user_profile.html', change_pass_tab = True, user_info = current_user.get_user_info_by_username() ,error="Password does not meet the policy requirements")
         else:
             firstname = lastname = email = new_password = ''
             current_app.logger.warning(
