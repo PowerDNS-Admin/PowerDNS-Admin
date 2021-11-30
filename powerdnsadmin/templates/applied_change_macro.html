@@ -1,0 +1,133 @@
+{% macro applied_change_template(change_set) -%}
+{{ caller() }}
+{% for hist_rec_entry in change_set %}
+<table id="tbl_records" class="table table-bordered">
+    <thead>
+        <tr>
+            <th colspan="3">
+                {% if hist_rec_entry.change_type == "+" %}
+                <span
+                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrest['name']}}
+                    {{hist_rec_entry.add_rrest['type']}}</span>
+                {% elif hist_rec_entry.change_type == "-" %}
+                <s
+                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
+                    {{hist_rec_entry.del_rrest['name']}}
+                    {{hist_rec_entry.del_rrest['type']}}
+                </s>
+                {% else %}
+                {{hist_rec_entry.add_rrest['name']}}
+                {{hist_rec_entry.add_rrest['type']}}
+                {% endif %}
+
+                , TTL:
+                {% if "ttl" in hist_rec_entry.changed_fields %}
+                <s
+                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
+                    {{hist_rec_entry.del_rrest['ttl']}}</s>
+                <span
+                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrest['ttl']}}</span>
+                {% else %}
+                {{hist_rec_entry.add_rrest['ttl']}}
+                {% endif %}
+
+            </th>
+        </tr>
+        <tr>
+
+            <th style="width: 150px;">Status</th>
+            <th style="width: 400px;">Data</th>
+            <th style="width: 400px;">Comment</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <table>
+                    <tbody>
+                        {% for changes in hist_rec_entry.changeSet %}
+                        <tr>
+                            {% if changes[2] == "unchanged" %}
+                            <td>{{ "Activated" if changes[0]['disabled'] ==
+                                False else
+                                "Disabled"}} </td>
+                            {% elif changes[2] == "addition" %}
+                            <td>
+                                <span style="background-color:  lightgreen">
+                                    {{ "Activated" if changes[1]['disabled'] ==
+                                    False else
+                                    "Disabled"}}
+                                </span>
+                            </td>
+                            {% elif changes[2] == "status" %}
+                            <td>
+                                <s
+                                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
+                                    {{ "Activated" if changes[0]['disabled'] ==
+                                    False else
+                                    "Disabled"}}</s>
+                                <span style="background-color:  lightgreen">{{
+                                    "Activated" if changes[1]['disabled'] ==
+                                    False else
+                                    "Disabled"}}</span>
+                            </td>
+                            {% elif changes[2] == "deletion" %}
+                            <td>
+                                <s
+                                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
+                                    {{ "Activated" if changes[0]['disabled'] ==
+                                    False else
+                                    "Disabled"}}</s>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tbody>
+                        {% for changes in hist_rec_entry.changeSet %}
+                        <tr>
+                            {% if changes[2] == "unchanged" %}
+                            <td>
+                                {{changes[0]['content']}}
+                            </td>
+                            {% elif changes[2] == "addition" %}
+                            <td>
+                                <span style="background-color:  lightgreen">
+                                    {{changes[1]['content']}}
+                                </span>
+                            </td>
+                            {% elif changes[2] == "deletion" %}
+                            <td>
+                                <s
+                                    style="text-decoration-color: rgba(194, 10, 10, 0.6); text-decoration-thickness: 2px;">
+                                    {{changes[0]['content']}}
+                                </s>
+                            </td>
+                            {% elif changes[2] == "status" %}
+                            <td>
+                                {{changes[0]['content']}}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </td>
+            <td>
+                {% for comments in hist_rec_entry.add_rrest['comments'] %}
+                {{comments['content'] }}
+                <br/>
+                {% endfor %}
+            </td>
+        </tr>
+
+    </tbody>
+</table>
+{% endfor %}
+{%- endmacro %}
