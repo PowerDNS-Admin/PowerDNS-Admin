@@ -51,7 +51,7 @@
                     <div class="nav-tabs-custom" id="tabs">
                         <ul class="nav nav-tabs">
                             <li class="active"><a href="#tabs-general" data-toggle="tab">General</a></li>
-                            <li class="active"><a href="#tabs-ldap" data-toggle="tab">LDAP</a></li>
+                            <li><a href="#tabs-ldap" data-toggle="tab">LDAP</a></li>
                             <li><a href="#tabs-google" data-toggle="tab">Google OAuth</a></li>
                             <li><a href="#tabs-github" data-toggle="tab">Github OAuth</a></li>
                             <li><a href="#tabs-azure" data-toggle="tab">Microsoft OAuth</a></li>
@@ -130,7 +130,7 @@
                                     </div>
                                 </form>
                             </div>
-                            <div class="tab-pane active" id="tabs-ldap">
+                            <div class="tab-pane" id="tabs-ldap">
                                 <div class="row">
                                     <div class="col-md-4">
                                         {% if error %}
@@ -747,12 +747,12 @@
 <script>
     
     $(function() {
-        $('#tabs').tabs({
-            // add url anchor tags
-            activate: function(event, ui) {
-                window.location.hash = ui.newPanel.attr('id');
-            }
-        });
+    //     $('#tabs').tabs({
+    //         // add url anchor tags
+    //         activate: function(event, ui) {
+    //             window.location.hash = ui.newPanel.attr('id');
+    //         }
+    //     });
         // re-set active tab (ui)
         var activeTabIdx = $('#tabs').tabs('option','active');
         $('#tabs li:eq('+activeTabIdx+')').tab('show')

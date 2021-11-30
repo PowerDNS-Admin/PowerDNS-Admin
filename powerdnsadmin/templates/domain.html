@@ -33,6 +33,12 @@
                         Update from Master&nbsp;<i class="fa fa-download"></i>
                     </button>
                     {% endif %}
+                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                    <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary button_changelog" id="{{ domain.name }}">
+                        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
+                    </i>
+                    </button>
+                    {% endif %}
                 </div>
                 <div class="box-body">
                     <table id="tbl_records" class="table table-bordered table-striped">
@@ -46,6 +52,9 @@
                                 <th>Comment</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
+                                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                <th >Changelog</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -91,6 +100,13 @@
                                     </td>
                                 {% endif %}
                                     </td>
+                                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                    <td width="6%">
+                                        <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-flat btn-primary">&nbsp;&nbsp;
+                                                            <i class="fa fa-history" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;
+                                        </button>
+                                    </td>
+                                    {% endif %}
                                     <!-- hidden column that we can sort on -->
                                     <td>1</td>
                                 </tr>
@@ -144,14 +160,33 @@
                 // hidden column so that we can add new records on top
                 // regardless of whatever sorting is done. See orderFixed
                 visible: false,
+                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                targets: [ 9 ]
+                {% else %}
                 targets: [ 8 ]
+                {% endif %}
             },
             {
                 className: "length-break",
                 targets: [ 4, 5 ]
             }
         ],
+        {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+        "orderFixed": [[9, 'asc']]
+        {% else %}
         "orderFixed": [[8, 'asc']]
+        {% endif %}
+    });
+
+
+    function show_record_changelog(record_name, record_type, e) {
+        e.stopPropagation();
+        window.location.href = "/domain/{{domain.name}}/changelog/" + record_name + ".-" + record_type;
+    }
+    // handle changelog button
+    $(document.body).on("click", ".button_changelog", function(e) {
+        e.stopPropagation();
+        window.location.href = "/domain/{{domain.name}}/changelog";
     });
 
     // handle delete button
@@ -243,7 +278,11 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-	        var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
+            {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+	        var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
+            {% else %}
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
+            {% endif %}
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;

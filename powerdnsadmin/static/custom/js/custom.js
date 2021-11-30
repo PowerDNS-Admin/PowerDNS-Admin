@@ -53,6 +53,7 @@ function applyRecordChanges(data, domain) {
             var modal = $("#modal_success");
             modal.find('.modal-body p').text("Applied changes successfully");
             modal.modal('show');
+            setTimeout(() => {window.location.reload()}, 2000);
         },
 
         error : function(jqXHR, status) {
