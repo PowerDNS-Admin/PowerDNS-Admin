@@ -2,6 +2,7 @@
 {% set active_page = "dashboard" %}
 {% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
+
 {% block dashboard_stat %}
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -15,6 +16,8 @@
       </ol>
     </section>
 {% endblock %}
+
+{% import 'applied_change_macro.html' as applied_change_macro %}
 
 {% block content %}
  <!-- Main content -->
@@ -107,13 +110,25 @@
                     <tbody>
                     {% for history in histories %}
                       <tr class="odd">
-                          <td>{{ history.created_by }}</td>
-                          <td>{{ history.msg }}</td>
-                          <td>{{ history.created_on }}</td>
+                          <td>{{ history.history.created_by }}</td>
+                          <td>{{ history.history.msg }}</td>
+                          <td>{{ history.history.created_on }}</td>
                           <td width="6%">
-                              <button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail }}'>
-                                  Info&nbsp;<i class="fa fa-info"></i>
-                              </button>
+                            <button type="button" class="btn btn-flat btn-primary history-info-button"
+                            {% if history.detailed_msg == "" and history.change_set == None %}
+                            style="visibility: hidden;"
+                            {% endif%}
+                            value='{{ history.detailed_msg }}
+                              {% if history.change_set != None %}
+                              <div class="content">
+                                  <div id="change_index_definition"></div>
+                                  {% call applied_change_macro.applied_change_template(history.change_set) %} 
+                                  {% endcall %}
+                              </div>
+                              {% endif %}
+                              '>
+                                Info&nbsp;<i class="fa fa-info"></i>
+                            </button>
                           </td>
                       </tr>
                     {% endfor %}
@@ -226,11 +241,10 @@
         ]
     });
 
-    $(document.body).on('click', '.history-info-button', function()
-    {
+    $(document.body).on('click', '.history-info-button', function () {
         var modal = $("#modal_history_info");
         var info = $(this).val();
-        $('#modal-code-content').html(json_library.prettyPrint(info));
+        $('#modal-info-content').html(info);
         modal.modal('show');
     });
 
@@ -297,7 +311,7 @@
                 <h4 class="modal-title">History Details</h4>
             </div>
             <div class="modal-body">
-                <pre><code id="modal-code-content"></code></pre>
+              <div id="modal-info-content"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-flat btn-default pull-right"
