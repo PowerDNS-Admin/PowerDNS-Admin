@@ -192,7 +192,8 @@ class Setting(db.Model):
         'custom_css': '',
         'otp_force': False,
         'max_history_records': 1000,
-        'deny_domain_override': False
+        'deny_domain_override': False,
+        'account_name_extra_chars': False
     }
 
     def __init__(self, id=None, name=None, value=None):
@@ -273,15 +274,15 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in self.defaults:
- 
+
             if setting.upper() in current_app.config:
                 result = current_app.config[setting.upper()]
             else:
                 result = self.query.filter(Setting.name == setting).first()
- 
+
             if result is not None:
                 if hasattr(result,'value'):
-                    result = result.value 
+                    result = result.value
                 return strtobool(result) if result in [
                     'True', 'False'
                 ] else result
@@ -289,7 +290,7 @@ class Setting(db.Model):
                 return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
-            
+
     def get_records_allow_to_edit(self):
         return list(
             set(self.get_forward_records_allow_to_edit() +

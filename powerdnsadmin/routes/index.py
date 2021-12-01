@@ -401,7 +401,7 @@ def login():
             if name_prop in me and desc_prop in me:
                 accounts_name_prop = [me[name_prop]] if type(me[name_prop]) is not list else me[name_prop]
                 accounts_desc_prop = [me[desc_prop]] if type(me[desc_prop]) is not list else me[desc_prop]
-		
+
                 #Run on all groups the user is in by the index num.
                 for i in range(len(accounts_name_prop)):
                     description = ''
@@ -411,7 +411,7 @@ def login():
 
                     account_to_add.append(account)
                 user_accounts = user.get_accounts()
-                
+
 		# Add accounts
                 for account in account_to_add:
                     if account not in user_accounts:
@@ -1092,8 +1092,12 @@ def create_group_to_account_mapping():
 
 
 def handle_account(account_name, account_description=""):
+    if Setting().get('account_name_extra_chars'):
+        char_list = "abcdefghijklmnopqrstuvwxyz0123456789_-."
+    else:
+        char_list = "abcdefghijklmnopqrstuvwxyz0123456789"
     clean_name = ''.join(c for c in account_name.lower()
-                         if c in "abcdefghijklmnopqrstuvwxyz0123456789_-")
+                         if c in char_list)
     if len(clean_name) > Account.name.type.length:
         current_app.logger.error(
             "Account name {0} too long. Truncated.".format(clean_name))

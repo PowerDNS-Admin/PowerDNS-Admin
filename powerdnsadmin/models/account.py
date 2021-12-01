@@ -34,8 +34,12 @@ class Account(db.Model):
         self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
 
         if self.name is not None:
+            if Setting().get('account_name_extra_chars'):
+                char_list = "abcdefghijklmnopqrstuvwxyz0123456789_-."
+            else:
+                char_list = "abcdefghijklmnopqrstuvwxyz0123456789"
             self.name = ''.join(c for c in self.name.lower()
-                                if c in "abcdefghijklmnopqrstuvwxyz0123456789_-")
+                                if c in char_list)
 
     def __repr__(self):
         return '<Account {0}r>'.format(self.name)
