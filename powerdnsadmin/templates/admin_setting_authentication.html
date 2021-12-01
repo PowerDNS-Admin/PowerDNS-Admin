@@ -693,12 +693,12 @@
 <script>
     
     $(function() {
-    //     $('#tabs').tabs({
-    //         // add url anchor tags
-    //         activate: function(event, ui) {
-    //             window.location.hash = ui.newPanel.attr('id');
-    //         }
-    //     });
+        $('#tabs').tabs({
+            // add url anchor tags
+            activate: function(event, ui) {
+                window.location.hash = ui.newPanel.attr('id');
+            }
+        });
         // re-set active tab (ui)
         var activeTabIdx = $('#tabs').tabs('option','active');
         $('#tabs li:eq('+activeTabIdx+')').tab('show')
