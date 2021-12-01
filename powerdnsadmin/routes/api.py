@@ -942,7 +942,7 @@ def api_delete_account(account_id):
         "Deleting account {} ({})".format(account_id, account.name))
     result = account.delete_account()
     if not result:
-        raise AccountUpdateFail(message=result['msg'])
+        raise AccountDeleteFail(message=result['msg'])
 
     history = History(msg='Delete account {0}'.format(account.name),
                       created_by=current_user.username)
