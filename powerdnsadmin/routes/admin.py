@@ -825,14 +825,19 @@ class DetailedHistory():
 			<table class="table table-bordered table-striped"><tr><td>Users with access to this domain</td><td>{0}</td></tr><tr><td>Number of users:</td><td>{1}</td><tr></table>
 				""".format(str(detail_dict['user_has_access']).replace("]","").replace("[", ""), len((detail_dict['user_has_access'])))
 		elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
+			domains = detail_dict['domains' if 'domains' in detail_dict.keys() else 'domain_acl']
+			accounts = detail_dict['accounts'] if 'accounts' in detail_dict.keys() else 'None'
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
 					<tr><td>Key: </td><td>{0}</td></tr>
 					<tr><td>Role:</td><td>{1}</td></tr>
 					<tr><td>Description:</td><td>{2}</td></tr>
-					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
+					<tr><td>Accounts bound to this API key:</td><td>{3}</td></tr>
+					<tr><td>Accessible domains with this API key:</td><td>{4}</td></tr>
 				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domain_acl']).replace("]","").replace("[", ""))
+				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'],
+						   str(accounts).replace("]","").replace("[", ""),
+						   str(domains).replace("]","").replace("[", ""))
 		elif 'Update type for domain' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
@@ -1230,7 +1235,7 @@ def setting_basic():
             'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
-	          'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
+            'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
 
         ]
 
