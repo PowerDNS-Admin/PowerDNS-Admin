@@ -19,6 +19,29 @@ Now you can enable the OAuth in PowerDNS-Admin.
 
 This should allow you to log in using OAuth.
 
+#### Keycloak
+
+To link to Keycloak for authentication, you need to create a new client in the Keycloak Administration Console. 
+* Log in to the Keycloak Administration Console
+* Go to Clients > Create
+* Enter a Client ID (for example 'powerdns-admin') and click 'Save'
+* Scroll down to 'Access Type' and choose 'Confidential'.
+* Scroll down to 'Valid Redirect URIs' and enter 'https://<pdnsa address>/oidc/authorized'
+* Click 'Save'
+* Go to the 'Credentials' tab and copy the Client Secret
+* Log in to PowerDNS-Admin and go to 'Settings > Authentication > OpenID Connect OAuth'
+* Enter the following details:
+  * Client key -> Client ID
+  * Client secret > Client secret copied from keycloak
+  * Scope: `profile`
+  * API URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/
+  * Token URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/token
+  * Authorize URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/auth
+  * Logout URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/logout
+  * Leave the rest default
+* Save the changes and restart PowerDNS-Admin
+* Use the new 'Sign in using OpenID Connect' button to log in.
+
 #### OpenID Connect OAuth
 To link to oidc service for authenticationregister your PowerDNS-Admin in the OIDC Provider. This requires your PowerDNS-Admin web interface to use an HTTPS URL.
 
