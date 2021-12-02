@@ -745,7 +745,7 @@ class DetailedHistory():
 		self.detailed_msg = ""
 		self.change_set = change_set
 		
-		if history.detail is None:
+		if not history.detail:
 			self.detailed_msg = ""
 			# if 'Create account' in history.msg:
 			#     account = Account.query.filter(
@@ -851,8 +851,7 @@ def convert_histories(histories):
 	detailedHistories = []
 	j = 0
 	for i in range(len(histories)):
-		# if histories[i].detail != None and 'add_rrests' in json.loads(histories[i].detail.replace("'", '"')):
-		if histories[i].detail != None and ('add_rrests' in json.loads(histories[i].detail.replace("'", '"')) or 'del_rrests' in json.loads(histories[i].detail.replace("'", '"'))):
+		if histories[i].detail and ('add_rrests' in json.loads(histories[i].detail.replace("'", '"')) or 'del_rrests' in json.loads(histories[i].detail.replace("'", '"'))):
 			extract_changelogs_from_a_history_entry(changes_set, histories[i], j)
 			if j in changes_set:
 				detailedHistories.append(DetailedHistory(histories[i], changes_set[j]))
