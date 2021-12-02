@@ -59,7 +59,6 @@ js_main = Bundle('node_modules/jquery/dist/jquery.js',
                  'node_modules/jtimeout/src/jTimeout.js',
                  'node_modules/jquery.quicksearch/src/jquery.quicksearch.js',
                  'custom/js/custom.js',
-                #  'node_modules/bootstrap-datepicker/js/bootstrap-datepicker.js',
                  'node_modules/bootstrap-datepicker/dist/js/bootstrap-datepicker.js',
                  filters=(ConcatFilter, 'jsmin'),
                  output='generated/main.js')
