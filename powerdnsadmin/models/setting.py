@@ -189,7 +189,7 @@ class Setting(db.Model):
         'ttl_options': '1 minute,5 minutes,30 minutes,60 minutes,24 hours',
         'otp_field_enabled': True,
         'custom_css': '',
-        'otp_first_login': False
+        'otp_force': False
     }
 
     def __init__(self, id=None, name=None, value=None):
