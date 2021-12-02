@@ -217,9 +217,11 @@
             $( ".datepicker" ).datepicker({
                 changeMonth: true,
                 changeYear: true,
-                maxDate: '+0'
+                format: "yyyy-mm-dd",
+                endDate: '+0'
             });
-            $(".datepicker").datepicker("option", "dateFormat", "yy-mm-dd")
+            // $(".datepicker").datepicker("option", "format", "yy-mm-dd")
+            
         });
     });
 
@@ -436,7 +438,7 @@
         // then initialize it
         $('#search-submit').on('click', function() {
             if ($('#max').val() === "" || $('#max').val() === undefined)
-                $('#max').datepicker('setDate', new Date());
+                $('#max').datepicker('setDate', 'now');
         });
 
         $("#history-search-form").submit(function(e){ // ajax call to load results on submition
