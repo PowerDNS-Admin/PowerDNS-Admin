@@ -246,6 +246,46 @@ def api_can_create_domain(f):
     return decorated_function
 
 
+def apikey_can(action, http_methods=[]):
+    """
+    Grant access if:
+        - user is in Operator role or higher, or
+        - the action is allowed for a User in the settings
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+
+            p = {
+                "create_domain": {
+                    "setting": "allow_user_create_domain",
+                    "msg": "create domains",
+                    "toggle": True
+                },
+                "remove_domain": {
+                    "setting": "allow_user_remove_domain",
+                    "msg": "remove domains",
+                    "toggle": True
+                },
+                "dnssec": {
+                    "setting": "dnssec_admins_only",
+                    "msg": "create domains",
+                    "toggle": False
+                }
+            }
+
+            if (g.apikey.role.name not in ['Administrator', 'Operator']
+                and request.method in http_methods
+                and Setting().get(p[action]['setting']) != p[action]['toggle']):
+                msg = "ApiKey #{0} does not have enough privileges to {1}"
+                current_app.logger.error(msg.format(g.apikey.id, p[action]['msg']))
+                raise NotEnoughPrivileges()
+            return f(*args, **kwargs)
+
+        return decorated_function
+    return decorator
+
+
 def apikey_can_create_domain(f):
     """
     Grant access if:
