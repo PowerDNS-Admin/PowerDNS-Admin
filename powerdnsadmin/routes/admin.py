@@ -752,7 +752,15 @@ def manage_account():
                     'There is something wrong, please contact Administrator.'
                 }), 400)
 
-
+# check for lower key as well for old databases
+def get_key_val(dict, k):
+    key_lowercase = k.lower()
+    if k in dict.keys():
+        return str(dict[k])
+    elif key_lowercase in dict.keys():
+        return str(dict[key_lowercase])
+    else:
+        return ""
 class DetailedHistory():
 	def __init__(self, history, change_set):
 		self.history = history
@@ -766,6 +774,7 @@ class DetailedHistory():
 			detail_dict = json.loads(history.detail.replace("'", '"'))
 		else:
 			detail_dict = json.loads(history.detail.replace("\'", ''))
+		key_array = list(detail_dict.keys())
 		if 'domain_type' in detail_dict.keys() and 'account_id' in detail_dict.keys():  # this is a domain creation
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped"><tr><td>Domain type:</td><td>{0}</td></tr> <tr><td>Account:</td><td>{1}</td></tr></table>
@@ -809,7 +818,6 @@ class DetailedHistory():
 			</tbody>
 			</table>
 			""".format(detail_dict['authenticator'], detail_dict['ip_address'])
-
 		elif 'add_rrests' in detail_dict.keys(): # this is a domain record change
 			# changes_set = []
 			self.detailed_msg = ""
@@ -817,25 +825,21 @@ class DetailedHistory():
 		elif 'name' in detail_dict.keys() and 'template' in history.msg: # template creation
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped"><tr><td>Template name:</td><td>{0}</td></tr> <tr><td>Description:</td><td>{1}</td></tr></table>
-				""".format(detail_dict['name'], detail_dict['description'])
+				""".format(get_key_val(detail_dict, key_array[0]), get_key_val(detail_dict, key_array[1]))
 		elif 'Change domain' in history.msg and 'access control' in history.msg: # added or removed a user from a domain
 			self.detailed_msg = """
 			<table class="table table-bordered table-striped"><tr><td>Users with access to this domain</td><td>{0}</td></tr><tr><td>Number of users:</td><td>{1}</td><tr></table>
-				""".format(str(detail_dict['user_has_access']).replace("]","").replace("[", ""), len((detail_dict['user_has_access'])))
+				""".format(get_key_val(detail_dict, key_array[0]), len((detail_dict[key_array[0]])))
 		elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
-			domains = detail_dict['domains' if 'domains' in detail_dict.keys() else 'domain_acl']
-			accounts = detail_dict['accounts'] if 'accounts' in detail_dict.keys() else 'None'
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
 					<tr><td>Key: </td><td>{0}</td></tr>
 					<tr><td>Role:</td><td>{1}</td></tr>
 					<tr><td>Description:</td><td>{2}</td></tr>
-					<tr><td>Accounts bound to this API key:</td><td>{3}</td></tr>
-					<tr><td>Accessible domains with this API key:</td><td>{4}</td></tr>
+					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
 				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'],
-						   str(accounts).replace("]","").replace("[", ""),
-						   str(domains).replace("]","").replace("[", ""))
+				""".format(get_key_val(detail_dict, key_array[0]), get_key_val(detail_dict, key_array[1]), 
+								get_key_val(detail_dict, key_array[2]),  get_key_val(detail_dict, key_array[3]))
 		elif 'Update type for domain' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
@@ -843,7 +847,7 @@ class DetailedHistory():
 					<tr><td>Domain type:</td><td>{1}</td></tr>
 					<tr><td>Masters:</td><td>{2}</td></tr>
 				</table>
-			""".format(detail_dict['domain'], detail_dict['type'], str(detail_dict['masters']).replace("]","").replace("[", "") if 'masters' in detail_dict else "")
+			""".format(get_key_val(detail_dict, key_array[0]), get_key_val(detail_dict, key_array[1]), get_key_val(detail_dict, key_array[2]))
 		elif 'Delete API key' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
@@ -852,14 +856,15 @@ class DetailedHistory():
 					<tr><td>Description:</td><td>{2}</td></tr>
 					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
 				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domains']).replace("]","").replace("[", "") if 'domains' in detail_dict else "")
+				""".format(get_key_val(detail_dict, key_array[0]), get_key_val(detail_dict, key_array[1]),
+							 get_key_val(detail_dict, key_array[2]), get_key_val(detail_dict, key_array[3]))
 		elif 'reverse' in history.msg:
 			self.detailed_msg = """
 			<table class="table table-bordered table-striped">
 					<tr><td>Domain Type: </td><td>{0}</td></tr>
 					<tr><td>Domain Master IPs:</td><td>{1}</td></tr>
 				</table>
-			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'] if 'domain_master_ips' in detail_dict else "")
+			""".format(get_key_val(detail_dict, key_array[0]), get_key_val(detail_dict, key_array[1]))
 
 # convert a list of History objects into DetailedHistory objects
 def convert_histories(histories):
