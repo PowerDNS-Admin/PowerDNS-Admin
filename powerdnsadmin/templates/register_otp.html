@@ -29,13 +29,22 @@
         </div>
         {% endif %}
         Welcome, {{user.firstname}}! <br />
-        You will need a Token on login. Your QR code is:
+        You will need a Token on login. <br />
+        Your QR code is:
         <div id="token_information">
           {% if qrcode_image == None %}
           <p><img id="qrcode" src="{{ url_for('user.qrcode') }}"></p>
           {% else %}
           <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{qrcode_image}}"></p>
           {% endif %}
+          <p>
+            Your secret key is: <br />
+            <form>
+              <input type=text id="otp_secret" value={{user.otp_secret}} readonly>
+              <button type=button style="position:relative; right:28px" onclick="copy_to_clickboard()"> <i class="fa fa-clipboard"></i> </button>
+              <br /><font color="red" id="copy_tooltip" style="visibility:collapse">Copied.</font>
+            </form>
+          </p>
           You can use Google Authenticator (<a target="_blank"
               href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android</a>
           - <a target="_blank"
@@ -45,10 +54,10 @@
               href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en">Android</a>
           - <a target="_blank"
               href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>)
-          on your smartphone <br /> to scan the QR code.
+          on your smartphone <br /> to scan the QR code or type the secret key.
           <br /> <br />
-          <font color="red"><strong><i>Make sure only you can see this QR Code
-          <br />  and nobody can capture it.</i></strong></font>
+          <font color="red"><strong><i>Make sure only you can see this QR Code <br />
+            and secret key, and nobody can capture them.</i></strong></font>
         </div>
         </br>
         Please input your OTP token to continue, to ensure the seed has been scanned correctly.
@@ -78,4 +87,15 @@
   {% assets "js_validation" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {%- endassets %}
+  <script>
+    // copy otp secret code to clipboard
+    function copy_to_clickboard() {
+      var copyBox = document.getElementById("otp_secret");
+      copyBox.select();
+      copyBox.setSelectionRange(0, 99999); /* For mobile devices */
+      navigator.clipboard.writeText(copyBox.value);
+      $("#copy_tooltip").css("visibility", "visible");
+      setTimeout(function(){ $("#copy_tooltip").css("visibility", "collapse"); }, 2000);
+    }
+  </script>
 </html>
