@@ -340,7 +340,8 @@ def record_changelog(domain_name, record_name, record_type):
     for i in indexes_to_pop:
         changes_set_of_record.pop(i)
 
-    return render_template('domain_changelog.html', domain=domain, allHistoryChanges=changes_set_of_record)
+    return render_template('domain_changelog.html', domain=domain, allHistoryChanges=changes_set_of_record, 
+                            record_name = record_name, record_type = record_type)
 
 
 
