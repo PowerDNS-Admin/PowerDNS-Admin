@@ -92,8 +92,9 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
     if history_entry.detail is None:
         return
 
-    detail_dict = json.loads(history_entry.detail.replace("'", '"'))
-    if "add_rrests" not in detail_dict:
+    if "add_rrests" in history_entry.detail:
+        detail_dict = json.loads(history_entry.detail.replace("\'", ''))
+    else: # not a record entry
         return
 
     add_rrests = detail_dict['add_rrests']
@@ -745,16 +746,13 @@ class DetailedHistory():
 		self.detailed_msg = ""
 		self.change_set = change_set
 		
-		if history.detail is None:
+		if not history.detail:
 			self.detailed_msg = ""
-			# if 'Create account' in history.msg:
-			#     account = Account.query.filter(
-			#         Account.name == history.msg.split(' ')[2]).first()
-			#     self.detailed_msg = str(account.get_user())
-			# # WRONG, cannot do query afterwards, db may have changed
 			return
-
-		detail_dict = json.loads(history.detail.replace("'", '"'))
+		if 'add_rrest' not in history.detail:
+			detail_dict = json.loads(history.detail.replace("'", '"'))
+		else:
+			detail_dict = json.loads(history.detail.replace("\'", ''))
 		if 'domain_type' in detail_dict.keys() and 'account_id' in detail_dict.keys():  # this is a domain creation
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped"><tr><td>Domain type:</td><td>{0}</td></tr> <tr><td>Account:</td><td>{1}</td></tr></table>
@@ -851,8 +849,7 @@ def convert_histories(histories):
 	detailedHistories = []
 	j = 0
 	for i in range(len(histories)):
-		# if histories[i].detail != None and 'add_rrests' in json.loads(histories[i].detail.replace("'", '"')):
-		if histories[i].detail != None and ('add_rrests' in json.loads(histories[i].detail.replace("'", '"')) or 'del_rrests' in json.loads(histories[i].detail.replace("'", '"'))):
+		if histories[i].detail and ('add_rrests' in histories[i].detail or 'del_rrests' in histories[i].detail):
 			extract_changelogs_from_a_history_entry(changes_set, histories[i], j)
 			if j in changes_set:
 				detailedHistories.append(DetailedHistory(histories[i], changes_set[j]))
