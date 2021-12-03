@@ -831,15 +831,12 @@ class DetailedHistory():
 			<table class="table table-bordered table-striped"><tr><td>Users with access to this domain</td><td>{0}</td></tr><tr><td>Number of users:</td><td>{1}</td><tr></table>
 				""".format(get_key_val(detail_dict, key_array[0]), len((detail_dict[key_array[0]])))
 		elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
-			domains = detail_dict['domains' if 'domains' in detail_dict.keys() else 'domain_acl']
-			accounts = detail_dict['accounts'] if 'accounts' in detail_dict.keys() else 'None'
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
 					<tr><td>Key: </td><td>{0}</td></tr>
 					<tr><td>Role:</td><td>{1}</td></tr>
 					<tr><td>Description:</td><td>{2}</td></tr>
-					<tr><td>Accounts bound to this API key:</td><td>{3}</td></tr>
-					<tr><td>Accessible domains with this API key:</td><td>{4}</td></tr>
+					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
 				</table>
 				""".format(get_key_val(detail_dict, key_array[0]), get_key_val(detail_dict, key_array[1]), 
 								get_key_val(detail_dict, key_array[2]),  get_key_val(detail_dict, key_array[3]))
