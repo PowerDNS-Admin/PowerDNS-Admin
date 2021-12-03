@@ -17,6 +17,9 @@ class Account(db.Model):
     contact = db.Column(db.String(128))
     mail = db.Column(db.String(128))
     domains = db.relationship("Domain", back_populates="account")
+    apikeys = db.relationship("ApiKey",
+                              secondary="apikey_account",
+                              back_populates="accounts")
 
     def __init__(self, name=None, description=None, contact=None, mail=None):
         self.name = name
