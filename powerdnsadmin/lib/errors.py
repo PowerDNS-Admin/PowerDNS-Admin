@@ -60,7 +60,8 @@ class ApiKeyNotUsable(StructuredException):
     def __init__(
         self,
         name=None,
-        message="Api key must have domains or have administrative role"):
+        message=("Api key must have domains or accounts"
+                 " or an administrative role")):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
@@ -115,6 +116,15 @@ class AccountDeleteFail(StructuredException):
     status_code = 500
 
     def __init__(self, name=None, message="Delete of account failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+
+class AccountNotExists(StructuredException):
+    status_code = 404
+
+    def __init__(self, name=None, message="Account does not exist"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
