@@ -270,7 +270,12 @@ def apikey_can_access_domain(f):
             zone_id = kwargs.get('zone_id').rstrip(".")
             domain_names = [item.name for item in domains]
 
-            if zone_id not in domain_names:
+            accounts = apikey.accounts
+            accounts_domains = [domain.name for a in accounts for domain in a.domains]
+
+            allowed_domains = set(domain_names + accounts_domains)
+
+            if zone_id not in allowed_domains:
                 raise DomainAccessForbidden()
         return f(*args, **kwargs)
 

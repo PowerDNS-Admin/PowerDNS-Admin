@@ -40,7 +40,7 @@ old_state: dictionary with "disabled" and "content" keys. {"disabled" : False, "
 new_state: similarly
 change_type: "addition" or "deletion" or "status" for status change or "unchanged" for no change
 
-Note: A change in "content", is considered a deletion and recreation of the same record, 
+Note: A change in "content", is considered a deletion and recreation of the same record,
 holding the new content value.
 """
 def get_record_changes(del_rrest, add_rrest):
@@ -57,12 +57,12 @@ def get_record_changes(del_rrest, add_rrest):
                                     {"disabled":a['disabled'],"content":a['content']},
                                     "status") )
                 break
-        
+
         if not exists: # deletion
             changeSet.append( ({"disabled":d['disabled'],"content":d['content']},
                             None,
                             "deletion") )
-        
+
     for a in addSet:  # get the additions
         exists = False
         for d in delSet:
@@ -78,7 +78,7 @@ def get_record_changes(del_rrest, add_rrest):
         exists = False
         for c in changeSet:
             if c[1] != None and  c[1]["content"] == a['content']:
-                exists = True 
+                exists = True
                 break
         if not exists:
             changeSet.append( ( {"disabled":a['disabled'], "content":a['content']}, {"disabled":a['disabled'], "content":a['content']}, "unchanged") )
@@ -124,7 +124,7 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
             if change_num not in out_changes:
                 out_changes[change_num] = []
             out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrest, [], "-"))
-    
+
 
     # only used for changelog per record
     if record_name != None and record_type != None: # then get only the records with the specific (record_name, record_type) tuple
@@ -173,7 +173,7 @@ class HistoryRecordEntry:
             if add_rrest['ttl'] != del_rrest['ttl']:
                 self.changed_fields.append("ttl")
             self.changeSet = get_record_changes(del_rrest, add_rrest)
-        
+
 
 
     def toDict(self):
@@ -301,6 +301,7 @@ def edit_user(user_username=None):
 @operator_role_required
 def edit_key(key_id=None):
     domains = Domain.query.all()
+    accounts = Account.query.all()
     roles = Role.query.all()
     apikey = None
     create = True
@@ -317,6 +318,7 @@ def edit_key(key_id=None):
         return render_template('admin_edit_key.html',
                                key=apikey,
                                domains=domains,
+                               accounts=accounts,
                                roles=roles,
                                create=create)
 
@@ -324,14 +326,21 @@ def edit_key(key_id=None):
         fdata = request.form
         description = fdata['description']
         role = fdata.getlist('key_role')[0]
-        doamin_list = fdata.getlist('key_multi_domain')
+        domain_list = fdata.getlist('key_multi_domain')
+        account_list = fdata.getlist('key_multi_account')
 
         # Create new apikey
         if create:
-            domain_obj_list = Domain.query.filter(Domain.name.in_(doamin_list)).all()
+            if role == "User":
+                domain_obj_list = Domain.query.filter(Domain.name.in_(domain_list)).all()
+                account_obj_list = Account.query.filter(Account.name.in_(account_list)).all()
+            else:
+                account_obj_list, domain_obj_list = [], []
+
             apikey = ApiKey(desc=description,
                             role_name=role,
-                            domains=domain_obj_list)
+                            domains=domain_obj_list,
+                            accounts=account_obj_list)
             try:
                 apikey.create()
             except Exception as e:
@@ -345,7 +354,9 @@ def edit_key(key_id=None):
         # Update existing apikey
         else:
             try:
-                apikey.update(role,description,doamin_list)
+                if role != "User":
+                    domain_list, account_list = [], []
+                apikey.update(role,description,domain_list, account_list)
                 history_message =  "Updated API key {0}".format(apikey.id)
             except Exception as e:
                 current_app.logger.error('Error: {0}'.format(e))
@@ -355,14 +366,16 @@ def edit_key(key_id=None):
                             'key': apikey.id,
                             'role': apikey.role.name,
                             'description': apikey.description,
-                            'domain_acl': [domain.name for domain in apikey.domains]
+                            'domains': [domain.name for domain in apikey.domains],
+                            'accounts': [a.name for a in apikey.accounts]
                           }),
                           created_by=current_user.username)
         history.add()
-        
+
         return render_template('admin_edit_key.html',
                                key=apikey,
                                domains=domains,
+                               accounts=accounts,
                                roles=roles,
                                create=create,
                                plain_key=plain_key)
@@ -391,7 +404,7 @@ def manage_keys():
                 history_apikey_role = apikey.role.name
                 history_apikey_description = apikey.description
                 history_apikey_domains = [ domain.name for domain in apikey.domains]
-                
+
                 apikey.delete()
             except Exception as e:
                 current_app.logger.error('Error: {0}'.format(e))
@@ -756,16 +769,16 @@ class DetailedHistory():
 		if 'domain_type' in detail_dict.keys() and 'account_id' in detail_dict.keys():  # this is a domain creation
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped"><tr><td>Domain type:</td><td>{0}</td></tr> <tr><td>Account:</td><td>{1}</td></tr></table>
-				""".format(detail_dict['domain_type'], 
+				""".format(detail_dict['domain_type'],
 						Account.get_name_by_id(self=None, account_id=detail_dict['account_id']) if detail_dict['account_id'] != "0" else "None")
 		elif 'authenticator' in detail_dict.keys(): # this is a user authentication
 			self.detailed_msg = """
 			<table class="table table-bordered table-striped" style="width:565px;">
 			<thead>
 			<tr>
-			<th colspan="3" style="background: 
+			<th colspan="3" style="background:
 			"""
-			
+
 			# Change table header background colour depending on auth success or failure
 			if detail_dict['success'] == 1:
 				self.detailed_msg+= """
@@ -783,7 +796,7 @@ class DetailedHistory():
 
 			self.detailed_msg+= """
 			</tr>
-			</thead>  
+			</thead>
 			<tbody>
 			<tr>
 			<td>Authenticator Type:</td>
@@ -810,18 +823,21 @@ class DetailedHistory():
 			<table class="table table-bordered table-striped"><tr><td>Users with access to this domain</td><td>{0}</td></tr><tr><td>Number of users:</td><td>{1}</td><tr></table>
 				""".format(str(detail_dict['user_has_access']).replace("]","").replace("[", ""), len((detail_dict['user_has_access'])))
 		elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
+			domains = detail_dict['domains' if 'domains' in detail_dict.keys() else 'domain_acl']
+			accounts = detail_dict['accounts'] if 'accounts' in detail_dict.keys() else 'None'
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
-					<tr><td>Key: </td><td>{0}</td></tr> 
+					<tr><td>Key: </td><td>{0}</td></tr>
 					<tr><td>Role:</td><td>{1}</td></tr>
 					<tr><td>Description:</td><td>{2}</td></tr>
-					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
+					<tr><td>Accounts bound to this API key:</td><td>{3}</td></tr>
+					<tr><td>Accessible domains with this API key:</td><td>{4}</td></tr>
 				</table>
 				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'],  str(detail_dict['domain_acl']).replace("]","").replace("[", "") if 'domain_acl' in detail_dict else "")
 		elif 'Update type for domain' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
-					<tr><td>Domain: </td><td>{0}</td></tr> 
+					<tr><td>Domain: </td><td>{0}</td></tr>
 					<tr><td>Domain type:</td><td>{1}</td></tr>
 					<tr><td>Masters:</td><td>{2}</td></tr>
 				</table>
@@ -829,7 +845,7 @@ class DetailedHistory():
 		elif 'Delete API key' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
-					<tr><td>Key: </td><td>{0}</td></tr> 
+					<tr><td>Key: </td><td>{0}</td></tr>
 					<tr><td>Role:</td><td>{1}</td></tr>
 					<tr><td>Description:</td><td>{2}</td></tr>
 					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
@@ -838,7 +854,7 @@ class DetailedHistory():
 		elif 'reverse' in history.msg:
 			self.detailed_msg = """
 			<table class="table table-bordered table-striped">
-					<tr><td>Domain Type: </td><td>{0}</td></tr> 
+					<tr><td>Domain Type: </td><td>{0}</td></tr>
 					<tr><td>Domain Master IPs:</td><td>{1}</td></tr>
 				</table>
 			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'] if 'domain_master_ips' in detail_dict else "")
@@ -892,7 +908,7 @@ def history():
 				}), 500)
 
 
-	if request.method == 'GET': 
+	if request.method == 'GET':
 		doms = accounts = users = ""
 		if current_user.role.name in [ 'Administrator', 'Operator']:
 			all_domain_names = Domain.query.all()
@@ -900,7 +916,7 @@ def history():
 			all_user_names = User.query.all()
 
 
-			
+
 			for d in all_domain_names:
 				doms += d.name + " "
 			for acc in all_account_names:
@@ -928,9 +944,9 @@ def history():
 					AccountUser.user_id == current_user.id
 				)).all()
 
-			
+
 			all_user_names = []
-			for a in all_account_names:            
+			for a in all_account_names:
 				temp =  db.session.query(User) \
 						.join(AccountUser, AccountUser.user_id == User.id) \
 						.outerjoin(Account, Account.id == AccountUser.account_id) \
@@ -948,11 +964,11 @@ def history():
 
 			for d in all_domain_names:
 				doms += d.name + " "
-			
+
 			for a in all_account_names:
 				accounts += a.name + " "
 			for u in all_user_names:
-				users += u.username + " "        
+				users += u.username + " "
 		return render_template('admin_history.html', all_domain_names=doms, all_account_names=accounts, all_usernames=users)
 
 # local_offset is the offset of the utc to the local time
@@ -1002,7 +1018,7 @@ def history_table():    # ajax call data
 		if current_user.role.name in [ 'Administrator', 'Operator' ]:
 			base_query = History.query
 		else:
-			# if the user isn't an administrator or operator, 
+			# if the user isn't an administrator or operator,
 			# allow_user_view_history must be enabled to get here,
 			# so include history for the domains for the user
 			base_query = db.session.query(History) \
@@ -1017,7 +1033,7 @@ def history_table():    # ajax call data
 				))
 
 		domain_name = request.args.get('domain_name_filter') if request.args.get('domain_name_filter') != None \
-															and len(request.args.get('domain_name_filter')) != 0 else None 
+															and len(request.args.get('domain_name_filter')) != 0 else None
 		account_name = request.args.get('account_name_filter') if request.args.get('account_name_filter') != None \
 															and len(request.args.get('account_name_filter')) != 0 else None
 		user_name = request.args.get('auth_name_filter') if request.args.get('auth_name_filter') != None \
@@ -1214,7 +1230,7 @@ def setting_basic():
             'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
-	          'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
+            'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
 
         ]
 

@@ -35,6 +35,7 @@
                                 <th>Role</th>
                                 <th>Description</th>
                                 <th>Domains</th>
+                                <th>Accounts</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -45,6 +46,7 @@
                                 <td>{{ key.role.name }}</td>
                                 <td>{{ key.description }}</td>
                                 <td>{% for domain in key.domains %}{{ domain.name }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+                                <td>{% for account in key.accounts %}{{ account.name }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
                                 <td width="15%">
                                     <button type="button" class="btn btn-flat btn-success button_edit"
                                         onclick="window.location.href='{{ url_for('admin.edit_key', key_id=key.id) }}'">
