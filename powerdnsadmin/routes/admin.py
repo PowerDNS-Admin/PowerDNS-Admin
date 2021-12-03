@@ -817,7 +817,7 @@ class DetailedHistory():
 					<tr><td>Description:</td><td>{2}</td></tr>
 					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
 				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domain_acl']).replace("]","").replace("[", ""))
+				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'],  str(detail_dict['domain_acl']).replace("]","").replace("[", "") if 'domain_acl' in detail_dict else "")
 		elif 'Update type for domain' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
@@ -825,7 +825,7 @@ class DetailedHistory():
 					<tr><td>Domain type:</td><td>{1}</td></tr>
 					<tr><td>Masters:</td><td>{2}</td></tr>
 				</table>
-			""".format(detail_dict['domain'], detail_dict['type'], str(detail_dict['masters']).replace("]","").replace("[", ""))
+			""".format(detail_dict['domain'], detail_dict['type'], str(detail_dict['masters']).replace("]","").replace("[", "") if 'masters' in detail_dict else "")
 		elif 'Delete API key' in history.msg:
 			self.detailed_msg = """
 				<table class="table table-bordered table-striped">
@@ -834,14 +834,14 @@ class DetailedHistory():
 					<tr><td>Description:</td><td>{2}</td></tr>
 					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
 				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domains']).replace("]","").replace("[", ""))
+				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domains']).replace("]","").replace("[", "") if 'domains' in detail_dict else "")
 		elif 'reverse' in history.msg:
 			self.detailed_msg = """
 			<table class="table table-bordered table-striped">
 					<tr><td>Domain Type: </td><td>{0}</td></tr> 
 					<tr><td>Domain Master IPs:</td><td>{1}</td></tr>
 				</table>
-			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'])
+			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'] if 'domain_master_ips' in detail_dict else "")
 
 # convert a list of History objects into DetailedHistory objects
 def convert_histories(histories):
