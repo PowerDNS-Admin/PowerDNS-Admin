@@ -844,7 +844,7 @@ class DetailedHistory():
                 keyname=DetailedHistory.get_key_val(detail_dict, "key"),
                 rolename=DetailedHistory.get_key_val(detail_dict, "role"),
                 description=DetailedHistory.get_key_val(detail_dict, "description"),
-                linked_domains=DetailedHistory.get_key_val(detail_dict, "domains"),
+                linked_domains=DetailedHistory.get_key_val(detail_dict, "domains" if "domains" in detail_dict else "domain_acl"),
                 linked_accounts=DetailedHistory.get_key_val(detail_dict, "accounts"))
 
         elif 'Delete API key' in history.msg:
@@ -886,7 +886,7 @@ class DetailedHistory():
     # check for lower key as well for old databases
     @staticmethod
     def get_key_val(_dict, key):
-        return _dict.get(key, _dict.get(key.lower(), ''))
+        return str(_dict.get(key, _dict.get(key.title(), '')))
 
 
 # convert a list of History objects into DetailedHistory objects
