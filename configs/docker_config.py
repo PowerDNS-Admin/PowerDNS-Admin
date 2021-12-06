@@ -1,7 +1,25 @@
-# Defaults for Docker image
+import urllib.parse
+DEBUG_MODE = False
 BIND_ADDRESS = '0.0.0.0'
 PORT = 80
-SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
+
+#SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
+
+### DATABASE CONFIG
+SQLA_DB_USER = 'pda'
+SQLA_DB_PASSWORD = 'qHZDZ26fPqqCfKZtWkQ9'
+SQLA_DB_HOST = 'mysql'
+SQLA_DB_NAME = 'pda'
+SQLALCHEMY_TRACK_MODIFICATIONS = True
+
+### DATABASE - MySQL
+SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
+    urllib.parse.quote_plus(SQLA_DB_USER),
+    urllib.parse.quote_plus(SQLA_DB_PASSWORD),
+    SQLA_DB_HOST,
+    SQLA_DB_NAME
+)
+
 
 legal_envvars = (
     'SECRET_KEY',

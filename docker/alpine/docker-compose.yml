@@ -1,9 +1,9 @@
-version: "3"
+version: "3.3"
 
 services:
   app:
     image: ngoduykhanh/powerdns-admin:latest
-    container_name: powerdns_admin
+    container_name: powerdns-admin
     ports:
       - "9191:80"
     logging:

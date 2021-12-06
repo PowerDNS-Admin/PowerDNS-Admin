@@ -33,7 +33,7 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 # Add sources
-COPY . /build
+COPY .. /build
 
 # Prepare assets
 RUN yarn install --pure-lockfile --production && \
