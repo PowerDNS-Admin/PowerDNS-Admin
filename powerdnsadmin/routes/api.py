@@ -28,8 +28,9 @@ from ..lib.errors import (
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
     apikey_can_create_domain, apikey_can_remove_domain,
-    apikey_is_admin, apikey_can_access_domain,
+    apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
     api_role_can, apikey_or_basic_auth,
+    callback_if_request_body_contains_key,
 )
 import secrets
 import string
@@ -1025,6 +1026,28 @@ def api_remove_account_user(account_id, user_id):
 
 
 @api_bp.route(
+    '/servers/<string:server_id>/zones/<string:zone_id>/cryptokeys',
+    methods=['GET', 'POST'])
+@apikey_auth
+@apikey_can_access_domain
+@apikey_can_configure_dnssec(http_methods=['POST'])
+def api_zone_cryptokeys(server_id, zone_id):
+    resp = helper.forward_request()
+    return resp.content, resp.status_code, resp.headers.items()
+
+
+@api_bp.route(
+    '/servers/<string:server_id>/zones/<string:zone_id>/cryptokeys/<string:cryptokey_id>',
+    methods=['GET', 'PUT', 'DELETE'])
+@apikey_auth
+@apikey_can_access_domain
+@apikey_can_configure_dnssec()
+def api_zone_cryptokey(server_id, zone_id, cryptokey_id):
+    resp = helper.forward_request()
+    return resp.content, resp.status_code, resp.headers.items()
+
+
+@api_bp.route(
     '/servers/<string:server_id>/zones/<string:zone_id>/<path:subpath>',
     methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
@@ -1039,6 +1062,9 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 @apikey_auth
 @apikey_can_access_domain
 @apikey_can_remove_domain(http_methods=['DELETE'])
+@callback_if_request_body_contains_key(apikey_can_configure_dnssec()(),
+                                       http_methods=['PUT'],
+                                       keys=['dnssec', 'nsec3param'])
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
     if not Setting().get('bg_domain_updates'):
@@ -1071,6 +1097,7 @@ def api_zone_forward(server_id, zone_id):
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
     return resp.content, resp.status_code, resp.headers.items()
+
 
 @api_bp.route('/servers/<path:subpath>', methods=['GET', 'PUT'])
 @apikey_auth
