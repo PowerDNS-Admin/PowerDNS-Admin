@@ -1,0 +1,78 @@
+version: "3.3"
+
+services:
+
+  mysql:
+    image: mariadb:10.6
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=qHZDZ26fPqqCfKZtWkQ9
+      - MYSQL_DATABASE=pda
+      - MYSQL_USER=pda
+      - MYSQL_PASSWORD=qHZDZ26fPqqCfKZtWkQ9
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.1
+    depends_on: ['mysql']
+    restart: unless-stopped
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+    ports:
+      - 8082:80
+
+  pdns:
+    image: azoriansolutions/powerdns-nameserver:4.5.2-alpine-3.14-mysql
+    depends_on: ['powerdns-admin']
+    restart: unless-stopped
+    environment:
+      - AS_MYSQL_CHECK_RETRY=10
+      - AS_MYSQL_CHECK_INTERVAL=4
+      - PDNS_launch=gmysql
+      - PDNS_gmysql_host=mysql
+      - PDNS_gmysql_port=3306
+      - PDNS_gmysql_user=root
+      - PDNS_gmysql_password=qHZDZ26fPqqCfKZtWkQ9
+      - PDNS_gmysql_dbname=pda
+      - PDNS_gmysql_dnssec=yes
+      - PDNS_default_soa_content=pdns noc.@ 0 10800 3600 604800 3600
+      - PDNS_default_ttl=3600
+      - PDNS_local_address=0.0.0.0
+      - PDNS_local_port=53
+      - PDNS_api=yes
+      - PDNS_api_key=scjfNRN4Ch2DBuhk24vr
+      - PDNS_webserver=yes
+      - PDNS_webserver_address=0.0.0.0
+      - PDNS_webserver_allow_from=0.0.0.0/0
+      - PDNS_any_to_tcp=yes
+      - PDNS_master=no
+    ports:
+      - "5053:53/tcp"
+      - "5053:53/udp"
+      - "8081:8081/tcp"
+
+  powerdns-admin:
+    image: azoriansolutions/powerdns-admin:alpine
+    depends_on: ['mysql']
+    restart: unless-stopped
+    environment:
+      - PDA_BUILD_ON_STARTUP=1
+      - PDA_PORT=80
+      - PDA_PDNS_API_KEY=scjfNRN4Ch2DBuhk24vr
+      - PDA_PDNS_VERSION=4.5.2
+      - PDA_PDNS_PROTO=http
+      - PDA_PDNS_HOST=pdns
+      - PDA_PDNS_PORT=8081
+      - SQLA_DB_HOST=mysql
+      - SQLA_DB_NAME=pda
+      - SQLA_DB_USER=root
+      - SQLA_DB_PASSWORD=qHZDZ26fPqqCfKZtWkQ9
+      - SQLA_DB_PORT=3306
+      - ADMIN_USER=nocadmin
+      - ADMIN_USER_PASSWORD=clink henchmen mete coracle uphold
+      - FLASK_ENV=development
+      - FLASK_CONF=/srv/app/configs/development.py
+    ports:
+      - "8080:80"
+    volumes:
+      - /home/matt/Projects/azorian-solutions-llc/projects/docker-images/powerdns-admin/AzorianSolutions/PowerDNS-Admin:/srv/app

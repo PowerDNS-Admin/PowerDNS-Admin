@@ -27,7 +27,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
 )
 
 ### DATABASE - SQLite
-#SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:////srv/app/pdns.db'
 
 ### SMTP config
 # MAIL_SERVER = 'localhost'
