@@ -110,7 +110,7 @@ class Setting(db.Model):
         'oidc_oauth_email': 'email',
         'oidc_oauth_account_name_property': '',
         'oidc_oauth_account_description_property': '',
-        'saml_enabled': False,
+        'saml_enabled': True,
         'saml_debug': True,
         'saml_metadata_url': 'https://example.com/metadata.xml',
         'saml_metadata_cache_lifetime': '1',

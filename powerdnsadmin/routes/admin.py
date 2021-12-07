@@ -22,7 +22,7 @@ from ..models.domain_template import DomainTemplate
 from ..models.domain_template_record import DomainTemplateRecord
 from ..models.api_key import ApiKey
 from ..models.base import db
-
+from ..services.saml import SAML
 from ..lib.schema import ApiPlainKeySchema
 
 apikey_plain_schema = ApiPlainKeySchema(many=True)
@@ -1694,6 +1694,8 @@ def setting_authentication():
                     'msg':
                     'Saved successfully. Please reload PDA to take effect.'
                 }
+                global saml
+                saml = SAML()
         else:
             return abort(400)
 
