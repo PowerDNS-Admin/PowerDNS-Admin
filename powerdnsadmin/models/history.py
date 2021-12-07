@@ -8,6 +8,7 @@ from .base import db
 
 class History(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # format of msg field must not change. History traversing is done using part of the msg field
     msg = db.Column(db.String(256))
     # detail = db.Column(db.Text().with_variant(db.Text(length=2**24-2), 'mysql'))
     detail = db.Column(db.Text())

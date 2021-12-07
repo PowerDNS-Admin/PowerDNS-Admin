@@ -13,7 +13,12 @@
         <li class="active">History</li>
     </ol>
 </section>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
+{% import 'applied_change_macro.html' as applied_change_macro %}
+
+
+
 <section class="content">
     <div class="row">
         <div class="col-xs-12">
@@ -28,32 +33,134 @@
                         Clear History&nbsp;<i class="fa fa-trash"></i>
                     </button>
                 </div>
-                <div class="box-body">
-                    <table id="tbl_history" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Changed by</th>
-                                <th>Content</th>
-                                <th>Time</th>
-                                <th>Detail</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for history in histories %}
-                            <tr class="odd gradeX">
-                                <td>{{ history.created_by }}</td>
-                                <td>{{ history.msg }}</td>
-                                <td>{{ history.created_on }}</td>
-                                <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-primary history-info-button"
-                                        value='{{ history.detail }}'>Info&nbsp;<i class="fa fa-info"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+
+                <div class="box-body clearfix">
+                    <form id="history-search-form" autocomplete="off">
+                        <!-- Custom Tabs -->
+                        <div class="nav-tabs-custom" id="tabs">
+                            <ul class="nav nav-tabs" id="nav_nav_tabs" name="nav_nav_tabs">
+                                <li id="activity_tab" class="active"><a href="#tabs-act"    data-toggle="tab">Search for All Activity</a></li>
+                                <li id="domain_tab"><a href="#tabs-domain"   data-toggle="tab">Search By Domain</a></li>
+                                <li id="account_tab"><a href="#tabs-account" data-toggle="tab">Search By Account</a></li>
+                                {% if current_user.role.name != 'User' %}
+                                <li id="user_auth_tab"><a href="#tabs-auth"  data-toggle="tab">Search for User Authentication</a></li>
+                                {% endif %}
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane" id="tabs-act">
+                                </div>
+                                <div class="tab-pane" id="tabs-domain">
+                                    <td><label>Domain Name</label></td>
+                                    <td>
+                                        <div class="autocomplete" style="width:250px;">
+                                            <input type="text" class="form-control" id="domain_name_filter" name="domain_name_filter" placeholder="Enter * to search for any domain" value=""> 
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="position: relative; top:10px;">
+                                            <td>Record Changelog only &nbsp</td>
+                                                <td>
+                                                    <input type="checkbox" id="domain_changelog_only_checkbox" name="domain_changelog_only_checkbox"
+                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+                                                </td>
+                                        </div>
+                                    </td>
+                                </div>
+                                <div class="tab-pane" id="tabs-account">
+                                    <td><label>Account Name</label></td>
+                                    <td>
+                                        <div class="autocomplete" style="width:250px;">
+                                            <input type="text" class="form-control" id="account_name_filter" name="account_name_filter" placeholder="Enter * to search for any account" value=""> 
+                                        </div>
+                                    </td>
+                                </div>
+                                <div class="tab-pane" id="tabs-auth">
+                                    <td><label>Username</label></td>
+                                    <td>
+                                        <div class="autocomplete" style="width:250px;">
+                                            <input type="text" class="form-control" id="auth_name_filter" name="auth_name_filter" placeholder="Enter * to search for any username" value=""> 
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div style="position: relative; top:10px;">
+                                            <td>Authenticator Types: &nbsp</td>
+                                            <td>&nbsp All</td>
+                                            <td>
+                                                    <input type="checkbox" checked id="auth_all_checkbox" name="auth_all_checkbox"
+                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+                                            </td>
+                                            <td>&nbsp LOCAL</td>
+                                            <td>
+                                                    <input type="checkbox" checked id="auth_local_only_checkbox" name="auth_local_only_checkbox"
+                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+                                            </td>
+                                            <td>&nbsp OAuth</td>
+                                            <td>
+                                                    <input type="checkbox" checked id="auth_oauth_only_checkbox" name="auth_oauth_only_checkbox"
+                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+                                            </td>
+                                            <td>&nbsp SAML</td>
+                                            <td>
+                                                    <input type="checkbox" checked id="auth_saml_only_checkbox" name="auth_saml_only_checkbox"
+                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+                                            </td>
+                                        </div>
+                                    </td>
+                                </div>
+                        </div>
+                        <!-- End Custom Tabs -->
+
+                        <div class="box-body">
+                            <table id="Filters-Table">
+                                <thead>
+                                    <th>Filters</th>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><label>Changed by: &nbsp</label></td>
+                                        <td>
+                                            <div class="autocomplete" style="width:250px;">
+                                                <input type="text" style=" border:1px solid #d2d6de; width:250px; height: 34px;" id="user_name_filter" name="user_name_filter" value="">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="position: relative; top:10px;">
+                                            <label>Minimum date: &nbsp</label>
+                                        </td>
+                                        <td style="position: relative; top:10px;">
+                                            <input type="text" id="min" name="min" class="datepicker" autocomplete="off" style=" border:1px solid #d2d6de; width:250px; height: 34px;">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="position: relative; top:20px;">
+                                            <label>Maximum date: &nbsp</label>
+                                        </td>
+                                        <td style="position: relative; top:20px;">
+                                            <input type="text" id="max" name="max" class="datepicker" autocomplete="off" style=" border:1px solid #d2d6de; width:250px; height: 34px;">
+                                        </td>
+                                    </tr>
+                                    <tr><td>&nbsp</td></tr>
+                                    <tr><td>&nbsp</td></tr>
+                                    <tr>
+                                        <td>
+                                            <button type="submit" id="search-submit" name="search-submit" class="btn btn-flat btn-primary button-filter">Search&nbsp;<i class="fa fa-search"></i></button>
+                                        </td>
+                                        <td>
+                                            <!-- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
+                                            <button id="clear-filters" name="clear-filters" class="btn btn-flat btn-warning button-clearf">Clear Filters&nbsp;<i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
                 </div>
+
+                <div id="table_from_ajax"></div>
+
+
                 <!-- /.box-body -->
             </div>
             <!-- /.box -->
@@ -65,31 +172,304 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    // set up history data table
-    $("#tbl_history").DataTable({
-        "paging": true,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false,
-        "order": [
-            [2, "desc"]
-        ],
-        "columnDefs": [{
-            "type": "time",
-            "render": function (data, type, row) {
-                return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+
+    /* Don't let user search with a blank main field */
+    var canSearch=true;
+    
+    $(document).ready(function () {
+        $.ajax({
+            url: "/admin/history_table",
+            type: "get",
+            success: function(response) {
+                console.log('Submission was successful.');
+                $("#table_from_ajax").html(response);
             },
-            "targets": 2
-        }]
+            error: function(xhr) {
+                console.log("Sending data: ", data, " failed")
+            }
+        });
+        
+        var minDate = $('#min');
+        var maxDate = $('#max');
+        domain_changelog = $('domain_changelog_only_checkbox');
+
+        // Show/hide filters
+        $('#domain_name_filter, #account_name_filter, #auth_name_filter').on('keyup change', function (e) {            
+            if ( $('#domain_name_filter').val() == "" && $('#account_name_filter').val() == "" && $('#auth_name_filter').val() == "")
+                canSearch=false;
+            else
+                canSearch=true;
+        });
+
+        // Handle giving later mindate than current max
+        $('#min').on('change', function () {
+            if (minDate.val() > maxDate.val())
+                $('#max').datepicker('setDate', minDate.val() );
+        });
+
+        // Handle giving earlier maxdate than current min
+        $('#max').on('keyup change', function () {
+            if (maxDate.val() < minDate.val())
+                $('#min').datepicker('setDate', maxDate.val() );
+        });
+
+        $(function() {
+            $( ".datepicker" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                format: "yyyy-mm-dd",
+                endDate: '+0'
+            });
+            // $(".datepicker").datepicker("option", "format", "yy-mm-dd")
+            
+        });
     });
-    $(document.body).on('click', '.history-info-button', function () {
-        var modal = $("#modal_history_info");
-        var info = $(this).val();
-        $('#modal-code-content').html(json_library.prettyPrint(info));
-        modal.modal('show');
+
+    $('.checkbox,.radio').iCheck({
+        checkboxClass: 'icheckbox_square-blue',
+        radioClass: 'iradio_square-blue',
+        increaseArea: '20%'
     });
+
+    //Handle "ALL" Checkbox
+    $('#auth_all_checkbox').on('ifChecked',function() {
+        $('#auth_local_only_checkbox').iCheck('check');
+        $('#auth_oauth_only_checkbox').iCheck('check');
+        $('#auth_saml_only_checkbox').iCheck('check');
+    });
+
+    $('#auth_all_checkbox').on('ifUnchecked',function() {
+        //check if all were checked
+        if($('#auth_local_only_checkbox').is(':checked') && $('#auth_oauth_only_checkbox').is(':checked') && $('#auth_saml_only_checkbox').is(':checked'))
+        {
+            $('#auth_local_only_checkbox').iCheck('uncheck');
+            $('#auth_oauth_only_checkbox').iCheck('uncheck');
+            $('#auth_saml_only_checkbox').iCheck('uncheck');
+        }
+    });
+
+    //Handle other auth checkboxes
+    $('#auth_local_only_checkbox').on('ifChecked',function() {
+        //check if all others were checked
+        if($('#auth_oauth_only_checkbox').is(':checked') && $('#auth_saml_only_checkbox').is(':checked'))
+            $('#auth_all_checkbox').iCheck('check');
+    });
+    $('#auth_local_only_checkbox').on('ifUnchecked',function() {
+        $('#auth_all_checkbox').iCheck('uncheck');
+    });
+
+    $('#auth_oauth_only_checkbox').on('ifChecked',function() {
+        if($('#auth_local_only_checkbox').is(':checked') && $('#auth_saml_only_checkbox').is(':checked'))
+            $('#auth_all_checkbox').iCheck('check');
+    });
+    $('#auth_oauth_only_checkbox').on('ifUnchecked',function() {
+        $('#auth_all_checkbox').iCheck('uncheck');
+    });
+
+    $('#auth_saml_only_checkbox').on('ifChecked',function() {
+        if($('#auth_local_only_checkbox').is(':checked') && $('#auth_oauth_only_checkbox').is(':checked'))
+            $('#auth_all_checkbox').iCheck('check');
+    });
+    $('#auth_saml_only_checkbox').on('ifUnchecked',function() {
+        $('#auth_all_checkbox').iCheck('uncheck');
+    });
+
+    $(document.body).on("click", ".button-clearf", function (e) {
+        e.preventDefault();
+
+        $('#user_name_filter').val('');
+        $('#min').val('');
+        $('#max').val('');
+        $('#domain_name_filter').val('');
+        $('#account_name_filter').val('');
+        $('#auth_name_filter').val('');
+        $('#auth_all_checkbox').iCheck('check');
+        $('#domain_changelog_only_checkbox').iCheck('uncheck');
+    });
+
+    var all_doms = "{{all_domain_names}}".split(" ");
+    var all_accounts = "{{all_account_names}}".split(" ");
+    var all_usernames = "{{all_usernames}}".split(" ");
+    all_doms.pop(); // remove last element which is " "
+    all_accounts.pop();
+    all_usernames.pop();
+
+    function autocomplete(inp, arr) {
+        /*the autocomplete function takes two arguments,
+        the text field element and an array of possible autocompleted values:*/
+        var currentFocus;
+        /*execute a function when someone writes in the text field:*/
+        inp.addEventListener("input", function(e) {
+            var a, b, i, val = this.value;
+            /*close any already open lists of autocompleted values*/
+            closeAllLists();
+            if (!val) { return false;}
+            currentFocus = -1;
+            /*create a DIV element that will contain the items (values):*/
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            /*append the DIV element as a child of the autocomplete container:*/
+            this.parentNode.appendChild(a);
+            /*for each item in the array...*/
+            for (i = 0; i < arr.length; i++) {
+                /*check if the item starts with the same letters as the text field value:*/
+                if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                /*create a DIV element for each matching element:*/
+                b = document.createElement("DIV");
+                /*make the matching letters bold:*/
+                b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                b.innerHTML += arr[i].substr(val.length);
+                /*insert a input field that will hold the current array item's value:*/
+                b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                /*execute a function when someone clicks on the item value (DIV element):*/
+                b.addEventListener("click", function(e) {
+                    /*insert the value for the autocomplete text field:*/
+                    inp.value = this.getElementsByTagName("input")[0].value;
+                    /*close the list of autocompleted values,
+                    (or any other open lists of autocompleted values:*/
+                    closeAllLists();
+                });
+                a.appendChild(b);
+                }
+            }
+        });
+        /*execute a function presses a key on the keyboard:*/
+        inp.addEventListener("keydown", function(e) {
+            var x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                /*If the arrow DOWN key is pressed,
+                increase the currentFocus variable:*/
+                currentFocus++;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 38) { //up
+                /*If the arrow UP key is pressed,
+                decrease the currentFocus variable:*/
+                currentFocus--;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                e.preventDefault();
+                if (currentFocus > -1) {
+                /*and simulate a click on the "active" item:*/
+                if (x) x[currentFocus].click();
+                }
+            }
+        });
+        function addActive(x) {
+            /*a function to classify an item as "active":*/
+            if (!x) return false;
+            /*start by removing the "active" class on all items:*/
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            /*add class "autocomplete-active":*/
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+        function removeActive(x) {
+            /*a function to remove the "active" class from all autocomplete items:*/
+            for (var i = 0; i < x.length; i++) {
+            x[i].classList.remove("autocomplete-active");
+            }
+        }
+        function closeAllLists(elmnt) {
+            /*close all autocomplete lists in the document,
+            except the one passed as an argument:*/
+            var x = document.getElementsByClassName("autocomplete-items");
+            for (var i = 0; i < x.length; i++) {
+            if (elmnt != x[i] && elmnt != inp) {
+                x[i].parentNode.removeChild(x[i]);
+            }
+            }
+        }
+        /*execute a function when someone clicks in the document:*/
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+    autocomplete(document.getElementById("domain_name_filter"), all_doms);
+    autocomplete(document.getElementById("account_name_filter"), all_accounts);
+    autocomplete(document.getElementById("auth_name_filter"), all_usernames);
+    autocomplete(document.getElementById("user_name_filter"), all_usernames);
+
+
+    //  prevent multiple filter field at the same time
+    $('#domain_tab').click(function() {
+            $('#account_name_filter').val('');
+            $('#auth_name_filter').val('');
+            $('#user_name_filter').removeAttr('disabled');
+            canSearch=false;
+            main_field="Domain Name"
+        });
+
+        $('#account_tab').click(function() {
+            $('#domain_name_filter').val('');
+            $('#auth_name_filter').val('');
+            $('#user_name_filter').removeAttr('disabled');
+            canSearch=false;
+            main_field="Account Name"
+        });
+
+        $('#user_auth_tab').click( function() {
+            $('#domain_name_filter').val('');
+            $('#account_name_filter').val('');
+            $('#user_name_filter').val('');
+            $('#user_name_filter').attr('disabled','disabled');
+            canSearch=false;
+            main_field="Username"
+        });
+
+        $('#activity_tab').click( function() {
+            $('#domain_name_filter').val('');
+            $('#account_name_filter').val('');
+            $('#auth_name_filter').val('');
+            $('#user_name_filter').removeAttr('disabled');
+            $('#search-submit').removeAttr('disabled','disabled');
+            canSearch=true;
+            main_field=""
+        });
+
+        // if search submit is pressed, and max date not initialized
+        // then initialize it
+        $('#search-submit').on('click', function() {
+            if ($('#max').val() === "" || $('#max').val() === undefined)
+                $('#max').datepicker('setDate', 'now');
+        });
+
+        $("#history-search-form").submit(function(e){ // ajax call to load results on submition
+            e.preventDefault();  // prevent page reloading
+            
+            if(!canSearch)
+            {
+                var modal = $("#modal_error");
+                modal.find('.modal-body p').text("Please fill out the " + main_field + " field.");
+                modal.modal('show');
+            }
+            else
+            {
+                var form = $(this);
+                var tzoffset = (new Date()).getTimezoneOffset();
+                $.ajax({
+                    url: "/admin/history_table",
+                    type: "get",
+                    data: form.serialize() + "&tzoffset=" + tzoffset,
+                    success: function(response) {
+                        console.log('Submission was successful.');
+                        $("#table_from_ajax").html(response);
+
+                    },
+                    error: function(xhr) {
+                        console.log("Sending data: ", data, " failed")
+                    }
+                });
+            }
+        });
+        
 </script>
 {% endblock %}
 {% block modals %}
@@ -127,7 +507,7 @@
                 <h4 class="modal-title">History Details</h4>
             </div>
             <div class="modal-body">
-                <pre><code id="modal-code-content"></code></pre>
+                <div id="modal-info-content"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Close</button>

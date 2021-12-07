@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}<title>{{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+<section class="content-header">
+    <h1>
+        {% if record_name and record_type %}
+        Record changelog: <b>{{ record_name}} &nbsp {{ record_type }}</b>
+        {% else %}
+        Domain changelog: <b>{{ domain.name | pretty_domain_name }}</b>
+        {% endif %}
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li>Domain</li>
+        <li class="active">{{ domain.name | pretty_domain_name }}</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% import 'applied_change_macro.html' as applied_change_macro %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+                    <button type="button" class="btn btn-flat btn-primary pull-left button_show_records"
+                        id="{{ domain.name }}">
+                        Manage &nbsp;<i class="fa fa-arrow-left"></i>
+                    </button>
+                </div>
+                <div class="box-body">
+
+                    <table id="tbl_changelog" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Changed on</th>
+                                <th>Changed by</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applied_change in allHistoryChanges %}
+
+                            <tr class="odd row_record" id="{{ domain.name }}">
+                                <td id="changed_on" class="changed_on">
+                                    {{ allHistoryChanges[applied_change][0].history_entry.created_on }}
+                                </td>
+                                <td>
+                                    {{allHistoryChanges[applied_change][0].history_entry.created_by }}
+                                </td>
+                            </tr>
+                            <!-- Nested Table -->
+                            <tr style='visibility:collapse'>
+                                <td colspan="2">
+                                    <div class="content">
+                                        {% call applied_change_macro.applied_change_template(allHistoryChanges[applied_change]) %} 
+                                        {% endcall %}
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- end nested table -->
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+    // handle "show records" button
+    $(document.body).on("click", ".button_show_records", function (e) {
+        e.stopPropagation();
+        window.location.href = "/domain/{{domain.name}}";
+    });
+
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function () {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        });
+    }
+
+    // handle click on history record
+    $(document.body).on("click", ".row_record", function (e) {
+        e.stopPropagation();
+        var nextRow = $(this).next('tr')
+        if (nextRow.css("visibility") == "visible")
+            nextRow.css("visibility", "collapse")
+        else
+            nextRow.css("visibility", "visible")
+
+    });
+
+
+    var els = document.getElementsByClassName("changed_on");
+    for (var i = 0; i < els.length; i++) {
+        // els[i].innerHTML = moment.utc(els[i].innerHTML).local().format('YYYY-MM-DD HH:mm:ss');
+        els[i].innerHTML = moment.utc(els[i].innerHTML,'YYYY-MM-DD HH:mm:ss').local().format('YYYY-MM-DD HH:mm:ss');
+    }
+
+</script>
+{% endblock %}

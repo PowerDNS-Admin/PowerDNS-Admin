@@ -1,5 +1,5 @@
 import os
-basedir = os.path.abspath(os.path.abspath(os.path.dirname(__file__)))
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 ### BASIC APP CONFIG
 SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
