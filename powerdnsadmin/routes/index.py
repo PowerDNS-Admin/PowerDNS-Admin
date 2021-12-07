@@ -593,19 +593,27 @@ def logout():
         req = saml.prepare_flask_request(request)
         auth = saml.init_saml_auth(req)
         if Setting().get('saml_logout_url'):
+            try:
+                return redirect(
+                    auth.logout(
+                        name_id_format=
+                        Setting().get('saml_nameid_format'),
+                        return_to=Setting().get('saml_logout_url'),
+                        session_index=session['samlSessionIndex'],
+                        name_id=session['samlNameId']))
+            except:
+                current_app.logger.info(
+                "SAML: Your IDP does not support Single Logout.")
+        try:
             return redirect(
                 auth.logout(
                     name_id_format=
-                    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                    return_to=Setting().get('saml_logout_url'),
+                    Setting().get('saml_nameid_format'),
                     session_index=session['samlSessionIndex'],
                     name_id=session['samlNameId']))
-        return redirect(
-            auth.logout(
-                name_id_format=
-                "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                session_index=session['samlSessionIndex'],
-                name_id=session['samlNameId']))
+        except:
+            current_app.logger.info(
+                "SAML: Your IDP does not support Single Logout.")
 
     redirect_uri = url_for('index.login')
     oidc_logout = Setting().get('oidc_oauth_logout_url')
@@ -897,8 +905,16 @@ def dyndns_update():
 def saml_login():
     if not Setting().get('saml_enabled'):
         abort(400)
+    global saml
     req = saml.prepare_flask_request(request)
-    auth = saml.init_saml_auth(req)
+    try:
+        auth = saml.init_saml_auth(req)
+    except:
+        current_app.logger.info(
+            "SAML: IDP Metadata were not successfully initialized. Reinitializing...")
+        saml = SAML()
+        req = saml.prepare_flask_request(request)
+        auth = saml.init_saml_auth(req)
     redirect_url = OneLogin_Saml2_Utils.get_self_url(req) + url_for(
         'index.saml_authorized')
     return redirect(auth.login(return_to=redirect_url))

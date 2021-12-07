@@ -1020,7 +1020,9 @@ def setting_authentication():
                         'Must have at least one authentication method enabled.'
                 }
             else:
-                Setting().set('saml_enabled', True)
+                Setting().set(
+                    'saml_enabled',
+                    True if request.form.get('saml_enabled') else False)
                 Setting().set('saml_metadata_url',
                               request.form.get('saml_metadata_url'))
                 Setting().set('saml_metadata_cache_lifetime',

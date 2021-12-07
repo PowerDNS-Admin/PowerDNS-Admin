@@ -21,42 +21,60 @@ class SAML(object):
             self.idp_data = None
 
             if Setting().get('saml_idp_entity_id'):
-                self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                    Setting().get('saml_metadata_url'),
-                    entity_id=Setting().get('saml_idp_entity_id'),
-                    required_sso_binding=Setting().get('saml_idp_sso_binding'))
+                try:
+                    self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                        Setting().get('saml_metadata_url'),
+                        entity_id=Setting().get('saml_idp_entity_id'),
+                        required_sso_binding=Setting().get('saml_idp_sso_binding'))
+                except:
+                    self.idp_data = None
             else:
-                self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                    Setting().get('saml_metadata_url'),
-                    entity_id=None)
+                try:
+                    self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                        Setting().get('saml_metadata_url'),
+                        entity_id=None)
+                except:
+                    self.idp_data = None
             if self.idp_data is None:
                 current_app.logger.info(
                     'SAML: IDP Metadata initial load failed')
-                exit(-1)
+                Setting().set('saml_enabled', False)
+                print("SAML EN1 ", Setting().get('saml_enabled'))
+                # exit(-1)
 
     def get_idp_data(self):
 
-        lifetime = timedelta(
-            minutes=int(Setting().get('saml_metadata_cache_lifetime')))     # should be seconds instead of minutes?
-
-        if self.idp_timestamp + lifetime < datetime.now():
-            background_thread = Thread(target=self.retrieve_idp_data())
-            background_thread.start()
+        # lifetime = timedelta(
+        #     minutes=int(Setting().get('saml_metadata_cache_lifetime')))     # should be seconds instead of minutes?
+        # Since SAML is now user-configurable, idp_data may change before the lifetime has ended,
+        # so metadata should not be cached at all, or outdated settings may be used. 
+        try:
+            self.retrieve_idp_data()
+        except:
+            return None
+        # if self.idp_timestamp + lifetime < datetime.now():
+        background_thread = Thread(target=self.retrieve_idp_data())
+        background_thread.start()
 
         return self.idp_data
 
     def retrieve_idp_data(self):
 
         if Setting().get('saml_idp_sso_binding'):
-            new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                Setting().get('saml_metadata_url'),
-                entity_id=Setting().get('saml_idp_entity_id'),
-                required_sso_binding=Setting().get('saml_idp_sso_binding')
-            )
+            try:
+                new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                    Setting().get('saml_metadata_url'),
+                    entity_id=Setting().get('saml_idp_entity_id'),
+                    required_sso_binding=Setting().get('saml_idp_sso_binding'))
+            except:
+                new_idp_data = None
         else:
-            new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                Setting().get('saml_metadata_url'),
-                entity_id=Setting().get('saml_idp_entity_id'))
+            try:
+                new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                    Setting().get('saml_metadata_url'),
+                    entity_id=Setting().get('saml_idp_entity_id'))
+            except:
+                new_idp_data = None
         if new_idp_data is not None:
             self.idp_data = new_idp_data
             self.idp_timestamp = datetime.now()

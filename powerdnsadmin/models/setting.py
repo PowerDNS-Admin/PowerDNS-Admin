@@ -112,10 +112,10 @@ class Setting(db.Model):
         'oidc_oauth_account_description_property': '',
         'saml_enabled': False,
         'saml_debug': True,
-        'saml_metadata_url': 'https://md.aai.grnet.gr/aggregates/grnet-metadata.xml',#'https://md.aai.grnet.gr/aggregates/grnet-metadata.xml'
+        'saml_metadata_url': 'https://example.com/metadata.xml',
         'saml_metadata_cache_lifetime': '1',
-        'saml_idp_sso_binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',#
-        'saml_idp_entity_id': 'https://idp.uoa.gr/idp/shibboleth',#'https://idp.uoa.gr/idp/shibboleth'
+        'saml_idp_sso_binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+        'saml_idp_entity_id': 'https://idp.example.com/idp/',
         'saml_nameid_format': 'urn:oid:0.9.2342.19200300.100.1.1',
         'saml_sp_requested_attributes': '[ \
             {"name": "urn:oid:0.9.2342.19200300.100.1.3", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "email"}, \
