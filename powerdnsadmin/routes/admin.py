@@ -4,7 +4,7 @@ import traceback
 import re
 from base64 import b64encode
 from ast import literal_eval
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
+from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
 from ..decorators import operator_role_required, admin_role_required, history_access_required
@@ -754,112 +754,140 @@ def manage_account():
 
 
 class DetailedHistory():
-	def __init__(self, history, change_set):
-		self.history = history
-		self.detailed_msg = ""
-		self.change_set = change_set
-		
-		if not history.detail:
-			self.detailed_msg = ""
-			return
-		if 'add_rrest' not in history.detail:
-			detail_dict = json.loads(history.detail.replace("'", '"'))
-		else:
-			detail_dict = json.loads(history.detail.replace("\'", ''))
-		if 'domain_type' in detail_dict.keys() and 'account_id' in detail_dict.keys():  # this is a domain creation
-			self.detailed_msg = """
-				<table class="table table-bordered table-striped"><tr><td>Domain type:</td><td>{0}</td></tr> <tr><td>Account:</td><td>{1}</td></tr></table>
-				""".format(detail_dict['domain_type'],
-						Account.get_name_by_id(self=None, account_id=detail_dict['account_id']) if detail_dict['account_id'] != "0" else "None")
-		elif 'authenticator' in detail_dict.keys(): # this is a user authentication
-			self.detailed_msg = """
-			<table class="table table-bordered table-striped" style="width:565px;">
-			<thead>
-			<tr>
-			<th colspan="3" style="background:
-			"""
+    def __init__(self, history, change_set):
+        self.history = history
+        self.detailed_msg = ""
+        self.change_set = change_set
 
-			# Change table header background colour depending on auth success or failure
-			if detail_dict['success'] == 1:
-				self.detailed_msg+= """
-				rgba(68,157,68);"> <p style="color:white;">
-				User {0} authentication success
-				</p></th>
-				""".format(detail_dict['username'])
+        if not history.detail:
+            self.detailed_msg = ""
+            return
 
-			else:
-				self.detailed_msg+= """
-				rgba(201,48,44);"> <p style="color:white;">
-				User {0} authentication failure
-				</th>
-				""".format(detail_dict['username'])
+        if 'add_rrest' in history.detail:
+            detail_dict = json.loads(history.detail.replace("\'", ''))
+        else:
+            detail_dict = json.loads(history.detail.replace("'", '"'))
 
-			self.detailed_msg+= """
-			</tr>
-			</thead>
-			<tbody>
-			<tr>
-			<td>Authenticator Type:</td>
-			<td colspan="2">{0}</td>
-			</tr>
-			<tr>
-			<td>IP Address</td>
-			<td colspan="2">{1}</td>
-			</tr>
-			</tbody>
-			</table>
-			""".format(detail_dict['authenticator'], detail_dict['ip_address'])
+        if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
+            self.detailed_msg = render_template_string("""
+                    <table class="table table-bordered table-striped">
+                        <tr><td>Domain type:</td><td>{{ domaintype }}</td></tr>
+                        <tr><td>Account:</td><td>{{ account }}</td></tr>
+                    </table>
+                """,
+                domaintype=detail_dict['domain_type'],
+                account=Account.get_name_by_id(self=None, account_id=detail_dict['account_id']) if detail_dict['account_id'] != "0" else "None")
 
-		elif 'add_rrests' in detail_dict.keys(): # this is a domain record change
-			# changes_set = []
-			self.detailed_msg = ""
-			# extract_changelogs_from_a_history_entry(changes_set, history, 0)
-		elif 'name' in detail_dict.keys() and 'template' in history.msg: # template creation
-			self.detailed_msg = """
-				<table class="table table-bordered table-striped"><tr><td>Template name:</td><td>{0}</td></tr> <tr><td>Description:</td><td>{1}</td></tr></table>
-				""".format(detail_dict['name'], detail_dict['description'])
-		elif 'Change domain' in history.msg and 'access control' in history.msg: # added or removed a user from a domain
-			self.detailed_msg = """
-			<table class="table table-bordered table-striped"><tr><td>Users with access to this domain</td><td>{0}</td></tr><tr><td>Number of users:</td><td>{1}</td><tr></table>
-				""".format(str(detail_dict['user_has_access']).replace("]","").replace("[", ""), len((detail_dict['user_has_access'])))
-		elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
-			domains = detail_dict['domains' if 'domains' in detail_dict.keys() else 'domain_acl']
-			accounts = detail_dict['accounts'] if 'accounts' in detail_dict.keys() else 'None'
-			self.detailed_msg = """
-				<table class="table table-bordered table-striped">
-					<tr><td>Key: </td><td>{0}</td></tr>
-					<tr><td>Role:</td><td>{1}</td></tr>
-					<tr><td>Description:</td><td>{2}</td></tr>
-					<tr><td>Accounts bound to this API key:</td><td>{3}</td></tr>
-					<tr><td>Accessible domains with this API key:</td><td>{4}</td></tr>
-				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'],
-						   str(accounts).replace("]","").replace("[", ""),
-						   str(domains).replace("]","").replace("[", ""))
-		elif 'Update type for domain' in history.msg:
-			self.detailed_msg = """
-				<table class="table table-bordered table-striped">
-					<tr><td>Domain: </td><td>{0}</td></tr>
-					<tr><td>Domain type:</td><td>{1}</td></tr>
-					<tr><td>Masters:</td><td>{2}</td></tr>
-				</table>
-			""".format(detail_dict['domain'], detail_dict['type'], str(detail_dict['masters']).replace("]","").replace("[", "") if 'masters' in detail_dict else "")
-		elif 'Delete API key' in history.msg:
-			self.detailed_msg = """
-				<table class="table table-bordered table-striped">
-					<tr><td>Key: </td><td>{0}</td></tr>
-					<tr><td>Role:</td><td>{1}</td></tr>
-					<tr><td>Description:</td><td>{2}</td></tr>
-					<tr><td>Accessible domains with this API key:</td><td>{3}</td></tr>
-				</table>
-				""".format(detail_dict['key'], detail_dict['role'], detail_dict['description'], str(detail_dict['domains']).replace("]","").replace("[", "") if 'domains' in detail_dict else "")
-		elif 'reverse' in history.msg:
-			self.detailed_msg = """
-			<table class="table table-bordered table-striped">
-					<tr><td>Domain Type: </td><td>{0}</td></tr>
-					<tr><td>Domain Master IPs:</td><td>{1}</td></tr>
-				</table>
-			""".format(detail_dict['domain_type'], detail_dict['domain_master_ips'] if 'domain_master_ips' in detail_dict else "")
+        elif 'authenticator' in detail_dict: # this is a user authentication
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped" style="width:565px;">
+                    <thead>
+                        <tr>
+                            <th colspan="3" style="background: rgba({{ background_rgba }});">
+                                <p style="color:white;">User {{ username }} authentication {{ auth_result }}</p>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Authenticator Type:</td>
+                            <td colspan="2">{{ authenticator }}</td>
+                        </tr>
+                        <tr>
+                            <td>IP Address</td>
+                            <td colspan="2">{{ ip_address }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """,
+                background_rgba="68,157,68" if detail_dict['success'] == 1 else "201,48,44",
+                username=detail_dict['username'],
+                auth_result="success" if detail_dict['success'] == 1 else "failure",
+                authenticator=detail_dict['authenticator'],
+                ip_address=detail_dict['ip_address'])
+
+        elif 'add_rrests' in detail_dict: # this is a domain record change
+            # changes_set = []
+            self.detailed_msg = ""
+            # extract_changelogs_from_a_history_entry(changes_set, history, 0)
+
+        elif 'name' in detail_dict and 'template' in history.msg: # template creation / deletion
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Template name:</td><td>{{ template_name }}</td></tr>
+                    <tr><td>Description:</td><td>{{ description }}</td></tr>
+                </table>
+                """,
+                template_name=DetailedHistory.get_key_val(detail_dict, "name"),
+                description=DetailedHistory.get_key_val(detail_dict, "description"))
+
+        elif 'Change domain' in history.msg and 'access control' in history.msg: # added or removed a user from a domain
+            users_with_access = DetailedHistory.get_key_val(detail_dict, "user_has_access")
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Users with access to this domain</td><td>{{ users_with_access }}</td></tr>
+                    <tr><td>Number of users:</td><td>{{ users_with_access | length }}</td><tr>
+                </table>
+                """,
+                users_with_access=users_with_access)
+
+        elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Key: </td><td>{{ keyname }}</td></tr>
+                    <tr><td>Role:</td><td>{{ rolename }}</td></tr>
+                    <tr><td>Description:</td><td>{{ description }}</td></tr>
+                    <tr><td>Accessible domains with this API key:</td><td>{{ linked_domains }}</td></tr>
+                    <tr><td>Accessible accounts with this API key:</td><td>{{ linked_accounts }}</td></tr>
+                </table>
+                """,
+                keyname=DetailedHistory.get_key_val(detail_dict, "key"),
+                rolename=DetailedHistory.get_key_val(detail_dict, "role"),
+                description=DetailedHistory.get_key_val(detail_dict, "description"),
+                linked_domains=DetailedHistory.get_key_val(detail_dict, "domains" if "domains" in detail_dict else "domain_acl"),
+                linked_accounts=DetailedHistory.get_key_val(detail_dict, "accounts"))
+
+        elif 'Delete API key' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Key: </td><td>{{ keyname }}</td></tr>
+                    <tr><td>Role:</td><td>{{ rolename }}</td></tr>
+                    <tr><td>Description:</td><td>{{ description }}</td></tr>
+                    <tr><td>Accessible domains with this API key:</td><td>{{ linked_domains }}</td></tr>
+                </table>
+                """,
+                keyname=DetailedHistory.get_key_val(detail_dict, "key"),
+                rolename=DetailedHistory.get_key_val(detail_dict, "role"),
+                description=DetailedHistory.get_key_val(detail_dict, "description"),
+                linked_domains=DetailedHistory.get_key_val(detail_dict, "domains"))
+
+        elif 'Update type for domain' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Domain: </td><td>{{ domain }}</td></tr>
+                    <tr><td>Domain type:</td><td>{{ domain_type }}</td></tr>
+                    <tr><td>Masters:</td><td>{{ masters }}</td></tr>
+                </table>
+                """,
+                domain=DetailedHistory.get_key_val(detail_dict, "domain"),
+                domain_type=DetailedHistory.get_key_val(detail_dict, "type"),
+                masters=DetailedHistory.get_key_val(detail_dict, "masters"))
+
+        elif 'reverse' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Domain Type: </td><td>{{ domain_type }}</td></tr>
+                    <tr><td>Domain Master IPs:</td><td>{{ domain_master_ips }}</td></tr>
+                </table>
+                """,
+                domain_type=DetailedHistory.get_key_val(detail_dict, "domain_type"),
+                domain_master_ips=DetailedHistory.get_key_val(detail_dict, "domain_master_ips"))
+
+    # check for lower key as well for old databases
+    @staticmethod
+    def get_key_val(_dict, key):
+        return str(_dict.get(key, _dict.get(key.title(), '')))
+
 
 # convert a list of History objects into DetailedHistory objects
 def convert_histories(histories):
