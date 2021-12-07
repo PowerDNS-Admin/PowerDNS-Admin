@@ -32,9 +32,9 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 # MAIL_DEFAULT_SENDER = ('PowerDNS-Admin', 'noreply@domain.ltd')
 
 # SAML Authnetication
-SAML_ENABLED = False
+# SAML_ENABLED = True
 # SAML_DEBUG = True
-# SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
+SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
 # ##Example for ADFS Metadata-URL
 # SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
 # #Cache Lifetime in Seconds

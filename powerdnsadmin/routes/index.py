@@ -141,7 +141,7 @@ def oidc_login():
 
 @index_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    SAML_ENABLED = current_app.config.get('SAML_ENABLED')
+    SAML_ENABLED = Setting().get('saml_enabled')
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard.dashboard'))
@@ -587,18 +587,17 @@ def get_azure_groups(uri):
 
 @index_bp.route('/logout')
 def logout():
-    if current_app.config.get(
-            'SAML_ENABLED'
-    ) and 'samlSessionIndex' in session and current_app.config.get(
-            'SAML_LOGOUT'):
+    if Setting().get('saml_enabled'
+        ) and 'samlSessionIndex' in session and Setting().get(
+            'saml_logout'):
         req = saml.prepare_flask_request(request)
         auth = saml.init_saml_auth(req)
-        if current_app.config.get('SAML_LOGOUT_URL'):
+        if Setting().get('saml_logout_url'):
             return redirect(
                 auth.logout(
                     name_id_format=
                     "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                    return_to=current_app.config.get('SAML_LOGOUT_URL'),
+                    return_to=Setting().get('saml_logout_url'),
                     session_index=session['samlSessionIndex'],
                     name_id=session['samlNameId']))
         return redirect(
@@ -896,7 +895,7 @@ def dyndns_update():
 ### START SAML AUTHENTICATION ###
 @index_bp.route('/saml/login')
 def saml_login():
-    if not current_app.config.get('SAML_ENABLED'):
+    if not Setting().get('saml_enabled'):
         abort(400)
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
@@ -907,7 +906,7 @@ def saml_login():
 
 @index_bp.route('/saml/metadata')
 def saml_metadata():
-    if not current_app.config.get('SAML_ENABLED'):
+    if not Setting().get('saml_enabled'):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
 
@@ -928,7 +927,7 @@ def saml_metadata():
 @index_bp.route('/saml/authorized', methods=['GET', 'POST'])
 def saml_authorized():
     errors = []
-    if not current_app.config.get('SAML_ENABLED'):
+    if not Setting().get('saml_enabled'):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
     req = saml.prepare_flask_request(request)
@@ -945,9 +944,9 @@ def saml_authorized():
         if 'RelayState' in request.form and self_url != request.form[
                 'RelayState']:
             return redirect(auth.redirect_to(request.form['RelayState']))
-        if current_app.config.get('SAML_ATTRIBUTE_USERNAME', False):
+        if Setting().get('saml_attribute_username'):
             username = session['samlUserdata'][
-                current_app.config['SAML_ATTRIBUTE_USERNAME']][0].lower()
+                Setting().get('saml_attribute_username')][0].lower()
         else:
             username = session['samlNameId'].lower()
         user = User.query.filter_by(username=username).first()
@@ -958,22 +957,38 @@ def saml_authorized():
                         email=session['samlNameId'])
             user.create_local_user()
         session['user_id'] = user.id
-        email_attribute_name = current_app.config.get('SAML_ATTRIBUTE_EMAIL',
-                                                      'email')
-        givenname_attribute_name = current_app.config.get(
-            'SAML_ATTRIBUTE_GIVENNAME', 'givenname')
-        surname_attribute_name = current_app.config.get(
-            'SAML_ATTRIBUTE_SURNAME', 'surname')
-        name_attribute_name = current_app.config.get('SAML_ATTRIBUTE_NAME',
-                                                     None)
-        account_attribute_name = current_app.config.get(
-            'SAML_ATTRIBUTE_ACCOUNT', None)
-        admin_attribute_name = current_app.config.get('SAML_ATTRIBUTE_ADMIN',
-                                                      None)
-        group_attribute_name = current_app.config.get('SAML_ATTRIBUTE_GROUP',
-                                                      None)
-        admin_group_name = current_app.config.get('SAML_GROUP_ADMIN_NAME',
-                                                  None)
+        if Setting().get('saml_attribute_email'):
+            email_attribute_name = Setting().get('saml_attribute_email')
+        else:
+            email_attribute_name = 'email'
+        if Setting().get('saml_attribute_givenname'):
+            givenname_attribute_name = Setting().get('saml_attribute_givenname')
+        else:
+            givenname_attribute_name = 'givenname'
+        if Setting().get('saml_attribute_surname'):
+            surname_attribute_name = Setting().get('saml_attribute_surname')
+        else:
+            surname_attribute_name = 'surname'
+        if Setting().get('saml_attribute_name'):
+            name_attribute_name = Setting().get('saml_attribute_name')
+        else:
+            name_attribute_name = None
+        if Setting().get('saml_attribute_account'):
+            account_attribute_name = Setting().get('saml_attribute_account')
+        else:
+            account_attribute_name = None
+        if Setting().get('saml_attribute_admin'):
+            admin_attribute_name = Setting().get('saml_attribute_admin')
+        else:
+            admin_attribute_name = None
+        if Setting().get('saml_attribute_group'):
+            group_attribute_name = Setting().get('saml_attribute_group')
+        else:
+            group_attribute_name = None
+        if Setting().get('saml_group_admin_name'):
+            admin_group_name = Setting().get('saml_group_admin_name')
+        else:
+            admin_group_name = None
         group_to_account_mapping = create_group_to_account_mapping()
 
         if email_attribute_name in session['samlUserdata']:
@@ -1045,8 +1060,7 @@ def saml_authorized():
 
 
 def create_group_to_account_mapping():
-    group_to_account_mapping_string = current_app.config.get(
-        'SAML_GROUP_TO_ACCOUNT_MAPPING', None)
+    group_to_account_mapping_string = Setting().get('saml_group_to_account_mapping')
     if group_to_account_mapping_string and len(
             group_to_account_mapping_string.strip()) > 0:
         group_to_account_mapping = group_to_account_mapping_string.split(',')
@@ -1096,8 +1110,8 @@ def saml_logout():
         clear_session()
         if url is not None:
             return redirect(url)
-        elif current_app.config.get('SAML_LOGOUT_URL') is not None:
-            return redirect(current_app.config.get('SAML_LOGOUT_URL'))
+        elif Setting().get('saml_logout_url') is not None:
+            return redirect(Setting().get('saml_logout_url'))
         else:
             return redirect(url_for('login'))
     else:

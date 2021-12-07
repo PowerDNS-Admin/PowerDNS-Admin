@@ -766,12 +766,12 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_sp_contact_name">SP Contact Name</label>
-                                                    <input type="text" class="form-control" name="saml_sp_contact_name" id="saml_sp_contact_name" placeholder="<contact name>" data-error="Please input SAML SP contact name" value="{{ SETTING.get('saml_sp_entity_name') }}">
+                                                    <input type="text" class="form-control" name="saml_sp_contact_name" id="saml_sp_contact_name" placeholder="<contact name>" data-error="Please input SAML SP contact name" value="{{ SETTING.get('saml_sp_contact_name') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_sp_contact_mail">SP Contact Mail</label>
-                                                    <input type="text" class="form-control" name="saml_sp_contact_mail" id="saml_sp_contact_mail" placeholder="<contact mail>" data-error="Please input SAML SP contact mail" value="{{ SETTING.get('saml_sp_entity_mail') }}">
+                                                    <input type="text" class="form-control" name="saml_sp_contact_mail" id="saml_sp_contact_mail" placeholder="<contact mail>" data-error="Please input SAML SP contact mail" value="{{ SETTING.get('saml_sp_contact_mail') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
@@ -800,7 +800,7 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_logout_url">Logout URL</label>
-                                                    <input type="text" class="form-control" name="saml_saml_logout_url" id="saml_logout_url" placeholder="must be a valid logout URL" data-error="Please input SAML logout URL" value="{{ SETTING.get('saml_logout_url') }}">
+                                                    <input type="text" class="form-control" name="saml_logout_url" id="saml_logout_url" placeholder="must be a valid logout URL" data-error="Please input SAML logout URL" value="{{ SETTING.get('saml_logout_url') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
@@ -809,6 +809,38 @@
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_assertion_encrypted" name="saml_assertion_encrypted" class="checkbox" {% if SETTING.get('saml_assertion_encrypted') %}checked{% endif %}>
                                                     <label for="saml_assertion_encrypted">Encrypted Assertion</label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_want_assertions_signed" name="saml_want_assertions_signed" class="checkbox" {% if SETTING.get('saml_want_assertions_signed') %}checked{% endif %}>
+                                                    <label for="saml_want_assertions_encrypted">Want Assertions Signed </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_digest_algorithm">Digest Algorithm</label>
+                                                    <input type="text" class="form-control" name="saml_digest_algorithm" id="saml_digest_algorithm" placeholder="must be a valid algorithm" data-error="Please input SAML digest algorithm" value="{{ SETTING.get('saml_digest_algorithm') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_signature_algorithm">Signature Algorithm</label>
+                                                    <input type="text" class="form-control" name="saml_signature_algorithm" id="saml_signature_algorithm" placeholder="must be a valid algorithm" data-error="Please input SAML signature algorithm" value="{{ SETTING.get('saml_signature_algorithm') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_want_message_signed" name="saml_want_message_signed" class="checkbox" {% if SETTING.get('saml_want_message_signed') %}checked{% endif %}>
+                                                    <label for="saml_want_message_signed">Want Message Signed </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <input type="checkbox" id="saml_sign_metadata" name="saml_sign_metadata" class="checkbox" {% if SETTING.get('saml_signed_metadata') %}checked{% endif %}>
+                                                    <label for="saml_sign_metadata">Sign Metadata </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_metadata_cache_duration">Metadata Cache Duration</label>
+                                                    <input type="text" class="form-control" name="saml_metadata_cache_duration" id="saml_metadata_cache_duration" placeholder="Cache duration in seconds" data-error="Please input Metadata Cache Duration" value="{{ SETTING.get('saml_metadata_cache_duration') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_metadata_valid_until">Metadata Valid Until</label>
+                                                    <input type="text" class="form-control" name="saml_metadata_valid_until" id="saml_metadata_valid_until" placeholder="Time-moment when metadata stops being valid" data-error="Please input Metadata Expiration Date" value="{{ SETTING.get('saml_metadata_valid_until') }}">
+                                                    <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
                                             <div class="form-group">
@@ -1315,7 +1347,7 @@
     {% endif %}
     //END: OIDC Tab JS
 
-    // START: OIDC tab js
+    // START: SAML tab js
     $('#saml_enabled').iCheck({
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
@@ -1340,6 +1372,10 @@
             $('#saml_cert_file').prop('required', true);
             $('#saml_cert_key').prop('required', true);
             $('#saml_logout_url').prop('required', true);
+            $('#saml_digest_algorithm').prop('required', true);
+            $('#saml_signature_algorithm').prop('required', true);
+            $('#saml_metadata_cache_duration').prop('required', true);
+            $('#saml_metadata_valid_until').prop('required', true);
         } else {
             $('#saml_metadata_url').prop('required', false);
             $('#saml_metadata_cache_lifetime').prop('required', false);
@@ -1359,6 +1395,10 @@
             $('#saml_cert_file').prop('required', false);
             $('#saml_cert_key').prop('required', false);
             $('#saml_logout_url').prop('required', false);
+            $('#saml_digest_algorithm').prop('required', false);
+            $('#saml_signature_algorithm').prop('required', false);
+            $('#saml_metadata_cache_duration').prop('required', false);
+            $('#saml_metadata_valid_until').prop('required', false);
         }
     });
     // init validation requirement at first time page load
@@ -1380,10 +1420,12 @@
         $('#saml_sp_contact_mail').prop('required', true);
         $('#saml_cert_file').prop('required', true);
         $('#saml_cert_key').prop('required', true);
-        $('#saml_sign_request').prop('required', true);
         $('#saml_logout').prop('required', true);
         $('#saml_logout_url').prop('required', true);
-        $('#saml_assertion_encrypted').prop('required', true);
+        $('#saml_digest_algorithm').prop('required', true);
+        $('#saml_signature_algorithm').prop('required', true);
+        $('#saml_metadata_cache_duration').prop('required', true);
+        $('#saml_metadata_valid_until').prop('required', true);
     {% endif %}
 
     $('#saml_sign_request').iCheck({
@@ -1398,7 +1440,19 @@
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
     })
-    // END: OIDC Tab js
+    $('#saml_want_assertions_signed').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+    $('#saml_want_message_signed').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+    $('#saml_sign_metadata').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+    // END: SAML Tab js
 
 </script>
 {% endblock %}

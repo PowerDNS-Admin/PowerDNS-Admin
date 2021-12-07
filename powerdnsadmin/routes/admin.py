@@ -1021,7 +1021,6 @@ def setting_authentication():
                 }
             else:
                 Setting().set('saml_enabled', True)
-                print("SAML ENABLED = ",Setting().get('saml_enabled'))
                 Setting().set('saml_metadata_url',
                               request.form.get('saml_metadata_url'))
                 Setting().set('saml_metadata_cache_lifetime',

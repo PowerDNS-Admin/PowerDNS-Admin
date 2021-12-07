@@ -111,10 +111,11 @@ class Setting(db.Model):
         'oidc_oauth_account_name_property': '',
         'oidc_oauth_account_description_property': '',
         'saml_enabled': False,
-        'saml_metadata_url': 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml',
+        'saml_debug': True,
+        'saml_metadata_url': 'https://md.aai.grnet.gr/aggregates/grnet-metadata.xml',#'https://md.aai.grnet.gr/aggregates/grnet-metadata.xml'
         'saml_metadata_cache_lifetime': '1',
-        'saml_idp_sso_binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-        'saml_idp_entity_id': 'https://idp.example.edu/idp',
+        'saml_idp_sso_binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',#
+        'saml_idp_entity_id': 'https://idp.uoa.gr/idp/shibboleth',#'https://idp.uoa.gr/idp/shibboleth'
         'saml_nameid_format': 'urn:oid:0.9.2342.19200300.100.1.1',
         'saml_sp_requested_attributes': '[ \
             {"name": "urn:oid:0.9.2342.19200300.100.1.3", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "email"}, \
@@ -126,15 +127,25 @@ class Setting(db.Model):
         'saml_attribute_username': 'urn:oid:0.9.2342.19200300.100.1.1',
         'saml_attribute_admin': 'https://example.edu/pdns-admin',
         'saml_attribute_account': 'https://example.edu/pdns-account',
+        'saml_attribute_group': None,
+        'saml_group_admin_name': None,
+        'saml_group_to_account_mapping': None,
         'saml_sp_entity_id': 'http://<SAML SP ENTITY ID>',
-        'saml_sp_entity_name': '<contact name>',
-        'saml_sp_entity_mail': '<contact mail>',
+        'saml_sp_contact_name': '<contact name>',
+        'saml_sp_contact_mail': '<contact mail>',
         'saml_cert_file': '/etc/pki/powerdns-admin/cert.crt',
         'saml_cert_key': '/etc/pki/powerdns-admin/key.pem',
         'saml_sign_request': False,
         'saml_logout': False,
         'saml_logout_url': 'https://google.com',
         'saml_assertion_encrypted': True,
+        'saml_digest_algorithm': 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',
+        'saml_signature_algorithm': 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',
+        'saml_want_assertions_signed': True,
+        'saml_sign_metadata': True,
+        'saml_want_message_signed': True,
+        'saml_metadata_cache_duration': 'PT5M',
+        'saml_metadata_valid_until': '',
         'forward_records_allow_edit': {
             'A': True,
             'AAAA': True,
