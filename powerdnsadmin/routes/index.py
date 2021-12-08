@@ -1037,7 +1037,11 @@ def saml_authorized():
         elif Setting().get('saml_autoprovisioning'):
             urn_prefix = Setting().get('saml_urn_prefix') 
             autoprovisioning_attribute = Setting().get('saml_autoprovisioning_attribute')
-            Entitlements = read_saml_entitlements(urn_prefix, autoprovisioning_attribute, session['samlUserdata'])
+            Entitlements = []
+            if autoprovisioning_attribute in session['samlUserdata']:
+                for k in session['samlUserdata'][autoprovisioning_attribute]:
+                    Entitlements.append(k)
+            
             if len(Entitlements)==0 and Setting().get('saml_purge'):
                 if user.role.name != 'User':
                     user.role_id = Role.query.filter_by(name='User').first().id
@@ -1046,8 +1050,8 @@ def saml_authorized():
                                     created_by='SAML Autoprovision')
                     history.add()
             elif len(Entitlements)!=0:
-                if checkForPDAEntries(Entitlements, autoprovisioning_attribute):
-                    user.updateUser(Entitlements, autoprovisioning_attribute)
+                if checkForPDAEntries(Entitlements, urn_prefix):
+                    user.updateUser(Entitlements, urn_prefix)
                 else:
                     current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
                     if Setting().get('saml_purge'):
@@ -1068,14 +1072,6 @@ def saml_authorized():
     else:
         return render_template('errors/SAML.html', errors=errors)
 
-def read_saml_entitlements(urn_prefix, autoprovisioning_attribute, saml_userdata):
-    Entitlements = []
-    if autoprovisioning_attribute in saml_userdata:
-        for k in saml_userdata[autoprovisioning_attribute]:
-            pref = k.split(":powerdns-admin:")[0]
-            if pref == urn_prefix:
-                Entitlements.append(k)
-    return Entitlements
 
 def create_group_to_account_mapping():
     group_to_account_mapping_string = current_app.config.get(
