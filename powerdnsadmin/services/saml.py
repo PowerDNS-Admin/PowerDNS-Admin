@@ -175,7 +175,7 @@ class SAML(object):
         settings['security']['metadataValidUntil'] = None
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
-            'signatureAlgorithm'] = Setting.get('saml_signature_algorithm')
+            'signatureAlgorithm'] = Setting().get('saml_signature_algorithm')
         settings['security']['wantAssertionsEncrypted'] = Setting().get('saml_assertion_encrypted')
         settings['security']['wantAttributeStatement'] = True
         settings['security']['wantNameId'] = True

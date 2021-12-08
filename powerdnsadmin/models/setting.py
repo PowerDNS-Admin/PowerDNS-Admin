@@ -112,14 +112,16 @@ class Setting(db.Model):
         'oidc_oauth_account_description_property': '',
         'saml_enabled': True,
         'saml_debug': True,
-        'saml_metadata_url': 'https://example.com/metadata.xml',
+        'saml_metadata_url': 'https://md.aai.grnet.gr/aggregates/grnet-metadata.xml',
         'saml_metadata_cache_lifetime': '1',
         'saml_idp_sso_binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-        'saml_idp_entity_id': 'https://idp.example.com/idp/',
-        'saml_nameid_format': 'urn:oid:0.9.2342.19200300.100.1.1',
+        'saml_idp_entity_id': 'https://idp.uoa.gr/idp/shibboleth',
+        'saml_nameid_format': 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
         'saml_sp_requested_attributes': '[ \
+            {"name": "urn:oid:0.9.2342.19200300.100.1.1", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "username" }, \
             {"name": "urn:oid:0.9.2342.19200300.100.1.3", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": true, "friendlyName": "email"}, \
-            {"name": "mail", "isRequired": false, "friendlyName": "test-field"} \
+            {"name": "urn:oid:2.5.4.42", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": false, "friendlyName": "givenname"}, \
+            {"name": "urn:oid:2.5.4.4", "nameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri", "isRequired": false, "friendlyName": "surname" } \
             ]',
         'saml_attribute_email': 'urn:oid:0.9.2342.19200300.100.1.3',
         'saml_attribute_givenname': 'urn:oid:2.5.4.42',
@@ -130,13 +132,13 @@ class Setting(db.Model):
         'saml_attribute_group': None,
         'saml_group_admin_name': None,
         'saml_group_to_account_mapping': None,
-        'saml_sp_entity_id': 'http://<SAML SP ENTITY ID>',
-        'saml_sp_contact_name': '<contact name>',
-        'saml_sp_contact_mail': '<contact mail>',
+        'saml_sp_entity_id': 'https://dns.uoa.gr',
+        'saml_sp_contact_name': 'admin',
+        'saml_sp_contact_mail': 'pda@uoa.gr',
         'saml_cert_file': '/etc/pki/powerdns-admin/cert.crt',
         'saml_cert_key': '/etc/pki/powerdns-admin/key.pem',
         'saml_sign_request': False,
-        'saml_logout': False,
+        'saml_logout': True,
         'saml_logout_url': 'https://google.com',
         'saml_assertion_encrypted': False,
         'saml_digest_algorithm': 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',
