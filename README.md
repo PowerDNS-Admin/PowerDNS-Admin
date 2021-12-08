@@ -45,7 +45,3 @@ The app has a plethora of settings that may be configured through a number of me
 ## LICENSE
 MIT. See [LICENSE](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/LICENSE)
 
-## Support
-If you like the project and want to support it, you can *buy me a coffee* ☕
-
-<a href="https://www.buymeacoffee.com/khanhngo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
