@@ -170,12 +170,12 @@ class SAML(object):
         settings['debug'] = Setting().get('saml_debug')
         settings['security'] = {}
         settings['security'][
-            'digestAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+            'digestAlgorithm'] = Setting().get('saml_digest_algorithm')
         settings['security']['metadataCacheDuration'] = None
         settings['security']['metadataValidUntil'] = None
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
-            'signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+            'signatureAlgorithm'] = Setting.get('saml_signature_algorithm')
         settings['security']['wantAssertionsEncrypted'] = Setting().get('saml_assertion_encrypted')
         settings['security']['wantAttributeStatement'] = True
         settings['security']['wantNameId'] = True
