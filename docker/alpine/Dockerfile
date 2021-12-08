@@ -8,7 +8,6 @@ LABEL maintainer="matt@azorian.solutions"
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
-    PDA_PORT=${PDA_PORT:-80} \
     PDA_UID=${PDA_UID:-1000} \
     PDA_USER=${PDA_USER:-pda} \
     PDA_GID=${PDA_GID:-1000} \
@@ -19,7 +18,7 @@ ENV LC_ALL=en_US.UTF-8 \
 # - Install required APK packages per the required dependencies
 # - Upgrade Python pip package using pip3
 RUN apk update \
-    && apk add --no-cache curl build-base tzdata libcap libffi-dev libxml2-dev xmlsec-dev mariadb-connector-c-dev \
+    && apk add --no-cache bash grep curl build-base tzdata libcap libffi-dev libxml2-dev xmlsec-dev mariadb-connector-c-dev \
     openldap-dev python3-dev py3-pip py3-gunicorn py3-psycopg2 yarn cargo mysql-client postgresql-client sqlite \
     && pip install --upgrade pip
 
@@ -33,7 +32,6 @@ WORKDIR /srv/app
 RUN pip install -r requirements.txt
 
 # Copy all project files into the container's /app directory
-# FIXME: This is too broad and will almost guarentee constant image re-builds that can be skipped in dev environment
 COPY . /srv/app
 
 # Perform the following tasks:
@@ -62,7 +60,7 @@ VOLUME /srv/app
 EXPOSE 80/TCP
 
 # Set the entrypoint script of the container
-ENTRYPOINT ["sh", "/srv/app/docker/shared/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/srv/app/docker/shared/entrypoint"]
 
 # Set the default command of the container to be ran following the entrypoint script
-CMD ["sh", "-c", "/srv/app/run.py"]
+CMD ["/bin/sh", "-c", "/srv/app/run.py"]

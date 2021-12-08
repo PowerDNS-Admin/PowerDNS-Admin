@@ -8,7 +8,6 @@ LABEL maintainer="matt@azorian.solutions"
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
-    PDA_PORT=${PDA_PORT:-80} \
     PDA_UID=${PDA_UID:-1000} \
     PDA_USER=${PDA_USER:-pda} \
     PDA_GID=${PDA_GID:-1000} \
@@ -27,7 +26,8 @@ ENV LC_ALL=en_US.UTF-8 \
 RUN apt update -y \
     && apt install -y --no-install-recommends apt-transport-https locales locales-all python3-pip python3-setuptools \
     python3-dev curl libsasl2-dev libldap2-dev libssl-dev libxml2-dev libxmlsec1 libxslt1-dev libxmlsec1-dev xmlsec1 \
-    libffi-dev build-essential libmariadb-dev-compat pkg-config mysql-client postgresql-client sqlite3 \
+    libffi-dev build-essential libmariadb-dev-compat pkg-config default-mysql-client postgresql-client sqlite3 \
+    netcat-openbsd \
     && curl -sL https://deb.nodesource.com/setup_14.x | bash - \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
@@ -47,7 +47,6 @@ WORKDIR /srv/app
 RUN pip3 install -r requirements.txt
 
 # Copy all project files into the container's /srv/app directory
-# FIXME: This is too broad and will almost guarentee constant image re-builds that can be skipped in dev environment
 COPY . /srv/app
 
 # Perform the following tasks:
@@ -72,7 +71,7 @@ VOLUME /srv/app
 EXPOSE 80/TCP
 
 # Set the entrypoint script of the container
-ENTRYPOINT ["sh", "/srv/app/docker/shared/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/srv/app/docker/shared/entrypoint"]
 
 # Set the default command of the container to be ran following the entrypoint script
-CMD ["sh", "-c", "/srv/app/run.py"]
+CMD ["/bin/sh", "-c", "/srv/app/run.py"]

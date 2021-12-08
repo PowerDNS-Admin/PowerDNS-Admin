@@ -1,0 +1,26 @@
+version: "3.3"
+services:
+  powerdns-admin:
+    image: ngoduykhanh/powerdns-admin:0.2.4
+    restart: unless-stopped
+    environment:
+      - PDA_CHECK_API_ENABLED=true
+      - PDA_GUNICORN_ENABLED=true
+      - PDA_GUNICORN_TIMEOUT=2
+      - PDA_GUNICORN_WORKERS=10
+      - PDA_GUNICORN_LOGLEVEL=info
+      - PDA_PDNS_API_KEY=YOUR-PDNS-API-SERVER-API-KEY
+      - PDA_PDNS_VERSION=YOUR-PDNS-API-SERVER-VERSION
+      - PDA_PDNS_PROTO=YOUR-PDNS-API-SERVER-HTTP-PROTOCOL
+      - PDA_PDNS_HOST=YOUR-PDNS-API-SERVER-HOSTNAME
+      - PDA_PDNS_PORT=YOUR-PDNS-API-SERVER-PORT
+      - PDAC_SALT=ntR8BmMQb7MKTJ5YrgQwZr3pxU3uLG
+      - PDAC_SECRET_KEY=eJ92QLuennVStHTj5FVwxz7m4r3Ng3
+      - PDAC_SIGNUP_ENABLED=false
+      - PDAC_HSTS_ENABLED=true
+      - PDAC_SQLALCHEMY_DATABASE_URI=sqlite:////srv/app/pdns.db
+      - PDAC_SAML_ENABLED=false
+      - SQLALCHEMY_TRACK_MODIFICATIONS=false
+      - FLASK_ENV=production
+    ports:
+      - "8080:80"

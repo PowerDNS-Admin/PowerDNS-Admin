@@ -1,35 +1,35 @@
-import os
-import urllib.parse
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-### BASIC APP CONFIG
-DEBUG_MODE = True
+########################################
+# Core App Config
+########################################
+PDA_BIND_ADDRESS = '0.0.0.0'
+PDA_BIND_PORT = 80
+PDA_DEBUG = True
 SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
-BIND_ADDRESS = '0.0.0.0'
-PORT = 80
+SIGNUP_ENABLED = True
+HSTS_ENABLED = False
 OFFLINE_MODE = False
+FILESYSTEM_SESSIONS_ENABLED = False
 
-### DATABASE CONFIG
+########################################
+# MySQL Database Config
+########################################
+SQLA_DB_HOST = 'mysql'
+SQLA_DB_PORT = 3306
 SQLA_DB_USER = 'pda'
 SQLA_DB_PASSWORD = 'qHZDZ26fPqqCfKZtWkQ9'
-SQLA_DB_HOST = 'mysql'
 SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-### DATABASE - MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
-    urllib.parse.quote_plus(SQLA_DB_USER),
-    urllib.parse.quote_plus(SQLA_DB_PASSWORD),
-    SQLA_DB_HOST,
-    SQLA_DB_NAME
-)
+########################################
+# SQLite Database Config
+########################################
+# Uncomment the following line to use SQLite instead of MySQL
+# SQLALCHEMY_DATABASE_URI = 'sqlite:////srv/app/pdns.db'
 
-### DATABASE - SQLite
-SQLALCHEMY_DATABASE_URI = 'sqlite:////srv/app/pdns.db'
-
-### SMTP config
+########################################
+# SMTP Config
+########################################
 # MAIL_SERVER = 'localhost'
 # MAIL_PORT = 25
 # MAIL_DEBUG = False
@@ -39,28 +39,27 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:////srv/app/pdns.db'
 # MAIL_PASSWORD = None
 # MAIL_DEFAULT_SENDER = ('PowerDNS-Admin', 'noreply@domain.ltd')
 
-# SAML Authnetication
+########################################
+# SAML Authentication Config
+########################################
 SAML_ENABLED = False
 # SAML_DEBUG = True
 # SAML_PATH = os.path.join(os.path.dirname(__file__), 'saml')
-# ##Example for ADFS Metadata-URL
+# ** Example for ADFS Metadata-URL
 # SAML_METADATA_URL = 'https://<hostname>/FederationMetadata/2007-06/FederationMetadata.xml'
-# #Cache Lifetime in Seconds
+# ** Cache Lifetime in Seconds
 # SAML_METADATA_CACHE_LIFETIME = 1
-
-# # SAML SSO binding format to use
-# ## Default: library default (urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect)
+# ** SAML SSO binding format to use
+# *** Default: library default (urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect)
 # #SAML_IDP_SSO_BINDING = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
-
-# ## EntityID of the IdP to use. Only needed if more than one IdP is
-# ##   in the SAML_METADATA_URL
-# ### Default: First (only) IdP in the SAML_METADATA_URL
-# ### Example: https://idp.example.edu/idp
-# #SAML_IDP_ENTITY_ID = 'https://idp.example.edu/idp'
-# ## NameID format to request
-# ### Default: The SAML NameID Format in the metadata if present,
-# ###   otherwise urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
-# ### Example: urn:oid:0.9.2342.19200300.100.1.1
+# ** EntityID of the IdP to use. Only needed if more than one IdP is in the SAML_METADATA_URL
+# *** Default: First (only) IdP in the SAML_METADATA_URL
+# *** Example: https://idp.example.edu/idp
+# SAML_IDP_ENTITY_ID = 'https://idp.example.edu/idp'
+# ** NameID format to request
+# *** Default: The SAML NameID Format in the metadata if present,
+# ***   otherwise urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
+# *** Example: urn:oid:0.9.2342.19200300.100.1.1
 # #SAML_NAMEID_FORMAT = 'urn:oid:0.9.2342.19200300.100.1.1'
 
 # Following parameter defines RequestedAttributes section in SAML metadata

@@ -9,10 +9,16 @@ from flask_session import Session
 from .lib import utils
 
 
-def create_app(config=None):
+def create_app(config=None, other=''):
+    import urllib
     from . import models, routes, services
     from .assets import assets
+    from .lib import config_util
     app = Flask(__name__)
+
+    ########################################
+    # LOGGING SETUP
+    ########################################
 
     # Read log level from environment variable
     log_level_name = os.environ.get('PDNS_ADMIN_LOG_LEVEL', 'WARNING')
@@ -23,17 +29,18 @@ def create_app(config=None):
         format=
         "[%(asctime)s] [%(filename)s:%(lineno)d] %(levelname)s - %(message)s")
 
-    # If we use Docker + Gunicorn, adjust the
-    # log handler
-    if "GUNICORN_LOGLEVEL" in os.environ:
+    # Reconfigure the log handler if gunicorn is being ran in Docker
+    if "PDA_GUNICORN_ENABLED" in os.environ and bool(os.environ['PDA_GUNICORN_ENABLED']):
         gunicorn_logger = logging.getLogger("gunicorn.error")
         app.logger.handlers = gunicorn_logger.handlers
         app.logger.setLevel(gunicorn_logger.level)
 
-    # Proxy
+    # Proxy Support
     app.wsgi_app = ProxyFix(app.wsgi_app)
 
-    # CSRF protection
+    ########################################
+    # CSRF Protection Setup
+    ########################################
     csrf = SeaSurf(app)
     csrf.exempt(routes.index.dyndns_checkip)
     csrf.exempt(routes.index.dyndns_update)
@@ -56,28 +63,53 @@ def create_app(config=None):
     csrf.exempt(routes.api.api_add_account_user)
     csrf.exempt(routes.api.api_remove_account_user)
 
-    # Load config from env variables if using docker
-    if os.path.exists(os.path.join(app.root_path, 'docker_config.py')):
-        app.config.from_object('powerdnsadmin.docker_config')
-    else:
-        # Load default configuration
-        app.config.from_object('powerdnsadmin.default_config')
+    ########################################
+    # CONFIGURATION SETUP
+    ########################################
 
-    # Load config file from FLASK_CONF env variable
+    # Load default configuration
+    app.config.from_object('configs.default')
+
+    # Load config file from path given in FLASK_CONF env variable
     if 'FLASK_CONF' in os.environ:
         app.config.from_envvar('FLASK_CONF')
 
-    # Load app sepecified configuration
+    # Load instance specific configuration
     if config is not None:
         if isinstance(config, dict):
             app.config.update(config)
         elif config.endswith('.py'):
             app.config.from_pyfile(config)
 
+    # Load configuration from environment variables
+    config_util.load_config_from_env(app)
+
+    # If no SQLA DB URI is set but SQLA MySQL settings are present, then create DB URI setting
+    if 'SQLALCHEMY_DATABASE_URI' not in app.config and 'SQLA_DB_USER' in app.config \
+            and 'SQLA_DB_PASSWORD' in app.config and 'SQLA_DB_HOST' in app.config and 'SQLA_DB_PORT' in app.config \
+            and 'SQLA_DB_NAME' in app.config:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{}:{}@{}:{}/{}'.format(
+            urllib.parse.quote_plus(app.config.get('SQLA_DB_USER')),
+            urllib.parse.quote_plus(app.config.get('SQLA_DB_PASSWORD')),
+            app.config.get('SQLA_DB_HOST'),
+            app.config.get('SQLA_DB_PORT'),
+            app.config.get('SQLA_DB_NAME')
+        )
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////srv/app/pdns.db'
+
+    ########################################
+    # SSL SETUP
+    ########################################
+
     # HSTS
     if app.config.get('HSTS_ENABLED'):
         from flask_sslify import SSLify
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
+
+    ########################################
+    # SESSION SETUP
+    ########################################
 
     # Load Flask-Session
     if app.config.get('FILESYSTEM_SESSIONS_ENABLED'):
@@ -85,8 +117,16 @@ def create_app(config=None):
         sess = Session()
         sess.init_app(app)
 
+    ########################################
+    # MAIL SETUP
+    ########################################
+
     # SMTP
     app.mail = Mail(app)
+
+    ########################################
+    # FLASK APP SETUP
+    ########################################
 
     # Load app's components
     assets.init_app(app)

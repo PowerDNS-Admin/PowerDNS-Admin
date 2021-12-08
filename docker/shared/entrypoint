@@ -1,0 +1,238 @@
+#!/bin/bash
+
+script_path=$(readlink -f "$0")
+app_path=$(dirname $(dirname $(dirname "$script_path")))
+docker_path=$app_path/docker
+auto_init_path=$docker_path/.autoinit
+
+########################################################################################################################
+# START CONFIGURATION
+########################################################################################################################
+
+# The container interface IP mask to bind both gunicorn and the built-in web server to
+PDA_BIND_ADDRESS=${PDA_BIND_ADDRESS:-0.0.0.0}
+
+# The container port to bind both gunicorn and the built-in web server to
+PDA_BIND_PORT=${PDA_BIND_PORT:-80}
+
+# The debug mode setting of the app
+PDA_DEBUG=${PDA_DEBUG:-false}
+
+# Whether to automatically convert environment variables beginning with PDA_ and ending with _FILE
+PDA_LOAD_ENV_FILES=${PDA_LOAD_ENV_FILES:-true}
+
+# Whether the automatic first-time initialization feature is enabled
+PDA_AUTOINIT_ENABLED=${PDA_AUTOINIT_ENABLED:-false}
+
+# Whether to force execution of the first-time initialization feature
+PDA_AUTOINIT_FORCE=${PDA_AUTOINIT_FORCE:-false}
+
+# Whether to delay container startup until the configured MySQL server is online
+PDA_CHECK_MYSQL_ENABLED=${PDA_CHECK_MYSQL_ENABLED:-false}
+
+# How many seconds to wait after a MySQL connection attempt failure before trying again
+PDA_CHECK_MYSQL_FAIL_DELAY=${PDA_CHECK_MYSQL_FAIL_DELAY:-2}
+
+# How many seconds to wait after a successful MySQL connection attempt before proceeding to the next step
+PDA_CHECK_MYSQL_SUCCESS_DELAY=${PDA_CHECK_MYSQL_SUCCESS_DELAY:-0}
+
+# How many MySQL connection attempts should be made before halting container execution
+PDA_CHECK_MYSQL_ATTEMPTS=${PDA_CHECK_MYSQL_ATTEMPTS:-30}
+
+# Whether to delay container startup until the configured PDNS API key passes authorization to the server
+PDA_CHECK_API_ENABLED=${PDA_CHECK_API_ENABLED:-false}
+
+# How many seconds to wait after an API connection attempt failure before trying again
+PDA_CHECK_API_FAIL_DELAY=${PDA_CHECK_API_FAIL_DELAY:-2}
+
+# How many seconds to wait after an API successful connection attempt before proceeding to the next step
+PDA_CHECK_API_SUCCESS_DELAY=${PDA_CHECK_API_SUCCESS_DELAY:-0}
+
+# How many API connection attempts should be made before halting container execution
+PDA_CHECK_API_ATTEMPTS=${PDA_CHECK_API_ATTEMPTS:-15}
+
+# Whether to run the app's Python test unit before starting the primary container process
+PDA_CHECK_PYTEST_ENABLED=${PDA_CHECK_PYTEST_ENABLED:-false}
+
+# Whether to enable the use of gunicorn
+PDA_GUNICORN_ENABLED=${PDA_GUNICORN_ENABLED:-false}
+
+# The request timeout in seconds for a gunicorn worker
+PDA_GUNICORN_TIMEOUT=${PDA_GUNICORN_TIMEOUT:-120}
+
+# The total number of gunicorn worker threads to spawn
+PDA_GUNICORN_WORKERS=${PDA_GUNICORN_WORKERS:-4}
+
+# The log output level of the gunicorn process
+PDA_GUNICORN_LOGLEVEL=${PDA_GUNICORN_LOGLEVEL:-info}
+
+# The additional gunicorn arguments that will be appended to the startup command when gunicorn is enabled
+PDA_GUNICORN_ARGS=${PDA_GUNICORN_ARGS:-"-t ${PDA_GUNICORN_TIMEOUT} -w ${PDA_GUNICORN_WORKERS} \
+--log-level ${PDA_GUNICORN_LOGLEVEL} --bind ${PDA_BIND_ADDRESS}:${PDA_BIND_PORT}"}
+
+# The API key for the associated PowerDNS Authoritative server API
+PDA_PDNS_API_KEY=${PDA_PDNS_API_KEY:-CHANGE_ME!}
+
+# The API version of the associated PowerDNS Authoritative server API
+PDA_PDNS_API_VERSION=${PDA_PDNS_API_VERSION:-4.5.2}
+
+# The HTTP protocol for the associated PowerDNS Authoritative server API
+PDA_PDNS_API_PROTO=${PDA_PDNS_API_PROTO:-http}
+
+# The hostname or IP address of the associated PowerDNS Authoritative server API
+PDA_PDNS_API_HOST=${PDA_PDNS_API_HOST:-127.0.0.1}
+
+# The port of the associated PowerDNS Authoritative server API
+PDA_PDNS_API_PORT=${PDA_PDNS_API_PORT:-8081}
+
+# The username to use for automatic admin account setup on startup
+PDA_ADMIN_USER_USERNAME=${PDA_ADMIN_USER_USERNAME:-}
+
+# The password to use for automatic admin account setup on startup
+PDA_ADMIN_USER_PASSWORD=${PDA_ADMIN_USER_PASSWORD:-}
+
+########################################################################################################################
+# END CONFIGURATION
+########################################################################################################################
+
+convert_file_vars() {
+    for line in $(env); do
+        len=$(($(echo $line | wc -c) - 1))
+        key=$(echo $line | cut -c1-$(echo $line | grep -aob '=' | grep -oE '[0-9]+'))
+        value=$(echo $line | cut -c$(($(echo $line | grep -aob '=' | grep -oE '[0-9]+') + 2))-$len)
+        if [[ $key == PDA_* && $key == *_FILE && -n "$value" && -f "$value" ]]; then
+            len=$(($(echo $key | wc -c) - 1))
+            new_key=${key:0:$((len - 5))}
+            file_value=$(cat "$value")
+            export "$new_key"="$file_value"
+            unset "$key"
+        fi
+    done
+}
+
+auto_init() {
+    # Determine if the first run file exists and abort if so
+    if ([ ! -n "$PDA_AUTOINIT_FORCE" ] || [ ! "$PDA_AUTOINIT_FORCE" = "true" ]) && [ -f "$auto_init_path" ]; then
+        echo "Automatic initialization will abort as a first run file exists at $auto_init_path"
+        return
+    fi
+
+    # Assume MySQL database if the SQLA_DB_HOST environment variable has been set, otherwise assume SQLite
+    if [ -n "$PDAC_SQLA_DB_HOST" ] && [ -n "$PDAC_SQLA_DB_USER" ] && [ -n "$PDAC_SQLA_DB_PASSWORD" ] \
+    && [ -n "$PDAC_SQLA_DB_PASSWORD" ] && [ -n "$PDAC_SQLA_DB_NAME" ]; then
+        table=tsigkeys
+        sql=$(printf "SHOW TABLES LIKE '%s'" "$table")
+        if [[ -z $(mysql -h $PDAC_SQLA_DB_HOST -u $PDAC_SQLA_DB_USER -p$PDAC_SQLA_DB_PASSWORD -e "$sql" $PDAC_SQLA_DB_NAME) ]]; then
+            echo "The table $table does not exist so the base pdns schema will be installed."
+            mysql_result=$(mysql -h $PDAC_SQLA_DB_HOST -u $PDAC_SQLA_DB_USER -p$PDAC_SQLA_DB_PASSWORD $PDAC_SQLA_DB_NAME < /srv/app/docker/shared/pdns-schema-mysql.sql)
+        else
+            echo "The table $table does exist so no further action will be taken."
+        fi
+    fi
+
+    if [ ! -f "/srv/app/pdns.db" ]; then
+        cat /srv/app/docker/shared/pdns-schema-sqlite.sql | sqlite3 /srv/app/pdns.db
+    fi
+
+    touch $auto_init_path;
+}
+
+verify_mysql_ready() {
+    local host=$1
+    local port=$2
+    local retry_executed=1
+
+    while ! nc -z $host $port >& /dev/null; do
+        # The last connection test to the MySQL server failed at this point
+
+        # If the remaining retry counter falls to zero, exit the connection test cycle
+        if [ $retry_executed -ge $PDA_CHECK_MYSQL_ATTEMPTS ]; then
+            echo "The maximum number ($PDA_CHECK_MYSQL_ATTEMPTS) of TCP connection tests have been executed without success. This container will now exit."
+            exit 1
+        else
+            echo "MySQL server is offline. The TCP connection test cycle number $retry_executed has failed to $host:$port. Waiting for $PDA_CHECK_MYSQL_FAIL_DELAY seconds..."
+        fi
+
+        # Delay execution for the configured MySQL fail delay
+        sleep $PDA_CHECK_MYSQL_FAIL_DELAY
+
+        # Increment the retry execution counter
+        retry_executed=$((retry_executed + 1))
+    done
+
+    echo "MySQL server is online after $retry_executed check(s). Delaying execution for $PDA_CHECK_MYSQL_SUCCESS_DELAY seconds..."
+
+    sleep $PDA_CHECK_MYSQL_SUCCESS_DELAY
+}
+
+verify_api_ready() {
+    local retry_executed=1
+    local api_uri="$PDA_PDNS_PROTO://$PDA_PDNS_HOST:$PDA_PDNS_PORT/api/v1/servers"
+    local auth_header="X-API-Key: $PDA_PDNS_API_KEY"
+
+    while [ $(curl -s -o /dev/null -w "%{http_code}" -H "$auth_header" "$api_uri") -ne "200" ]; do
+        # The last connection test to the API server failed at this point
+
+        # If the remaining retry counter falls to zero, exit the connection test cycle
+        if [ $retry_executed -ge $PDA_CHECK_API_ATTEMPTS ]; then
+            echo "The maximum number ($PDA_CHECK_API_ATTEMPTS) of API server HTTP connection tests have been executed without success. This container will now exit."
+            exit 1
+        else
+            echo "PowerDNS API server is offline. The HTTP connection test cycle number $retry_executed has failed to $api_uri. Waiting for $PDA_CHECK_API_FAIL_DELAY seconds..."
+        fi
+
+        # Delay execution for the configured API fail delay
+        sleep $PDA_CHECK_API_FAIL_DELAY
+
+        # Increment the retry execution counter
+        retry_executed=$((retry_executed + 1))
+    done
+
+    echo "PowerDNS API server is online after $retry_executed check(s). Delaying execution for ${PDA_CHECK_API_SUCCESS_DELAY} seconds..."
+
+    sleep $PDA_CHECK_API_SUCCESS_DELAY
+}
+
+# Automatically load any environment variables that begin with "PDA_" and end with "_FILE" if this feature is enabled
+if [ "$PDA_LOAD_ENV_FILES" = "true" ]; then
+    convert_file_vars
+fi
+
+# Verify that the configured MySQL server is ready for connections
+if [ "$PDA_CHECK_MYSQL_ENABLED" = "true" ] && [ -n "$PDAC_SQLA_DB_HOST" ]; then
+    verify_mysql_ready "$PDAC_SQLA_DB_HOST" "${PDAC_SQLA_DB_PORT:-3306}"
+fi
+
+# Execute first-run automatic initialization
+# - Setup the base PowerDNS Authoritative server database schema if this is the first run if this feature is enabled
+if [ "$PDA_AUTOINIT_ENABLED" = "true" ] || [ "$PDA_AUTOINIT_FORCE" = "true" ]; then
+    auto_init
+fi
+
+# Verify that the configured PowerDNS name server API is ready for connections if this feature is enabled
+if [ "$PDA_CHECK_API_ENABLED" = "true" ] && [ -n "$PDA_PDNS_HOST" ]; then
+    verify_api_ready
+fi
+
+echo "Proceeding with app initialization..."
+cd /srv/app
+
+# Execute any pending database upgrades via Flask
+flask db upgrade
+
+if [ "$FLASK_ENV" = "development" ]; then
+    flask assets build
+fi
+
+# Run Python test units if this feature is enabled
+if [ "$PDA_CHECK_PYTEST_ENABLED" = "true" ]; then
+    pytest
+fi
+
+# If gunicorn is configured for use then execute the gunicorn command with the configuration arguments and container
+# command appended. Otherwise, just execute the container command.
+if [ "$PDA_GUNICORN_ENABLED" = "true" ]; then
+    exec "gunicorn" $PDA_GUNICORN_ARGS "$@"
+else
+    exec "$@"
+fi

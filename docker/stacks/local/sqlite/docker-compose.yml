@@ -32,10 +32,6 @@ services:
       - PDA_LOAD_ENV_FILES=true
       - PDA_AUTOINIT_ENABLED=true
       - PDA_AUTOINIT_FORCE=false
-      - PDA_CHECK_MYSQL_ENABLED=true
-      - PDA_CHECK_MYSQL_FAIL_DELAY=2
-      - PDA_CHECK_MYSQL_SUCCESS_DELAY=0
-      - PDA_CHECK_MYSQL_ATTEMPTS=30
       - PDA_CHECK_API_ENABLED=true
       - PDA_CHECK_API_FAIL_DELAY=2
       - PDA_CHECK_API_SUCCESS_DELAY=0
@@ -57,11 +53,7 @@ services:
       - PDAC_HSTS_ENABLED=false
       - PDAC_OFFLINE_MODE=false
       - PDAC_FILESYSTEM_SESSIONS_ENABLED=false
-      - PDAC_SQLA_DB_HOST=mysql
-      - PDAC_SQLA_DB_NAME=pda
-      - PDAC_SQLA_DB_USER=root
-      - PDAC_SQLA_DB_PASSWORD=qHZDZ26fPqqCfKZtWkQ9
-      - PDAC_SQLA_DB_PORT=3306
+      - PDAC_SQLALCHEMY_DATABASE_URI=sqlite:////srv/app/pdns.db
       - PDAC_SAML_ENABLED=false
       - SQLALCHEMY_TRACK_MODIFICATIONS=true
       - FLASK_ENV=development

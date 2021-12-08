@@ -1,8 +1,17 @@
 # PowerDNS-Admin
-A PowerDNS web interface with advanced features.
 
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/ngoduykhanh/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ngoduykhanh/PowerDNS-Admin/context:python)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/ngoduykhanh/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ngoduykhanh/PowerDNS-Admin/context:javascript)
+
+The PowerDNS-Admin is a simple web GUI for managing zone configurations of a PowerDNS Authoritative server.
+
+The PowerDNS-Admin app does NOT modify the PowerDNS Authoritative server database directly. Instead, it communicates with the PDNS server via the built-in HTTP API.
+
+The app does have a database for identity management, access control, and caching which can be hosted in either MySQL or SQLite.
+
+- [PowerDNS-Admin GitHub](https://github.com/ngoduykhanh/PowerDNS-Admin)
+- [PowerDNS-Admin Settings](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md)
+- [PowerDNS-Admin Wiki](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki)
 
 #### Features:
 - Multiple domain management
@@ -19,38 +28,18 @@ A PowerDNS web interface with advanced features.
 - Limited API for manipulating zones and records
 - Full IDN/Punycode support
 
-## Running PowerDNS-Admin
-There are several ways to run PowerDNS-Admin. The easiest way is to use Docker.
-If you are looking to install and run PowerDNS-Admin directly onto your system check out the [Wiki](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki#installation-guides) for ways to do that.
+## Deploying PowerDNS-Admin
+There are multiple ways to run the PowerDNS-Admin app. The recommended method is to use the official [Docker images](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/docker.md).
 
-### Docker
-This are two options to run PowerDNS-Admin using Docker.
-To get started as quickly as possible try option 1. If you want to make modifications to the configuration option 2 may be cleaner.
+If you would like to run PowerDNS-Admin directly on your machine or VM, check out the [Wiki](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki#installation-guides) for additional information.
 
-#### Option 1: From Docker Hub
-The easiest is to just run the latest Docker image from Docker Hub:
-```
-$ docker run -d \
-    -e SECRET_KEY='a-very-secret-key' \
-    -v pda-data:/data \
-    -p 9191:80 \
-    ngoduykhanh/powerdns-admin:latest
-```
-This creates a volume called `pda-data` to persist the SQLite database with the configuration.
+Once you have deployed the app through one of the supported methods, You should be able to access the PowerDNS-Admin app by pointing your browser to http://localhost:8080.
 
-#### Option 2: Using docker-compose
-1. Update the configuration   
-   Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
-   Other environment variables are mentioned in the [legal_envvars](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/configs/docker_config.py#L5-L46).
-   To use the Docker secrets feature it is possible to append `_FILE` to the environment variables and point to a file with the values stored in it.   
-   Make sure to set the environment variable `SECRET_KEY` to a long random string (https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY)
+## Configuring PowerDNS-Admin
 
-2. Start docker container
-   ```
-   $ docker-compose up
-   ```
+The app has a [plethora of settings](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md) that may be configured through a number of methods. Check out the settings documentation [here](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md).
 
-You can then access PowerDNS-Admin by pointing your browser to http://localhost:9191.
+[PowerDNS Admin Settings](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md)
 
 ## Screenshots
 ![dashboard](https://user-images.githubusercontent.com/6447444/44068603-0d2d81f6-9fa5-11e8-83af-14e2ad79e370.png)

@@ -97,6 +97,7 @@ npm-debug.log
 Dockerfile*
 docker-compose*
 .dockerignore
+docker/.autoinit
 
 # Git
 .git
