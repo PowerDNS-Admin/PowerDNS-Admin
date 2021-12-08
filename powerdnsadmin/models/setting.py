@@ -145,7 +145,7 @@ class Setting(db.Model):
         'saml_sign_metadata': False,
         'saml_want_message_signed': False,
         'saml_metadata_cache_duration': 'PT5M',
-        'saml_metadata_valid_until': '',
+        'saml_metadata_valid_until': '999999999999999999',
         'forward_records_allow_edit': {
             'A': True,
             'AAAA': True,
