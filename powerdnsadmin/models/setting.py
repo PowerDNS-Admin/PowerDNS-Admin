@@ -148,6 +148,10 @@ class Setting(db.Model):
         'saml_want_message_signed': False,
         'saml_metadata_cache_duration': 'PT5M',
         'saml_metadata_valid_until': '999999999999999999',
+        'saml_autoprovisioning': True,
+        'saml_urn_prefix': 'urn:mace:uoa.gr',
+        'saml_autoprovisioning_attribute': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7',
+        'saml_purge': False,
         'forward_records_allow_edit': {
             'A': True,
             'AAAA': True,
