@@ -26,6 +26,10 @@ This setting controls what group ID is used for various container setup processe
 
 This setting controls what group name is used for various container setup processes during image building. This setting is useful if you're mounting a host path over the /srv/app volume and need to match your host file system permissions.
 
+#### PDA_LOCAL_PATH
+
+This setting controls with path on the Docker host machine will be used as the project root for local development.
+
 ## App Settings
 \* denotes a legacy setting key that will be deprecated.
 

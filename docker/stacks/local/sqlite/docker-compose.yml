@@ -61,7 +61,9 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - /PATH/TO/YOUR/GIT/PROJECT/ROOT:/srv/app
+      - type: bind
+        source: ${PDA_LOCAL_PATH}
+        target: /srv/app
 
   pdns:
     image: azoriansolutions/powerdns-nameserver:4.5.2-alpine-3.14-mysql

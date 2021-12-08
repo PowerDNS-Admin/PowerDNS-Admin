@@ -37,9 +37,7 @@ Once you have deployed the app through one of the supported methods, You should 
 
 ## Configuring PowerDNS-Admin
 
-The app has a [plethora of settings](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md) that may be configured through a number of methods. Check out the settings documentation [here](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md).
-
-[PowerDNS Admin Settings](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md)
+The app has a plethora of settings that may be configured through a number of methods. Check out the settings documentation [here](https://github.com/ngoduykhanh/PowerDNS-Admin/blob/master/docs/settings.md).
 
 ## Screenshots
 ![dashboard](https://user-images.githubusercontent.com/6447444/44068603-0d2d81f6-9fa5-11e8-83af-14e2ad79e370.png)
