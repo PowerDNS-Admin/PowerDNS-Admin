@@ -111,7 +111,7 @@ class Setting(db.Model):
         'oidc_oauth_account_name_property': '',
         'oidc_oauth_account_description_property': '',
         'saml_autoprovisioning': False,
-        'saml_urn_value': '',
+        'saml_urn_prefix': '',
         'saml_autoprovisioning_attribute': '',
         'saml_purge': False,
         'forward_records_allow_edit': {
