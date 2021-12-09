@@ -805,7 +805,7 @@
                                                 </div>
                                             </fieldset>
                                             <fieldset>
-                                                <legend>ADVANCED</legend>
+                                                <legend>ENCRYPTION</legend>
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_assertion_encrypted" name="saml_assertion_encrypted" class="checkbox" {% if SETTING.get('saml_assertion_encrypted') %}checked{% endif %}>
                                                     <label for="saml_assertion_encrypted">Encrypted Assertion</label>
@@ -832,6 +832,9 @@
                                                     <input type="checkbox" id="saml_sign_metadata" name="saml_sign_metadata" class="checkbox" {% if SETTING.get('saml_sign_metadata') %}checked{% endif %}>
                                                     <label for="saml_sign_metadata">Sign Metadata </label>
                                                 </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>DURATION</legend>
                                                 <div class="form-group">
                                                     <label for="saml_metadata_cache_duration">Metadata Cache Duration</label>
                                                     <input type="text" class="form-control" name="saml_metadata_cache_duration" id="saml_metadata_cache_duration" placeholder="Cache duration in seconds" data-error="Please input Metadata Cache Duration" value="{{ SETTING.get('saml_metadata_cache_duration') }}">
@@ -841,6 +844,41 @@
                                                     <label for="saml_metadata_valid_until">Metadata Valid Until</label>
                                                     <input type="text" class="form-control" name="saml_metadata_valid_until" id="saml_metadata_valid_until" placeholder="Time-moment when metadata stops being valid" data-error="Please input Metadata Expiration Date" value="{{ SETTING.get('saml_metadata_valid_until') }}">
                                                     <span class="help-block with-errors"></span>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>AUTOPROVISION</legend>
+                                                <div class="form-group">
+                                                    <label>Roles Autoprovisioning</label> <br />
+                                                    <label>
+                                                        <input type="radio" name="saml_autoprovisioning" id="saml_autoprovisioning_off" value="OFF"
+                                                            {% if not SETTING.get('saml_autoprovisioning') %}checked{% endif %}> OFF
+                                                    </label>
+                                                    &nbsp;&nbsp;&nbsp;
+                                                    <label>
+                                                        <input type="radio" name="saml_autoprovisioning" id="saml_autoprovisioning_on" value="ON"
+                                                            {% if SETTING.get('saml_autoprovisioning') %}checked{% endif %}> ON
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_autoprovisioning_attribute">Roles provisioning field</label>
+                                                    <input type="text" class="form-control" name="saml_autoprovisioning_attribute" id="saml_autoprovisioning_attribute" placeholder="e.g. eduPersonEntitlement" data-error="Please input field responsible for autoprovisioning" value="{{ SETTING.get('saml_autoprovisioning_attribute') }}">
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group {% if error %}has-error{% endif %}">
+                                                    <label for="saml_urn_prefix">Urn prefix</label>
+                                                    <input type="text" class="form-control" name="saml_urn_prefix" id="saml_urn_prefix" placeholder="e.g. urn:mace:<yourOrganization>" data-error="Please fill this field" value="{{ SETTING.get('saml_urn_prefix') }}">
+                                                    {% if error %}
+                                                        <span class="help-block with-errors">Please input the correct prefix for your urn value</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Purge Roles If Empty</label> <br />
+                                                    <label>
+                                                        <input type="radio" name="saml_purge" id="saml_purge_off" value="OFF" {% if not SETTING.get('saml_purge') %}checked{% endif %}> OFF
+                                                    </label>
+                                                    &nbsp;&nbsp;&nbsp;
+                                                    <label>
+                                                        <input type="radio" name="saml_purge" id="saml_purge_on" value="ON" {% if SETTING.get('saml_purge') %}checked{% endif %}> ON
                                                 </div>
                                             </fieldset>
                                             <div class="form-group">
@@ -855,10 +893,10 @@
                                             <dd> <br>
                                                 <ul>
                                                     <li>
-                                                        <b>Metadata URL</b> - 
+                                                        <b>Metadata URL</b> - URL to fetch metadata from
                                                     </li>
                                                     <li>
-                                                        <b>Metadata Cache Lifetime</b> - Cache Lifetime in Seconds
+                                                        <b>Metadata Cache Lifetime</b> - Cache Lifetime in Seconds before fresh metadata are requested
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -929,13 +967,13 @@
                                                         be created and the user added to them.
                                                     </li>
                                                     <li>
-                                                        <b>SP Entity ID</b> - 
+                                                        <b>SP Entity ID</b> - The entity ID of your Service Provider (SP).
                                                     </li>
                                                     <li>
-                                                        <b>SP Entity Name</b> - 
+                                                        <b>SP Entity Name</b> - Contact information about your SP, to be included in the generated metadata.
                                                     </li>
                                                     <li>
-                                                        <b>SP Entity Mail</b> - 
+                                                        <b>SP Entity Mail</b> - Contact information about your SP, to be included in the generated metadata.
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -961,12 +999,81 @@
                                                 Choose whether user is logged out of SAML session and possibly redirect them elsewhere.
                                                 <ul>
                                                     <li>
-                                                        <b>SAML Logout</b> - Use SAML standard logout mechanism retreived from idp metadata.<br>
-                                                        If configured false don't care about SAML session on logout.<br>
+                                                        <b>SAML Logout</b> - Use SAML standard logout mechanism retreived from IDP metadata.<br>
+                                                        If disabled, don't care about SAML session on logout.<br>
                                                         Logout from PowerDNS-Admin only and keep SAML session authenticated.
                                                     </li>
                                                     <li>
                                                         <b>Logout URL</b> - Configure to redirect to a url different than PowerDNS-Admin login after a successful SAML logout.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>ENCRYPTION</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>Encrypted Assertion</b> - Choose whether assertions are encrypted.
+                                                    </li>
+                                                    <li>
+                                                        <b>Want Assertions Signed</b> - Expect incoming assertions to be signed.
+                                                    </li>
+                                                    <li>
+                                                        <b>Digest Algorithm</b> - Encryption algorithm to encode outgoing and decode incoming metadata.
+                                                    </li>
+                                                    <li>
+                                                        <b>Signature Algorithm</b> - Encryption algorithm to encode/decode signatures.
+                                                    </li>
+                                                    <li>
+                                                        <b>Want Message Signed</b> - Expect incoming messages to be signed.
+                                                    </li>
+                                                    <li>
+                                                        <b>Sign Metadata</b> - Choose whether metadata produced is signed.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>DURATION</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>Metadata Cache Duration</b> - Set the cache duration of generated metadata.
+                                                    </li>
+                                                    <li>
+                                                        <b>Metadata Valid Until</b> - Set the expiration moment (in seconds) for generated metadata.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>AUTOPROVISION</dt>
+                                            <dd> Provision PDA user privileges based on SAML Token Attributes. 
+                                                This feature and the "Admin / Account" attribute assertion are mutually exclusive.
+                                                <ul>
+                                                    <li>
+                                                        <b>Roles Autoprovisioning</b> - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the SAML SP db every time they log in.
+                                                    </li>
+                                                    <li>
+                                                        <b>Roles provisioning field</b> - The urn value of the attribute in the SAML Token where PDA will look for a new Role and/or new associations to domains/accounts.
+                                                        The allowed syntax for records inside this attribute in your SAML Token is: <br>
+                                                        <ul>if <i>PDA-Role∈[Administrator, Operator]</i>:
+                                                            <ul>
+                                                                <li>
+                                                                    prefix:"powerdns-admin":PDA-Role
+                                                                </li>
+                                                            </ul>
+                                                            else (<i>if user</i>): <br>
+                                                            <ul>
+                                                                <li>
+                                                                    prefix:"powerdns-admin":PDA-Role:&ltdomain&gt:&ltaccount&gt
+                                                                </li>
+                                                            </ul>
+                                                            where <i>prefix</i> is given in the field "Urn prefix".
+                                                        </ul>
+                                                    </li>
+                                                    <li>
+                                                        <b>Urn prefix</b> - The prefix used before the static keyword "powerdns-admin" for your entitlements in the SAML token. Must comply with RFC no.8141.
+                                                    </li>
+                                                    <li>
+                                                        <b>Purge Roles If Empty</b> - If toggled on, SAML logins that have no valid "powerdns-admin" records to their autoprovisioning field, 
+                                                         will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br>
+                                                         If toggled off, in the same scenario they get to keep their existing associations and their current Role.
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -1348,6 +1455,23 @@
     //END: OIDC Tab JS
 
     // START: SAML tab js
+    $('#saml_autoprovisioning_on').iCheck({
+        radioClass: 'iradio_square-blue',
+        increaseArea: '20%'
+    });
+    $('#saml_autoprovisioning_off').iCheck({
+        radioClass: 'iradio_square-blue',
+        increaseArea: '20%'
+    });
+    $('#saml_purge_on').iCheck({
+        radioClass: 'iradio_square-blue',
+        increaseArea: '20%'
+    });
+    $('#saml_purge_off').iCheck({
+        radioClass: 'iradio_square-blue',
+        increaseArea: '20%'
+    });
+
     $('#saml_enabled').iCheck({
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
@@ -1355,84 +1479,137 @@
         var is_enabled = e.currentTarget.checked;
         if (is_enabled){
             $('#saml_metadata_url').prop('required', true);
-            $('#saml_metadata_cache_lifetime').prop('required', true);
+            // $('#saml_metadata_cache_lifetime').prop('required', true);
             $('#saml_idp_sso_binding').prop('required', true);
             $('#saml_idp_entity_id').prop('required', true);
             $('#saml_nameid_format').prop('required', true);
             $('#saml_sp_requested_attributes').prop('required', true);
-            $('#saml_attribute_email').prop('required', true);
-            $('#saml_attribute_givenname').prop('required', true);
-            $('#saml_attribute_surname').prop('required', true);
+            // $('#saml_attribute_email').prop('required', true);
+            // $('#saml_attribute_givenname').prop('required', true);
+            // $('#saml_attribute_surname').prop('required', true);
             $('#saml_attribute_username').prop('required', true);
-            $('#saml_attribute_admin').prop('required', true);
-            $('#saml_attribute_account').prop('required', true);
+            // $('#saml_attribute_admin').prop('required', true);
+            // $('#saml_attribute_account').prop('required', true);
             $('#saml_sp_entity_id').prop('required', true);
-            $('#saml_sp_contact_name').prop('required', true);
-            $('#saml_sp_contact_mail').prop('required', true);
+            // $('#saml_sp_contact_name').prop('required', true);
+            // $('#saml_sp_contact_mail').prop('required', true);
             $('#saml_cert_file').prop('required', true);
             $('#saml_cert_key').prop('required', true);
-            $('#saml_logout_url').prop('required', true);
             $('#saml_digest_algorithm').prop('required', true);
             $('#saml_signature_algorithm').prop('required', true);
-            $('#saml_metadata_cache_duration').prop('required', true);
-            $('#saml_metadata_valid_until').prop('required', true);
+            // $('#saml_metadata_cache_duration').prop('required', true);
+            // $('#saml_metadata_valid_until').prop('required', true);
+            if ($('#saml_logout').is(":checked")) {
+                $('#saml_logout_url').prop('required', true);
+            }
+            if ($('#saml_autoprovisioning_on').is(":checked")) {
+                $('#saml_autoprovisioning_attribute').prop('required', true);
+                $('#saml_urn_prefix').prop('required', true);
+            }
         } else {
             $('#saml_metadata_url').prop('required', false);
-            $('#saml_metadata_cache_lifetime').prop('required', false);
+            // $('#saml_metadata_cache_lifetime').prop('required', false);
             $('#saml_idp_sso_binding').prop('required', false);
             $('#saml_idp_entity_id').prop('required', false);
             $('#saml_nameid_format').prop('required', false);
             $('#saml_sp_requested_attributes').prop('required', false);
-            $('#saml_attribute_email').prop('required', false);
-            $('#saml_attribute_givenname').prop('required', false);
-            $('#saml_attribute_surname').prop('required', false);
+            // $('#saml_attribute_email').prop('required', false);
+            // $('#saml_attribute_givenname').prop('required', false);
+            // $('#saml_attribute_surname').prop('required', false);
             $('#saml_attribute_username').prop('required', false);
-            $('#saml_attribute_admin').prop('required', false);
-            $('#saml_attribute_account').prop('required', false);
+            // $('#saml_attribute_admin').prop('required', false);
+            // $('#saml_attribute_account').prop('required', false);
             $('#saml_sp_entity_id').prop('required', false);
-            $('#saml_sp_contact_name').prop('required', false);
-            $('#saml_sp_contact_mail').prop('required', false);
+            // $('#saml_sp_contact_name').prop('required', false);
+            // $('#saml_sp_contact_mail').prop('required', false);
             $('#saml_cert_file').prop('required', false);
             $('#saml_cert_key').prop('required', false);
             $('#saml_logout_url').prop('required', false);
             $('#saml_digest_algorithm').prop('required', false);
             $('#saml_signature_algorithm').prop('required', false);
-            $('#saml_metadata_cache_duration').prop('required', false);
-            $('#saml_metadata_valid_until').prop('required', false);
+            // $('#saml_metadata_cache_duration').prop('required', false);
+            // $('#saml_metadata_valid_until').prop('required', false);
+            $('#saml_autoprovisioning_attribute').prop('required', false);
+            $('#saml_urn_prefix').prop('required', false);
         }
     });
     // init validation requirement at first time page load
     {% if SETTING.get('saml_enabled') %}
         $('#saml_metadata_url').prop('required', true);
-        $('#saml_metadata_cache_lifetime').prop('required', true);
+        // $('#saml_metadata_cache_lifetime').prop('required', true);
         $('#saml_idp_sso_binding').prop('required', true);
         $('#saml_idp_entity_id').prop('required', true);
         $('#saml_nameid_format').prop('required', true);
         $('#saml_sp_requested_attributes').prop('required', true);
-        $('#saml_attribute_email').prop('required', true);
-        $('#saml_attribute_givenname').prop('required', true);
-        $('#saml_attribute_surname').prop('required', true);
+        // $('#saml_attribute_email').prop('required', true);
+        // $('#saml_attribute_givenname').prop('required', true);
+        // $('#saml_attribute_surname').prop('required', true);
         $('#saml_attribute_username').prop('required', true);
-        $('#saml_attribute_admin').prop('required', true);
-        $('#saml_attribute_account').prop('required', true);
+        // $('#saml_attribute_admin').prop('required', true);
+        // $('#saml_attribute_account').prop('required', true);
         $('#saml_sp_entity_id').prop('required', true);
-        $('#saml_sp_contact_name').prop('required', true);
-        $('#saml_sp_contact_mail').prop('required', true);
-        $('#saml_cert_file').prop('required', true);
+        // $('#saml_sp_contact_name').prop('required', true);
+        // $('#saml_sp_contact_mail').prop('required', true);
+        // $('#saml_cert_file').prop('required', true);
         $('#saml_cert_key').prop('required', true);
-        $('#saml_logout').prop('required', true);
-        $('#saml_logout_url').prop('required', true);
         $('#saml_digest_algorithm').prop('required', true);
         $('#saml_signature_algorithm').prop('required', true);
-        $('#saml_metadata_cache_duration').prop('required', true);
-        $('#saml_metadata_valid_until').prop('required', true);
+        // $('#saml_metadata_cache_duration').prop('required', true);
+        // $('#saml_metadata_valid_until').prop('required', true);
+        if ($('#saml_logout').is(":checked")) {
+            $('#saml_logout_url').prop('required', true);
+        }
+        if ($('#saml_autoprovisioning_on').is(":checked")) {
+            $('#saml_autoprovisioning_attribute').prop('required', true);
+            $('#saml_urn_prefix').prop('required', true);
+        }
     {% endif %}
 
-    $('#saml_sign_request').iCheck({
+    $("#saml_autoprovisioning_on" ).on('ifChanged',function(){
+        if ($('#saml_autoprovisioning_on').is(":checked") && $('#saml_enabled').is(":checked")) {
+            $('#saml_autoprovisioning_attribute').prop('required', true);
+            $('#saml_urn_prefix').prop('required', true);
+        }
+        else{
+            $('#saml_autoprovisioning_attribute').prop('required', false);
+            $('#saml_urn_prefix').prop('required', false);
+        }
+    });
+    
+    $('#saml_purge_on').on('ifClicked', function(event){
+        if( !$(event.target).is(':checked')){
+            var modal = $("#modal_confirm");
+            var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning field prepopulated." ;
+            modal.find('.modal-body p').text(info);
+            modal.find('#button_confirm').click(function () {
+                modal.modal('hide');
+            })
+            modal.find('#button_cancel').click(function () {
+                $('#saml_purge_off').iCheck('check');
+                modal.modal('hide');
+            })
+            modal.find('#X').click(function () {
+                $('#saml_purge_off').iCheck('check');
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        }
+    });
+
+    $('#saml_logout').iCheck({
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
-    })
-    $('#saml_logout').iCheck({
+    }).on('ifChanged', function(e) {
+        var is_enabled = e.currentTarget.checked;
+        if (is_enabled){
+            $('#saml_logout_url').prop('required', true);
+        }
+        else{
+            $('#saml_logout_url').prop('required', false);
+        }
+    });
+
+    $('#saml_sign_request').iCheck({
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
     })
