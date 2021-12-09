@@ -62,6 +62,8 @@ def create_app(config=None, other=''):
     csrf.exempt(routes.api.api_list_account_users)
     csrf.exempt(routes.api.api_add_account_user)
     csrf.exempt(routes.api.api_remove_account_user)
+    csrf.exempt(routes.api.api_zone_cryptokeys)
+    csrf.exempt(routes.api.api_zone_cryptokey)
 
     ########################################
     # CONFIGURATION SETUP
