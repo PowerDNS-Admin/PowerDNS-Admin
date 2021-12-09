@@ -47,7 +47,7 @@ class UserDetailedSchema(Schema):
     lastname = fields.String()
     email = fields.String()
     role = fields.Embed(schema=RoleSchema)
-    accounts = fields.Embed(schema=AccountSummarySchema)
+    accounts = fields.Embed(schema=AccountSummarySchema, many=True)
 
 class AccountSchema(Schema):
     id = fields.Integer()

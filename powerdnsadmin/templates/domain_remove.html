@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% set active_page = "remove_domain" %}
+{% block title %}<title>Remove Domain - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Domain
+        <small>Remove existing</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('dashboard.dashboard') }}">Domain</a></li>
+        <li class="active">Remove Domain</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Remove domain</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post" action="{{ url_for('domain.remove') }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <div class="box-body">
+                        <select id=domainid class="form-control" style="width:15em;">
+                            <option value="0">- Select Domain -</option>
+                            {% for domain in domainss %}
+                            <option value="{{ domain.id }}">{{ domain.name }}</option>
+                            {% endfor %}
+                        </select><br />
+
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-flat btn-danger button_delete">Remove</button>
+                        <button type="button" class="btn btn-flat btn-default"
+                            onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.box -->
+        </div>
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help with removing a new domain</h3>
+                </div>
+                <div class="box-body">
+                    <dl class="dl-horizontal">
+                        <dt>Domain name</dt>
+                        <dd>Select domain you wish to remove from DNS.</dd>
+                    </dl>
+                    <p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // handle delete button
+    $(document.body).on("click", ".button_delete", function(e) {
+        e.stopPropagation();
+        if ( $("#domainid").val() == 0 ){
+            var modal = $("#modal_error");
+            modal.find('.modal-body p').text("Please select domain to remove.");
+            modal.modal('show');
+            return;
+        }
+
+
+        var modal = $("#modal_delete");
+        var domain = $("#domainid option:selected").text(); 
+        var info = "Are you sure you want to delete " + domain + "?";
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_delete_confirm').click(function () {
+            $.post($SCRIPT_ROOT + '/domain/remove' , {
+                '_csrf_token': '{{ csrf_token() }}',
+                'domainid': domain,
+            }, function () {
+                window.location.href = '{{ url_for('dashboard.dashboard') }}';
+            });
+            modal.modal('hide');
+        })
+       modal.modal('show');
+
+        $("#button_delete_cancel").unbind().one('click', function(e) {
+            modal.modal('hide');
+        });
+    });
+</script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal fade modal-warning" id="modal_delete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" id="button_delete_cancel"
+                    data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+{% endblock %}

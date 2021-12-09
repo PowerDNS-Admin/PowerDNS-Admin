@@ -59,7 +59,7 @@
                             <select multiple="multiple" class="form-control" id="key_multi_domain"
                                 name="key_multi_domain">
                                 {% for domain in domains %}
-                                    <option {% if domain in key.domains %}selected{% endif %} value="{{ domain.name }}">{{ domain.name }}</option>
+                                    <option {% if key and domain in key.domains %}selected{% endif %} value="{{ domain.name }}">{{ domain.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
