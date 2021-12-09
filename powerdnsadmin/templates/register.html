@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Register - {{ SITE_NAME }}</title>
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
   <!-- Tell the browser to be responsive to screen width -->
@@ -63,6 +64,7 @@
         <div id="pass-feedback" class="form-group">
           <input type="password" class="form-control" placeholder="Password" id="password" name="password"
             required>
+          <small class="help-block" id="password-text"></small> <br>
           <div id="policy-err" style='color: #df5948;'></div>
         </div>
         <div class="form-group has-feedback">
@@ -167,6 +169,83 @@
       }
     });
 
+
+
+
+
+
+
+
+
+
+    {% if use_package %}
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        }
+    })
+    var timer = null;
+    function send_pass() {
+      var fname = document.getElementById('firstname').value;
+      var lname = document.getElementById('lastname').value;
+      var email = document.getElementById('email').value;
+      var username = document.getElementById('username').value;
+      var password = document.getElementById('password').value;
+
+      $.ajax({
+          url: "/ratepassword",
+          // headers: { "X-CSRFToken": getCookie("csrftoken") },
+          type: "post",
+          data : {'fname': fname, 'lname': lname, 'email' : email, 'username' : username, 'password': password},
+          success: function(response) {
+            console.log('Submission was successful.');
+            console.log("Resp = " , response)
+            console.log('sccess')
+            var x = document.getElementById('policy-err');
+            console.log(response['feedback'])
+            x.innerHTML = response['feedback'] // response['feedback']
+            var strength;
+            switch (response['strength']) {
+              case 'very weak':
+                strength = "<small class='progress-bar bg-danger' style='background-color: #a50021; width: 25%'>Very weak</small>";
+                break;
+              case 'weak':
+                strength = "<small class='progress-bar bg-danger' style='background-color: #f7a73e;width: 50%'>Weak</small>";
+                break;
+              case 'medium':
+                strength = "<small class='progress-bar bg-warning' style='background-color: #a0cb89; width: 75%'>Medium</small>";
+                break;
+              case 'strong':
+                strength = "<small class='progress-bar bg-success' style='background-color: #2e8b57; width: 100%'>Strong</small>";
+                break;
+              }
+              var y = document.getElementById('password-text')
+              y.innerHTML = strength;
+          },
+          error: function(xhr) {
+              console.log("Ajax call to rate pass, has failed")
+          }
+        });
+      timer = null; // turn the timer off
+    }
+    // handling password complexity requirements message
+    $(':input').on('keyup', function() {
+
+      var seconds = 1.5;
+      if (timer == null) {  // if user typed sth and timer is not running, then start one
+        timer = setTimeout(send_pass, seconds*1000);
+      }
+      else { // if user typed sth and timer is still up and running,then reset timer
+        clearTimeout(timer);
+        timer = null; 
+        timer = setTimeout(send_pass, seconds*1000);
+      }
+    });
+    {% endif %}
   </script>
 </body>
 

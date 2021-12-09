@@ -675,6 +675,16 @@ def password_quality_check(user, password):
                 return False
     return True
 
+
+@index_bp.route('/ratepass', methods=['POST'])
+def rate_password():
+
+    username = request.form.get('username')
+    fname = request.form.get('fname')
+    lname = request.form.get('name')
+    email = request.form.get('email')
+    
+
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if Setting().get('signup_enabled'):
