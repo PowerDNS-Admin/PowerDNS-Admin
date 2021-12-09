@@ -1,12 +1,12 @@
-import random
+import secrets
 import string
 import bcrypt
 from flask import current_app
 
-from .base import db, domain_apikey
+from .base import db
 from ..models.role import Role
 from ..models.domain import Domain
-
+from ..models.account import Account
 
 class ApiKey(db.Model):
     __tablename__ = "apikey"
@@ -16,17 +16,21 @@ class ApiKey(db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates="apikeys", lazy=True)
     domains = db.relationship("Domain",
-                              secondary=domain_apikey,
+                              secondary="domain_apikey",
                               back_populates="apikeys")
+    accounts = db.relationship("Account",
+                               secondary="apikey_account",
+                               back_populates="apikeys")
 
-    def __init__(self, key=None, desc=None, role_name=None, domains=[]):
+    def __init__(self, key=None, desc=None, role_name=None, domains=[], accounts=[]):
         self.id = None
         self.description = desc
         self.role_name = role_name
         self.domains[:] = domains
+        self.accounts[:] = accounts
         if not key:
             rand_key = ''.join(
-                random.choice(string.ascii_letters + string.digits)
+                secrets.choice(string.ascii_letters + string.digits)
                 for _ in range(15))
             self.plain_key = rand_key
             self.key = self.get_hashed_password(rand_key).decode('utf-8')
@@ -54,7 +58,7 @@ class ApiKey(db.Model):
             db.session.rollback()
             raise e
 
-    def update(self, role_name=None, description=None, domains=None):
+    def update(self, role_name=None, description=None, domains=None, accounts=None):
         try:
             if role_name:
                 role = Role.query.filter(Role.name == role_name).first()
@@ -63,11 +67,17 @@ class ApiKey(db.Model):
             if description:
                 self.description = description
 
-            if domains:
+            if domains is not None:
                 domain_object_list = Domain.query \
                                            .filter(Domain.name.in_(domains)) \
                                            .all()
                 self.domains[:] = domain_object_list
+
+            if accounts is not None:
+                account_object_list = Account.query \
+                                           .filter(Account.name.in_(accounts)) \
+                                           .all()
+                self.accounts[:] = account_object_list
 
             db.session.commit()
         except Exception as e:
@@ -87,6 +97,15 @@ class ApiKey(db.Model):
         else:
             pw = self.plain_text_password
 
+        # The salt value is currently re-used here intentionally because
+        # the implementation relies on just the API key's value itself
+        # for database lookup: ApiKey.is_validate() would have no way of
+        # discerning whether any given key is valid if bcrypt.gensalt()
+        # was used. As far as is known, this is fine as long as the
+        # value of new API keys is randomly generated in a
+        # cryptographically secure fashion, as this then makes
+        # expendable as an exception the otherwise vital protection of
+        # proper salting as provided by bcrypt.gensalt().
         return bcrypt.hashpw(pw.encode('utf-8'),
                              current_app.config.get('SALT').encode('utf-8'))
 
@@ -112,3 +131,12 @@ class ApiKey(db.Model):
                 raise Exception("Unauthorized")
 
             return apikey
+
+    def associate_account(self, account):
+        return True
+
+    def dissociate_account(self, account):
+        return True
+
+    def get_accounts(self):
+        return True

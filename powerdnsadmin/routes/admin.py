@@ -4,7 +4,7 @@ import traceback
 import re
 from base64 import b64encode
 from ast import literal_eval
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
+from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
 from ..decorators import operator_role_required, admin_role_required, history_access_required
@@ -32,13 +32,172 @@ admin_bp = Blueprint('admin',
                      template_folder='templates',
                      url_prefix='/admin')
 
+"""
+changeSet is a list of tuples, in the following format
+(old_state, new_state, change_type)
+
+old_state: dictionary with "disabled" and "content" keys. {"disabled" : False, "content" : "1.1.1.1" }
+new_state: similarly
+change_type: "addition" or "deletion" or "status" for status change or "unchanged" for no change
+
+Note: A change in "content", is considered a deletion and recreation of the same record,
+holding the new content value.
+"""
+def get_record_changes(del_rrest, add_rrest):
+    changeSet = []
+    delSet = del_rrest['records'] if 'records' in del_rrest else []
+    addSet = add_rrest['records'] if 'records' in add_rrest else []
+    for d in delSet:  # get the deletions and status changes
+        exists = False
+        for a in addSet:
+            if d['content'] == a['content']:
+                exists = True
+                if d['disabled'] != a['disabled']:
+                    changeSet.append( ({"disabled":d['disabled'],"content":d['content']},
+                                    {"disabled":a['disabled'],"content":a['content']},
+                                    "status") )
+                break
+
+        if not exists: # deletion
+            changeSet.append( ({"disabled":d['disabled'],"content":d['content']},
+                            None,
+                            "deletion") )
+
+    for a in addSet:  # get the additions
+        exists = False
+        for d in delSet:
+            if d['content'] == a['content']:
+                exists = True
+                # already checked for status change
+                break
+        if not exists:
+            changeSet.append( (None, {"disabled":a['disabled'], "content":a['content']}, "addition") )
+            continue
+
+    for a in addSet:  # get the unchanged
+        exists = False
+        for c in changeSet:
+            if c[1] != None and  c[1]["content"] == a['content']:
+                exists = True
+                break
+        if not exists:
+            changeSet.append( ( {"disabled":a['disabled'], "content":a['content']}, {"disabled":a['disabled'], "content":a['content']}, "unchanged") )
+
+    return changeSet
+
+# out_changes is a list of  HistoryRecordEntry objects in which we will append the new changes
+# a HistoryRecordEntry represents a pair of add_rrest and del_rrest
+def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_num, record_name=None, record_type=None):
+
+    if history_entry.detail is None:
+        return
+
+    if "add_rrests" in history_entry.detail:
+        detail_dict = json.loads(history_entry.detail.replace("\'", ''))
+    else: # not a record entry
+        return
+
+    add_rrests = detail_dict['add_rrests']
+    del_rrests = detail_dict['del_rrests']
+
+
+    for add_rrest in add_rrests:
+        exists = False
+        for del_rrest in del_rrests:
+            if del_rrest['name'] == add_rrest['name'] and del_rrest['type'] == add_rrest['type']:
+                exists = True
+                if change_num not in out_changes:
+                    out_changes[change_num] = []
+                out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrest, add_rrest, "*"))
+                break
+        if not exists:  # this is a new record
+            if change_num not in out_changes:
+                out_changes[change_num] = []
+            out_changes[change_num].append(HistoryRecordEntry(history_entry, [], add_rrest, "+"))  # (add_rrest, del_rrest, change_type)
+    for del_rrest in del_rrests:
+        exists = False
+        for add_rrest in add_rrests:
+            if del_rrest['name'] == add_rrest['name'] and del_rrest['type'] == add_rrest['type']:
+                exists = True  # no need to add in the out_changes set
+                break
+        if not exists:  # this is a deletion
+            if change_num not in out_changes:
+                out_changes[change_num] = []
+            out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrest, [], "-"))
+
+
+    # only used for changelog per record
+    if record_name != None and record_type != None: # then get only the records with the specific (record_name, record_type) tuple
+        if change_num in out_changes:
+            changes_i = out_changes[change_num]
+        else:
+            return
+        for hre in changes_i: # for each history record entry in changes_i
+            if 'type' in hre.add_rrest and hre.add_rrest['name'] == record_name and hre.add_rrest['type'] == record_type:
+                continue
+            elif 'type' in hre.del_rrest and hre.del_rrest['name'] == record_name and hre.del_rrest['type'] == record_type:
+                continue
+            else:
+                out_changes[change_num].remove(hre)
+
+
+
+# records with same (name,type) are considered as a single HistoryRecordEntry
+# history_entry is of type History - used to extract created_by and created_on
+# add_rrest is a dictionary of replace
+# del_rrest is a dictionary of remove
+class HistoryRecordEntry:
+    def __init__(self, history_entry, del_rrest, add_rrest, change_type):
+        # search the add_rrest index into the add_rrest set for the key (name, type)
+
+        self.history_entry = history_entry
+        self.add_rrest = add_rrest
+        self.del_rrest = del_rrest
+        self.change_type = change_type  # "*": edit or unchanged, "+" new tuple(name,type), "-" deleted (name,type) tuple
+        self.changed_fields = []   # contains a subset of : [ttl, name, type]
+        self.changeSet = []   # all changes for the records of this add_rrest-del_rrest pair
+
+
+        if change_type == "+": # addition
+            self.changed_fields.append("name")
+            self.changed_fields.append("type")
+            self.changed_fields.append("ttl")
+            self.changeSet = get_record_changes(del_rrest, add_rrest)
+        elif change_type == "-": # removal
+            self.changed_fields.append("name")
+            self.changed_fields.append("type")
+            self.changed_fields.append("ttl")
+            self.changeSet = get_record_changes(del_rrest, add_rrest)
+
+        elif change_type == "*":  # edit of unchanged
+            if add_rrest['ttl'] != del_rrest['ttl']:
+                self.changed_fields.append("ttl")
+            self.changeSet = get_record_changes(del_rrest, add_rrest)
+
+
+
+    def toDict(self):
+        return {
+            "add_rrest" : self.add_rrest,
+            "del_rrest" : self.del_rrest,
+            "changed_fields" : self.changed_fields,
+            "created_on" : self.history_entry.created_on,
+            "created_by" : self.history_entry.created_by,
+            "change_type" : self.change_type,
+            "changeSet" : self.changeSet
+        }
+
+    def __eq__(self, obj2): # used for removal of objects from a list
+        return True if obj2.toDict() == self.toDict() else False
 
 @admin_bp.before_request
 def before_request():
     # Manage session timeout
     session.permanent = True
+    # current_app.permanent_session_lifetime = datetime.timedelta(
+    #     minutes=int(Setting().get('session_timeout')))
     current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
+    minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
 
@@ -102,17 +261,17 @@ def edit_user(user_username=None):
         fdata = request.form
 
         if create:
-            user_username = fdata['username']
+            user_username = fdata.get('username', '').strip()
 
         user = User(username=user_username,
-                    plain_text_password=fdata['password'],
-                    firstname=fdata['firstname'],
-                    lastname=fdata['lastname'],
-                    email=fdata['email'],
+                    plain_text_password=fdata.get('password', ''),
+                    firstname=fdata.get('firstname', '').strip(),
+                    lastname=fdata.get('lastname', '').strip(),
+                    email=fdata.get('email', '').strip(),
                     reload_info=False)
 
         if create:
-            if fdata['password'] == "":
+            if not fdata.get('password', ''):
                 return render_template('admin_edit_user.html',
                                        user=user,
                                        create=create,
@@ -142,6 +301,7 @@ def edit_user(user_username=None):
 @operator_role_required
 def edit_key(key_id=None):
     domains = Domain.query.all()
+    accounts = Account.query.all()
     roles = Role.query.all()
     apikey = None
     create = True
@@ -158,6 +318,7 @@ def edit_key(key_id=None):
         return render_template('admin_edit_key.html',
                                key=apikey,
                                domains=domains,
+                               accounts=accounts,
                                roles=roles,
                                create=create)
 
@@ -165,14 +326,21 @@ def edit_key(key_id=None):
         fdata = request.form
         description = fdata['description']
         role = fdata.getlist('key_role')[0]
-        doamin_list = fdata.getlist('key_multi_domain')
+        domain_list = fdata.getlist('key_multi_domain')
+        account_list = fdata.getlist('key_multi_account')
 
         # Create new apikey
         if create:
-            domain_obj_list = Domain.query.filter(Domain.name.in_(doamin_list)).all()
+            if role == "User":
+                domain_obj_list = Domain.query.filter(Domain.name.in_(domain_list)).all()
+                account_obj_list = Account.query.filter(Account.name.in_(account_list)).all()
+            else:
+                account_obj_list, domain_obj_list = [], []
+
             apikey = ApiKey(desc=description,
                             role_name=role,
-                            domains=domain_obj_list)
+                            domains=domain_obj_list,
+                            accounts=account_obj_list)
             try:
                 apikey.create()
             except Exception as e:
@@ -186,7 +354,9 @@ def edit_key(key_id=None):
         # Update existing apikey
         else:
             try:
-                apikey.update(role,description,doamin_list)
+                if role != "User":
+                    domain_list, account_list = [], []
+                apikey.update(role,description,domain_list, account_list)
                 history_message =  "Updated API key {0}".format(apikey.id)
             except Exception as e:
                 current_app.logger.error('Error: {0}'.format(e))
@@ -196,14 +366,16 @@ def edit_key(key_id=None):
                             'key': apikey.id,
                             'role': apikey.role.name,
                             'description': apikey.description,
-                            'domain_acl': [domain.name for domain in apikey.domains]
+                            'domains': [domain.name for domain in apikey.domains],
+                            'accounts': [a.name for a in apikey.accounts]
                           }),
                           created_by=current_user.username)
         history.add()
-        
+
         return render_template('admin_edit_key.html',
                                key=apikey,
                                domains=domains,
+                               accounts=accounts,
                                roles=roles,
                                create=create,
                                plain_key=plain_key)
@@ -232,7 +404,7 @@ def manage_keys():
                 history_apikey_role = apikey.role.name
                 history_apikey_description = apikey.description
                 history_apikey_domains = [ domain.name for domain in apikey.domains]
-                
+
                 apikey.delete()
             except Exception as e:
                 current_app.logger.error('Error: {0}'.format(e))
@@ -581,55 +753,498 @@ def manage_account():
                 }), 400)
 
 
+class DetailedHistory():
+    def __init__(self, history, change_set):
+        self.history = history
+        self.detailed_msg = ""
+        self.change_set = change_set
+
+        if not history.detail:
+            self.detailed_msg = ""
+            return
+
+        if 'add_rrest' in history.detail:
+            detail_dict = json.loads(history.detail.replace("\'", ''))
+        else:
+            detail_dict = json.loads(history.detail.replace("'", '"'))
+
+        if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
+            self.detailed_msg = render_template_string("""
+                    <table class="table table-bordered table-striped">
+                        <tr><td>Domain type:</td><td>{{ domaintype }}</td></tr>
+                        <tr><td>Account:</td><td>{{ account }}</td></tr>
+                    </table>
+                """,
+                domaintype=detail_dict['domain_type'],
+                account=Account.get_name_by_id(self=None, account_id=detail_dict['account_id']) if detail_dict['account_id'] != "0" else "None")
+
+        elif 'authenticator' in detail_dict: # this is a user authentication
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped" style="width:565px;">
+                    <thead>
+                        <tr>
+                            <th colspan="3" style="background: rgba({{ background_rgba }});">
+                                <p style="color:white;">User {{ username }} authentication {{ auth_result }}</p>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Authenticator Type:</td>
+                            <td colspan="2">{{ authenticator }}</td>
+                        </tr>
+                        <tr>
+                            <td>IP Address</td>
+                            <td colspan="2">{{ ip_address }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """,
+                background_rgba="68,157,68" if detail_dict['success'] == 1 else "201,48,44",
+                username=detail_dict['username'],
+                auth_result="success" if detail_dict['success'] == 1 else "failure",
+                authenticator=detail_dict['authenticator'],
+                ip_address=detail_dict['ip_address'])
+
+        elif 'add_rrests' in detail_dict: # this is a domain record change
+            # changes_set = []
+            self.detailed_msg = ""
+            # extract_changelogs_from_a_history_entry(changes_set, history, 0)
+
+        elif 'name' in detail_dict and 'template' in history.msg: # template creation / deletion
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Template name:</td><td>{{ template_name }}</td></tr>
+                    <tr><td>Description:</td><td>{{ description }}</td></tr>
+                </table>
+                """,
+                template_name=DetailedHistory.get_key_val(detail_dict, "name"),
+                description=DetailedHistory.get_key_val(detail_dict, "description"))
+
+        elif 'Change domain' in history.msg and 'access control' in history.msg: # added or removed a user from a domain
+            users_with_access = DetailedHistory.get_key_val(detail_dict, "user_has_access")
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Users with access to this domain</td><td>{{ users_with_access }}</td></tr>
+                    <tr><td>Number of users:</td><td>{{ users_with_access | length }}</td><tr>
+                </table>
+                """,
+                users_with_access=users_with_access)
+
+        elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Key: </td><td>{{ keyname }}</td></tr>
+                    <tr><td>Role:</td><td>{{ rolename }}</td></tr>
+                    <tr><td>Description:</td><td>{{ description }}</td></tr>
+                    <tr><td>Accessible domains with this API key:</td><td>{{ linked_domains }}</td></tr>
+                    <tr><td>Accessible accounts with this API key:</td><td>{{ linked_accounts }}</td></tr>
+                </table>
+                """,
+                keyname=DetailedHistory.get_key_val(detail_dict, "key"),
+                rolename=DetailedHistory.get_key_val(detail_dict, "role"),
+                description=DetailedHistory.get_key_val(detail_dict, "description"),
+                linked_domains=DetailedHistory.get_key_val(detail_dict, "domains" if "domains" in detail_dict else "domain_acl"),
+                linked_accounts=DetailedHistory.get_key_val(detail_dict, "accounts"))
+
+        elif 'Delete API key' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Key: </td><td>{{ keyname }}</td></tr>
+                    <tr><td>Role:</td><td>{{ rolename }}</td></tr>
+                    <tr><td>Description:</td><td>{{ description }}</td></tr>
+                    <tr><td>Accessible domains with this API key:</td><td>{{ linked_domains }}</td></tr>
+                </table>
+                """,
+                keyname=DetailedHistory.get_key_val(detail_dict, "key"),
+                rolename=DetailedHistory.get_key_val(detail_dict, "role"),
+                description=DetailedHistory.get_key_val(detail_dict, "description"),
+                linked_domains=DetailedHistory.get_key_val(detail_dict, "domains"))
+
+        elif 'Update type for domain' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Domain: </td><td>{{ domain }}</td></tr>
+                    <tr><td>Domain type:</td><td>{{ domain_type }}</td></tr>
+                    <tr><td>Masters:</td><td>{{ masters }}</td></tr>
+                </table>
+                """,
+                domain=DetailedHistory.get_key_val(detail_dict, "domain"),
+                domain_type=DetailedHistory.get_key_val(detail_dict, "type"),
+                masters=DetailedHistory.get_key_val(detail_dict, "masters"))
+
+        elif 'reverse' in history.msg:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Domain Type: </td><td>{{ domain_type }}</td></tr>
+                    <tr><td>Domain Master IPs:</td><td>{{ domain_master_ips }}</td></tr>
+                </table>
+                """,
+                domain_type=DetailedHistory.get_key_val(detail_dict, "domain_type"),
+                domain_master_ips=DetailedHistory.get_key_val(detail_dict, "domain_master_ips"))
+
+    # check for lower key as well for old databases
+    @staticmethod
+    def get_key_val(_dict, key):
+        return str(_dict.get(key, _dict.get(key.title(), '')))
+
+
+# convert a list of History objects into DetailedHistory objects
+def convert_histories(histories):
+	changes_set = dict()
+	detailedHistories = []
+	j = 0
+	for i in range(len(histories)):
+		if histories[i].detail and ('add_rrests' in histories[i].detail or 'del_rrests' in histories[i].detail):
+			extract_changelogs_from_a_history_entry(changes_set, histories[i], j)
+			if j in changes_set:
+				detailedHistories.append(DetailedHistory(histories[i], changes_set[j]))
+			else: # no changes were found
+				detailedHistories.append(DetailedHistory(histories[i], None))
+			j += 1
+
+		else:
+			detailedHistories.append(DetailedHistory(histories[i], None))
+	return detailedHistories
+
 @admin_bp.route('/history', methods=['GET', 'POST'])
 @login_required
 @history_access_required
 def history():
-    if request.method == 'POST':
-        if current_user.role.name != 'Administrator':
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'You do not have permission to remove history.'
-                }), 401)
+	if request.method == 'POST':
+		if current_user.role.name != 'Administrator':
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'You do not have permission to remove history.'
+				}), 401)
 
-        h = History()
-        result = h.remove_all()
-        if result:
-            history = History(msg='Remove all histories',
-                              created_by=current_user.username)
-            history.add()
-            return make_response(
-                jsonify({
-                    'status': 'ok',
-                    'msg': 'Changed user role successfully.'
-                }), 200)
-        else:
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'Can not remove histories.'
-                }), 500)
+		h = History()
+		result = h.remove_all()
+		if result:
+			history = History(msg='Remove all histories',
+							  created_by=current_user.username)
+			history.add()
+			return make_response(
+				jsonify({
+					'status': 'ok',
+					'msg': 'Changed user role successfully.'
+				}), 200)
+		else:
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'Can not remove histories.'
+				}), 500)
 
-    if request.method == 'GET':
-        if current_user.role.name in [ 'Administrator', 'Operator' ]:
-            histories = History.query.all()
-        else:
-            # if the user isn't an administrator or operator, 
-            # allow_user_view_history must be enabled to get here,
-            # so include history for the domains for the user
-            histories = db.session.query(History) \
-                .join(Domain, History.domain_id == Domain.id) \
-                .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-                .outerjoin(Account, Domain.account_id == Account.id) \
-                .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-                .filter(
-                db.or_(
-                    DomainUser.user_id == current_user.id,
-                    AccountUser.user_id == current_user.id
-                ))
 
-        return render_template('admin_history.html', histories=histories)
+	if request.method == 'GET':
+		doms = accounts = users = ""
+		if current_user.role.name in [ 'Administrator', 'Operator']:
+			all_domain_names = Domain.query.all()
+			all_account_names = Account.query.all()
+			all_user_names = User.query.all()
+
+
+
+			for d in all_domain_names:
+				doms += d.name + " "
+			for acc in all_account_names:
+				accounts += acc.name + " "
+			for usr in all_user_names:
+				users += usr.username + " "
+		else: # special autocomplete for users
+			all_domain_names = db.session.query(Domain) \
+				.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+				.outerjoin(Account, Domain.account_id == Account.id) \
+				.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+				.filter(
+				db.or_(
+					DomainUser.user_id == current_user.id,
+					AccountUser.user_id == current_user.id
+				)).all()
+
+			all_account_names = db.session.query(Account) \
+				.outerjoin(Domain, Domain.account_id == Account.id) \
+				.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+				.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+				.filter(
+				db.or_(
+					DomainUser.user_id == current_user.id,
+					AccountUser.user_id == current_user.id
+				)).all()
+
+
+			all_user_names = []
+			for a in all_account_names:
+				temp =  db.session.query(User) \
+						.join(AccountUser, AccountUser.user_id == User.id) \
+						.outerjoin(Account, Account.id == AccountUser.account_id) \
+						.filter(
+							db.or_(
+								Account.id == a.id,
+								AccountUser.account_id == a.id
+							)
+						) \
+						.all()
+				for u in temp:
+					if u in all_user_names:
+						continue
+					all_user_names.append(u)
+
+			for d in all_domain_names:
+				doms += d.name + " "
+
+			for a in all_account_names:
+				accounts += a.name + " "
+			for u in all_user_names:
+				users += u.username + " "
+		return render_template('admin_history.html', all_domain_names=doms, all_account_names=accounts, all_usernames=users)
+
+# local_offset is the offset of the utc to the local time
+# offset must be int
+# return the date converted and simplified
+def from_utc_to_local(local_offset, timeframe):
+	offset = str(local_offset *(-1))
+	date_split = str(timeframe).split(".")[0]
+	date_converted = datetime.datetime.strptime(date_split, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(minutes=int(offset))
+	return date_converted
+
+@admin_bp.route('/history_table', methods=['GET', 'POST'])
+@login_required
+@history_access_required
+def history_table():    # ajax call data
+
+	if request.method == 'POST':
+		if current_user.role.name != 'Administrator':
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'You do not have permission to remove history.'
+				}), 401)
+
+		h = History()
+		result = h.remove_all()
+		if result:
+			history = History(msg='Remove all histories',
+							  created_by=current_user.username)
+			history.add()
+			return make_response(
+				jsonify({
+					'status': 'ok',
+					'msg': 'Changed user role successfully.'
+				}), 200)
+		else:
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'Can not remove histories.'
+				}), 500)
+
+	detailedHistories = []
+	lim = int(Setting().get('max_history_records'))  # max num of records
+
+	if request.method == 'GET':
+		if current_user.role.name in [ 'Administrator', 'Operator' ]:
+			base_query = History.query
+		else:
+			# if the user isn't an administrator or operator,
+			# allow_user_view_history must be enabled to get here,
+			# so include history for the domains for the user
+			base_query = db.session.query(History) \
+				.join(Domain, History.domain_id == Domain.id) \
+				.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+				.outerjoin(Account, Domain.account_id == Account.id) \
+				.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+				.filter(
+				db.or_(
+					DomainUser.user_id == current_user.id,
+					AccountUser.user_id == current_user.id
+				))
+
+		domain_name = request.args.get('domain_name_filter') if request.args.get('domain_name_filter') != None \
+															and len(request.args.get('domain_name_filter')) != 0 else None
+		account_name = request.args.get('account_name_filter') if request.args.get('account_name_filter') != None \
+															and len(request.args.get('account_name_filter')) != 0 else None
+		user_name = request.args.get('auth_name_filter') if request.args.get('auth_name_filter') != None \
+															and len(request.args.get('auth_name_filter')) != 0 else None
+
+		min_date = request.args.get('min') if request.args.get('min') != None and len( request.args.get('min')) != 0 else None
+		if min_date != None:    # get 1 day earlier, to check for timezone errors
+			min_date = str(datetime.datetime.strptime(min_date, '%Y-%m-%d') - datetime.timedelta(days=1))
+		max_date = request.args.get('max') if request.args.get('max') != None and len( request.args.get('max')) != 0 else None
+		if max_date != None:    # get 1 day later, to check for timezone errors
+			max_date = str(datetime.datetime.strptime(max_date, '%Y-%m-%d') + datetime.timedelta(days=1))
+		tzoffset = request.args.get('tzoffset') if request.args.get('tzoffset') != None and len(request.args.get('tzoffset')) != 0 else None
+		changed_by = request.args.get('user_name_filter') if  request.args.get('user_name_filter') != None \
+															and len(request.args.get('user_name_filter')) != 0 else None
+		"""
+			Auth methods: LOCAL, Github OAuth, Azure OAuth, SAML, OIDC OAuth, Google OAuth
+		"""
+		auth_methods = []
+		if (request.args.get('auth_local_only_checkbox') is None \
+														and request.args.get('auth_oauth_only_checkbox') is None \
+														and request.args.get('auth_saml_only_checkbox') is None and request.args.get('auth_all_checkbox') is None):
+			auth_methods = []
+		if request.args.get('auth_all_checkbox') == "on":
+			auth_methods.append("")
+		if request.args.get('auth_local_only_checkbox') == "on":
+			auth_methods.append("LOCAL")
+		if request.args.get('auth_oauth_only_checkbox') == "on":
+			auth_methods.append("OAuth")
+		if request.args.get('auth_saml_only_checkbox') == "on":
+			auth_methods.append("SAML")
+
+		if request.args.get('domain_changelog_only_checkbox') != None:
+			changelog_only = True if request.args.get('domain_changelog_only_checkbox') == "on" else False
+		else:
+			changelog_only = False
+
+
+
+
+		# users cannot search for authentication
+		if user_name != None and current_user.role.name not in [ 'Administrator', 'Operator']:
+			histories = []
+		elif domain_name != None:
+
+			if not changelog_only:
+				histories = base_query \
+				.filter(
+					db.and_(
+						db.or_(
+							History.msg.like("%domain "+ domain_name) if domain_name != "*" else History.msg.like("%domain%"),
+							History.msg.like("%domain "+ domain_name + " access control") if domain_name != "*" else History.msg.like("%domain%access control")
+						),
+						History.created_on <= max_date  if max_date != None else True,
+						History.created_on >= min_date if min_date != None else True,
+						History.created_by == changed_by if changed_by != None else True
+					)
+				).order_by(History.created_on.desc()).limit(lim).all()
+			else:
+				# search for records changes only
+				histories = base_query \
+							.filter(
+								db.and_(
+									History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
+																			else History.msg.like("Apply record changes to domain%"),
+									History.created_on <= max_date  if max_date != None else True,
+									History.created_on >= min_date if min_date != None else True,
+									History.created_by == changed_by if changed_by != None else True
+
+								)
+							).order_by(History.created_on.desc()) \
+							.limit(lim).all()
+		elif account_name != None:
+			if current_user.role.name in ['Administrator', 'Operator']:
+				histories = base_query \
+					.join(Domain, History.domain_id == Domain.id) \
+					.outerjoin(Account, Domain.account_id == Account.id) \
+					.filter(
+						db.and_(
+							Account.id == Domain.account_id,
+							account_name == Account.name if account_name != "*" else True,
+							History.created_on <= max_date if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					).order_by(History.created_on.desc()) \
+					.limit(lim).all()
+			else:
+				histories = base_query \
+							.filter(
+								db.and_(
+									Account.id == Domain.account_id,
+									account_name == Account.name if account_name != "*" else True,
+									History.created_on <= max_date if max_date != None else True,
+									History.created_on >= min_date if min_date != None else True,
+									History.created_by == changed_by if changed_by != None else True
+								)
+							).order_by(History.created_on.desc()) \
+							.limit(lim).all()
+		elif user_name != None and current_user.role.name in [ 'Administrator', 'Operator']: # only admins can see the user login-logouts
+
+			histories = History.query \
+					.filter(
+						db.and_(
+							db.or_(
+								History.msg.like("User "+ user_name + " authentication%") if user_name != "*" and user_name != None else History.msg.like("%authentication%"),
+								History.msg.like("User "+ user_name + " was not authorized%") if user_name != "*" and user_name != None else History.msg.like("User%was not authorized%")
+							),
+							History.created_on <= max_date if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					) \
+					.order_by(History.created_on.desc()).limit(lim).all()
+			temp = []
+			for h in histories:
+				for method in auth_methods:
+					if method in h.detail:
+						temp.append(h)
+						break
+			histories = temp
+		elif (changed_by != None or max_date != None) and current_user.role.name in [ 'Administrator', 'Operator'] :   # select changed by and date filters only
+			histories = History.query \
+					.filter(
+						db.and_(
+							History.created_on <= max_date  if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					) \
+					.order_by(History.created_on.desc()).limit(lim).all()
+		elif (changed_by != None or max_date != None): # special filtering for user because one user does not have access to log-ins logs
+			histories = base_query \
+					.filter(
+						db.and_(
+							History.created_on <= max_date if max_date != None else True,
+							History.created_on >= min_date if min_date != None else True,
+							History.created_by == changed_by if changed_by != None else True
+						)
+					) \
+					.order_by(History.created_on.desc()).limit(lim).all()
+		elif max_date != None:  # if changed by == null and only date is applied
+			histories = base_query.filter(
+							db.and_(
+								History.created_on <= max_date if max_date != None else True,
+								History.created_on >= min_date if min_date != None else True,
+							)
+			).order_by(History.created_on.desc()).limit(lim).all()
+		else:  # default view
+			if current_user.role.name in [ 'Administrator', 'Operator']:
+				histories = History.query.order_by(History.created_on.desc()).limit(lim).all()
+			else:
+				histories = db.session.query(History) \
+					.join(Domain, History.domain_id == Domain.id) \
+					.outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+					.outerjoin(Account, Domain.account_id == Account.id) \
+					.outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+					.order_by(History.created_on.desc()) \
+					.filter(
+					db.or_(
+						DomainUser.user_id == current_user.id,
+						AccountUser.user_id == current_user.id
+					)).limit(lim).all()
+
+		detailedHistories = convert_histories(histories)
+
+		# Remove dates from previous or next day that were brought over
+		if tzoffset != None:
+			if min_date != None:
+				min_date_split = min_date.split()[0]
+			if max_date != None:
+				max_date_split = max_date.split()[0]
+			for i, history_rec in enumerate(detailedHistories):
+				local_date = str(from_utc_to_local(int(tzoffset), history_rec.history.created_on).date())
+				if (min_date != None and local_date == min_date_split) or (max_date != None and local_date == max_date_split):
+					detailedHistories[i] = None
+
+		# Remove elements previously flagged as None
+		detailedHistories = [h for h in detailedHistories if h is not None]
+
+		return render_template('admin_history_table.html', histories=detailedHistories, len_histories=len(detailedHistories), lim=lim)
+
 
 
 @admin_bp.route('/setting/basic', methods=['GET'])
@@ -644,7 +1259,9 @@ def setting_basic():
             'pretty_ipv6_ptr', 'dnssec_admins_only',
             'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
-            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email', 'otp_field_enabled', 'custom_css'
+            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
+            'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
+
         ]
 
         return render_template('admin_setting_basic.html', settings=settings)
@@ -986,6 +1603,8 @@ def setting_authentication():
                               request.form.get('oidc_oauth_token_url'))
                 Setting().set('oidc_oauth_authorize_url',
                               request.form.get('oidc_oauth_authorize_url'))
+                Setting().set('oidc_oauth_logout_url',
+                              request.form.get('oidc_oauth_logout_url'))
                 Setting().set('oidc_oauth_username',
                               request.form.get('oidc_oauth_username'))
                 Setting().set('oidc_oauth_firstname',

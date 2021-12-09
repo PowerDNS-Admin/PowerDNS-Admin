@@ -628,6 +628,7 @@ class User(db.Model):
                 Account)\
             .filter(self.id == AccountUser.user_id)\
             .filter(Account.id == AccountUser.account_id)\
+            .order_by(Account.name)\
             .all()
         for q in query:
             accounts.append(q[1])

@@ -61,7 +61,7 @@ def domains_custom(boxId):
                 ))
 
     template = current_app.jinja_env.get_template("dashboard_domain.html")
-    render = template.make_module(vars={"current_user": current_user})
+    render = template.make_module(vars={"current_user": current_user, "allow_user_view_history": Setting().get('allow_user_view_history')})
 
     columns = [
         Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master,
@@ -163,19 +163,20 @@ def dashboard():
     if current_user.role.name in ['Administrator', 'Operator']:
         domain_count = Domain.query.count()
         history_number = History.query.count()
-        history = History.query.order_by(History.created_on.desc()).limit(4)
+        history = History.query.order_by(History.created_on.desc()).limit(4).all()
     elif Setting().get('allow_user_view_history'):
         history = db.session.query(History) \
             .join(Domain, History.domain_id == Domain.id) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .order_by(History.created_on.desc()) \
             .filter(
             db.or_(
                 DomainUser.user_id == current_user.id,
                 AccountUser.user_id == current_user.id
-            )).order_by(History.created_on.desc())
-        history_number = history.count()
+            )).all()
+        history_number = len(history)  # history.count()
         history = history[:4]
         domain_count = db.session.query(Domain) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
@@ -186,6 +187,10 @@ def dashboard():
                     DomainUser.user_id == current_user.id,
                     AccountUser.user_id == current_user.id
                 )).count()
+
+    from .admin import convert_histories, DetailedHistory
+    detailedHistories = convert_histories(history)
+    
     server = Server(server_id='localhost')
     statistics = server.get_statistic()
     if statistics:
@@ -202,7 +207,7 @@ def dashboard():
                            user_num=user_num,
                            history_number=history_number,
                            uptime=uptime,
-                           histories=history,
+                           histories=detailedHistories,
                            show_bg_domain_button=show_bg_domain_button,
                            pdns_version=Setting().get('pdns_version'))
 

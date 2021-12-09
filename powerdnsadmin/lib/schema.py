@@ -11,10 +11,21 @@ class RoleSchema(Schema):
     name = fields.String()
 
 
+class AccountSummarySchema(Schema):
+    id = fields.Integer()
+    name = fields.String()
+    domains = fields.Embed(schema=DomainSchema, many=True)
+
+class ApiKeySummarySchema(Schema):
+    id = fields.Integer()
+    description = fields.String()
+
+
 class ApiKeySchema(Schema):
     id = fields.Integer()
     role = fields.Embed(schema=RoleSchema)
     domains = fields.Embed(schema=DomainSchema, many=True)
+    accounts = fields.Embed(schema=AccountSummarySchema, many=True)
     description = fields.String()
     key = fields.String()
 
@@ -23,13 +34,9 @@ class ApiPlainKeySchema(Schema):
     id = fields.Integer()
     role = fields.Embed(schema=RoleSchema)
     domains = fields.Embed(schema=DomainSchema, many=True)
+    accounts = fields.Embed(schema=AccountSummarySchema, many=True)
     description = fields.String()
     plain_key = fields.String()
-
-
-class AccountSummarySchema(Schema):
-    id = fields.Integer()
-    name = fields.String()
 
 
 class UserSchema(Schema):
@@ -56,3 +63,4 @@ class AccountSchema(Schema):
     contact = fields.String()
     mail = fields.String()
     domains = fields.Embed(schema=DomainSchema, many=True)
+    apikeys = fields.Embed(schema=ApiKeySummarySchema, many=True)

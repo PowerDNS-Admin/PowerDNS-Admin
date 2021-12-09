@@ -43,7 +43,6 @@ index_bp = Blueprint('index',
                      template_folder='templates',
                      url_prefix='/')
 
-
 @index_bp.before_app_first_request
 def register_modules():
     global google
@@ -398,16 +397,39 @@ def login():
             session.pop('oidc_token', None)
             return redirect(url_for('index.login'))
 
+        #This checks if the account_name_property and account_description property were included in settings.
         if Setting().get('oidc_oauth_account_name_property') and Setting().get('oidc_oauth_account_description_property') and not Setting().get('autoprovisioning_oidc'):
+
+            #Gets the name_property and description_property.
             name_prop = Setting().get('oidc_oauth_account_name_property')
             desc_prop = Setting().get('oidc_oauth_account_description_property')
+
+            account_to_add = []
+	    #If the name_property and desc_property exist in me (A variable that contains all the userinfo from the IdP).
             if name_prop in me and desc_prop in me:
-                account = handle_account(me[name_prop], me[desc_prop])
-                account.add_user(user)
+                accounts_name_prop = [me[name_prop]] if type(me[name_prop]) is not list else me[name_prop]
+                accounts_desc_prop = [me[desc_prop]] if type(me[desc_prop]) is not list else me[desc_prop]
+		
+                #Run on all groups the user is in by the index num.
+                for i in range(len(accounts_name_prop)):
+                    description = ''
+                    if i < len(accounts_desc_prop):
+                        description = accounts_desc_prop[i]
+                    account = handle_account(accounts_name_prop[i], description)
+
+                    account_to_add.append(account)
                 user_accounts = user.get_accounts()
-                for ua in user_accounts:
-                    if ua.name != account.name:
-                        ua.remove_user(user)
+                
+		# Add accounts
+                for account in account_to_add:
+                    if account not in user_accounts:
+                        account.add_user(user)
+
+                # Remove accounts if the setting is enabled
+                if Setting().get('delete_sso_accounts'):
+                    for account in user_accounts:
+                        if account not in account_to_add:
+                              account.remove_user(user)
 
         if Setting().get('autoprovisioning_oidc'):
             urn_value=Setting().get('urn_value_oidc')
@@ -643,12 +665,12 @@ def register():
         if request.method == 'GET':
             return render_template('register.html')
         elif request.method == 'POST':
-            username = request.form['username']
-            password = request.form['password']
-            firstname = request.form.get('firstname')
-            lastname = request.form.get('lastname')
-            email = request.form.get('email')
-            rpassword = request.form.get('rpassword')
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            firstname = request.form.get('firstname', '').strip()
+            lastname = request.form.get('lastname', '').strip()
+            email = request.form.get('email', '').strip()
+            rpassword = request.form.get('rpassword', '')
 
             if not username or not password or not email:
                 return render_template(
