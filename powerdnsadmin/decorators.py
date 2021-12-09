@@ -192,6 +192,24 @@ def is_json(f):
     return decorated_function
 
 
+def callback_if_request_body_contains_key(callback, http_methods=[], keys=[]):
+    """
+    If request body contains one or more of specified keys, call
+    :param callback
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            check_current_http_method = not http_methods or request.method in http_methods
+            if (check_current_http_method and
+                set(request.get_json(force=True).keys()).intersection(set(keys))
+            ):
+                callback(*args, **kwargs)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def api_role_can(action, roles=None, allow_self=False):
     """
     Grant access if:
@@ -304,15 +322,18 @@ def apikey_is_admin(f):
 
 
 def apikey_can_access_domain(f):
+    """
+    Grant access if:
+        - user has Operator role or higher, or
+        - user has explicitly been granted access to domain
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        apikey = g.apikey
         if g.apikey.role.name not in ['Administrator', 'Operator']:
-            domains = apikey.domains
             zone_id = kwargs.get('zone_id').rstrip(".")
-            domain_names = [item.name for item in domains]
+            domain_names = [item.name for item in g.apikey.domains]
 
-            accounts = apikey.accounts
+            accounts = g.apikey.accounts
             accounts_domains = [domain.name for a in accounts for domain in a.domains]
 
             allowed_domains = set(domain_names + accounts_domains)
@@ -322,6 +343,29 @@ def apikey_can_access_domain(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def apikey_can_configure_dnssec(http_methods=[]):
+    """
+    Grant access if:
+        - user is in Operator role or higher, or
+        - dnssec_admins_only is off
+    """
+    def decorator(f=None):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            check_current_http_method = not http_methods or request.method in http_methods
+
+            if (check_current_http_method and
+                g.apikey.role.name not in ['Administrator', 'Operator'] and
+                Setting().get('dnssec_admins_only')
+            ):
+                msg = "ApiKey #{0} does not have enough privileges to configure dnssec"
+                current_app.logger.error(msg.format(g.apikey.id))
+                raise DomainAccessForbidden(message=msg)
+            return f(*args, **kwargs) if f else None
+        return decorated_function
+    return decorator
 
 
 def apikey_auth(f):
