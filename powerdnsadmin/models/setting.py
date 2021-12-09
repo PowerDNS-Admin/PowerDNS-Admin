@@ -195,7 +195,9 @@ class Setting(db.Model):
         'pwd_min_digits' : 2,
         'pwd_min_special' : 1,
         'pwd_must_not_contain' : 'username,firstname',
-        'max_history_records': 1000
+        'max_history_records': 1000,
+        'zxcvbn_enabled': True,
+        'zxcvbn_guesses_log' : 11
     }
 
     def __init__(self, id=None, name=None, value=None):

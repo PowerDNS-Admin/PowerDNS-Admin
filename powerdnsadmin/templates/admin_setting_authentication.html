@@ -27,8 +27,9 @@
         }
 
         window.onload = function() {
-            ldapSelection();
+            ldapSelection();            
         }
+
     </script>
 </section>
 {% endblock %}
@@ -76,27 +77,39 @@
                                             <legend>Password Policy </br>(database authentication)</legend>
                                             <div class="form-group">
                                                 <label for="min_len">Minimum length</label>
-                                                <input type="text" class="form-control" name="min_len" id="min_len"  value="{{ SETTING.get('pwd_min_len') }}">
+                                                <input type="text" class="form-control char_specified" name="min_len" id="min_len"  value="{{ SETTING.get('pwd_min_len') }}"
+                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <label for="min_lowercase">Minimum number of lowercase letters</label>
-                                                <input type="text" class="form-control" name="min_lowercase" id="min_lowercase"  value="{{ SETTING.get('pwd_min_lowercase') }}">
+                                                <input type="text" class="form-control char_specified" name="min_lowercase" id="min_lowercase"  value="{{ SETTING.get('pwd_min_lowercase') }}"
+                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <label for="min_uppercase">Minimum number of uppercase letters</label>
-                                                <input type="text" class="form-control" name="min_uppercase" id="min_uppercase"  value="{{ SETTING.get('pwd_min_uppercase') }}">
+                                                <input type="text" class="form-control char_specified" name="min_uppercase" id="min_uppercase"  value="{{ SETTING.get('pwd_min_uppercase') }}"
+                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <label for="min_digits">Minimum number of digits</label>
-                                                <input type="text" class="form-control" name="min_digits" id="min_digits"  value="{{ SETTING.get('pwd_min_digits') }}">
+                                                <input type="text" class="form-control char_specified" name="min_digits" id="min_digits"  value="{{ SETTING.get('pwd_min_digits') }}"
+                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <label for="min_special">Minimum number of special characters</label>
-                                                <input type="text" class="form-control" name="min_special" id="min_special"  value="{{ SETTING.get('pwd_min_special') }}">
+                                                <input type="text" class="form-control char_specified" name="min_special" id="min_special"  value="{{ SETTING.get('pwd_min_special') }}"
+                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <label for="must_not_contain">Must not contain</label>
-                                                <input type="text" class="form-control" name="must_not_contain" id="must_not_contain" placeholder="username,firstname,lastname,email"  value="{{ SETTING.get('pwd_must_not_contain') }}">
+                                                <input type="text" class="form-control char_specified" name="must_not_contain" id="must_not_contain" placeholder="username,firstname,lastname,email"  value="{{ SETTING.get('pwd_must_not_contain') }}" 
+                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>
+                                                    <label for="zxcvbn">Use zxcvbn python package</label>
+                                                    <input type="checkbox" class="checkbox" name="zxcvbn" id="zxcvbn" onclick="javascript:passPolicySelection();"  {% if SETTING.get('zxcvbn_enabled')== true %}checked{% endif %}>
+                                                </label>
                                             </div>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-flat btn-primary">Save</button>
@@ -745,7 +758,21 @@
 {%- endassets %}
 
 <script>
-    
+
+    $('input').on('ifChecked', function(event){
+        // alert(event.type + ' callback');
+        $(".form-control.char_specified").prop("disabled", true)
+    });
+    $('input').on('ifUnchecked', function(event){
+        // alert(event.type + ' callback');
+        $(".form-control.char_specified").prop("disabled", false)
+    });
+
+    $('#zxcvbn').iCheck({
+        checkboxClass : 'icheckbox_square-blue',
+        increaseArea : '20%'
+    })
+
     $(function() {
         $('#tabs').tabs({
             // add url anchor tags

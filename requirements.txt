@@ -28,3 +28,4 @@ PyYAML==5.4
 Flask-SSLify==0.1.5
 Flask-Mail==0.9.1
 flask-session==0.3.2
+zxcvbn==4.4.28

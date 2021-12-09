@@ -1356,13 +1356,17 @@ def setting_authentication():
                 'local_db_enabled') else False
             signup_enabled = True if request.form.get(
                 'signup_enabled', ) else False
-            min_len = int(request.form.get('min_len'))
-            min_lowercase = int(request.form.get('min_lowercase'))
-            min_uppercase = int(request.form.get('min_uppercase'))
-            min_digits = int(request.form.get('min_digits'))
-            min_special = int(request.form.get('min_special'))
-            must_not_contain = request.form.get('must_not_contain')
-            
+            password_package_enabled = request.form.get('zxcvbn')
+            if password_package_enabled is None:
+                min_len = int(request.form.get('min_len'))
+                min_lowercase = int(request.form.get('min_lowercase'))
+                min_uppercase = int(request.form.get('min_uppercase'))
+                min_digits = int(request.form.get('min_digits'))
+                min_special = int(request.form.get('min_special'))
+                must_not_contain = request.form.get('must_not_contain')
+            else:
+                Setting().set('zxcvbn_enabled', True)
+
             if not has_an_auth_method(local_db_enabled=local_db_enabled):
                 result = {
                     'status':
@@ -1371,15 +1375,19 @@ def setting_authentication():
                     'Must have at least one authentication method enabled.'
                 }
             else:
-                Setting().set('local_db_enabled', local_db_enabled)
-                Setting().set('signup_enabled', signup_enabled)
-                Setting().set('pwd_min_len', min_len)
-                Setting().set('pwd_min_lowercase', min_lowercase)
-                Setting().set('pwd_min_uppercase', min_uppercase)
-                Setting().set('pwd_min_digits', min_digits)
-                Setting().set('pwd_min_special', min_special)
-                Setting().set('pwd_must_not_contain', must_not_contain)
-                
+                if password_package_enabled is None:
+                    Setting().set('local_db_enabled', local_db_enabled)
+                    Setting().set('signup_enabled', signup_enabled)
+                    Setting().set('pwd_min_len', min_len)
+                    Setting().set('pwd_min_lowercase', min_lowercase)
+                    Setting().set('pwd_min_uppercase', min_uppercase)
+                    Setting().set('pwd_min_digits', min_digits)
+                    Setting().set('pwd_min_special', min_special)
+                    Setting().set('pwd_must_not_contain', must_not_contain)
+                    Setting().set('zxcvbn_enabled', False)
+                else:
+                    Setting().set('zxcvbn_enabled', True)
+
                 result = {'status': True, 'msg': 'Saved successfully'}
         elif conf_type == 'ldap':
             ldap_enabled = True if request.form.get('ldap_enabled') else False

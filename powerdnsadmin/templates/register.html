@@ -64,7 +64,9 @@
         <div id="pass-feedback" class="form-group">
           <input type="password" class="form-control" placeholder="Password" id="password" name="password"
             required>
+          {% if SETTING.get('zxcvbn_enabled') == true %}
           <small class="help-block" id="password-text"></small> <br>
+          {% endif %}
           <div id="policy-err" style='color: #df5948;'></div>
         </div>
         <div class="form-group has-feedback">
@@ -106,6 +108,7 @@
       })
     });
 
+    {% if SETTING.get('zxcvbn_enabled') == false %}
     // handling password complexity requirements message
     $(':input').on('keyup', function() {
 
@@ -170,15 +173,7 @@
     });
 
 
-
-
-
-
-
-
-
-
-    {% if use_package %}
+    {% else %}
     var csrftoken = $('meta[name=csrf-token]').attr('content')
 
     $.ajaxSetup({
@@ -206,10 +201,17 @@
             console.log("Resp = " , response)
             console.log('sccess')
             var x = document.getElementById('policy-err');
-            console.log(response['feedback'])
-            x.innerHTML = response['feedback'] // response['feedback']
+            // x.innerHTML = response['feedback'];
+            x.innerHTML = "<ul>";
+            for (let i = 0; i < response['feedback'].length; i++) {
+              x.innerHTML += "<li>" + response['feedback'][i] + "</li>";
+            }
+            x.innerHTML += "</ul>"
             var strength;
             switch (response['strength']) {
+              case '':
+                strength = ''; // no password was given
+                break;
               case 'very weak':
                 strength = "<small class='progress-bar bg-danger' style='background-color: #a50021; width: 25%'>Very weak</small>";
                 break;
@@ -225,6 +227,16 @@
               }
               var y = document.getElementById('password-text')
               y.innerHTML = strength;
+
+              if (response['feedback'] != "") {
+                document.getElementById('register').disabled = true; 
+                // $('#pass-feedback').addClass("has-error");
+              }
+              else { 
+                document.getElementById('register').disabled = false;
+                // $('#pass-feedback').addClass("has-success");
+              }
+              
           },
           error: function(xhr) {
               console.log("Ajax call to rate pass, has failed")
@@ -235,7 +247,7 @@
     // handling password complexity requirements message
     $(':input').on('keyup', function() {
 
-      var seconds = 1.5;
+      var seconds = 1;
       if (timer == null) {  // if user typed sth and timer is not running, then start one
         timer = setTimeout(send_pass, seconds*1000);
       }

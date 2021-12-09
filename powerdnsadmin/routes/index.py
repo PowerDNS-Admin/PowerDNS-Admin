@@ -7,8 +7,9 @@ import ipaddress
 from distutils.util import strtobool
 from yaml import Loader, load
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
-from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
+from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
+from zxcvbn import zxcvbn
 
 from .base import login_manager
 from ..lib import utils
@@ -676,14 +677,63 @@ def password_quality_check(user, password):
     return True
 
 
-@index_bp.route('/ratepass', methods=['POST'])
+@index_bp.route('/ratepassword', methods=['POST'])
 def rate_password():
+    # print("\n\nGot pass = ", passwd)
+    # result = zxcvbn(pwd, user_inputs=[wordlist])
+    fname = request.form['fname']
+    lname = request.form['lname']
+    email = request.form['email']
+    username = request.form['username']
+    password = request.form['password']
+    inputs = []
+    for i in [fname, lname, email, username]:
+        if len(i) != 0:
+            inputs.append(i)
+    if len(password) == 0:
+        return make_response(
+            jsonify({
+                'msg' : 'no-passwd',
+                'feedback': '',
+                'valid' : 'false',
+                'strength': ''
+            }), 200)
 
-    username = request.form.get('username')
-    fname = request.form.get('fname')
-    lname = request.form.get('name')
-    email = request.form.get('email')
-    
+    result = zxcvbn(password, user_inputs=inputs)
+    defined_guesses_log = 11
+    # attrubutes to return as json
+    feedback = []
+    rate = result['guesses_log10']/defined_guesses_log
+    if rate < 0.5:
+        strength = "very weak"
+    if rate < 0.6:
+        strength = "weak"
+    elif rate < 1:
+        strength = "medium"
+    else:
+        strength = "strong"
+
+    if result['guesses_log10'] < defined_guesses_log:
+        feedback.append("Add more complexity to your password")
+    for s in result['sequence']:
+        if s['pattern'] == 'dictionary':
+            if s['dictionary_name'] == 'user_inputs':
+                feedback.append("Your password must not contain parts of your firstname, lastname, username or email")
+                break
+    for s in result['sequence']:
+        if s['pattern'] == 'dictionary' and s['dictionary_name'] != 'user_inputs':
+            feedback.append("Your password contains one or more words which exist in common wordlists.")
+            break
+    # in case complexity is high but feedback is still given, then downgrade to 'medium'
+    if strength == "strong" and (len(feedback) != 0 or result['score'] < 4):
+        strength = "medium"
+    return make_response(
+        jsonify({
+            'feedback': feedback,
+            'strength': strength,
+            'valid' : 'true' if strength == 'strong' and len(feedback) == 0 else 'false'
+        }), 200)
+
 
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register():
