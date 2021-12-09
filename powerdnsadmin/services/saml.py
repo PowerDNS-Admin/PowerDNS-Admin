@@ -44,17 +44,17 @@ class SAML(object):
 
     def get_idp_data(self):
 
-        # lifetime = timedelta(
-        #     minutes=int(Setting().get('saml_metadata_cache_lifetime')))     # should be seconds instead of minutes?
+        lifetime = timedelta(
+            minutes=int(Setting().get('saml_metadata_cache_lifetime')))     # should be seconds instead of minutes?
         # Since SAML is now user-configurable, idp_data may change before the lifetime has ended,
         # so metadata should not be cached at all, or outdated settings may be used. 
         try:
             self.retrieve_idp_data()
         except:
             return None
-        # if self.idp_timestamp + lifetime < datetime.now():
-        background_thread = Thread(target=self.retrieve_idp_data())
-        background_thread.start()
+        if self.idp_timestamp + lifetime < datetime.now():
+            background_thread = Thread(target=self.retrieve_idp_data())
+            background_thread.start()
 
         return self.idp_data
 
@@ -158,12 +158,12 @@ class SAML(object):
 
         settings['sp']['assertionConsumerService'] = {}
         settings['sp']['assertionConsumerService'][
-            'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+            'binding'] = Setting().get('saml_idp_sso_binding')
         settings['sp']['assertionConsumerService'][
             'url'] = own_url + '/saml/authorized'
         settings['sp']['singleLogoutService'] = {}
         settings['sp']['singleLogoutService'][
-            'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+            'binding'] = Setting().get('saml_idp_slo_binding')
         settings['sp']['singleLogoutService']['url'] = own_url + '/saml/sls'
         settings['idp'] = metadata['idp']
         settings['strict'] = True
@@ -176,17 +176,17 @@ class SAML(object):
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
             'signatureAlgorithm'] = Setting().get('saml_signature_algorithm')
-        settings['security']['wantAssertionsEncrypted'] = Setting().get('saml_assertion_encrypted')
+        settings['security']['wantAssertionsEncrypted'] = Setting().get('saml_want_assertions_encrypted')
         settings['security']['wantAttributeStatement'] = True
         settings['security']['wantNameId'] = True
-        settings['security']['authnRequestsSigned'] = Setting().get('saml_sign_request')
-        settings['security']['logoutRequestSigned'] = Setting().get('saml_sign_request')
-        settings['security']['logoutResponseSigned'] = Setting().get('saml_sign_request')
-        settings['security']['nameIdEncrypted'] = False
+        settings['security']['authnRequestsSigned'] = Setting().get('saml_sign_authn_request')
+        settings['security']['logoutRequestSigned'] = Setting().get('saml_sign_logout_request_response')
+        settings['security']['logoutResponseSigned'] = Setting().get('saml_sign_logout_request_response')
+        settings['security']['nameIdEncrypted'] = Setting().get('saml_nameid_encrypted')
         settings['security']['signMetadata'] = Setting().get('saml_sign_metadata')
         settings['security']['wantAssertionsSigned'] = Setting().get('saml_want_assertions_signed')
         settings['security']['wantMessagesSigned'] = Setting().get('saml_want_message_signed')
-        settings['security']['wantNameIdEncrypted'] = False
+        settings['security']['wantNameIdEncrypted'] = Setting().get('saml_want_nameid_encrypted')
         settings['contactPerson'] = {}
         settings['contactPerson']['support'] = {}
         settings['contactPerson']['support']['emailAddress'] = Setting().get('saml_sp_contact_mail')

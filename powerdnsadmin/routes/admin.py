@@ -1646,6 +1646,8 @@ def setting_authentication():
                                 else Setting().defaults['saml_metadata_cache_lifetime']))
                 Setting().set('saml_idp_sso_binding',
                               request.form.get('saml_idp_sso_binding'))
+                Setting().set('saml_idp_slo_binding',
+                              request.form.get('saml_idp_slo_binding'))
                 Setting().set('saml_idp_entity_id',
                               request.form.get('saml_idp_entity_id'))
                 Setting().set('saml_nameid_format',
@@ -1689,8 +1691,11 @@ def setting_authentication():
                 Setting().set('saml_cert_key',
                               request.form.get('saml_cert_key'))
                 Setting().set(
-                    'saml_sign_request',
-                    True if request.form.get('saml_sign_request') else False)
+                    'saml_sign_authn_request',
+                    True if request.form.get('saml_sign_authn_request') else False)
+                Setting().set(
+                    'saml_sign_logout_request_response',
+                    True if request.form.get('saml_sign_logout_request_response') else False)
                 Setting().set(
                     'saml_logout',
                     True if request.form.get('saml_logout') else False)
@@ -1698,11 +1703,17 @@ def setting_authentication():
                     Setting().set('saml_logout_url',
                               request.form.get('saml_logout_url'))
                 Setting().set(
-                    'saml_assertion_encrypted',
-                    True if request.form.get('saml_assertion_encrypted') else False)
+                    'saml_want_assertions_encrypted',
+                    True if request.form.get('saml_want_assertions_encrypted') else False)
                 Setting().set(
                     'saml_want_assertions_signed',
                     True if request.form.get('saml_want_assertions_signed') else False)
+                Setting().set(
+                    'saml_want_nameid_encrypted',
+                    True if request.form.get('saml_want_nameid_encrypted') else False)
+                Setting().set(
+                    'saml_nameid_encrypted',
+                    True if request.form.get('saml_nameid_encrypted') else False)
                 Setting().set('saml_digest_algorithm',
                               request.form.get('saml_digest_algorithm'))
                 Setting().set('saml_signature_algorithm',
