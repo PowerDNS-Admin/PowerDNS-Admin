@@ -2031,11 +2031,8 @@ definitions:
         description: The name for this account (unique, immutable)
         readOnly: false
       domains:
-        type: array
         description: The list of domains owned by this account
-        readOnly: true
-        items:
-          $ref: '#/definitions/PDNSAdminZones'
+        $ref: '#/definitions/PDNSAdminZones'
 
   ConfigSetting:
     title: ConfigSetting
