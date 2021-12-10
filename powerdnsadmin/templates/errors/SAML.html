@@ -26,14 +26,15 @@
                 <i class="fa fa-warning text-yellow"></i> Oops! Something went wrong
             </h3><br>
             <p>
-                Login failed.<br>
-                Error(s) when processing SAML Response:<br>
+                Login failed.
+                {% if error %}
+                <br>Error(s) when processing SAML Response:<br>
                 <ul>
                     {% for error in errors %}
                     <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
-
+                {% endif %}
                 You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
             </p>
         </div>

@@ -25,7 +25,8 @@ class SAML(object):
                     self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
                         Setting().get('saml_metadata_url'),
                         entity_id=Setting().get('saml_idp_entity_id'),
-                        required_sso_binding=Setting().get('saml_idp_sso_binding'))
+                        required_sso_binding=Setting().get('saml_idp_sso_binding'),
+                        required_slo_binding=Setting().get('saml_idp_slo_binding'))
                 except:
                     self.idp_data = None
             else:
@@ -36,23 +37,18 @@ class SAML(object):
                 except:
                     self.idp_data = None
             if self.idp_data is None:
-                current_app.logger.info(
+                current_app.logger.error(
                     'SAML: IDP Metadata initial load failed')
                 Setting().set('saml_enabled', False)
-                print("SAML EN1 ", Setting().get('saml_enabled'))
-                # exit(-1)
+
 
     def get_idp_data(self):
 
         lifetime = timedelta(
-            minutes=int(Setting().get('saml_metadata_cache_lifetime')))     # should be seconds instead of minutes?
-        # Since SAML is now user-configurable, idp_data may change before the lifetime has ended,
-        # so metadata should not be cached at all, or outdated settings may be used. 
-        try:
+            minutes=int(Setting().get('saml_metadata_cache_lifetime')))
+        if not hasattr(self,'idp_timestamp'):
             self.retrieve_idp_data()
-        except:
-            return None
-        if self.idp_timestamp + lifetime < datetime.now():
+        elif self.idp_timestamp + lifetime < datetime.now():
             background_thread = Thread(target=self.retrieve_idp_data())
             background_thread.start()
 
@@ -165,9 +161,10 @@ class SAML(object):
         settings['sp']['singleLogoutService'][
             'binding'] = Setting().get('saml_idp_slo_binding')
         settings['sp']['singleLogoutService']['url'] = own_url + '/saml/sls'
-        settings['idp'] = metadata['idp']
+        if metadata is not None and 'idp' in metadata:
+            settings['idp'] = metadata['idp']
         settings['strict'] = True
-        settings['debug'] = Setting().get('saml_debug')
+        settings['debug'] = bool(Setting().get('saml_debug'))
         settings['security'] = {}
         settings['security'][
             'digestAlgorithm'] = Setting().get('saml_digest_algorithm')
@@ -176,17 +173,17 @@ class SAML(object):
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
             'signatureAlgorithm'] = Setting().get('saml_signature_algorithm')
-        settings['security']['wantAssertionsEncrypted'] = Setting().get('saml_want_assertions_encrypted')
+        settings['security']['wantAssertionsEncrypted'] = bool(Setting().get('saml_want_assertions_encrypted'))
         settings['security']['wantAttributeStatement'] = True
         settings['security']['wantNameId'] = True
-        settings['security']['authnRequestsSigned'] = Setting().get('saml_sign_authn_request')
-        settings['security']['logoutRequestSigned'] = Setting().get('saml_sign_logout_request_response')
-        settings['security']['logoutResponseSigned'] = Setting().get('saml_sign_logout_request_response')
-        settings['security']['nameIdEncrypted'] = Setting().get('saml_nameid_encrypted')
-        settings['security']['signMetadata'] = Setting().get('saml_sign_metadata')
-        settings['security']['wantAssertionsSigned'] = Setting().get('saml_want_assertions_signed')
-        settings['security']['wantMessagesSigned'] = Setting().get('saml_want_message_signed')
-        settings['security']['wantNameIdEncrypted'] = Setting().get('saml_want_nameid_encrypted')
+        settings['security']['authnRequestsSigned'] = bool(Setting().get('saml_sign_authn_request'))
+        settings['security']['logoutRequestSigned'] = bool(Setting().get('saml_sign_logout_request_response'))
+        settings['security']['logoutResponseSigned'] = bool(Setting().get('saml_sign_logout_request_response'))
+        settings['security']['nameIdEncrypted'] = bool(Setting().get('saml_nameid_encrypted'))
+        settings['security']['signMetadata'] = bool(Setting().get('saml_sign_metadata'))
+        settings['security']['wantAssertionsSigned'] = bool(Setting().get('saml_want_assertions_signed'))
+        settings['security']['wantMessagesSigned'] = bool(Setting().get('saml_want_message_signed'))
+        settings['security']['wantNameIdEncrypted'] = bool(Setting().get('saml_want_nameid_encrypted'))
         settings['contactPerson'] = {}
         settings['contactPerson']['support'] = {}
         settings['contactPerson']['support']['emailAddress'] = Setting().get('saml_sp_contact_mail')
@@ -199,5 +196,10 @@ class SAML(object):
         settings['organization']['en-US']['displayname'] = 'PowerDNS-Admin'
         settings['organization']['en-US']['name'] = 'PowerDNS-Admin'
         settings['organization']['en-US']['url'] = own_url
-        auth = self.OneLogin_Saml2_Auth(req, settings)
+        try:
+            auth = self.OneLogin_Saml2_Auth(req, settings)
+        except:
+            current_app.logger.error(
+                "SAML: SAML Authentication failed")
+            auth = None
         return auth

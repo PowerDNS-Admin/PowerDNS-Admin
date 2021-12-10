@@ -917,6 +917,8 @@ def saml_login():
         auth = saml.init_saml_auth(req)
     redirect_url = OneLogin_Saml2_Utils.get_self_url(req) + url_for(
         'index.saml_authorized')
+    if auth is None:
+        return render_template('errors/SAML.html')
     return redirect(auth.login(return_to=redirect_url))
 
 
@@ -928,8 +930,15 @@ def saml_metadata():
 
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
+    if auth is None:
+        return render_template('errors/SAML.html')
     settings = auth.get_settings()
-    metadata = settings.get_sp_metadata()
+    try:
+        metadata = settings.get_sp_metadata()
+    except:
+        current_app.logger.error(
+                "SAML: Error fetching SP Metadata")
+        return render_template('errors/SAML.html')
     errors = settings.validate_metadata(metadata)
 
     if len(errors) == 0:
@@ -947,6 +956,8 @@ def saml_authorized():
         abort(400)
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
+    if auth is None:
+        return render_template('errors/SAML.html')
     auth.process_response()
     current_app.logger.debug( auth.get_attributes() )
     errors = auth.get_errors()
@@ -1147,8 +1158,13 @@ def uplift_to_admin(user):
 
 @index_bp.route('/saml/sls')
 def saml_logout():
+    if not Setting().get('saml_enabled'):
+        current_app.logger.error("SAML authentication is disabled.")
+        abort(400)
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
+    if auth is None:
+        return render_template('errors/SAML.html')
     url = auth.process_slo()
     errors = auth.get_errors()
     if len(errors) == 0:

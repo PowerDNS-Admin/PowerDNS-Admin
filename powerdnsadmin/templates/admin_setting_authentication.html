@@ -810,7 +810,7 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_want_assertions_signed" name="saml_want_assertions_signed" class="checkbox" {% if SETTING.get('saml_want_assertions_signed') %}checked{% endif %}>
-                                                    <label for="saml_want_assertions_encrypted">Want Assertions Signed</label>
+                                                    <label for="saml_want_assertions_signed">Want Assertions Signed</label>
                                                 </div>
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_want_message_signed" name="saml_want_message_signed" class="checkbox" {% if SETTING.get('saml_want_message_signed') %}checked{% endif %}>
@@ -818,11 +818,11 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_nameid_encrypted" name="saml_nameid_encrypted" class="checkbox" {% if SETTING.get('saml_nameid_encrypted') %}checked{% endif %}>
-                                                    <label for="saml_nameid_encrypted">NameID Encrypted </label>
+                                                    <label for="saml_nameid_encrypted">NameID Encrypted</label>
                                                 </div>
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_want_nameid_encrypted" name="saml_want_nameid_encrypted" class="checkbox" {% if SETTING.get('saml_want_nameid_encrypted') %}checked{% endif %}>
-                                                    <label for="saml_want_message_signed">Want NameID Encrypted </label>
+                                                    <label for="saml_want_nameid_encrypted">Want NameID Encrypted</label>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_digest_algorithm">Digest Algorithm</label>
@@ -900,32 +900,97 @@
                                     <div class="col-md-8">
                                         <legend>Help</legend>
                                         <dl class="dl-horizontal">
-                                            <dt>METADATA</dt>
+                                            <dt>General</dt>
                                             <dd> <br>
+                                                <b>Enable SAML</b> - Enables or disables SAML Authentication. <br>
+                                                If toggled on, the following fields must be filled in the left form:
                                                 <ul>
                                                     <li>
-                                                        <b>Metadata URL</b> - URL to fetch metadata from
+                                                        <b>IDP Entity ID</b>
                                                     </li>
                                                     <li>
-                                                        <b>Metadata Cache Lifetime</b> - Cache Lifetime in minutes before fresh metadata are requested
+                                                        <b>IDP Metadata URL</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>IDP SSO BINDING</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>IDP SLO BINDING</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Entity ID</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>SP NameID Format</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Requested Attributes</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>Cert File</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>Cert Key</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>Digest Algorithm</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>Signature Algorithm</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>Logout URL</b>, if <i>SAML Logout</i> is toggled on
+                                                    </li>
+                                                    <li>
+                                                        <b>Roles Provisioning Field</b> and <b>Urn Prefix</b>, if <i>Roles Autoprovisioning</i> is toggled on.
                                                     </li>
                                                 </ul>
+                                                The rest can be filled, or left empty to revert to the Default settings.
                                             </dd>
                                             <dt>IDP</dt>
                                             <dd> <br>
                                                 <ul>
                                                     <li>
+                                                        <b>IDP Entity ID</b> - EntityID of the IDP to use. Only needed if more than one IDP is in the SAML_METADATA_URL
+                                                    </li>
+                                                    <li>
+                                                        <b>IDP Metadata URL</b> - URL to fetch IDP metadata from
+                                                    </li>
+                                                    <li>
+                                                        <b>IDP Metadata Cache Lifetime</b> - Cache Lifetime in minutes before fresh metadata are requested from the IDP Metadata URL
+                                                    </li>
+                                                    <li>
                                                         <b>IDP SSO Binding</b> - SAML SSO binding format to use
                                                     </li>
                                                     <li>
-                                                        <b>IDP Entity ID</b> - EntityID of the IdP to use. Only needed if more than one IdP is in the SAML_METADATA_URL
+                                                        <b>IDP SLO Binding</b> - SAML SLO binding format to use
                                                     </li>
                                                     <li>
                                                         <b>NameID Format</b> - NameID format to request
                                                     </li>
                                                 </ul>
                                             </dd>
-                                            <dt>ATTRIBUTES</dt>
+                                            <dt>SP</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>SP Entity ID</b> - The entity ID of your Service Provider (SP).
+                                                    </li>
+                                                    <li>
+                                                        <b>SP NameID Format</b> - NameID format to request
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Metadata Cache Duration</b> - Set the cache duration of generated metadata.
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Metadata Valid Until</b> - Set the expiration moment (in seconds) for generated metadata.
+                                                    </li>
+                                                    <li>
+                                                        <b>Sign SP Metadata</b> - Choose whether metadata produced is signed.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>SP ATTRIBUTES</dt>
                                             <dd> <br>
                                                 <ul>
                                                     <li>
@@ -966,6 +1031,79 @@
                                                         <b>Username</b> - Attribute to use for username.
                                                     </li>
                                                     <li>
+                                                        <b>SP Entity Name</b> - Contact information about your SP, to be included in the generated metadata.
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Entity Mail</b> - Contact information about your SP, to be included in the generated metadata.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>ENCRYPTION</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        The <b>Cert File</b> - <b>Cert Key</b> pair configures the path
+                                                        to certificate file and it's respective private key file.
+                                                        It is used for signing metadata, encrypting tokens and all other
+                                                        signing/encryption tasks during communication between iDP and SP.<br>
+                                                        <b>NOTE</b>: If these two parameters aren't explicitly provided, a self-signed certificate-key pair
+                                                        will be generated in "PowerDNS-Admin" root directory.<br>
+                                                        <b style="color:red;">CAUTION</b>: For production use, usage of self-signed certificates is highly discouraged.
+                                                        Use certificates from trusted CA instead.
+                                                    </li>
+                                                    <li>
+                                                        <b>Sign Authentication Request</b> - Configures if the SP should sign outgoing authentication requests.
+                                                    </li>
+                                                    <li>
+                                                        <b>Sign Logout Request & Response</b> - Configures if the SP should sign outgoing Logout requests & Logout responses.
+                                                    </li>
+                                                    <li>
+                                                        <b>Want Assertions Encrypted</b> - Choose whether the SP expects assertions received from the IDP to be encrypted.
+                                                    </li>
+                                                    <li>
+                                                        <b>Want Assertions Signed</b> - Choose whether the SP expects incoming assertions to be signed.
+                                                    </li>
+                                                    <li>
+                                                        <b>NameID Encrypted</b> - Indicates that the nameID of the logoutRequest sent by this SP will be encrypted.
+                                                    </li>
+                                                    <li>
+                                                        <b>Want NameID Encrypted</b> - Indicates a requirement for the NameID received by this SP to be encrypted.
+                                                    </li>
+                                                    <li>
+                                                        <b>Want Message Signed</b> - Choose whether the SP expects incoming messages to be signed.
+                                                    </li>
+                                                    <li>
+                                                        <b>Digest Algorithm</b> - Encryption algorithm to encode outgoing and decode incoming metadata.
+                                                    </li>
+                                                    <li>
+                                                        <b>Signature Algorithm</b> - Encryption algorithm to encode/decode signatures.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>LOGOUT</dt>
+                                            <dd> <br>
+                                                <ul>
+                                                    <li>
+                                                        <b>SAML Logout</b> - Choose whether user is logged out of SAML session and possibly redirect them elsewhere.
+                                                        <ul>
+                                                            <li>
+                                                                If enabled, use SAML standard logout mechanism retreived from IDP metadata.
+                                                            </li>
+                                                            <li>
+                                                                If disabled, don't care about SAML session on logout.<br>
+                                                                Logout from PowerDNS-Admin only and keep SAML session authenticated.
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                    <li>
+                                                        <b>Logout URL</b> - Configure to redirect to a url different than PowerDNS-Admin login after a successful SAML logout.
+                                                    </li>
+                                                </ul>
+                                            </dd>
+                                            <dt>AUTOPROVISION</dt>
+                                            <dd> Provision PDA user privileges based on SAML Attributes. 
+                                                <ul>
+                                                    <li>
                                                         <b>Admin</b> - Attribute to get admin status from.<br>
                                                         If set, look for the value 'true' to set a user as an administrator.<br>
                                                         If not included in assertion, or set to something other than 'true',
@@ -978,87 +1116,9 @@
                                                         be created and the user added to them.
                                                     </li>
                                                     <li>
-                                                        <b>SP Entity ID</b> - The entity ID of your Service Provider (SP).
-                                                    </li>
-                                                    <li>
-                                                        <b>SP Entity Name</b> - Contact information about your SP, to be included in the generated metadata.
-                                                    </li>
-                                                    <li>
-                                                        <b>SP Entity Mail</b> - Contact information about your SP, to be included in the generated metadata.
-                                                    </li>
-                                                </ul>
-                                            </dd>
-                                            <dt>CERTIFICATE</dt>
-                                            <dd> Configures the path to certificate file and it's respective private key file.
-                                                <ul>
-                                                    <li>
-                                                        The <b>Cert File</b> - <b>Cert Key</b> pair is used for signing metadata, encrypting tokens and all other signing/encryption
-                                                        tasks during communication between iDP and SP.<br>
-                                                        <b>NOTE</b>: If these two parameters aren't explicitly provided, a self-signed certificate-key pair
-                                                        will be generated in "PowerDNS-Admin" root directory.<br>
-                                                        <b style="color:red;">CAUTION</b>: For production use, usage of self-signed certificates is highly discouraged.
-                                                        Use certificates from trusted CA instead.
-                                                    </li>
-                                                    <li>
-                                                        <b>Sign Request</b> - Configures if SAML tokens should be encrypted.<br>
-                                                        If enabled a new app certificate will be generated on restart.
-                                                    </li>
-                                                </ul>
-                                            </dd>
-                                            <dt>LOGOUT</dt>
-                                            <dd>
-                                                Choose whether user is logged out of SAML session and possibly redirect them elsewhere.
-                                                <ul>
-                                                    <li>
-                                                        <b>SAML Logout</b> - Use SAML standard logout mechanism retreived from IDP metadata.<br>
-                                                        If disabled, don't care about SAML session on logout.<br>
-                                                        Logout from PowerDNS-Admin only and keep SAML session authenticated.
-                                                    </li>
-                                                    <li>
-                                                        <b>Logout URL</b> - Configure to redirect to a url different than PowerDNS-Admin login after a successful SAML logout.
-                                                    </li>
-                                                </ul>
-                                            </dd>
-                                            <dt>ENCRYPTION</dt>
-                                            <dd> <br>
-                                                <ul>
-                                                    <li>
-                                                        <b>Encrypted Assertion</b> - Choose whether assertions are encrypted.
-                                                    </li>
-                                                    <li>
-                                                        <b>Want Assertions Signed</b> - Expect incoming assertions to be signed.
-                                                    </li>
-                                                    <li>
-                                                        <b>Digest Algorithm</b> - Encryption algorithm to encode outgoing and decode incoming metadata.
-                                                    </li>
-                                                    <li>
-                                                        <b>Signature Algorithm</b> - Encryption algorithm to encode/decode signatures.
-                                                    </li>
-                                                    <li>
-                                                        <b>Want Message Signed</b> - Expect incoming messages to be signed.
-                                                    </li>
-                                                    <li>
-                                                        <b>Sign Metadata</b> - Choose whether metadata produced is signed.
-                                                    </li>
-                                                </ul>
-                                            </dd>
-                                            <dt>DURATION</dt>
-                                            <dd> <br>
-                                                <ul>
-                                                    <li>
-                                                        <b>Metadata Cache Duration</b> - Set the cache duration of generated metadata.
-                                                    </li>
-                                                    <li>
-                                                        <b>Metadata Valid Until</b> - Set the expiration moment (in seconds) for generated metadata.
-                                                    </li>
-                                                </ul>
-                                            </dd>
-                                            <dt>AUTOPROVISION</dt>
-                                            <dd> Provision PDA user privileges based on SAML Token Attributes. 
-                                                This feature and the "Admin / Account" attribute assertion are mutually exclusive.
-                                                <ul>
-                                                    <li>
-                                                        <b>Roles Autoprovisioning</b> - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the SAML SP db every time they log in.
+                                                        <b>Roles Autoprovisioning</b> - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the SAML SP db every time they log in.<br>
+                                                        <b style="color:red;">NOTE</b>:This feature and the assertion of "Admin / Account" attributes are mutually exclusive.<br>
+                                                        If used, the values for Admin/Account given above will be ignored.
                                                     </li>
                                                     <li>
                                                         <b>Roles provisioning field</b> - The urn value of the attribute in the SAML Token where PDA will look for a new Role and/or new associations to domains/accounts.
@@ -1083,8 +1143,9 @@
                                                     </li>
                                                     <li>
                                                         <b>Purge Roles If Empty</b> - If toggled on, SAML logins that have no valid "powerdns-admin" records to their autoprovisioning field, 
-                                                         will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br>
-                                                         If toggled off, in the same scenario they get to keep their existing associations and their current Role.
+                                                        will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br>
+                                                        If toggled off, in the same scenario they get to keep their existing associations and their current Role.<br>
+                                                        <b style="color:red;">CAUTION</b>: Enabling this feature will revoke existing users' access to their associated domains unless they have their autoprovisioning field prepopulated.
                                                     </li>
                                                 </ul>
                                             </dd>

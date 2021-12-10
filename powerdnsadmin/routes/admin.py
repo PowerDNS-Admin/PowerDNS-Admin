@@ -1759,8 +1759,8 @@ def setting_authentication():
                     'msg':
                     'Saved successfully. Please reload PDA to take effect.'
                 }
-                global saml
-                saml = SAML()
+                # # Attempt to reinitialize SAML. If attempt fails, setting will be automatically disabled.
+                # SAML()
         else:
             return abort(400)
 
