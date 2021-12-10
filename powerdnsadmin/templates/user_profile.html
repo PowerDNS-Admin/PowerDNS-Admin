@@ -178,7 +178,7 @@
     });
     
 
-    {% call password_policy_macro.password_policy(SETTING.get('zxcvbn_enabled')) %} 
+    {% call password_policy_macro.password_policy(zxcvbn_enabled, SETTING.get('pwd_min_len'), SETTING.get('pwd_min_digits'), SETTING.get('pwd_min_uppercase'), SETTING.get('pwd_min_lowercase'), SETTING.get('pwd_min_special'), SETTING.get('pwd_must_not_contain')) %} 
     {% endcall %}
 
 </script>

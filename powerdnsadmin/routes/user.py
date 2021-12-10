@@ -39,7 +39,7 @@ def before_request():
 @login_required
 def profile():
     if request.method == 'GET':
-        return render_template('user_profile.html',user_info = current_user.get_user_info_by_username() )
+        return render_template('user_profile.html',user_info = current_user.get_user_info_by_username(), zxcvbn_enabled=Setting().get('zxcvbn_enabled') )
     if request.method == 'POST':
         if session['authentication_type'] == 'LOCAL':
             firstname = request.form.get('firstname', '').strip()
@@ -48,7 +48,7 @@ def profile():
             new_password = request.form.get('password', '')
             if not password_quality_check(current_user, new_password):
                 # return render_template('errors/400.html', msg="Password does not meet the policy requirements")
-                return render_template('user_profile.html', change_pass_tab = True, user_info = current_user.get_user_info_by_username() ,error="Password does not meet the policy requirements")
+                return render_template('user_profile.html', change_pass_tab = True, user_info = current_user.get_user_info_by_username() , zxcvbn_enabled=Setting().get('zxcvbn_enabled'), error="Password does not meet the policy requirements")
         else:
             firstname = lastname = email = new_password = ''
             current_app.logger.warning(
