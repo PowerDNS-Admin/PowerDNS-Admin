@@ -13,7 +13,10 @@
     </ol>
 </section>
 {% endblock %}
+{% import 'password_policy_macro.html' as password_policy_macro %}
+
 {% block content %}
+
 <section class="content">
     <div class="row">
         <div class="col-lg-12">
@@ -175,147 +178,8 @@
     });
     
 
+    {% call password_policy_macro.password_policy(SETTING.get('zxcvbn_enabled')) %} 
+    {% endcall %}
 
-    {% if SETTING.get('zxcvbn_enabled') == false %}
-    // handling password complexity requirements message and password comparison
-    $(':input').on('keyup', function() {
-        var rpass = document.getElementById('rpassword').value;
-        var input = document.getElementById('newpassword');
-        var pass = input.value;
-        if (rpass != pass) {
-            document.getElementById('pwd-submit').disabled = true;
-            document.getElementById('retype-err').innerHTML = 'Password confirmation does not match';
-        }
-        else {
-            document.getElementById('retype-err').innerHTML = '';
-        }
-        var pwd_len = parseInt("{{ SETTING.get('pwd_min_len') }}");
-        var n_upper = parseInt("{{ SETTING.get('pwd_min_uppercase') }}");
-        var n_lower = parseInt("{{ SETTING.get('pwd_min_lowercase') }}");
-        var n_digits = parseInt("{{ SETTING.get('pwd_min_digits') }}");
-        var n_special = parseInt("{{ SETTING.get('pwd_min_special') }}");
-        var must_not_contain = "{{ SETTING.get('pwd_must_not_contain') }}";
-        var pattern = "^(?=(?:.*[0-9]){" + n_digits + ",})(?=(?:.*[a-z]){" + n_lower + ",})(?=(?:.*[A-Z]){" + n_upper + ",})(?=(?:.*[[!@#$%^&*()_+]){" + n_special + ",}).+$";
-
-        var PasswordRegEx = new RegExp(pattern, 'm');
-        var upper_found = 0;
-        var lower_found = 0;
-        var digits_found = 0;
-        var special_found = 0;
-        var lower_pattern = /[a-z]/g;
-        var upper_pattern = /[A-Z]/g;
-        var digits_pattern = /[0-9]/g;
-        var special_pattern = /[[!@#$%^&*()_+]/g;
-        for (var i = 0; i < pass.length; i++) {
-        if (pass[i].match(special_pattern)) special_found++;
-        else if (pass[i].match(lower_pattern)) lower_found++;
-        else if (pass[i].match(upper_pattern)) upper_found++;
-        else if (pass[i].match(digits_pattern)) digits_found++;
-        }
-        var msg = "";
-        if (pass.length < pwd_len) msg += 'at least ' + pwd_len + ' character(s)<br>'
-        if (lower_found < n_lower) msg += 'at least ' + n_lower + ' lowercase character(s)<br>';
-        if (upper_found < n_upper) msg += 'at least ' + n_upper + ' uppercase character(s)<br>';
-        if (digits_found < n_digits) msg += 'at least ' + n_digits + ' digit(s)<br>';
-        if (special_found < n_special) msg += 'at least ' + n_special + ' special character(s) from [!@#$%^&*()_+<br>';
-        if (msg.length != 0) msg = "Password must have: <br>" + msg;
-
-        // must not contain
-        must_not_contain_msg = "";
-        var fname = "{{ user_info.firstname }}";
-        var lname = "{{ user_info.lastname }}";
-        var email = "{{ user_info.email }}";
-        var username = "{{ user_info.username }}";
-        if (must_not_contain.search("username") != -1 && pass.search(username) != -1) must_not_contain_msg += " username<br>"
-        if (must_not_contain.search("firstname") != -1 && pass.search(fname) != -1) must_not_contain_msg += " firstname<br>"
-        if (must_not_contain.search("lastname") != -1 && pass.search(lname) != -1) must_not_contain_msg += " lastname<br>"
-        if (must_not_contain.search("email") != -1 && pass.search(email) != -1) must_not_contain_msg += " email<br>"
-        if (must_not_contain_msg.length != 0) must_not_contain_msg = "Password must not contain: <br>" + must_not_contain_msg
-        var x = document.getElementById('policy-err');
-        x.innerHTML = msg + must_not_contain_msg
-        if (msg != "") {
-            document.getElementById('pwd-submit').disabled = true; 
-        }
-        else if (msg.length == 0 && pass.length != 0 && rpass == pass){ 
-            document.getElementById('pwd-submit').disabled = false;
-        }
-    });
-    {% else %}
-
-    var timer = null;
-    function send_pass() {
-      var fname = document.getElementById('firstname').value;
-      var lname = document.getElementById('lastname').value;
-      var email = document.getElementById('email').value;
-      var username = document.getElementById('username').value;
-      var password = document.getElementById('password').value;
-
-      $.ajax({
-          url: "/ratepassword",
-          // headers: { "X-CSRFToken": getCookie("csrftoken") },
-          type: "post",
-          data : {'fname': fname, 'lname': lname, 'email' : email, 'username' : username, 'password': password},
-          success: function(response) {
-            console.log('Submission was successful.');
-            console.log("Resp = " , response)
-            console.log('sccess')
-            var x = document.getElementById('policy-err');
-            // x.innerHTML = response['feedback'];
-            x.innerHTML = "<ul>";
-            for (let i = 0; i < response['feedback'].length; i++) {
-              x.innerHTML += "<li>" + response['feedback'][i] + "</li>";
-            }
-            x.innerHTML += "</ul>"
-            var strength;
-            switch (response['strength']) {
-              case '':
-                strength = ''; // no password was given
-                break;
-              case 'very weak':
-                strength = "<small class='progress-bar bg-danger' style='background-color: #a50021; width: 25%'>Very weak</small>";
-                break;
-              case 'weak':
-                strength = "<small class='progress-bar bg-danger' style='background-color: #f7a73e;width: 50%'>Weak</small>";
-                break;
-              case 'medium':
-                strength = "<small class='progress-bar bg-warning' style='background-color: #a0cb89; width: 75%'>Medium</small>";
-                break;
-              case 'strong':
-                strength = "<small class='progress-bar bg-success' style='background-color: #2e8b57; width: 100%'>Strong</small>";
-                break;
-              }
-              var y = document.getElementById('password-text')
-              y.innerHTML = strength;
-
-              if (response['feedback'] != "") {
-                document.getElementById('register').disabled = true; 
-                // $('#pass-feedback').addClass("has-error");
-              }
-              else { 
-                document.getElementById('register').disabled = false;
-                // $('#pass-feedback').addClass("has-success");
-              }
-              
-          },
-          error: function(xhr) {
-              console.log("Ajax call to rate pass, has failed")
-          }
-        });
-      timer = null; // turn the timer off
-    }
-    // handling password complexity requirements message
-    $(':input').on('keyup', function() {
-
-      var seconds = 1;
-      if (timer == null) {  // if user typed sth and timer is not running, then start one
-        timer = setTimeout(send_pass, seconds*1000);
-      }
-      else { // if user typed sth and timer is still up and running,then reset timer
-        clearTimeout(timer);
-        timer = null; 
-        timer = setTimeout(send_pass, seconds*1000);
-      }
-    });
-    {% endif %}
 </script>
 {% endblock %}
