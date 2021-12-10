@@ -25,6 +25,9 @@
                     <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
                         Add Record&nbsp;<i class="fa fa-plus"></i>
                     </button>
+                    <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary pull-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+                        Admin&nbsp;<i class="fa fa-cog"></i>
+                      </button>
                     <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
                         Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
                     </button>
