@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}<title>My Profile - {{ SITE_NAME }}</title>{% endblock %}
 {% block dashboard_stat %}
+
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <h1>
@@ -80,13 +81,16 @@
                                     <div class="form-group">
                                         <label for="password">New Password</label> 
                                             <input type="password"
-                                            class="form-control" name="password" id="newpassword" required />
+                                            class="form-control" name="password" id="password" required />
                                     </div>
+                                    {% if zxcvbn_enabled == true %}
+                                    <small class="help-block" id="password-text"></small> <br>
+                                    {% endif %}
                                     <div id="policy-err" style='color: #df5948;'></div>
                                     <div class="form-group has-feedback">
                                         <label for="rpassword">Re-type New Password</label> 
                                         <input type="password"
-                                            data-match="#newpassword" data-match-error="Password confirmation does not match"
+                                            data-match="#password" data-match-error="Password confirmation does not match"
                                             class="form-control" name="rpassword" id="rpassword" required />
                                             <span class="help-block with-errors"></span>
                                             <span class="glyphicon form-control-feedback"></span>
@@ -178,8 +182,36 @@
     });
     
 
-    {% call password_policy_macro.password_policy(zxcvbn_enabled, SETTING.get('pwd_min_len'), SETTING.get('pwd_min_digits'), SETTING.get('pwd_min_uppercase'), SETTING.get('pwd_min_lowercase'), SETTING.get('pwd_min_special'), SETTING.get('pwd_must_not_contain')) %} 
+    document.getElementById('pwd-submit').disabled = true;
+    {% call password_policy_macro.password_policy(1, user_info, zxcvbn_enabled, SETTING.get('pwd_min_len'), SETTING.get('pwd_min_digits'), SETTING.get('pwd_min_uppercase'), SETTING.get('pwd_min_lowercase'), SETTING.get('pwd_min_special'), SETTING.get('pwd_must_not_contain')) %} 
     {% endcall %}
+
+
+    {% if zxcvbn_enabled == false %}
+
+    // handling password complexity requirements message and password comparison
+    $(':input').on('keyup', function() {
+        var rpass = document.getElementById('rpassword').value;
+        var input = document.getElementById('password');
+        var pass = input.value;
+        if (rpass != pass || pass.length == 0 || rpass.length == 0) {
+            document.getElementById('pwd-submit').disabled = true;
+            document.getElementById('retype-err').innerHTML = 'Password confirmation does not match';
+        }
+        else {
+            document.getElementById('retype-err').innerHTML = '';
+        }
+        var fname = "{{ user_info.firstname }}";
+        var lname = "{{ user_info.lastname }}";
+        var email = "{{ user_info.email }}";
+        var username = "{{ user_info.username }}";
+        
+        charbased_password_policy(fname, lname, username, email, pass, rpass);
+
+    });
+    {% endif %}
+
+ 
 
 </script>
 {% endblock %}

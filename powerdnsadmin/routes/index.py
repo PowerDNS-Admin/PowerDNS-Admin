@@ -681,10 +681,18 @@ def password_quality_check(user, password):
 def rate_password():
     # print("\n\nGot pass = ", passwd)
     # result = zxcvbn(pwd, user_inputs=[wordlist])
-    fname = request.form['fname']
-    lname = request.form['lname']
-    email = request.form['email']
-    username = request.form['username']
+    logged_in = request.form['logged_in']
+    if 'logged_in' in request.form and logged_in == 1:
+        fname = current_user.firstname
+        lname = current_user.lastname
+        username = current_user.username
+        email = current_user.email
+    else:
+        fname = request.form['fname']
+        lname = request.form['lname']
+        username = request.form['username']
+        email = request.form['email']
+
     password = request.form['password']
     inputs = []
     for i in [fname, lname, email, username]:

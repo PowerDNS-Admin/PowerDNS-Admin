@@ -89,7 +89,7 @@ def profile():
                     reload_info=False)
         user.update_profile()
 
-        return render_template('user_profile.html', user_info = current_user.get_user_info_by_username())
+        return render_template('user_profile.html', user_info = current_user.get_user_info_by_username(), zxcvbn_enabled=Setting().get('zxcvbn_enabled'))
 
 
 @user_bp.route('/qrcode')

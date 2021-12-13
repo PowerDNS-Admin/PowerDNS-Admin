@@ -1376,6 +1376,10 @@ def setting_authentication():
                 }
             else:
                 if password_package_enabled is None:
+                    for attribute in must_not_contain.split(","):
+                        if attribute not in ['firstname','lastname','username','email']:
+                            result = {'status': False, 'msg': "Incorrect syntax in 'Must not contain' field"}
+                            return render_template('admin_setting_authentication.html', result=result)
                     Setting().set('local_db_enabled', local_db_enabled)
                     Setting().set('signup_enabled', signup_enabled)
                     Setting().set('pwd_min_len', min_len)
