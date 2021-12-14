@@ -7,7 +7,7 @@ import ipaddress
 from distutils.util import strtobool
 from yaml import Loader, load
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
-from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort, jsonify
+from flask import Blueprint, render_template, render_template, make_response, url_for, current_app, g, session, request, redirect, abort, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from zxcvbn import zxcvbn
 
@@ -708,8 +708,8 @@ def rate_password():
             }), 200)
 
     result = zxcvbn(password, user_inputs=inputs)
-    defined_guesses_log = 11
-    # attrubutes to return as json
+    defined_guesses_log = int(Setting().get('zxcvbn_guesses_log'))
+    # attributes to return as json
     feedback = []
     rate = result['guesses_log10']/defined_guesses_log
     if rate < 0.5:

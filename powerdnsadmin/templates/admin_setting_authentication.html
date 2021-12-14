@@ -106,10 +106,8 @@
                                                 {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
-                                                <label>
-                                                    <label for="zxcvbn">Use zxcvbn python package</label>
+                                                    <label for="zxcvbn">Use zxcvbn python package (If turned on, then the above password specifications will be disabled</label>
                                                     <input type="checkbox" class="checkbox" name="zxcvbn" id="zxcvbn" {% if SETTING.get('zxcvbn_enabled')== true %}checked{% endif %}>
-                                                </label>
                                             </div>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-flat btn-primary">Save</button>
@@ -759,11 +757,11 @@
 
 <script>
 
-    $('input').on('ifChecked', function(event){
+    $('#zxcvbn').on('ifChecked', function(event){
         // alert(event.type + ' callback');
         $(".form-control.char_specified").prop("disabled", true)
     });
-    $('input').on('ifUnchecked', function(event){
+    $('#zxcvbn').on('ifUnchecked', function(event){
         // alert(event.type + ' callback');
         $(".form-control.char_specified").prop("disabled", false)
     });
