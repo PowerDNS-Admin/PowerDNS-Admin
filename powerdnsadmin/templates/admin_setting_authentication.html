@@ -713,11 +713,6 @@
                                                     <input type="text" class="form-control" name="saml_idp_sso_binding" id="saml_idp_sso_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" data-error="Please input SAML IDP SSO Binding" value="{{ SETTING.get('saml_idp_sso_binding') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label for="saml_idp_slo_binding">IDP SLO Binding</label>
-                                                    <input type="text" class="form-control" name="saml_idp_slo_binding" id="saml_idp_slo_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-REDIRECT" data-error="Please input SAML IDP SLO Binding" value="{{ SETTING.get('saml_idp_slo_binding') }}">
-                                                    <span class="help-block with-errors"></span>
-                                                </div>
                                             </fieldset>
                                             <fieldset>
                                                 <legend>SP</legend>
@@ -733,12 +728,12 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_metadata_cache_duration">SP Metadata Cache Duration</label>
-                                                    <input type="text" class="form-control" name="saml_metadata_cache_duration" id="saml_metadata_cache_duration" placeholder="Cache duration in seconds" data-error="Please input Metadata Cache Duration" value="{{ SETTING.get('saml_metadata_cache_duration') }}">
+                                                    <input type="text" class="form-control" name="saml_metadata_cache_duration" id="saml_metadata_cache_duration" placeholder="eg PT5M" data-error="Please input Metadata Cache Duration" value="{{ SETTING.get('saml_metadata_cache_duration') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_metadata_valid_until">SP Metadata Valid Until</label>
-                                                    <input type="text" class="form-control" name="saml_metadata_valid_until" id="saml_metadata_valid_until" placeholder="Time-moment when metadata stops being valid" data-error="Please input Metadata Expiration Date" value="{{ SETTING.get('saml_metadata_valid_until') }}">
+                                                    <input type="text" class="form-control" name="saml_metadata_valid_until" id="saml_metadata_valid_until" placeholder="YYYY-MM-DDThh:mm:ssZ" data-error="Please input Metadata Expiration Date" value="{{ SETTING.get('saml_metadata_valid_until') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                                 <div class="form-group">
@@ -915,9 +910,6 @@
                                                         <b>IDP SSO BINDING</b>
                                                     </li>
                                                     <li>
-                                                        <b>IDP SLO BINDING</b>
-                                                    </li>
-                                                    <li>
                                                         <b>SP Entity ID</b>
                                                     </li>
                                                     <li>
@@ -960,10 +952,7 @@
                                                         <b>IDP Metadata Cache Lifetime</b> - Cache Lifetime in minutes before fresh metadata are requested from the IDP Metadata URL
                                                     </li>
                                                     <li>
-                                                        <b>IDP SSO Binding</b> - SAML SSO binding format to use
-                                                    </li>
-                                                    <li>
-                                                        <b>IDP SLO Binding</b> - SAML SLO binding format to use
+                                                        <b>IDP SSO Binding</b> - SAML SSO binding format required for the IDP to use
                                                     </li>
                                                     <li>
                                                         <b>NameID Format</b> - NameID format to request
@@ -980,10 +969,12 @@
                                                         <b>SP NameID Format</b> - NameID format to request
                                                     </li>
                                                     <li>
-                                                        <b>SP Metadata Cache Duration</b> - Set the cache duration of generated metadata.
+                                                        <b>SP Metadata Cache Duration</b> - Set the cache duration of generated metadata.<br>
+                                                        Use PT5M to set cache duration to 5 minutes.
                                                     </li>
                                                     <li>
-                                                        <b>SP Metadata Valid Until</b> - Set the expiration moment (in seconds) for generated metadata.
+                                                        <b>SP Metadata Valid Until</b> - Set the expiration date, in XML DateTime String format, for generated metadata.<br>
+                                                        XML DateTime String Format: "YYYY-MM-DDThh:mm:ssZ", Z can be Z for timezone 0 or "+-hh:mm" for other timezones.
                                                     </li>
                                                     <li>
                                                         <b>Sign SP Metadata</b> - Choose whether metadata produced is signed.
@@ -1552,7 +1543,6 @@
         if (is_enabled){
             $('#saml_metadata_url').prop('required', true);
             $('#saml_idp_sso_binding').prop('required', true);
-            $('#saml_idp_slo_binding').prop('required', true);
             $('#saml_idp_entity_id').prop('required', true);
             $('#saml_nameid_format').prop('required', true);
             $('#saml_sp_requested_attributes').prop('required', true);
@@ -1572,7 +1562,6 @@
         } else {
             $('#saml_metadata_url').prop('required', false);
             $('#saml_idp_sso_binding').prop('required', false);
-            $('#saml_idp_slo_binding').prop('required', false);
             $('#saml_idp_entity_id').prop('required', false);
             $('#saml_nameid_format').prop('required', false);
             $('#saml_sp_requested_attributes').prop('required', false);
@@ -1591,7 +1580,6 @@
     {% if SETTING.get('saml_enabled') %}
         $('#saml_metadata_url').prop('required', true);
         $('#saml_idp_sso_binding').prop('required', true);
-        $('#saml_idp_slo_binding').prop('required', true);
         $('#saml_idp_entity_id').prop('required', true);
         $('#saml_nameid_format').prop('required', true);
         $('#saml_sp_requested_attributes').prop('required', true);

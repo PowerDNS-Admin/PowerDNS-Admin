@@ -1646,8 +1646,6 @@ def setting_authentication():
                                 else Setting().defaults['saml_metadata_cache_lifetime']))
                 Setting().set('saml_idp_sso_binding',
                               request.form.get('saml_idp_sso_binding'))
-                Setting().set('saml_idp_slo_binding',
-                              request.form.get('saml_idp_slo_binding'))
                 Setting().set('saml_idp_entity_id',
                               request.form.get('saml_idp_entity_id'))
                 Setting().set('saml_nameid_format',

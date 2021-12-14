@@ -8,7 +8,12 @@ from ..lib.certutil import KEY_FILE, CERT_FILE, create_self_signed_cert
 from ..lib.utils import urlparse
 from ..models.setting import Setting
 
-
+# The python3-saml library currently supports only the Redirect binding for IDP endpoints.
+# For SP, the Assertion Consumer Service endpoint supports HTTP-POST binding,
+# while the Single Logout Service endpoint uses HTTP-Redirect.
+# Therefore, to protect users from using unsupported features, settings
+# 'saml_idp_slo_binding', 'saml_sp_acs_binding' and 'saml_sp_sls_binding'
+# are not exposed on the front end SAML interface.
 class SAML(object):
     def __init__(self):
         if Setting().get('saml_enabled'):
@@ -25,8 +30,7 @@ class SAML(object):
                     self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
                         Setting().get('saml_metadata_url'),
                         entity_id=Setting().get('saml_idp_entity_id'),
-                        required_sso_binding=Setting().get('saml_idp_sso_binding'),
-                        required_slo_binding=Setting().get('saml_idp_slo_binding'))
+                        required_sso_binding=Setting().get('saml_idp_sso_binding'))
                 except:
                     self.idp_data = None
             else:
@@ -154,12 +158,12 @@ class SAML(object):
 
         settings['sp']['assertionConsumerService'] = {}
         settings['sp']['assertionConsumerService'][
-            'binding'] = Setting().get('saml_idp_sso_binding')
+            'binding'] = Setting().get('saml_sp_acs_binding')#'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
         settings['sp']['assertionConsumerService'][
             'url'] = own_url + '/saml/authorized'
         settings['sp']['singleLogoutService'] = {}
         settings['sp']['singleLogoutService'][
-            'binding'] = Setting().get('saml_idp_slo_binding')
+            'binding'] = Setting().get('saml_sp_sls_binding')#'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
         settings['sp']['singleLogoutService']['url'] = own_url + '/saml/sls'
         if metadata is not None and 'idp' in metadata:
             settings['idp'] = metadata['idp']
@@ -168,8 +172,8 @@ class SAML(object):
         settings['security'] = {}
         settings['security'][
             'digestAlgorithm'] = Setting().get('saml_digest_algorithm')
-        settings['security']['metadataCacheDuration'] = None
-        settings['security']['metadataValidUntil'] = None
+        settings['security']['metadataCacheDuration'] = Setting().get('saml_metadata_cache_duration') if Setting().get('saml_metadata_cache_duration') else None
+        settings['security']['metadataValidUntil'] = Setting().get('saml_metadata_valid_until') if Setting().get('saml_metadata_valid_until') else None
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
             'signatureAlgorithm'] = Setting().get('saml_signature_algorithm')
