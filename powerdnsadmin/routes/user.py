@@ -46,8 +46,7 @@ def profile():
             lastname = request.form.get('lastname', '').strip()
             email = request.form.get('email', '').strip()
             new_password = request.form.get('password', '')
-            if not password_quality_check(current_user, new_password):
-                # return render_template('errors/400.html', msg="Password does not meet the policy requirements")
+            if Setting().get('zxcvbn_enabled') == False and not password_quality_check(current_user, new_password):
                 return render_template('user_profile.html', change_pass_tab = True, user_info = current_user.get_user_info_by_username() , zxcvbn_enabled=Setting().get('zxcvbn_enabled'), error="Password does not meet the policy requirements")
         else:
             firstname = lastname = email = new_password = ''

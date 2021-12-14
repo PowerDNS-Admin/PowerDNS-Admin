@@ -771,7 +771,7 @@ def register():
                         lastname=lastname,
                         email=email)
 
-            if not password_quality_check(user, password):
+            if Setting().get('zxcvbn_enabled') == False and not password_quality_check(user, password):
                 return render_template('register.html', error="Password does not meet the policy requirements")
             try:
                 result = user.create_local_user()
