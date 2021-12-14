@@ -93,7 +93,7 @@
                                             <div class="form-group">
                                                 <label for="min_digits">Minimum number of digits</label>
                                                 <input type="text" class="form-control char_specified" name="min_digits" id="min_digits"  value="{{ SETTING.get('pwd_min_digits') }}"
-                                                {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
+                                                {% if SETTING.get('zxcvbn_enabled')== true  %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <label for="min_special">Minimum number of special characters</label>
@@ -108,7 +108,7 @@
                                             <div class="form-group">
                                                 <label>
                                                     <label for="zxcvbn">Use zxcvbn python package</label>
-                                                    <input type="checkbox" class="checkbox" name="zxcvbn" id="zxcvbn" onclick="javascript:passPolicySelection();"  {% if SETTING.get('zxcvbn_enabled')== true %}checked{% endif %}>
+                                                    <input type="checkbox" class="checkbox" name="zxcvbn" id="zxcvbn" {% if SETTING.get('zxcvbn_enabled')== true %}checked{% endif %}>
                                                 </label>
                                             </div>
                                             <div class="form-group">
