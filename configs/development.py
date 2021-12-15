@@ -147,6 +147,37 @@ SAML_ENABLED = False
 # #SAML_LOGOUT_URL = 'https://google.com'
 
 # #SAML_ASSERTION_ENCRYPTED = True
+# SAML_WANT_MESSAGE_SIGNED
+
+# SAML Autoprovisioning
+# If toggled on, the PDA Role and the associations of users found in the local db
+# will be directly updated from the SAML IDP every time they log in.
+# NOTE: This feature and the assertion of "Admin / Account" attributes are mutually exclusive.
+# If used, the values for Admin/Account given above will be ignored.
+SAML_AUTOPROVISIONING = True
+# The urn value of the attribute in the SAML Authn Response where PDA will look
+# for a new Role and/or new associations to domains/accounts.
+# Example: urn:oid:1.3.6.1.4.1.5923.1.1.1.7
+# The record syntax for this attribute inside the SAML Response must look like:
+# prefix:powerdns-admin:PDA-Role, to provision an Administrator or Operator, or
+# prefix:powerdns-admin:User:<domain>:<account>, provision a User
+# who has access to one or more Domains and belongs to one or more Accounts.
+# the "prefix" is given in the next attribute
+SAML_AUTOPROVISIONING_ATTRIBUTE = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
+# The prefix used before the static keyword "powerdns-admin" for your entitlements
+# in the SAML Response. Must be a valid URN.
+# Example: urn:mace:example.com
+SAML_URN_PREFIX = 'urn:mace:example.com'
+# If toggled on, SAML logins that have no valid "powerdns-admin" records
+# to their autoprovisioning field, will lose all their associations
+# with any domain or account, also reverting to a User in the process,
+# despite their current role in the local db.
+# If toggled off, in the same scenario they get to keep
+# their existing associations and their current Role.
+### CAUTION: Enabling this feature will revoke existing users' access to their
+# associated domains unless they have their autoprovisioning field prepopulated.
+SAML_PURGE = False
+
 
 # Remote authentication settings
 

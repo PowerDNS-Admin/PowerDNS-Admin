@@ -1049,19 +1049,21 @@ def saml_authorized():
                         user.username),
                                     created_by='SAML Autoprovision')
                     history.add()
+                user.revoke_privilege(True)
             elif len(Entitlements)!=0:
                 if checkForPDAEntries(Entitlements, urn_prefix):
                     user.updateUser(Entitlements, urn_prefix)
                 else:
                     current_app.logger.warning('Not a single powerdns-admin record was found, possibly a typo in the prefix')
                     if Setting().get('saml_purge'):
-                        current_app.logger.warning('Procceding to revoke every privilige from ' +  user.username + '.' )
+                        current_app.logger.warning('Procceding to revoke every privilege from ' +  user.username + '.' )
                         if user.role.name != 'User':
                             user.role_id = Role.query.filter_by(name='User').first().id
                             history = History(msg='Demoting {0} to user'.format(
                                 user.username),
                                             created_by='SAML Autoprovision')
                             history.add()
+                        user.revoke_privilege(True)
 
         user.plain_text_password = None
         user.update_profile()
