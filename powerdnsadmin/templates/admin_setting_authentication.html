@@ -75,6 +75,15 @@
                                             </div>
 
                                             <legend>Password Policy </br>(database authentication)</legend>
+                                            <div class='form-check'>
+                                                <input type="radio" class='form-check-input' id="char-based-policy" name="pass-policy-sel" value="char-based-policy" {% if SETTING.get('zxcvbn_enabled')== false %}checked{% endif %}>
+                                                <label for="char-based-policy">Character-specific password policy</label><br>
+                                            </div>
+
+                                            <div class="form-check">
+                                                <input type="radio" class='form-check-input' id="heuristic-policy" name="pass-policy-sel" value="heuristic-policy" {% if SETTING.get('zxcvbn_enabled')== true %}checked{% endif %}>
+                                                <label for="heuristic-policy">zxcvbn heuristic password</label><br>
+                                            </div>
                                             <div class="form-group">
                                                 <label for="min_len">Minimum length</label>
                                                 <input type="text" class="form-control char_specified" name="min_len" id="min_len"  value="{{ SETTING.get('pwd_min_len') }}"
@@ -105,9 +114,11 @@
                                                 <input type="text" class="form-control char_specified" name="must_not_contain" id="must_not_contain" placeholder="username,firstname,lastname,email"  value="{{ SETTING.get('pwd_must_not_contain') }}" 
                                                 {% if SETTING.get('zxcvbn_enabled')== true %}disabled{% endif %}>
                                             </div>
+
                                             <div class="form-group">
-                                                    <label for="zxcvbn">Use zxcvbn python package (If turned on, then the above password specifications will be disabled</label>
-                                                    <input type="checkbox" class="checkbox" name="zxcvbn" id="zxcvbn" {% if SETTING.get('zxcvbn_enabled')== true %}checked{% endif %}>
+                                                <label for="must_not_contain">(zxcvbn)Complexity</label>
+                                                <input type="text" class="form-control heuristic_group" name="complexity" id="complexity" value="{{ SETTING.get('zxcvbn_guesses_log') }}" 
+                                                {% if SETTING.get('zxcvbn_enabled')== false %}disabled{% endif %}>
                                             </div>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-flat btn-primary">Save</button>
@@ -117,7 +128,7 @@
                                         <div class="col-md-8">
                                             <legend>Help</legend>
                                             <dl class="dl-horizontal">
-                                                <dt>Password Policy</dt>
+                                                <dt>Character-specific Password Policy</dt>
                                                 <dd>Define the password policy - character composition of the users' password
                                                     <ul>
                                                         <li>
@@ -133,6 +144,17 @@
                                                         </li>
                                                         <li>
                                                             Acceptable special characters are: [!@#$%^&*()_+
+                                                        </li>
+                                                    </ul>
+                                                </dd>
+                                                <dt>(zxcvbn) Heuristic password policy</dt>
+                                                <dd>Define the password complexity log factor
+                                                    <ul>
+                                                        <li>
+                                                            The default value of the log factor is 11, as it is considered secure.
+                                                            More information about the package, can be found at:
+                                                            <a href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">Paper</a>
+
                                                         </li>
                                                     </ul>
                                                 </dd>
@@ -757,14 +779,26 @@
 
 <script>
 
-    $('#zxcvbn').on('ifChecked', function(event){
-        // alert(event.type + ' callback');
-        $(".form-control.char_specified").prop("disabled", true)
-    });
-    $('#zxcvbn').on('ifUnchecked', function(event){
-        // alert(event.type + ' callback');
-        $(".form-control.char_specified").prop("disabled", false)
-    });
+    // $('#zxcvbn').on('ifChecked', function(event){
+    //     // alert(event.type + ' callback');
+    //     $(".form-control.char_specified").prop("disabled", true)
+    // });
+    // $('#zxcvbn').on('ifUnchecked', function(event){
+    //     // alert(event.type + ' callback');
+    //     $(".form-control.char_specified").prop("disabled", false)
+    // });
+
+
+    $('input[name="pass-policy-sel"]:radio').on('click', function() {
+        if (document.getElementById('heuristic-policy').checked == true) {
+            $(".form-control.char_specified").prop("disabled", true)
+            $(".form-control.heuristic_group").prop("disabled", false)
+        }
+        else if (document.getElementById('char-based-policy').checked == true) {
+            $(".form-control.char_specified").prop("disabled", false)
+            $(".form-control.heuristic_group").prop("disabled", true)
+        }
+    })
 
     $('#zxcvbn').iCheck({
         checkboxClass : 'icheckbox_square-blue',

@@ -739,7 +739,7 @@ def rate_password():
         jsonify({
             'feedback': feedback,
             'strength': strength,
-            'valid' : 'true' if strength == 'strong' and len(feedback) == 0 else 'false'
+            'valid' : 'true' if len(feedback) == 0 else 'false'
         }), 200)
 
 
