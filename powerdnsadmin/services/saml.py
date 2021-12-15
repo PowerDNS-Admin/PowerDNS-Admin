@@ -12,7 +12,7 @@ from ..models.setting import Setting
 # For SP, the Assertion Consumer Service endpoint supports HTTP-POST binding,
 # while the Single Logout Service endpoint uses HTTP-Redirect.
 # Therefore, to protect users from using unsupported features, settings
-# 'saml_idp_slo_binding', 'saml_sp_acs_binding' and 'saml_sp_sls_binding'
+# 'saml_idp_sso_binding', 'saml_idp_slo_binding', 'saml_sp_acs_binding' and 'saml_sp_sls_binding'
 # are not exposed on the front end SAML interface.
 class SAML(object):
     def __init__(self):

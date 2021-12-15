@@ -710,7 +710,12 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="saml_idp_sso_binding">IDP SSO Binding</label>
-                                                    <input type="text" class="form-control" name="saml_idp_sso_binding" id="saml_idp_sso_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" data-error="Please input SAML IDP SSO Binding" value="{{ SETTING.get('saml_idp_sso_binding') }}">
+                                                    <input type="text" class="form-control" name="saml_idp_sso_binding" id="saml_idp_sso_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" data-error="Please input SAML IDP SSO Binding" value="{{ SETTING.get('saml_idp_sso_binding') }}" readonly>
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_idp_slo_binding">IDP SLO Binding</label>
+                                                    <input type="text" class="form-control" name="saml_idp_slo_binding" id="saml_idp_slo_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" data-error="Please input SAML IDP SLO Binding" value="{{ SETTING.get('saml_idp_slo_binding') }}" readonly>
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
@@ -739,6 +744,16 @@
                                                 <div class="form-group">
                                                     <input type="checkbox" id="saml_sign_metadata" name="saml_sign_metadata" class="checkbox" {% if SETTING.get('saml_sign_metadata') %}checked{% endif %}>
                                                     <label for="saml_sign_metadata">Sign SP Metadata </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_sp_acs_binding">SP ACS Binding</label>
+                                                    <input type="text" class="form-control" name="saml_sp_acs_binding" id="saml_sp_acs_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" data-error="Please input SAML SP ACS Binding" value="{{ SETTING.get('saml_sp_acs_binding') }}" readonly>
+                                                    <span class="help-block with-errors"></span>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="saml_sp_acs_binding">SP SLS Binding</label>
+                                                    <input type="text" class="form-control" name="saml_sp_sls_binding" id="saml_sp_sls_binding" placeholder="e.g. urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" data-error="Please input SAML SP SLS Binding" value="{{ SETTING.get('saml_sp_sls_binding') }}" readonly>
+                                                    <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
                                             <fieldset>
@@ -907,9 +922,6 @@
                                                         <b>IDP Metadata URL</b>
                                                     </li>
                                                     <li>
-                                                        <b>IDP SSO BINDING</b>
-                                                    </li>
-                                                    <li>
                                                         <b>SP Entity ID</b>
                                                     </li>
                                                     <li>
@@ -917,6 +929,9 @@
                                                     </li>
                                                     <li>
                                                         <b>SP Requested Attributes</b>
+                                                    </li>
+                                                    <li>
+                                                        <b>SP Username Attribute</b>
                                                     </li>
                                                     <li>
                                                         <b>Cert File</b>
@@ -943,30 +958,32 @@
                                             <dd> <br>
                                                 <ul>
                                                     <li>
-                                                        <b>IDP Entity ID</b> - EntityID of the IDP to use. Only needed if more than one IDP is in the SAML_METADATA_URL
+                                                        <b>IDP Entity ID</b> - Specify the EntityID of the IDP to use.<br>
+                                                        Only needed if more the XML provided in the SAML_METADATA_URL contains more than 1 IDP Entity.
                                                     </li>
                                                     <li>
-                                                        <b>IDP Metadata URL</b> - URL to fetch IDP metadata from
+                                                        <b>IDP Metadata URL</b> - Url where the XML of the Identity Provider Metadata is published.
                                                     </li>
                                                     <li>
-                                                        <b>IDP Metadata Cache Lifetime</b> - Cache Lifetime in minutes before fresh metadata are requested from the IDP Metadata URL
+                                                        <b>IDP Metadata Cache Lifetime</b> - Cache Lifetime in minutes before fresh metadata are fetched from the IDP Metadata URL
                                                     </li>
                                                     <li>
-                                                        <b>IDP SSO Binding</b> - SAML SSO binding format required for the IDP to use
+                                                        <b>IDP SSO Binding</b> - SAML SSO binding format required for the IDP to use<br>    
                                                     </li>
                                                     <li>
-                                                        <b>NameID Format</b> - NameID format to request
+                                                        <b>IDP SLO Binding</b> - SAML SLO binding format required for the IDP to use<br>
                                                     </li>
+                                                    <b>NOTE:</b>:The Binding settings are currently disabled, as the underlying saml library currently supports only the Redirect binding for IDP endpoints.<br>
                                                 </ul>
                                             </dd>
                                             <dt>SP</dt>
                                             <dd> <br>
                                                 <ul>
                                                     <li>
-                                                        <b>SP Entity ID</b> - The entity ID of your Service Provider (SP).
+                                                        <b>SP Entity ID</b> - Specify the EntityID of your Service Provider (SP).
                                                     </li>
                                                     <li>
-                                                        <b>SP NameID Format</b> - NameID format to request
+                                                        <b>SP NameID Format</b> - NameID format to request. This specifies the content of the NameID and any associated processing rules.
                                                     </li>
                                                     <li>
                                                         <b>SP Metadata Cache Duration</b> - Set the cache duration of generated metadata.<br>
@@ -979,15 +996,23 @@
                                                     <li>
                                                         <b>Sign SP Metadata</b> - Choose whether metadata produced is signed.
                                                     </li>
+                                                    <li>
+                                                        <b>SP ACS Binding</b> - SAML Assertion Consumer Service Binding Format for the SP to use on login.
+                                                    </li>
+                                                    <li>
+                                                        <b>SP SLS Binding</b> - SAML Single Logout Service Binding Format for the SP to use on logout.
+                                                    </li>
+                                                    <b>NOTE:</b>:The Binding settings are currently disabled, as in the underlying saml library, the ACS endpoint currently supports
+                                                    only the HTTP-POST binding, while the SLS endpoint supports only HTTP-Redirect.
                                                 </ul>
                                             </dd>
                                             <dt>SP ATTRIBUTES</dt>
                                             <dd> <br>
                                                 <ul>
                                                     <li>
-                                                        <b>Requested Attributes</b> - Following parameter defines RequestedAttributes section in SAML metadata
-                                                        since certain iDPs require explicit attribute request. If not provided section
-                                                        will not be available in metadata.
+                                                        <b>Requested Attributes</b> - The following parameter defines RequestedAttributes section in SAML metadata
+                                                        since certain IDPs require explicitly requesting attributes.<br>
+                                                        If not provided, the Attribute Consuming Service Section will not be available in metadata.
                                                         <br>
                                                         <u>Possible attributes</u>:<br>
                                                         <i>name (mandatory), nameFormat, isRequired, friendlyName</i>
@@ -1009,6 +1034,9 @@
                                                          &ltmd:RequestedAttribute Name="mail" FriendlyName="test-field"/&gt<br>
                                                          &lt/md:AttributeConsumingService&gt</code>
                                                     </li>
+                                                </ul>
+                                                The following attribute values must be <i>derived</i> from <b>Requested Attributes</b>, and must be in the form of a <b>valid URN</b> (e.g. <i>urn:oid:2.5.4.4</i>):
+                                                <ul>
                                                     <li>
                                                         <b>Email</b> - Attribute to use for Email address.
                                                     </li>
@@ -1021,6 +1049,9 @@
                                                     <li>
                                                         <b>Username</b> - Attribute to use for username.
                                                     </li>
+                                                </ul>
+                                                These may be generic strings containing your information:
+                                                <ul>
                                                     <li>
                                                         <b>SP Entity Name</b> - Contact information about your SP, to be included in the generated metadata.
                                                     </li>
@@ -1034,40 +1065,40 @@
                                                 <ul>
                                                     <li>
                                                         The <b>Cert File</b> - <b>Cert Key</b> pair configures the path
-                                                        to certificate file and it's respective private key file.
+                                                        to certificate file and it's respective private key file.<br>
                                                         It is used for signing metadata, encrypting tokens and all other
-                                                        signing/encryption tasks during communication between iDP and SP.<br>
-                                                        <b>NOTE</b>: If these two parameters aren't explicitly provided, a self-signed certificate-key pair
-                                                        will be generated in "PowerDNS-Admin" root directory.<br>
-                                                        <b style="color:red;">CAUTION</b>: For production use, usage of self-signed certificates is highly discouraged.
-                                                        Use certificates from trusted CA instead.
+                                                        signing/encryption tasks during communication between IDP and SP.<br>
+                                                        <b>NOTE</b>: If these two parameters aren't explicitly provided,
+                                                        a self-signed certificate-key pair will be generated.<br>
+                                                        <b style="color:red;">CAUTION</b>: For production use, usage of self-signed certificates
+                                                        is highly discouraged. Use certificates from trusted CA instead.
                                                     </li>
                                                     <li>
-                                                        <b>Sign Authentication Request</b> - Configures if the SP should sign outgoing authentication requests.
+                                                        <b>Sign Authentication Request</b> - Configures if the SP should sign <b>outgoing</b> authentication requests.
                                                     </li>
                                                     <li>
-                                                        <b>Sign Logout Request & Response</b> - Configures if the SP should sign outgoing Logout requests & Logout responses.
+                                                        <b>Sign Logout Request & Response</b> - Configures if the SP should sign <b>outgoing</b> Logout requests & Logout responses.
                                                     </li>
                                                     <li>
-                                                        <b>Want Assertions Encrypted</b> - Choose whether the SP expects assertions received from the IDP to be encrypted.
+                                                        <b>Want Assertions Encrypted</b> - Choose whether the SP expects <b>incoming</b> assertions received from the IDP to be encrypted.
                                                     </li>
                                                     <li>
-                                                        <b>Want Assertions Signed</b> - Choose whether the SP expects incoming assertions to be signed.
+                                                        <b>Want Assertions Signed</b> - Choose whether the SP expects <b>incoming</b> assertions to be signed.
                                                     </li>
                                                     <li>
-                                                        <b>NameID Encrypted</b> - Indicates that the nameID of the logoutRequest sent by this SP will be encrypted.
+                                                        <b>NameID Encrypted</b> - Indicates that the <b>outgoing</b> nameID of the logoutRequest sent by this SP will be encrypted.
                                                     </li>
                                                     <li>
-                                                        <b>Want NameID Encrypted</b> - Indicates a requirement for the NameID received by this SP to be encrypted.
+                                                        <b>Want NameID Encrypted</b> - Indicates a requirement for the <b>incoming</b> NameID received by this SP to be encrypted.
                                                     </li>
                                                     <li>
-                                                        <b>Want Message Signed</b> - Choose whether the SP expects incoming messages to be signed.
+                                                        <b>Want Message Signed</b> - Choose whether the SP expects <b>incoming</b> messages to be signed.
                                                     </li>
                                                     <li>
-                                                        <b>Digest Algorithm</b> - Encryption algorithm to encode outgoing and decode incoming metadata.
+                                                        <b>Digest Algorithm</b> - Encryption algorithm for the DigestValue, which is part of the validation process to ensure the integrity of the XML message.
                                                     </li>
                                                     <li>
-                                                        <b>Signature Algorithm</b> - Encryption algorithm to encode/decode signatures.
+                                                        <b>Signature Algorithm</b> - Encryption algorithm for the message Signature.
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -1075,7 +1106,7 @@
                                             <dd> <br>
                                                 <ul>
                                                     <li>
-                                                        <b>SAML Logout</b> - Choose whether user is logged out of SAML session and possibly redirect them elsewhere.
+                                                        <b>SAML Logout</b> - Choose whether user is logged out of the SAML session using SLO.
                                                         <ul>
                                                             <li>
                                                                 If enabled, use SAML standard logout mechanism retreived from IDP metadata.
@@ -1092,7 +1123,8 @@
                                                 </ul>
                                             </dd>
                                             <dt>AUTOPROVISION</dt>
-                                            <dd> Provision PDA user privileges based on SAML Attributes. 
+                                            <dd> <br>
+                                                Assert user Admin status and associated Accounts with SAML Attributes.
                                                 <ul>
                                                     <li>
                                                         <b>Admin</b> - Attribute to get admin status from.<br>
@@ -1106,13 +1138,17 @@
                                                         what's in the login assertion.<br>Accounts that don't exist will
                                                         be created and the user added to them.
                                                     </li>
+                                                </ul>
+                                                Provision PDA Role/Domains/Accounts based on urn SAML Attributes.<br>
+                                                <ul>
                                                     <li>
                                                         <b>Roles Autoprovisioning</b> - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the SAML SP db every time they log in.<br>
                                                         <b style="color:red;">NOTE</b>:This feature and the assertion of "Admin / Account" attributes are mutually exclusive.<br>
                                                         If used, the values for Admin/Account given above will be ignored.
                                                     </li>
                                                     <li>
-                                                        <b>Roles provisioning field</b> - The urn value of the attribute in the SAML Token where PDA will look for a new Role and/or new associations to domains/accounts.
+                                                        <b>Roles provisioning field</b> - The urn value of the attribute in the SAML Token where PDA will look for a new Role and/or new associations to domains/accounts.<br>
+                                                        e.g. <i>urn:oid:x.x.x.x.x</i><br>
                                                         The allowed syntax for records inside this attribute in your SAML Token is: <br>
                                                         <ul>if <i>PDA-Role∈[Administrator, Operator]</i>:
                                                             <ul>
@@ -1130,7 +1166,8 @@
                                                         </ul>
                                                     </li>
                                                     <li>
-                                                        <b>Urn prefix</b> - The prefix used before the static keyword "powerdns-admin" for your entitlements in the SAML token. Must comply with RFC no.8141.
+                                                        <b>Urn prefix</b> - The prefix used before the static keyword "powerdns-admin" for your entitlements in the SAML token.
+                                                        Must comply with RFC no.8141.<br> e.g.<i>urn:mace:&ltyour_organization&gt</i>
                                                     </li>
                                                     <li>
                                                         <b>Purge Roles If Empty</b> - If toggled on, SAML logins that have no valid "powerdns-admin" records to their autoprovisioning field, 
@@ -1158,6 +1195,13 @@
 {%- endassets %}
 
 <script>
+
+    $(document).ready(function() {
+        // Focus on text attribute of modal
+        $("#modal_requested_attributes").on('shown.bs.modal', function() {
+            $("#txt_req_attr").focus();
+        });
+    });
     
     $(function() {
         $('#tabs').tabs({
@@ -1543,11 +1587,13 @@
         if (is_enabled){
             $('#saml_metadata_url').prop('required', true);
             $('#saml_idp_sso_binding').prop('required', true);
-            $('#saml_idp_entity_id').prop('required', true);
+            $('#saml_idp_slo_binding').prop('required', true);
+            $('#saml_sp_entity_id').prop('required', true);
             $('#saml_nameid_format').prop('required', true);
+            $('#saml_sp_acs_binding').prop('required', true);
+            $('#saml_sp_sls_binding').prop('required', true);
             $('#saml_sp_requested_attributes').prop('required', true);
             $('#saml_attribute_username').prop('required', true);
-            $('#saml_sp_entity_id').prop('required', true);
             $('#saml_cert_file').prop('required', true);
             $('#saml_cert_key').prop('required', true);
             $('#saml_digest_algorithm').prop('required', true);
@@ -1562,16 +1608,18 @@
         } else {
             $('#saml_metadata_url').prop('required', false);
             $('#saml_idp_sso_binding').prop('required', false);
-            $('#saml_idp_entity_id').prop('required', false);
+            $('#saml_idp_slo_binding').prop('required', false);
+            $('#saml_sp_entity_id').prop('required', false);
             $('#saml_nameid_format').prop('required', false);
+            $('#saml_sp_acs_binding').prop('required', false);
+            $('#saml_sp_sls_binding').prop('required', false);
             $('#saml_sp_requested_attributes').prop('required', false);
             $('#saml_attribute_username').prop('required', false);
-            $('#saml_sp_entity_id').prop('required', false);
             $('#saml_cert_file').prop('required', false);
             $('#saml_cert_key').prop('required', false);
-            $('#saml_logout_url').prop('required', false);
             $('#saml_digest_algorithm').prop('required', false);
             $('#saml_signature_algorithm').prop('required', false);
+            $('#saml_logout_url').prop('required', false);
             $('#saml_autoprovisioning_attribute').prop('required', false);
             $('#saml_urn_prefix').prop('required', false);
         }
@@ -1580,11 +1628,14 @@
     {% if SETTING.get('saml_enabled') %}
         $('#saml_metadata_url').prop('required', true);
         $('#saml_idp_sso_binding').prop('required', true);
-        $('#saml_idp_entity_id').prop('required', true);
+        $('#saml_idp_slo_binding').prop('required', true);
+        $('#saml_sp_entity_id').prop('required', true);
         $('#saml_nameid_format').prop('required', true);
+        $('#saml_sp_acs_binding').prop('required', true);
+        $('#saml_sp_sls_binding').prop('required', true);
         $('#saml_sp_requested_attributes').prop('required', true);
         $('#saml_attribute_username').prop('required', true);
-        $('#saml_sp_entity_id').prop('required', true);
+        $('#saml_cert_file').prop('required', true);
         $('#saml_cert_key').prop('required', true);
         $('#saml_digest_algorithm').prop('required', true);
         $('#saml_signature_algorithm').prop('required', true);
@@ -1596,6 +1647,22 @@
             $('#saml_urn_prefix').prop('required', true);
         }
     {% endif %}
+
+    $(document.body).on("focus", "#saml_sp_requested_attributes", function (e) {
+        var req_attr = $(this);
+        req_attr.blur();
+        var txt_data = req_attr.val();
+        var modal = $("#modal_requested_attributes");
+        var form = "<textarea spellcheck=\"false\" style=\"min-width: 100%;color: #333;\" placeholder=\"SP Requested Attributes in JSON format\" \
+                    rows=\"10\" id=\"txt_req_attr\" name=\"txt_req_attr\">" + txt_data + "</textarea>";
+        modal.find('.modal-body p').html(form);
+        modal.find('#button_save').click(function() {
+            data = modal.find('#txt_req_attr').val();
+            req_attr.val(data);
+            modal.modal('hide');
+        });
+        modal.modal('show');
+    });
 
     $("#saml_autoprovisioning_on" ).on('ifChanged',function(){
         if ($('#saml_autoprovisioning_on').is(":checked") && $('#saml_enabled').is(":checked")) {
@@ -1723,5 +1790,26 @@
     <!-- /.modal-dialog -->
 </div>
 
+<div class="modal fade modal-primary" id="modal_requested_attributes">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">SP Requested Attributes</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
 
 {% endblock %}

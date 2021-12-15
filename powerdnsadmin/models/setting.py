@@ -138,7 +138,7 @@ class Setting(db.Model):
         'saml_group_to_account_mapping': None,
         'saml_sp_entity_id': 'https://dns.uoa.gr',
         'saml_sp_contact_name': 'admin',
-        'saml_sp_contact_mail': 'pda@uoa.gr',
+        'saml_sp_contact_mail': 'powerdnsadmin@organization.com',
         'saml_cert_file': '/etc/pki/powerdns-admin/cert.crt',
         'saml_cert_key': '/etc/pki/powerdns-admin/key.pem',
         'saml_sign_authn_request': False,

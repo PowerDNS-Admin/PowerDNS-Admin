@@ -1640,50 +1640,52 @@ def setting_authentication():
                     True if request.form.get('saml_enabled') else False)
                 Setting().set('saml_metadata_url',
                               request.form.get('saml_metadata_url'))
-                Setting().set('saml_metadata_cache_lifetime',
-                            request.form.get('saml_metadata_cache_lifetime' \
-                                if request.form.get('saml_metadata_cache_lifetime') \
-                                else Setting().defaults['saml_metadata_cache_lifetime']))
+                if request.form.get('saml_metadata_cache_lifetime'):
+                    Setting().set('saml_metadata_cache_lifetime',
+                            request.form.get('saml_metadata_cache_lifetime'))
+                else:
+                    Setting().set('saml_metadata_cache_lifetime',
+                        Setting().defaults['saml_metadata_cache_lifetime'])
                 Setting().set('saml_idp_sso_binding',
                               request.form.get('saml_idp_sso_binding'))
+                Setting().set('saml_idp_slo_binding',
+                              request.form.get('saml_idp_slo_binding'))
                 Setting().set('saml_idp_entity_id',
                               request.form.get('saml_idp_entity_id'))
                 Setting().set('saml_nameid_format',
                               request.form.get('saml_nameid_format'))
+                Setting().set('saml_sp_acs_binding',
+                              request.form.get('saml_sp_acs_binding'))
+                Setting().set('saml_sp_sls_binding',
+                              request.form.get('saml_sp_sls_binding'))
                 Setting().set('saml_sp_requested_attributes',
                               request.form.get('saml_sp_requested_attributes'))
                 Setting().set('saml_attribute_email',
-                            request.form.get('saml_attribute_email' \
-                                if request.form.get('saml_attribute_email') \
-                                else Setting().defaults['saml_attribute_email']))
+                            request.form.get('saml_attribute_email'))
                 Setting().set('saml_attribute_givenname',
-                            request.form.get('saml_attribute_givenname' \
-                                if request.form.get('saml_attribute_givenname') \
-                                else Setting().defaults['saml_attribute_givenname']))
+                            request.form.get('saml_attribute_givenname'))
                 Setting().set('saml_attribute_surname',
-                            request.form.get('saml_attribute_surname' \
-                                if request.form.get('saml_attribute_surname') \
-                                else Setting().defaults['saml_attribute_surname']))
+                            request.form.get('saml_attribute_surname'))
                 Setting().set('saml_attribute_username',
                               request.form.get('saml_attribute_username'))
                 Setting().set('saml_attribute_admin',
-                            request.form.get('saml_attribute_admin' \
-                                if request.form.get('saml_attribute_admin') \
-                                else Setting().defaults['saml_attribute_admin']))
+                            request.form.get('saml_attribute_admin'))
                 Setting().set('saml_attribute_account',
-                            request.form.get('saml_attribute_account' \
-                                if request.form.get('saml_attribute_account') \
-                                else Setting().defaults['saml_attribute_account']))
+                            request.form.get('saml_attribute_account'))
                 Setting().set('saml_sp_entity_id',
                               request.form.get('saml_sp_entity_id'))
-                Setting().set('saml_sp_contact_name',
-                            request.form.get('saml_sp_contact_name' \
-                                if request.form.get('saml_sp_contact_name') \
-                                else Setting().defaults['saml_sp_contact_name']))
-                Setting().set('saml_sp_contact_mail',
-                            request.form.get('saml_sp_contact_mail' \
-                                if request.form.get('saml_sp_contact_mail') \
-                                else Setting().defaults['saml_sp_contact_mail']))
+                if request.form.get('saml_sp_contact_name'):
+                    Setting().set('saml_sp_contact_name',
+                            request.form.get('saml_sp_contact_name'))
+                else:
+                    Setting().set('saml_sp_contact_name',
+                                Setting().defaults['saml_sp_contact_name'])
+                if request.form.get('saml_sp_contact_mail'):
+                    Setting().set('saml_sp_contact_mail',
+                            request.form.get('saml_sp_contact_mail'))
+                else:
+                    Setting().set('saml_sp_contact_mail',
+                                Setting().defaults['saml_sp_contact_mail'])
                 Setting().set('saml_cert_file',
                               request.form.get('saml_cert_file'))
                 Setting().set('saml_cert_key',
@@ -1722,11 +1724,9 @@ def setting_authentication():
                 Setting().set(
                     'saml_sign_metadata',
                     True if request.form.get('saml_sign_metadata') else False)
-                if request.form.get('saml_metadata_cache_duration'):
-                    Setting().set('saml_metadata_cache_duration',
+                Setting().set('saml_metadata_cache_duration',
                               request.form.get('saml_metadata_cache_duration'))
-                if request.form.get('saml_metadata_valid_until'):
-                    Setting().set('saml_metadata_valid_until',
+                Setting().set('saml_metadata_valid_until',
                               request.form.get('saml_metadata_valid_until'))
 
                 Setting().set(
@@ -1757,8 +1757,6 @@ def setting_authentication():
                     'msg':
                     'Saved successfully. Please reload PDA to take effect.'
                 }
-                # # Attempt to reinitialize SAML. If attempt fails, setting will be automatically disabled.
-                # SAML()
         else:
             return abort(400)
 

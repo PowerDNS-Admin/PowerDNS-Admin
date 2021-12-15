@@ -1157,6 +1157,7 @@ def uplift_to_admin(user):
 
 
 @index_bp.route('/saml/sls')
+@login_required
 def saml_logout():
     if not Setting().get('saml_enabled'):
         current_app.logger.error("SAML authentication is disabled.")
