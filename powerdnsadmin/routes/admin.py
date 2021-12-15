@@ -1366,8 +1366,6 @@ def setting_authentication():
                 must_not_contain = request.form.get('must_not_contain')
             elif enable_zxcvbn and signup_enabled:
                 complexity = int(request.form.get('complexity'))
-                Setting().set('zxcvbn_guesses_log', complexity)
-                Setting().set('zxcvbn_enabled', True)
 
             if not has_an_auth_method(local_db_enabled=local_db_enabled):
                 result = {
@@ -1392,6 +1390,7 @@ def setting_authentication():
                     Setting().set('pwd_must_not_contain', must_not_contain)
                     Setting().set('zxcvbn_enabled', False)
                 elif enable_zxcvbn and signup_enabled:
+                    Setting().set('zxcvbn_guesses_log', complexity)
                     Setting().set('zxcvbn_enabled', True)
 
                 result = {'status': True, 'msg': 'Saved successfully'}
