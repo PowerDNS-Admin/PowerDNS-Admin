@@ -22,7 +22,6 @@ from ..models.domain_template import DomainTemplate
 from ..models.domain_template_record import DomainTemplateRecord
 from ..models.api_key import ApiKey
 from ..models.base import db
-from ..services.saml import SAML
 from ..lib.schema import ApiPlainKeySchema
 
 apikey_plain_schema = ApiPlainKeySchema(many=True)
@@ -1728,29 +1727,6 @@ def setting_authentication():
                               request.form.get('saml_metadata_cache_duration'))
                 Setting().set('saml_metadata_valid_until',
                               request.form.get('saml_metadata_valid_until'))
-
-                Setting().set(
-                    'saml_autoprovisioning', True
-                    if request.form.get('saml_autoprovisioning') == 'ON' else False)
-                if request.form.get('autoprovisioning')=='ON':
-                    Setting().set('saml_autoprovisioning_attribute',
-                              request.form.get('saml_autoprovisioning_attribute'))
-
-                    if  validateURN(request.form.get('saml_urn_value')):
-                        Setting().set('saml_urn_value',
-                                       request.form.get('saml_urn_value'))
-                    else:
-                        return render_template('admin_setting_authentication.html',
-                                    error="Invalid urn")
-                else:
-                    if request.form.get('saml_autoprovisioning_attribute'):
-                        Setting().set('saml_autoprovisioning_attribute',
-                              request.form.get('saml_autoprovisioning_attribute'))
-                    if request.form.get('saml_urn_value'):
-                        Setting().set('saml_urn_value',
-                                       request.form.get('saml_urn_value'))
-                Setting().set('saml_purge', True
-                    if request.form.get('purge') == 'ON' else False)
 
                 result = {
                     'status': True,

@@ -869,38 +869,6 @@
                                                     <input type="text" class="form-control" name="saml_attribute_account" id="saml_attribute_account" placeholder="e.g. https://example.edu/pdns-account" data-error="Please input SAML Account Attribute" value="{{ SETTING.get('saml_attribute_account') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label>Roles Autoprovisioning</label> <br />
-                                                    <label>
-                                                        <input type="radio" name="saml_autoprovisioning" id="saml_autoprovisioning_off" value="OFF"
-                                                            {% if not SETTING.get('saml_autoprovisioning') %}checked{% endif %}> OFF
-                                                    </label>
-                                                    &nbsp;&nbsp;&nbsp;
-                                                    <label>
-                                                        <input type="radio" name="saml_autoprovisioning" id="saml_autoprovisioning_on" value="ON"
-                                                            {% if SETTING.get('saml_autoprovisioning') %}checked{% endif %}> ON
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="saml_autoprovisioning_attribute">Roles provisioning field</label>
-                                                    <input type="text" class="form-control" name="saml_autoprovisioning_attribute" id="saml_autoprovisioning_attribute" placeholder="e.g. eduPersonEntitlement" data-error="Please input field responsible for autoprovisioning" value="{{ SETTING.get('saml_autoprovisioning_attribute') }}">
-                                                    <span class="help-block with-errors"></span>
-                                                </div>
-                                                <div class="form-group {% if error %}has-error{% endif %}">
-                                                    <label for="saml_urn_prefix">Urn prefix</label>
-                                                    <input type="text" class="form-control" name="saml_urn_prefix" id="saml_urn_prefix" placeholder="e.g. urn:mace:<yourOrganization>" data-error="Please fill this field" value="{{ SETTING.get('saml_urn_prefix') }}">
-                                                    {% if error %}
-                                                        <span class="help-block with-errors">Please input the correct prefix for your urn value</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Purge Roles If Empty</label> <br />
-                                                    <label>
-                                                        <input type="radio" name="saml_purge" id="saml_purge_off" value="OFF" {% if not SETTING.get('saml_purge') %}checked{% endif %}> OFF
-                                                    </label>
-                                                    &nbsp;&nbsp;&nbsp;
-                                                    <label>
-                                                        <input type="radio" name="saml_purge" id="saml_purge_on" value="ON" {% if SETTING.get('saml_purge') %}checked{% endif %}> ON
-                                                </div>
                                             </fieldset>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-flat btn-primary">Save</button>
@@ -1137,43 +1105,6 @@
                                                         If set, the user will be added and removed from accounts to match
                                                         what's in the login assertion.<br>Accounts that don't exist will
                                                         be created and the user added to them.
-                                                    </li>
-                                                </ul>
-                                                Provision PDA Role/Domains/Accounts based on urn SAML Attributes.<br>
-                                                <ul>
-                                                    <li>
-                                                        <b>Roles Autoprovisioning</b> - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the SAML SP db every time they log in.<br>
-                                                        <b style="color:red;">NOTE</b>:This feature and the assertion of "Admin / Account" attributes are mutually exclusive.<br>
-                                                        If used, the values for Admin/Account given above will be ignored.
-                                                    </li>
-                                                    <li>
-                                                        <b>Roles provisioning field</b> - The urn value of the attribute in the SAML Token where PDA will look for a new Role and/or new associations to domains/accounts.<br>
-                                                        e.g. <i>urn:oid:x.x.x.x.x</i><br>
-                                                        The allowed syntax for records inside this attribute in your SAML Token is: <br>
-                                                        <ul>if <i>PDA-Role∈[Administrator, Operator]</i>:
-                                                            <ul>
-                                                                <li>
-                                                                    prefix:"powerdns-admin":PDA-Role
-                                                                </li>
-                                                            </ul>
-                                                            else (<i>if user</i>): <br>
-                                                            <ul>
-                                                                <li>
-                                                                    prefix:"powerdns-admin":PDA-Role:&ltdomain&gt:&ltaccount&gt
-                                                                </li>
-                                                            </ul>
-                                                            where <i>prefix</i> is given in the field "Urn prefix".
-                                                        </ul>
-                                                    </li>
-                                                    <li>
-                                                        <b>Urn prefix</b> - The prefix used before the static keyword "powerdns-admin" for your entitlements in the SAML token.
-                                                        Must comply with RFC no.8141.<br> e.g.<i>urn:mace:&ltyour_organization&gt</i>
-                                                    </li>
-                                                    <li>
-                                                        <b>Purge Roles If Empty</b> - If toggled on, SAML logins that have no valid "powerdns-admin" records to their autoprovisioning field, 
-                                                        will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br>
-                                                        If toggled off, in the same scenario they get to keep their existing associations and their current Role.<br>
-                                                        <b style="color:red;">CAUTION</b>: Enabling this feature will revoke existing users' access to their associated domains unless they have their autoprovisioning field prepopulated.
                                                     </li>
                                                 </ul>
                                             </dd>
@@ -1562,23 +1493,6 @@
     //END: OIDC Tab JS
 
     // START: SAML tab js
-    $('#saml_autoprovisioning_on').iCheck({
-        radioClass: 'iradio_square-blue',
-        increaseArea: '20%'
-    });
-    $('#saml_autoprovisioning_off').iCheck({
-        radioClass: 'iradio_square-blue',
-        increaseArea: '20%'
-    });
-    $('#saml_purge_on').iCheck({
-        radioClass: 'iradio_square-blue',
-        increaseArea: '20%'
-    });
-    $('#saml_purge_off').iCheck({
-        radioClass: 'iradio_square-blue',
-        increaseArea: '20%'
-    });
-
     $('#saml_enabled').iCheck({
         checkboxClass : 'icheckbox_square-blue',
         increaseArea : '20%'
@@ -1601,10 +1515,6 @@
             if ($('#saml_logout').is(":checked")) {
                 $('#saml_logout_url').prop('required', true);
             }
-            if ($('#saml_autoprovisioning_on').is(":checked")) {
-                $('#saml_autoprovisioning_attribute').prop('required', true);
-                $('#saml_urn_prefix').prop('required', true);
-            }
         } else {
             $('#saml_metadata_url').prop('required', false);
             $('#saml_idp_sso_binding').prop('required', false);
@@ -1620,8 +1530,6 @@
             $('#saml_digest_algorithm').prop('required', false);
             $('#saml_signature_algorithm').prop('required', false);
             $('#saml_logout_url').prop('required', false);
-            $('#saml_autoprovisioning_attribute').prop('required', false);
-            $('#saml_urn_prefix').prop('required', false);
         }
     });
     // init validation requirement at first time page load
@@ -1642,10 +1550,6 @@
         if ($('#saml_logout').is(":checked")) {
             $('#saml_logout_url').prop('required', true);
         }
-        if ($('#saml_autoprovisioning_on').is(":checked")) {
-            $('#saml_autoprovisioning_attribute').prop('required', true);
-            $('#saml_urn_prefix').prop('required', true);
-        }
     {% endif %}
 
     $(document.body).on("focus", "#saml_sp_requested_attributes", function (e) {
@@ -1662,37 +1566,6 @@
             modal.modal('hide');
         });
         modal.modal('show');
-    });
-
-    $("#saml_autoprovisioning_on" ).on('ifChanged',function(){
-        if ($('#saml_autoprovisioning_on').is(":checked") && $('#saml_enabled').is(":checked")) {
-            $('#saml_autoprovisioning_attribute').prop('required', true);
-            $('#saml_urn_prefix').prop('required', true);
-        }
-        else{
-            $('#saml_autoprovisioning_attribute').prop('required', false);
-            $('#saml_urn_prefix').prop('required', false);
-        }
-    });
-    
-    $('#saml_purge_on').on('ifClicked', function(event){
-        if( !$(event.target).is(':checked')){
-            var modal = $("#modal_confirm");
-            var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning field prepopulated." ;
-            modal.find('.modal-body p').text(info);
-            modal.find('#button_confirm').click(function () {
-                modal.modal('hide');
-            })
-            modal.find('#button_cancel').click(function () {
-                $('#saml_purge_off').iCheck('check');
-                modal.modal('hide');
-            })
-            modal.find('#X').click(function () {
-                $('#saml_purge_off').iCheck('check');
-                modal.modal('hide');
-            })
-            modal.modal('show');
-        }
     });
 
     $('#saml_logout').iCheck({
