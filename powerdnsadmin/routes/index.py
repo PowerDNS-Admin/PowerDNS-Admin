@@ -591,8 +591,7 @@ def authenticate_user(user, authenticator, remember=False):
 # Prepare user to enter /welcome screen, otherwise they won't have permission to do so
 def prepare_welcome_user(user_id):
     logout_user()
-    session['user_id'] = user_id
-    session['welcome'] = True
+    session['welcome_user_id'] = user_id
 
 @index_bp.route('/logout')
 def logout():
@@ -684,10 +683,8 @@ def register():
                     if Setting().get('verify_user_email'):
                         send_account_verification(email)
                     if Setting().get('otp_force') and Setting().get('otp_field_enabled'):
-                        login_user(user)
-                        current_user.update_profile(enable_otp=True)
-                        user_id = current_user.id
-                        prepare_welcome_user(user_id)
+                        user.update_profile(enable_otp=True)
+                        prepare_welcome_user(user.id)
                         return redirect(url_for('index.welcome'))
                     else:
                         return redirect(url_for('index.login'))
@@ -703,14 +700,11 @@ def register():
 # Show welcome page on first login if otp_force is enabled
 @index_bp.route('/welcome', methods=['GET', 'POST'])
 def welcome():
-    if 'welcome' not in session:
+    if 'welcome_user_id' not in session:
         return redirect(url_for('index.index'))
 
-    user_id = session['user_id']
-    user = User(id = user_id)
-    login_user(user)
-    encoded_img_data = base64.b64encode(qrcode()[0])
-    prepare_welcome_user(user_id)
+    user = User(id = session['welcome_user_id'])
+    encoded_img_data = base64.b64encode(user.get_qrcode_value())
 
     if request.method == 'GET':
         return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user)
@@ -722,7 +716,7 @@ def welcome():
                 return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user, error="Invalid token")
         else:
             return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user, error="Token required")
-        session.pop('welcome')
+        session.pop('welcome_user_id')
         return redirect(url_for('index.index'))
 
 @index_bp.route('/confirm/<token>', methods=['GET'])

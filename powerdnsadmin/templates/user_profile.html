@@ -97,7 +97,7 @@
                                                 Your secret key is: <br />
                                                 <form>
                                                     <input type=text id="otp_secret" value={{current_user.otp_secret}} readonly>
-                                                    <button type=button style="position:relative; right:28px" onclick="copy_to_clickboard()"> <i class="fa fa-clipboard"></i> </button>
+                                                    <button type=button style="position:relative; right:28px" onclick="copy_otp_secret_to_clipboard()"> <i class="fa fa-clipboard"></i> </button>
                                                     <br /><font color="red" id="copy_tooltip" style="visibility:collapse">Copied.</font>
                                                 </form>
                                             </div>
@@ -160,15 +160,5 @@
         };
         applyChanges(postdata, $SCRIPT_ROOT + '/user/profile', false, true);
     });
-
-    // copy otp secret code to clipboard
-    function copy_to_clickboard() {
-      var copyBox = document.getElementById("otp_secret");
-      copyBox.select();
-      copyBox.setSelectionRange(0, 99999); /* For mobile devices */
-      navigator.clipboard.writeText(copyBox.value);
-      $("#copy_tooltip").css("visibility", "visible");
-      setTimeout(function(){ $("#copy_tooltip").css("visibility", "collapse"); }, 2000);
-    }
 </script>
 {% endblock %}
