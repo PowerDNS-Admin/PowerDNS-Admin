@@ -12,7 +12,6 @@ from flask import Blueprint, render_template, make_response, url_for, current_ap
 from flask_login import login_user, logout_user, login_required, current_user
 
 from .base import login_manager
-from .user import qrcode
 from ..lib import utils
 from ..decorators import dyndns_login_required
 from ..models.base import db
@@ -703,7 +702,7 @@ def welcome():
     if 'welcome_user_id' not in session:
         return redirect(url_for('index.index'))
 
-    user = User(id = session['welcome_user_id'])
+    user = User(id=session['welcome_user_id'])
     encoded_img_data = base64.b64encode(user.get_qrcode_value())
 
     if request.method == 'GET':
