@@ -210,7 +210,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="autoprovisioning_attribute">Roles provisioning field</label>
+                                                    <label for="autoprovisioning_attribute">Roles provisioning attribute</label>
                                                     <input type="text" class="form-control" name="autoprovisioning_attribute" id="autoprovisioning_attribute" placeholder="e.g. eduPersonEntitlement"  data-error="    Please input field responsible for autoprovisioning" value="{{ SETTING.get('autoprovisioning_attribute') }}">
                                                     <span class="help-block with-errors"></span>
                                                 </div>
@@ -310,22 +310,41 @@
                                                 </ul>
                                             </dd>
                                             <dt>ADVANCE</dt>
-                                            <dd> Provision PDA user privileges based on LDAP Object Attributes. Alternative to Group Security Role Management.
+                                            <dd> Provision PDA user privileges based on a single attribute with URN values. Alternative to Group Security Role Management.
                                                 <ul>
                                                     <li>
-                                                        Roles Autoprovisioning - If toggled on, the PDA Role and the associations of users found in the local db, will be instantly updated from the LDAP server every time they log in.
+                                                        Roles Autoprovisioning - If toggled on, roles & associations of the PDA user will be determined based on the URN value(s) of an attribute in the user's LDAP object.
                                                     </li>
                                                     <li>
-                                                        Roles provisioning field - The attribute in the ldap server populated by the urn values where PDA will look for a new Role and/or new associations to domains/accounts.
+                                                        Roles provisioning attribute - The LDAP attribute where PDA will look for roles and/or associations to domains/accounts, each time the user logs in.<br>
+                                                        eg. <i>eduPersonEntitlement</i><br>
+                                                        Some <b>examples</b> of the URN value inside the provisioning attribute are:
+                                                        <ul>
+                                                            <li>
+                                                                <i>urn:mace:organization.com:powerdns-admin:Administrator</i>, to set user as Administrator.
+                                                            </li>
+                                                            <li>
+                                                                <i>urn:mace:organization.com:powerdns-admin:User:example.com</i>, to give user access to domain <i>example.com</i>.
+                                                            </li>
+                                                            <li>
+                                                                <i>urn:mace:organization.com:powerdns-admin:User:example.com:example.net</i>, to give user access to domain <i>example.com</i> and add them to account <i>example.net</i>.
+                                                            </li>
+                                                            <li>
+                                                                <i>urn:mace:organization.com:powerdns-admin:User::example.net</i>, to add user to account <i>example.net</i>.
+                                                            </li>
+                                                            (supposing <i>example.com</i>, <i>example.net</i> exist.)
+                                                        </ul>
                                                     </li>
                                                     <li>
-                                                        Urn prefix - The prefix used before the static keyword "powerdns-admin" for your entitlements in the ldap server. Must comply with RFC no.8141.
+                                                        Urn prefix - The <i>urn:mace:organization.com</i> prefix referenced <i>above</i> that is used for your entitlements in the LDAP server.
                                                     </li>
                                                     <li>
-                                                         Purge Roles If Empty - If toggled on, ldap entries that have no valid "powerdns-admin" records to their autoprovisioning field, will lose all their associations with any domain or account, also reverting to a User in the process, despite their current role in the local db.<br> If toggled off, in the same scenario they get to keep their existing associations and their current Role.
-
+                                                        Purge Roles If Empty - If toggled <b>on</b>, LDAP entries that have no valid "powerdns-admin" records to their autoprovisioning field,
+                                                        will <b>lose <u>all</u> their associations</b> with any domain or account, <b>also reverting to a User</b> in the process.<br>
+                                                        If toggled <b>off</b>, in the same scenario they get to <b>keep their existing associations</b> and their current <b>Role</b>.
                                                     </li>
                                                 </ul>
+                                                For further information visit the <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/Autoprovision_LDAP.md">LDAP Autoprovisioning wiki</a>
                                             </dd>
                                         </dl>
                                     </div>
