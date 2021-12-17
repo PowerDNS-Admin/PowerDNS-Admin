@@ -50,7 +50,7 @@
         </div>
         {% if SETTING.get('otp_field_enabled') %}
         <div class="form-group">
-          <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
+          <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken" autocomplete="off">
         </div>
         {% endif %}
         {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
