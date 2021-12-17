@@ -8,6 +8,9 @@ import ldap.filter
 from flask import current_app
 from flask_login import AnonymousUserMixin
 from sqlalchemy import orm
+import qrcode as qrc
+import qrcode.image.svg as qrc_svg
+from io import BytesIO
 
 from .base import db
 from .role import Role
@@ -628,10 +631,18 @@ class User(db.Model):
                 Account)\
             .filter(self.id == AccountUser.user_id)\
             .filter(Account.id == AccountUser.account_id)\
+            .order_by(Account.name)\
             .all()
         for q in query:
             accounts.append(q[1])
         return accounts
+    
+    def get_qrcode_value(self):
+        img = qrc.make(self.get_totp_uri(),
+                    image_factory=qrc_svg.SvgPathImage)
+        stream = BytesIO()
+        img.save(stream)
+        return stream.getvalue()
 
 
     def read_entitlements(self, key):
@@ -794,6 +805,3 @@ def getUserInfo(DomainsOrAccounts):
     for DomainOrAccount in DomainsOrAccounts:
         current.append(DomainOrAccount.name)
     return current
-
-        
-

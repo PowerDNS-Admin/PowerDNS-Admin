@@ -198,6 +198,8 @@ class Setting(db.Model):
         'max_history_records': 1000,
         'zxcvbn_enabled': False,
         'zxcvbn_guesses_log' : 11
+        'otp_force': False,
+        'max_history_records': 1000
     }
 
     def __init__(self, id=None, name=None, value=None):

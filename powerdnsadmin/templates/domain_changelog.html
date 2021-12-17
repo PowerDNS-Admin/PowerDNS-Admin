@@ -4,7 +4,11 @@
 {% block dashboard_stat %}
 <section class="content-header">
     <h1>
+        {% if record_name and record_type %}
+        Record changelog: <b>{{ record_name}} &nbsp {{ record_type }}</b>
+        {% else %}
         Domain changelog: <b>{{ domain.name | pretty_domain_name }}</b>
+        {% endif %}
     </h1>
     <ol class="breadcrumb">
         <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
