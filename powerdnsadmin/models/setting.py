@@ -197,7 +197,7 @@ class Setting(db.Model):
         'pwd_must_not_contain' : 'username,firstname',
         'max_history_records': 1000,
         'zxcvbn_enabled': False,
-        'zxcvbn_guesses_log' : 11
+        'zxcvbn_guesses_log' : 11,
         'otp_force': False,
         'max_history_records': 1000
     }
