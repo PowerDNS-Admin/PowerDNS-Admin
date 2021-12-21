@@ -23,6 +23,7 @@ css_login = Bundle('node_modules/bootstrap/dist/css/bootstrap.css',
 js_login = Bundle('node_modules/jquery/dist/jquery.js',
                   'node_modules/bootstrap/dist/js/bootstrap.js',
                   'node_modules/icheck/icheck.js',
+                  'custom/js/custom.js',
                   filters=(ConcatFilter, 'jsmin'),
                   output='generated/login.js')
 

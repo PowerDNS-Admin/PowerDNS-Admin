@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Welcome - {{ SITE_NAME }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {% assets "css_login" -%}
+    <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
+    {% if SETTING.get('custom_css') %}
+    <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
+    {% endif %}
+  </head>
+
+  <body class="hold-transition register-page">
+    <div class="register-box">
+      <div class="register-logo">
+        <a><b>PowerDNS</b>-Admin</a>
+      </div>
+      <div class="register-box-body">
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          {{ error }}
+        </div>
+        {% endif %}
+        Welcome, {{user.firstname}}! <br />
+        You will need a Token on login. <br />
+        Your QR code is:
+        <div id="token_information">
+          {% if qrcode_image == None %}
+          <p><img id="qrcode" src="{{ url_for('user.qrcode') }}"></p>
+          {% else %}
+          <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{qrcode_image}}"></p>
+          {% endif %}
+          <p>
+            Your secret key is: <br />
+            <form>
+              <input type=text id="otp_secret" value={{user.otp_secret}} readonly>
+              <button type=button style="position:relative; right:28px" onclick="copy_otp_secret_to_clipboard()"> <i class="fa fa-clipboard"></i> </button>
+              <br /><font color="red" id="copy_tooltip" style="visibility:collapse">Copied.</font>
+            </form>
+          </p>
+          You can use Google Authenticator (<a target="_blank"
+              href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android</a>
+          - <a target="_blank"
+              href="https://apps.apple.com/us/app/google-authenticator/id388497605">iOS</a>)
+          <br />
+          or FreeOTP (<a target="_blank"
+              href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en">Android</a>
+          - <a target="_blank"
+              href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>)
+          on your smartphone <br /> to scan the QR code or type the secret key.
+          <br /> <br />
+          <font color="red"><strong><i>Make sure only you can see this QR Code <br />
+            and secret key, and nobody can capture them.</i></strong></font>
+        </div>
+        </br>
+        Please input your OTP token to continue, to ensure the seed has been scanned correctly.
+        <form action="" method="post" data-toggle="validator">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <input type="text" class="form-control" placeholder="OTP Token" name="otptoken"
+              data-error="Please input your OTP token" required>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button type="submit" class="btn btn-flat btn-primary btn-block">Continue</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="login-box-footer">
+        <center>
+          <p>Powered by <a href="https://github.com/ngoduykhanh/PowerDNS-Admin">PowerDNS-Admin</a></p>
+        </center>
+      </div>
+    </div>
+  </body>
+  {% assets "js_login" -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {%- endassets %}
+  {% assets "js_validation" -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {%- endassets %}
+</html>
