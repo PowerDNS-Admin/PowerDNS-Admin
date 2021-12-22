@@ -645,6 +645,12 @@ def change_account(domain_name):
     else:
         abort(500)
 
+def is_forbidden(s):
+    forbidden = ['&', '\'', '>', '<', 'script']
+    for f in forbidden:
+        if f in s:
+            return True
+    return False
 
 @domain_bp.route('/<path:domain_name>/apply',
                  methods=['POST'],
@@ -656,6 +662,21 @@ def record_apply(domain_name):
         jdata = request.json
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']
+        submitted_record = jdata['record']
+        for r in submitted_record:
+            if is_forbidden(r['record_comment']):
+                field = "Comment "
+            elif is_forbidden(r['record_data']) and r['record_type'] == 'TXT':
+                field = "Data field "
+            else:
+                field = ""
+            if field != "":
+                return make_response(
+                    jsonify({
+                        'status': 'error',
+                        'msg': field + ' on record ' + r['record_name'] + "." + r['record_type'] 
+                                    + " must not contain the following keywords or characters:  &, \', >, <, \"script\"" 
+                    }), 500)
         domain = Domain.query.filter(Domain.name == domain_name).first()
 
         if domain:
