@@ -666,8 +666,10 @@ def record_apply(domain_name):
         for r in submitted_record:
             if is_forbidden(r['record_comment']):
                 field = "Comment "
-            elif is_forbidden(r['record_data']) and r['record_type'] == 'TXT':
+            elif is_forbidden(r['record_data']):
                 field = "Data field "
+            elif is_forbidden(r['record_name']):
+                field = "Name field "
             else:
                 field = ""
             if field != "":
