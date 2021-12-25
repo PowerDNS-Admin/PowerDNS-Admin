@@ -208,6 +208,7 @@ def dashboard():
                            history_number=history_number,
                            uptime=uptime,
                            histories=detailedHistories,
+                           histories=history,
                            show_bg_domain_button=show_bg_domain_button,
                            pdns_version=Setting().get('pdns_version'))
 
