@@ -662,7 +662,6 @@ def record_apply(domain_name):
         jdata = request.json
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']
-        submitted_record = jdata['record']
         for r in submitted_record:
             if is_forbidden(r['record_comment']):
                 field = "Comment "
