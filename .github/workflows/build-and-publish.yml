@@ -26,6 +26,10 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
@@ -43,6 +47,7 @@ jobs:
           context: ./
           file: ./docker/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ngoduykhanh/powerdns-admin:latest
 
       - name: Build release image
@@ -52,5 +57,6 @@ jobs:
           context: ./
           file: ./docker/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
