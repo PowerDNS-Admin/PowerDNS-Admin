@@ -23,7 +23,7 @@ from ..lib.errors import (
     AccountCreateFail, AccountUpdateFail, AccountDeleteFail,
     AccountCreateDuplicate, AccountNotExists,
     UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
-    UserUpdateFailEmail
+    UserUpdateFailEmail, InvalidAccountNameException
 )
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
@@ -870,12 +870,15 @@ def api_create_account():
     contact = data['contact'] if 'contact' in data else None
     mail = data['mail'] if 'mail' in data else None
     if not name:
-        current_app.logger.debug("Account name missing")
-        abort(400)
+        current_app.logger.debug("Account creation failed: name missing")
+        raise InvalidAccountNameException(message="Account name missing")
 
-    account_exists = [] or Account.query.filter(Account.name == name).all()
+    sanitized_name = Account.sanitize_name(name)
+    account_exists = Account.query.filter(Account.name == sanitized_name).all()
+
     if len(account_exists) > 0:
-        msg = "Account {} already exists".format(name)
+        msg = ("Requested Account {} would be translated to {}"
+               " which already exists").format(name, sanitized_name)
         current_app.logger.debug(msg)
         raise AccountCreateDuplicate(message=msg)
 
@@ -913,8 +916,9 @@ def api_update_account(account_id):
     if not account:
         abort(404)
 
-    if name and name != account.name:
-        abort(400)
+    if name and Account.sanitize_name(name) != account.name:
+        msg = "Account name is immutable"
+        raise AccountUpdateFail(message=msg)
 
     if current_user.role.name not in ['Administrator', 'Operator']:
         msg = "User role update accounts"
@@ -1212,13 +1216,13 @@ def sync_domains():
 def health():
     domain = Domain()
     domain_to_query = domain.query.first()
-    
+
     if not domain_to_query:
         current_app.logger.error("No domain found to query a health check")
         return make_response("Unknown", 503)
 
     try:
-        domain.get_domain_info(domain_to_query.name)                                
+        domain.get_domain_info(domain_to_query.name)
     except Exception as e:
         current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
         return make_response("Down", 503)

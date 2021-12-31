@@ -136,6 +136,13 @@ class AccountNotExists(StructuredException):
         self.message = message
         self.name = name
 
+class InvalidAccountNameException(StructuredException):
+    status_code = 400
+
+    def __init__(self, name=None, message="The account name is invalid"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
 
 class UserCreateFail(StructuredException):
     status_code = 500
@@ -144,7 +151,6 @@ class UserCreateFail(StructuredException):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
-
 
 class UserCreateDuplicate(StructuredException):
     status_code = 409

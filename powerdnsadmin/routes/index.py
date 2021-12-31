@@ -323,8 +323,8 @@ def login():
                             # Regexp didn't match, continue to next iteration
                             continue
 
-                    account = Account()
-                    account_id = account.get_id_by_name(account_name=group_name)
+                    sanitized_group_name = Account.sanitize_name(group_name)
+                    account_id = account.get_id_by_name(account_name=sanitized_group_name)
 
                     if account_id:
                         account = Account.query.get(account_id)
@@ -345,10 +345,12 @@ def login():
                             current_app.logger.info('User {} added to Account {}'.format(
                                 user.username, account.name))
                     else:
-                        account.name = group_name
-                        account.description = group_description
-                        account.contact = ''
-                        account.mail = ''
+                        account = Account(
+                            name=sanitized_group_name,
+                            description=group_description,
+                            contact='',
+                            mail=''
+                        )
                         account.create_account()
                         history = History(msg='Create account {0}'.format(
                             account.name),
@@ -1092,18 +1094,10 @@ def create_group_to_account_mapping():
 
 
 def handle_account(account_name, account_description=""):
-    if Setting().get('account_name_extra_chars'):
-        char_list = "abcdefghijklmnopqrstuvwxyz0123456789_-."
-    else:
-        char_list = "abcdefghijklmnopqrstuvwxyz0123456789"
-    clean_name = ''.join(c for c in account_name.lower()
-                         if c in char_list)
-    if len(clean_name) > Account.name.type.length:
-        current_app.logger.error(
-            "Account name {0} too long. Truncated.".format(clean_name))
+    clean_name = Account.sanitize_name(account_name)
     account = Account.query.filter_by(name=clean_name).first()
     if not account:
-        account = Account(name=clean_name.lower(),
+        account = Account(name=clean_name,
                           description=account_description,
                           contact='',
                           mail='')
