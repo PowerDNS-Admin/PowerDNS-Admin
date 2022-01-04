@@ -758,35 +758,39 @@ def manage_account():
 def manage_roles():
     if request.method == 'GET':
         roles = Role.query.order_by(Role.name).all()
-        # for role in roles:
-        #     role.user_num = Role.query.filter(
-        #         AccountUser.account_id == account.id).count()
         return render_template('admin_manage_roles.html', roles=roles)
 
     if request.method == 'POST':
         #
         # post data should in format
-        # {'action': 'delete_account', 'data': 'accountname'}
+        # {'action': 'delete_role', 'data': 'rolename'}
         #
         try:
             jdata = request.json
             data = jdata['data']
 
             if jdata['action'] == 'delete_role':
-                account = Account.query.filter(Account.name == data).first()
-                if not account:
+                role = Role.query.filter(Role.name == data).first()
+                if not role:
                     return make_response(
                         jsonify({
                             'status': 'error',
-                            'msg': 'Account not found.'
+                            'msg': 'Role not found.'
                         }), 404)
-                # Remove account association from domains first
-                for domain in account.domains:
-                    Domain(name=domain.name).assoc_account(None)
-                # Then delete the account
-                result = account.delete_account()
+                if role.name in ['User', 'Administrator', 'Operator']:
+                    return make_response(
+                        jsonify({
+                            'status': 'error',
+                            'msg': 'Cannot delete a basic Role.'
+                        }), 404)
+                # Remove users from role first
+                # Set them as "User" instead
+                # Then delete the role
+                for u in role.users:
+                    u.set_role("User")
+                result = role.delete_role()
                 if result:
-                    history = History(msg='Delete account {0}'.format(data),
+                    history = History(msg='Delete role {0}'.format(data),
                                       created_by=current_user.username)
                     history.add()
                     return make_response(
@@ -885,7 +889,7 @@ def edit_role(role_name=None):
 
         if result['status']:
             role.id = role.get_id_by_name(role.name)
-            R = Role.query.filter(Role.id == role.id).all()[0]
+            R = Role.query.filter(Role.id == role.id).first()
             grant_role_privileges(R, new_user_list)
             history.add()
             return redirect(url_for('admin.manage_roles'))

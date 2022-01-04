@@ -40,13 +40,21 @@
                             <tr>
                                 <td>{{ loop.index }}</td>
                                 <td>{{ record }}</td>
-                                <td>
-                                    <input type="checkbox" id="fr_{{ record|lower }}" name="fr_{{ record|lower }}"
-                                        class="checkbox" {% if f_records[record] %}checked{% endif %}>
+                                <td class='forward' id="{{ record + '_forward_' }} {{loop.index}}">
+                                    R
+                                    <input  type="checkbox" id="forward_r_{{ record|lower }}" name="forward_r_{{ record|lower }}"
+                                        class="checkbox read" {% if f_records[record] %}checked{% endif %}>
+                                    W
+                                    <input type="checkbox" id="forward_w_{{ record|lower }}" name="forward_w_{{ record|lower }}"
+                                        class="checkbox write" {% if f_records[record] %}checked{% endif %}>
                                 </td>
-                                <td>
-                                    <input type="checkbox" id="rr_{{ record|lower }}" name="rr_{{ record|lower }}"
-                                        class="checkbox" {% if r_records[record] %}checked{% endif %}>
+                                <td class='reverse' id="{{ record + '_reverse_' }} {{loop.index }}">
+                                    R
+                                    <input type="checkbox" id="reverse_r_{{ record|lower }}" name="reverse_r_{{ record|lower }}"
+                                        class="checkbox read" {% if r_records[record] %}checked{% endif %}>
+                                    W
+                                    <input type="checkbox" id="reverse_r_{{ record|lower }}" name="reverse_w_{{ record|lower }}"
+                                        class="checkbox write" {% if r_records[record] %}checked{% endif %}>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -79,5 +87,22 @@
         checkboxClass: 'icheckbox_square-blue',
         increaseArea: '20%'
     })
+
+    // $('r_checkbox').on('ifChecked',function() {
+    //         $('#auth_all_checkbox').iCheck('check');
+    // });
+    
+    $(".forward :input").on('ifUnchecked',function() {
+        if ($(this).prop('class') == "checkbox read") 
+            console.log($(this).siblings())
+            // $(this).next().iCheck('uncheck');
+            // console.log($(this).next())
+            // console.log("GOt a read")
+        // console.log($(this))
+        
+        // console.log('triger')
+    })
+    
+    
 </script>
 {% endblock %}

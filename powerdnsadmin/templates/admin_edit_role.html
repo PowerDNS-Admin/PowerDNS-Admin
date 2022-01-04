@@ -60,25 +60,14 @@
                                 name="roledescription" {% if role %}value="{{ role.description }}" {% endif %}>
                             <span class="fa fa-industry form-control-feedback"></span>
                         </div>
-                        <div class="form-group has-feedback">
-                            <label class="control-label" for="rolecontact">Contact Person</label>
-                            <input type="text" class="form-control" placeholder="Contact Person (optional)"
-                                name="rolecontact" {% if role %}value="{{ role.contact }}" {% endif %}>
-                            <span class="fa fa-user form-control-feedback"></span>
-                        </div>
-                        <div class="form-group has-feedback">
-                            <label class="control-label" for="rolemail">Mail Address</label>
-                            <input type="email" class="form-control" placeholder="Mail Address (optional)"
-                                name="rolemail" {% if role %}value="{{ role.mail }}" {% endif %}>
-                            <span class="fa fa-envelope form-control-feedback"></span>
-                        </div>
                     </div>
                     <div class="box-header with-border">
                         <h3 class="box-title">Access Control</h3>
                     </div>
                     <div class="box-body">
-                        <p>Users on the right have access to manage records in all domains
-                            associated with the role.</p>
+                        <p>Users on the right are given the current Role.<br />
+                        Users removed from the right column will be given the default "User" role.
+                        </p>
                         <p>Click on users to move between columns.</p>
                         <div class="form-group col-xs-2">
                             <select multiple="multiple" class="form-control" id="role_multi_user"
@@ -105,18 +94,15 @@
                 </div>
                 <div class="box-body">
                     <p>
-                        An role allows grouping of domains belonging to a particular entity, such as a customer or
-                        department.<br />
-                        A domain can be assigned to an role upon domain creation or through the domain administration
-                        page.
+                        Custom roles can be built upon the limited User role, to give specific entities
+                        just enough control over specific Record types.<br />
+                        A user can be assigned a specific Role in this Edit Role page, 
+                        as well as on the Manage User page.
                     </p>
                     <p>Fill in all the fields to the in the form to the left.</p>
                     <p>
-                        <strong>Name</strong> is an role identifier. It will be stored as all lowercase letters (no
-                        spaces, special characters etc).<br />
+                        <strong>Name</strong> is the name of the role. It cannot be edited after creation.<br />
                         <strong>Description</strong> is a user friendly name for this role.<br />
-                        <strong>Contact person</strong> is the name of a contact person at the role.<br />
-                        <strong>Mail Address</strong> is an e-mail address for the contact person.
                     </p>
                 </div>
             </div>

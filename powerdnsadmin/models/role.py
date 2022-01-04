@@ -1,4 +1,5 @@
 from .base import db
+from flask import current_app
 
 
 class Role(db.Model):
@@ -86,3 +87,20 @@ class Role(db.Model):
 
         db.session.commit()
         return {'status': True, 'msg': 'Role description updated successfully'}
+
+    def delete_role(self, commit=True):
+        """
+        Delete a role
+        """
+
+        try:
+            Role.query.filter(Role.name == self.name).delete()
+            if commit:
+                db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(
+                'Cannot delete account {0} from DB. DETAIL: {1}'.format(
+                    self.name, e))
+            return False
