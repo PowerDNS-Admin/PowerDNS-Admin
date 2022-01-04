@@ -21,3 +21,68 @@ class Role(db.Model):
 
     def __repr__(self):
         return '<Role {0}r>'.format(self.name)
+
+    def create_role(self):
+        """
+        Create a new role
+        """
+        # Sanity check - role name
+        if self.name == "":
+            return {'status': False, 'msg': 'No role name specified'}
+
+        # check that role name is not already used
+        role = Role.query.filter(Role.name == self.name).first()
+        if role:
+            return {'status': False, 'msg': 'Role already exists'}
+
+        db.session.add(self)
+        db.session.commit()
+        return {'status': True, 'msg': 'Role created successfully'}
+
+    def get_id_by_name(self, role_name):
+        """
+        Convert role_name to role_id
+        """
+        # Skip actual database lookup for empty queries
+        if role_name is None or role_name == "":
+            return None
+
+        role = Role.query.filter(Role.name == role_name).first()
+        if role is None:
+            return None
+
+        return role.id
+
+    def get_name_by_id(self, role_id):
+        """
+        Convert role_id to role_name
+        """
+        role = Role.query.filter(Role.id == role_id).first()
+        if role is None:
+            return ''
+
+        return role.name
+    
+    def get_user(self):
+        role_user_ids = []
+        for u in self.users:
+            role_user_ids.append(u.id)
+        return role_user_ids
+
+    def update_role(self):
+        """
+        Update an existing role
+        """
+        # Sanity check - role name
+        if self.name == "":
+            return {'status': False, 'msg': 'No role name specified'}
+
+        # read role and check that it exists
+        role = Role.query.filter(Role.name == self.name).first()
+        if not role:
+            return {'status': False, 'msg': 'Role does not exist'}
+
+        role.description = self.description
+
+        db.session.commit()
+        return {'status': True, 'msg': 'Role description updated successfully'}

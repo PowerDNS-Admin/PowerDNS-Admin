@@ -752,6 +752,178 @@ def manage_account():
                     'There is something wrong, please contact Administrator.'
                 }), 400)
 
+@admin_bp.route('/manage-roles', methods=['GET', 'POST'])
+@login_required
+@operator_role_required
+def manage_roles():
+    if request.method == 'GET':
+        roles = Role.query.order_by(Role.name).all()
+        # for role in roles:
+        #     role.user_num = Role.query.filter(
+        #         AccountUser.account_id == account.id).count()
+        return render_template('admin_manage_roles.html', roles=roles)
+
+    if request.method == 'POST':
+        #
+        # post data should in format
+        # {'action': 'delete_account', 'data': 'accountname'}
+        #
+        try:
+            jdata = request.json
+            data = jdata['data']
+
+            if jdata['action'] == 'delete_role':
+                account = Account.query.filter(Account.name == data).first()
+                if not account:
+                    return make_response(
+                        jsonify({
+                            'status': 'error',
+                            'msg': 'Account not found.'
+                        }), 404)
+                # Remove account association from domains first
+                for domain in account.domains:
+                    Domain(name=domain.name).assoc_account(None)
+                # Then delete the account
+                result = account.delete_account()
+                if result:
+                    history = History(msg='Delete account {0}'.format(data),
+                                      created_by=current_user.username)
+                    history.add()
+                    return make_response(
+                        jsonify({
+                            'status': 'ok',
+                            'msg': 'Account has been removed.'
+                        }), 200)
+                else:
+                    return make_response(
+                        jsonify({
+                            'status': 'error',
+                            'msg': 'Cannot remove account.'
+                        }), 500)
+            else:
+                return make_response(
+                    jsonify({
+                        'status': 'error',
+                        'msg': 'Action not supported.'
+                    }), 400)
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot update account. Error: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'There is something wrong, please contact Administrator.'
+                }), 400)
+
+@admin_bp.route('/role/edit/<role_name>', methods=['GET', 'POST'])
+@admin_bp.route('/role/edit', methods=['GET', 'POST'])
+@login_required
+@operator_role_required
+def edit_role(role_name=None):
+    users = User.query.all()
+    if request.method == 'GET':
+        if role_name is None:
+            return render_template('admin_edit_role.html',
+                                   role_user_ids=[],
+                                   users=users,
+                                   create=1)
+        else:
+            role = Role.query.filter(
+                Role.name == role_name).first()
+            role_user_ids = role.get_user()
+            return render_template('admin_edit_role.html',
+                                   role=role,
+                                   role_user_ids=role_user_ids,
+                                   users=users,
+                                   create=0)
+
+    if request.method == 'POST':
+        fdata = request.form
+        new_user_list = request.form.getlist('role_multi_user')
+        # on POST, synthesize account and account_user_ids from form data
+        if not role_name:
+            role_name = fdata['rolename']
+
+        role = Role(name=role_name,
+                          description=fdata['roledescription'])
+        role_user_ids = []
+        for username in new_user_list:
+            userid = User(username=username).get_user_info_by_username().id
+            role_user_ids.append(userid)
+
+        create = int(fdata['create'])
+        if create:
+            # account __init__ sanitizes and lowercases the name, so to manage expectations
+            # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
+            if role.name == "" or role.name != role_name.lower():
+                return render_template('admin_edit_role.html',
+                                       role=role,
+                                       role_user_ids=role_user_ids,
+                                       users=users,
+                                       create=create,
+                                       invalid_rolename=True)
+
+            if Role.query.filter(Role.name == role.name).first():
+                return render_template('admin_edit_role.html',
+                                       role=role,
+                                       role_user_ids=role_user_ids,
+                                       users=users,
+                                       create=create,
+                                       duplicate_rolename=True)
+
+            result = role.create_role()
+            history = History(msg='Create role {0}'.format(role.name),
+                              created_by=current_user.username)
+
+        else:
+            result = role.update_role()
+            history = History(msg='Update role {0}'.format(role.name),
+                              created_by=current_user.username)
+
+        if result['status']:
+            role.id = role.get_id_by_name(role.name)
+            R = Role.query.filter(Role.id == role.id).all()[0]
+            grant_role_privileges(R, new_user_list)
+            history.add()
+            return redirect(url_for('admin.manage_roles'))
+
+        return render_template('admin_edit_role.html',
+                               role=role,
+                               role_user_ids=role_user_ids,
+                               users=users,
+                               create=create,
+                               error=result['msg'])
+
+
+def grant_role_privileges(role, new_user_list):
+    role_user_ids = role.get_user()
+    new_user_ids = [
+        u.id
+        for u in User.query.filter(User.username.in_(new_user_list)).all()
+    ] if new_user_list else []
+
+    removed_ids = list(set(role_user_ids).difference(new_user_ids))
+    added_ids = list(set(new_user_ids).difference(role_user_ids))
+    for uid in removed_ids:
+        u = User.get_user_info_by_id(User(uid))
+        current_user_role_id = u.role_id
+        if current_user_role_id == role.id:
+            u.set_role("User")
+        # user_list = role.users
+        # for u in user_list:
+        #     if u.id == uid:
+        #         user = User(uid)
+        #         user = User.get_user_info_by_id(user)
+        #         user.set_role(role.name)
+        # Role.users = user_list
+    
+    for uid in added_ids:
+        user = User(uid)
+        user = User.get_user_info_by_id(user)
+        user.set_role(role.name)
 
 class DetailedHistory():
     def __init__(self, history, change_set):
