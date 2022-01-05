@@ -40,7 +40,7 @@
                             <tr>
                                 <td>{{ loop.index }}</td>
                                 <td>{{ record }}</td>
-                                <td class='forward' id="{{ record + '_forward_' }} {{loop.index}}">
+                                <td class='record_privs' id="{{ record + '_forward_' }} {{loop.index}}">
                                     R
                                     <input  type="checkbox" id="forward_r_{{ record|lower }}" name="forward_r_{{ record|lower }}"
                                         class="checkbox read" {% if f_records[record] %}checked{% endif %}>
@@ -48,12 +48,12 @@
                                     <input type="checkbox" id="forward_w_{{ record|lower }}" name="forward_w_{{ record|lower }}"
                                         class="checkbox write" {% if f_records[record] %}checked{% endif %}>
                                 </td>
-                                <td class='reverse' id="{{ record + '_reverse_' }} {{loop.index }}">
+                                <td class='record_privs' id="{{ record + '_reverse_' }} {{loop.index }}">
                                     R
                                     <input type="checkbox" id="reverse_r_{{ record|lower }}" name="reverse_r_{{ record|lower }}"
                                         class="checkbox read" {% if r_records[record] %}checked{% endif %}>
                                     W
-                                    <input type="checkbox" id="reverse_r_{{ record|lower }}" name="reverse_w_{{ record|lower }}"
+                                    <input type="checkbox" id="reverse_w_{{ record|lower }}" name="reverse_w_{{ record|lower }}"
                                         class="checkbox write" {% if r_records[record] %}checked{% endif %}>
                                 </td>
                             </tr>
@@ -87,22 +87,29 @@
         checkboxClass: 'icheckbox_square-blue',
         increaseArea: '20%'
     })
+    
+    $(".record_privs :input").on('ifUnchecked',function() {
+        var splitted = $(this).prop('id').split('_')
+        if ($(this).prop('class') == "checkbox read") {
+            $('#'+splitted[0]+'_w_'+splitted[2]).iCheck('uncheck') //.prop('checked', true) //  iCheck('check');
+            // console.log('unchecked R with id ' + $(this).prop('id') )
+        }
+        else {
+            // console.log('unchecked W')
+        }
+    });
 
-    // $('r_checkbox').on('ifChecked',function() {
-    //         $('#auth_all_checkbox').iCheck('check');
-    // });
-    
-    $(".forward :input").on('ifUnchecked',function() {
-        if ($(this).prop('class') == "checkbox read") 
-            console.log($(this).siblings())
-            // $(this).next().iCheck('uncheck');
-            // console.log($(this).next())
-            // console.log("GOt a read")
-        // console.log($(this))
-        
-        // console.log('triger')
+    $(".record_privs :input").on('ifChecked',function() {
+        var splitted = $(this).prop('id').split('_')
+        if ($(this).prop('class') == "checkbox read") {
+
+        }
+        else {
+            // console.log('unchecked W')
+            $('#'+splitted[0]+'_r_'+splitted[2]).iCheck('check') //.prop('checked', true) //  iCheck('check');
+        }
+
     })
-    
     
 </script>
 {% endblock %}
