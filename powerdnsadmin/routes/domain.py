@@ -78,6 +78,11 @@ def domain(domain_name):
     ttl_options = Setting().get_ttl_options()
     records = []
 
+    if re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
+        records_allow_to_edit = reverse_records_allow_to_edit
+    else:
+        records_allow_to_edit = forward_records_allow_to_edit
+
     # Render the "records" to display in HTML datatable
     #
     # BUG: If we have multiple records with the same name
