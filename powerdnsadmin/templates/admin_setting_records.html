@@ -91,24 +91,15 @@
     $(".record_privs :input").on('ifUnchecked',function() {
         var splitted = $(this).prop('id').split('_')
         if ($(this).prop('class') == "checkbox read") {
-            $('#'+splitted[0]+'_w_'+splitted[2]).iCheck('uncheck') //.prop('checked', true) //  iCheck('check');
-            // console.log('unchecked R with id ' + $(this).prop('id') )
-        }
-        else {
-            // console.log('unchecked W')
+            $('#'+splitted[0]+'_w_'+splitted[2]).iCheck('uncheck')
         }
     });
 
     $(".record_privs :input").on('ifChecked',function() {
         var splitted = $(this).prop('id').split('_')
-        if ($(this).prop('class') == "checkbox read") {
-
+        if ($(this).prop('class') == "checkbox write") {
+            $('#'+splitted[0]+'_r_'+splitted[2]).iCheck('check')
         }
-        else {
-            // console.log('unchecked W')
-            $('#'+splitted[0]+'_r_'+splitted[2]).iCheck('check') //.prop('checked', true) //  iCheck('check');
-        }
-
     })
     
 </script>
