@@ -1,24 +1,110 @@
 from .base import db
 from flask import current_app
-
+import json
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     description = db.Column(db.String(128))
+    forward_access = db.Column(db.Text())  # {"type":"W or R or None string literal"}
+    reverse_access = db.Column(db.Text())
+
     users = db.relationship('User', backref='role', lazy=True)
     apikeys = db.relationship('ApiKey', back_populates='role', lazy=True)
 
+
+    defaults = {
+        'forward_records_allow_edit': {
+            'A': 'R',
+            'AAAA': 'W',
+            'AFSDB': 'None',
+            'ALIAS': 'None',
+            'CAA': 'W',
+            'CERT': 'None',
+            'CDNSKEY': 'None',
+            'CDS': 'None',
+            'CNAME': 'W',
+            'DNSKEY': 'None',
+            'DNAME': 'None',
+            'DS': 'None',
+            'HINFO': 'None',
+            'KEY': 'None',
+            'LOC': 'W',
+            'LUA': 'None',
+            'MX': 'W',
+            'NAPTR': 'None',
+            'NS': 'W',
+            'NSEC': 'None',
+            'NSEC3': 'None',
+            'NSEC3PARAM': 'None',
+            'OPENPGPKEY': 'None',
+            'PTR': 'W',
+            'RP': 'None',
+            'RRSIG': 'None',
+            'SOA': 'None',
+            'SPF': 'W',
+            'SSHFP': 'None',
+            'SRV': 'W',
+            'TKEY': 'None',
+            'TSIG': 'None',
+            'TLSA': 'None',
+            'SMIMEA': 'None',
+            'TXT': 'W',
+            'URI': 'None'
+        },
+        'reverse_records_allow_edit': {
+            'A': 'None',
+            'AAAA': 'None',
+            'AFSDB': 'None',
+            'ALIAS': 'None',
+            'CAA': 'None',
+            'CERT': 'None',
+            'CDNSKEY': 'None',
+            'CDS': 'None',
+            'CNAME': 'None',
+            'DNSKEY': 'None',
+            'DNAME': 'None',
+            'DS': 'None',
+            'HINFO': 'None',
+            'KEY': 'None',
+            'LOC': 'W',
+            'LUA': 'None',
+            'MX': 'None',
+            'NAPTR': 'None',
+            'NS': 'W',
+            'NSEC': 'None',
+            'NSEC3': 'None',
+            'NSEC3PARAM': 'None',
+            'OPENPGPKEY': 'None',
+            'PTR': 'W',
+            'RP': 'None',
+            'RRSIG': 'None',
+            'SOA': 'None',
+            'SPF': 'None',
+            'SSHFP': 'None',
+            'SRV': 'None',
+            'TKEY': 'None',
+            'TSIG': 'None',
+            'TLSA': 'None',
+            'SMIMEA': 'None',
+            'TXT': 'W',
+            'URI': 'None'
+        }
+    }
     def __init__(self, id=None, name=None, description=None):
         self.id = id
         self.name = name
         self.description = description
+        self.forward_access = json.dumps(self.defaults['forward_records_allow_edit'])
+        self.reverse_access = json.dumps(self.defaults['reverse_records_allow_edit'])
 
     # allow database autoincrement to do its own ID assignments
     def __init__(self, name=None, description=None):
         self.id = None
         self.name = name
         self.description = description
+        self.forward_access = json.dumps(self.defaults['forward_records_allow_edit'])
+        self.reverse_access = json.dumps(self.defaults['reverse_records_allow_edit'])
 
     def __repr__(self):
         return '<Role {0}r>'.format(self.name)
