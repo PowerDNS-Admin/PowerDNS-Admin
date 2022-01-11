@@ -827,22 +827,48 @@ def manage_roles():
 @login_required
 @operator_role_required
 def edit_role(role_name=None):
+
+    # fetching record types
+    if request.method == 'GET':
+        _fr = Setting().get('forward_records_allow_edit')
+        _rr = Setting().get('reverse_records_allow_edit')
+        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
+        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
+    elif request.method == 'POST':
+        fr = {}
+        rr = {}
+        records = Setting().defaults['forward_records_allow_edit']
+        for r in records:
+            fr[r] = True if request.form.get('fr_{0}'.format(
+                r.lower())) else False
+            rr[r] = True if request.form.get('rr_{0}'.format(
+                r.lower())) else False
+
+        Setting().set('forward_records_allow_edit', str(fr))
+        Setting().set('reverse_records_allow_edit', str(rr))
+
+
+    
     users = User.query.all()
     if request.method == 'GET':
         if role_name is None:
             return render_template('admin_edit_role.html',
-                                   role_user_ids=[],
-                                   users=users,
-                                   create=1)
+                                    role_user_ids=[],
+                                    users=users,
+                                    create=1,
+                                    f_records=f_records,
+                                    r_records=r_records)
         else:
             role = Role.query.filter(
                 Role.name == role_name).first()
             role_user_ids = role.get_user()
             return render_template('admin_edit_role.html',
-                                   role=role,
-                                   role_user_ids=role_user_ids,
-                                   users=users,
-                                   create=0)
+                                    role=role,
+                                    role_user_ids=role_user_ids,
+                                    users=users,
+                                    create=0,
+                                    f_records=f_records,
+                                    r_records=r_records)
 
     if request.method == 'POST':
         fdata = request.form
@@ -864,19 +890,23 @@ def edit_role(role_name=None):
             # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
             if role.name == "" or role.name != role_name.lower():
                 return render_template('admin_edit_role.html',
-                                       role=role,
-                                       role_user_ids=role_user_ids,
-                                       users=users,
-                                       create=create,
-                                       invalid_rolename=True)
+                                        role=role,
+                                        role_user_ids=role_user_ids,
+                                        users=users,
+                                        create=create,
+                                        invalid_rolename=True,
+                                        f_records=f_records,
+                                        r_records=r_records)
 
             if Role.query.filter(Role.name == role.name).first():
                 return render_template('admin_edit_role.html',
-                                       role=role,
-                                       role_user_ids=role_user_ids,
-                                       users=users,
-                                       create=create,
-                                       duplicate_rolename=True)
+                                        role=role,
+                                        role_user_ids=role_user_ids,
+                                        users=users,
+                                        create=create,
+                                        duplicate_rolename=True,
+                                        f_records=f_records,
+                                        r_records=r_records)
 
             result = role.create_role()
             history = History(msg='Create role {0}'.format(role.name),
@@ -895,11 +925,13 @@ def edit_role(role_name=None):
             return redirect(url_for('admin.manage_roles'))
 
         return render_template('admin_edit_role.html',
-                               role=role,
-                               role_user_ids=role_user_ids,
-                               users=users,
-                               create=create,
-                               error=result['msg'])
+                                    role=role,
+                                    role_user_ids=role_user_ids,
+                                    users=users,
+                                    create=create,
+                                    error=result['msg'],
+                                    f_records=f_records,
+                                    r_records=r_records)
 
 
 def grant_role_privileges(role, new_user_list):
