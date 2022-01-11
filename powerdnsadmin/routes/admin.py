@@ -835,17 +835,23 @@ def edit_role(role_name=None):
         f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
         r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
     elif request.method == 'POST':
-        fr = {}
-        rr = {}
+        fr_read = {}
+        rr_read = {}
+        fr_write = {}
+        rr_write = {}
         records = Setting().defaults['forward_records_allow_edit']
         for r in records:
-            fr[r] = True if request.form.get('fr_{0}'.format(
+            fr_read[r] = True if request.form.get('forward_r_{0}'.format(
                 r.lower())) else False
-            rr[r] = True if request.form.get('rr_{0}'.format(
+            rr_read[r] = True if request.form.get('reverse_r_{0}'.format(
+                r.lower())) else False
+            fr_write[r] = True if request.form.get('forward_r_{0}'.format(
+                r.lower())) else False
+            rr_write[r] = True if request.form.get('reverse_w_{0}'.format(
                 r.lower())) else False
 
-        Setting().set('forward_records_allow_edit', str(fr))
-        Setting().set('reverse_records_allow_edit', str(rr))
+        Setting().set('forward_records_allow_edit', str(fr_read))
+        Setting().set('reverse_records_allow_edit', str(rr_read))
 
 
     

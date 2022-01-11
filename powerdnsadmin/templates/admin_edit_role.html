@@ -79,48 +79,6 @@
                             </select>
                         </div>
                     </div>
-                    <div class="box-footer">
-                        <button type="submit"
-                            class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
-                            Role</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="col-md-8">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Help with creating a new role</h3>
-                </div>
-                <div class="box-body">
-                    <p>
-                        Custom roles can be built upon the limited User role, to give specific entities
-                        just enough control over specific Record types.<br />
-                        A user can be assigned a specific Role in this Edit Role page, 
-                        as well as on the Manage User page.
-                    </p>
-                    <p>Fill in all the fields to the in the form to the left.</p>
-                    <p>
-                        <strong>Name</strong> is the name of the role. It cannot be edited after creation.<br />
-                        <strong>Description</strong> is a user friendly name for this role.<br />
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="row">
-        <div class="col-md-5">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">DNS record Settings</h3>
-                </div>
-                <!-- /.box-header -->
-                <!-- form start -->
-                <form role="form" method="post">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="create" value="{{ create }}">
                     <div class="box-body">
                         <table class="table table-bordered">
                             <tr>
@@ -154,24 +112,35 @@
                         </table>
                     </div>
                     <div class="box-footer">
-                        <button type="submit" class="btn btn-flat btn-primary">Update</button>
+                        <button type="submit"
+                            class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
+                            Role</button>
                     </div>
                 </form>
             </div>
         </div>
-        <div class="col-md-7">
+        <div class="col-md-8">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Help</h3>
+                    <h3 class="box-title">Help with creating a new role</h3>
                 </div>
                 <div class="box-body">
-                    <p>Select record types you allow user to edit in the forward zone and reverse zone. Take a look at
-                        <a href="https://doc.powerdns.com/authoritative/appendices/types.html">PowerDNS docs</a> for
-                        full list of supported record types.</p>
+                    <p>
+                        Custom roles can be built upon the limited User role, to give specific entities
+                        just enough control over specific Record types.<br />
+                        A user can be assigned a specific Role in this Edit Role page, 
+                        as well as on the Manage User page.
+                    </p>
+                    <p>Fill in all the fields to the in the form to the left.</p>
+                    <p>
+                        <strong>Name</strong> is the name of the role. It cannot be edited after creation.<br />
+                        <strong>Description</strong> is a user friendly name for this role.<br />
+                    </p>
                 </div>
             </div>
         </div>
     </div>
+
 </section>
 {% endblock %}
 {% block extrascripts %}
