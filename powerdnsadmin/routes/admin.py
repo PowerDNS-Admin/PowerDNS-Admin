@@ -827,52 +827,24 @@ def manage_roles():
 @login_required
 @operator_role_required
 def edit_role(role_name=None):
+    if role_name is not None:  # if not create
+        role_obj = Role.query.filter(Role.name == role_name).first()
+    else:
+        role_obj = None
 
-
-    role_obj = Role.query.filter(Role.name == role_name).first()
     # fetching record types
     if request.method == 'GET':
         _fr = Setting().get('forward_records_allow_edit')
         _rr = Setting().get('reverse_records_allow_edit')
+        
+        if role_obj is None:
+            role_obj = Role()
+        breakpoint()
         _fr = role_obj.forward_access
         _rr = role_obj.reverse_access
-        breakpoint()
-        # f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
-        # r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
-    elif request.method == 'POST':
-        # fr_read = {}
-        # rr_read = {}
-        # fr_write = {}
-        # rr_write = {}
-        forward_records_perms = {}
-        reverse_records_perms = {}
-        records = Setting().defaults['forward_records_allow_edit']
-        for r in records:
-            # is is on, then
-            if request.form.get('forward_w_{0}'.format(r.lower())):
-                forward_records_perms[r] = "W"
-            elif request.form.get('forward_r_{0}'.format(r.lower())):
-                forward_records_perms[r] = "R"
-            else:
-                forward_records_perms[r] = "None"
-
-            if request.form.get('reverse_w_{0}'.format(r.lower())):
-                reverse_records_perms[r] = "W"
-            elif request.form.get('reverse_r_{0}'.format(r.lower())):
-                reverse_records_perms[r] = "R"
-            else:
-                reverse_records_perms[r] = "None"
-            # fr_read[r] = True if request.form.get('forward_r_{0}'.format(
-            #     r.lower())) else False
-            # rr_read[r] = True if request.form.get('reverse_r_{0}'.format(
-            #     r.lower())) else False
-            # fr_write[r] = True if request.form.get('forward_r_{0}'.format(
-            #     r.lower())) else False
-            # rr_write[r] = True if request.form.get('reverse_w_{0}'.format(
-            #     r.lower())) else False
-
-        # Setting().set('forward_records_allow_edit', str(fr_read))
-        # Setting().set('reverse_records_allow_edit', str(rr_read))
+        # breakpoint()
+        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
+        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
 
 
     
@@ -906,7 +878,30 @@ def edit_role(role_name=None):
 
         role = Role(name=role_name,
                           description=fdata['roledescription'])
-        breakpoint()
+    # if request.method == 'POST':
+        forward_records_perms = {}
+        reverse_records_perms = {}
+        records = Setting().defaults['forward_records_allow_edit']
+        for r in records:
+            # is is on, then
+            if request.form.get('forward_w_{0}'.format(r.lower())):
+                forward_records_perms[r] = "W"
+            elif request.form.get('forward_r_{0}'.format(r.lower())):
+                forward_records_perms[r] = "R"
+            else:
+                forward_records_perms[r] = "None"
+
+            if request.form.get('reverse_w_{0}'.format(r.lower())):
+                reverse_records_perms[r] = "W"
+            elif request.form.get('reverse_r_{0}'.format(r.lower())):
+                reverse_records_perms[r] = "R"
+            else:
+                reverse_records_perms[r] = "None"
+        role.forward_access = json.dumps(forward_records_perms)
+        role.reverse_access = json.dumps(reverse_records_perms)
+        # db.session.add(role)
+        # db.session.commit()
+
         role_user_ids = []
         for username in new_user_list:
             userid = User(username=username).get_user_info_by_username().id

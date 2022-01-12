@@ -121,7 +121,6 @@ class Role(db.Model):
         role = Role.query.filter(Role.name == self.name).first()
         if role:
             return {'status': False, 'msg': 'Role already exists'}
-
         db.session.add(self)
         db.session.commit()
         return {'status': True, 'msg': 'Role created successfully'}
@@ -150,11 +149,6 @@ class Role(db.Model):
 
         return role.name
     
-    def get_user(self):
-        role_user_ids = []
-        for u in self.users:
-            role_user_ids.append(u.id)
-        return role_user_ids
 
     def update_role(self):
         """
@@ -170,7 +164,8 @@ class Role(db.Model):
             return {'status': False, 'msg': 'Role does not exist'}
 
         role.description = self.description
-
+        role.forward_access = self.forward_access
+        role.reverse_access = self.reverse_access
         db.session.commit()
         return {'status': True, 'msg': 'Role description updated successfully'}
 
