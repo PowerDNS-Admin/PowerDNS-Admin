@@ -32,6 +32,51 @@ domain_bp = Blueprint('domain',
                       url_prefix='/domain')
 
 
+
+def fetch_records(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    records = []
+
+    # Query domain's rrsets from PowerDNS API
+    rrsets = Record().get_rrsets(domain.name)
+    if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
+        for r in rrsets:
+            # if r['type'] in records_allow_to_edit:
+            r_name = r['name'].rstrip('.')
+
+            # If it is reverse zone and pretty_ipv6_ptr setting
+            # is enabled, we reformat the name for ipv6 records.
+            if Setting().get('pretty_ipv6_ptr') and r[
+                    'type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+                r_name = dns.reversename.to_address(
+                    dns.name.from_text(r_name))
+
+            # Create the list of records in format that
+            # PDA jinja2 template can understand.
+            index = 0
+            for record in r['records']:
+                if (len(r['comments'])>index):
+                    c=r['comments'][index]['content']
+                else:
+                    c=''
+                record_entry = RecordEntry(
+                    name=r_name,
+                    type=r['type'],
+                    status='Disabled' if record['disabled'] else 'Active',
+                    ttl=r['ttl'],
+                    data=record['content'],
+                    comment=c,
+                    is_allowed_edit=True)
+                index += 1
+                records.append(record_entry)
+    else:
+        # Unsupported version
+        abort(500)
+    return records
+
 @domain_bp.before_request
 def before_request():
     # Check if user is anonymous
@@ -646,6 +691,46 @@ def change_account(domain_name):
         abort(500)
 
 
+
+def are_equal(old : RecordEntry, new: dict):
+    if old.name != new['record_name'] or \
+            old.type != new['record_type'] or \
+            old.status != new['status'] or \
+            old.ttl != new['record_ttl'] or \
+            old.data != new['record_data'] or \
+            old.comment != new['record_comment']:
+        return False
+    return True
+
+def get_changed_record_entries(old_entries, new_submission):
+    not_changed = []
+    for nr in new_submission:
+        for old_entry in old_entries:
+            if are_equal(old=old_entry, new=nr):
+                not_changed.append(json.dumps(nr))
+    
+    for nr in new_submission:
+        dumped = json.dumps(nr)
+        if dumped in not_changed:
+            continue
+        print("ALLEEEERT")
+        breakpoint()
+
+                
+    # if old.name != new['record_name']:
+    #     return False
+    # if old.status != new['status']:
+    #     return False
+    # if old.comment == new['record_comment']:
+    #     return False
+        
+    # if old.type != new['record_type']:
+    #     return False
+    # if old.ttl != new['record_ttl']:
+    #     return False
+    # if old.data != new['record_data']:
+    #     return False
+
 @domain_bp.route('/<path:domain_name>/apply',
                  methods=['POST'],
                  strict_slashes=False)
@@ -656,6 +741,10 @@ def record_apply(domain_name):
         jdata = request.json
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']
+
+        old_entries = fetch_records(domain_name=domain_name)
+        get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record)
+    
         domain = Domain.query.filter(Domain.name == domain_name).first()
 
         if domain:
