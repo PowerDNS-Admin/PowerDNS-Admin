@@ -70,7 +70,6 @@ def domain(domain_name):
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting(
     ).get_forward_records_allow_to_edit()
     reverse_records_allow_to_edit = Setting(
