@@ -831,20 +831,14 @@ def edit_role(role_name=None):
         role_obj = Role.query.filter(Role.name == role_name).first()
     else:
         role_obj = None
-
-    # fetching record types
-    if request.method == 'GET':
-        _fr = Setting().get('forward_records_allow_edit')
-        _rr = Setting().get('reverse_records_allow_edit')
-        
-        if role_obj is None:
-            role_obj = Role()
-        breakpoint()
-        _fr = role_obj.forward_access
-        _rr = role_obj.reverse_access
-        # breakpoint()
-        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
-        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
+    
+    if role_obj is None:
+        role_obj = Role()
+    _fr = role_obj.forward_access
+    _rr = role_obj.reverse_access
+    # breakpoint()
+    f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
+    r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
 
 
     

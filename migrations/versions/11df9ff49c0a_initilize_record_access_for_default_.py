@@ -100,7 +100,6 @@ reverse_records = json.dumps(defaults['reverse_records_allow_edit'])
 
 def upgrade():
     # Use Alchemy's connection and transaction to noodle over the data.
-    return
     connection = op.get_bind()
 
     meta = MetaData(bind=connection)
@@ -131,7 +130,26 @@ def upgrade():
 
 def downgrade():
 
-    # op.drop_column('role', 'forward_access')
-    # op.drop_column('role', 'reverse_access')
-    # op.execute("DROP COLUMN ")
-    pass
+    op.drop_table('role')
+    
+    role_table = op.create_table('role',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=64), nullable=True),
+        sa.Column('description', sa.String(length=128), nullable=True),
+        sa.PrimaryKeyConstraint('id')
+    )
+
+    op.bulk_insert(role_table,
+        [
+            {'id': 1, 'name': 'Administrator', 'description': 'Administrator'},
+            {'id': 2, 'name': 'User', 'description': 'User'},
+            {'id': 3, 'name': 'Operator', 'description': 'Operator'}
+        ]
+    )
+
+    # Revert any users with custom roles to Users
+    op.execute("""
+    UPDATE user
+    SET role_id = 2
+    WHERE role_id > 3
+    """)

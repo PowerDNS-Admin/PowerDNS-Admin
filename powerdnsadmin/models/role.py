@@ -149,7 +149,12 @@ class Role(db.Model):
 
         return role.name
     
-
+    def get_user(self):
+        role_user_ids = []
+        for u in self.users:
+            role_user_ids.append(u.id)
+        return role_user_ids
+        
     def update_role(self):
         """
         Update an existing role
