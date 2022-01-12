@@ -127,10 +127,7 @@ def domain(domain_name):
         # Unsupported version
         abort(500)
 
-    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
-        editable_records = forward_records_allow_to_edit
-    else:
-        editable_records = reverse_records_allow_to_edit
+    editable_records = records_allow_to_edit
 
     return render_template('domain.html',
                            domain=domain,
