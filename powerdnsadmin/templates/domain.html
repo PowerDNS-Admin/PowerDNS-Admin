@@ -80,8 +80,8 @@
                                     <td>
                                         {{ record.data | pretty_domain_name }}
                                     </td>
-                                    <td>
-                                        {{ record.comment }}
+                                    <td id="record_comment">
+                                        {{ record.comment}}
                                     </td>
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
@@ -323,11 +323,38 @@
             applyChanges({'domain': domain, '_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
     });
 
+
+    $(document.body).on("click", "#record_comment", function (e) {
+
+        // $("#record_comment").on("focus", function (e) {
+
+        var record_data = $(this);
+        console.log('spec type = ', record_data.val())
+        console.log('end')
+        var txt_data = record_data.val().replace(/"/g, '&quot;');
+            var modal = $("#modal_custom_record");
+            var form = "    <label for=\"comment_attr\">Comment Record Data</label> \
+                            <textarea style=\"min-width: 100%;color: #333;\" placeholder=\"Your TXT record data\" rows=\"5\" id=\"comment_attr\" name=\"comment_attr\">" + txt_data + "</textarea> \
+                       ";
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function() {
+                data = modal.find('#comment_attr').val();
+                if (! /^".*"$/.test(data)) {
+                    data = '"' + data + '"';
+                }
+                record_data.val(data);
+                modal.modal('hide');
+            });
+            modal.modal('show');
+    });
+
     {% if SETTING.get('record_helper') %}
     //handle wacky record types
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();
+        console.log('rec type = ', record_type)
         var record_data = $(this);
+
         if (record_type == "CAA") {
             var modal = $("#modal_custom_record");
             if (record_data.val() == "") {

@@ -25,3 +25,5 @@ class RecordEntry(object):
 
     def is_allowed_delete(self):
         return self._is_allowed_delete
+    def __repr__(self):
+        return self.name + " : " + self.type + " : " + self.data

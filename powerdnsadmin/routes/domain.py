@@ -693,29 +693,31 @@ def change_account(domain_name):
 
 
 def are_equal(old : RecordEntry, new: dict):
-    if old.name != new['record_name'] or \
+    if old.name.split('.')[0] != new['record_name'] or \
             old.type != new['record_type'] or \
-            old.status != new['status'] or \
-            old.ttl != new['record_ttl'] or \
+            old.status != new['record_status'] or \
+            int(old.ttl) != int(new['record_ttl']) or \
             old.data != new['record_data'] or \
             old.comment != new['record_comment']:
         return False
     return True
 
-def get_changed_record_entries(old_entries, new_submission):
+def get_changed_record_entries(old_entries, new_submission, current_user):
     not_changed = []
     for nr in new_submission:
         for old_entry in old_entries:
+            # if old_entry.name.split('.')[0] == nr['record_name'] and old_entry.type == nr['record_type']:
+            #     breakpoint()
             if are_equal(old=old_entry, new=nr):
                 not_changed.append(json.dumps(nr))
-    
+    types_of_changed = []
     for nr in new_submission:
         dumped = json.dumps(nr)
         if dumped in not_changed:
             continue
-        print("ALLEEEERT")
-        breakpoint()
-
+        if nr['record_type'] in types_of_changed:
+            continue
+        types_of_changed.append(nr['record_type'])
                 
     # if old.name != new['record_name']:
     #     return False
@@ -743,7 +745,7 @@ def record_apply(domain_name):
         submitted_record = jdata['record']
 
         old_entries = fetch_records(domain_name=domain_name)
-        get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record)
+        get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, current_user=current_user)
     
         domain = Domain.query.filter(Domain.name == domain_name).first()
 
