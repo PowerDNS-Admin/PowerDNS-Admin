@@ -117,15 +117,16 @@ def domain(domain_name):
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
-    forward_records_allow_to_edit = Setting(
-    ).get_forward_records_allow_to_edit()
-    reverse_records_allow_to_edit = Setting(
-    ).get_reverse_records_allow_to_edit()
+    # records_allow_to_edit = Setting().get_records_allow_to_edit()
+    # forward_records_allow_to_edit = Setting(
+    # ).get_forward_records_allow_to_edit()
+    # reverse_records_allow_to_edit = Setting(
+    # ).get_reverse_records_allow_to_edit()
     ttl_options = Setting().get_ttl_options()
     records = []
 
     records_allow_to_edit = []
+    records_allow_to_view = []
     role = Role.query.filter(Role.id == current_user.role_id).first()
     
     if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
@@ -134,8 +135,11 @@ def domain(domain_name):
         dictionary = json.loads(role.reverse_access)
 
     for rec_type in dictionary:
-        if dictionary[rec_type] == 'R' or dictionary[rec_type] == 'W':
+        if dictionary[rec_type] == 'W':
+            records_allow_to_view.append(rec_type)
             records_allow_to_edit.append(rec_type)
+        elif dictionary[rec_type] == 'R':
+            records_allow_to_view.append(rec_type)
         
     # Render the "records" to display in HTML datatable
     #
@@ -149,7 +153,7 @@ def domain(domain_name):
     #   - Only allow one comment for that case
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for r in rrsets:
-            if r['type'] in records_allow_to_edit:
+            if r['type'] in records_allow_to_view:
                 r_name = r['name'].rstrip('.')
 
                 # If it is reverse zone and pretty_ipv6_ptr setting
@@ -174,22 +178,22 @@ def domain(domain_name):
                         ttl=r['ttl'],
                         data=record['content'],
                         comment=c,
-                        is_allowed_edit=True)
+                        is_allowed_edit=True if r['type'] in records_allow_to_edit else False)
                     index += 1
                     records.append(record_entry)
     else:
         # Unsupported version
         abort(500)
 
-    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
-        editable_records = forward_records_allow_to_edit
-    else:
-        editable_records = reverse_records_allow_to_edit
+    # if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
+    #     editable_records = forward_records_allow_to_edit
+    # else:
+    #     editable_records = reverse_records_allow_to_edit
 
     return render_template('domain.html',
                            domain=domain,
                            records=records,
-                           editable_records=editable_records,
+                           editable_records=records_allow_to_edit,#editable_records,
                            quick_edit=quick_edit,
                            ttl_options=ttl_options,
                            current_user=current_user)
