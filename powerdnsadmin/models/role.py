@@ -8,10 +8,14 @@ class Role(db.Model):
     description = db.Column(db.String(128))
     forward_access = db.Column(db.Text())  # {"type":"W or R or None string literal"}
     reverse_access = db.Column(db.Text())
-
+    
+    can_configure_dnssec = db.Column(db.Boolean())
+    can_access_history = db.Column(db.Boolean())
+    can_create_domain = db.Column(db.Boolean())
+    can_remove_domain = db.Column(db.Boolean())
+    
     users = db.relationship('User', backref='role', lazy=True)
     apikeys = db.relationship('ApiKey', back_populates='role', lazy=True)
-
 
     defaults = {
         'forward_records_allow_edit': {

@@ -82,11 +82,15 @@ def can_configure_dnssec(f):
         - user is in Operator role or higher, or
         - dnssec_admins_only is off
     """
+    from .models.role import Role
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in [
-                'Administrator', 'Operator'
-        ] and Setting().get('dnssec_admins_only'):
+        # if current_user.role.name not in [
+        #         'Administrator', 'Operator'
+        # ] and Setting().get('dnssec_admins_only'):
+        #     abort(403)
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        if role.can_configure_dnssec == False:
             abort(403)
 
         return f(*args, **kwargs)

@@ -112,10 +112,18 @@
                         </table>
                     </div>
                     <div class="box-footer">
+                        <div>
+                            Allow dns configuration
+                            <input type="checkbox" id="allow_dns_configuration" name="allow_dns_configuration"
+                            class="checkbox" {% if can_configure_dnssec == true %} checked {% endif %}>
+                        </div>
                         <button type="submit"
                             class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
                             Role</button>
                     </div>
+
+
+
                 </form>
             </div>
         </div>

@@ -134,9 +134,9 @@ def domain(domain_name):
         dictionary = json.loads(role.reverse_access)
 
     for rec_type in dictionary:
-        if dictionary[rec_type] == 'R':
+        if dictionary[rec_type] == 'R' or dictionary[rec_type] == 'W':
             records_allow_to_edit.append(rec_type)
-    breakpoint()
+        
     # Render the "records" to display in HTML datatable
     #
     # BUG: If we have multiple records with the same name
@@ -705,16 +705,13 @@ def change_account(domain_name):
         abort(500)
 
 
-num = 0
 def are_equal(old : RecordEntry, new: dict, domain_name: str):
-    global num
     if old.name == domain_name:
         name_to_compare = domain_name
         name_comparison = (new['record_name'] == '@')
     else:
         name_comparison = (old.name == new['record_name'] + "." + domain_name)
-    print("Logics " + str(num))
-    num+=1
+
     print(not name_comparison)
     print(old.type != new['record_type'])
     print(old.status != new['record_status'])
@@ -730,7 +727,6 @@ def are_equal(old : RecordEntry, new: dict, domain_name: str):
     return True
 
 def get_changed_record_entries(old_entries, new_submission, current_user, domain_name):
-    num = 0
     not_changed = []
     for nr in new_submission:
         for old_entry in old_entries:
@@ -775,14 +771,30 @@ def record_apply(domain_name):
                                         current_user=current_user, domain_name=domain_name)
 
 
-        if 'SRV' in types_of_changed:
+        prohibited_types = []
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+            dictionary = json.loads(role.forward_access)
+        else:
+            dictionary = json.loads(role.reverse_access)
+
+        for rec_type in dictionary:
+            if dictionary[rec_type] != 'W':
+                prohibited_types.append(rec_type)
+
+        to_reject = []
+        for p in prohibited_types:
+            if p in types_of_changed:
+                to_reject.append(p)
+        
+        if len(to_reject) != 0:
             return make_response(
-                jsonify({
-                    'status':
-                    'error',
-                    'msg':
-                    'SRV is prohibbited'
-                }), 404)
+                    jsonify({
+                        'status':
+                        'error',
+                        'msg':
+                        'You are not allowed to create/edit records of type : ' + ' or '.join(to_reject)
+                    }), 404)
         domain = Domain.query.filter(Domain.name == domain_name).first()
 
         if domain:

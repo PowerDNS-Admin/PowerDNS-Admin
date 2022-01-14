@@ -7,7 +7,7 @@ from ast import literal_eval
 from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
-from ..decorators import operator_role_required, admin_role_required, history_access_required
+from ..decorators import can_configure_dnssec, operator_role_required, admin_role_required, history_access_required
 from ..models.user import User
 from ..models.account import Account
 from ..models.account_user import AccountUser
@@ -850,7 +850,8 @@ def edit_role(role_name=None):
                                     users=users,
                                     create=1,
                                     f_records=f_records,
-                                    r_records=r_records)
+                                    r_records=r_records,
+                                    can_configure_dnssec='True')
         else:
             role = Role.query.filter(
                 Role.name == role_name).first()
@@ -861,7 +862,8 @@ def edit_role(role_name=None):
                                     users=users,
                                     create=0,
                                     f_records=f_records,
-                                    r_records=r_records)
+                                    r_records=r_records,
+                                    can_configure_dnssec=role.can_configure_dnssec)
 
     if request.method == 'POST':
         fdata = request.form
@@ -913,7 +915,8 @@ def edit_role(role_name=None):
                                         create=create,
                                         invalid_rolename=True,
                                         f_records=f_records,
-                                        r_records=r_records)
+                                        r_records=r_records,
+                                        can_configure_dnssec=role.can_configure_dnssec)
 
             if Role.query.filter(Role.name == role.name).first():
                 return render_template('admin_edit_role.html',
@@ -923,7 +926,8 @@ def edit_role(role_name=None):
                                         create=create,
                                         duplicate_rolename=True,
                                         f_records=f_records,
-                                        r_records=r_records)
+                                        r_records=r_records,
+                                        can_configure_dnssec=role.can_configure_dnssec)
 
             result = role.create_role()
             history = History(msg='Create role {0}'.format(role.name),
@@ -948,7 +952,8 @@ def edit_role(role_name=None):
                                     create=create,
                                     error=result['msg'],
                                     f_records=f_records,
-                                    r_records=r_records)
+                                    r_records=r_records,
+                                    can_configure_dnssec=role.can_configure_dnssec)
 
 
 def grant_role_privileges(role, new_user_list):
