@@ -851,7 +851,8 @@ def edit_role(role_name=None):
                                     create=1,
                                     f_records=f_records,
                                     r_records=r_records,
-                                    can_configure_dnssec='True')
+                                    can_configure_dnssec=False,
+                                    can_access_history=False)
         else:
             role = Role.query.filter(
                 Role.name == role_name).first()
@@ -863,9 +864,11 @@ def edit_role(role_name=None):
                                     create=0,
                                     f_records=f_records,
                                     r_records=r_records,
-                                    can_configure_dnssec=role.can_configure_dnssec)
+                                    can_configure_dnssec=role.can_configure_dnssec,
+                                    can_access_history=role.can_access_history)
 
     if request.method == 'POST':
+
         fdata = request.form
         new_user_list = request.form.getlist('role_multi_user')
         # on POST, synthesize account and account_user_ids from form data
@@ -874,6 +877,10 @@ def edit_role(role_name=None):
 
         role = Role(name=role_name,
                           description=fdata['roledescription'])
+
+        role.can_configure_dnssec = True if request.form.get('can_configure_dnssec') else False
+        role.can_access_history = True if request.form.get('can_access_history') else False
+
     # if request.method == 'POST':
         forward_records_perms = {}
         reverse_records_perms = {}
@@ -916,7 +923,8 @@ def edit_role(role_name=None):
                                         invalid_rolename=True,
                                         f_records=f_records,
                                         r_records=r_records,
-                                        can_configure_dnssec=role.can_configure_dnssec)
+                                        can_configure_dnssec=role.can_configure_dnssec,
+                                        can_access_history=role.can_access_history)
 
             if Role.query.filter(Role.name == role.name).first():
                 return render_template('admin_edit_role.html',
@@ -927,7 +935,8 @@ def edit_role(role_name=None):
                                         duplicate_rolename=True,
                                         f_records=f_records,
                                         r_records=r_records,
-                                        can_configure_dnssec=role.can_configure_dnssec)
+                                        can_configure_dnssec=role.can_configure_dnssec,
+                                        can_access_history=role.can_access_history)
 
             result = role.create_role()
             history = History(msg='Create role {0}'.format(role.name),
@@ -953,7 +962,8 @@ def edit_role(role_name=None):
                                     error=result['msg'],
                                     f_records=f_records,
                                     r_records=r_records,
-                                    can_configure_dnssec=role.can_configure_dnssec)
+                                    can_configure_dnssec=role.can_configure_dnssec,
+                                    can_access_history=role.can_access_history)
 
 
 def grant_role_privileges(role, new_user_list):
@@ -1244,7 +1254,6 @@ def from_utc_to_local(local_offset, timeframe):
 @login_required
 @history_access_required
 def history_table():    # ajax call data
-
 	if request.method == 'POST':
 		if current_user.role.name != 'Administrator':
 			return make_response(
