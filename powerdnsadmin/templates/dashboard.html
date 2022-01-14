@@ -22,7 +22,7 @@
 {% block content %}
  <!-- Main content -->
     <section class="content">
-      {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+      {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
       <div class="row">
         <div class="col-xs-3">
             <div class="box">

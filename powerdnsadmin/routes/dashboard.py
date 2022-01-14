@@ -61,7 +61,7 @@ def domains_custom(boxId):
                 ))
 
     template = current_app.jinja_env.get_template("dashboard_domain.html")
-    render = template.make_module(vars={"current_user": current_user, "allow_user_view_history": Setting().get('allow_user_view_history')})
+    render = template.make_module(vars={"current_user": current_user, "allow_user_view_history": current_user.role.can_access_history})
 
     columns = [
         Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master,
@@ -164,7 +164,7 @@ def dashboard():
         domain_count = Domain.query.count()
         history_number = History.query.count()
         history = History.query.order_by(History.created_on.desc()).limit(4).all()
-    elif Setting().get('allow_user_view_history'):
+    elif current_user.role.can_access_history:
         history = db.session.query(History) \
             .join(Domain, History.domain_id == Domain.id) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \

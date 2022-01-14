@@ -41,10 +41,6 @@ def history_access_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # if current_user.role.name not in [
-        #     'Administrator', 'Operator'
-        # ] and not Setting().get('allow_user_view_history'):
-        #     abort(403)
         role = Role.query.filter(Role.id == current_user.role_id).first()
         if role.can_access_history == False:
             abort(403)

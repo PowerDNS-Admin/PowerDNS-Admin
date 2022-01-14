@@ -38,7 +38,7 @@
                         Admin&nbsp;<i class="fa fa-cog"></i>
                       </button>
                     {% endif %}
-                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                    {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                     <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary button_changelog" id="{{ domain.name }}">
                         Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
                     </i>
@@ -57,7 +57,7 @@
                                 <th>Comment</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
-                                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                                 <th >Changelog</th>
                                 {% endif %}
                             </tr>
@@ -103,7 +103,7 @@
                                     </td>
                                 {% endif %}
                                     </td>
-                                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                    {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                                     <td width="6%">
                                         <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-flat btn-primary">&nbsp;&nbsp;
                                                             <i class="fa fa-history" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;
@@ -163,7 +163,7 @@
                 // hidden column so that we can add new records on top
                 // regardless of whatever sorting is done. See orderFixed
                 visible: false,
-                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                 targets: [ 9 ]
                 {% else %}
                 targets: [ 8 ]
@@ -174,7 +174,7 @@
                 targets: [ 4, 5 ]
             }
         ],
-        {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+        {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
         "orderFixed": [[9, 'asc']]
         {% else %}
         "orderFixed": [[8, 'asc']]
@@ -287,7 +287,7 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-            {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+            {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
 	        var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
             {% else %}
             var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
