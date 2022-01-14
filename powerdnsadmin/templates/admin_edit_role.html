@@ -114,8 +114,13 @@
                     <div class="box-footer">
                         <div>
                             Allow dns configuration
-                            <input type="checkbox" id="allow_dns_configuration" name="allow_dns_configuration"
+                            <input type="checkbox" id="can_configure_dnssec" name="can_configure_dnssec"
                             class="checkbox" {% if can_configure_dnssec == true %} checked {% endif %}>
+                        </div> <br>
+                        <div>
+                            Allow history access
+                            <input type="checkbox" id="can_access_history" name="can_access_history"
+                            class="checkbox" {% if can_access_history == true %} checked {% endif %}>
                         </div>
                         <button type="submit"
                             class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}

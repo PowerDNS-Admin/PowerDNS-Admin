@@ -13,7 +13,7 @@ class Role(db.Model):
     can_access_history = db.Column(db.Boolean())
     can_create_domain = db.Column(db.Boolean())
     can_remove_domain = db.Column(db.Boolean())
-    
+
     users = db.relationship('User', backref='role', lazy=True)
     apikeys = db.relationship('ApiKey', back_populates='role', lazy=True)
 
@@ -101,7 +101,10 @@ class Role(db.Model):
         self.description = description
         self.forward_access = json.dumps(self.defaults['forward_records_allow_edit'])
         self.reverse_access = json.dumps(self.defaults['reverse_records_allow_edit'])
-
+        self.can_configure_dnssec = False
+        self.can_access_history = False
+        self.can_create_domain = False
+        self.can_remove_domain = False
     # allow database autoincrement to do its own ID assignments
     def __init__(self, name=None, description=None):
         self.id = None
@@ -109,7 +112,11 @@ class Role(db.Model):
         self.description = description
         self.forward_access = json.dumps(self.defaults['forward_records_allow_edit'])
         self.reverse_access = json.dumps(self.defaults['reverse_records_allow_edit'])
-
+        self.can_configure_dnssec = False
+        self.can_access_history = False
+        self.can_create_domain = False
+        self.can_remove_domain = False
+        
     def __repr__(self):
         return '<Role {0}r>'.format(self.name)
 
@@ -175,6 +182,11 @@ class Role(db.Model):
         role.description = self.description
         role.forward_access = self.forward_access
         role.reverse_access = self.reverse_access
+        role.can_configure_dnssec = self.can_configure_dnssec
+        role.can_access_history = self.can_access_history
+        role.can_create_domain = self.can_create_domain
+        role.can_remove_domain = self.can_remove_domain
+
         db.session.commit()
         return {'status': True, 'msg': 'Role description updated successfully'}
 

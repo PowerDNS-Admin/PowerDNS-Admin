@@ -5,6 +5,7 @@ from flask import g, request, abort, current_app, render_template
 from flask_login import current_user
 
 from .models import User, ApiKey, Setting, Domain, Setting
+from .models.role import Role
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
 from .lib.errors import DomainAccessForbidden
 
@@ -40,9 +41,12 @@ def history_access_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in [
-            'Administrator', 'Operator'
-        ] and not Setting().get('allow_user_view_history'):
+        # if current_user.role.name not in [
+        #     'Administrator', 'Operator'
+        # ] and not Setting().get('allow_user_view_history'):
+        #     abort(403)
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        if role.can_access_history == False:
             abort(403)
         return f(*args, **kwargs)
 
@@ -82,7 +86,6 @@ def can_configure_dnssec(f):
         - user is in Operator role or higher, or
         - dnssec_admins_only is off
     """
-    from .models.role import Role
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # if current_user.role.name not in [
