@@ -26,6 +26,8 @@ from ..models.domain_user import DomainUser
 from ..models.account_user import AccountUser
 from .admin import extract_changelogs_from_a_history_entry
 from ..decorators import history_access_required
+from ..models.role import Role
+
 domain_bp = Blueprint('domain',
                       __name__,
                       template_folder='templates',
@@ -123,6 +125,18 @@ def domain(domain_name):
     ttl_options = Setting().get_ttl_options()
     records = []
 
+    records_allow_to_edit = []
+    role = Role.query.filter(Role.id == current_user.role_id).first()
+    
+    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+        dictionary = json.loads(role.forward_access)
+    else:
+        dictionary = json.loads(role.reverse_access)
+
+    for rec_type in dictionary:
+        if dictionary[rec_type] == 'R':
+            records_allow_to_edit.append(rec_type)
+    breakpoint()
     # Render the "records" to display in HTML datatable
     #
     # BUG: If we have multiple records with the same name
@@ -691,24 +705,41 @@ def change_account(domain_name):
         abort(500)
 
 
-
-def are_equal(old : RecordEntry, new: dict):
-    if old.name.split('.')[0] != new['record_name'] or \
+num = 0
+def are_equal(old : RecordEntry, new: dict, domain_name: str):
+    global num
+    if old.name == domain_name:
+        name_to_compare = domain_name
+        name_comparison = (new['record_name'] == '@')
+    else:
+        name_comparison = (old.name == new['record_name'] + "." + domain_name)
+    print("Logics " + str(num))
+    num+=1
+    print(not name_comparison)
+    print(old.type != new['record_type'])
+    print(old.status != new['record_status'])
+    print(int(old.ttl) != int(new['record_ttl']))
+    print(old.data != new['record_data'])
+    if not name_comparison or \
             old.type != new['record_type'] or \
             old.status != new['record_status'] or \
             int(old.ttl) != int(new['record_ttl']) or \
-            old.data != new['record_data'] or \
-            old.comment != new['record_comment']:
+            old.data != new['record_data']: 
+            # old.comment != new['record_comment']:
         return False
     return True
 
-def get_changed_record_entries(old_entries, new_submission, current_user):
+def get_changed_record_entries(old_entries, new_submission, current_user, domain_name):
+    num = 0
     not_changed = []
     for nr in new_submission:
         for old_entry in old_entries:
+            # for debugging purposes
+            print("old name = ", old_entry.name.split('.'))
+            print("new name = ", nr['record_name'])
             # if old_entry.name.split('.')[0] == nr['record_name'] and old_entry.type == nr['record_type']:
             #     breakpoint()
-            if are_equal(old=old_entry, new=nr):
+            if are_equal(old=old_entry, new=nr, domain_name=domain_name):
                 not_changed.append(json.dumps(nr))
     types_of_changed = []
     for nr in new_submission:
@@ -718,20 +749,15 @@ def get_changed_record_entries(old_entries, new_submission, current_user):
         if nr['record_type'] in types_of_changed:
             continue
         types_of_changed.append(nr['record_type'])
-                
-    # if old.name != new['record_name']:
-    #     return False
-    # if old.status != new['status']:
-    #     return False
-    # if old.comment == new['record_comment']:
-    #     return False
-        
-    # if old.type != new['record_type']:
-    #     return False
-    # if old.ttl != new['record_ttl']:
-    #     return False
-    # if old.data != new['record_data']:
-    #     return False
+
+    print("------------------")
+    print()
+
+
+    print(types_of_changed)
+    print()
+    print("--------------------")
+    return types_of_changed
 
 @domain_bp.route('/<path:domain_name>/apply',
                  methods=['POST'],
@@ -745,8 +771,18 @@ def record_apply(domain_name):
         submitted_record = jdata['record']
 
         old_entries = fetch_records(domain_name=domain_name)
-        get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, current_user=current_user)
-    
+        types_of_changed = get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, 
+                                        current_user=current_user, domain_name=domain_name)
+
+
+        if 'SRV' in types_of_changed:
+            return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'SRV is prohibbited'
+                }), 404)
         domain = Domain.query.filter(Domain.name == domain_name).first()
 
         if domain:

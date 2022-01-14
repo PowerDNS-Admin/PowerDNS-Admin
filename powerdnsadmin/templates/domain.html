@@ -80,7 +80,7 @@
                                     <td>
                                         {{ record.data | pretty_domain_name }}
                                     </td>
-                                    <td id="record_comment">
+                                    <td>
                                         {{ record.comment}}
                                     </td>
                                 {% if domain.type != 'Slave' %}
@@ -352,7 +352,6 @@
     //handle wacky record types
     $(document.body).on("focus", "#current_edit_record_data", function (e) {
         var record_type = $(this).parents("tr").find('#record_type').val();
-        console.log('rec type = ', record_type)
         var record_data = $(this);
 
         if (record_type == "CAA") {
