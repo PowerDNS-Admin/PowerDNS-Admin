@@ -185,15 +185,11 @@ def domain(domain_name):
         # Unsupported version
         abort(500)
 
-    # if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
-    #     editable_records = forward_records_allow_to_edit
-    # else:
-    #     editable_records = reverse_records_allow_to_edit
 
     return render_template('domain.html',
                            domain=domain,
                            records=records,
-                           editable_records=records_allow_to_edit,#editable_records,
+                           editable_records=records_allow_to_edit,
                            quick_edit=quick_edit,
                            ttl_options=ttl_options,
                            current_user=current_user)
@@ -774,6 +770,14 @@ def record_apply(domain_name):
         types_of_changed = get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, 
                                         current_user=current_user, domain_name=domain_name)
 
+        if '' in types_of_changed:
+            return make_response(
+                    jsonify({
+                        'status':
+                        'error',
+                        'msg':
+                        'A read-only record has been modified.'
+                    }), 404)
 
         prohibited_types = []
         role = Role.query.filter(Role.id == current_user.role_id).first()
