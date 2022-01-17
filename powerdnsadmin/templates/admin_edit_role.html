@@ -83,12 +83,22 @@
                         <div class="form-group">
                             <input type="checkbox" id="can_configure_dnssec" name="can_configure_dnssec"
                                 class="checkbox" {% if can_configure_dnssec == true %} checked {% endif %}>
-                            <label for="local_db_enabled">Allow DNSSEC configuration</label>
+                            <label for="can_configure_dnssec">Allow DNSSEC configuration</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_access_history" name="can_access_history"
                                 class="checkbox" {% if can_access_history == true %} checked {% endif %}>
-                            <label for="local_db_enabled">Allow History access</label>
+                            <label for="can_access_history">Allow History access</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_create_domain" name="can_create_domain"
+                                class="checkbox" {% if can_create_domain == true %} checked {% endif %}>
+                            <label for="can_create_domain">Allow domain creation</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_remove_domain" name="can_remove_domain"
+                                class="checkbox" {% if can_remove_domain == true %} checked {% endif %}>
+                            <label for="can_remove_domain">Allow domain removal</label>
                         </div>
                         <div class="form-group">
                             <button type="submit" class="btn btn-flat btn-primary">

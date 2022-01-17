@@ -852,7 +852,9 @@ def edit_role(role_name=None):
                                     f_records=f_records,
                                     r_records=r_records,
                                     can_configure_dnssec=False,
-                                    can_access_history=False)
+                                    can_access_history=False,
+                                    can_create_domain=False,
+                                    can_remove_domain=False)
         else:
             role = Role.query.filter(
                 Role.name == role_name).first()
@@ -865,7 +867,9 @@ def edit_role(role_name=None):
                                     f_records=f_records,
                                     r_records=r_records,
                                     can_configure_dnssec=role.can_configure_dnssec,
-                                    can_access_history=role.can_access_history)
+                                    can_access_history=role.can_access_history,
+                                    can_create_domain=role.can_create_domain,
+                                    can_remove_domain=role.can_remove_domain)
 
     if request.method == 'POST':
 
@@ -880,6 +884,8 @@ def edit_role(role_name=None):
 
         role.can_configure_dnssec = True if request.form.get('can_configure_dnssec') else False
         role.can_access_history = True if request.form.get('can_access_history') else False
+        role.can_create_domain = True if request.form.get('can_create_domain') else False
+        role.can_remove_domain = True if request.form.get('can_remove_domain') else False
 
     # if request.method == 'POST':
         forward_records_perms = {}
@@ -924,7 +930,9 @@ def edit_role(role_name=None):
                                         f_records=f_records,
                                         r_records=r_records,
                                         can_configure_dnssec=role.can_configure_dnssec,
-                                        can_access_history=role.can_access_history)
+                                        can_access_history=role.can_access_history,
+                                        can_create_domain=role.can_create_domain,
+                                        can_remove_domain=role.can_remove_domain)
 
             if Role.query.filter(Role.name == role.name).first():
                 return render_template('admin_edit_role.html',
@@ -936,7 +944,9 @@ def edit_role(role_name=None):
                                         f_records=f_records,
                                         r_records=r_records,
                                         can_configure_dnssec=role.can_configure_dnssec,
-                                        can_access_history=role.can_access_history)
+                                        can_access_history=role.can_access_history,
+                                        can_create_domain=role.can_create_domain,
+                                        can_remove_domain=role.can_remove_domain)
 
             result = role.create_role()
             history = History(msg='Create role {0}'.format(role.name),
@@ -963,7 +973,9 @@ def edit_role(role_name=None):
                                     f_records=f_records,
                                     r_records=r_records,
                                     can_configure_dnssec=role.can_configure_dnssec,
-                                    can_access_history=role.can_access_history)
+                                    can_access_history=role.can_access_history,
+                                    can_create_domain=role.can_create_domain,
+                                    can_remove_domain=role.can_remove_domain)
 
 
 def grant_role_privileges(role, new_user_list):
