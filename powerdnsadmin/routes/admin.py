@@ -887,10 +887,9 @@ def edit_role(role_name=None):
         role.can_create_domain = True if request.form.get('can_create_domain') else False
         role.can_remove_domain = True if request.form.get('can_remove_domain') else False
 
-    # if request.method == 'POST':
         forward_records_perms = {}
         reverse_records_perms = {}
-        records = Setting().defaults['forward_records_allow_edit']
+        records = role.defaults['forward_records_allow_edit']
         for r in records:
             # is is on, then
             if request.form.get('forward_w_{0}'.format(r.lower())):
@@ -1508,7 +1507,6 @@ def setting_basic():
             'login_ldap_first', 'default_record_table_size',
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
             'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
 	          'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records', 'otp_force'

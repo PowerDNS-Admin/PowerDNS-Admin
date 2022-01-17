@@ -206,3 +206,29 @@ class Role(db.Model):
                 'Cannot delete account {0} from DB. DETAIL: {1}'.format(
                     self.name, e))
             return False
+    
+    def get_forward_records_allow_to_view_edit(self):
+        records_allow_to_view, records_allow_to_edit = []
+        dictionary = json.loads(self.forward_access)
+
+        for rec_type in dictionary:
+            if dictionary[rec_type] == 'W':
+                records_allow_to_view.append(rec_type)
+                records_allow_to_edit.append(rec_type)
+            elif dictionary[rec_type] == 'R':
+                records_allow_to_view.append(rec_type)
+        
+        return records_allow_to_view, records_allow_to_edit
+    
+    def get_reverse_records_allow_to_edit(self):
+        records_allow_to_view, records_allow_to_edit = []
+        dictionary = json.loads(self.reverse_access)
+
+        for rec_type in dictionary:
+            if dictionary[rec_type] == 'W':
+                records_allow_to_view.append(rec_type)
+                records_allow_to_edit.append(rec_type)
+            elif dictionary[rec_type] == 'R':
+                records_allow_to_view.append(rec_type)
+        
+        return records_allow_to_view, records_allow_to_edit

@@ -263,12 +263,19 @@ def api_can_create_domain(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in [
-                'Administrator', 'Operator'
-        ] and not Setting().get('allow_user_create_domain'):
-            msg = "User {0} does not have enough privileges to create domain"
-            current_app.logger.error(msg.format(current_user.username))
-            raise NotEnoughPrivileges()
+        # if current_user.role.name not in [
+        #         'Administrator', 'Operator'
+        # ] and not Setting().get('allow_user_create_domain'):
+        #     msg = "User {0} does not have enough privileges to create domain"
+        #     current_app.logger.error(msg.format(current_user.username))
+        #     raise NotEnoughPrivileges()
+        # return f(*args, **kwargs)
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        if role.name not in ['Administrator', 'Operator']:
+            if role.can_create_domain == False:
+                msg = "User {0} does not have enough privileges to create domain"
+                current_app.logger.error(msg.format(current_user.username))
+                raise NotEnoughPrivileges()
         return f(*args, **kwargs)
 
     return decorated_function
@@ -282,12 +289,19 @@ def apikey_can_create_domain(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if g.apikey.role.name not in [
-                'Administrator', 'Operator'
-        ] and not Setting().get('allow_user_create_domain'):
-            msg = "ApiKey #{0} does not have enough privileges to create domain"
-            current_app.logger.error(msg.format(g.apikey.id))
-            raise NotEnoughPrivileges()
+        # if g.apikey.role.name not in [
+        #         'Administrator', 'Operator'
+        # ] and not Setting().get('allow_user_create_domain'):
+        #     msg = "ApiKey #{0} does not have enough privileges to create domain"
+        #     current_app.logger.error(msg.format(g.apikey.id))
+        #     raise NotEnoughPrivileges()
+        # return f(*args, **kwargs)
+        role = Role.query.filter(Role.id == g.apikey.role_id).first()
+        if role.name not in ['Administrator', 'Operator']:
+            if role.can_create_domain == False:
+                msg = "User {0} does not have enough privileges to create domain"
+                current_app.logger.error(msg.format(current_user.username))
+                raise NotEnoughPrivileges()
         return f(*args, **kwargs)
 
     return decorated_function
@@ -304,9 +318,10 @@ def apikey_can_remove_domain(http_methods=[]):
         def decorated_function(*args, **kwargs):
             check_current_http_method = not http_methods or request.method in http_methods
 
+            role = Role.query.filter(Role.id == g.apikey.role_id).first()
             if (check_current_http_method and
-                g.apikey.role.name not in ['Administrator', 'Operator'] and
-                not Setting().get('allow_user_remove_domain')
+                role.name not in ['Administrator', 'Operator'] and
+                not role.can_remove_domain
             ):
                 msg = "ApiKey #{0} does not have enough privileges to remove domain"
                 current_app.logger.error(msg.format(g.apikey.id))
