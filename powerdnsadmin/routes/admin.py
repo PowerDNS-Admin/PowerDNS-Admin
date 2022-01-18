@@ -830,17 +830,12 @@ def edit_role(role_name=None):
     if role_name is not None:  # if not create
         role_obj = Role.query.filter(Role.name == role_name).first()
     else:
-        role_obj = None
-    
-    if role_obj is None:
         role_obj = Role()
+
     _fr = role_obj.forward_access
     _rr = role_obj.reverse_access
-    # breakpoint()
     f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
     r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
-
-
     
     users = User.query.all()
     if request.method == 'GET':
@@ -876,7 +871,7 @@ def edit_role(role_name=None):
 
         fdata = request.form
         new_user_list = request.form.getlist('role_multi_user')
-        # on POST, synthesize account and account_user_ids from form data
+        # on POST, synthesize role and role_user_ids from form data
         if not role_name:
             role_name = fdata['rolename']
 
@@ -908,8 +903,6 @@ def edit_role(role_name=None):
                 reverse_records_perms[r] = "None"
         role.forward_access = json.dumps(forward_records_perms)
         role.reverse_access = json.dumps(reverse_records_perms)
-        # db.session.add(role)
-        # db.session.commit()
 
         role_user_ids = []
         for username in new_user_list:
