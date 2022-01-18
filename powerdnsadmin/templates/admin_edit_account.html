@@ -81,8 +81,8 @@
                             associated with the account.</p>
                         <p>Click on users to move between columns.</p>
                         <div class="form-group col-xs-2">
-                            <select multiple="multiple" class="form-control" id="role_multi_user"
-                                name="role_multi_user">
+                            <select multiple="multiple" class="form-control" id="account_multi_user"
+                                name="account_multi_user">
                                 {% for user in users %}
                                 <option {% if user.id in account_user_ids|default([]) %}selected{% endif %}
                                     value="{{ user.username }}">{{ user.username }}</option>
@@ -126,7 +126,7 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    $("#role_multi_user").multiSelect({
+    $("#account_multi_user").multiSelect({
         selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
         selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
         afterInit: function (ms) {
