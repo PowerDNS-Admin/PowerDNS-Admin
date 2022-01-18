@@ -108,26 +108,20 @@ def upgrade():
     # Select all existing names that need migrating.
     roles = Table('role',meta)
 
-    op.add_column('role',
-                  sa.Column('forward_access', sa.Text(), nullable=True))
-    op.add_column('role',
-                  sa.Column('reverse_access', sa.Text(), nullable=True))
-    
-    op.add_column('role',
-                sa.Column('can_configure_dnssec', sa.Boolean(), nullable=True))
-    op.add_column('role',
-                sa.Column('can_access_history', sa.Boolean(), nullable=True))
-    op.add_column('role',
-                sa.Column('can_create_domain', sa.Boolean(), nullable=True))
-    op.add_column('role',
-                sa.Column('can_remove_domain', sa.Boolean(), nullable=True))
-
-    results = connection.execute(
-        sa.select([roles]).where(or_(
-            roles.columns.name == 'Administrator',
-            roles.columns.name == 'Operator',
-            roles.columns.name == 'User'
-    ))).fetchall()
+    with op.batch_alter_table('role', schema=None) as batch_op:
+        batch_op.add_column(
+                      sa.Column('forward_access', sa.Text(), nullable=True))
+        batch_op.add_column(
+                      sa.Column('reverse_access', sa.Text(), nullable=True))
+        
+        batch_op.add_column(
+                    sa.Column('can_configure_dnssec', sa.Boolean(), nullable=True))
+        batch_op.add_column(
+                    sa.Column('can_access_history', sa.Boolean(), nullable=True))
+        batch_op.add_column(
+                    sa.Column('can_create_domain', sa.Boolean(), nullable=True))
+        batch_op.add_column(
+                    sa.Column('can_remove_domain', sa.Boolean(), nullable=True))
 
     # op.execute("DELETE FROM setting WHERE name = 'allow_user_create_domain'")
     op.execute("""
@@ -139,7 +133,7 @@ def upgrade():
     op.execute("""
     UPDATE role
     SET can_configure_dnssec = false, can_access_history = false, can_create_domain = false, can_remove_domain = false
-    WHERE role.id == 2
+    WHERE role.id = 2
     """.format(forward_records,reverse_records))
 
 def downgrade():

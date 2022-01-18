@@ -847,6 +847,7 @@ def edit_role(role_name=None):
         if role_name is None:
             return render_template('admin_edit_role.html',
                                     role_user_ids=[],
+                                    role=Role(name="",description=""),
                                     users=users,
                                     create=1,
                                     f_records=f_records,
