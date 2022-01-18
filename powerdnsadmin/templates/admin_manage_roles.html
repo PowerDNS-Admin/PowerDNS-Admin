@@ -50,10 +50,12 @@
                                         onclick="window.location.href='{{ url_for('admin.edit_role', role_name=role.name) }}'">
                                         Edit&nbsp;<i class="fa fa-cog"></i>
                                     </button>
+                                    {% if role.name not in ['Administrator', 'Operator', 'User'] %}
                                     <button type="button" class="btn btn-flat btn-danger button_delete"
                                         id="{{ role.name }}">
                                         Delete&nbsp;<i class="fa fa-trash"></i>
                                     </button>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
