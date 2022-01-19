@@ -47,11 +47,7 @@
                                 <td>{{ user.firstname }}</td>
                                 <td>{{ user.lastname }}</td>
                                 <td>{{ user.email }}</td>
-                                <td>
-                                    {% for role in roles %}
-                                    {% if role.id==user.role.id %} {{ role.name }} {% endif %}
-                                    {% endfor %}
-                                </td>
+                                <td>{% for role in roles %}{% if role.id==user.role.id %}{{ role.name }}{% endif %}{% endfor %}</td>
                                 <td width="6%">
                                     <button type="button" class="btn btn-flat btn-warning button_revoke"
                                         id="{{ user.username }}"
