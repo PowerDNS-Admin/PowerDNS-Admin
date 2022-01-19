@@ -942,13 +942,23 @@ def edit_role(role_name=None):
                                         can_remove_domain=role.can_remove_domain)
 
             result = role.create_role()
+            jsoned = {  "type" : "role_change", 
+                        "dnssec": role.can_configure_dnssec, 
+                        "history_access" : role.can_access_history,
+                        "create_domain" : role.can_create_domain,
+                        "remove_domain" : role.can_remove_domain }
             history = History(msg='Create role {0}'.format(role.name),
-                              created_by=current_user.username)
+                              created_by=current_user.username, detail=json.dumps(jsoned))
 
         else:
+            jsoned = {  "type" : "role_change", 
+                        "dnssec": role.can_configure_dnssec, 
+                        "history_access" : role.can_access_history,
+                        "create_domain" : role.can_create_domain,
+                        "remove_domain" : role.can_remove_domain }
             result = role.update_role()
             history = History(msg='Update role {0}'.format(role.name),
-                              created_by=current_user.username)
+                              created_by=current_user.username, detail=json.dumps(jsoned))
 
         if result['status']:
             role.id = role.get_id_by_name(role.name)
@@ -1130,14 +1140,15 @@ class DetailedHistory():
         elif 'type' in detail_dict and detail_dict['type'] == 'role_change':
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
-                    <tr><td>Role name: </td><td>{{ detailed_msg["name"] }}</td></tr>
-                    <tr><td>Can configure DNSSEC</td><td>{{ detailed_msg["dnssec"] }}</td></tr>
-                    <tr><td>History access:</td><td>{{ detailed_msg["history_access"] }}</td></tr>
-                    <tr><td>Can create domain:</td><td>{{ detailed_msg["create_domain"] }}</td></tr>
-                    <tr><td>Can remove domain:</td><td>{{ detailed_msg["remove_domain"] }}</td></tr>
-
+                    <tr><td>Can configure DNSSEC</td><td>{{ dnssec }}</td></tr>
+                    <tr><td>History access:</td><td>{{ history_access }}</td></tr>
+                    <tr><td>Can create domain:</td><td>{{ create_domain }}</td></tr>
+                    <tr><td>Can remove domain:</td><td>{{ remove_domain }}</td></tr>
                 </table>
-            """)
+            """,dnssec=detail_dict["dnssec"], 
+                        history_access=detail_dict["history_access"], 
+                        create_domain=detail_dict["create_domain"],
+                        remove_domain=detail_dict["remove_domain"])
     # check for lower key as well for old databases
     @staticmethod
     def get_key_val(_dict, key):
