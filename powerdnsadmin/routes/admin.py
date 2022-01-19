@@ -1127,7 +1127,17 @@ class DetailedHistory():
                 """,
                 domain_type=DetailedHistory.get_key_val(detail_dict, "domain_type"),
                 domain_master_ips=DetailedHistory.get_key_val(detail_dict, "domain_master_ips"))
+        elif 'type' in detail_dict and detail_dict['type'] == 'role_change':
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>Role name: </td><td>{{ detailed_msg["name"] }}</td></tr>
+                    <tr><td>Can configure DNSSEC</td><td>{{ detailed_msg["dnssec"] }}</td></tr>
+                    <tr><td>History access:</td><td>{{ detailed_msg["history_access"] }}</td></tr>
+                    <tr><td>Can create domain:</td><td>{{ detailed_msg["create_domain"] }}</td></tr>
+                    <tr><td>Can remove domain:</td><td>{{ detailed_msg["remove_domain"] }}</td></tr>
 
+                </table>
+            """)
     # check for lower key as well for old databases
     @staticmethod
     def get_key_val(_dict, key):
