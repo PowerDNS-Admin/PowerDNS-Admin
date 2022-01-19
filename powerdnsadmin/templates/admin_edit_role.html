@@ -38,7 +38,6 @@
                             <h4><i class="icon fa fa-ban"></i> Error!</h4>
                             {{ error }}
                         </div>
-                        <span class="help-block">{{ error }}</span>
                         {% endif %}
                         <div
                             class="form-group has-feedback {% if invalid_rolename or duplicate_rolename %}has-error{% endif %}">
@@ -69,7 +68,7 @@
                         Users removed from the right column will be given the default "User" role.
                         </p>
                         <p>Click on users to move between columns.</p>
-                        {% if role.name != "Administrator" %}
+                        {% if role.name != "Administrator" and current_user.role_id == 1 %}
                         <p>
                             Users highlighted in red are privileged users.<br />
                             <strong>WARNING:</strong> Moving a privileged user to the right column will revoke their privileges.
@@ -87,11 +86,6 @@
                             </select>
                         </div>
                     </div>
-                    {% if err_change_self %}
-                    <span class="help-block">Cannot update your own role.</span>
-                    {% elif err_change_admin %}
-                    <span class="help-block">Cannot update a privileged user's role.</span>
-                    {% endif %}
                     <div class="box-footer">
                         <div class="form-group">
                             <input type="checkbox" id="can_configure_dnssec" name="can_configure_dnssec"

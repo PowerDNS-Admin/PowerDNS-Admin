@@ -867,7 +867,6 @@ def edit_role(role_name=None):
     if request.method == 'POST':
 
         fdata = request.form
-        create = int(fdata['create'])
         new_user_list = request.form.getlist('role_multi_user')
         # on POST, synthesize role and role_user_ids from form data
         if not role_name:
@@ -875,42 +874,6 @@ def edit_role(role_name=None):
 
         role = Role(name=role_name,
                           description=fdata['roledescription'])
-
-        role_user_ids = role.get_user()
-        new_user_ids = []
-        new_user_roles = [] 
-        if new_user_list:
-            for u in User.query.filter(User.username.in_(new_user_list)).all():
-                new_user_ids.append(u.id)
-                if u.role_id not in new_user_roles:
-                    new_user_roles.append(u.role_id)
-        
-        breakpoint()
-
-        removed_ids = list(set(role_user_ids).difference(new_user_ids))
-        added_ids = list(set(new_user_ids).difference(role_user_ids))
-
-        if current_user.id in removed_ids or current_user.id in added_ids:
-            return render_template('admin_edit_role.html',
-                                        role=role,
-                                        role_user_ids=role_user_ids,
-                                        users=users,
-                                        create=create,
-                                        err_change_self=True,
-                                        f_records=f_records,
-                                        r_records=r_records)
-        if current_user.role_id != 1 and 1 in new_user_roles:
-            return render_template('admin_edit_role.html',
-                                        role=role,
-                                        role_user_ids=role_user_ids,
-                                        users=users,
-                                        create=create,
-                                        err_change_admin=True,
-                                        f_records=f_records,
-                                        r_records=r_records)
-        
-
-
 
         role.can_configure_dnssec = True if request.form.get('can_configure_dnssec') else False
         role.can_access_history = True if request.form.get('can_access_history') else False
@@ -943,6 +906,7 @@ def edit_role(role_name=None):
             userid = User(username=username).get_user_info_by_username().id
             role_user_ids.append(userid)
 
+        create = int(fdata['create'])
         if create:
             if role.name == "" or not role.name.isalnum():
                 return render_template('admin_edit_role.html',
@@ -976,7 +940,16 @@ def edit_role(role_name=None):
         if result['status']:
             role.id = role.get_id_by_name(role.name)
             R = Role.query.filter(Role.id == role.id).first()
-            grant_role_privileges(R, new_user_list)
+            err = grant_role_privileges(R, new_user_list)
+            if err:
+                return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=R.get_user(),
+                                        users=users,
+                                        create=create,
+                                        error=err,
+                                        f_records=f_records,
+                                        r_records=r_records)
             history.add()
             return redirect(url_for('admin.manage_roles'))
 
@@ -999,18 +972,22 @@ def grant_role_privileges(role, new_user_list):
 
     removed_ids = list(set(role_user_ids).difference(new_user_ids))
     added_ids = list(set(new_user_ids).difference(role_user_ids))
+    modified_ids = removed_ids + added_ids
+
+    if current_user.id in modified_ids:
+        return "Cannot update your own role."
+    
+    if current_user.role_id != 1:
+        for uid in modified_ids:
+            u = User.get_user_info_by_id(User(uid))
+            if u.role_id in [1,3]:
+                return "Cannot update a privileged user's role."
+
     for uid in removed_ids:
         u = User.get_user_info_by_id(User(uid))
         current_user_role_id = u.role_id
         if current_user_role_id == role.id:
             u.set_role("User")
-        # user_list = role.users
-        # for u in user_list:
-        #     if u.id == uid:
-        #         user = User(uid)
-        #         user = User.get_user_info_by_id(user)
-        #         user.set_role(role.name)
-        # Role.users = user_list
     
     for uid in added_ids:
         user = User(uid)
