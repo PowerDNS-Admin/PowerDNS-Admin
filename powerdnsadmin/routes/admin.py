@@ -833,6 +833,9 @@ def edit_role(role_name=None):
     else:
         role_obj = Role()
 
+    if role_name == "Administrator" and current_user.role_id != 1:
+        abort(403)  # Operators cannot edit Administrator Role!
+
     _fr = role_obj.forward_access
     _rr = role_obj.reverse_access
     f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
@@ -864,6 +867,7 @@ def edit_role(role_name=None):
     if request.method == 'POST':
 
         fdata = request.form
+        create = int(fdata['create'])
         new_user_list = request.form.getlist('role_multi_user')
         # on POST, synthesize role and role_user_ids from form data
         if not role_name:
@@ -871,6 +875,42 @@ def edit_role(role_name=None):
 
         role = Role(name=role_name,
                           description=fdata['roledescription'])
+
+        role_user_ids = role.get_user()
+        new_user_ids = []
+        new_user_roles = [] 
+        if new_user_list:
+            for u in User.query.filter(User.username.in_(new_user_list)).all():
+                new_user_ids.append(u.id)
+                if u.role_id not in new_user_roles:
+                    new_user_roles.append(u.role_id)
+        
+        breakpoint()
+
+        removed_ids = list(set(role_user_ids).difference(new_user_ids))
+        added_ids = list(set(new_user_ids).difference(role_user_ids))
+
+        if current_user.id in removed_ids or current_user.id in added_ids:
+            return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=role_user_ids,
+                                        users=users,
+                                        create=create,
+                                        err_change_self=True,
+                                        f_records=f_records,
+                                        r_records=r_records)
+        if current_user.role_id != 1 and 1 in new_user_roles:
+            return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=role_user_ids,
+                                        users=users,
+                                        create=create,
+                                        err_change_admin=True,
+                                        f_records=f_records,
+                                        r_records=r_records)
+        
+
+
 
         role.can_configure_dnssec = True if request.form.get('can_configure_dnssec') else False
         role.can_access_history = True if request.form.get('can_access_history') else False
@@ -903,7 +943,6 @@ def edit_role(role_name=None):
             userid = User(username=username).get_user_info_by_username().id
             role_user_ids.append(userid)
 
-        create = int(fdata['create'])
         if create:
             if role.name == "" or not role.name.isalnum():
                 return render_template('admin_edit_role.html',
