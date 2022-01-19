@@ -48,30 +48,26 @@
                                 <td>{{ user.lastname }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>
-                                    <select id="{{ user.username }}" class="user_role"
-                                        {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
-                                        {% for role in roles %}
-                                        <option value="{{ role.name }}"
-                                            {% if role.id==user.role.id %}selected{% endif %}>{{ role.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    {% for role in roles %}
+                                    {% if role.id==user.role.id %} {{ role.name }} {% endif %}
+                                    {% endfor %}
                                 </td>
                                 <td width="6%">
                                     <button type="button" class="btn btn-flat btn-warning button_revoke"
                                         id="{{ user.username }}"
-                                        {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
+                                        {% if user.role.name in ['Administrator','Operator'] %}disabled{% endif %}>
                                         Revoke&nbsp;<i class="fa fa-lock"></i>
                                     </button>
                                 </td>
                                 <td width="15%">
                                     <button type="button" class="btn btn-flat btn-success button_edit"
                                         onclick="window.location.href='{{ url_for('admin.edit_user', user_username=user.username) }}'"
-                                        {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
+                                        {% if user.username!=current_user.username and (current_user.role.name=='Operator' and user.role.name in ['Administrator','Operator']) %}disabled{% endif %}>
                                         Edit&nbsp;<i class="fa fa-lock"></i>
                                     </button>
                                     <button type="button" class="btn btn-flat btn-danger button_delete"
                                         id="{{ user.username }}"
-                                        {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
+                                        {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name in ['Administrator','Operator']) %}disabled{% endif %}>
                                         Delete&nbsp;<i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -111,7 +107,7 @@
         var modal = $("#modal_revoke");
         var username = $(this).prop('id');
         var info = "Are you sure you want to revoke all privileges for " + username +
-            ". They will not able to access any domain.";
+            "? They will not able to access any domain.";
         modal.find('.modal-body p').text(info);
         modal.find('#button_revoke_confirm').click(function () {
             var postdata = {
@@ -141,21 +137,6 @@
         })
         modal.modal('show');
 
-    });
-
-    // handle user role changing
-    $(document.body).on('change', '.user_role', function () {
-        var role_name = this.value;
-        var username = $(this).prop('id');
-        var postdata = {
-            'action': 'update_user_role',
-            'data': {
-                'username': username,
-                'role_name': role_name
-            },
-            '_csrf_token': '{{ csrf_token() }}'
-        };
-        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', showResult = true);
     });
 </script>
 {% endblock %}
