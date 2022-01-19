@@ -4,6 +4,7 @@ import traceback
 import re
 from base64 import b64encode
 from ast import literal_eval
+from sqlalchemy import func
 from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
@@ -914,7 +915,7 @@ def edit_role(role_name=None):
                                         f_records=f_records,
                                         r_records=r_records)
 
-            if Role.query.filter(Role.name == role.name).first():
+            if Role.query.filter(func.lower(Role.name) == func.lower(role.name)).first():
                 return render_template('admin_edit_role.html',
                                         role=role,
                                         role_user_ids=role_user_ids,
