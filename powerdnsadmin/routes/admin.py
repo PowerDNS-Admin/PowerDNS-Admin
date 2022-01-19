@@ -4,6 +4,7 @@ import traceback
 import re
 from base64 import b64encode
 from ast import literal_eval
+from sqlalchemy import func
 from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
@@ -840,17 +841,14 @@ def edit_role(role_name=None):
     users = User.query.all()
     if request.method == 'GET':
         if role_name is None:
+            role=Role(name="",description="")
             return render_template('admin_edit_role.html',
                                     role_user_ids=[],
-                                    role=Role(name="",description=""),
+                                    role=role,
                                     users=users,
                                     create=1,
                                     f_records=f_records,
-                                    r_records=r_records,
-                                    can_configure_dnssec=False,
-                                    can_access_history=False,
-                                    can_create_domain=False,
-                                    can_remove_domain=False)
+                                    r_records=r_records)
         else:
             role = Role.query.filter(
                 Role.name == role_name).first()
@@ -861,11 +859,7 @@ def edit_role(role_name=None):
                                     users=users,
                                     create=0,
                                     f_records=f_records,
-                                    r_records=r_records,
-                                    can_configure_dnssec=role.can_configure_dnssec,
-                                    can_access_history=role.can_access_history,
-                                    can_create_domain=role.can_create_domain,
-                                    can_remove_domain=role.can_remove_domain)
+                                    r_records=r_records)
 
     if request.method == 'POST':
 
@@ -911,9 +905,7 @@ def edit_role(role_name=None):
 
         create = int(fdata['create'])
         if create:
-            # account __init__ sanitizes and lowercases the name, so to manage expectations
-            # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
-            if role.name == "" or role.name != role_name.lower():
+            if role.name == "" or not role.name.isalnum():
                 return render_template('admin_edit_role.html',
                                         role=role,
                                         role_user_ids=role_user_ids,
@@ -921,13 +913,9 @@ def edit_role(role_name=None):
                                         create=create,
                                         invalid_rolename=True,
                                         f_records=f_records,
-                                        r_records=r_records,
-                                        can_configure_dnssec=role.can_configure_dnssec,
-                                        can_access_history=role.can_access_history,
-                                        can_create_domain=role.can_create_domain,
-                                        can_remove_domain=role.can_remove_domain)
+                                        r_records=r_records)
 
-            if Role.query.filter(Role.name == role.name).first():
+            if Role.query.filter(func.lower(Role.name) == func.lower(role.name)).first():
                 return render_template('admin_edit_role.html',
                                         role=role,
                                         role_user_ids=role_user_ids,
@@ -935,11 +923,7 @@ def edit_role(role_name=None):
                                         create=create,
                                         duplicate_rolename=True,
                                         f_records=f_records,
-                                        r_records=r_records,
-                                        can_configure_dnssec=role.can_configure_dnssec,
-                                        can_access_history=role.can_access_history,
-                                        can_create_domain=role.can_create_domain,
-                                        can_remove_domain=role.can_remove_domain)
+                                        r_records=r_records)
 
             result = role.create_role()
             jsoned = {  "type" : "role_change", 
@@ -974,11 +958,7 @@ def edit_role(role_name=None):
                                     create=create,
                                     error=result['msg'],
                                     f_records=f_records,
-                                    r_records=r_records,
-                                    can_configure_dnssec=role.can_configure_dnssec,
-                                    can_access_history=role.can_access_history,
-                                    can_create_domain=role.can_create_domain,
-                                    can_remove_domain=role.can_remove_domain)
+                                    r_records=r_records)
 
 
 def grant_role_privileges(role, new_user_list):
