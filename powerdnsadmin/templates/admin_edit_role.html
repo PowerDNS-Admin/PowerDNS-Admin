@@ -38,7 +38,6 @@
                             <h4><i class="icon fa fa-ban"></i> Error!</h4>
                             {{ error }}
                         </div>
-                        <span class="help-block">{{ error }}</span>
                         {% endif %}
                         <div
                             class="form-group has-feedback {% if invalid_rolename or duplicate_rolename %}has-error{% endif %}">
@@ -69,11 +68,19 @@
                         Users removed from the right column will be given the default "User" role.
                         </p>
                         <p>Click on users to move between columns.</p>
+                        {% if role.name != "Administrator" and current_user.role_id == 1 %}
+                        <p>
+                            Users highlighted in red are privileged users.<br />
+                            <strong>WARNING:</strong> Moving a privileged user to the right column will revoke their privileges.
+                        </p>
+                        {% endif %}
                         <div class="form-group col-xs-2">
                             <select multiple="multiple" class="form-control" id="role_multi_user"
                                 name="role_multi_user">
                                 {% for user in users %}
-                                <option {% if user.id in role_user_ids|default([]) %}selected{% endif %}
+                                <option
+                                    {% if user.id in role_user_ids|default([]) %}selected{% endif %}
+                                    {% if user.role.name in ['Administrator', 'Operator'] %} style="color:red"{% endif %}
                                     value="{{ user.username }}">{{ user.username }}</option>
                                 {% endfor %}
                             </select>

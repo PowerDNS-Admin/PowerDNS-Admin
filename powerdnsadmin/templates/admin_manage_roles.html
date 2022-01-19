@@ -46,10 +46,12 @@
                                 <td>{{ role.users | length }}</td>
                                 <td>{{ role.apikeys | length }}</td>
                                 <td width="15%">
+                                    {% if role.name != 'Administrator' or current_user.role_id == 1 %}
                                     <button type="button" class="btn btn-flat btn-success"
                                         onclick="window.location.href='{{ url_for('admin.edit_role', role_name=role.name) }}'">
                                         Edit&nbsp;<i class="fa fa-cog"></i>
                                     </button>
+                                    {% endif %}
                                     {% if role.name not in ['Administrator', 'Operator', 'User'] %}
                                     <button type="button" class="btn btn-flat btn-danger button_delete"
                                         id="{{ role.name }}">
