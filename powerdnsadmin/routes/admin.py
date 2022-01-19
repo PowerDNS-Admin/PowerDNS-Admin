@@ -898,6 +898,7 @@ def edit_role(role_name=None):
         role.forward_access = json.dumps(forward_records_perms)
         role.reverse_access = json.dumps(reverse_records_perms)
 
+
         role_user_ids = []
         for username in new_user_list:
             userid = User(username=username).get_user_info_by_username().id
@@ -926,28 +927,47 @@ def edit_role(role_name=None):
                                         r_records=r_records)
 
             result = role.create_role()
-            jsoned = {  "type" : "role_change", 
-                        "dnssec": role.can_configure_dnssec, 
-                        "history_access" : role.can_access_history,
-                        "create_domain" : role.can_create_domain,
-                        "remove_domain" : role.can_remove_domain }
-            history = History(msg='Create role {0}'.format(role.name),
-                              created_by=current_user.username, detail=json.dumps(jsoned))
+            # jsoned = {  "type" : "role_change", 
+            #             "dnssec": role.can_configure_dnssec, 
+            #             "history_access" : role.can_access_history,
+            #             "create_domain" : role.can_create_domain,
+            #             "remove_domain" : role.can_remove_domain }
+            # history = History(msg='Create role {0}'.format(role.name),
+            #                   created_by=current_user.username, detail=json.dumps(jsoned))
 
         else:
-            jsoned = {  "type" : "role_change", 
-                        "dnssec": role.can_configure_dnssec, 
-                        "history_access" : role.can_access_history,
-                        "create_domain" : role.can_create_domain,
-                        "remove_domain" : role.can_remove_domain }
+            # jsoned = {  "type" : "role_change", 
+            #             "dnssec": role.can_configure_dnssec, 
+            #             "history_access" : role.can_access_history,
+            #             "create_domain" : role.can_create_domain,
+            #             "remove_domain" : role.can_remove_domain }
             result = role.update_role()
-            history = History(msg='Update role {0}'.format(role.name),
-                              created_by=current_user.username, detail=json.dumps(jsoned))
+
 
         if result['status']:
             role.id = role.get_id_by_name(role.name)
             R = Role.query.filter(Role.id == role.id).first()
-            grant_role_privileges(R, new_user_list)
+            removed_ids, added_ids = grant_role_privileges(R, new_user_list)
+            removed_username_list = []
+            added_username_list = []
+            for id_i in removed_ids:
+                removed_username_list.append(User(id_i).get_user_info_by_id().username)
+            for id_i in added_ids:
+                added_username_list.append(User(id_i).get_user_info_by_id().username)
+            jsoned = {  "type" : "role_change", 
+                        "dnssec": role.can_configure_dnssec, 
+                        "history_access" : role.can_access_history,
+                        "create_domain" : role.can_create_domain,
+                        "remove_domain" : role.can_remove_domain,
+                        "added_users" :   ', '.join(added_username_list),
+                        "removed_users" : ', '.join(removed_username_list)}
+
+            if create:
+                history = History(msg='Create role {0}'.format(role.name),
+                                  created_by=current_user.username, detail=json.dumps(jsoned))
+            else:
+                history = History(msg='Update role {0}'.format(role.name),
+                                  created_by=current_user.username, detail=json.dumps(jsoned))
             history.add()
             return redirect(url_for('admin.manage_roles'))
 
@@ -987,6 +1007,7 @@ def grant_role_privileges(role, new_user_list):
         user = User(uid)
         user = User.get_user_info_by_id(user)
         user.set_role(role.name)
+    return removed_ids, added_ids
 
 class DetailedHistory():
     def __init__(self, history, change_set):
@@ -1124,11 +1145,15 @@ class DetailedHistory():
                     <tr><td>History access:</td><td>{{ history_access }}</td></tr>
                     <tr><td>Can create domain:</td><td>{{ create_domain }}</td></tr>
                     <tr><td>Can remove domain:</td><td>{{ remove_domain }}</td></tr>
+                    <tr><td>Added users:</td><td>{{ added_users }}</td></tr>
+                    <tr><td>Removed users:</td><td>{{ removed_users }}</td></tr>
                 </table>
             """,dnssec=detail_dict["dnssec"], 
                         history_access=detail_dict["history_access"], 
                         create_domain=detail_dict["create_domain"],
-                        remove_domain=detail_dict["remove_domain"])
+                        remove_domain=detail_dict["remove_domain"],
+                        added_users=detail_dict["added_users"],
+                        removed_users=detail_dict["removed_users"])
     # check for lower key as well for old databases
     @staticmethod
     def get_key_val(_dict, key):
