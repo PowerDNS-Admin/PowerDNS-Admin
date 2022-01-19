@@ -840,17 +840,14 @@ def edit_role(role_name=None):
     users = User.query.all()
     if request.method == 'GET':
         if role_name is None:
+            role=Role(name="",description="")
             return render_template('admin_edit_role.html',
                                     role_user_ids=[],
-                                    role=Role(name="",description=""),
+                                    role=role,
                                     users=users,
                                     create=1,
                                     f_records=f_records,
-                                    r_records=r_records,
-                                    can_configure_dnssec=False,
-                                    can_access_history=False,
-                                    can_create_domain=False,
-                                    can_remove_domain=False)
+                                    r_records=r_records)
         else:
             role = Role.query.filter(
                 Role.name == role_name).first()
@@ -861,11 +858,7 @@ def edit_role(role_name=None):
                                     users=users,
                                     create=0,
                                     f_records=f_records,
-                                    r_records=r_records,
-                                    can_configure_dnssec=role.can_configure_dnssec,
-                                    can_access_history=role.can_access_history,
-                                    can_create_domain=role.can_create_domain,
-                                    can_remove_domain=role.can_remove_domain)
+                                    r_records=r_records)
 
     if request.method == 'POST':
 
@@ -921,11 +914,7 @@ def edit_role(role_name=None):
                                         create=create,
                                         invalid_rolename=True,
                                         f_records=f_records,
-                                        r_records=r_records,
-                                        can_configure_dnssec=role.can_configure_dnssec,
-                                        can_access_history=role.can_access_history,
-                                        can_create_domain=role.can_create_domain,
-                                        can_remove_domain=role.can_remove_domain)
+                                        r_records=r_records)
 
             if Role.query.filter(Role.name == role.name).first():
                 return render_template('admin_edit_role.html',
@@ -935,11 +924,7 @@ def edit_role(role_name=None):
                                         create=create,
                                         duplicate_rolename=True,
                                         f_records=f_records,
-                                        r_records=r_records,
-                                        can_configure_dnssec=role.can_configure_dnssec,
-                                        can_access_history=role.can_access_history,
-                                        can_create_domain=role.can_create_domain,
-                                        can_remove_domain=role.can_remove_domain)
+                                        r_records=r_records)
 
             result = role.create_role()
             history = History(msg='Create role {0}'.format(role.name),
@@ -964,11 +949,7 @@ def edit_role(role_name=None):
                                     create=create,
                                     error=result['msg'],
                                     f_records=f_records,
-                                    r_records=r_records,
-                                    can_configure_dnssec=role.can_configure_dnssec,
-                                    can_access_history=role.can_access_history,
-                                    can_create_domain=role.can_create_domain,
-                                    can_remove_domain=role.can_remove_domain)
+                                    r_records=r_records)
 
 
 def grant_role_privileges(role, new_user_list):

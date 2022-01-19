@@ -82,25 +82,25 @@
                     <div class="box-footer">
                         <div class="form-group">
                             <input type="checkbox" id="can_configure_dnssec" name="can_configure_dnssec"
-                                class="checkbox" {% if can_configure_dnssec == true %} checked {% endif %}
+                                class="checkbox" {% if role.can_configure_dnssec == true %} checked {% endif %}
                                 {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
                             <label for="can_configure_dnssec">Allow DNSSEC configuration</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_access_history" name="can_access_history"
-                                class="checkbox" {% if can_access_history == true %} checked {% endif %}
+                                class="checkbox" {% if role.can_access_history == true %} checked {% endif %}
                                 {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
                             <label for="can_access_history">Allow History access</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_create_domain" name="can_create_domain"
-                                class="checkbox" {% if can_create_domain == true %} checked {% endif %}
+                                class="checkbox" {% if role.can_create_domain == true %} checked {% endif %}
                                 {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
                             <label for="can_create_domain">Allow Domain creation</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_remove_domain" name="can_remove_domain"
-                                class="checkbox" {% if can_remove_domain == true %} checked {% endif %}
+                                class="checkbox" {% if role.can_remove_domain == true %} checked {% endif %}
                                 {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
                             <label for="can_remove_domain">Allow Domain removal</label>
                         </div>
