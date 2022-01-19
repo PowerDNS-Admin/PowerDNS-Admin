@@ -950,7 +950,16 @@ def edit_role(role_name=None):
         if result['status']:
             role.id = role.get_id_by_name(role.name)
             R = Role.query.filter(Role.id == role.id).first()
-            removed_ids, added_ids = grant_role_privileges(R, new_user_list)
+            removed_ids, added_ids, err = grant_role_privileges(R, new_user_list)
+            if err:
+                return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=R.get_user(),
+                                        users=users,
+                                        create=create,
+                                        error=err,
+                                        f_records=f_records,
+                                        r_records=r_records)
             removed_username_list = []
             added_username_list = []
             for id_i in removed_ids:
@@ -971,16 +980,6 @@ def edit_role(role_name=None):
             else:
                 history = History(msg='Update role {0}'.format(role.name),
                         created_by=current_user.username, detail=json.dumps(jsoned))
-            err = grant_role_privileges(R, new_user_list)
-            if err:
-                return render_template('admin_edit_role.html',
-                                        role=role,
-                                        role_user_ids=R.get_user(),
-                                        users=users,
-                                        create=create,
-                                        error=err,
-                                        f_records=f_records,
-                                        r_records=r_records)
             history.add()
             return redirect(url_for('admin.manage_roles'))
 
@@ -1006,13 +1005,13 @@ def grant_role_privileges(role, new_user_list):
     modified_ids = removed_ids + added_ids
 
     if current_user.id in modified_ids:
-        return "Cannot update your own role."
+        return [], [], "Cannot update your own role."
     
     if current_user.role_id != 1:
         for uid in modified_ids:
             u = User.get_user_info_by_id(User(uid))
             if u.role_id in [1,3]:
-                return "Cannot update a privileged user's role."
+                return [], [], "Cannot update a privileged user's role."
 
     for uid in removed_ids:
         u = User.get_user_info_by_id(User(uid))
@@ -1024,7 +1023,7 @@ def grant_role_privileges(role, new_user_list):
         user = User(uid)
         user = User.get_user_info_by_id(user)
         user.set_role(role.name)
-    return removed_ids, added_ids
+    return removed_ids, added_ids, None
 
 class DetailedHistory():
     def __init__(self, history, change_set):
