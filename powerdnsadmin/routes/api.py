@@ -287,7 +287,7 @@ def api_login_delete_zone(domain_name):
             domain.update()
 
             history = History(msg='Delete domain {0}'.format(
-                pretty_domain_name(domain_name)),
+                utils.pretty_domain_name(domain_name)),
                               detail='',
                               created_by=current_user.username,
                               domain_id=domain_id)
