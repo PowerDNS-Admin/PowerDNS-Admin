@@ -966,7 +966,8 @@ def edit_role(role_name=None):
                 removed_username_list.append(User(id_i).get_user_info_by_id().username)
             for id_i in added_ids:
                 added_username_list.append(User(id_i).get_user_info_by_id().username)
-            jsoned = {  "type" : "role_change", 
+            jsoned = {  "type" : "role_change",
+                        "rolename" : role.name,
                         "dnssec": role.can_configure_dnssec, 
                         "history_access" : role.can_access_history,
                         "create_domain" : role.can_create_domain,
@@ -1157,6 +1158,7 @@ class DetailedHistory():
         elif 'type' in detail_dict and detail_dict['type'] == 'role_change':
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
+                    <tr><th colspan="2">Updated Role {{ role_name }}</th></tr>
                     <tr><td>Can configure DNSSEC</td><td>{{ dnssec }}</td></tr>
                     <tr><td>History access:</td><td>{{ history_access }}</td></tr>
                     <tr><td>Can create domain:</td><td>{{ create_domain }}</td></tr>
@@ -1164,8 +1166,9 @@ class DetailedHistory():
                     <tr><td>Added users:</td><td>{{ added_users }}</td></tr>
                     <tr><td>Removed users:</td><td>{{ removed_users }}</td></tr>
                 </table>
-            """,dnssec=detail_dict["dnssec"], 
-                        history_access=detail_dict["history_access"], 
+            """,dnssec=detail_dict["dnssec"],
+                        role_name=detail_dict["rolename"],
+                        history_access=detail_dict["history_access"],
                         create_domain=detail_dict["create_domain"],
                         remove_domain=detail_dict["remove_domain"],
                         added_users=detail_dict["added_users"],
