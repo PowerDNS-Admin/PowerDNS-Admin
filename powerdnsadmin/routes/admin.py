@@ -904,9 +904,7 @@ def edit_role(role_name=None):
 
         create = int(fdata['create'])
         if create:
-            # account __init__ sanitizes and lowercases the name, so to manage expectations
-            # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
-            if role.name == "" or role.name != role_name.lower():
+            if role.name == "" or not role.name.isalnum():
                 return render_template('admin_edit_role.html',
                                         role=role,
                                         role_user_ids=role_user_ids,
