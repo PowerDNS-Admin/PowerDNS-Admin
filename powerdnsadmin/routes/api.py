@@ -1175,7 +1175,7 @@ def api_server_config_forward(server_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
-# The endpoint to snychronize Domains in background
+# The endpoint to synchronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
 @apikey_or_basic_auth
 def sync_domains():
