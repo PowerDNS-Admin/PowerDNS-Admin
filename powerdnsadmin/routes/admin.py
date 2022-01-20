@@ -332,7 +332,7 @@ def edit_key(key_id=None):
 
         # Create new apikey
         if create:
-            if role == "User":
+            if role not in ['Administrator', 'Operator']:
                 domain_obj_list = Domain.query.filter(Domain.name.in_(domain_list)).all()
                 account_obj_list = Account.query.filter(Account.name.in_(account_list)).all()
             else:
@@ -355,7 +355,7 @@ def edit_key(key_id=None):
         # Update existing apikey
         else:
             try:
-                if role != "User":
+                if role in ['Administrator', 'Operator']:
                     domain_list, account_list = [], []
                 apikey.update(role,description,domain_list, account_list)
                 history_message =  "Updated API key {0}".format(apikey.id)

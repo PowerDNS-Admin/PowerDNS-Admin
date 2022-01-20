@@ -336,18 +336,18 @@ def api_generate_apikey():
     else:
         abort(400)
 
-    if role_name == 'User' and len(domains) == 0 and len(accounts) == 0:
-        current_app.logger.error("Apikey with User role must have domains or accounts")
+    if role_name not in ['Administrator', 'Operator'] and len(domains) == 0 and len(accounts) == 0:
+        current_app.logger.error("Apikey with User or custom role must have domains or accounts")
         raise ApiKeyNotUsable()
 
-    if role_name == 'User' and len(domains) > 0:
+    if role_name not in ['Administrator', 'Operator'] and len(domains) > 0:
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
             msg = "One of supplied domains does not exist"
             current_app.logger.error(msg)
             raise DomainNotExists(message=msg)
 
-    if role_name == 'User' and len(accounts) > 0:
+    if role_name not in ['Administrator', 'Operator'] and len(accounts) > 0:
         account_obj_list = Account.query.filter(Account.name.in_(accounts)).all()
         if len(account_obj_list) == 0:
             msg = "One of supplied accounts does not exist"
@@ -358,13 +358,13 @@ def api_generate_apikey():
         # domain list of domain api key should be valid for
         # if not any domain error
         # role of api key, user cannot assign role above for api key
-        if role_name != 'User':
-            msg = "User cannot assign other role than User"
+        if role_name != current_user.role.name:
+            msg = "Non-administrative roles cannot assign other role than their own"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
         if len(accounts) > 0:
-            msg = "User cannot assign accounts"
+            msg = "Non-administrative User cannot assign accounts"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
@@ -540,7 +540,7 @@ def api_update_apikey(apikey_id):
 
     current_app.logger.debug('Updating apikey with id {0}'.format(apikey_id))
 
-    if target_role == 'User':
+    if target_role not in ['Administrator', 'Operator']:
         current_domains = [item.name for item in apikey.domains]
         current_accounts = [item.name for item in apikey.accounts]
 
@@ -567,7 +567,7 @@ def api_update_apikey(apikey_id):
             target_accounts = current_accounts
 
         if len(target_domains) == 0 and len(target_accounts) == 0:
-            current_app.logger.error("Apikey with User role must have domains or accounts")
+            current_app.logger.error("Apikey with non-administrative role must have domains or accounts")
             raise ApiKeyNotUsable()
 
         if domains is not None and set(domains) == set(current_domains):
@@ -581,13 +581,13 @@ def api_update_apikey(apikey_id):
             accounts = None
 
     if current_user.role.name not in ['Administrator', 'Operator']:
-        if role_name != 'User':
-            msg = "User cannot assign other role than User"
+        if role_name != current_user.role.name:
+            msg = "Non-administrative roles cannot assign other role than their own"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
         if len(accounts) > 0:
-            msg = "User cannot assign accounts"
+            msg = "Non-administrative Users cannot assign accounts"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
@@ -624,7 +624,7 @@ def api_update_apikey(apikey_id):
         current_app.logger.debug(msg)
         description = None
 
-    if target_role != "User":
+    if target_role in ['Administrator', 'Operator']:
         domains, accounts = [], []
 
     try:

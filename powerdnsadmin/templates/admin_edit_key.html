@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set active_page = "admin_keys" %}
-{% if create or (key is not none and key.role.name != "User") %}{% set hide_opts = True %}{%else %}{% set hide_opts = False %}{% endif %}
+{% if create or (key is not none and key.role.name in ['Administrator', 'Operator']) %}{% set hide_opts = True %}{%else %}{% set hide_opts = False %}{% endif %}
 {% block title %}
 <title>Edit Key - {{ SITE_NAME }}</title>
 {% endblock %}
@@ -114,14 +114,14 @@
         var selectedAccounts = $("#key_multi_account option:selected").length;
         var warn_modal = $("#modal_warning");
 
-        if (selectedRole != "User" && selectedDomains > 0 && selectedAccounts > 0){
+        if ( (selectedRole == "Administrator" || selectedRole == "Operator") && selectedDomains > 0 && selectedAccounts > 0){
           var warning = "Administrator and Operators have access to all domains. Your domain an account selection won't be saved.";
           e.preventDefault(e);
           warn_modal.modal('show');
         }
 
-        if (selectedRole == "User" && selectedDomains == 0 && selectedAccounts == 0){
-          var warning = "User role must have at least one account or one domain bound. None selected.";
+        if ( (selectedRole != "Administrator" && selectedRole != "Operator") && selectedDomains == 0 && selectedAccounts == 0){
+          var warning = "Non-administrative role must have at least one account or one domain bound. None selected.";
           e.preventDefault(e);
           warn_modal.modal('show');
         }
@@ -134,7 +134,7 @@
     }
     $('#key_role').on('change', function (e) {
         var optionSelected = $("option:selected", this);
-        if (this.value != "User") {
+        if (this.value == "Administrator" || this.value == "Operator") {
           // Clear the visible list
           $('#ms-key_multi_domain .ms-selection li').each(function(){ $(this).css('display', 'none');})
           $('#ms-key_multi_domain .ms-selectable li').each(function(){ $(this).css('display', '');})
