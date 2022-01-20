@@ -24,7 +24,6 @@ class Setting(db.Model):
         'auto_ptr': False,
         'record_quick_edit': True,
         'pretty_ipv6_ptr': False,
-        'dnssec_admins_only': False,
 	'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,

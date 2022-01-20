@@ -1545,7 +1545,7 @@ def setting_basic():
             'maintenance', 'fullscreen_layout', 'record_helper',
             'login_ldap_first', 'default_record_table_size',
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
-            'pretty_ipv6_ptr', 'dnssec_admins_only',
+            'pretty_ipv6_ptr',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
 	          'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records', 'otp_force'

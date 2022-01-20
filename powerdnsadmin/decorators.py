@@ -80,8 +80,7 @@ def can_access_domain(f):
 def can_configure_dnssec(f):
     """
     Grant access if:
-        - user is in Operator role or higher, or
-        - dnssec_admins_only is off
+        - Role is has right so
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -373,8 +372,8 @@ def apikey_can_access_domain(f):
 def apikey_can_configure_dnssec(http_methods=[]):
     """
     Grant access if:
-        - user is in Operator role or higher, or
-        - dnssec_admins_only is off
+        - role is Administrator or Operator
+        - or 
     """
     def decorator(f=None):
         @wraps(f)
@@ -383,7 +382,7 @@ def apikey_can_configure_dnssec(http_methods=[]):
 
             if (check_current_http_method and
                 g.apikey.role.name not in ['Administrator', 'Operator'] and
-                Setting().get('dnssec_admins_only')
+                g.apikey.role.can_configure_dnssec == False
             ):
                 msg = "ApiKey #{0} does not have enough privileges to configure dnssec"
                 current_app.logger.error(msg.format(g.apikey.id))
