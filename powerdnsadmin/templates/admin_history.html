@@ -42,7 +42,7 @@
                                 <li id="activity_tab" class="active"><a href="#tabs-act"    data-toggle="tab">Search for All Activity</a></li>
                                 <li id="domain_tab"><a href="#tabs-domain"   data-toggle="tab">Search By Domain</a></li>
                                 <li id="account_tab"><a href="#tabs-account" data-toggle="tab">Search By Account</a></li>
-                                {% if current_user.role.name != 'User' %}
+                                {% if current_user.role.name in ['Administrator', 'Operator']  %}
                                 <li id="user_auth_tab"><a href="#tabs-auth"  data-toggle="tab">Search for User Authentication</a></li>
                                 {% endif %}
                             </ul>
