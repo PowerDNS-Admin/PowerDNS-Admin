@@ -712,11 +712,6 @@ def are_equal(old : RecordEntry, new: dict, domain_name: str):
     else:
         name_comparison = (old.name == new['record_name'] + "." + domain_name)
 
-    print(not name_comparison)
-    print(old.type != new['record_type'])
-    print(old.status != new['record_status'])
-    print(int(old.ttl) != int(new['record_ttl']))
-    print(old.data != new['record_data'])
     if not name_comparison or \
             old.type != new['record_type'] or \
             old.status != new['record_status'] or \
@@ -746,13 +741,6 @@ def get_changed_record_entries(old_entries, new_submission, current_user, domain
             continue
         types_of_changed.append(nr['record_type'])
 
-    print("------------------")
-    print()
-
-
-    print(types_of_changed)
-    print()
-    print("--------------------")
     return types_of_changed
 
 @domain_bp.route('/<path:domain_name>/apply',
@@ -769,15 +757,41 @@ def record_apply(domain_name):
         old_entries = fetch_records(domain_name=domain_name)
         types_of_changed = get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, 
                                         current_user=current_user, domain_name=domain_name)
+        
+        
+        # updated the following
+        prohibited_types = []
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+            dictionary = json.loads(role.forward_access)
+        else:
+            dictionary = json.loads(role.reverse_access)
 
-        if '' in types_of_changed:
+        for rec_type in dictionary:
+            if dictionary[rec_type] != 'W':
+                prohibited_types.append(rec_type)
+
+        to_reject = []
+        for p in prohibited_types:
+            if p in types_of_changed:
+                to_reject.append(p)
+        
+        if len(to_reject) != 0:
             return make_response(
                     jsonify({
                         'status':
                         'error',
                         'msg':
-                        'A read-only record has been modified.'
+                        'You are not allowed to create/edit records of type : ' + ' or '.join(to_reject)
                     }), 404)
+        # if '' in types_of_changed:
+        #     return make_response(
+        #             jsonify({
+        #                 'status':
+        #                 'error',
+        #                 'msg':
+        #                 'A read-only record has been modified.'
+        #             }), 404)
 
         prohibited_types = []
         role = Role.query.filter(Role.id == current_user.role_id).first()

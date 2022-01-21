@@ -1,6 +1,7 @@
 import json
 from urllib.parse import urljoin
 from base64 import b64encode
+import re
 from flask import (
     Blueprint, g, request, abort, current_app, make_response, jsonify,
 )
@@ -1057,6 +1058,27 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
     return resp.content, resp.status_code, resp.headers.items()
 
 
+def forbidden_changed_types(rrset, role_name):
+    jsoned = json.dumps(rrset)
+    prohibited_types = []
+    role = Role.query.filter(Role.name == role_name).first()
+    # if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+    dictionary = json.loads(role.forward_access)
+    # else:
+        # dictionary = json.loads(role.reverse_access)
+
+    for rec_type in dictionary:
+        if dictionary[rec_type] != 'W':
+            prohibited_types.append(rec_type)
+
+    to_reject = []
+    for typ in prohibited_types:
+        if '"type": "{}"'.format(typ) in jsoned and typ not in to_reject:
+            to_reject.append(typ)
+    
+
+    return to_reject
+
 @api_bp.route('/servers/<string:server_id>/zones/<string:zone_id>',
               methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
@@ -1066,6 +1088,18 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
                                        http_methods=['PUT'],
                                        keys=['dnssec', 'nsec3param'])
 def api_zone_forward(server_id, zone_id):
+    data = request.get_json(force=True)
+    to_reject = forbidden_changed_types(data, g.apikey.role.name)
+    if len(to_reject) != 0:
+        return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'You are not allowed to create/edit records of type : ' + ' or '.join(to_reject)
+                }), 404)
+
+
     resp = helper.forward_request()
     if not Setting().get('bg_domain_updates'):
         domain = Domain()
