@@ -1090,6 +1090,7 @@ def forbidden_changed_types(rrset, role_name):
 def api_zone_forward(server_id, zone_id):
     data = request.get_json(force=True)
     to_reject = forbidden_changed_types(data, g.apikey.role.name)
+    print("data = " , data)
     if len(to_reject) != 0:
         return make_response(
                 jsonify({
