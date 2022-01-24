@@ -46,7 +46,8 @@
                                 <td>{{ role.users | length }}</td>
                                 <td>{{ role.apikeys | length }}</td>
                                 <td width="15%">
-                                    {% if role.name != 'Administrator' or current_user.role_id == 1 %}
+                                    {% if (role.name == 'Administrator' and current_user.role_id != 1) or (role.name == 'Operator' and current_user.role_id != 1) %}
+                                    {% else %}
                                     <button type="button" class="btn btn-flat btn-success"
                                         onclick="window.location.href='{{ url_for('admin.edit_role', role_name=role.name) }}'">
                                         Edit&nbsp;<i class="fa fa-cog"></i>

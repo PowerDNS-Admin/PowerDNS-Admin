@@ -828,13 +828,18 @@ def manage_roles():
 @login_required
 @operator_role_required
 def edit_role(role_name=None):
+
+    # Operator role settings is only accessible from and Administrator.
+    # Administrator role is also accisible by an administrator
+    if (role_name == 'Operator' and current_user.role_id == 3) or \
+            (role_name == "Administrator" and current_user.role_id != 1):
+        abort(403)
+
     if role_name is not None:  # if not create
         role_obj = Role.query.filter(Role.name == role_name).first()
     else:
         role_obj = Role()
 
-    if role_name == "Administrator" and current_user.role_id != 1:
-        abort(403)  # Operators cannot edit Administrator Role!
 
     _fr = role_obj.forward_access
     _rr = role_obj.reverse_access
