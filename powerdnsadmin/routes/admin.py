@@ -2078,7 +2078,7 @@ def edit_template(template):
                 records_allow_to_edit.append(rec_type)
                 records_allow_to_view.append(rec_type)
             elif forwd_dictionary[rec_type] == 'R' or rev_dictionary[rec_type] == 'R':
-                records_allow_to_edit.append(rec_type)
+                records_allow_to_view.append(rec_type)
         quick_edit = Setting().get('record_quick_edit')
         ttl_options = Setting().get_ttl_options()
         if t is not None:
@@ -2098,6 +2098,7 @@ def edit_template(template):
                                    template=t.name,
                                    records=records,
                                    editable_records=records_allow_to_edit,
+                                   viewable_records=records_allow_to_view,
                                    quick_edit=quick_edit,
                                    ttl_options=ttl_options)
     except Exception as e:
