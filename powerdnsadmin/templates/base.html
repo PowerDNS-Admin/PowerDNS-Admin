@@ -158,7 +158,6 @@
           </a>
           <ul class="treeview-menu" {% if active_page == 'admin_settings' %}style="display: block;"{% endif %}>
             <li><a href="{{ url_for('admin.setting_basic') }}"><i class="fa fa-circle-o"></i></i> <span>Basic</span></a></li>
-            <li><a href="{{ url_for('admin.setting_records') }}"><i class="fa fa-circle-o"></i> <span>Records</span></a></li>
             {% if current_user.role.name == 'Administrator' %}
             <li><a href="{{ url_for('admin.setting_pdns') }}"><i class="fa fa-circle-o"></i> <span>PDNS</a></li>
             <li><a href="{{ url_for('admin.setting_authentication') }}"><i class="fa fa-circle-o"></i> <span>Authentication</span></a></li>

@@ -85,12 +85,12 @@
                                     </td>
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
-                                        {% if record.is_allowed_edit() %}
+                                        {% if record['type'] in editable_records %}
                                             <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
                                         {% endif %}
                                     </td>
                                     <td width="6%">
-                                        {% if record.is_allowed_delete() %}
+                                        {% if record['type'] != 'SOA' and record['type'] in editable_records %}
                                             <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
                                         {% endif %}
                                     </td>

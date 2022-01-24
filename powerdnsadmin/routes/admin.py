@@ -1622,34 +1622,6 @@ def setting_pdns():
                                pdns_version=pdns_version)
 
 
-@admin_bp.route('/setting/dns-records', methods=['GET', 'POST'])
-@login_required
-@operator_role_required
-def setting_records():
-    if request.method == 'GET':
-        _fr = Setting().get('forward_records_allow_edit')
-        _rr = Setting().get('reverse_records_allow_edit')
-        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
-        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
-
-        return render_template('admin_setting_records.html',
-                               f_records=f_records,
-                               r_records=r_records)
-    elif request.method == 'POST':
-        fr = {}
-        rr = {}
-        records = Setting().defaults['forward_records_allow_edit']
-        for r in records:
-            fr[r] = True if request.form.get('fr_{0}'.format(
-                r.lower())) else False
-            rr[r] = True if request.form.get('rr_{0}'.format(
-                r.lower())) else False
-
-        Setting().set('forward_records_allow_edit', str(fr))
-        Setting().set('reverse_records_allow_edit', str(rr))
-        return redirect(url_for('admin.setting_records'))
-
-
 def has_an_auth_method(local_db_enabled=None,
                        ldap_enabled=None,
                        google_oauth_enabled=None,
@@ -2067,7 +2039,6 @@ def edit_template(template):
     try:
         t = DomainTemplate.query.filter(
             DomainTemplate.name == template).first()
-        # records_allow_to_edit = Setting().get_records_allow_to_edit()
         role = Role.query.filter(Role.id == current_user.role_id).first()
         records_allow_to_edit = []
         records_allow_to_view = []

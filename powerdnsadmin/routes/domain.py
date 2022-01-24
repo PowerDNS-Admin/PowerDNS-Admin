@@ -267,7 +267,18 @@ def changelog(domain_name):
     if not rrsets and domain.type != 'Slave':
         abort(500)
 
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
+
+    records_allow_to_view = []
+    role = Role.query.filter(Role.id == current_user.role_id).first()
+    
+    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+        dictionary = json.loads(role.forward_access)
+    else:
+        dictionary = json.loads(role.reverse_access)
+
+    for rec_type in dictionary:
+        if dictionary[rec_type] in ['R','W']:
+            records_allow_to_view.append(rec_type)
     records = []
 
     # get all changelogs for this domain, in descening order
@@ -294,7 +305,7 @@ def changelog(domain_name):
 
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for r in rrsets:
-            if r['type'] in records_allow_to_edit:
+            if r['type'] in records_allow_to_view:
                 r_name = r['name'].rstrip('.')
 
                 # If it is reverse zone and pretty_ipv6_ptr setting
