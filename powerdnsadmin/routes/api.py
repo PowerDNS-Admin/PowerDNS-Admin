@@ -1092,6 +1092,11 @@ def api_zone_forward(server_id, zone_id):
     to_reject = forbidden_changed_types(data, g.apikey.role.name)
     print("data = " , data)
     if len(to_reject) != 0:
+        history = History(msg='API: Access on zone {0} was rejected for role {1}'.format(zone_id.rstrip('.'), g.apikey.role.name),
+                            detail='',
+                            created_by=g.apikey.description,
+                            domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
+        history.add()
         return make_response(
                 jsonify({
                     'status':
