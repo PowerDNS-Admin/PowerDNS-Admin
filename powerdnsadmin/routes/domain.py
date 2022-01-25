@@ -117,29 +117,13 @@ def domain(domain_name):
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
-    # records_allow_to_edit = Setting().get_records_allow_to_edit()
-    # forward_records_allow_to_edit = Setting(
-    # ).get_forward_records_allow_to_edit()
-    # reverse_records_allow_to_edit = Setting(
-    # ).get_reverse_records_allow_to_edit()
     ttl_options = Setting().get_ttl_options()
     records = []
 
     records_allow_to_edit = []
     records_allow_to_view = []
     role = Role.query.filter(Role.id == current_user.role_id).first()
-    
-    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
-        dictionary = json.loads(role.forward_access)
-    else:
-        dictionary = json.loads(role.reverse_access)
-
-    for rec_type in dictionary:
-        if dictionary[rec_type] == 'W':
-            records_allow_to_view.append(rec_type)
-            records_allow_to_edit.append(rec_type)
-        elif dictionary[rec_type] == 'R':
-            records_allow_to_view.append(rec_type)
+    records_allow_to_view, records_allow_to_edit = role.get_records_allow_to_view_edit(domain_name)
         
     # Render the "records" to display in HTML datatable
     #
@@ -270,15 +254,7 @@ def changelog(domain_name):
 
     records_allow_to_view = []
     role = Role.query.filter(Role.id == current_user.role_id).first()
-    
-    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
-        dictionary = json.loads(role.forward_access)
-    else:
-        dictionary = json.loads(role.reverse_access)
-
-    for rec_type in dictionary:
-        if dictionary[rec_type] in ['R','W']:
-            records_allow_to_view.append(rec_type)
+    records_allow_to_view = role.get_records_allow_to_view(domain_name)
     records = []
 
     # get all changelogs for this domain, in descening order
@@ -718,7 +694,6 @@ def change_account(domain_name):
 
 def are_equal(old : RecordEntry, new: dict, domain_name: str):
     if old.name == domain_name:
-        name_to_compare = domain_name
         name_comparison = (new['record_name'] == '@')
     else:
         name_comparison = (old.name == new['record_name'] + "." + domain_name)
@@ -768,57 +743,13 @@ def record_apply(domain_name):
         old_entries = fetch_records(domain_name=domain_name)
         types_of_changed = get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, 
                                         current_user=current_user, domain_name=domain_name)
-        
-        
-        # updated the following
-        prohibited_types = []
+
         role = Role.query.filter(Role.id == current_user.role_id).first()
-        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
-            dictionary = json.loads(role.forward_access)
-        else:
-            dictionary = json.loads(role.reverse_access)
-
-        for rec_type in dictionary:
-            if dictionary[rec_type] != 'W':
-                prohibited_types.append(rec_type)
-
+        records_allow_to_edit = role.get_records_allow_to_edit(domain_name)
         to_reject = []
-        for p in prohibited_types:
-            if p in types_of_changed:
-                to_reject.append(p)
-        
-        if len(to_reject) != 0:
-            return make_response(
-                    jsonify({
-                        'status':
-                        'error',
-                        'msg':
-                        'You are not allowed to create/edit records of type : ' + ' or '.join(to_reject)
-                    }), 404)
-        # if '' in types_of_changed:
-        #     return make_response(
-        #             jsonify({
-        #                 'status':
-        #                 'error',
-        #                 'msg':
-        #                 'A read-only record has been modified.'
-        #             }), 404)
-
-        prohibited_types = []
-        role = Role.query.filter(Role.id == current_user.role_id).first()
-        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
-            dictionary = json.loads(role.forward_access)
-        else:
-            dictionary = json.loads(role.reverse_access)
-
-        for rec_type in dictionary:
-            if dictionary[rec_type] != 'W':
-                prohibited_types.append(rec_type)
-
-        to_reject = []
-        for p in prohibited_types:
-            if p in types_of_changed:
-                to_reject.append(p)
+        for type in types_of_changed:
+            if type not in records_allow_to_edit:
+                to_reject.append(type)
         
         if len(to_reject) != 0:
             return make_response(

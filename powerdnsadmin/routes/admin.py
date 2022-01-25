@@ -2045,16 +2045,12 @@ def edit_template(template):
         t = DomainTemplate.query.filter(
             DomainTemplate.name == template).first()
         role = Role.query.filter(Role.id == current_user.role_id).first()
-        records_allow_to_edit = []
-        records_allow_to_view = []
-        forwd_dictionary = json.loads(role.forward_access)
-        rev_dictionary = json.loads(role.reverse_access)
-        for rec_type in forwd_dictionary:
-            if forwd_dictionary[rec_type] == 'W' or rev_dictionary[rec_type] == 'W':
-                records_allow_to_edit.append(rec_type)
-                records_allow_to_view.append(rec_type)
-            elif forwd_dictionary[rec_type] == 'R' or rev_dictionary[rec_type] == 'R':
-                records_allow_to_view.append(rec_type)
+
+        f_records_allow_to_view, f_records_allow_to_edit = role.get_forward_records_allow_to_view_edit()
+        r_records_allow_to_view, r_records_allow_to_edit = role.get_reverse_records_allow_to_view_edit()
+        records_allow_to_view = f_records_allow_to_view + r_records_allow_to_view
+        records_allow_to_edit = f_records_allow_to_edit + r_records_allow_to_edit
+        
         quick_edit = Setting().get('record_quick_edit')
         ttl_options = Setting().get_ttl_options()
         if t is not None:

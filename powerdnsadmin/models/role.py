@@ -1,6 +1,7 @@
 from .base import db
 from flask import current_app
 import json
+import re
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -208,7 +209,8 @@ class Role(db.Model):
             return False
     
     def get_forward_records_allow_to_view_edit(self):
-        records_allow_to_view, records_allow_to_edit = []
+        records_allow_to_view = []
+        records_allow_to_edit = []
         dictionary = json.loads(self.forward_access)
 
         for rec_type in dictionary:
@@ -220,8 +222,9 @@ class Role(db.Model):
         
         return records_allow_to_view, records_allow_to_edit
     
-    def get_reverse_records_allow_to_edit(self):
-        records_allow_to_view, records_allow_to_edit = []
+    def get_reverse_records_allow_to_view_edit(self):
+        records_allow_to_view = []
+        records_allow_to_edit = []
         dictionary = json.loads(self.reverse_access)
 
         for rec_type in dictionary:
@@ -232,3 +235,27 @@ class Role(db.Model):
                 records_allow_to_view.append(rec_type)
         
         return records_allow_to_view, records_allow_to_edit
+
+    def get_records_allow_to_view(self, domain_name):
+        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+            dictionary = self.get_forward_records_allow_to_view_edit()[0]
+        else:
+            dictionary = self.get_reverse_records_allow_to_view_edit()[0]
+
+        return dictionary
+    
+    def get_records_allow_to_edit(self, domain_name):
+        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+            dictionary = self.get_forward_records_allow_to_view_edit()[1]
+        else:
+            dictionary = self.get_reverse_records_allow_to_view_edit()[1]
+
+        return dictionary
+
+    def get_records_allow_to_view_edit(self, domain_name):
+        if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
+            dictionary = self.get_forward_records_allow_to_view_edit()
+        else:
+            dictionary = self.get_reverse_records_allow_to_view_edit()
+
+        return dictionary
