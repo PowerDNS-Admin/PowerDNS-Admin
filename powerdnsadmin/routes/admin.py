@@ -880,10 +880,10 @@ def edit_role(role_name=None):
         role = Role(name=role_name,
                           description=fdata['roledescription'])
 
-        role.can_configure_dnssec = True if request.form.get('can_configure_dnssec') else False
-        role.can_access_history = True if request.form.get('can_access_history') else False
-        role.can_create_domain = True if request.form.get('can_create_domain') else False
-        role.can_remove_domain = True if request.form.get('can_remove_domain') else False
+        role.can_access_history = True if role_name in ['Administrator','Operator'] or request.form.get('can_access_history') else False
+        role.can_create_domain = True if role_name in ['Administrator','Operator'] or request.form.get('can_create_domain') else False
+        role.can_remove_domain = True if role_name == 'Administrator' or request.form.get('can_remove_domain') else False
+        role.can_configure_dnssec = True if role_name == 'Administrator' or request.form.get('can_configure_dnssec') else False
 
         forward_records_perms = {}
         reverse_records_perms = {}
