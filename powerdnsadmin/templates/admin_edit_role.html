@@ -91,26 +91,39 @@
                             <input type="checkbox" id="can_access_history" name="can_access_history"
                             class="checkbox" {% if role.can_access_history == true %} checked {% endif %}
                             {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
-                            <label for="can_access_history">Allow History access</label>
+                            <label for="can_access_history">Allow History access for this role</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_create_domain" name="can_create_domain"
                             class="checkbox" {% if role.can_create_domain == true %} checked {% endif %}
                             {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
-                            <label for="can_create_domain">Allow Domain creation</label>
+                            <label for="can_create_domain">Allow Domain creation for this role</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_remove_domain" name="can_remove_domain"
                             class="checkbox" {% if role.can_remove_domain == true %} checked {% endif %}
-                            {% if role.name in ['Administrator'] %} disabled {% endif %}>
-                            <label for="can_remove_domain">Allow Domain removal</label>
+                            {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
+                            <label for="can_remove_domain">Allow Domain removal for this role</label>
                         </div>
                         <div class="form-group">
                             <input type="checkbox" id="can_configure_dnssec" name="can_configure_dnssec"
                                 class="checkbox" {% if role.can_configure_dnssec == true %} checked {% endif %}
-                                {% if role.name in ['Administrator'] %} disabled {% endif %}>
-                            <label for="can_configure_dnssec">Allow DNSSEC configuration</label>
+                                {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
+                            <label for="can_configure_dnssec">Allow DNSSEC configuration for this role</label>
                         </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_access_all_domains" name="can_access_all_domains"
+                                class="checkbox" {% if role.can_access_all_domains == true %} checked {% endif %}
+                                {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
+                            <label for="can_access_all_domains">Allow access to all domains for this role</label>
+                        </div>
+                        {% if role.name == 'Operator' %}
+                        <div class="form-group">
+                            <input type="checkbox" id="can_edit_roles" name="can_edit_roles"
+                                class="checkbox" {% if role.can_edit_roles == true %} checked {% endif %}>
+                            <label for="can_edit_roles">Allow to edit roles (for operators only)</label>
+                        </div>
+                        {% endif %}
                         <div class="form-group">
                             <button type="submit" class="btn btn-flat btn-primary">
                                 {% if create %}Create{% else %}Update{% endif %} Role

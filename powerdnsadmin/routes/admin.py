@@ -8,7 +8,7 @@ from sqlalchemy import func
 from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
-from ..decorators import can_configure_dnssec, operator_role_required, admin_role_required, history_access_required
+from ..decorators import can_configure_dnssec, operator_role_required, admin_role_required, history_access_required, can_edit_roles
 from ..models.user import User
 from ..models.account import Account
 from ..models.account_user import AccountUser
@@ -755,7 +755,7 @@ def manage_account():
 
 @admin_bp.route('/manage-roles', methods=['GET', 'POST'])
 @login_required
-@operator_role_required
+@can_edit_roles
 def manage_roles():
     if request.method == 'GET':
         roles = Role.query.order_by(Role.name).all()
@@ -826,7 +826,7 @@ def manage_roles():
 @admin_bp.route('/role/edit/<role_name>', methods=['GET', 'POST'])
 @admin_bp.route('/role/edit', methods=['GET', 'POST'])
 @login_required
-@operator_role_required
+@can_edit_roles
 def edit_role(role_name=None):
 
     # Operator role settings is only accessible from and Administrator.
@@ -882,8 +882,11 @@ def edit_role(role_name=None):
 
         role.can_access_history = True if role_name in ['Administrator','Operator'] or request.form.get('can_access_history') else False
         role.can_create_domain = True if role_name in ['Administrator','Operator'] or request.form.get('can_create_domain') else False
-        role.can_remove_domain = True if role_name == 'Administrator' or request.form.get('can_remove_domain') else False
-        role.can_configure_dnssec = True if role_name == 'Administrator' or request.form.get('can_configure_dnssec') else False
+        role.can_remove_domain = True if role_name in ['Administrator', 'Operator'] or request.form.get('can_remove_domain') else False
+        role.can_configure_dnssec = True if role_name in ['Administrator', 'Operator'] or request.form.get('can_configure_dnssec') else False
+        role.can_edit_roles = True if role_name in ['Administrator'] or request.form.get('can_edit_roles') else False
+        role.can_access_all_domains = True if role_name in ['Administrator','Operator'] or request.form.get('can_access_all_domains') else False
+
 
         forward_records_perms = {}
         reverse_records_perms = {}

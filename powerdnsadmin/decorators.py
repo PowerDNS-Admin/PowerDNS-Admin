@@ -21,6 +21,18 @@ def admin_role_required(f):
 
     return decorated_function
 
+def can_edit_roles(f):
+    """
+    Grant access only for users with can_edit_roles flag on
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.role.can_edit_roles and current_user.role.name != 'Administrator':
+            abort(403)
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 
 def operator_role_required(f):
     """
@@ -45,6 +57,8 @@ def history_access_required(f):
         if role.name not in ['Administrator', 'Operator']:
             if role.can_access_history == False:
                 abort(403)
+        if role.name == 'Operator' and role.can_access_history == False:
+            abort(403)
         return f(*args, **kwargs)
 
     return decorated_function
@@ -59,19 +73,20 @@ def can_access_domain(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role.name not in ['Administrator', 'Operator']:
-            domain_name = kwargs.get('domain_name')
-            domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not current_user.role.can_access_all_domains:
+            if current_user.role.name not in ['Administrator', 'Operator']:
+                domain_name = kwargs.get('domain_name')
+                domain = Domain.query.filter(Domain.name == domain_name).first()
 
-            if not domain:
-                abort(404)
+                if not domain:
+                    abort(404)
 
-            valid_access = Domain(id=domain.id).is_valid_access(
-                current_user.id)
+                valid_access = Domain(id=domain.id).is_valid_access(
+                    current_user.id)
 
-            if not valid_access:
-                abort(403)
-
+                if not valid_access:
+                    abort(403)
+        
         return f(*args, **kwargs)
 
     return decorated_function

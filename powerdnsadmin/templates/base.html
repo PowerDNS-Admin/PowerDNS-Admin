@@ -140,9 +140,11 @@
         <li class="{{ 'active' if active_page == 'admin_accounts' else '' }}">
           <a href="{{ url_for('admin.manage_account') }}"><i class="fa fa-industry"></i> <span>Accounts</span></a>
         </li>
+        {% if current_user.role.can_edit_roles or current_user.role.name == 'Administrator' %}
         <li class="{{ 'active' if active_page == 'admin_roles' else '' }}">
           <a href="{{ url_for('admin.manage_roles') }}"><i class="fa fa-address-book"></i> <span>Roles</span></a>
         </li>
+        {% endif %}
         <li class="{{ 'active' if active_page == 'admin_users' else '' }}">
           <a href="{{ url_for('admin.manage_user') }}"><i class="fa fa-users"></i> <span>Users</span></a>
         </li>

@@ -44,7 +44,7 @@ def before_request():
 @dashboard_bp.route('/domains-custom/<path:boxId>', methods=['GET'])
 @login_required
 def domains_custom(boxId):
-    if current_user.role.name in ['Administrator', 'Operator']:
+    if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_all_domains:
         domains = Domain.query
     else:
         # Get query for domain to which the user has access permission.
