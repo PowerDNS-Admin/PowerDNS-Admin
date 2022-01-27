@@ -701,8 +701,8 @@ def are_equal(old : RecordEntry, new: dict, domain_name: str):
             old.type != new['record_type'] or \
             old.status != new['record_status'] or \
             int(old.ttl) != int(new['record_ttl']) or \
-            old.data != new['record_data']: 
-            # old.comment != new['record_comment']:
+            old.data != new['record_data'] or \
+            old.comment != new['record_comment']:
         return False
     return True
 
