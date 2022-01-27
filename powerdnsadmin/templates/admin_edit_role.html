@@ -167,17 +167,14 @@
 
                         {% if role.name == 'Operator' %}
 
-                        <strong>Allow to edit roles</strong> option, permits users who are Operators, to modify the Role privileges of non-Administrative roles.
-                        {% endif %}
-                        {% if role.name in ['Administrator', 'Operator'] %}
-                        <strong>NOTE: </strong> For the {{ role.name }} role, the options
+                        <strong>Allow to edit roles</strong> option, permits users who are Operators, to modify the Role privileges of non-Administrative roles.<br/>
+                        {% endif %} 
+                        {% if role.name == 'Operator' %}
+                        <strong>NOTE: </strong> For the Operator role, the options
                         <ul>
-                            <li>Allow History access</li>
-                            <li>Allow Domain creation</li>
-                            {% if role.name == 'Administrator' %}
-                            <li>Allow Domain removal</li>
-                            <li>Allow DNSSEC configuration</li>
-                            {% endif %}
+                            <li>Allow History access for this role</li>
+                            <li>Allow to view and edit all domains for this role</li>
+
                         </ul>
                         are enabled by default and cannot be toggled off.
                         {% endif %}
