@@ -154,7 +154,7 @@
                         Operators cannot assign a role to users who are either Adminstrators or Operators. </br>
                         <strong>Allow DNSSEC configuration</strong> selects whether users who have this Role
                         can toggle DNSSEC in their domains.<br />
-                        <strong>Allow History access for this role</strong> toggles whether users who have this Role can view History records.<br />
+                        <strong>Allow History access for this role</strong> toggles whether users who have this Role can view History records for the domains they have access to.<br />
                         <strong>Allow Domain creation for this role</strong> toggles whether users who have this Role can create new Domains.<br />
                         Note that domains created by non-administrative users must belong to an account. Therefore, users who are not members in an account
                         cannot create a new domain.<br />
@@ -163,7 +163,9 @@
                         to a specific DNS Record type, in all Forward, or all Reverse Domains.<br />
                         In order to have Write access to a Record, a user must also have Read access to the same Record.<br />
                         <strong>Allow to view and edit all domains for this role</strong> enables read access for all the domains. 
-                        With this option toggled on, a non-administrative user assigned to this role, can only view and edit the domains but not remove them.<br />
+                        With this option toggled on, a non-administrative user assigned to this role, can only view and edit the domains.<br />
+                        This setting does not give the user Domain Removal access and History access for all domains.<br />
+                        Instead, they must be given access to the domain explicitly to use these features.<br />
 
                         {% if role.name == 'Operator' %}
 
