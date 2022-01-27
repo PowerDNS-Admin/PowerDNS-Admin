@@ -202,12 +202,17 @@ class Role(db.Model):
         """
         Delete a role
         """
-
+        from .api_key import ApiKey
         try:
             Role.query.filter(Role.name == self.name).delete()
+            # when a Role is deleted, delete also all the api keys which are
+            # associated with this role
+            ApiKey.query.filter(self.id == ApiKey.role_id).delete()
             if commit:
                 db.session.commit()
+                
             return True
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
