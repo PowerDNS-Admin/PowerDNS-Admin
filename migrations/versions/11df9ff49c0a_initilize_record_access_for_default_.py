@@ -125,18 +125,18 @@ def upgrade():
         batch_op.add_column(
                     sa.Column('can_edit_roles', sa.Boolean(), nullable=True))
         batch_op.add_column(
-                    sa.Column('can_access_all_domains', sa.Boolean(), nullable=True))
+                    sa.Column('can_view_edit_all_domains', sa.Boolean(), nullable=True))
 
     # op.execute("DELETE FROM setting WHERE name = 'allow_user_create_domain'")
     op.execute("""
     UPDATE role
-    SET forward_access = '{0}', reverse_access = '{1}', can_configure_dnssec = true, can_access_history = true, can_create_domain = true, can_remove_domain = true, can_edit_roles = true, can_access_all_domains = true
+    SET forward_access = '{0}', reverse_access = '{1}', can_configure_dnssec = true, can_access_history = true, can_create_domain = true, can_remove_domain = true, can_edit_roles = true, can_view_edit_all_domains = true
     WHERE role.id <= 3
     """.format(forward_records,reverse_records))
 
     op.execute("""
     UPDATE role
-    SET can_configure_dnssec = false, can_access_history = false, can_create_domain = false, can_remove_domain = false, can_edit_roles = false, can_access_all_domains = false
+    SET can_configure_dnssec = false, can_access_history = false, can_create_domain = false, can_remove_domain = false, can_edit_roles = false, can_view_edit_all_domains = false
     WHERE role.id = 2
     """.format(forward_records,reverse_records))
 

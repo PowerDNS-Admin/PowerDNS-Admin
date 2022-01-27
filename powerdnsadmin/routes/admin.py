@@ -881,11 +881,11 @@ def edit_role(role_name=None):
                           description=fdata['roledescription'])
 
         role.can_access_history = True if role_name in ['Administrator','Operator'] or request.form.get('can_access_history') else False
-        role.can_create_domain = True if role_name in ['Administrator','Operator'] or request.form.get('can_create_domain') else False
-        role.can_remove_domain = True if role_name in ['Administrator', 'Operator'] or request.form.get('can_remove_domain') else False
-        role.can_configure_dnssec = True if role_name in ['Administrator', 'Operator'] or request.form.get('can_configure_dnssec') else False
+        role.can_create_domain = True if role_name in ['Administrator'] or request.form.get('can_create_domain') else False
+        role.can_remove_domain = True if role_name in ['Administrator'] or request.form.get('can_remove_domain') else False
+        role.can_configure_dnssec = True if role_name in ['Administrator'] or request.form.get('can_configure_dnssec') else False
         role.can_edit_roles = True if role_name in ['Administrator'] or request.form.get('can_edit_roles') else False
-        role.can_access_all_domains = True if role_name in ['Administrator','Operator'] or request.form.get('can_access_all_domains') else False
+        role.can_view_edit_all_domains = True if role_name in ['Administrator','Operator'] or request.form.get('can_view_edit_all_domains') else False
 
 
         forward_records_perms = {}

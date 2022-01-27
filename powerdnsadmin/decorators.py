@@ -73,7 +73,7 @@ def can_access_domain(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.role.can_access_all_domains:
+        if not current_user.role.can_view_edit_all_domains:
             if current_user.role.name not in ['Administrator', 'Operator']:
                 domain_name = kwargs.get('domain_name')
                 domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -100,7 +100,7 @@ def can_configure_dnssec(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         role = Role.query.filter(Role.id == current_user.role_id).first()
-        if role.name not in ['Administrator', 'Operator']:
+        if role.name not in ['Administrator']:
             if role.can_configure_dnssec == False:
                 abort(403)
         return f(*args, **kwargs)
@@ -121,7 +121,7 @@ def can_remove_domain(f):
         #     abort(403)
         # return f(*args, **kwargs)
         role = Role.query.filter(Role.id == current_user.role_id).first()
-        if role.name not in ['Administrator', 'Operator']:
+        if role.name not in ['Administrator']:
             if role.can_remove_domain == False:
                 abort(403)
         return f(*args, **kwargs)
@@ -144,7 +144,7 @@ def can_create_domain(f):
         #     abort(403)
         # return f(*args, **kwargs)
         role = Role.query.filter(Role.id == current_user.role_id).first()
-        if role.name not in ['Administrator', 'Operator']:
+        if role.name not in ['Administrator']:
             if role.can_create_domain == False:
                 abort(403)
         return f(*args, **kwargs)

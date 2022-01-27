@@ -15,7 +15,7 @@ class Role(db.Model):
     can_create_domain = db.Column(db.Boolean())
     can_remove_domain = db.Column(db.Boolean())
     can_edit_roles = db.Column(db.Boolean())
-    can_access_all_domains = db.Column(db.Boolean())
+    can_view_edit_all_domains = db.Column(db.Boolean())
     
     users = db.relationship('User', backref='role', lazy=True)
     apikeys = db.relationship('ApiKey', back_populates='role', lazy=True)
@@ -109,7 +109,7 @@ class Role(db.Model):
         self.can_create_domain = False
         self.can_remove_domain = False
         self.can_edit_roles = False
-        self.can_access_all_domains = False
+        self.can_view_edit_all_domains = False
     # allow database autoincrement to do its own ID assignments
     def __init__(self, name=None, description=None):
         self.id = None
@@ -122,7 +122,7 @@ class Role(db.Model):
         self.can_create_domain = False
         self.can_remove_domain = False
         self.can_edit_roles = False
-        self.can_access_all_domains = False
+        self.can_view_edit_all_domains = False
 
     def __repr__(self):
         return '<Role {0}r>'.format(self.name)
@@ -194,7 +194,7 @@ class Role(db.Model):
         role.can_create_domain = self.can_create_domain
         role.can_remove_domain = self.can_remove_domain
         role.can_edit_roles = self.can_edit_roles
-        role.can_access_all_domains = self.can_access_all_domains
+        role.can_view_edit_all_domains = self.can_view_edit_all_domains
         db.session.commit()
         return {'status': True, 'msg': 'Role description updated successfully'}
 
