@@ -47,7 +47,15 @@
                                 <td>{{ user.firstname }}</td>
                                 <td>{{ user.lastname }}</td>
                                 <td>{{ user.email }}</td>
-                                <td>{% for role in roles %}{% if role.id==user.role.id %}{{ role.name }}{% endif %}{% endfor %}</td>
+                                <td>
+                                    <select id="{{ user.username }}" class="user_role"
+                                        {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name in ['Administrator','Operator']) %}disabled{% endif %}>
+                                        {% for role in roles %}
+                                        <option value="{{ role.name }}"
+                                            {% if role.id==user.role.id %}selected{% endif %}>{{ role.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
                                 <td width="6%">
                                     <button type="button" class="btn btn-flat btn-warning button_revoke"
                                         id="{{ user.username }}"
@@ -133,6 +141,21 @@
         })
         modal.modal('show');
 
+    });
+
+    // handle user role changing
+    $(document.body).on('change', '.user_role', function () {
+        var role_name = this.value;
+        var username = $(this).prop('id');
+        var postdata = {
+            'action': 'update_user_role',
+            'data': {
+                'username': username,
+                'role_name': role_name
+            },
+            '_csrf_token': '{{ csrf_token() }}'
+        };
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', showResult = true);
     });
 </script>
 {% endblock %}

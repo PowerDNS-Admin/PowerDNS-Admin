@@ -545,22 +545,22 @@ def manage_user():
                             'msg': 'User does not exist.'
                         }), 404)
 
-                if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+                if user.role.name in ['Administrator','Operator'] and current_user.role.name != 'Administrator':
                     return make_response(
                         jsonify({
                             'status':
                             'error',
                             'msg':
-                            'You do not have permission to change Administrator users role.'
+                            'You do not have permission to change a privileged user\'s role.'
                         }), 400)
 
-                if role_name == 'Administrator' and current_user.role.name != 'Administrator':
+                if role_name in ['Administrator','Operator'] and current_user.role.name != 'Administrator':
                     return make_response(
                         jsonify({
                             'status':
                             'error',
                             'msg':
-                            'You do not have permission to promote a user to Administrator role.'
+                            'You do not have permission to promote a user to {0} role.'.format(role_name)
                         }), 400)
 
                 user = User(username=username)
