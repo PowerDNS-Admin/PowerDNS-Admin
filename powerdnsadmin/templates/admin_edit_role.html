@@ -60,30 +60,37 @@
                             <span class="fa fa-industry form-control-feedback"></span>
                         </div>
                     </div>
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Access Control</h3>
-                    </div>
                     <div class="box-body">
-                        <p>Users on the right are given the current Role.<br />
-                        Users removed from the right column will be given the default "User" role.
-                        </p>
-                        <p>Click on users to move between columns.</p>
-                        {% if role.name != "Administrator" and current_user.role_id == 1 %}
-                        <p>
-                            Users highlighted in red are privileged users.<br />
-                            <strong>WARNING:</strong> Moving a privileged user to the right column will revoke their privileges.
-                        </p>
-                        {% endif %}
-                        <div class="form-group col-xs-2">
-                            <select multiple="multiple" class="form-control" id="role_multi_user"
-                                name="role_multi_user">
-                                {% for user in users %}
-                                <option
-                                    {% if user.id in role_user_ids|default([]) %}selected{% endif %}
-                                    {% if user.role.name in ['Administrator', 'Operator'] %} style="color:red"{% endif %}
-                                    value="{{ user.username }}">{{ user.username }}</option>
-                                {% endfor %}
-                            </select>
+                        <button type="button" id="btn_access_control" class="btn btn-flat btn-primary">
+                            Show Access Control
+                        </button>
+                    </div>
+                    <div id="access_control" style="display: none">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Access Control</h3>
+                        </div>
+                        <div class="box-body">
+                            <p>Users on the right are given the current Role.<br />
+                            Users removed from the right column will be given the default "User" role.
+                            </p>
+                            <p>Click on users to move between columns.</p>
+                            {% if role.name != "Administrator" and current_user.role_id == 1 %}
+                            <p>
+                                Users highlighted in red are privileged users.<br />
+                                <strong>WARNING:</strong> Moving a privileged user to the right column will revoke their privileges.
+                            </p>
+                            {% endif %}
+                            <div class="form-group col-xs-2">
+                                <select multiple="multiple" class="form-control" id="role_multi_user"
+                                    name="role_multi_user">
+                                    {% for user in users %}
+                                    <option
+                                        {% if user.id in role_user_ids|default([]) %}selected{% endif %}
+                                        {% if user.role.name in ['Administrator', 'Operator'] %} style="color:red"{% endif %}
+                                        value="{{ user.username }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="box-footer">
@@ -230,6 +237,19 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
+    // Toggle Access Control Visibility
+    $("#btn_access_control").on("click", function (e) {
+        e.stopPropagation();
+        var access_control = document.getElementById("access_control");
+        if (access_control.style.display === "none") {
+            access_control.style.display = "block";
+        }
+        else {
+            access_control.style.display = "none";
+        }
+    });
+
+    // Access Control JS
     $("#role_multi_user").multiSelect({
         selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
         selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
@@ -266,12 +286,12 @@
         }
     });
 
-
     $('.checkbox').iCheck({
         checkboxClass: 'icheckbox_square-blue',
         increaseArea: '20%'
     });
-    
+
+    // Auto mutual checkbox handling
     $(".record_privs :input").on('ifUnchecked',function() {
         var splitted = $(this).prop('id').split('_')
         if ($(this).prop('class') == "checkbox read") {
