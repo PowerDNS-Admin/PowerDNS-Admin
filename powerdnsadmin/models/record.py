@@ -293,7 +293,7 @@ class Record(object):
         return new_rrsets, del_rrsets
 
     def apply_rrsets(self, domain_name, rrsets):
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
             '/servers/localhost/zones/{0}'.format(domain_name)),
