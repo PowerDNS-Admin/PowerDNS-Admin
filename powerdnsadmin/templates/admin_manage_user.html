@@ -91,6 +91,17 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
+    // Show warning modal on load if autoprovisioning is enabled
+    $(document).ready(function(){
+        var autoprovision = "{{ SETTING.get('autoprovisioning') }}"
+        console.log(autoprovision)
+        if(autoprovision == "True" || autoprovision == "1") {
+            var modal = $("#modal_warning");
+            modal.find('.modal-body p').text('LDAP Autoprovisioning is enabled. Changing a user\'s role may be automatically reverted the next time they log in via LDAP.');
+            modal.modal('show');
+        }
+    });
+
     // set up user data table
     $("#tbl_users").DataTable({
         "paging": true,

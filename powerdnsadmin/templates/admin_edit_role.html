@@ -62,7 +62,7 @@
                     </div>
                     <div class="box-body">
                         <button type="button" id="btn_access_control" class="btn btn-flat btn-primary">
-                            Show Access Control
+                            Toggle Access Control
                         </button>
                     </div>
                     <div id="access_control" style="display: none">
@@ -243,6 +243,14 @@
         var access_control = document.getElementById("access_control");
         if (access_control.style.display === "none") {
             access_control.style.display = "block";
+
+            var autoprovision = "{{ SETTING.get('autoprovisioning') }}"
+            console.log(autoprovision)
+            if(autoprovision == "True" || autoprovision == "1") {
+                var modal = $("#modal_warning");
+                modal.find('.modal-body p').text('LDAP Autoprovisioning is enabled. Changing a user\'s role may be automatically reverted the next time they log in via LDAP.');
+                modal.modal('show');
+            }
         }
         else {
             access_control.style.display = "none";
