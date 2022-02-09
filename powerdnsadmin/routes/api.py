@@ -1,7 +1,6 @@
 import json
 from urllib.parse import urljoin
 from base64 import b64encode
-import re
 from flask import (
     Blueprint, g, request, abort, current_app, make_response, jsonify,
 )
@@ -1062,10 +1061,7 @@ def forbidden_changed_types(rrset, role_name):
     jsoned = json.dumps(rrset)
     prohibited_types = []
     role = Role.query.filter(Role.name == role_name).first()
-    # if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name): # is forward
     dictionary = json.loads(role.forward_access)
-    # else:
-        # dictionary = json.loads(role.reverse_access)
 
     for rec_type in dictionary:
         if dictionary[rec_type] != 'W':
