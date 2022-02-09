@@ -15,6 +15,9 @@ from .domain_setting import DomainSetting
 from .history import History
 
 
+def by_record_content_pair(e):
+    return e[0]['content']
+
 class Domain(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, unique=True)
@@ -197,6 +200,42 @@ class Domain(db.Model):
                     domain.name, e))
                 raise
 
+    def get_rrsets(self, domain):
+        """
+        Query domain's rrsets via PDNS API
+        """
+        headers = {'X-API-Key': self.PDNS_API_KEY}
+        try:
+            jdata = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                '/servers/localhost/zones/{0}'.format(domain)),
+                                     timeout=int(
+                                         Setting().get('pdns_api_timeout')),
+                                     headers=headers,
+                                     verify=Setting().get('verify_ssl_connections'))
+        except Exception as e:
+            current_app.logger.error(
+                "Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}"
+                .format(e))
+            return []
+
+        rrsets=[]
+        for r in jdata['rrsets']:
+            if len(r['records']) == 0:
+                continue
+
+            while len(r['comments'])<len(r['records']):
+                r['comments'].append({"content": "", "account": ""})
+            r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'], r['comments']), key=by_record_content_pair)))
+            rrsets.append(r)
+
+        return rrsets
+
+    def get_upper_domain(self, domain_name):
+        upper_domain_name = '.'.join(domain_name.split('.')[1:])
+        print("Upper Domain Name: {}".format(upper_domain_name))
+        return upper_domain_name
+
     def add(self,
             domain_name,
             domain_type,
@@ -205,7 +244,7 @@ class Domain(db.Model):
             domain_master_ips=[],
             account_name=None):
         """
-        Add a domain to power dns
+        Add a domain to power dns, only if there is no record of the same name in the upper domain
         """
 
         headers = {'X-API-Key': self.PDNS_API_KEY}
@@ -229,6 +268,20 @@ class Domain(db.Model):
         }
 
         try:
+            # Test if a record same as the domain already exists in an upper level domain
+            upper_domain_name = self.get_upper_domain(domain_name[:-1])
+            while (upper_domain_name != ''):
+                if self.get_id_by_name(upper_domain_name) != None:
+                    rrsets = self.get_rrsets(upper_domain_name)
+                    for r in rrsets:
+                        print(r)
+                        if r['name'] == domain_name:
+                            current_app.logger.error(
+                            "A record of {} already exists in {}".format(r['name'], upper_domain_name))
+                            return {'status': 'error', 'msg': "A record of {} already exists in {}".format(r['name'], upper_domain_name)}
+                else:
+                    current_app.logger.error("")
+                upper_domain_name = self.get_upper_domain(upper_domain_name)
             jdata = utils.fetch_json(
                 urljoin(self.PDNS_STATS_URL,
                         self.API_EXTENDED_URL + '/servers/localhost/zones'),
@@ -243,6 +296,7 @@ class Domain(db.Model):
                     return {'status': 'error', 'msg': 'Domain already exists'}
                 return {'status': 'error', 'msg': jdata['error']}
             else:
+
                 current_app.logger.info(
                     'Added domain successfully to PowerDNS: {0}'.format(
                         domain_name))
