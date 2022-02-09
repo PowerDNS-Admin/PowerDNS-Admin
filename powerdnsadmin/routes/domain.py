@@ -31,6 +31,10 @@ domain_bp = Blueprint('domain',
                       template_folder='templates',
                       url_prefix='/domain')
 
+def get_upper_domain(domain_name):
+    upper_domain_name = '.'.join(domain_name.split('.')[1:])
+    print("Upper Domain Name: {}".format(upper_domain_name))
+    return upper_domain_name
 
 @domain_bp.before_request
 def before_request():
@@ -400,6 +404,20 @@ def add():
             account_name = Account().get_name_by_id(account_id)
 
             d = Domain()
+            ### Test if a record same as the domain already exists in an upper level domain
+            deny_domain_override = Setting().get('deny_domain_override')
+            if deny_domain_override:
+                rec = Record()
+                upper_domain_name = get_upper_domain(domain_name)
+                while (upper_domain_name != ''):
+                    if d.get_id_by_name(upper_domain_name) != None:
+                        rrsets = rec.get_rrsets(upper_domain_name)
+                        for r in rrsets:
+                            if r['name'].rstrip('.') == domain_name:
+                                result = {'msg': 'Domain already exists as a record under {}'.format(upper_domain_name)}
+                                return render_template('errors/400.html', msg=result['msg']), 400
+                    upper_domain_name = get_upper_domain(upper_domain_name)
+            ### END CHECK
             result = d.add(domain_name=domain_name,
                            domain_type=domain_type,
                            soa_edit_api=soa_edit_api,
