@@ -187,21 +187,13 @@
         modal.find('.modal-body p').text(info);
         modal.modal('show');
     });
-
-    function redirect_modal() {
-        modal.modal('hide');
-    }
-
-    function dothis() {
-        modal.find('.modal-body p').text(modal.find('#button_confirm_warn_modal'))
-    }
 {% endif %}
 </script>
 </div>
 <div class="modal fade" id="modal_warning">
   <div class="modal-dialog">
       <div class="modal-content modal-sm">
-          <div class="modal-header">
+          <div class="modal-header alert-danger">
               <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
                   <span aria-hidden="true">&times;</span>
               </button>

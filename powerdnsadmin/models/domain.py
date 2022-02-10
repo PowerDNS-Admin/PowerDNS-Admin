@@ -15,9 +15,6 @@ from .domain_setting import DomainSetting
 from .history import History
 
 
-def by_record_content_pair(e):
-    return e[0]['content']
-
 class Domain(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, unique=True)
@@ -208,7 +205,7 @@ class Domain(db.Model):
             domain_master_ips=[],
             account_name=None):
         """
-        Add a domain to power dns, only if there is no record of the same name in the upper domain
+        Add a domain to power dns
         """
 
         headers = {'X-API-Key': self.PDNS_API_KEY}
@@ -246,7 +243,6 @@ class Domain(db.Model):
                     return {'status': 'error', 'msg': 'Domain already exists'}
                 return {'status': 'error', 'msg': jdata['error']}
             else:
-
                 current_app.logger.info(
                     'Added domain successfully to PowerDNS: {0}'.format(
                         domain_name))
