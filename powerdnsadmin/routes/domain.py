@@ -414,12 +414,9 @@ def add():
                         rrsets = rec.get_rrsets(upper_domain_name)
                         for r in rrsets:
                             if r['name'].rstrip('.') == domain_name:
-                                result = {'msg': 'Domain already exists as a record under {}'.format(upper_domain_name)}
                                 msg = 'Domain already exists as a record under {}'.format(upper_domain_name)
-                                #return render_template('errors/400.html', msg=result['msg']), 400
                                 return render_template('domain_add.html', domain_override_message=msg)
                     upper_domain_name = get_upper_domain(upper_domain_name)
-            ### END CHECK
             result = d.add(domain_name=domain_name,
                            domain_type=domain_type,
                            soa_edit_api=soa_edit_api,
