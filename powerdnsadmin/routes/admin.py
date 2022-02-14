@@ -303,7 +303,14 @@ def edit_user(user_username=None):
 def edit_key(key_id=None):
     domains = Domain.query.all()
     accounts = Account.query.all()
-    roles = Role.query.all()
+    if current_user.role_id == 1:
+        roles = Role.query.all()
+    else:
+        roles = Role.query.filter(db.and_(
+            Role.name != 'Administrator',
+            Role.name != 'Operator'
+        )).all()
+
     apikey = None
     create = True
     plain_key = None
@@ -329,6 +336,10 @@ def edit_key(key_id=None):
         role = fdata.getlist('key_role')[0]
         domain_list = fdata.getlist('key_multi_domain')
         account_list = fdata.getlist('key_multi_account')
+
+        if current_user.role_id == 3 and role in ['Administrator','Operator']:
+            return render_template('errors/400.html',
+                msg='Operators cannot create administrative API keys.'), 400
 
         # Create new apikey
         if create:
