@@ -375,10 +375,13 @@ def allowed_record_types(f):
 
         records_allowed_to_edit = Setting().get_records_allow_to_edit()
         content = request.get_json()
-        for record in content['rrsets']:
-            if record['type'] not in records_allowed_to_edit:
-                current_app.logger.error(f"Error: Record type not allowed: {record['type']}")
-                abort(401)
+        try:
+            for record in content['rrsets']:
+                if record['type'] not in records_allowed_to_edit:
+                    current_app.logger.error(f"Error: Record type not allowed: {record['type']}")
+                    abort(401)
+        except (TypeError, KeyError) as e:
+            pass
         return f(*args, **kwargs)
 
     return decorated_function
@@ -392,10 +395,13 @@ def allowed_record_ttl(f):
         allowed_ttls = Setting().get_ttl_options()
         allowed_numric_ttls = [ ttl[0] for ttl in allowed_ttls ]
         content = request.get_json()
-        for record in content['rrsets']:
+        try:
+            for record in content['rrsets']:
                 if record['ttl'] not in allowed_numric_ttls:
                     current_app.logger.error(f"Error: Record TTL not allowed: {record['ttl']}")
                     abort(401)
+        except (TypeError, KeyError) as e:
+            pass
         return f(*args, **kwargs)
 
     return decorated_function
