@@ -461,7 +461,7 @@ def login():
             auth = user.is_validate(method=auth_method,
                                     src_ip=request.remote_addr)
             if auth == False:
-                signin_history(user.username, 'LOCAL', False)
+                signin_history(user.username, auth_method, False)
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        error='Invalid credentials')
@@ -478,7 +478,7 @@ def login():
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
-                    signin_history(user.username, 'LOCAL', False)
+                    signin_history(user.username, auth_method, False)
                     return render_template('login.html',
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
@@ -504,7 +504,7 @@ def login():
                         user.revoke_privilege(True)
                         current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.' )
 
-        return authenticate_user(user, 'LOCAL', remember_me)
+        return authenticate_user(user, auth_method, remember_me)
 
 def checkForPDAEntries(Entitlements, urn_value):
     """
