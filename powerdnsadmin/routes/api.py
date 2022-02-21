@@ -941,6 +941,29 @@ def api_delete_account(account_id):
     else:
         abort(404)
     current_app.logger.debug(
+            f'Deleting Account {account.name}'
+        )
+    # Unassign all domains
+    pdns_api_url = Setting().get('pdns_api_url')
+    pdns_api_ext = utils.pdns_api_extended_uri(Setting().get('pdns_version'))
+    pdns_api_key = Setting().get('pdns_api_key')
+
+    domains = Domain.query.filter(Domain.account_id == account_id).all()
+    for domain in domains:
+        current_app.logger.debug(
+            f'Account {account.name} is associated with domain {domain.name}'
+        )
+        domain.PDNS_STATS_URL = pdns_api_url
+        domain.PDNS_API_KEY = pdns_api_key
+        domain.API_EXTENDED_URL = pdns_api_ext
+        domain.assoc_account(0, update=False)
+
+    if len(domains) > 0:
+        current_app.logger.debug("Updating all domains")
+        domain_obj = Domain()
+        domain_obj.update()
+
+    current_app.logger.debug(
         "Deleting account {} ({})".format(account_id, account.name))
     result = account.delete_account()
     if not result:
