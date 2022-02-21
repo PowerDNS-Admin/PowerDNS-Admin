@@ -941,6 +941,18 @@ def api_delete_account(account_id):
     else:
         abort(404)
     current_app.logger.debug(
+            f'Deleting Account {account.name}'
+        )
+
+    # Remove account association from domains first
+    if len(account.domains) > 0:
+        for domain in account.domains:
+            current_app.logger.info(f"Disassociating domain {domain.name} with {account.name}")
+            Domain(name=domain.name).assoc_account(None, update=False)
+        current_app.logger.info("Syncing all domains")
+        Domain().update()
+
+    current_app.logger.debug(
         "Deleting account {} ({})".format(account_id, account.name))
     result = account.delete_account()
     if not result:
