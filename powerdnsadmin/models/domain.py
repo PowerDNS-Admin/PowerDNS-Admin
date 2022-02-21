@@ -806,7 +806,7 @@ class Domain(db.Model):
         else:
             return {'status': 'error', 'msg': 'This domain does not exist'}
 
-    def assoc_account(self, account_id):
+    def assoc_account(self, account_id, update=True):
         """
         Associate domain with a domain, specified by account id
         """
@@ -842,7 +842,8 @@ class Domain(db.Model):
                 current_app.logger.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
-                self.update()
+                if update:
+                    self.update()
                 msg_str = 'Account changed for domain {0} successfully'
                 current_app.logger.info(msg_str.format(domain_name))
                 return {'status': 'ok', 'msg': 'account changed successfully'}
