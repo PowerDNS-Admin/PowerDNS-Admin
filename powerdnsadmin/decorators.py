@@ -1,12 +1,12 @@
 import base64
 import binascii
 from functools import wraps
-from flask import g, request, abort, current_app, render_template
+from flask import g, request, abort, current_app, render_template, jsonify
 from flask_login import current_user
 
-from .models import User, ApiKey, Setting, Domain, Setting
+from .models import User, ApiKey, Setting, Domain, Setting, Record
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
-from .lib.errors import DomainAccessForbidden
+from .lib.errors import DomainAccessForbidden, DomainOverrideForbidden
 
 def admin_role_required(f):
     """
@@ -123,9 +123,11 @@ def can_create_domain(f):
                 'Administrator', 'Operator'
         ] and not Setting().get('allow_user_create_domain'):
             abort(403)
+
         return f(*args, **kwargs)
 
     return decorated_function
+
 
 
 def api_basic_auth(f):
@@ -259,6 +261,7 @@ def api_can_create_domain(f):
             msg = "User {0} does not have enough privileges to create domain"
             current_app.logger.error(msg.format(current_user.username))
             raise NotEnoughPrivileges()
+
         return f(*args, **kwargs)
 
     return decorated_function
@@ -269,6 +272,9 @@ def apikey_can_create_domain(f):
     Grant access if:
         - user is in Operator role or higher, or
         - allow_user_create_domain is on
+        and
+        - deny_domain_override is off or
+        - override_domain is true (from request)
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -278,6 +284,26 @@ def apikey_can_create_domain(f):
             msg = "ApiKey #{0} does not have enough privileges to create domain"
             current_app.logger.error(msg.format(g.apikey.id))
             raise NotEnoughPrivileges()
+
+        deny_domain_override = Setting().get('deny_domain_override')
+        req = request.get_json(force=True)
+        override_domain = req["override_domain"]
+        print("Override: {}".format(override_domain))
+        d = Domain()
+        if deny_domain_override and not override_domain:
+            domain_name = req["name"].rstrip('.')
+            upper_domain_name = '.'.join(domain_name.split('.')[1:])
+            while upper_domain_name != '':
+                rec = Record()
+                if d.get_id_by_name(upper_domain_name.rstrip('.')) != None:
+                        rrsets = rec.get_rrsets(upper_domain_name)
+                        for r in rrsets:
+                            if r['name'].rstrip('.') == domain_name:
+                                msg = 'Domain already exists as a record under {}'.format(upper_domain_name)
+                                current_app.logger.error(msg)
+                                raise DomainOverrideForbidden()
+                upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
+
         return f(*args, **kwargs)
 
     return decorated_function

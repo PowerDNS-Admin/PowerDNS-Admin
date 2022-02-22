@@ -357,6 +357,7 @@ def add():
     if request.method == 'POST':
         try:
             domain_name = request.form.getlist('domain_name')[0]
+            domain_override = request.form.get('domain_override')
             domain_type = request.form.getlist('radio_type')[0]
             domain_template = request.form.getlist('domain_template')[0]
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
@@ -406,7 +407,7 @@ def add():
             d = Domain()
             ### Test if a record same as the domain already exists in an upper level domain
             deny_domain_override = Setting().get('deny_domain_override')
-            if deny_domain_override:
+            if deny_domain_override and not domain_override:
                 rec = Record()
                 upper_domain_name = get_upper_domain(domain_name)
                 while (upper_domain_name != ''):
