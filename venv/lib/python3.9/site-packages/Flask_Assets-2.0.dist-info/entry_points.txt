@@ -1,0 +1,3 @@
+[flask.commands]
+assets = flask_assets:assets
+

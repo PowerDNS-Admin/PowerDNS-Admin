@@ -1,0 +1,12 @@
+../blinker/__init__.py
+../blinker/__pycache__/__init__.cpython-39.pyc
+../blinker/__pycache__/_saferef.cpython-39.pyc
+../blinker/__pycache__/_utilities.cpython-39.pyc
+../blinker/__pycache__/base.cpython-39.pyc
+../blinker/_saferef.py
+../blinker/_utilities.py
+../blinker/base.py
+PKG-INFO
+SOURCES.txt
+dependency_links.txt
+top_level.txt

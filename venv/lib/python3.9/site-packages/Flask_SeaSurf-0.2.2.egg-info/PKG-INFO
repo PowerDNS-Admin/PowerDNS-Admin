@@ -1,0 +1,28 @@
+Metadata-Version: 1.1
+Name: Flask-SeaSurf
+Version: 0.2.2
+Summary: An updated CSRF extension for Flask.
+Home-page: https://github.com/maxcountryman/flask-seasurf/
+Author: Max Countryman
+Author-email: maxc@me.com
+License: BSD
+Description: 
+            Flask-SeaSurf
+            -------------
+        
+            An updated cross-site forgery protection extension for Flask.
+        
+            Links
+            `````
+        
+            * `documentation <http://packages.python.org/Flask-SeaSurf>`_
+        
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

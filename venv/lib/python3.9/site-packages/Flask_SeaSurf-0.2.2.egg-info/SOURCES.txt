@@ -1,0 +1,10 @@
+flask_seasurf.py
+setup.cfg
+setup.py
+Flask_SeaSurf.egg-info/PKG-INFO
+Flask_SeaSurf.egg-info/SOURCES.txt
+Flask_SeaSurf.egg-info/dependency_links.txt
+Flask_SeaSurf.egg-info/not-zip-safe
+Flask_SeaSurf.egg-info/requires.txt
+Flask_SeaSurf.egg-info/top_level.txt
+Flask_SeaSurf.egg-info/version_info.json

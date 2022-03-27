@@ -1,0 +1,65 @@
+Metadata-Version: 2.1
+Name: webcolors
+Version: 1.11.1
+Summary: A library for working with color names and color values formats defined by HTML and CSS.
+Home-page: https://github.com/ubernostrum/webcolors
+Author: James Bennett
+Author-email: james@b-list.org
+License: BSD 3-Clause
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: Utilities
+Requires-Python: >=3.5,
+
+.. -*-restructuredtext-*-
+
+.. image:: https://travis-ci.org/ubernostrum/webcolors.svg?branch=master
+    :target: https://travis-ci.org/ubernostrum/webcolors
+
+``webcolors`` is a module for working with HTML/CSS color definitions.
+
+Support is included for normalizing and converting between the
+following formats (RGB colorspace only; conversion to/from HSL can be
+handled by the ``colorsys`` module in the Python standard library):
+
+* Specification-defined color names
+
+* Six-digit hexadecimal
+
+* Three-digit hexadecimal
+
+* Integer ``rgb()`` triplet
+
+* Percentage ``rgb()`` triplet
+
+For example:
+
+.. code-block:: python
+
+    >>> import webcolors
+    >>> webcolors.hex_to_name(u'#daa520')
+    u'goldenrod'
+
+Implementations are also provided for the HTML5 color parsing and
+serialization algorithms. For example, parsing the infamous
+"chucknorris" string into an rgb() triplet:
+
+.. code-block:: python
+
+    >>> import webcolors
+    >>> webcolors.html5_parse_legacy_color(u'chucknorris')
+    HTML5SimpleColor(red=192, green=0, blue=0)
+
+Full documentation is `available online <https://webcolors.readthedocs.io/>`_.
+
+

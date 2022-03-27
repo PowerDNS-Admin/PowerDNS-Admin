@@ -1,0 +1,29 @@
+Metadata-Version: 2.1
+Name: Flask-Assets
+Version: 2.0
+Summary: Asset management for Flask, to compress and merge CSS and Javascript files.
+Home-page: http://github.com/miracle2k/flask-assets
+Author: Michael Elsdoerfer
+Author-email: michael@elsdoerfer.com
+License: BSD
+Platform: any
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: Flask (>=0.8)
+Requires-Dist: webassets (>=2.0)
+
+
+Flask-Assets
+-------------
+
+Integrates the ``webassets`` library with Flask, adding support for
+merging, minifying and compiling CSS and Javascript files.
+
+

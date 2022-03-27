@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: cssmin
+Version: 0.2.0
+Summary: A Python port of the YUI CSS compression algorithm.
+Home-page: http://github.com/zacharyvoase/cssmin
+Author: Zachary Voase
+Author-email: zacharyvoase@me.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

@@ -1,0 +1,9 @@
+MANIFEST.in
+setup.cfg
+setup.py
+src/cssmin.py
+src/cssmin.egg-info/PKG-INFO
+src/cssmin.egg-info/SOURCES.txt
+src/cssmin.egg-info/dependency_links.txt
+src/cssmin.egg-info/entry_points.txt
+src/cssmin.egg-info/top_level.txt
