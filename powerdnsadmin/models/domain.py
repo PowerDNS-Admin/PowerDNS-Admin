@@ -208,7 +208,7 @@ class Domain(db.Model):
         Add a domain to power dns
         """
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         domain_name = domain_name + '.'
         domain_ns = [ns + '.' for ns in domain_ns]
@@ -311,7 +311,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': 'error', 'msg': 'Domain does not exist.'}
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
             soa_edit_api = 'DEFAULT'
@@ -361,7 +361,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': 'error', 'msg': 'Domain does not exist.'}
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         post_data = {"kind": kind, "masters": masters}
 
@@ -681,7 +681,7 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
+            headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
             try:
                 # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
                 post_data = {"api_rectify": True}
@@ -747,7 +747,7 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
+            headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
             try:
                 # Deactivate DNSSEC
                 jdata = utils.fetch_json(
@@ -821,7 +821,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': False, 'msg': 'Domain does not exist'}
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         account_name = Account().get_name_by_id(account_id)
 
