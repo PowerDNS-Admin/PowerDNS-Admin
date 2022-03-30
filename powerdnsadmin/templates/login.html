@@ -8,6 +8,7 @@
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <META HTTP-EQUIV="REFRESH" CONTENT="{{ 60 * SETTING.get('session_timeout') }}">
   {% assets "css_login" -%}
   <link rel="stylesheet" href="{{ ASSET_URL }}">
   {%- endassets %}
