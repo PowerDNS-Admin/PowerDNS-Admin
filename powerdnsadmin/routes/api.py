@@ -188,6 +188,7 @@ def api_login_create_zone():
     api_full_uri = api_uri_with_prefix + '/servers/localhost/zones'
     headers = {}
     headers['X-API-Key'] = pdns_api_key
+    headers['Content-Type'] = 'application/json'
 
     msg_str = "Sending request to powerdns API {0}"
     msg = msg_str.format(request.get_json(force=True))

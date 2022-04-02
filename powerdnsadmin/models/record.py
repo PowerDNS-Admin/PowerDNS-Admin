@@ -99,7 +99,7 @@ class Record(object):
                 }
 
         # Continue if the record is ready to be added
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         try:
             jdata = utils.fetch_json(urljoin(
@@ -293,7 +293,7 @@ class Record(object):
         return new_rrsets, del_rrsets
 
     def apply_rrsets(self, domain_name, rrsets):
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
             '/servers/localhost/zones/{0}'.format(domain_name)),
@@ -500,7 +500,7 @@ class Record(object):
         """
         Delete a record from domain
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         data = {
             "rrsets": [{
                 "name": self.name.rstrip('.') + '.',
@@ -562,7 +562,7 @@ class Record(object):
         """
         Update single record
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         data = {
             "rrsets": [{
