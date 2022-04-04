@@ -883,6 +883,16 @@ class DetailedHistory():
                 domain_type=DetailedHistory.get_key_val(detail_dict, "domain_type"),
                 domain_master_ips=DetailedHistory.get_key_val(detail_dict, "domain_master_ips"))
 
+        elif DetailedHistory.get_key_val(detail_dict, 'msg') and DetailedHistory.get_key_val(detail_dict, 'status'):
+            self.detailed_msg = render_template_string('''
+                <table class="table table-bordered table-striped">
+                    <tr><td>Status: </td><td>{{ history_status }}</td></tr>
+                    <tr><td>Message:</td><td>{{ history_msg }}</td></tr>
+                </table>
+                ''',
+                history_status=DetailedHistory.get_key_val(detail_dict, 'status'),
+                history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
+
     # check for lower key as well for old databases
     @staticmethod
     def get_key_val(_dict, key):
