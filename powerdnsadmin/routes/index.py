@@ -550,12 +550,13 @@ def signin_history(username, authenticator, success):
 
     # Write history
     History(msg='User {} authentication {}'.format(username, str_success),
-            detail=str({
-                "username": username,
-                "authenticator": authenticator,
-                "ip_address": request_ip,
-                "success": 1 if success else 0
-            }),
+            detail=str(
+                json.dumps({
+                    "username": username,
+                    "authenticator": authenticator,
+                    "ip_address": request_ip,
+                    "success": 1 if success else 0
+                })),
             created_by='System').add()
 
 # Get a list of Azure security groups the user is a member of
@@ -864,13 +865,14 @@ def dyndns_update():
                 if result['status'] == 'ok':
                     history = History(
                         msg='DynDNS update: updated {} successfully'.format(hostname),
-                        detail=str({
-                            "domain": domain.name,
-                            "record": hostname,
-                            "type": rtype,
-                            "old_value": oldip,
-                            "new_value": str(ip)
-                        }),
+                        detail=str(
+                            json.dumps({
+                                "domain": domain.name,
+                                "record": hostname,
+                                "type": rtype,
+                                "old_value": oldip,
+                                "new_value": str(ip)
+                            })),
                         created_by=current_user.username,
                         domain_id=domain.id)
                     history.add()
@@ -906,11 +908,12 @@ def dyndns_update():
                         msg=
                         'DynDNS update: created record {0} in zone {1} successfully'
                         .format(hostname, domain.name, str(ip)),
-                        detail=str({
-                            "domain": domain.name,
-                            "record": hostname,
-                            "value": str(ip)
-                        }),
+                        detail=str(
+                            json.dumps({
+                                "domain": domain.name,
+                                "record": hostname,
+                                "value": str(ip)
+                            })),
                         created_by=current_user.username,
                         domain_id=domain.id)
                     history.add()

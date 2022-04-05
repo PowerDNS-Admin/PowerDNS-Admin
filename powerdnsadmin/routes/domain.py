@@ -409,11 +409,12 @@ def add():
                 domain_id = Domain().get_id_by_name(domain_name)
                 history = History(msg='Add domain {0}'.format(
                     pretty_domain_name(domain_name)),
-                                  detail=str({
+                                  detail=str(
+                                      json.dumps({
                                       'domain_type': domain_type,
                                       'domain_master_ips': domain_master_ips,
                                       'account_id': account_id
-                                  }),
+                                  })),
                                   created_by=current_user.username,
                                   domain_id=domain_id)
                 history.add()
@@ -464,7 +465,7 @@ def add():
                             msg=
                             'Failed to apply template {0} to {1}.'
                             .format(template.name, domain_name),
-                            detail=str(result),
+                            detail=str(json.dumps(result)),
                             created_by=current_user.username)
                         history.add()
                 return redirect(url_for('dashboard.dashboard'))
@@ -617,10 +618,11 @@ def change_soa_edit_api(domain_name):
         history = History(
             msg='Update soa_edit_api for domain {0}'.format(
                 pretty_domain_name(domain_name)),
-            detail=str({
+            detail=str(
+                json.dumps({
                 "domain": domain_name,
                 "soa_edit_api": new_setting
-            }),
+            })),
             created_by=current_user.username,
             domain_id=d.get_id_by_name(domain_name))
         history.add()

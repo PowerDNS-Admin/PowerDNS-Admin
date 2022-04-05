@@ -93,7 +93,7 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
         return
 
     if "add_rrests" in history_entry.detail:
-        detail_dict = json.loads(history_entry.detail.replace("\'", ''))
+        detail_dict = json.loads(history_entry.detail)
     else: # not a record entry
         return
 
@@ -362,13 +362,14 @@ def edit_key(key_id=None):
                 current_app.logger.error('Error: {0}'.format(e))
 
         history = History(msg=history_message,
-                          detail=str({
-                            'key': apikey.id,
-                            'role': apikey.role.name,
-                            'description': apikey.description,
-                            'domains': [domain.name for domain in apikey.domains],
-                            'accounts': [a.name for a in apikey.accounts]
-                          }),
+                          detail=str(
+                            json.dumps({
+                                'key': apikey.id,
+                                'role': apikey.role.name,
+                                'description': apikey.description,
+                                'domains': [domain.name for domain in apikey.domains],
+                                'accounts': [a.name for a in apikey.accounts]
+                            })),
                           created_by=current_user.username)
         history.add()
 
@@ -411,12 +412,13 @@ def manage_keys():
 
             current_app.logger.info('Delete API key {0}'.format(apikey.id))
             history = History(msg='Delete API key {0}'.format(apikey.id),
-                              detail=str({
-                                  'key': history_apikey_id,
-                                  'role': history_apikey_role,
-                                  'description': history_apikey_description,
-                                  'domains': history_apikey_domains
-                              }),
+                              detail=str(
+                                json.dumps({
+                                    'key': history_apikey_id,
+                                    'role': history_apikey_role,
+                                    'description': history_apikey_description,
+                                    'domains': history_apikey_domains
+                                })),
                               created_by=current_user.username)
             history.add()
 
@@ -763,10 +765,7 @@ class DetailedHistory():
             self.detailed_msg = ""
             return
 
-        if 'add_rrest' in history.detail:
-            detail_dict = json.loads(history.detail.replace("\'", ''))
-        else:
-            detail_dict = json.loads(history.detail.replace("'", '"'))
+        detail_dict = json.loads(history.detail)
 
         if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
             self.detailed_msg = render_template_string("""
@@ -1673,10 +1672,11 @@ def create_template():
             result = t.create()
             if result['status'] == 'ok':
                 history = History(msg='Add domain template {0}'.format(name),
-                                  detail=str({
-                                      'name': name,
-                                      'description': description
-                                  }),
+                                  detail=str(
+                                    json.dumps({
+                                        'name': name,
+                                        'description': description
+                                    })),
                                   created_by=current_user.username)
                 history.add()
                 return redirect(url_for('admin.templates'))
@@ -1720,10 +1720,11 @@ def create_template_from_zone():
         result = t.create()
         if result['status'] == 'ok':
             history = History(msg='Add domain template {0}'.format(name),
-                              detail=str({
-                                  'name': name,
-                                  'description': description
-                              }),
+                              detail=str(
+                                json.dumps({
+                                    'name': name,
+                                    'description': description
+                                })),
                               created_by=current_user.username)
             history.add()
 
@@ -1883,7 +1884,7 @@ def delete_template(template):
             if result['status'] == 'ok':
                 history = History(
                     msg='Deleted domain template {0}'.format(template),
-                    detail=str({'name': template}),
+                    detail=str(json.dumps({'name': template})),
                     created_by=current_user.username)
                 history.add()
                 return redirect(url_for('admin.templates'))
