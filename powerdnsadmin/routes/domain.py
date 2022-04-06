@@ -10,6 +10,7 @@ from flask_login import login_required, current_user, login_manager
 
 from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
+from ..lib.utils import to_idna
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec, can_remove_domain
 from ..models.user import User, Anonymous
 from ..models.account import Account
@@ -379,7 +380,7 @@ def add():
 
             # Encode domain name into punycode (IDN)
             try:
-                domain_name = domain_name.encode('idna').decode()
+                domain_name = to_idna(domain_name, 'encode')
             except:
                 current_app.logger.error("Cannot encode the domain name {}".format(domain_name))
                 current_app.logger.debug(traceback.format_exc())
