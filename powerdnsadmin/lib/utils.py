@@ -4,6 +4,7 @@ import json
 import requests
 import hashlib
 import ipaddress
+import idna
 
 from collections.abc import Iterable
 from distutils.version import StrictVersion
@@ -248,10 +249,27 @@ def pretty_domain_name(value):
         if value.startswith('xn--') \
         or value.find('.xn--') != -1:
             try:
-                return value.encode().decode('idna')
+                return to_idna(value, 'decode')
             except:
-                raise Exception("Cannot decode IDN domain")
+                raise Exception('Cannot decode IDN domain')
         else:
             return value
     else:
-        raise Exception("Require the Punycode in string format")
+        raise Exception('Require the Punycode in string format')
+
+def to_idna(value, action):
+    splits = value.split()
+    result = []
+    if action == 'encode':
+        for split in splits:
+            try:
+                # Try encoding to idna
+                result.append(idna.encode(split).decode())
+            except idna.IDNAError:
+                result.append(split)
+    elif action == 'decode':
+        for split in splits:
+            result.append(idna.decode(split))   
+    else:
+        raise Exception('No valid action received')
+    return ' '.join(result)
