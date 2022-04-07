@@ -7,7 +7,6 @@ import ipaddress
 import base64
 from distutils.util import strtobool
 from yaml import Loader, load
-from onelogin.saml2.utils import OneLogin_Saml2_Utils
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
 
@@ -932,6 +931,7 @@ def dyndns_update():
 def saml_login():
     if not current_app.config.get('SAML_ENABLED'):
         abort(400)
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     redirect_url = OneLogin_Saml2_Utils.get_self_url(req) + url_for(
@@ -944,7 +944,7 @@ def saml_metadata():
     if not current_app.config.get('SAML_ENABLED'):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
-
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     settings = auth.get_settings()
