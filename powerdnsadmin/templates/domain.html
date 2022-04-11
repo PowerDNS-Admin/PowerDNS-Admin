@@ -162,6 +162,10 @@
                 targets: [0, 4]
             },
             {
+                targets: [0, 1, 2, 3, 4, 5],
+                render: $.fn.dataTable.render.text()
+            },
+            {
                 // hidden column so that we can add new records on top
                 // regardless of whatever sorting is done. See orderFixed
                 visible: false,
