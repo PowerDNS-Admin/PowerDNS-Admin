@@ -780,6 +780,12 @@ def dnssec(domain_name):
 def dnssec_enable(domain_name):
     domain = Domain()
     dnssec = domain.enable_domain_dnssec(domain_name)
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was enabled for domain ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
     return make_response(jsonify(dnssec), 200)
 
 
@@ -793,7 +799,12 @@ def dnssec_disable(domain_name):
 
     for key in dnssec['dnssec']:
         domain.delete_dnssec_key(domain_name, key['id'])
-
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was disabled for domain ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
     return make_response(jsonify({'status': 'ok', 'msg': 'DNSSEC removed.'}))
 
 
