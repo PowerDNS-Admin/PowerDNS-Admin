@@ -4,10 +4,11 @@ import traceback
 import re
 from base64 import b64encode
 from ast import literal_eval
+from sqlalchemy import func
 from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
 
-from ..decorators import operator_role_required, admin_role_required, history_access_required
+from ..decorators import can_edit_roles, operator_role_required, admin_role_required, history_access_required
 from ..models.user import User
 from ..models.account import Account
 from ..models.account_user import AccountUser
@@ -302,7 +303,13 @@ def edit_user(user_username=None):
 def edit_key(key_id=None):
     domains = Domain.query.all()
     accounts = Account.query.all()
-    roles = Role.query.all()
+    if current_user.role_id == 1:
+        roles = Role.query.all()
+    else:
+        roles = Role.query.filter(db.and_(
+            Role.name != 'Administrator',
+            Role.name != 'Operator'
+        )).all()
     apikey = None
     create = True
     plain_key = None
@@ -329,9 +336,13 @@ def edit_key(key_id=None):
         domain_list = fdata.getlist('key_multi_domain')
         account_list = fdata.getlist('key_multi_account')
 
+        if current_user.role_id == 3 and role in ['Administrator','Operator']:
+            return render_template('errors/400.html',
+                msg='Operators cannot create administrative API keys.'), 400
+
         # Create new apikey
         if create:
-            if role == "User":
+            if role not in ['Administrator', 'Operator']:
                 domain_obj_list = Domain.query.filter(Domain.name.in_(domain_list)).all()
                 account_obj_list = Account.query.filter(Account.name.in_(account_list)).all()
             else:
@@ -354,7 +365,7 @@ def edit_key(key_id=None):
         # Update existing apikey
         else:
             try:
-                if role != "User":
+                if role in ['Administrator', 'Operator']:
                     domain_list, account_list = [], []
                 apikey.update(role,description,domain_list, account_list)
                 history_message =  "Updated API key {0}".format(apikey.id)
@@ -544,22 +555,22 @@ def manage_user():
                             'msg': 'User does not exist.'
                         }), 404)
 
-                if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+                if user.role.name in ['Administrator','Operator'] and current_user.role.name != 'Administrator':
                     return make_response(
                         jsonify({
                             'status':
                             'error',
                             'msg':
-                            'You do not have permission to change Administrator users role.'
+                            'You do not have permission to change a privileged user\'s role.'
                         }), 400)
 
-                if role_name == 'Administrator' and current_user.role.name != 'Administrator':
+                if role_name in ['Administrator','Operator'] and current_user.role.name != 'Administrator':
                     return make_response(
                         jsonify({
                             'status':
                             'error',
                             'msg':
-                            'You do not have permission to promote a user to Administrator role.'
+                            'You do not have permission to promote a user to {0} role.'.format(role_name)
                         }), 400)
 
                 user = User(username=username)
@@ -752,6 +763,273 @@ def manage_account():
                     'There is something wrong, please contact Administrator.'
                 }), 400)
 
+@admin_bp.route('/manage-roles', methods=['GET', 'POST'])
+@login_required
+@can_edit_roles
+def manage_roles():
+    if request.method == 'GET':
+        roles = Role.query.order_by(Role.name).all()
+        return render_template('admin_manage_roles.html', roles=roles)
+
+    if request.method == 'POST':
+        #
+        # post data should in format
+        # {'action': 'delete_role', 'data': 'rolename'}
+        #
+        try:
+            jdata = request.json
+            data = jdata['data']
+
+            if jdata['action'] == 'delete_role':
+                role = Role.query.filter(Role.name == data).first()
+                if not role:
+                    return make_response(
+                        jsonify({
+                            'status': 'error',
+                            'msg': 'Role not found.'
+                        }), 404)
+                if role.name in ['User', 'Administrator', 'Operator']:
+                    return make_response(
+                        jsonify({
+                            'status': 'error',
+                            'msg': 'Cannot delete a basic Role.'
+                        }), 404)
+                # Remove users from role first
+                # Set them as "User" instead
+                # Then delete the role
+                for u in role.users:
+                    u.set_role("User")
+                result = role.delete_role()
+                if result:
+                    history = History(msg='Delete role {0}'.format(data),
+                                      created_by=current_user.username)
+                    history.add()
+                    return make_response(
+                        jsonify({
+                            'status': 'ok',
+                            'msg': 'Account has been removed.'
+                        }), 200)
+                else:
+                    return make_response(
+                        jsonify({
+                            'status': 'error',
+                            'msg': 'Cannot remove account.'
+                        }), 500)
+            else:
+                return make_response(
+                    jsonify({
+                        'status': 'error',
+                        'msg': 'Action not supported.'
+                    }), 400)
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot update account. Error: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'There is something wrong, please contact Administrator.'
+                }), 400)
+
+@admin_bp.route('/role/edit/<role_name>', methods=['GET', 'POST'])
+@admin_bp.route('/role/edit', methods=['GET', 'POST'])
+@login_required
+@can_edit_roles
+def edit_role(role_name=None):
+
+    # Operator role settings is only accessible from and Administrator.
+    # Administrator role is also accisible by an administrator
+    if (role_name == 'Operator' and current_user.role_id == 3) or \
+            (role_name == "Administrator" and current_user.role_id != 1):
+        abort(403)
+
+    if role_name is not None:  # if not create
+        role_obj = Role.query.filter(Role.name == role_name).first()
+    else:
+        role_obj = Role()
+
+
+    _fr = role_obj.forward_access
+    _rr = role_obj.reverse_access
+    f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
+    r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
+
+    users = User.query.all()
+    if request.method == 'GET':
+        if role_name is None:
+            role=Role(name="",description="")
+            return render_template('admin_edit_role.html',
+                                    role_user_ids=[],
+                                    role=role,
+                                    users=users,
+                                    create=1,
+                                    f_records=f_records,
+                                    r_records=r_records)
+        else:
+            role = Role.query.filter(
+                Role.name == role_name).first()
+            role_user_ids = role.get_user()
+            return render_template('admin_edit_role.html',
+                                    role=role,
+                                    role_user_ids=role_user_ids,
+                                    users=users,
+                                    create=0,
+                                    f_records=f_records,
+                                    r_records=r_records)
+
+    if request.method == 'POST':
+
+        fdata = request.form
+        new_user_list = request.form.getlist('role_multi_user')
+        # on POST, synthesize role and role_user_ids from form data
+        if not role_name:
+            role_name = fdata['rolename']
+
+        role = Role(name=role_name,
+                          description=fdata['roledescription'])
+
+        role.can_access_history = True if role_name in ['Administrator','Operator'] or request.form.get('can_access_history') else False
+        role.can_create_domain = True if role_name in ['Administrator'] or request.form.get('can_create_domain') else False
+        role.can_remove_domain = True if role_name in ['Administrator'] or request.form.get('can_remove_domain') else False
+        role.can_configure_dnssec = True if role_name in ['Administrator'] or request.form.get('can_configure_dnssec') else False
+        role.can_edit_roles = True if role_name in ['Administrator'] or request.form.get('can_edit_roles') else False
+        role.can_view_edit_all_domains = True if role_name in ['Administrator','Operator'] or request.form.get('can_view_edit_all_domains') else False
+
+
+        forward_records_perms = {}
+        reverse_records_perms = {}
+        records = role.defaults['forward_records_allow_edit']
+        for r in records:
+            # is is on, then
+            if request.form.get('forward_w_{0}'.format(r.lower())):
+                forward_records_perms[r] = "W"
+            elif request.form.get('forward_r_{0}'.format(r.lower())):
+                forward_records_perms[r] = "R"
+            else:
+                forward_records_perms[r] = "None"
+
+            if request.form.get('reverse_w_{0}'.format(r.lower())):
+                reverse_records_perms[r] = "W"
+            elif request.form.get('reverse_r_{0}'.format(r.lower())):
+                reverse_records_perms[r] = "R"
+            else:
+                reverse_records_perms[r] = "None"
+        role.forward_access = json.dumps(forward_records_perms)
+        role.reverse_access = json.dumps(reverse_records_perms)
+
+
+        role_user_ids = []
+        for username in new_user_list:
+            userid = User(username=username).get_user_info_by_username().id
+            role_user_ids.append(userid)
+
+        create = int(fdata['create'])
+        if create:
+            if role.name == "" or not role.name.isalnum():
+                return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=role_user_ids,
+                                        users=users,
+                                        create=create,
+                                        invalid_rolename=True,
+                                        f_records=f_records,
+                                        r_records=r_records)
+
+            if Role.query.filter(func.lower(Role.name) == func.lower(role.name)).first():
+                return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=role_user_ids,
+                                        users=users,
+                                        create=create,
+                                        duplicate_rolename=True,
+                                        f_records=f_records,
+                                        r_records=r_records)
+
+            result = role.create_role()
+        else:
+            result = role.update_role()
+
+
+        if result['status']:
+            role.id = role.get_id_by_name(role.name)
+            R = Role.query.filter(Role.id == role.id).first()
+            removed_ids, added_ids, err = grant_role_privileges(R, new_user_list)
+            if err:
+                return render_template('admin_edit_role.html',
+                                        role=role,
+                                        role_user_ids=R.get_user(),
+                                        users=users,
+                                        create=create,
+                                        error=err,
+                                        f_records=f_records,
+                                        r_records=r_records)
+            removed_username_list = []
+            added_username_list = []
+            for id_i in removed_ids:
+                removed_username_list.append(User(id_i).get_user_info_by_id().username)
+            for id_i in added_ids:
+                added_username_list.append(User(id_i).get_user_info_by_id().username)
+            jsoned = {  "type" : "role_change",
+                        "rolename" : role.name,
+                        "dnssec": role.can_configure_dnssec, 
+                        "history_access" : role.can_access_history,
+                        "create_domain" : role.can_create_domain,
+                        "remove_domain" : role.can_remove_domain,
+                        "added_users" :   ', '.join(added_username_list),
+                        "removed_users" : ', '.join(removed_username_list)}
+
+            if create:
+                history = History(msg='Create role {0}'.format(role.name),
+                        created_by=current_user.username, detail=json.dumps(jsoned))
+            else:
+                history = History(msg='Update role {0}'.format(role.name),
+                        created_by=current_user.username, detail=json.dumps(jsoned))
+            history.add()
+            return redirect(url_for('admin.manage_roles'))
+
+        return render_template('admin_edit_role.html',
+                                    role=role,
+                                    role_user_ids=role_user_ids,
+                                    users=users,
+                                    create=create,
+                                    error=result['msg'],
+                                    f_records=f_records,
+                                    r_records=r_records)
+
+
+def grant_role_privileges(role, new_user_list):
+    role_user_ids = role.get_user()
+    new_user_ids = [
+        u.id
+        for u in User.query.filter(User.username.in_(new_user_list)).all()
+    ] if new_user_list else []
+
+    removed_ids = list(set(role_user_ids).difference(new_user_ids))
+    added_ids = list(set(new_user_ids).difference(role_user_ids))
+    modified_ids = removed_ids + added_ids
+
+    if current_user.id in modified_ids:
+        return [], [], "Cannot update your own role."
+
+    if current_user.role_id != 1:
+        for uid in modified_ids:
+            u = User.get_user_info_by_id(User(uid))
+            if u.role_id in [1,3]:
+                return [], [], "Cannot update a privileged user's role."
+
+    for uid in removed_ids:
+        u = User.get_user_info_by_id(User(uid))
+        current_user_role_id = u.role_id
+        if current_user_role_id == role.id:
+            u.set_role("User")
+
+    for uid in added_ids:
+        user = User(uid)
+        user = User.get_user_info_by_id(user)
+        user.set_role(role.name)
+    return removed_ids, added_ids, None
 
 class DetailedHistory():
     def __init__(self, history, change_set):
@@ -830,6 +1108,22 @@ class DetailedHistory():
                 </table>
                 """,
                 users_with_access=users_with_access)
+        
+        elif 'apiRecords' in detail_dict:   # template access to zone denied
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr><th colspan=2>Role does not have access to some record types</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Role:</td><td>{{ role_name }}</td></tr>
+                        <tr><td>Forbidden Record Types:</td><td>{{ record_types }}</td></tr>
+                    </tbody>
+                </table>
+            """,
+            role_name = DetailedHistory.get_key_val(detail_dict, "role"),
+            record_types = DetailedHistory.get_key_val(detail_dict, "apiRecords")
+            )
 
         elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
             self.detailed_msg = render_template_string("""
@@ -882,6 +1176,25 @@ class DetailedHistory():
                 """,
                 domain_type=DetailedHistory.get_key_val(detail_dict, "domain_type"),
                 domain_master_ips=DetailedHistory.get_key_val(detail_dict, "domain_master_ips"))
+
+        elif 'type' in detail_dict and detail_dict['type'] == 'role_change':
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><th colspan="2">Updated Role {{ role_name }}</th></tr>
+                    <tr><td>Can configure DNSSEC</td><td>{{ dnssec }}</td></tr>
+                    <tr><td>History access:</td><td>{{ history_access }}</td></tr>
+                    <tr><td>Can create domain:</td><td>{{ create_domain }}</td></tr>
+                    <tr><td>Can remove domain:</td><td>{{ remove_domain }}</td></tr>
+                    <tr><td>Added users:</td><td>{{ added_users }}</td></tr>
+                    <tr><td>Removed users:</td><td>{{ removed_users }}</td></tr>
+                </table>
+            """,dnssec=detail_dict["dnssec"],
+                        role_name=detail_dict["rolename"],
+                        history_access=detail_dict["history_access"],
+                        create_domain=detail_dict["create_domain"],
+                        remove_domain=detail_dict["remove_domain"],
+                        added_users=detail_dict["added_users"],
+                        removed_users=detail_dict["removed_users"])
 
     # check for lower key as well for old databases
     @staticmethod
@@ -1014,7 +1327,6 @@ def from_utc_to_local(local_offset, timeframe):
 @login_required
 @history_access_required
 def history_table():    # ajax call data
-
 	if request.method == 'POST':
 		if current_user.role.name != 'Administrator':
 			return make_response(
@@ -1256,11 +1568,10 @@ def setting_basic():
             'maintenance', 'fullscreen_layout', 'record_helper',
             'login_ldap_first', 'default_record_table_size',
             'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
-            'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
+            'pretty_ipv6_ptr', 'bg_domain_updates', 'site_name',
             'session_timeout', 'warn_session_timeout', 'ttl_options',
             'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
-	          'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records', 'otp_force'
+	        'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records', 'otp_force'
         ]
 
         return render_template('admin_setting_basic.html', settings=settings)
@@ -1332,35 +1643,6 @@ def setting_pdns():
                                pdns_api_url=pdns_api_url,
                                pdns_api_key=pdns_api_key,
                                pdns_version=pdns_version)
-
-
-@admin_bp.route('/setting/dns-records', methods=['GET', 'POST'])
-@login_required
-@operator_role_required
-def setting_records():
-    if request.method == 'GET':
-        _fr = Setting().get('forward_records_allow_edit')
-        _rr = Setting().get('reverse_records_allow_edit')
-        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
-        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
-
-        return render_template('admin_setting_records.html',
-                               f_records=f_records,
-                               r_records=r_records)
-    elif request.method == 'POST':
-        fr = {}
-        rr = {}
-        records = Setting().defaults['forward_records_allow_edit']
-        for r in records:
-            fr[r] = True if request.form.get('fr_{0}'.format(
-                r.lower())) else False
-            rr[r] = True if request.form.get('rr_{0}'.format(
-                r.lower())) else False
-
-        Setting().set('forward_records_allow_edit', str(fr))
-        Setting().set('reverse_records_allow_edit', str(rr))
-        return redirect(url_for('admin.setting_records'))
-
 
 def has_an_auth_method(local_db_enabled=None,
                        ldap_enabled=None,
@@ -1779,7 +2061,11 @@ def edit_template(template):
     try:
         t = DomainTemplate.query.filter(
             DomainTemplate.name == template).first()
-        records_allow_to_edit = Setting().get_records_allow_to_edit()
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        f_records_allow_to_view, f_records_allow_to_edit = role.get_forward_records_allow_to_view_edit()
+        r_records_allow_to_view, r_records_allow_to_edit = role.get_reverse_records_allow_to_view_edit()
+        records_allow_to_view = f_records_allow_to_view + r_records_allow_to_view
+        records_allow_to_edit = f_records_allow_to_edit + r_records_allow_to_edit
         quick_edit = Setting().get('record_quick_edit')
         ttl_options = Setting().get_ttl_options()
         if t is not None:
@@ -1799,6 +2085,7 @@ def edit_template(template):
                                    template=t.name,
                                    records=records,
                                    editable_records=records_allow_to_edit,
+                                   viewable_records=records_allow_to_view,
                                    quick_edit=quick_edit,
                                    ttl_options=ttl_options)
     except Exception as e:
