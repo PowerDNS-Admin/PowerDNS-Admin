@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% set active_page = "admin_roles" %}
+{% block title %}<title>Edit Role - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Role
+        <small>{% if create %}New role{% else %}{{ role.name }}{% endif %}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('admin.manage_roles') }}">Roles</a></li>
+        <li class="active">{% if create %}Add{% else %}Edit{% endif %} role</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <!-- form start -->
+        <form role="form" method="post"
+            action="{% if create %}{{ url_for('admin.edit_role') }}{% else %}{{ url_for('admin.edit_role', role_name=role.name) }}{% endif %}">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} role</h3>
+                </div>
+                <!-- /.box-header -->
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="create" value="{{ create }}">
+                    <div class="box-body">
+                        {% if error %}
+                        <div class="alert alert-danger alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                            {{ error }}
+                        </div>
+                        {% endif %}
+                        <div
+                            class="form-group has-feedback {% if invalid_rolename or duplicate_rolename %}has-error{% endif %}">
+                            <label class="control-label" for="rolename">Name</label>
+                            <input type="text" class="form-control" placeholder="Role Name (required)"
+                                name="rolename" {% if role %}value="{{ role.name }}" {% endif %}
+                                {% if not create %}disabled{% endif %}>
+                            <span class="fa fa-cog form-control-feedback"></span>
+                            {% if invalid_rolename %}
+                            <span class="help-block">Cannot be blank and must only contain alphanumeric
+                                characters.</span>
+                            {% elif duplicate_rolename %}
+                            <span class="help-block">Role name already in use.</span>
+                            {% endif %}
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="roledescription">Description</label>
+                            <input type="text" class="form-control" placeholder="Role Description (optional)"
+                                name="roledescription" {% if role %}value="{{ role.description }}" {% endif %}>
+                            <span class="fa fa-industry form-control-feedback"></span>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <button type="button" id="btn_access_control" class="btn btn-flat btn-primary">
+                            Toggle Access Control
+                        </button>
+                    </div>
+                    <div id="access_control" style="display: none">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Access Control</h3>
+                        </div>
+                        <div class="box-body">
+                            <p>Users on the right are given the current Role.<br />
+                            Users removed from the right column will be given the default "User" role.
+                            </p>
+                            <p>Click on users to move between columns.</p>
+                            {% if role.name != "Administrator" and current_user.role_id == 1 %}
+                            <p>
+                                Users highlighted in red are privileged users.<br />
+                                <strong>WARNING:</strong> Moving a privileged user to the right column will revoke their privileges.
+                            </p>
+                            {% endif %}
+                            <div class="form-group col-xs-2">
+                                <select multiple="multiple" class="form-control" id="role_multi_user"
+                                    name="role_multi_user">
+                                    {% for user in users %}
+                                    <option
+                                        {% if user.id in role_user_ids|default([]) %}selected{% endif %}
+                                        {% if user.role.name in ['Administrator', 'Operator'] %} style="color:red"{% endif %}
+                                        value="{{ user.username }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <div class="form-group">
+                            <input type="checkbox" id="can_access_history" name="can_access_history"
+                            class="checkbox" {% if role.can_access_history == true %} checked {% endif %}
+                            {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
+                            <label for="can_access_history">Allow History access for this role</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_create_domain" name="can_create_domain"
+                            class="checkbox" {% if role.can_create_domain == true %} checked {% endif %}
+                            {% if role.name in ['Administrator'] %} disabled {% endif %}>
+                            <label for="can_create_domain">Allow Domain creation for this role</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_remove_domain" name="can_remove_domain"
+                            class="checkbox" {% if role.can_remove_domain == true %} checked {% endif %}
+                            {% if role.name in ['Administrator'] %} disabled {% endif %}>
+                            <label for="can_remove_domain">Allow Domain removal for this role</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_configure_dnssec" name="can_configure_dnssec"
+                                class="checkbox" {% if role.can_configure_dnssec == true %} checked {% endif %}
+                                {% if role.name in ['Administrator'] %} disabled {% endif %}>
+                            <label for="can_configure_dnssec">Allow DNSSEC configuration for this role</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="can_view_edit_all_domains" name="can_view_edit_all_domains"
+                                class="checkbox" {% if role.can_view_edit_all_domains == true %} checked {% endif %}
+                                {% if role.name in ['Administrator', 'Operator'] %} disabled {% endif %}>
+                            <label for="can_view_edit_all_domains">Allow to view and edit all domains for this role</label>
+                        </div>
+                        {% if role.name == 'Operator' %}
+                        <div class="form-group">
+                            <input type="checkbox" id="can_edit_roles" name="can_edit_roles"
+                                class="checkbox" {% if role.can_edit_roles == true %} checked {% endif %}>
+                            <label for="can_edit_roles">Allow to edit roles (for operators only)</label>
+                        </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-flat btn-primary">
+                                {% if create %}Create{% else %}Update{% endif %} Role
+                            </button>
+                        </div>
+                    </div>
+
+
+
+            </div>
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help with {% if create %}creating a new{% else %}editing a{% endif %} role</h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        Custom roles can be built upon the limited, <strong>non-Administrative "User"</strong> role, to give specific entities
+                        just enough control in the application.<br />
+                        A user can be assigned a specific Role in this Edit Role page.<br/>
+                        <strong>NOTE:</strong> Only <strong>administrative roles</strong>("Administrator", "Operator") have access to all domains (including the removal of them).
+                        <strong>Non-administrative users</strong> cannot have this ability.
+                    </p>
+                    <p>
+                        <strong>Name</strong> is the name of the role. It cannot be edited after creation.<br />
+                        <strong>Description</strong> is a user friendly name for this role.<br />
+                        <strong>Access Control</strong> allows an Administrator or Operator to quickly assign the new Role
+                        to multiple users. Users removed from the right column will be given the default "User" Role.<br />
+                        Operators cannot assign a role to users who are either Adminstrators or Operators. </br>
+                        <strong>Allow DNSSEC configuration</strong> selects whether users who have this Role
+                        can toggle DNSSEC in their domains.<br />
+                        <strong>Allow History access for this role</strong> toggles whether users who have this Role can view History records for the domains they have access to.<br />
+                        <strong>Allow Domain creation for this role</strong> toggles whether users who have this Role can create new Domains.<br />
+                        Note that domains created by non-administrative users must belong to an account. Therefore, users who are not members in an account
+                        cannot create a new domain.<br />
+                        <strong>Allow Domain removal for this role</strong> toggles whether users who have this Role can remove Domains they have access to.<br />
+                        <strong>Allow DNSSEC configuration for this role</strong> grants users who have this Role Read or Write access
+                        to a specific DNS Record type, in all Forward, or all Reverse Domains.<br />
+                        In order to have Write access to a Record, a user must also have Read access to the same Record.<br />
+                        <strong>Allow to view and edit all domains for this role</strong> enables read access for all the domains. 
+                        With this option toggled on, a non-administrative user assigned to this role, can only view and edit the domains.<br />
+                        This setting does not give the user Domain Removal access and History access for all domains.<br />
+                        Instead, they must be given access to the domain explicitly to use these features.<br />
+
+                        {% if role.name == 'Operator' %}
+
+                        <strong>Allow to edit roles</strong> option, permits users who are Operators, to modify the Role privileges of non-Administrative roles.<br/>
+                        {% endif %} 
+                        {% if role.name == 'Operator' %}
+                        <strong>NOTE: </strong> For the Operator role, the options
+                        <ul>
+                            <li>Allow History access for this role</li>
+                            <li>Allow to view and edit all domains for this role</li>
+
+                        </ul>
+                        are enabled by default and cannot be toggled off.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">DNS Record Access</h3>
+                </div>
+                <div class="box-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 10px">#</th>
+                            <th style="width: 40px">Record</th>
+                            <th>Forward Zone</th>
+                            <th>Reverse Zone</th>
+                        </tr>
+                        {% for record in f_records %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ record }}</td>
+                            <td class='record_privs' id="{{ record + '_forward_' }} {{loop.index}}">
+                                R
+                                <input  type="checkbox" id="forward_r_{{ record|lower }}" name="forward_r_{{ record|lower }}"
+                                    class="checkbox read" {% if f_records[record] == "R" or f_records[record] == "W" %}checked{% endif %}>
+                                W
+                                <input type="checkbox" id="forward_w_{{ record|lower }}" name="forward_w_{{ record|lower }}"
+                                    class="checkbox write" {% if f_records[record] == "W" %}checked{% endif %}>
+                            </td>
+                            <td class='record_privs' id="{{ record + '_reverse_' }} {{loop.index }}">
+                                R
+                                <input type="checkbox" id="reverse_r_{{ record|lower }}" name="reverse_r_{{ record|lower }}"
+                                    class="checkbox read" {% if r_records[record] == "R" or r_records[record] == "W" %}checked{% endif %}>
+                                W
+                                <input type="checkbox" id="reverse_w_{{ record|lower }}" name="reverse_w_{{ record|lower }}"
+                                    class="checkbox write" {% if r_records[record] == "W" %}checked{% endif %}>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // Toggle Access Control Visibility
+    $("#btn_access_control").on("click", function (e) {
+        e.stopPropagation();
+        var access_control = document.getElementById("access_control");
+        if (access_control.style.display === "none") {
+            access_control.style.display = "block";
+
+            var autoprovision = "{{ SETTING.get('autoprovisioning') }}"
+            console.log(autoprovision)
+            if(autoprovision == "True" || autoprovision == "1") {
+                var modal = $("#modal_warning");
+                modal.find('.modal-body p').text('LDAP Autoprovisioning is enabled. Changing a user\'s role may be automatically reverted the next time they log in via LDAP.');
+                modal.modal('show');
+            }
+        }
+        else {
+            access_control.style.display = "none";
+        }
+    });
+
+    // Access Control JS
+    $("#role_multi_user").multiSelect({
+        selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
+        selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
+        afterInit: function (ms) {
+            var that = this,
+                $selectableSearch = that.$selectableUl.prev(),
+                $selectionSearch = that.$selectionUl.prev(),
+                selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+                selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+
+            that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+                .on('keydown', function (e) {
+                    if (e.which === 40) {
+                        that.$selectableUl.focus();
+                        return false;
+                    }
+                });
+
+            that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+                .on('keydown', function (e) {
+                    if (e.which == 40) {
+                        that.$selectionUl.focus();
+                        return false;
+                    }
+                });
+        },
+        afterSelect: function () {
+            this.qs1.cache();
+            this.qs2.cache();
+        },
+        afterDeselect: function () {
+            this.qs1.cache();
+            this.qs2.cache();
+        }
+    });
+
+    $('.checkbox').iCheck({
+        checkboxClass: 'icheckbox_square-blue',
+        increaseArea: '20%'
+    });
+
+    // Auto mutual checkbox handling
+    $(".record_privs :input").on('ifUnchecked',function() {
+        var splitted = $(this).prop('id').split('_')
+        if ($(this).prop('class') == "checkbox read") {
+            $('#'+splitted[0]+'_w_'+splitted[2]).iCheck('uncheck')
+        }
+    });
+
+    $(".record_privs :input").on('ifChecked',function() {
+        var splitted = $(this).prop('id').split('_')
+        if ($(this).prop('class') == "checkbox write") {
+            $('#'+splitted[0]+'_r_'+splitted[2]).iCheck('check')
+        }
+    })   
+</script>
+{% endblock %}
