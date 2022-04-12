@@ -221,7 +221,7 @@ def api_login_create_zone():
 
         if current_user.role.name not in ['Administrator', 'Operator']:
             current_app.logger.debug(
-                "User is ordinary user, assigning created domain")
+                "User is non-admnistrative, assigning created domain")
             domain = Domain(name=data['name'].rstrip('.'))
             domain.update()
             domain.grant_privileges([current_user.id])
@@ -337,7 +337,7 @@ def api_generate_apikey():
         abort(400)
 
     if role_name not in ['Administrator', 'Operator'] and len(domains) == 0 and len(accounts) == 0:
-        current_app.logger.error("Apikey with User or custom role must have domains or accounts")
+        current_app.logger.error("Apikey with non-admnistrative role must have domains or accounts")
         raise ApiKeyNotUsable()
 
     if role_name not in ['Administrator', 'Operator'] and len(domains) > 0:
@@ -1058,7 +1058,7 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 
 
 def forbidden_changed_types(rrset, role_name):
-    jsoned = json.dumps(rrset)
+    # jsoned = json.dumps(rrset)
     prohibited_types = []
     role = Role.query.filter(Role.name == role_name).first()
     dictionary = json.loads(role.forward_access)
@@ -1068,8 +1068,13 @@ def forbidden_changed_types(rrset, role_name):
             prohibited_types.append(rec_type)
 
     to_reject = []
+    # print(rrset['rrsets'][0])
+    # rrset_type = {rrset['type']}
+    rrset_type = {r['type'] for r in rrset['rrsets']}
     for typ in prohibited_types:
-        if '"type": "{}"'.format(typ) in jsoned and typ not in to_reject:
+        # if '"type": "{}"'.format(typ) in jsoned and typ not in to_reject:
+        #     to_reject.append(typ)
+        if typ in rrset_type:
             to_reject.append(typ)
     
 
@@ -1086,10 +1091,9 @@ def forbidden_changed_types(rrset, role_name):
 def api_zone_forward(server_id, zone_id):
     data = request.get_json(force=True)
     to_reject = forbidden_changed_types(data, g.apikey.role.name)
-    print("data = " , data)
     if len(to_reject) != 0:
         history = History(msg='API: Access on zone {0} was rejected for role {1}'.format(zone_id.rstrip('.'), g.apikey.role.name),
-                            detail='',
+                            detail=str({'role': g.apikey.role.name, 'apiRecords': ', '.join(to_reject)}),
                             created_by=g.apikey.description,
                             domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
         history.add()

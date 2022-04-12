@@ -949,20 +949,7 @@ def edit_role(role_name=None):
                                         r_records=r_records)
 
             result = role.create_role()
-            # jsoned = {  "type" : "role_change", 
-            #             "dnssec": role.can_configure_dnssec, 
-            #             "history_access" : role.can_access_history,
-            #             "create_domain" : role.can_create_domain,
-            #             "remove_domain" : role.can_remove_domain }
-            # history = History(msg='Create role {0}'.format(role.name),
-            #                   created_by=current_user.username, detail=json.dumps(jsoned))
-
         else:
-            # jsoned = {  "type" : "role_change", 
-            #             "dnssec": role.can_configure_dnssec, 
-            #             "history_access" : role.can_access_history,
-            #             "create_domain" : role.can_create_domain,
-            #             "remove_domain" : role.can_remove_domain }
             result = role.update_role()
 
 
@@ -1122,6 +1109,22 @@ class DetailedHistory():
                 </table>
                 """,
                 users_with_access=users_with_access)
+        
+        elif 'apiRecords' in detail_dict:   # template access to zone denied
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr><th colspan=2>Role does not have access to some record types</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Role:</td><td>{{ role_name }}</td></tr>
+                        <tr><td>Forbidden Record Types:</td><td>{{ record_types }}</td></tr>
+                    </tbody>
+                </table>
+            """,
+            role_name = DetailedHistory.get_key_val(detail_dict, "role"),
+            record_types = DetailedHistory.get_key_val(detail_dict, "apiRecords")
+            )
 
         elif 'Created API key' in history.msg or 'Updated API key' in history.msg:
             self.detailed_msg = render_template_string("""

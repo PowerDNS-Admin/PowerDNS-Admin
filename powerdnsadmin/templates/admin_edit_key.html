@@ -108,19 +108,20 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
+    var AdministrativeRoles = ["Administrator","Operator"];
     $('form').submit(function (e) {
         var selectedRole = $("#key_role").val();
         var selectedDomains = $("#key_multi_domain option:selected").length;
         var selectedAccounts = $("#key_multi_account option:selected").length;
         var warn_modal = $("#modal_warning");
 
-        if ( (selectedRole == "Administrator" || selectedRole == "Operator") && selectedDomains > 0 && selectedAccounts > 0){
+        if ( AdministrativeRoles.includes(selectedRole) && selectedDomains > 0 && selectedAccounts > 0){
           var warning = "Administrator and Operators have access to all domains. Your domain an account selection won't be saved.";
           e.preventDefault(e);
           warn_modal.modal('show');
         }
 
-        if ( (selectedRole != "Administrator" && selectedRole != "Operator") && selectedDomains == 0 && selectedAccounts == 0){
+        if ( !AdministrativeRoles.includes(selectedRole) && selectedDomains == 0 && selectedAccounts == 0){
           var warning = "Non-administrative role must have at least one account or one domain bound. None selected.";
           e.preventDefault(e);
           warn_modal.modal('show');
@@ -134,7 +135,7 @@
     }
     $('#key_role').on('change', function (e) {
         var optionSelected = $("option:selected", this);
-        if (this.value == "Administrator" || this.value == "Operator") {
+        if (AdministrativeRoles.includes(this.value)) {
           // Clear the visible list
           $('#ms-key_multi_domain .ms-selection li').each(function(){ $(this).css('display', 'none');})
           $('#ms-key_multi_domain .ms-selectable li').each(function(){ $(this).css('display', '');})

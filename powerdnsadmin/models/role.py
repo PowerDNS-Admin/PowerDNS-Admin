@@ -98,19 +98,6 @@ class Role(db.Model):
             'URI': 'None'
         }
     }
-    def __init__(self, id=None, name=None, description=None):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.forward_access = json.dumps(self.defaults['forward_records_allow_edit'])
-        self.reverse_access = json.dumps(self.defaults['reverse_records_allow_edit'])
-        self.can_configure_dnssec = False
-        self.can_access_history = False
-        self.can_create_domain = False
-        self.can_remove_domain = False
-        self.can_edit_roles = False
-        self.can_view_edit_all_domains = False
-    # allow database autoincrement to do its own ID assignments
     def __init__(self, name=None, description=None):
         self.id = None
         self.name = name
@@ -161,6 +148,10 @@ class Role(db.Model):
         """
         Convert role_id to role_name
         """
+        # Skip actual database lookup for empty queries
+        if role_id is None or role_id == "":
+            return None
+
         role = Role.query.filter(Role.id == role_id).first()
         if role is None:
             return ''
@@ -205,8 +196,11 @@ class Role(db.Model):
         from .api_key import ApiKey
         try:
             Role.query.filter(Role.name == self.name).delete()
-            # when a Role is deleted, delete also all the api keys which are
-            # associated with this role
+            # when a Role is deleted, update all API keys
+            # associated with this role to User role
+            apiKeys = ApiKey.query.filter(self.id == ApiKey.role_id).all()
+            for apiKey in apiKeys:
+                apiKey.update(role_name='User')
             ApiKey.query.filter(self.id == ApiKey.role_id).delete()
             if commit:
                 db.session.commit()
