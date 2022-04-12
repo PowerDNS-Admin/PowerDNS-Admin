@@ -22,7 +22,7 @@
 {% block content %}
  <!-- Main content -->
     <section class="content">
-      {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+      {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
       <div class="row">
         <div class="col-xs-3">
             <div class="box">
@@ -280,7 +280,7 @@
         modal.modal('show');
     });
 
-    {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
+    {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_configure_dnssec %}
     $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);

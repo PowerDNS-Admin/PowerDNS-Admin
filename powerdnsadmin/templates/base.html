@@ -113,12 +113,12 @@
         <li class="{{ 'active' if active_page == 'dashboard' else '' }}">
           <a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
         </li>
-        {% if SETTING.get('allow_user_create_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
+        {% if current_user.role.can_create_domain or current_user.role.name in ['Administrator'] %}
         <li class="{{ 'active' if active_page == 'new_domain' else '' }}">
           <a href="{{ url_for('domain.add') }}"><i class="fa fa-plus"></i> <span>New Domain</span></a>
         </li>
         {% endif %}
-        {% if SETTING.get('allow_user_remove_domain') or current_user.role.name in ['Administrator', 'Operator'] %}
+        {% if current_user.role.can_remove_domain or current_user.role.name in ['Administrator'] %}
         <li class="{{ 'active' if active_page == 'remove_domain' else '' }}">
           <a href="{{ url_for('domain.remove') }}"><i class="fa fa-trash-o"></i> <span>Remove Domain</span></a>
         </li>
@@ -140,6 +140,11 @@
         <li class="{{ 'active' if active_page == 'admin_accounts' else '' }}">
           <a href="{{ url_for('admin.manage_account') }}"><i class="fa fa-industry"></i> <span>Accounts</span></a>
         </li>
+        {% if current_user.role.can_edit_roles or current_user.role.name == 'Administrator' %}
+        <li class="{{ 'active' if active_page == 'admin_roles' else '' }}">
+          <a href="{{ url_for('admin.manage_roles') }}"><i class="fa fa-address-book"></i> <span>Roles</span></a>
+        </li>
+        {% endif %}
         <li class="{{ 'active' if active_page == 'admin_users' else '' }}">
           <a href="{{ url_for('admin.manage_user') }}"><i class="fa fa-users"></i> <span>Users</span></a>
         </li>
@@ -155,14 +160,13 @@
           </a>
           <ul class="treeview-menu" {% if active_page == 'admin_settings' %}style="display: block;"{% endif %}>
             <li><a href="{{ url_for('admin.setting_basic') }}"><i class="fa fa-circle-o"></i></i> <span>Basic</span></a></li>
-            <li><a href="{{ url_for('admin.setting_records') }}"><i class="fa fa-circle-o"></i> <span>Records</span></a></li>
             {% if current_user.role.name == 'Administrator' %}
             <li><a href="{{ url_for('admin.setting_pdns') }}"><i class="fa fa-circle-o"></i> <span>PDNS</a></li>
             <li><a href="{{ url_for('admin.setting_authentication') }}"><i class="fa fa-circle-o"></i> <span>Authentication</span></a></li>
             {% endif %}
           </ul>
         </li>
-        {% elif SETTING.get('allow_user_view_history') %}
+        {% elif current_user.role.can_access_history %}
         <li class="header">ADMINISTRATION</li>
         <li class="{{ 'active' if active_page == 'admin_history' else '' }}">
           <a href="{{ url_for('admin.history') }}"><i class="fa fa-calendar"></i> <span>History</span></a>
@@ -328,7 +332,7 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
-<div class="modal fade modal-success" id="modal_success">
+<div class="modal fade modal-danger" id="modal_error">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -336,7 +340,30 @@
           aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
-        <h4 class="modal-title">Success</h4>
+        <h4 class="modal-title">Error</h4>
+      </div>
+      <div class="modal-body">
+        <p></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-flat btn-default pull-right"
+          data-dismiss="modal">Close</button>
+      </div>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal fade modal-warning" id="modal_warning">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"
+          aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">Warning</h4>
       </div>
       <div class="modal-body">
         <p></p>

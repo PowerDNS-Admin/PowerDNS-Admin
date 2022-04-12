@@ -274,16 +274,14 @@ class Record(object):
         # List of rrsets to be added
         new_rrsets = {"rrsets": []}
         for r in submitted_rrsets:
-            if r not in current_rrsets and r['type'] in Setting(
-            ).get_records_allow_to_edit():
+            if r not in current_rrsets:
                 r['changetype'] = 'REPLACE'
                 new_rrsets["rrsets"].append(r)
 
         # List of rrsets to be removed
         del_rrsets = {"rrsets": []}
         for r in current_rrsets:
-            if r not in submitted_rrsets and r['type'] in Setting(
-            ).get_records_allow_to_edit() and r['type'] != 'SOA':
+            if r not in submitted_rrsets and r['type'] != 'SOA':
                 r['changetype'] = 'DELETE'
                 del_rrsets["rrsets"].append(r)
 
@@ -530,19 +528,6 @@ class Record(object):
                 'msg':
                 'There was something wrong, please contact administrator'
             }
-
-    def is_allowed_edit(self):
-        """
-        Check if record is allowed to edit
-        """
-        return self.type in Setting().get_records_allow_to_edit()
-
-    def is_allowed_delete(self):
-        """
-        Check if record is allowed to removed
-        """
-        return (self.type in Setting().get_records_allow_to_edit()
-                and self.type != 'SOA')
 
     def exists(self, domain):
         """

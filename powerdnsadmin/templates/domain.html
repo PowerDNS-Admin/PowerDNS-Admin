@@ -38,7 +38,7 @@
                         Admin&nbsp;<i class="fa fa-cog"></i>
                       </button>
                     {% endif %}
-                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                    {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                     <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary button_changelog" id="{{ domain.name }}">
                         Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
                     </i>
@@ -57,7 +57,7 @@
                                 <th>Comment</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
-                                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                                 <th >Changelog</th>
                                 {% endif %}
                             </tr>
@@ -85,14 +85,12 @@
                                     </td>
                                 {% if domain.type != 'Slave' %}
                                     <td width="6%">
-                                        {% if record.is_allowed_edit() %}
+                                        {% if record['type'] in editable_records %}
                                             <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
-                                        {% else %}
-                                            <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i></button>
                                         {% endif %}
                                     </td>
                                     <td width="6%">
-                                        {% if record.is_allowed_delete() %}
+                                        {% if record['type'] != 'SOA' and record['type'] in editable_records %}
                                             <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
                                         {% endif %}
                                     </td>
@@ -105,7 +103,7 @@
                                     </td>
                                 {% endif %}
                                     </td>
-                                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                    {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                                     <td width="6%">
                                         <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-flat btn-primary">&nbsp;&nbsp;
                                                             <i class="fa fa-history" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;
@@ -169,7 +167,7 @@
                 // hidden column so that we can add new records on top
                 // regardless of whatever sorting is done. See orderFixed
                 visible: false,
-                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
                 targets: [ 9 ]
                 {% else %}
                 targets: [ 8 ]
@@ -180,7 +178,7 @@
                 targets: [ 4, 5 ]
             }
         ],
-        {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+        {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
         "orderFixed": [[9, 'asc']]
         {% else %}
         "orderFixed": [[8, 'asc']]
@@ -225,6 +223,10 @@
             var nRow = $(this)[0];
          } else {
             var nRow = $(this).parents('tr')[0];
+         }
+         /* check if record type cannot be edited */
+         if (!records_allow_edit.includes(nRow.children[1].innerText)) {
+            return;
          }
          var table = $("#tbl_records").DataTable();
 
@@ -287,7 +289,7 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-            {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+            {% if current_user.role.name in ['Administrator', 'Operator'] or current_user.role.can_access_history %}
 	        var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
             {% else %}
             var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
@@ -326,6 +328,28 @@
             var domain = $(this).prop('id');
             applyChanges({'domain': domain, '_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
     });
+
+    $(document.body).on("click", "#record_comment", function (e) {
+
+        // $("#record_comment").on("focus", function (e) {
+
+        var record_data = $(this);
+        var txt_data = record_data.val().replace(/"/g, '&quot;');
+        var modal = $("#modal_custom_record");
+        var form = "    <label for=\"comment_attr\">Comment Record Data</label> \
+                        <textarea style=\"min-width: 100%;color: #333;\" placeholder=\"Your TXT record data\" rows=\"5\" id=\"comment_attr\" name=\"comment_attr\">" + txt_data + "</textarea> \
+                ";
+        modal.find('.modal-body p').html(form);
+        modal.find('#button_save').click(function() {
+        data = modal.find('#comment_attr').val();
+        if (! /^".*"$/.test(data)) {
+            data = '"' + data + '"';
+        }
+        record_data.val(data);
+        modal.modal('hide');
+    });
+    modal.modal('show');
+});
 
     {% if SETTING.get('record_helper') %}
     //handle wacky record types

@@ -681,7 +681,7 @@ class User(db.Model):
                 entArgs=arguments[arguments.index('powerdns-admin')+1:]
                 role= entArgs[0]
                 self.set_role(role)
-                if (role=="User") and len(entArgs)>1:
+                if role not in ['Administrator', 'Operator'] and len(entArgs)>1:
                     current_domains=getUserInfo(self.get_user_domains())
                     current_accounts=getUserInfo(self.get_accounts())
                     domain=entArgs[1]
@@ -752,7 +752,7 @@ def getCorrectEntitlements(Entitlements):
             continue
 
         if len(entArgs)>1:
-            if (role!="User"):
+            if role in ['Administrator', 'Operator']:
                 e="Too many arguments for Admin or Operator"
                 current_app.logger.warning("Cannot apply autoprovisioning on user: {}".format(e))
                 continue
