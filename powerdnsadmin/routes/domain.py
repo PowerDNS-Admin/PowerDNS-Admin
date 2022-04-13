@@ -1,4 +1,3 @@
-import re
 import json
 import datetime
 import traceback
@@ -24,6 +23,7 @@ from ..models.domain_setting import DomainSetting
 from ..models.base import db
 from ..models.domain_user import DomainUser
 from ..models.account_user import AccountUser
+from ..models.role import Role
 from .admin import extract_changelogs_from_a_history_entry
 from ..decorators import history_access_required
 domain_bp = Blueprint('domain',
@@ -31,6 +31,49 @@ domain_bp = Blueprint('domain',
                       template_folder='templates',
                       url_prefix='/domain')
 
+def fetch_records(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    records = []
+
+    # Query domain's rrsets from PowerDNS API
+    rrsets = Record().get_rrsets(domain.name)
+    if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
+        for r in rrsets:
+            # if r['type'] in records_allow_to_edit:
+            r_name = r['name'].rstrip('.')
+
+            # If it is reverse zone and pretty_ipv6_ptr setting
+            # is enabled, we reformat the name for ipv6 records.
+            if Setting().get('pretty_ipv6_ptr') and r[
+                    'type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+                r_name = dns.reversename.to_address(
+                    dns.name.from_text(r_name))
+
+            # Create the list of records in format that
+            # PDA jinja2 template can understand.
+            index = 0
+            for record in r['records']:
+                if (len(r['comments'])>index):
+                    c=r['comments'][index]['content']
+                else:
+                    c=''
+                record_entry = RecordEntry(
+                    name=r_name,
+                    type=r['type'],
+                    status='Disabled' if record['disabled'] else 'Active',
+                    ttl=r['ttl'],
+                    data=record['content'],
+                    comment=c,
+                    is_allowed_edit=True)
+                index += 1
+                records.append(record_entry)
+    else:
+        # Unsupported version
+        abort(500)
+    return records
 
 @domain_bp.before_request
 def before_request():
@@ -70,13 +113,12 @@ def domain(domain_name):
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
-    forward_records_allow_to_edit = Setting(
-    ).get_forward_records_allow_to_edit()
-    reverse_records_allow_to_edit = Setting(
-    ).get_reverse_records_allow_to_edit()
     ttl_options = Setting().get_ttl_options()
     records = []
+    records_allow_to_edit = []
+    records_allow_to_view = []
+    role = Role.query.filter(Role.id == current_user.role_id).first()
+    records_allow_to_view, records_allow_to_edit = role.get_records_allow_to_view_edit(domain_name)
 
     # Render the "records" to display in HTML datatable
     #
@@ -90,7 +132,7 @@ def domain(domain_name):
     #   - Only allow one comment for that case
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for r in rrsets:
-            if r['type'] in records_allow_to_edit:
+            if r['type'] in records_allow_to_view:
                 r_name = r['name'].rstrip('.')
 
                 # If it is reverse zone and pretty_ipv6_ptr setting
@@ -115,22 +157,17 @@ def domain(domain_name):
                         ttl=r['ttl'],
                         data=record['content'],
                         comment=c,
-                        is_allowed_edit=True)
+                        is_allowed_edit=True if r['type'] in records_allow_to_edit else False)
                     index += 1
                     records.append(record_entry)
     else:
         # Unsupported version
         abort(500)
 
-    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
-        editable_records = forward_records_allow_to_edit
-    else:
-        editable_records = reverse_records_allow_to_edit
-
     return render_template('domain.html',
                            domain=domain,
                            records=records,
-                           editable_records=editable_records,
+                           editable_records=records_allow_to_edit,
                            quick_edit=quick_edit,
                            ttl_options=ttl_options,
                            current_user=current_user)
@@ -208,7 +245,9 @@ def changelog(domain_name):
     if not rrsets and domain.type != 'Slave':
         abort(500)
 
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
+    records_allow_to_view = []
+    role = Role.query.filter(Role.id == current_user.role_id).first()
+    records_allow_to_view = role.get_records_allow_to_view(domain_name)
     records = []
 
     # get all changelogs for this domain, in descening order
@@ -235,7 +274,7 @@ def changelog(domain_name):
 
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
         for r in rrsets:
-            if r['type'] in records_allow_to_edit:
+            if r['type'] in records_allow_to_view:
                 r_name = r['name'].rstrip('.')
 
                 # If it is reverse zone and pretty_ipv6_ptr setting
@@ -645,6 +684,37 @@ def change_account(domain_name):
     else:
         abort(500)
 
+def are_equal(old : RecordEntry, new: dict, domain_name: str):
+    if old.name == domain_name:
+        name_comparison = (new['record_name'] == '@')
+    else:
+        name_comparison = (old.name == new['record_name'] + "." + domain_name)
+
+    if not name_comparison or \
+            old.type != new['record_type'] or \
+            old.status != new['record_status'] or \
+            int(old.ttl) != int(new['record_ttl']) or \
+            old.data != new['record_data'] or \
+            old.comment != new['record_comment']:
+        return False
+    return True
+
+def get_changed_record_entries(old_entries, new_submission, current_user, domain_name):
+    not_changed = []
+    for nr in new_submission:
+        for old_entry in old_entries:
+            if are_equal(old=old_entry, new=nr, domain_name=domain_name):
+                not_changed.append(json.dumps(nr))
+    types_of_changed = []
+    for nr in new_submission:
+        dumped = json.dumps(nr)
+        if dumped in not_changed:
+            continue
+        if nr['record_type'] in types_of_changed:
+            continue
+        types_of_changed.append(nr['record_type'])
+
+    return types_of_changed
 
 @domain_bp.route('/<path:domain_name>/apply',
                  methods=['POST'],
@@ -656,6 +726,26 @@ def record_apply(domain_name):
         jdata = request.json
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']
+
+        old_entries = fetch_records(domain_name=domain_name)
+        types_of_changed = get_changed_record_entries(old_entries=old_entries, new_submission=submitted_record, 
+                                        current_user=current_user, domain_name=domain_name)
+
+        role = Role.query.filter(Role.id == current_user.role_id).first()
+        records_allow_to_edit = role.get_records_allow_to_edit(domain_name)
+        to_reject = []
+        for type in types_of_changed:
+            if type not in records_allow_to_edit:
+                to_reject.append(type)
+
+        if len(to_reject) != 0:
+            return make_response(
+                    jsonify({
+                        'status':
+                        'error',
+                        'msg':
+                        'You are not allowed to create/edit records of type : ' + ' or '.join(to_reject)
+                    }), 404)
         domain = Domain.query.filter(Domain.name == domain_name).first()
 
         if domain:
@@ -780,12 +870,6 @@ def dnssec(domain_name):
 def dnssec_enable(domain_name):
     domain = Domain()
     dnssec = domain.enable_domain_dnssec(domain_name)
-    domain_object = Domain.query.filter(domain_name == Domain.name).first()
-    history = History(
-        msg='DNSSEC was enabled for domain ' + domain_name ,
-        created_by=current_user.username,
-        domain_id=domain_object.id)
-    history.add()
     return make_response(jsonify(dnssec), 200)
 
 
@@ -799,12 +883,7 @@ def dnssec_disable(domain_name):
 
     for key in dnssec['dnssec']:
         domain.delete_dnssec_key(domain_name, key['id'])
-    domain_object = Domain.query.filter(domain_name == Domain.name).first()
-    history = History(
-        msg='DNSSEC was disabled for domain ' + domain_name ,
-        created_by=current_user.username,
-        domain_id=domain_object.id)
-    history.add()
+
     return make_response(jsonify({'status': 'ok', 'msg': 'DNSSEC removed.'}))
 
 
