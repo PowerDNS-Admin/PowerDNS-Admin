@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% set active_page = "admin_roles" %}
+{% block title %}
+<title>Role Management - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<section class="content-header">
+    <h1>
+        Roles <small>Manage roles</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Roles</li>
+    </ol>
+</section>
+{% endblock %} {% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Role Management</h3>
+                </div>
+                <div class="box-body">
+                    <a href="{{ url_for('admin.edit_role') }}">
+                        <button type="button" class="btn btn-flat btn-primary pull-left button_add_role">
+                            Add Role&nbsp;<i class="fa fa-plus"></i>
+                        </button>
+                    </a>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_roles" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Users</th>
+                                <th>APIKeys</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in roles %}
+                            <tr class="odd gradeX">
+                                <td>{{ role.name }}</td>
+                                <td>{{ role.description }}</td>
+                                <td>{{ role.users | length }}</td>
+                                <td>{{ role.apikeys | length }}</td>
+                                <td width="15%">
+                                    {% if (role.name == 'Administrator' and current_user.role_id != 1) or (role.name == 'Operator' and current_user.role_id != 1) %}
+                                    {% else %}
+                                    <button type="button" class="btn btn-flat btn-success"
+                                        onclick="window.location.href='{{ url_for('admin.edit_role', role_name=role.name) }}'">
+                                        Edit&nbsp;<i class="fa fa-cog"></i>
+                                    </button>
+                                    {% endif %}
+                                    {% if role.name not in ['Administrator', 'Operator', 'User'] %}
+                                    <button type="button" class="btn btn-flat btn-danger button_delete"
+                                        id="{{ role.name }}">
+                                        Delete&nbsp;<i class="fa fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+{% endblock %}
+{% block extrascripts %}
+<script>
+    // set up roles data table
+    $("#tbl_roles").DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "columnDefs": [{
+            "orderable": false,
+            "targets": [-1]
+        }],
+        "info": false,
+        "autoWidth": false,
+        "lengthMenu": [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"]
+        ],
+        "pageLength": 10
+    });
+
+    // handle deletion of role
+    $(document.body).on('click', '.button_delete', function () {
+        var modal = $("#modal_delete");
+        var rolename = $(this).prop('id');
+        var info = "Are you sure you want to delete " + rolename + "?";
+        modal.find('.modal-body p').text(info);
+        modal.find('#button_delete_confirm').click(function () {
+            var postdata = {
+                'action': 'delete_role',
+                'data': rolename,
+                '_csrf_token': '{{ csrf_token() }}'
+            }
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-roles', false, true);
+            modal.modal('hide');
+        })
+        modal.modal('show');
+    });
+</script>
+{% endblock %}
+{% block modals %}
+<div class="modal fade modal-warning" id="modal_delete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+{% endblock %}
