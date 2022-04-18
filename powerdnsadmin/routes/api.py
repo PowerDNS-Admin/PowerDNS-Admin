@@ -23,7 +23,7 @@ from ..lib.errors import (
     AccountCreateFail, AccountUpdateFail, AccountDeleteFail,
     AccountCreateDuplicate, AccountNotExists,
     UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
-    UserUpdateFailEmail,
+    UserUpdateFailEmail, HealthCheckFail
 )
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
@@ -1182,3 +1182,36 @@ def sync_domains():
     domain = Domain()
     domain.update()
     return 'Finished synchronization in background', 200
+
+@api_bp.route('/health', methods=['GET'])
+def health():
+    domain = Domain()
+    domain_to_query = domain.query.first()
+    
+    if not domain_to_query:
+        current_app.logger.error("No domain found to query a health check")
+        raise (HealthCheckFail)
+
+    pdns_api_url = Setting().get('pdns_api_url')
+    pdns_api_key = Setting().get('pdns_api_key')
+    pdns_version = Setting().get('pdns_version')
+    api_uri_with_prefix = utils.pdns_api_extended_uri(pdns_version)
+    api_uri = '/servers/localhost/zones/{}'.format(domain_to_query.name)
+    headers = {}
+    headers['X-API-Key'] = pdns_api_key
+
+    try:
+        resp = utils.fetch_remote(urljoin(pdns_api_url, api_uri_with_prefix + api_uri),
+                                method='GET',
+                                headers=headers,
+                                accept='application/json; q=1',
+                                verify=Setting().get('verify_ssl_connections'))
+                                
+    except Exception as e:
+        current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
+        return make_response("bad", 503)
+
+    if resp.status_code == 200:
+        return make_response("good", 200)
+    else:
+        return make_response("bad", 503)

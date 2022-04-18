@@ -171,3 +171,11 @@ class UserDeleteFail(StructuredException):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
+
+class HealthCheckFail(StructuredException):
+    status_code = 500
+
+    def __init__(self,name=None, message="Health check failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
