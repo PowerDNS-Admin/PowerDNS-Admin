@@ -222,7 +222,7 @@ def api_login_create_zone():
 
         if current_user.role.name not in ['Administrator', 'Operator']:
             current_app.logger.debug(
-                "User is ordinary user, assigning created domain")
+                "User is non-admnistrative, assigning created domain")
             domain = Domain(name=data['name'].rstrip('.'))
             domain.update()
             domain.grant_privileges([current_user.id])
@@ -337,18 +337,18 @@ def api_generate_apikey():
     else:
         abort(400)
 
-    if role_name == 'User' and len(domains) == 0 and len(accounts) == 0:
-        current_app.logger.error("Apikey with User role must have domains or accounts")
+    if role_name not in ['Administrator', 'Operator'] and len(domains) == 0 and len(accounts) == 0:
+        current_app.logger.error("Apikey with non-admnistrative role must have domains or accounts")
         raise ApiKeyNotUsable()
 
-    if role_name == 'User' and len(domains) > 0:
+    if role_name not in ['Administrator', 'Operator'] and len(domains) > 0:
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
             msg = "One of supplied domains does not exist"
             current_app.logger.error(msg)
             raise DomainNotExists(message=msg)
 
-    if role_name == 'User' and len(accounts) > 0:
+    if role_name not in ['Administrator', 'Operator'] and len(accounts) > 0:
         account_obj_list = Account.query.filter(Account.name.in_(accounts)).all()
         if len(account_obj_list) == 0:
             msg = "One of supplied accounts does not exist"
@@ -359,13 +359,13 @@ def api_generate_apikey():
         # domain list of domain api key should be valid for
         # if not any domain error
         # role of api key, user cannot assign role above for api key
-        if role_name != 'User':
-            msg = "User cannot assign other role than User"
+        if role_name != current_user.role.name:
+            msg = "Non-administrative roles cannot assign other role than their own"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
         if len(accounts) > 0:
-            msg = "User cannot assign accounts"
+            msg = "Non-administrative User cannot assign accounts"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
@@ -541,7 +541,7 @@ def api_update_apikey(apikey_id):
 
     current_app.logger.debug('Updating apikey with id {0}'.format(apikey_id))
 
-    if target_role == 'User':
+    if target_role not in ['Administrator', 'Operator']:
         current_domains = [item.name for item in apikey.domains]
         current_accounts = [item.name for item in apikey.accounts]
 
@@ -568,7 +568,7 @@ def api_update_apikey(apikey_id):
             target_accounts = current_accounts
 
         if len(target_domains) == 0 and len(target_accounts) == 0:
-            current_app.logger.error("Apikey with User role must have domains or accounts")
+            current_app.logger.error("Apikey with non-administrative role must have domains or accounts")
             raise ApiKeyNotUsable()
 
         if domains is not None and set(domains) == set(current_domains):
@@ -582,13 +582,13 @@ def api_update_apikey(apikey_id):
             accounts = None
 
     if current_user.role.name not in ['Administrator', 'Operator']:
-        if role_name != 'User':
-            msg = "User cannot assign other role than User"
+        if role_name != current_user.role.name:
+            msg = "Non-administrative roles cannot assign other role than their own"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
         if len(accounts) > 0:
-            msg = "User cannot assign accounts"
+            msg = "Non-administrative Users cannot assign accounts"
             current_app.logger.error(msg)
             raise NotEnoughPrivileges(message=msg)
 
@@ -625,7 +625,7 @@ def api_update_apikey(apikey_id):
         current_app.logger.debug(msg)
         description = None
 
-    if target_role != "User":
+    if target_role in ['Administrator', 'Operator']:
         domains, accounts = [], []
 
     try:
@@ -1058,6 +1058,24 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
     return resp.content, resp.status_code, resp.headers.items()
 
 
+def forbidden_changed_types(rrset, role_name):
+    prohibited_types = []
+    role = Role.query.filter(Role.name == role_name).first()
+    dictionary = json.loads(role.forward_access)
+
+    for rec_type in dictionary:
+        if dictionary[rec_type] != 'W':
+            prohibited_types.append(rec_type)
+
+    to_reject = []
+    rrset_type = {r['type'] for r in rrset['rrsets']}
+    for typ in prohibited_types:
+        if typ in rrset_type:
+            to_reject.append(typ)
+    
+
+    return to_reject
+
 @api_bp.route('/servers/<string:server_id>/zones/<string:zone_id>',
               methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
@@ -1067,6 +1085,22 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
                                        http_methods=['PUT'],
                                        keys=['dnssec', 'nsec3param'])
 def api_zone_forward(server_id, zone_id):
+    data = request.get_json(force=True)
+    to_reject = forbidden_changed_types(data, g.apikey.role.name)
+    if len(to_reject) != 0:
+        history = History(msg='API: Access on zone {0} was rejected for role {1}'.format(zone_id.rstrip('.'), g.apikey.role.name),
+                            detail=str({'role': g.apikey.role.name, 'apiRecords': ', '.join(to_reject)}),
+                            created_by=g.apikey.description,
+                            domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
+        history.add()
+        return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'You are not allowed to create/edit records of type : ' + ' or '.join(to_reject)
+                }), 404)
+
     resp = helper.forward_request()
     if not Setting().get('bg_domain_updates'):
         domain = Domain()
