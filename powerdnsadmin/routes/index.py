@@ -84,7 +84,6 @@ def index():
 
 
 @index_bp.route('/ping', methods=['GET'])
-@login_required
 def ping():
     return make_response('ok')
 
