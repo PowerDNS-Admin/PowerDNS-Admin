@@ -76,11 +76,15 @@ function getTableData(table) {
         record["record_type"] = r[1].trim();
         record["record_status"] = r[2].trim();
         record["record_ttl"] = r[3].trim();
-        record["record_data"] = r[4].trim();
-        record["record_comment"] = r[5].trim();
+        record["record_data"] = convertHTMLEntityToText(r[4].trim());
+        record["record_comment"] = convertHTMLEntityToText(r[5].trim());
         records.push(record);
     });
     return records
+}
+
+function convertHTMLEntityToText(htmlEntity) {
+    return $('<textarea />').html(htmlEntity).text();
 }
 
 function saveRow(oTable, nRow) {
