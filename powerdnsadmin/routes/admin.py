@@ -362,14 +362,13 @@ def edit_key(key_id=None):
                 current_app.logger.error('Error: {0}'.format(e))
 
         history = History(msg=history_message,
-                          detail=str(
-                            json.dumps({
+                          detail = json.dumps({
                                 'key': apikey.id,
                                 'role': apikey.role.name,
                                 'description': apikey.description,
                                 'domains': [domain.name for domain in apikey.domains],
                                 'accounts': [a.name for a in apikey.accounts]
-                            })),
+                            }),
                           created_by=current_user.username)
         history.add()
 
@@ -412,13 +411,12 @@ def manage_keys():
 
             current_app.logger.info('Delete API key {0}'.format(apikey.id))
             history = History(msg='Delete API key {0}'.format(apikey.id),
-                              detail=str(
-                                json.dumps({
+                              detail = json.dumps({
                                     'key': history_apikey_id,
                                     'role': history_apikey_role,
                                     'description': history_apikey_description,
                                     'domains': history_apikey_domains
-                                })),
+                                }),
                               created_by=current_user.username)
             history.add()
 
@@ -1672,11 +1670,10 @@ def create_template():
             result = t.create()
             if result['status'] == 'ok':
                 history = History(msg='Add domain template {0}'.format(name),
-                                  detail=str(
-                                    json.dumps({
+                                  detail = json.dumps({
                                         'name': name,
                                         'description': description
-                                    })),
+                                    }),
                                   created_by=current_user.username)
                 history.add()
                 return redirect(url_for('admin.templates'))
@@ -1720,11 +1717,10 @@ def create_template_from_zone():
         result = t.create()
         if result['status'] == 'ok':
             history = History(msg='Add domain template {0}'.format(name),
-                              detail=str(
-                                json.dumps({
+                              detail = json.dumps({
                                     'name': name,
                                     'description': description
-                                })),
+                                }),
                               created_by=current_user.username)
             history.add()
 
@@ -1854,7 +1850,7 @@ def apply_records(template):
             history = History(
                 msg='Apply domain template record changes to domain template {0}'
                 .format(template),
-                detail=str(json.dumps(jdata)),
+                detail = json.dumps(jdata),
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
@@ -1884,7 +1880,7 @@ def delete_template(template):
             if result['status'] == 'ok':
                 history = History(
                     msg='Deleted domain template {0}'.format(template),
-                    detail=str(json.dumps({'name': template})),
+                    detail = json.dumps({'name': template}),
                     created_by=current_user.username)
                 history.add()
                 return redirect(url_for('admin.templates'))
