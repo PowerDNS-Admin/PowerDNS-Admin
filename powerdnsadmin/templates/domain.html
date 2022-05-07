@@ -60,6 +60,7 @@
                                 {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                                 <th >Changelog</th>
                                 {% endif %}
+                                <th>Invisible Sorting Column</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,7 +105,6 @@
                                         <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
                                     </td>
                                 {% endif %}
-                                    </td>
                                     {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                                     <td width="6%">
                                         <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-flat btn-primary">&nbsp;&nbsp;
