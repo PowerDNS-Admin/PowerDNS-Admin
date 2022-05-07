@@ -1,48 +1,58 @@
-from OpenSSL import crypto
-from datetime import datetime
-import pytz
+import datetime
 import os
-CRYPT_PATH = os.path.abspath(os.path.dirname(os.path.realpath(__file__))  + "/../../")
+
+from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.x509.oid import NameOID
+
+
+CRYPT_PATH = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../")
 CERT_FILE = CRYPT_PATH + "/saml_cert.crt"
 KEY_FILE = CRYPT_PATH + "/saml_cert.key"
 
 
-def check_certificate():
-    if not os.path.isfile(CERT_FILE):
-        return False
-    st_cert = open(CERT_FILE, 'rt').read()
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, st_cert)
-    now = datetime.now(pytz.utc)
-    begin = datetime.strptime(cert.get_notBefore(), "%Y%m%d%H%M%SZ").replace(tzinfo=pytz.UTC)
-    begin_ok = begin < now
-    end = datetime.strptime(cert.get_notAfter(), "%Y%m%d%H%M%SZ").replace(tzinfo=pytz.UTC)
-    end_ok = end > now
-    if begin_ok and end_ok:
-        return True
-    return False
-
 def create_self_signed_cert():
+    """ Generate a new self-signed RSA-2048-SHA256 x509 certificate. """
+    # Generate our key
+    key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
 
-    # create a key pair
-    k = crypto.PKey()
-    k.generate_key(crypto.TYPE_RSA, 2048)
+    # Write our key to disk for safe keeping
+    with open(KEY_FILE, "wb") as key_file:
+        key_file.write(key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        ))
 
-    # create a self-signed cert
-    cert = crypto.X509()
-    cert.get_subject().C = "DE"
-    cert.get_subject().ST = "NRW"
-    cert.get_subject().L = "Dortmund"
-    cert.get_subject().O = "Dummy Company Ltd"
-    cert.get_subject().OU = "Dummy Company Ltd"
-    cert.get_subject().CN = "PowerDNS-Admin"
-    cert.set_serial_number(1000)
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(10*365*24*60*60)
-    cert.set_issuer(cert.get_subject())
-    cert.set_pubkey(k)
-    cert.sign(k, 'sha256')
+    # Various details about who we are. For a self-signed certificate the
+    # subject and issuer are always the same.
+    subject = issuer = x509.Name([
+        x509.NameAttribute(NameOID.COUNTRY_NAME, "DE"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "NRW"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, "Dortmund"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Dummy Company Ltd"),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Dummy Company Ltd"),
+        x509.NameAttribute(NameOID.COMMON_NAME, "PowerDNS-Admin"),
+    ])
 
-    open(CERT_FILE, "bw").write(
-        crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(KEY_FILE, "bw").write(
-        crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+    cert = x509.CertificateBuilder().subject_name(
+        subject
+    ).issuer_name(
+        issuer
+    ).public_key(
+        key.public_key()
+    ).serial_number(
+        x509.random_serial_number()
+    ).not_valid_before(
+        datetime.datetime.utcnow()
+    ).not_valid_after(
+        datetime.datetime.utcnow() + datetime.timedelta(days=10*365)
+    ).sign(key, hashes.SHA256())
+
+    # Write our certificate out to disk.
+    with open(CERT_FILE, "wb") as cert_file:
+        cert_file.write(cert.public_bytes(serialization.Encoding.PEM))

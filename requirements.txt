@@ -14,7 +14,6 @@ qrcode==6.1
 dnspython>=1.16.0
 gunicorn==20.0.4
 python3-saml
-pyOpenSSL==19.1.0
 pytz==2020.1
 cssmin==0.2.0
 jsmin==3.0.0
