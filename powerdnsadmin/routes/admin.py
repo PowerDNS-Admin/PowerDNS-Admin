@@ -1374,7 +1374,8 @@ def has_an_auth_method(local_db_enabled=None,
                        google_oauth_enabled=None,
                        github_oauth_enabled=None,
                        oidc_oauth_enabled=None,
-                       azure_oauth_enabled=None):
+                       azure_oauth_enabled=None,
+                       saml_enabled=None):
     if local_db_enabled is None:
         local_db_enabled = Setting().get('local_db_enabled')
     if ldap_enabled is None:
@@ -1387,7 +1388,9 @@ def has_an_auth_method(local_db_enabled=None,
         oidc_oauth_enabled = Setting().get('oidc_oauth_enabled')
     if azure_oauth_enabled is None:
         azure_oauth_enabled = Setting().get('azure_oauth_enabled')
-    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled or azure_oauth_enabled
+    if saml_enabled is None:
+        saml_enabled = Setting().get('saml_enabled')
+    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled or azure_oauth_enabled or saml_enabled
 
 
 @admin_bp.route('/setting/authentication', methods=['GET', 'POST'])
@@ -1623,6 +1626,114 @@ def setting_authentication():
                               request.form.get('oidc_oauth_account_name_property'))
                 Setting().set('oidc_oauth_account_description_property',
                               request.form.get('oidc_oauth_account_description_property'))
+                result = {
+                    'status': True,
+                    'msg':
+                    'Saved successfully. Please reload PDA to take effect.'
+                }
+        elif conf_type == 'saml':
+            saml_enabled = True if request.form.get('saml_enabled') else False
+            if not has_an_auth_method(saml_enabled=saml_enabled):
+                result = {
+                    'status':
+                        False,
+                    'msg':
+                        'Must have at least one authentication method enabled.'
+                }
+            else:
+                Setting().set(
+                    'saml_enabled',
+                    True if request.form.get('saml_enabled') else False)
+                Setting().set('saml_metadata_url',
+                              request.form.get('saml_metadata_url'))
+                if request.form.get('saml_metadata_cache_lifetime'):
+                    Setting().set('saml_metadata_cache_lifetime',
+                            request.form.get('saml_metadata_cache_lifetime'))
+                else:
+                    Setting().set('saml_metadata_cache_lifetime',
+                        Setting().defaults['saml_metadata_cache_lifetime'])
+                Setting().set('saml_idp_sso_binding',
+                              request.form.get('saml_idp_sso_binding'))
+                Setting().set('saml_idp_slo_binding',
+                              request.form.get('saml_idp_slo_binding'))
+                Setting().set('saml_idp_entity_id',
+                              request.form.get('saml_idp_entity_id'))
+                Setting().set('saml_nameid_format',
+                              request.form.get('saml_nameid_format'))
+                Setting().set('saml_sp_acs_binding',
+                              request.form.get('saml_sp_acs_binding'))
+                Setting().set('saml_sp_sls_binding',
+                              request.form.get('saml_sp_sls_binding'))
+                Setting().set('saml_sp_requested_attributes',
+                              request.form.get('saml_sp_requested_attributes'))
+                Setting().set('saml_attribute_email',
+                            request.form.get('saml_attribute_email'))
+                Setting().set('saml_attribute_givenname',
+                            request.form.get('saml_attribute_givenname'))
+                Setting().set('saml_attribute_surname',
+                            request.form.get('saml_attribute_surname'))
+                Setting().set('saml_attribute_username',
+                              request.form.get('saml_attribute_username'))
+                Setting().set('saml_attribute_admin',
+                            request.form.get('saml_attribute_admin'))
+                Setting().set('saml_attribute_account',
+                            request.form.get('saml_attribute_account'))
+                Setting().set('saml_sp_entity_id',
+                              request.form.get('saml_sp_entity_id'))
+                if request.form.get('saml_sp_contact_name'):
+                    Setting().set('saml_sp_contact_name',
+                            request.form.get('saml_sp_contact_name'))
+                else:
+                    Setting().set('saml_sp_contact_name',
+                                Setting().defaults['saml_sp_contact_name'])
+                if request.form.get('saml_sp_contact_mail'):
+                    Setting().set('saml_sp_contact_mail',
+                            request.form.get('saml_sp_contact_mail'))
+                else:
+                    Setting().set('saml_sp_contact_mail',
+                                Setting().defaults['saml_sp_contact_mail'])
+                Setting().set('saml_cert_file',
+                              request.form.get('saml_cert_file'))
+                Setting().set('saml_cert_key',
+                              request.form.get('saml_cert_key'))
+                Setting().set(
+                    'saml_sign_authn_request',
+                    True if request.form.get('saml_sign_authn_request') else False)
+                Setting().set(
+                    'saml_sign_logout_request_response',
+                    True if request.form.get('saml_sign_logout_request_response') else False)
+                Setting().set(
+                    'saml_logout',
+                    True if request.form.get('saml_logout') else False)
+                if request.form.get('saml_logout_url'):
+                    Setting().set('saml_logout_url',
+                              request.form.get('saml_logout_url'))
+                Setting().set(
+                    'saml_want_assertions_encrypted',
+                    True if request.form.get('saml_want_assertions_encrypted') else False)
+                Setting().set(
+                    'saml_want_assertions_signed',
+                    True if request.form.get('saml_want_assertions_signed') else False)
+                Setting().set(
+                    'saml_want_nameid_encrypted',
+                    True if request.form.get('saml_want_nameid_encrypted') else False)
+                Setting().set(
+                    'saml_nameid_encrypted',
+                    True if request.form.get('saml_nameid_encrypted') else False)
+                Setting().set('saml_digest_algorithm',
+                              request.form.get('saml_digest_algorithm'))
+                Setting().set('saml_signature_algorithm',
+                              request.form.get('saml_signature_algorithm'))
+                Setting().set(
+                    'saml_want_message_signed',
+                    True if request.form.get('saml_want_message_signed') else False)
+                Setting().set(
+                    'saml_sign_metadata',
+                    True if request.form.get('saml_sign_metadata') else False)
+                Setting().set('saml_metadata_cache_duration',
+                              request.form.get('saml_metadata_cache_duration'))
+                Setting().set('saml_metadata_valid_until',
+                              request.form.get('saml_metadata_valid_until'))
                 result = {
                     'status': True,
                     'msg':

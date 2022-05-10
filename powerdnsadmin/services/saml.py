@@ -6,11 +6,18 @@ import os
 
 from ..lib.certutil import KEY_FILE, CERT_FILE, create_self_signed_cert
 from ..lib.utils import urlparse
+from ..models.setting import Setting
 
 
+# The python3-saml library currently supports only the Redirect binding for IDP endpoints.
+# For SP, the Assertion Consumer Service endpoint supports HTTP-POST binding,
+# while the Single Logout Service endpoint uses HTTP-Redirect.
+# Therefore, to protect users from using unsupported features, settings
+# 'saml_idp_sso_binding', 'saml_idp_slo_binding', 'saml_sp_acs_binding' and 'saml_sp_sls_binding'
+# are not exposed on the front end SAML interface.
 class SAML(object):
     def __init__(self):
-        if current_app.config['SAML_ENABLED']:
+        if Setting().get('saml_enabled'):
             from onelogin.saml2.auth import OneLogin_Saml2_Auth
             from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
@@ -19,29 +26,33 @@ class SAML(object):
             self.OneLogin_Saml2_IdPMetadataParser = OneLogin_Saml2_IdPMetadataParser
             self.idp_data = None
 
-            if 'SAML_IDP_ENTITY_ID' in current_app.config:
-                self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                    current_app.config['SAML_METADATA_URL'],
-                    entity_id=current_app.config.get('SAML_IDP_ENTITY_ID',
-                                                     None),
-                    required_sso_binding=current_app.
-                    config['SAML_IDP_SSO_BINDING'])
+            if Setting().get('saml_idp_entity_id'):
+                try:
+                    self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                        Setting().get('saml_metadata_url'),
+                        entity_id=Setting().get('saml_idp_entity_id'),
+                        required_sso_binding=Setting().get('saml_idp_sso_binding'))
+                except:
+                    self.idp_data = None
             else:
-                self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                    current_app.config['SAML_METADATA_URL'],
-                    entity_id=current_app.config.get('SAML_IDP_ENTITY_ID',
-                                                     None))
+                try:
+                    self.idp_data = OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                        Setting().get('saml_metadata_url'),
+                        entity_id=None)
+                except:
+                    self.idp_data = None
             if self.idp_data is None:
-                current_app.logger.info(
+                current_app.logger.error(
                     'SAML: IDP Metadata initial load failed')
-                exit(-1)
+                Setting().set('saml_enabled', False)
 
     def get_idp_data(self):
 
         lifetime = timedelta(
-            minutes=current_app.config['SAML_METADATA_CACHE_LIFETIME'])
-
-        if self.idp_timestamp + lifetime < datetime.now():
+            minutes=int(Setting().get('saml_metadata_cache_lifetime')))
+        if not hasattr(self,'idp_timestamp'):
+            self.retrieve_idp_data()
+        elif self.idp_timestamp + lifetime < datetime.now():
             background_thread = Thread(target=self.retrieve_idp_data())
             background_thread.start()
 
@@ -49,22 +60,27 @@ class SAML(object):
 
     def retrieve_idp_data(self):
 
-        if 'SAML_IDP_SSO_BINDING' in current_app.config:
-            new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                current_app.config['SAML_METADATA_URL'],
-                entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None),
-                required_sso_binding=current_app.config['SAML_IDP_SSO_BINDING']
-            )
+        if Setting().get('saml_idp_sso_binding'):
+            try:
+                new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                    Setting().get('saml_metadata_url'),
+                    entity_id=Setting().get('saml_idp_entity_id'),
+                    required_sso_binding=Setting().get('saml_idp_sso_binding'))
+            except:
+                new_idp_data = None
         else:
-            new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
-                current_app.config['SAML_METADATA_URL'],
-                entity_id=current_app.config.get('SAML_IDP_ENTITY_ID', None))
+            try:
+                new_idp_data = self.OneLogin_Saml2_IdPMetadataParser.parse_remote(
+                    Setting().get('saml_metadata_url'),
+                    entity_id=Setting().get('saml_idp_entity_id'))
+            except:
+                new_idp_data = None
         if new_idp_data is not None:
             self.idp_data = new_idp_data
             self.idp_timestamp = datetime.now()
             current_app.logger.info(
                 "SAML: IDP Metadata successfully retrieved from: " +
-                current_app.config['SAML_METADATA_URL'])
+                Setting().get('saml_metadata_url'))
         else:
             current_app.logger.info(
                 "SAML: IDP Metadata could not be retrieved")
@@ -94,20 +110,19 @@ class SAML(object):
         metadata = self.get_idp_data()
         settings = {}
         settings['sp'] = {}
-        if 'SAML_NAMEID_FORMAT' in current_app.config:
-            settings['sp']['NameIDFormat'] = current_app.config[
-                'SAML_NAMEID_FORMAT']
+        if Setting().get('saml_nameid_format'):
+            settings['sp']['NameIDFormat'] = Setting().get('saml_nameid_format')
         else:
             settings['sp']['NameIDFormat'] = self.idp_data.get('sp', {}).get(
                 'NameIDFormat',
                 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified')
-        settings['sp']['entityId'] = current_app.config['SAML_SP_ENTITY_ID']
+        settings['sp']['entityId'] = Setting().get('saml_sp_entity_id')
 
 
-        if ('SAML_CERT' in current_app.config) and ('SAML_KEY' in current_app.config):
+        if (Setting().get('saml_cert_file')) and (Setting().get('saml_cert_key')):
 
-             saml_cert_file = current_app.config['SAML_CERT']
-             saml_key_file = current_app.config['SAML_KEY']
+             saml_cert_file = Setting().get('saml_cert_file')
+             saml_key_file = Setting().get('saml_cert_key')
 
              if os.path.isfile(saml_cert_file):
                  cert = open(saml_cert_file, "r").readlines()
@@ -130,8 +145,8 @@ class SAML(object):
             settings['sp']['privateKey'] = "".join(key) 
 
 
-        if 'SAML_SP_REQUESTED_ATTRIBUTES' in current_app.config:
-             saml_req_attr = json.loads(current_app.config['SAML_SP_REQUESTED_ATTRIBUTES'])
+        if Setting().get('saml_sp_requested_attributes'):
+             saml_req_attr = json.loads(Setting().get('saml_sp_requested_attributes'))
              settings['sp']['attributeConsumingService'] = {
                 "serviceName": "PowerDNSAdmin",
                 "serviceDescription": "PowerDNS-Admin - PowerDNS administration utility",
@@ -143,55 +158,52 @@ class SAML(object):
 
         settings['sp']['assertionConsumerService'] = {}
         settings['sp']['assertionConsumerService'][
-            'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+            'binding'] = Setting().get('saml_sp_acs_binding')
         settings['sp']['assertionConsumerService'][
             'url'] = own_url + '/saml/authorized'
         settings['sp']['singleLogoutService'] = {}
         settings['sp']['singleLogoutService'][
-            'binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+            'binding'] = Setting().get('saml_sp_sls_binding')
         settings['sp']['singleLogoutService']['url'] = own_url + '/saml/sls'
-        settings['idp'] = metadata['idp']
+        if metadata is not None and 'idp' in metadata:
+            settings['idp'] = metadata['idp']
         settings['strict'] = True
-        settings['debug'] = current_app.config['SAML_DEBUG']
+        settings['debug'] = bool(Setting().get('saml_debug'))
         settings['security'] = {}
         settings['security'][
-            'digestAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-        settings['security']['metadataCacheDuration'] = None
-        settings['security']['metadataValidUntil'] = None
+                        'digestAlgorithm'] = Setting().get('saml_digest_algorithm')
+        settings['security']['metadataCacheDuration'] = Setting().get('saml_metadata_cache_duration') if Setting().get('saml_metadata_cache_duration') else None
+        settings['security']['metadataValidUntil'] = Setting().get('saml_metadata_valid_until') if Setting().get('saml_metadata_valid_until') else None
         settings['security']['requestedAuthnContext'] = True
         settings['security'][
-            'signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-        settings['security']['wantAssertionsEncrypted'] = current_app.config.get(
-            'SAML_ASSERTION_ENCRYPTED', True)
+                        'signatureAlgorithm'] = Setting().get('saml_signature_algorithm')
+        settings['security']['wantAssertionsEncrypted'] = bool(Setting().get('saml_want_assertions_encrypted'))
         settings['security']['wantAttributeStatement'] = True
         settings['security']['wantNameId'] = True
-        settings['security']['authnRequestsSigned'] = current_app.config[
-            'SAML_SIGN_REQUEST']
-        settings['security']['logoutRequestSigned'] = current_app.config[
-            'SAML_SIGN_REQUEST']
-        settings['security']['logoutResponseSigned'] = current_app.config[
-            'SAML_SIGN_REQUEST']
-        settings['security']['nameIdEncrypted'] = False
-        settings['security']['signMetadata'] = True
-        settings['security']['wantAssertionsSigned'] = True
-        settings['security']['wantMessagesSigned'] = current_app.config.get(
-            'SAML_WANT_MESSAGE_SIGNED', True)
-        settings['security']['wantNameIdEncrypted'] = False
+        settings['security']['authnRequestsSigned'] = bool(Setting().get('saml_sign_authn_request'))
+        settings['security']['logoutRequestSigned'] = bool(Setting().get('saml_sign_logout_request_response'))
+        settings['security']['logoutResponseSigned'] = bool(Setting().get('saml_sign_logout_request_response'))
+        settings['security']['nameIdEncrypted'] = bool(Setting().get('saml_nameid_encrypted'))
+        settings['security']['signMetadata'] = bool(Setting().get('saml_sign_metadata'))
+        settings['security']['wantAssertionsSigned'] = bool(Setting().get('saml_want_assertions_signed'))
+        settings['security']['wantMessagesSigned'] = bool(Setting().get('saml_want_message_signed'))
+        settings['security']['wantNameIdEncrypted'] = bool(Setting().get('saml_want_nameid_encrypted'))
         settings['contactPerson'] = {}
         settings['contactPerson']['support'] = {}
-        settings['contactPerson']['support'][
-            'emailAddress'] = current_app.config['SAML_SP_CONTACT_NAME']
-        settings['contactPerson']['support']['givenName'] = current_app.config[
-            'SAML_SP_CONTACT_MAIL']
+        settings['contactPerson']['support']['emailAddress'] = Setting().get('saml_sp_contact_mail')
+        settings['contactPerson']['support']['givenName'] = Setting().get('saml_sp_contact_name')
         settings['contactPerson']['technical'] = {}
-        settings['contactPerson']['technical'][
-            'emailAddress'] = current_app.config['SAML_SP_CONTACT_MAIL']
-        settings['contactPerson']['technical'][
-            'givenName'] = current_app.config['SAML_SP_CONTACT_NAME']
+        settings['contactPerson']['technical']['emailAddress'] = Setting().get('saml_sp_contact_mail')
+        settings['contactPerson']['technical']['givenName'] = Setting().get('saml_sp_contact_name')
         settings['organization'] = {}
         settings['organization']['en-US'] = {}
         settings['organization']['en-US']['displayname'] = 'PowerDNS-Admin'
         settings['organization']['en-US']['name'] = 'PowerDNS-Admin'
         settings['organization']['en-US']['url'] = own_url
-        auth = self.OneLogin_Saml2_Auth(req, settings)
+        try:
+            auth = self.OneLogin_Saml2_Auth(req, settings)
+        except:
+            current_app.logger.error(
+                "SAML: SAML Authentication failed")
+            auth = None
         return auth
