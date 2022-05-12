@@ -1,3 +1,4 @@
+import json
 import re
 import traceback
 from flask import current_app
@@ -421,7 +422,7 @@ class Domain(db.Model):
             if result['status'] == 'ok':
                 history = History(msg='Add reverse lookup domain {0}'.format(
                     domain_reverse_name),
-                    detail=str({
+                    detail=json.dumps({
                         'domain_type': 'Master',
                         'domain_master_ips': ''
                     }),

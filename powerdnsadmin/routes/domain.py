@@ -544,7 +544,7 @@ def setting(domain_name):
         history = History(
             msg='Change domain {0} access control'.format(
                 pretty_domain_name(domain_name)),
-            detail=str({'user_has_access': new_user_list}),
+            detail=json.dumps({'user_has_access': new_user_list}),
             created_by=current_user.username,
             domain_id=d.id)
         history.add()
@@ -582,7 +582,7 @@ def change_type(domain_name):
     if status['status'] == 'ok':
         history = History(msg='Update type for domain {0}'.format(
                 pretty_domain_name(domain_name)),
-                          detail=str({
+                          detail=json.dumps({
                               "domain": domain_name,
                               "type": domain_type,
                               "masters": domain_master_ips
