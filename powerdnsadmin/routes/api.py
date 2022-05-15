@@ -1194,7 +1194,7 @@ def health():
         return make_response("Down", 503)
 
     try:
-        resp = domain.get_domain_info(domain_to_query.name)                                
+        domain.get_domain_info(domain_to_query.name)                                
     except Exception as e:
         current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
         return make_response("Down", 503)
