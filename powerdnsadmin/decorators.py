@@ -285,25 +285,12 @@ def apikey_can_create_domain(f):
             current_app.logger.error(msg.format(g.apikey.id))
             raise NotEnoughPrivileges()
 
-        deny_domain_override = Setting().get('deny_domain_override')
-        req = request.get_json(force=True)
-        override_domain = req["override_domain"]
-        print("Override: {}".format(override_domain))
-        d = Domain()
-        if deny_domain_override and not override_domain:
-            domain_name = req["name"].rstrip('.')
-            upper_domain_name = '.'.join(domain_name.split('.')[1:])
-            while upper_domain_name != '':
-                rec = Record()
-                if d.get_id_by_name(upper_domain_name.rstrip('.')) != None:
-                        rrsets = rec.get_rrsets(upper_domain_name)
-                        for r in rrsets:
-                            if r['name'].rstrip('.') == domain_name:
-                                msg = 'Domain already exists as a record under {}'.format(upper_domain_name)
-                                current_app.logger.error(msg)
-                                raise DomainOverrideForbidden()
-                upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
-
+        if Setting.get('deny_domain_override'):
+            req = request.get_json(force=True)
+            domain = Domain()
+            if req['zone'] and domain.is_overriding(req['zone']):
+                raise DomainOverrideForbidden()
+                
         return f(*args, **kwargs)
 
     return decorated_function

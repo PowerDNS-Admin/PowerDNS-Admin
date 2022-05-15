@@ -405,19 +405,19 @@ def add():
             account_name = Account().get_name_by_id(account_id)
 
             d = Domain()
+
             ### Test if a record same as the domain already exists in an upper level domain
-            deny_domain_override = Setting().get('deny_domain_override')
-            if deny_domain_override and not domain_override:
-                rec = Record()
-                upper_domain_name = get_upper_domain(domain_name)
-                while (upper_domain_name != ''):
-                    if d.get_id_by_name(upper_domain_name) != None:
-                        rrsets = rec.get_rrsets(upper_domain_name)
-                        for r in rrsets:
-                            if r['name'].rstrip('.') == domain_name:
-                                msg = 'Domain already exists as a record under {}'.format(upper_domain_name)
-                                return render_template('domain_add.html', domain_override_message=msg)
-                    upper_domain_name = get_upper_domain(upper_domain_name)
+            if Setting().get('deny_domain_override'):
+                domain_override = request.form.get('domain_override')
+
+                # If overriding box is not selected
+                if not domain_override:
+                    upper_domain = d.is_overriding(domain_name)
+                    
+                if upper_domain:
+                    msg = 'Domain already exists as a record under {}'.format(upper_domain)
+                    return render_template('domain_add.html', domain_override_message=msg)
+           
             result = d.add(domain_name=domain_name,
                            domain_type=domain_type,
                            soa_edit_api=soa_edit_api,

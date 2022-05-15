@@ -879,3 +879,15 @@ class Domain(db.Model):
                 DomainUser.user_id == user_id,
                 AccountUser.user_id == user_id
             )).filter(Domain.id == self.id).first()
+
+    def is_overriding(self, domain_name):
+        upper_domain_name = '.'.join(domain_name.split('.')[1:])
+        while upper_domain_name != '':
+            if self.get_id_by_name(upper_domain_name.rstrip('.')) != None:
+                    rrsets = self.domain.get_domain_info(upper_domain_name)
+                    for r in rrsets:
+                        if r['name'].rstrip('.') == domain_name:
+                            current_app.logger.error('Domain already exists as a record under {}'.format(upper_domain_name))
+                            return upper_domain_name
+            upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
+        return None
