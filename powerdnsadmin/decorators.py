@@ -1,10 +1,10 @@
 import base64
 import binascii
 from functools import wraps
-from flask import g, request, abort, current_app, render_template, jsonify
+from flask import g, request, abort, current_app, render_template
 from flask_login import current_user
 
-from .models import User, ApiKey, Setting, Domain, Setting, Record
+from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
 from .lib.errors import DomainAccessForbidden, DomainOverrideForbidden
 
@@ -290,7 +290,7 @@ def apikey_can_create_domain(f):
             domain = Domain()
             if req['zone'] and domain.is_overriding(req['zone']):
                 raise DomainOverrideForbidden()
-                
+
         return f(*args, **kwargs)
 
     return decorated_function
