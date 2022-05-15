@@ -123,11 +123,9 @@ def can_create_domain(f):
                 'Administrator', 'Operator'
         ] and not Setting().get('allow_user_create_domain'):
             abort(403)
-
         return f(*args, **kwargs)
 
     return decorated_function
-
 
 
 def api_basic_auth(f):

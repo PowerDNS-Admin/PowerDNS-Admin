@@ -31,11 +31,6 @@ domain_bp = Blueprint('domain',
                       template_folder='templates',
                       url_prefix='/domain')
 
-def get_upper_domain(domain_name):
-    upper_domain_name = '.'.join(domain_name.split('.')[1:])
-    print("Upper Domain Name: {}".format(upper_domain_name))
-    return upper_domain_name
-
 @domain_bp.before_request
 def before_request():
     # Check if user is anonymous
@@ -413,7 +408,7 @@ def add():
                 # If overriding box is not selected
                 if not domain_override:
                     upper_domain = d.is_overriding(domain_name)
-                    
+
                 if upper_domain:
                     msg = 'Domain already exists as a record under {}'.format(upper_domain)
                     return render_template('domain_add.html', domain_override_message=msg)
