@@ -259,6 +259,12 @@ def api_can_create_domain(f):
             msg = "User {0} does not have enough privileges to create domain"
             current_app.logger.error(msg.format(current_user.username))
             raise NotEnoughPrivileges()
+        
+        if Setting().get('deny_domain_override'):
+            req = request.get_json(force=True)
+            domain = Domain()
+            if req['name'] and domain.is_overriding(req['name']):
+                raise DomainOverrideForbidden()
 
         return f(*args, **kwargs)
 
@@ -283,10 +289,10 @@ def apikey_can_create_domain(f):
             current_app.logger.error(msg.format(g.apikey.id))
             raise NotEnoughPrivileges()
 
-        if Setting.get('deny_domain_override'):
+        if Setting().get('deny_domain_override'):
             req = request.get_json(force=True)
             domain = Domain()
-            if req['zone'] and domain.is_overriding(req['zone']):
+            if req['name'] and domain.is_overriding(req['name']):
                 raise DomainOverrideForbidden()
 
         return f(*args, **kwargs)

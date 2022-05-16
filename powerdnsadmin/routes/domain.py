@@ -403,7 +403,8 @@ def add():
 
             ### Test if a record same as the domain already exists in an upper level domain
             if Setting().get('deny_domain_override'):
-                domain_override = request.form.get('domain_override')
+
+                upper_domain = None
 
                 # If overriding box is not selected
                 if not domain_override:
