@@ -889,8 +889,8 @@ class Domain(db.Model):
                     upper_domain = self.get_domain_info(upper_domain_name)
                     if 'rrsets' in upper_domain:
                         for r in upper_domain['rrsets']:
-                            if r['name'].rstrip('.') == domain_name.rstrip('.'):
-                                current_app.logger.error('Domain already exists as a record under domain: {}'.format(upper_domain_name))
+                            if domain_name.rstrip('.') in r['name'].rstrip('.'):
+                                current_app.logger.error('Domain already exists as a record: {} under domain: {}'.format(r['name'].rstrip('.'), upper_domain_name))
                                 return upper_domain_name
             upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
         return None

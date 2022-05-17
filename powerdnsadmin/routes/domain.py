@@ -352,7 +352,6 @@ def add():
     if request.method == 'POST':
         try:
             domain_name = request.form.getlist('domain_name')[0]
-            domain_override = request.form.get('domain_override')
             domain_type = request.form.getlist('radio_type')[0]
             domain_template = request.form.getlist('domain_template')[0]
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
@@ -405,14 +404,25 @@ def add():
             if Setting().get('deny_domain_override'):
 
                 upper_domain = None
+                domain_override = False
+                domain_override_toggle = True
 
-                # If overriding box is not selected
+                if current_user.role.name in ['Administrator', 'Operator']:
+                    domain_override = request.form.get('domain_override')
+                    domain_override_toggle = True
+
+
+                # If overriding box is not selected.
+                # False = Do not allow ovrriding, perform checks
+                # True = Allow overriding, do not perform checks
                 if not domain_override:
                     upper_domain = d.is_overriding(domain_name)
 
                 if upper_domain:
-                    msg = 'Domain already exists as a record under {}'.format(upper_domain)
-                    return render_template('domain_add.html', domain_override_message=msg)
+                    msg = 'Domain already exists as a record under domain: {}'.format(upper_domain)
+                    return render_template('domain_add.html', 
+                                            domain_override_message=msg,
+                                            domain_override_toggle=domain_override_toggle)
            
             result = d.add(domain_name=domain_name,
                            domain_type=domain_type,
@@ -492,14 +502,17 @@ def add():
 
     # Get
     else:
+        domain_override_toggle = False
         # Admins and Operators can set to any account
         if current_user.role.name in ['Administrator', 'Operator']:
             accounts = Account.query.order_by(Account.name).all()
+            domain_override_toggle = True
         else:
             accounts = current_user.get_accounts()
         return render_template('domain_add.html',
                                templates=templates,
-                               accounts=accounts)
+                               accounts=accounts,
+                               domain_override_toggle=domain_override_toggle)
 
 
 

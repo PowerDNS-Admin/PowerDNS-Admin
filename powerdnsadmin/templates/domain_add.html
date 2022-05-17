@@ -34,11 +34,13 @@
                             <input type="text" class="form-control" name="domain_name" id="domain_name"
                                 placeholder="Enter a valid domain name (required)">
                         </div>
+                        {% if domain_override_toggle == True %}
                         <div class="form-group">
                             <label>Domain Override Record</label>
                             <input type="checkbox" id="domain_override" name="domain_override"
                                 class="checkbox">
                         </div>
+                        {% endif %}
                         <select name="accountid" class="form-control" style="width:15em;">
                             <option value="0">- No Account -</option>
                             {% for account in accounts %}
