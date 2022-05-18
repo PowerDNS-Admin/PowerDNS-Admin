@@ -12,13 +12,7 @@ function applyChanges(data, url, showResult, refreshPage) {
             console.log("Applied changes successfully.");
             console.log(data);
             if (showResult) {
-                var modal = $("#modal_success");
-                if (data['msg']) {
-                    modal.find('.modal-body p').text(data['msg']);
-                } else {
-                    modal.find('.modal-body p').text("Applied changes successfully");
-                }
-                modal.modal('show');
+                showSuccessModal(data['msg'] || "Applied changes successfully");
             }
             if (refreshPage) {
                 location.reload(true);
@@ -27,10 +21,8 @@ function applyChanges(data, url, showResult, refreshPage) {
 
         error : function(jqXHR, status) {
             console.log(jqXHR);
-            var modal = $("#modal_error");
             var responseJson = jQuery.parseJSON(jqXHR.responseText);
-            modal.find('.modal-body p').text(responseJson['msg']);
-            modal.modal('show');
+            showErrorModal(responseJson['msg']);
         }
     });
 }
@@ -50,18 +42,14 @@ function applyRecordChanges(data, domain) {
             });
 
             console.log("Applied changes successfully.")
-            var modal = $("#modal_success");
-            modal.find('.modal-body p').text("Applied changes successfully");
-            modal.modal('show');
+            showSuccessModal("Applied changes successfully");
             setTimeout(() => {window.location.reload()}, 2000);
         },
 
         error : function(jqXHR, status) {
             console.log(jqXHR);
-            var modal = $("#modal_error");
             var responseJson = jQuery.parseJSON(jqXHR.responseText);
-            modal.find('.modal-body p').text(responseJson['msg']);
-            modal.modal('show');
+            showErrorModal(responseJson['msg']);
         }
     });
 }
