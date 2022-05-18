@@ -22,6 +22,9 @@ class TestUnitApiZoneUser(object):
         self.github_setting_patcher = patch(
             'powerdnsadmin.services.github.Setting',
             spec=powerdnsadmin.models.setting.Setting)
+        self.azure_setting_patcher = patch(
+            'powerdnsadmin.services.azure.Setting',
+            spec=powerdnsadmin.models.setting.Setting)
         self.oidc_setting_patcher = patch(
             'powerdnsadmin.services.oidc.Setting',
             spec=powerdnsadmin.models.setting.Setting)
@@ -57,6 +60,7 @@ class TestUnitApiZoneUser(object):
 
         self.mock_google_setting = self.google_setting_patcher.start()
         self.mock_github_setting = self.github_setting_patcher.start()
+        self.mock_azure_setting = self.azure_setting_patcher.start()
         self.mock_oidc_setting = self.oidc_setting_patcher.start()
         self.mock_base_route_user = self.base_route_user_patcher.start()
         self.mock_helpers_setting = self.helpers_setting_patcher.start()
@@ -74,6 +78,7 @@ class TestUnitApiZoneUser(object):
 
         self.mock_google_setting.return_value.get.side_effect = load_data
         self.mock_github_setting.return_value.get.side_effect = load_data
+        self.mock_azure_setting.return_value.get.side_effect = load_data
         self.mock_oidc_setting.return_value.get.side_effect = load_data
         self.mock_helpers_setting.return_value.get.side_effect = load_data
         self.mock_models_setting.return_value.get.side_effect = load_data
@@ -90,6 +95,27 @@ class TestUnitApiZoneUser(object):
         self.mock_user.return_value.is_validate.return_value = True
         self.mock_base_route_user.query.filter.return_value.first.return_value = self.mockk
         self.mock_base_route_user.return_value.is_validate.return_value = True
+
+        yield
+
+        for patcher in [
+            self.google_setting_patcher,
+            self.github_setting_patcher,
+            self.azure_setting_patcher,
+            self.oidc_setting_patcher,
+            self.base_route_user_patcher,
+            self.helpers_setting_patcher,
+            self.models_setting_patcher,
+            self.domain_model_setting_patcher,
+            self.record_model_setting_patcher,
+            self.server_model_setting_patcher,
+            self.decorators_setting_patcher,
+            self.api_setting_patcher,
+            self.mock_user_patcher,
+            self.mock_hist_patcher,
+        ]:
+            patcher.stop()
+
 
     def test_create_zone(self, client, common_data_mock, zone_data,
                          basic_auth_user_headers, created_zone_data):

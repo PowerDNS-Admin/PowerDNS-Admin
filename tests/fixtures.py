@@ -36,6 +36,8 @@ def load_data(setting_name, *args, **kwargs):
         return 10
     if setting_name == 'allow_user_create_domain':
         return True
+    if setting_name == 'allow_user_remove_domain':
+        return True
 
 
 @pytest.fixture
@@ -131,6 +133,7 @@ def initial_apikey_data():
     api_url_setting = Setting('pdns_api_url', pdns_api_url)
     api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
     allow_create_domain_setting = Setting('allow_user_create_domain', True)
+    allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
 
     try:
         flask_migrate.upgrade()
@@ -138,6 +141,7 @@ def initial_apikey_data():
         db.session.add(api_url_setting)
         db.session.add(api_key_setting)
         db.session.add(allow_create_domain_setting)
+        db.session.add(allow_remove_domain_setting)
 
         test_user_apikey = app.config.get('TEST_USER_APIKEY')
         test_admin_apikey = app.config.get('TEST_ADMIN_APIKEY')

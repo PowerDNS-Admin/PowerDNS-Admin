@@ -33,8 +33,8 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
                          headers=basic_auth_user_headers)
         data = res.get_json(force=True)
         assert res.status_code == 200
-        assert len(data) == 1, data
-        self.user = data
+        assert data
+        self.user = [data]
 
     def test_accounts(
             self, client, initial_data,                          # noqa: F811
@@ -118,10 +118,12 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 201
-        assert len(data) == 1
+        assert isinstance(data, dict)
+        assert len(data) == 6
+        assert data.get('id', None)
 
         # Check user
-        user1 = self.check_user(user1_data, data[0])
+        user1 = self.check_user(user1_data, data)
         user1_id = user1["id"]
 
         # Update to defaults (should fail)
@@ -181,10 +183,12 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 201
-        assert len(data) == 1
+        assert isinstance(data, dict)
+        assert len(data) == 6
+        assert data.get('id', None)
 
         # Check user
-        user1 = self.check_user(user1_data, data[0])
+        user1 = self.check_user(user1_data, data)
         user1_id = user1["id"]
 
         # Assert test account has no users

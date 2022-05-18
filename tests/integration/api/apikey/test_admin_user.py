@@ -39,7 +39,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
         assert res.status_code == 201
 
         apikey_url_format = "/api/v1/pdnsadmin/apikeys/{0}"
-        apikey_url = apikey_url_format.format(data[0]['id'])
+        apikey_url = apikey_url_format.format(data['id'])
 
         res = client.delete(apikey_url, headers=basic_auth_admin_headers)
 
@@ -123,7 +123,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
         assert res.status_code == 201
 
         apikey_url_format = "/api/v1/pdnsadmin/apikeys/{0}"
-        apikey_url = apikey_url_format.format(data[0]['id'])
+        apikey_url = apikey_url_format.format(data['id'])
         res = client.delete(apikey_url, headers=basic_auth_admin_headers)
 
         assert res.status_code == 204
