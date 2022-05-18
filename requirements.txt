@@ -20,6 +20,7 @@ jsmin==3.0.0
 Authlib==0.15
 Flask-SeaSurf==1.1.1
 bravado-core==5.17.0
+jsonschema[format]>=2.5.1,<4.0.0 # until https://github.com/Yelp/bravado-core/pull/385
 lima==0.5
 pytest==6.1.1
 pytimeparse==1.1.8
