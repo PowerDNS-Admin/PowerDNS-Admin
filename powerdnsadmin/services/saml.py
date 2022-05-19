@@ -163,7 +163,8 @@ class SAML(object):
             'signatureAlgorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
         settings['security']['wantAssertionsEncrypted'] = current_app.config.get(
             'SAML_ASSERTION_ENCRYPTED', True)
-        settings['security']['wantAttributeStatement'] = True
+        settings['security']['wantAttributeStatement'] = current_app.config.get(
+            'SAML_WANT_ATTRIBUTE_STATEMENT', True)
         settings['security']['wantNameId'] = True
         settings['security']['authnRequestsSigned'] = current_app.config[
             'SAML_SIGN_REQUEST']

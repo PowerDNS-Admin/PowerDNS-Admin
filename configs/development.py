@@ -148,6 +148,10 @@ SAML_ENABLED = False
 
 # #SAML_ASSERTION_ENCRYPTED = True
 
+# Some IdPs, like Okta, do not return Attribute Statements by default
+# Set the following to False if you are using Okta and not manually configuring Attribute Statements
+# #SAML_WANT_ATTRIBUTE_STATEMENT = True
+
 # Remote authentication settings
 
 # Whether to enable remote user authentication or not
