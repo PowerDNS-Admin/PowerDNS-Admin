@@ -133,8 +133,8 @@ SAML_ENABLED = False
 # CAUTION: For production use, usage of self-signed certificates it's highly discouraged.
 # Use certificates from trusted CA instead
 # ###########################################################################################
-# SAML_CERT_FILE = '/etc/pki/powerdns-admin/cert.crt'
-# SAML_CERT_KEY = '/etc/pki/powerdns-admin/key.pem'
+# SAML_CERT = '/etc/pki/powerdns-admin/cert.crt'
+# SAML_KEY = '/etc/pki/powerdns-admin/key.pem'
 
 # Configures if SAML tokens should be encrypted.
 # SAML_SIGN_REQUEST = False
