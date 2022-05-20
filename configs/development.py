@@ -120,6 +120,16 @@ SAML_ENABLED = False
 # ###  be created and the user added to them.
 # SAML_ATTRIBUTE_ACCOUNT = 'https://example.edu/pdns-account'
 
+# ## Attribute name that aggregates group names
+# ### Default: Don't collect IdP groups from SAML group attributes
+# ### In Okta, you can assign administrators by group using "Group Attribute Statements."
+# ### In this case, the SAML_ATTRIBUTE_GROUP will be the attribute name for a collection of
+# ###  groups passed in the SAML assertion.  From there, you can specify a SAML_GROUP_ADMIN_NAME.
+# ### If the user is a member of this group, and that group name is included in the collection,
+# ###   the user will be set as an administrator.
+# #SAML_ATTRIBUTE_GROUP = 'https://example.edu/pdns-groups'
+# #SAML_GROUP_ADMIN_NAME = 'PowerDNSAdmin-Administrators'
+
 # SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 # SAML_SP_CONTACT_NAME = '<contact name>'
 # SAML_SP_CONTACT_MAIL = '<contact mail>'
