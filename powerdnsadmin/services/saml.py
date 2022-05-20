@@ -72,8 +72,9 @@ class SAML(object):
     def prepare_flask_request(self, request):
         # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
         url_data = urlparse(request.url)
+        proto = request.headers.get('HTTP_X_FORWARDED_PROTO', request.scheme)
         return {
-            'https': 'on' if request.scheme == 'https' else 'off',
+            'https': 'on' if proto == 'https' else 'off',
             'http_host': request.host,
             'server_port': url_data.port,
             'script_name': request.path,
