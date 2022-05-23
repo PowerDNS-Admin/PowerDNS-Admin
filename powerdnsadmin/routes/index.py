@@ -1008,6 +1008,8 @@ def saml_authorized():
                                                       None)
         admin_group_name = current_app.config.get('SAML_GROUP_ADMIN_NAME',
                                                   None)
+        operator_group_name = current_app.config.get('SAML_GROUP_OPERATOR_NAME',
+                                                  None)
         group_to_account_mapping = create_group_to_account_mapping()
 
         if email_attribute_name in session['samlUserdata']:
@@ -1061,6 +1063,8 @@ def saml_authorized():
             uplift_to_admin(user)
         elif admin_group_name in user_groups:
             uplift_to_admin(user)
+        elif operator_group_name in user_groups:
+            uplift_to_operator(user)
         elif admin_attribute_name or group_attribute_name:
             if user.role.name != 'User':
                 user.role_id = Role.query.filter_by(name='User').first().id
@@ -1113,6 +1117,14 @@ def uplift_to_admin(user):
     if user.role.name != 'Administrator':
         user.role_id = Role.query.filter_by(name='Administrator').first().id
         history = History(msg='Promoting {0} to administrator'.format(
+            user.username),
+                          created_by='SAML Assertion')
+        history.add()
+
+def uplift_to_operator(user):
+    if user.role.name != 'Operator':
+        user.role_id = Role.query.filter_by(name='Operator').first().id
+        history = History(msg='Promoting {0} to operator'.format(
             user.username),
                           created_by='SAML Assertion')
         history.add()
