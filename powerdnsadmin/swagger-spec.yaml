@@ -782,6 +782,32 @@ paths:
         '422':
           description: 'Returned when something is wrong with the content of the request. Contains an error message'
 
+  '/servers/{server_id}/health':
+    get:
+      security:
+        - APIKeyHeader: []
+      summary: Perfoms health check
+      operationId: health_check
+      tags:
+        - Monitoring
+      parameters:
+        - name: server_id
+          in: path
+          required: true
+          description: The id of the server to retrieve
+          type: string
+      responses:
+        '200':
+          description: Healthcheck succeeded
+          schema:
+            type: string
+            example: "up"
+        '503':
+          description: Healthcheck failed
+          schema:
+            type: string
+            example: Down/Unknown
+            
   '/pdnsadmin/zones':
     get:
       security:

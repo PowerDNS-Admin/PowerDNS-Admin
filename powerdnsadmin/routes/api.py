@@ -23,7 +23,7 @@ from ..lib.errors import (
     AccountCreateFail, AccountUpdateFail, AccountDeleteFail,
     AccountCreateDuplicate, AccountNotExists,
     UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
-    UserUpdateFailEmail,
+    UserUpdateFailEmail
 )
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
@@ -1195,3 +1195,21 @@ def sync_domains():
     domain = Domain()
     domain.update()
     return 'Finished synchronization in background', 200
+
+@api_bp.route('/health', methods=['GET'])
+@apikey_auth
+def health():
+    domain = Domain()
+    domain_to_query = domain.query.first()
+    
+    if not domain_to_query:
+        current_app.logger.error("No domain found to query a health check")
+        return make_response("Unknown", 503)
+
+    try:
+        domain.get_domain_info(domain_to_query.name)                                
+    except Exception as e:
+        current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
+        return make_response("Down", 503)
+
+    return make_response("Up", 200)
