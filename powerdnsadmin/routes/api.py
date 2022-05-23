@@ -1191,7 +1191,7 @@ def health():
     
     if not domain_to_query:
         current_app.logger.error("No domain found to query a health check")
-        return make_response("Down", 503)
+        return make_response("Unknown", 503)
 
     try:
         domain.get_domain_info(domain_to_query.name)                                
