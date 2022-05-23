@@ -446,9 +446,7 @@
             
             if(!canSearch)
             {
-                var modal = $("#modal_error");
-                modal.find('.modal-body p').text("Please fill out the " + main_field + " field.");
-                modal.modal('show');
+                showErrorModal("Please fill out the " + main_field + " field.");
             }
             else
             {
