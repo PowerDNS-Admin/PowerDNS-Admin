@@ -405,7 +405,7 @@ def add():
 
                 upper_domain = None
                 domain_override = False
-                domain_override_toggle = True
+                domain_override_toggle = False
 
                 if current_user.role.name in ['Administrator', 'Operator']:
                     domain_override = request.form.get('domain_override')
@@ -419,9 +419,16 @@ def add():
                     upper_domain = d.is_overriding(domain_name)
 
                 if upper_domain:
+                    if current_user.role.name in ['Administrator', 'Operator']:
+                        accounts = Account.query.order_by(Account.name).all()
+                    else:
+                        accounts = current_user.get_accounts()
+                    
                     msg = 'Domain already exists as a record under domain: {}'.format(upper_domain)
+                    
                     return render_template('domain_add.html', 
                                             domain_override_message=msg,
+                                            accounts=accounts,
                                             domain_override_toggle=domain_override_toggle)
            
             result = d.add(domain_name=domain_name,
