@@ -393,11 +393,11 @@ def allowed_record_ttl(f):
             return f(*args, **kwargs)
 
         allowed_ttls = Setting().get_ttl_options()
-        allowed_numric_ttls = [ ttl[0] for ttl in allowed_ttls ]
+        allowed_numeric_ttls = [ ttl[0] for ttl in allowed_ttls ]
         content = request.get_json()
         try:
             for record in content['rrsets']:
-                if record['ttl'] not in allowed_numric_ttls:
+                if record['ttl'] not in allowed_numeric_ttls:
                     current_app.logger.error(f"Error: Record TTL not allowed: {record['ttl']}")
                     abort(401)
         except (TypeError, KeyError) as e:
