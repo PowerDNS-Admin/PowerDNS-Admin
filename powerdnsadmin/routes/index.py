@@ -590,6 +590,10 @@ def prepare_welcome_user(user_id):
     logout_user()
     session['welcome_user_id'] = user_id
 
+@index_bp.route('/samlsignout')
+def samlsignout():
+    return render_template('logout_saml.html')
+
 @index_bp.route('/logout')
 def logout():
     if Setting().get('saml_enabled'
@@ -613,15 +617,18 @@ def logout():
             return redirect(
                 auth.logout(
                     name_id_format=
-                    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-                    return_to=current_app.config.get('SAML_LOGOUT_URL'),
+                    Setting().get('saml_nameid_format'),
+                    return_to=url_for('index.samlsignout'),
                     session_index=session['samlSessionIndex'],
                     name_id=session['samlNameId']))
         except:
             current_app.logger.info(
                 "SAML: Your IDP does not support Single Logout.")
 
-    redirect_uri = url_for('index.login')
+    if 'samlSessionIndex' in session:
+        redirect_uri = url_for('index.samlsignout')
+    else:
+        redirect_uri = url_for('index.login')
     oidc_logout = Setting().get('oidc_oauth_logout_url')
 
     if 'oidc_token' in session and oidc_logout:
