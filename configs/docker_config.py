@@ -57,7 +57,9 @@ legal_envvars = (
     'LDAP_ENABLED',
     'SAML_CERT',
     'SAML_KEY',
-    'FILESYSTEM_SESSIONS_ENABLED'
+    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_COOKIE_SECURE',
+    'CSRF_COOKIE_SECURE',
 )
 
 legal_envvars_int = ('PORT', 'MAIL_PORT', 'SAML_METADATA_CACHE_LIFETIME')
@@ -79,7 +81,9 @@ legal_envvars_bool = (
     'SIGNUP_ENABLED',
     'LOCAL_DB_ENABLED',
     'LDAP_ENABLED',
-    'FILESYSTEM_SESSIONS_ENABLED'
+    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_COOKIE_SECURE',
+    'CSRF_COOKIE_SECURE',
 )
 
 # import everything from environment variables
