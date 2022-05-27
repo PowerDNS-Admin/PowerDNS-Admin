@@ -1259,20 +1259,41 @@ def history_table():    # ajax call data
 @login_required
 @operator_role_required
 def setting_basic():
-    if request.method == 'GET':
-        settings = [
-            'maintenance', 'fullscreen_layout', 'record_helper',
-            'login_ldap_first', 'default_record_table_size',
-            'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
-            'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
-            'session_timeout', 'warn_session_timeout', 'ttl_options',
-            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
-            'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records', 'otp_force',
-            'deny_domain_override', 'enforce_api_ttl', 'account_name_extra_chars'
-        ]
+    settings = [
+        'account_name_extra_chars',
+        'allow_user_create_domain',
+        'allow_user_remove_domain',
+        'allow_user_view_history',
+        'auto_ptr',
+        'bg_domain_updates',
+        'custom_css',
+        'default_domain_table_size',
+        'default_record_table_size',
+        'delete_sso_accounts',
+        'deny_domain_override',
+        'dnssec_admins_only',
+        'enable_api_rr_history',
+        'enforce_api_ttl',
+        'fullscreen_layout',
+        'gravatar_enabled',
+        'login_ldap_first',
+        'maintenance',
+        'max_history_records',
+        'otp_field_enabled',
+        'otp_force',
+        'pdns_api_timeout',
+        'pretty_ipv6_ptr',
+        'record_helper',
+        'record_quick_edit',
+        'session_timeout',
+        'site_name',
+        'ttl_options',
+        'verify_ssl_connections',
+        'verify_user_email',
+        'warn_session_timeout',
+    ]
 
-        return render_template('admin_setting_basic.html', settings=settings)
+    return render_template('admin_setting_basic.html', settings=settings)
 
 
 @admin_bp.route('/setting/basic/<path:setting>/edit', methods=['POST'])

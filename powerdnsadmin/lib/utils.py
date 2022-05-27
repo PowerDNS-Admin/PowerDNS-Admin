@@ -2,14 +2,12 @@ import logging
 import re
 import json
 import requests
-import hashlib
 import ipaddress
 import idna
 
 from collections.abc import Iterable
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
-from datetime import datetime, timedelta
 
 
 def auth_from_url(url):
@@ -184,17 +182,6 @@ def pdns_api_extended_uri(version):
         return "/api/v1"
     else:
         return ""
-
-
-def email_to_gravatar_url(email="", size=100):
-    """
-    AD doesn't necessarily have email
-    """
-    if email is None:
-        email = ""
-
-    hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
-    return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)
 
 
 def display_setting_state(value):

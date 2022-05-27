@@ -101,8 +101,6 @@ def create_app(config=None):
     app.jinja_env.filters['display_master_name'] = utils.display_master_name
     app.jinja_env.filters['display_second_to_time'] = utils.display_time
     app.jinja_env.filters[
-        'email_to_gravatar_url'] = utils.email_to_gravatar_url
-    app.jinja_env.filters[
         'display_setting_state'] = utils.display_setting_state
     app.jinja_env.filters['pretty_domain_name'] = utils.pretty_domain_name
 
