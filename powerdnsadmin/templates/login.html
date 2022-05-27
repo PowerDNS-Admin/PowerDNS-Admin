@@ -15,13 +15,6 @@
 {% if SETTING.get('custom_css') %}
   <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
 {% endif %}
-  {% assets "js_ie8" -%}
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-  <!--[if lt IE 9]>
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  <![endif]-->
-  {%- endassets %}
 </head>
 
 <body class="hold-transition login-page">
