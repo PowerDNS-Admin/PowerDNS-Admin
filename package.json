@@ -10,6 +10,8 @@
     "jquery-ui-dist": "^1.12.1",
     "jquery.quicksearch": "^2.4.0",
     "jtimeout": "^3.1.0",
-    "multiselect": "^0.9.12"
+    "multiselect": "^0.9.12",
+    "html5shiv": "^3.7.3",
+    "respond.js": "^1.4.2"
   }
 }

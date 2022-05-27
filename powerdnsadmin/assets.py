@@ -64,9 +64,15 @@ js_main = Bundle('node_modules/jquery/dist/jquery.js',
                  filters=(ConcatFilter, 'jsmin'),
                  output='generated/main.js')
 
+js_ie8 = Bundle('node_modules/html5shiv/dist/html5shiv.js',
+                'node_modules/respond.js/dest/respond.min.js',
+                filters=(ConcatFilter, 'jsmin'),
+                output='generated/ie8.js')
+
 assets = Environment()
 assets.register('js_login', js_login)
 assets.register('js_validation', js_validation)
 assets.register('css_login', css_login)
 assets.register('js_main', js_main)
 assets.register('css_main', css_main)
+assets.register('js_ie8', js_ie8)
