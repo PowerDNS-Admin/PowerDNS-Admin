@@ -8,13 +8,8 @@
   {% block title %}<title>{{ SITE_NAME }}</title>{% endblock %}
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/style.css') }}">
   <!--  Get Google Fonts we like -->
-  {% if OFFLINE_MODE %}
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/source_sans_pro.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/roboto_mono.css') }}">
-  {% else %}
-  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
-  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto+Mono:400,300,700">
-  {% endif %}
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Tell Safari to not recognise telephone numbers -->
