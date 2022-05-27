@@ -10,7 +10,7 @@ from yaml import Loader, load
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
 
-from .base import login_manager
+from .base import csrf, login_manager
 from ..lib import utils
 from ..decorators import dyndns_login_required
 from ..models.base import db
@@ -763,6 +763,7 @@ def resend_confirmation_email():
 
 
 @index_bp.route('/nic/checkip.html', methods=['GET', 'POST'])
+@csrf.exempt
 def dyndns_checkip():
     # This route covers the default ddclient 'web' setting for the checkip service
     return render_template('dyndns.html',
@@ -771,6 +772,7 @@ def dyndns_checkip():
 
 
 @index_bp.route('/nic/update', methods=['GET', 'POST'])
+@csrf.exempt
 @dyndns_login_required
 def dyndns_update():
     # dyndns protocol response codes in use are:
@@ -961,6 +963,7 @@ def saml_metadata():
 
 
 @index_bp.route('/saml/authorized', methods=['GET', 'POST'])
+@csrf.exempt
 def saml_authorized():
     errors = []
     if not current_app.config.get('SAML_ENABLED'):

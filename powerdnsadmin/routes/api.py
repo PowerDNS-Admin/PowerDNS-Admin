@@ -6,6 +6,7 @@ from flask import (
 )
 from flask_login import current_user
 
+from .base import csrf
 from ..models.base import db
 from ..models import (
     User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
@@ -187,6 +188,7 @@ def index():
 @api_bp.route('/pdnsadmin/zones', methods=['POST'])
 @api_basic_auth
 @api_can_create_domain
+@csrf.exempt
 def api_login_create_zone():
     pdns_api_url = Setting().get('pdns_api_url')
     pdns_api_key = Setting().get('pdns_api_key')
@@ -255,6 +257,7 @@ def api_login_list_zones():
 @api_bp.route('/pdnsadmin/zones/<string:domain_name>', methods=['DELETE'])
 @api_basic_auth
 @api_can_create_domain
+@csrf.exempt
 def api_login_delete_zone(domain_name):
     pdns_api_url = Setting().get('pdns_api_url')
     pdns_api_key = Setting().get('pdns_api_key')
@@ -310,6 +313,7 @@ def api_login_delete_zone(domain_name):
 
 @api_bp.route('/pdnsadmin/apikeys', methods=['POST'])
 @api_basic_auth
+@csrf.exempt
 def api_generate_apikey():
     data = request.get_json()
     description = None
@@ -466,6 +470,7 @@ def api_get_apikey(apikey_id):
 
 @api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['DELETE'])
 @api_basic_auth
+@csrf.exempt
 def api_delete_apikey(apikey_id):
     apikey = ApiKey.query.get(apikey_id)
 
@@ -503,6 +508,7 @@ def api_delete_apikey(apikey_id):
 
 @api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['PUT'])
 @api_basic_auth
+@csrf.exempt
 def api_update_apikey(apikey_id):
     # if role different and user is allowed to change it, update
     # if apikey domains are different and user is allowed to handle
@@ -664,6 +670,7 @@ def api_list_users(username=None):
 @api_bp.route('/pdnsadmin/users', methods=['POST'])
 @api_basic_auth
 @api_role_can('create users', allow_self=True)
+@csrf.exempt
 def api_create_user():
     """
     Create new user
@@ -737,6 +744,7 @@ def api_create_user():
 @api_bp.route('/pdnsadmin/users/<int:user_id>', methods=['PUT'])
 @api_basic_auth
 @api_role_can('update users', allow_self=True)
+@csrf.exempt
 def api_update_user(user_id):
     """
     Update existing user
@@ -809,6 +817,7 @@ def api_update_user(user_id):
 @api_bp.route('/pdnsadmin/users/<int:user_id>', methods=['DELETE'])
 @api_basic_auth
 @api_role_can('delete users')
+@csrf.exempt
 def api_delete_user(user_id):
     user = User.query.get(user_id)
     if not user:
@@ -860,6 +869,7 @@ def api_list_accounts(account_name):
 
 @api_bp.route('/pdnsadmin/accounts', methods=['POST'])
 @api_basic_auth
+@csrf.exempt
 def api_create_account():
     if current_user.role.name not in ['Administrator', 'Operator']:
         msg = "{} role cannot create accounts".format(current_user.role.name)
@@ -904,6 +914,7 @@ def api_create_account():
 @api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['PUT'])
 @api_basic_auth
 @api_role_can('update accounts')
+@csrf.exempt
 def api_update_account(account_id):
     data = request.get_json()
     name = data['name'] if 'name' in data else None
@@ -945,6 +956,7 @@ def api_update_account(account_id):
 @api_bp.route('/pdnsadmin/accounts/<int:account_id>', methods=['DELETE'])
 @api_basic_auth
 @api_role_can('delete accounts')
+@csrf.exempt
 def api_delete_account(account_id):
     account_list = [] or Account.query.filter(Account.id == account_id).all()
     if len(account_list) == 1:
@@ -996,6 +1008,7 @@ def api_list_account_users(account_id):
     methods=['PUT'])
 @api_basic_auth
 @api_role_can('add user to account')
+@csrf.exempt
 def api_add_account_user(account_id, user_id):
     account = Account.query.get(account_id)
     if not account:
@@ -1023,6 +1036,7 @@ def api_add_account_user(account_id, user_id):
     methods=['DELETE'])
 @api_basic_auth
 @api_role_can('remove user from account')
+@csrf.exempt
 def api_remove_account_user(account_id, user_id):
     account = Account.query.get(account_id)
     if not account:
@@ -1054,6 +1068,7 @@ def api_remove_account_user(account_id, user_id):
 @apikey_auth
 @apikey_can_access_domain
 @apikey_can_configure_dnssec(http_methods=['POST'])
+@csrf.exempt
 def api_zone_cryptokeys(server_id, zone_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
@@ -1065,6 +1080,7 @@ def api_zone_cryptokeys(server_id, zone_id):
 @apikey_auth
 @apikey_can_access_domain
 @apikey_can_configure_dnssec()
+@csrf.exempt
 def api_zone_cryptokey(server_id, zone_id, cryptokey_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
@@ -1075,6 +1091,7 @@ def api_zone_cryptokey(server_id, zone_id, cryptokey_id):
     methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
 @apikey_can_access_domain
+@csrf.exempt
 def api_zone_subpath_forward(server_id, zone_id, subpath):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
@@ -1090,6 +1107,7 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 @callback_if_request_body_contains_key(apikey_can_configure_dnssec()(),
                                        http_methods=['PUT'],
                                        keys=['dnssec', 'nsec3param'])
+@csrf.exempt
 def api_zone_forward(server_id, zone_id):
     resp = helper.forward_request()
     if not Setting().get('bg_domain_updates'):
@@ -1127,6 +1145,7 @@ def api_zone_forward(server_id, zone_id):
 @api_bp.route('/servers/<path:subpath>', methods=['GET', 'PUT'])
 @apikey_auth
 @apikey_is_admin
+@csrf.exempt
 def api_server_sub_forward(subpath):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
@@ -1135,6 +1154,7 @@ def api_server_sub_forward(subpath):
 @api_bp.route('/servers/<string:server_id>/zones', methods=['POST'])
 @apikey_auth
 @apikey_can_create_domain
+@csrf.exempt
 def api_create_zone(server_id):
     resp = helper.forward_request()
 

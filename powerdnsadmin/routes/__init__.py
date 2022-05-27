@@ -1,5 +1,5 @@
 from .base import (
-    login_manager, handle_bad_request, handle_unauthorized_access,
+    csrf, login_manager, handle_bad_request, handle_unauthorized_access,
     handle_access_forbidden, handle_page_not_found, handle_internal_server_error
 )
 
@@ -13,6 +13,7 @@ from .api import api_bp, apilist_bp
 
 def init_app(app):
     login_manager.init_app(app)
+    csrf.init_app(app)
 
     app.register_blueprint(index_bp)
     app.register_blueprint(user_bp)
