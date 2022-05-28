@@ -16,7 +16,7 @@ gunicorn==20.0.4
 python3-saml
 pytz==2020.1
 cssmin==0.2.0
-jsmin==3.0.0
+rjsmin==1.2.0
 Authlib==0.15
 Flask-SeaSurf==1.1.1
 bravado-core==5.17.0
