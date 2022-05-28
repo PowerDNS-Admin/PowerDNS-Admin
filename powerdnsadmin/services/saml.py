@@ -10,7 +10,7 @@ from ..lib.utils import urlparse
 
 class SAML(object):
     def __init__(self):
-        if current_app.config['SAML_ENABLED']:
+        if 'SAML_ENABLED' in current_app.config and current_app.config['SAML_ENABLED']:
             from onelogin.saml2.auth import OneLogin_Saml2_Auth
             from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
