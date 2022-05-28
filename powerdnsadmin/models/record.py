@@ -359,10 +359,10 @@ class Record(object):
 
                     # rollback - re-add the removed record if the adding operation is failed.
                     if del_rrsets["rrsets"]:
-                        rollback_rrests = del_rrsets
+                        rollback_rrsets = del_rrsets
                         for r in del_rrsets["rrsets"]:
                             r['changetype'] = 'REPLACE'
-                        rollback = self.apply_rrsets(domain_name, rollback_rrests)
+                        rollback = self.apply_rrsets(domain_name, rollback_rrsets)
                         if 'error' in rollback.keys():
                             return dict(status='error',
                                         msg='Failed to apply changes. Cannot rollback previous failed operation: {}'

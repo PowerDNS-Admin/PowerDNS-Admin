@@ -83,10 +83,7 @@ class User(db.Model):
         return False
 
     def get_id(self):
-        try:
-            return unicode(self.id)  # python 2
-        except NameError:
-            return str(self.id)  # python 3
+        return str(self.id)
 
     def __repr__(self):
         return '<User {0}>'.format(self.username)
@@ -293,7 +290,7 @@ class User(db.Model):
                                 if LDAP_USER_GROUP:
                                     ldap_user_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_USER_GROUP)
                                 searchFilter = "(&({0}={1})(|{2}{3}{4}))".format(LDAP_FILTER_USERNAME, self.username,
-                                                                                 LDAP_FILTER_GROUP, ldap_admin_group_filter,
+                                                                                 ldap_admin_group_filter,
                                                                                  ldap_operator_group, ldap_user_group)
                                 ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
                                 user_ad_member_of = ldap_result[0][0][1].get(

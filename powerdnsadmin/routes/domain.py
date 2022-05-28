@@ -63,7 +63,7 @@ def domain(domain_name):
 
     # Query domain's rrsets from PowerDNS API
     rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
@@ -202,7 +202,7 @@ def changelog(domain_name):
 
     # Query domain's rrsets from PowerDNS API
     rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
@@ -290,7 +290,7 @@ def record_changelog(domain_name, record_name, record_type):
         abort(404)
     # Query domain's rrsets from PowerDNS API
     rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
@@ -328,9 +328,9 @@ def record_changelog(domain_name, record_name, record_type):
     for change_num in changes_set_of_record:
         changes_i = changes_set_of_record[change_num]
         for hre in changes_i: # for each history record entry in changes_i
-            if  'type' in hre.add_rrest and hre.add_rrest['name'] == record_name and hre.add_rrest['type'] == record_type:
+            if  'type' in hre.add_rrset and hre.add_rrset['name'] == record_name and hre.add_rrset['type'] == record_type:
                 continue
-            elif 'type' in hre.del_rrest and hre.del_rrest['name'] == record_name and hre.del_rrest['type'] == record_type:
+            elif 'type' in hre.del_rrset and hre.del_rrset['name'] == record_name and hre.del_rrset['type'] == record_type:
                 continue
             else:
                 changes_set_of_record[change_num].remove(hre)
@@ -450,9 +450,9 @@ def add():
                                     domain_name,
                                     'template':
                                     template.name,
-                                    'add_rrests':
+                                    'add_rrsets':
                                     result['data'][0]['rrsets'],
-                                    'del_rrests':
+                                    'del_rrsets':
                                     result['data'][1]['rrsets']
                                 }),
                             created_by=current_user.username,
@@ -544,7 +544,7 @@ def setting(domain_name):
         history = History(
             msg='Change domain {0} access control'.format(
                 pretty_domain_name(domain_name)),
-            detail=str({'user_has_access': new_user_list}),
+            detail=json.dumps({'user_has_access': new_user_list}),
             created_by=current_user.username,
             domain_id=d.id)
         history.add()
@@ -582,7 +582,7 @@ def change_type(domain_name):
     if status['status'] == 'ok':
         history = History(msg='Update type for domain {0}'.format(
                 pretty_domain_name(domain_name)),
-                          detail=str({
+                          detail=json.dumps({
                               "domain": domain_name,
                               "type": domain_type,
                               "masters": domain_master_ips
@@ -685,8 +685,8 @@ def record_apply(domain_name):
                 msg='Apply record changes to domain {0}'.format(pretty_domain_name(domain_name)),
                 detail = json.dumps({
                         'domain': domain_name,
-                        'add_rrests': result['data'][0]['rrsets'],
-                        'del_rrests': result['data'][1]['rrsets']
+                        'add_rrsets': result['data'][0]['rrsets'],
+                        'del_rrsets': result['data'][1]['rrsets']
                     }),
                 created_by=current_user.username,
                 domain_id=domain.id)
