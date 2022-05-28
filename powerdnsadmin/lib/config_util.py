@@ -1,21 +1,24 @@
 import os
 
 
-def str2bool(v):
+def str2bool(v) -> bool:
     return v.lower() in ("true", "yes", "1")
 
 
-def load_env_file(file_name='legacy'):
-    f = open('/srv/app/powerdnsadmin/env/' + file_name + '.env', 'r')
+def load_env_file(env_path: str, file_name: str = 'legacy') -> list:
+    f = open(f'{env_path}{file_name}.env', 'r')
     lines = f.read().splitlines()
     f.close()
     return lines
 
 
-def load_config_from_env(app):
-    legacy_vars = load_env_file('legacy')
-    boolean_vars = load_env_file('boolean')
-    integer_vars = load_env_file('integer')
+def load_config_from_env(app, root_path: str) -> None:
+    if root_path[-1] != '/':
+        root_path += '/'
+    env_path = f'{root_path}powerdnsadmin/env/'
+    legacy_vars = load_env_file(env_path, 'legacy')
+    boolean_vars = load_env_file(env_path, 'boolean')
+    integer_vars = load_env_file(env_path, 'integer')
     config = {}
 
     for key in os.environ:

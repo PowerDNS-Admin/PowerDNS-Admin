@@ -10,11 +10,13 @@ from .lib import utils
 
 
 def create_app(config=None, other=''):
+    import os
     import urllib
     from . import models, routes, services
     from .assets import assets
     from .lib import config_util
     app = Flask(__name__)
+    root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/'
 
     ########################################
     # LOGGING SETUP
@@ -84,21 +86,25 @@ def create_app(config=None, other=''):
             app.config.from_pyfile(config)
 
     # Load configuration from environment variables
-    config_util.load_config_from_env(app)
+    config_util.load_config_from_env(app, root_path)
 
-    # If no SQLA DB URI is set but SQLA MySQL settings are present, then create DB URI setting
-    if 'SQLALCHEMY_DATABASE_URI' not in app.config and 'SQLA_DB_USER' in app.config \
-            and 'SQLA_DB_PASSWORD' in app.config and 'SQLA_DB_HOST' in app.config and 'SQLA_DB_PORT' in app.config \
-            and 'SQLA_DB_NAME' in app.config:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{}:{}@{}:{}/{}'.format(
-            urllib.parse.quote_plus(app.config.get('SQLA_DB_USER')),
-            urllib.parse.quote_plus(app.config.get('SQLA_DB_PASSWORD')),
-            app.config.get('SQLA_DB_HOST'),
-            app.config.get('SQLA_DB_PORT'),
-            app.config.get('SQLA_DB_NAME')
-        )
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////srv/app/pdns.db'
+    # If no SQLAlchemy connection string has been defined in app configuration, attempt to build one from other app
+    # settings if all five of the following keys are present in app configuration.
+    if 'SQLALCHEMY_DATABASE_URI' not in app.config:
+        search_keys = ['SQLA_DB_USER', 'SQLA_DB_PASSWORD', 'SQLA_DB_HOST', 'SQLA_DB_PORT', 'SQLA_DB_NAME']
+        uses_connection_string = not all(item in list(app.config.keys()) for item in search_keys)
+        if not uses_connection_string:
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{}:{}@{}:{}/{}'.format(
+                urllib.parse.quote_plus(app.config.get('SQLA_DB_USER')),
+                urllib.parse.quote_plus(app.config.get('SQLA_DB_PASSWORD')),
+                app.config.get('SQLA_DB_HOST'),
+                app.config.get('SQLA_DB_PORT'),
+                app.config.get('SQLA_DB_NAME')
+            )
+
+    # If no SQLAlchemy connection string is set at this point, fall back to SQLite3 stored under the app root
+    if 'SQLALCHEMY_DATABASE_URI' not in app.config:
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{root_path}pdns.db'
 
     ########################################
     # SSL SETUP

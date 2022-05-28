@@ -14,11 +14,11 @@ FILESYSTEM_SESSIONS_ENABLED = False
 ########################################
 # MySQL Database Config
 ########################################
-SQLA_DB_HOST = 'mysql'
-SQLA_DB_PORT = 3306
-SQLA_DB_USER = 'pda'
-SQLA_DB_PASSWORD = 'qHZDZ26fPqqCfKZtWkQ9'
-SQLA_DB_NAME = 'pda'
+# SQLA_DB_HOST = 'mysql'
+# SQLA_DB_PORT = 3306
+# SQLA_DB_USER = 'pda'
+# SQLA_DB_PASSWORD = 'qHZDZ26fPqqCfKZtWkQ9'
+# SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 ########################################
