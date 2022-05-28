@@ -22,8 +22,8 @@ services:
       - 8082:80
 
   powerdns-admin:
-    image: ngoduykhanh/powerdns-admin:latest
-    depends_on: [ 'mysql' ]
+    image: powerdns-admin/powerdns-admin:latest
+    depends_on: [ 'mysql', 'pdns' ]
     restart: unless-stopped
     environment:
       - PDA_BIND_ADDRESS=0.0.0.0
@@ -75,7 +75,6 @@ services:
 
   pdns:
     image: azoriansolutions/powerdns-nameserver:4.5.2-alpine-3.14-mysql
-    depends_on: ['powerdns-admin']
     restart: unless-stopped
     environment:
       - AS_MYSQL_CHECK_RETRY=10

@@ -128,10 +128,10 @@ auto_init() {
         else
             echo "The table $table does exist so no further action will be taken."
         fi
-    fi
-
-    if [ ! -f "/srv/app/pdns.db" ]; then
-        cat /srv/app/docker/shared/pdns-schema-sqlite.sql | sqlite3 /srv/app/pdns.db
+    else
+        if [ ! -f "/srv/app/pdns.db" ]; then
+            cat /srv/app/docker/shared/pdns-schema-sqlite.sql | sqlite3 /srv/app/pdns.db
+        fi
     fi
 
     touch $auto_init_path;

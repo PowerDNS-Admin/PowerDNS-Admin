@@ -8,6 +8,7 @@
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <META HTTP-EQUIV="REFRESH" CONTENT="{{ 60 * SETTING.get('session_timeout') }}">
   {% assets "css_login" -%}
   <link rel="stylesheet" href="{{ ASSET_URL }}">
   {%- endassets %}
@@ -50,7 +51,7 @@
         </div>
         {% if SETTING.get('otp_field_enabled') %}
         <div class="form-group">
-          <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken">
+          <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken" autocomplete="off">
         </div>
         {% endif %}
         {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
@@ -138,7 +139,7 @@
     <!-- /.login-box-body -->
     <div class="login-box-footer">
       <center>
-        <p>Powered by <a href="https://github.com/ngoduykhanh/PowerDNS-Admin">PowerDNS-Admin</a></p>
+        <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
       </center>
     </div>
   </div>

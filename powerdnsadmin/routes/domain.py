@@ -409,7 +409,7 @@ def add():
                 domain_id = Domain().get_id_by_name(domain_name)
                 history = History(msg='Add domain {0}'.format(
                     pretty_domain_name(domain_name)),
-                                  detail=str({
+                                  detail = json.dumps({
                                       'domain_type': domain_type,
                                       'domain_master_ips': domain_master_ips,
                                       'account_id': account_id
@@ -445,17 +445,16 @@ def add():
                         history = History(
                             msg='Applying template {0} to {1} successfully.'.
                             format(template.name, domain_name),
-                            detail=str(
-                                json.dumps({
-                                    "domain":
+                            detail = json.dumps({
+                                    'domain':
                                     domain_name,
-                                    "template":
+                                    'template':
                                     template.name,
-                                    "add_rrests":
+                                    'add_rrests':
                                     result['data'][0]['rrsets'],
-                                    "del_rrests":
+                                    'del_rrests':
                                     result['data'][1]['rrsets']
-                                })),
+                                }),
                             created_by=current_user.username,
                             domain_id=domain_id)
                         history.add()
@@ -464,7 +463,7 @@ def add():
                             msg=
                             'Failed to apply template {0} to {1}.'
                             .format(template.name, domain_name),
-                            detail=str(result),
+                            detail = json.dumps(result),
                             created_by=current_user.username)
                         history.add()
                 return redirect(url_for('dashboard.dashboard'))
@@ -617,9 +616,9 @@ def change_soa_edit_api(domain_name):
         history = History(
             msg='Update soa_edit_api for domain {0}'.format(
                 pretty_domain_name(domain_name)),
-            detail=str({
-                "domain": domain_name,
-                "soa_edit_api": new_setting
+            detail = json.dumps({
+                'domain': domain_name,
+                'soa_edit_api': new_setting
             }),
             created_by=current_user.username,
             domain_id=d.get_id_by_name(domain_name))
@@ -684,12 +683,11 @@ def record_apply(domain_name):
         if result['status'] == 'ok':
             history = History(
                 msg='Apply record changes to domain {0}'.format(pretty_domain_name(domain_name)),
-                detail=str(
-                    json.dumps({
-                        "domain": domain_name,
-                        "add_rrests": result['data'][0]['rrsets'],
-                        "del_rrests": result['data'][1]['rrsets']
-                    })),
+                detail = json.dumps({
+                        'domain': domain_name,
+                        'add_rrests': result['data'][0]['rrsets'],
+                        'del_rrests': result['data'][1]['rrsets']
+                    }),
                 created_by=current_user.username,
                 domain_id=domain.id)
             history.add()
@@ -698,11 +696,10 @@ def record_apply(domain_name):
             history = History(
                 msg='Failed to apply record changes to domain {0}'.format(
                     pretty_domain_name(domain_name)),
-                detail=str(
-                    json.dumps({
-                        "domain": domain_name,
-                        "msg": result['msg'],
-                    })),
+                detail = json.dumps({
+                        'domain': domain_name,
+                        'msg': result['msg'],
+                    }),
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 400)
@@ -780,6 +777,12 @@ def dnssec(domain_name):
 def dnssec_enable(domain_name):
     domain = Domain()
     dnssec = domain.enable_domain_dnssec(domain_name)
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was enabled for domain ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
     return make_response(jsonify(dnssec), 200)
 
 
@@ -793,7 +796,12 @@ def dnssec_disable(domain_name):
 
     for key in dnssec['dnssec']:
         domain.delete_dnssec_key(domain_name, key['id'])
-
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was disabled for domain ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
     return make_response(jsonify({'status': 'ok', 'msg': 'DNSSEC removed.'}))
 
 

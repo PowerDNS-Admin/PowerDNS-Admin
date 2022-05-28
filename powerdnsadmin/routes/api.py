@@ -188,6 +188,7 @@ def api_login_create_zone():
     api_full_uri = api_uri_with_prefix + '/servers/localhost/zones'
     headers = {}
     headers['X-API-Key'] = pdns_api_key
+    headers['Content-Type'] = 'application/json'
 
     msg_str = "Sending request to powerdns API {0}"
     msg = msg_str.format(request.get_json(force=True))
@@ -287,7 +288,7 @@ def api_login_delete_zone(domain_name):
             domain.update()
 
             history = History(msg='Delete domain {0}'.format(
-                pretty_domain_name(domain_name)),
+                utils.pretty_domain_name(domain_name)),
                               detail='',
                               created_by=current_user.username,
                               domain_id=domain_id)
@@ -1175,7 +1176,7 @@ def api_server_config_forward(server_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
-# The endpoint to snychronize Domains in background
+# The endpoint to synchronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
 @apikey_or_basic_auth
 def sync_domains():

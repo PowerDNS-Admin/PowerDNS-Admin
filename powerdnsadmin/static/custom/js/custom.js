@@ -76,11 +76,15 @@ function getTableData(table) {
         record["record_type"] = r[1].trim();
         record["record_status"] = r[2].trim();
         record["record_ttl"] = r[3].trim();
-        record["record_data"] = r[4].trim();
-        record["record_comment"] = r[5].trim();
+        record["record_data"] = convertHTMLEntityToText(r[4].trim());
+        record["record_comment"] = convertHTMLEntityToText(r[5].trim());
         records.push(record);
     });
     return records
+}
+
+function convertHTMLEntityToText(htmlEntity) {
+    return $('<textarea />').html(htmlEntity).text();
 }
 
 function saveRow(oTable, nRow) {
@@ -286,3 +290,13 @@ function timer(elToUpdate, maxTime) {
 
     return interval;
 }
+
+// copy otp secret code to clipboard
+function copy_otp_secret_to_clipboard() {
+    var copyBox = document.getElementById("otp_secret");
+    copyBox.select();
+    copyBox.setSelectionRange(0, 99999); /* For mobile devices */
+    navigator.clipboard.writeText(copyBox.value);
+    $("#copy_tooltip").css("visibility", "visible");
+    setTimeout(function(){ $("#copy_tooltip").css("visibility", "collapse"); }, 2000);
+  }

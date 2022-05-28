@@ -4,9 +4,9 @@ import json
 import traceback
 import datetime
 import ipaddress
+import base64
 from distutils.util import strtobool
 from yaml import Loader, load
-from onelogin.saml2.utils import OneLogin_Saml2_Utils
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
 
@@ -84,7 +84,6 @@ def index():
 
 
 @index_bp.route('/ping', methods=['GET'])
-@login_required
 def ping():
     return make_response('ok')
 
@@ -167,10 +166,8 @@ def login():
                 return redirect(url_for('index.login'))
 
         session['user_id'] = user.id
-        login_user(user, remember=False)
         session['authentication_type'] = 'OAuth'
-        signin_history(user.username, 'Google OAuth', True)
-        return redirect(url_for('index.index'))
+        return authenticate_user(user, 'Google OAuth')
 
     if 'github_token' in session:
         me = json.loads(github.get('user').text)
@@ -195,9 +192,7 @@ def login():
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
-        login_user(user, remember=False)
-        signin_history(user.username, 'Github OAuth', True)
-        return redirect(url_for('index.index'))
+        return authenticate_user(user, 'Github OAuth')
 
     if 'azure_token' in session:
         azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName').text
@@ -366,10 +361,7 @@ def login():
                         history.add()
                     current_app.logger.warning('group info: {} '.format(account_id))
 
-
-        login_user(user, remember=False)
-        signin_history(user.username, 'Azure OAuth', True)
-        return redirect(url_for('index.index'))
+        return authenticate_user(user, 'Azure OAuth')
 
     if 'oidc_token' in session:
         me = json.loads(oidc.get('userinfo').text)
@@ -433,9 +425,7 @@ def login():
 
         session['user_id'] = user.id
         session['authentication_type'] = 'OAuth'
-        login_user(user, remember=False)
-        signin_history(user.username, 'OIDC OAuth', True)
-        return redirect(url_for('index.index'))
+        return authenticate_user(user, 'OIDC OAuth')
 
     if request.method == 'GET':
         return render_template('login.html', saml_enabled=SAML_ENABLED)
@@ -469,7 +459,7 @@ def login():
             auth = user.is_validate(method=auth_method,
                                     src_ip=request.remote_addr)
             if auth == False:
-                signin_history(user.username, 'LOCAL', False)
+                signin_history(user.username, auth_method, False)
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        error='Invalid credentials')
@@ -486,7 +476,7 @@ def login():
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
-                    signin_history(user.username, 'LOCAL', False)
+                    signin_history(user.username, auth_method, False)
                     return render_template('login.html',
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
@@ -512,9 +502,7 @@ def login():
                         user.revoke_privilege(True)
                         current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.' )
 
-        login_user(user, remember=remember_me)
-        signin_history(user.username, 'LOCAL', True)
-        return redirect(session.get('next', url_for('index.index')))
+        return authenticate_user(user, auth_method, remember_me)
 
 def checkForPDAEntries(Entitlements, urn_value):
     """
@@ -561,12 +549,12 @@ def signin_history(username, authenticator, success):
 
     # Write history
     History(msg='User {} authentication {}'.format(username, str_success),
-            detail=str({
-                "username": username,
-                "authenticator": authenticator,
-                "ip_address": request_ip,
-                "success": 1 if success else 0
-            }),
+            detail = json.dumps({
+                    'username': username,
+                    'authenticator': authenticator,
+                    'ip_address': request_ip,
+                    'success': 1 if success else 0
+                }),
             created_by='System').add()
 
 # Get a list of Azure security groups the user is a member of
@@ -584,6 +572,23 @@ def get_azure_groups(uri):
         mygroups = []
     return mygroups
 
+# Handle user login, write history and, if set, handle showing the register_otp QR code.
+# if Setting for OTP on first login is enabled, and OTP field is also enabled,
+# but user isn't using it yet, enable OTP, get QR code and display it, logging the user out.
+def authenticate_user(user, authenticator, remember=False):
+    login_user(user, remember=remember)
+    signin_history(user.username, authenticator, True)
+    if Setting().get('otp_force') and Setting().get('otp_field_enabled') and not user.otp_secret:
+        user.update_profile(enable_otp=True)
+        user_id = current_user.id
+        prepare_welcome_user(user_id)
+        return redirect(url_for('index.welcome'))
+    return redirect(url_for('index.login'))
+
+# Prepare user to enter /welcome screen, otherwise they won't have permission to do so
+def prepare_welcome_user(user_id):
+    logout_user()
+    session['welcome_user_id'] = user_id
 
 @index_bp.route('/logout')
 def logout():
@@ -674,7 +679,12 @@ def register():
                 if result and result['status']:
                     if Setting().get('verify_user_email'):
                         send_account_verification(email)
-                    return redirect(url_for('index.login'))
+                    if Setting().get('otp_force') and Setting().get('otp_field_enabled'):
+                        user.update_profile(enable_otp=True)
+                        prepare_welcome_user(user.id)
+                        return redirect(url_for('index.welcome'))
+                    else:
+                        return redirect(url_for('index.login'))
                 else:
                     return render_template('register.html',
                                            error=result['msg'])
@@ -683,6 +693,28 @@ def register():
     else:
         return render_template('errors/404.html'), 404
 
+
+# Show welcome page on first login if otp_force is enabled
+@index_bp.route('/welcome', methods=['GET', 'POST'])
+def welcome():
+    if 'welcome_user_id' not in session:
+        return redirect(url_for('index.index'))
+
+    user = User(id=session['welcome_user_id'])
+    encoded_img_data = base64.b64encode(user.get_qrcode_value())
+
+    if request.method == 'GET':
+        return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user)
+    elif request.method == 'POST':
+        otp_token = request.form.get('otptoken', '')
+        if otp_token and otp_token.isdigit():
+            good_token = user.verify_totp(otp_token)
+            if not good_token:
+                return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user, error="Invalid token")
+        else:
+            return render_template('register_otp.html', qrcode_image=encoded_img_data.decode(), user=user, error="Token required")
+        session.pop('welcome_user_id')
+        return redirect(url_for('index.index'))
 
 @index_bp.route('/confirm/<token>', methods=['GET'])
 def confirm_email(token):
@@ -831,13 +863,13 @@ def dyndns_update():
                 if result['status'] == 'ok':
                     history = History(
                         msg='DynDNS update: updated {} successfully'.format(hostname),
-                        detail=str({
-                            "domain": domain.name,
-                            "record": hostname,
-                            "type": rtype,
-                            "old_value": oldip,
-                            "new_value": str(ip)
-                        }),
+                        detail = json.dumps({
+                                'domain': domain.name,
+                                'record': hostname,
+                                'type': rtype,
+                                'old_value': oldip,
+                                'new_value': str(ip)
+                            }),
                         created_by=current_user.username,
                         domain_id=domain.id)
                     history.add()
@@ -873,11 +905,11 @@ def dyndns_update():
                         msg=
                         'DynDNS update: created record {0} in zone {1} successfully'
                         .format(hostname, domain.name, str(ip)),
-                        detail=str({
-                            "domain": domain.name,
-                            "record": hostname,
-                            "value": str(ip)
-                        }),
+                        detail = json.dumps({
+                                'domain': domain.name,
+                                'record': hostname,
+                                'value': str(ip)
+                            }),
                         created_by=current_user.username,
                         domain_id=domain.id)
                     history.add()
@@ -898,6 +930,7 @@ def dyndns_update():
 def saml_login():
     if not current_app.config.get('SAML_ENABLED'):
         abort(400)
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     redirect_url = OneLogin_Saml2_Utils.get_self_url(req) + url_for(
@@ -910,7 +943,7 @@ def saml_metadata():
     if not current_app.config.get('SAML_ENABLED'):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
-
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     settings = auth.get_settings()
@@ -931,6 +964,7 @@ def saml_authorized():
     if not current_app.config.get('SAML_ENABLED'):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
+    from onelogin.saml2.utils import OneLogin_Saml2_Utils
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
     auth.process_response()
@@ -1037,9 +1071,7 @@ def saml_authorized():
         user.plain_text_password = None
         user.update_profile()
         session['authentication_type'] = 'SAML'
-        login_user(user, remember=False)
-        signin_history(user.username, 'SAML', True)
-        return redirect(url_for('index.login'))
+        return authenticate_user(user, 'SAML')
     else:
         return render_template('errors/SAML.html', errors=errors)
 

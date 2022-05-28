@@ -33,6 +33,11 @@
                         Update from Master&nbsp;<i class="fa fa-download"></i>
                     </button>
                     {% endif %}
+                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary pull-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+                        Admin&nbsp;<i class="fa fa-cog"></i>
+                      </button>
+                    {% endif %}
                     {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                     <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary button_changelog" id="{{ domain.name }}">
                         Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
@@ -155,6 +160,10 @@
             {
                 type: 'natural',
                 targets: [0, 4]
+            },
+            {
+                targets: [0, 1, 2, 3, 4, 5],
+                render: $.fn.dataTable.render.text()
             },
             {
                 // hidden column so that we can add new records on top
