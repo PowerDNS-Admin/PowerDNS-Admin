@@ -836,7 +836,7 @@ def dyndns_update():
 
     remote_addr = utils.validate_ipaddress(
         request.headers.get('X-Forwarded-For',
-                            request.remote_addr).split(', ')[:1])
+                            request.remote_addr).split(', ')[0])
 
     response = 'nochg'
     for ip in myip_addr or remote_addr:
