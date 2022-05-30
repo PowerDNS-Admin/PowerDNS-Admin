@@ -2,6 +2,7 @@
 BIND_ADDRESS = '0.0.0.0'
 PORT = 80
 SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
+SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
 
 legal_envvars = (
