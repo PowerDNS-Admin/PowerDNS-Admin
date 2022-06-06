@@ -5,7 +5,7 @@ from flask import g, request, abort, current_app, render_template
 from flask_login import current_user
 
 from .models import User, ApiKey, Setting, Domain, Setting
-from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges
+from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges, RecordTTLNotAllowed, RecordTypeNotAllowed
 from .lib.errors import DomainAccessForbidden
 
 def admin_role_required(f):
@@ -370,6 +370,9 @@ def apikey_can_configure_dnssec(http_methods=[]):
 def allowed_record_types(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if request.method == 'GET':
+            return f(*args, **kwargs)
+
         if g.apikey.role.name in ['Administrator', 'Operator']:
             return f(*args, **kwargs)
 
@@ -377,11 +380,14 @@ def allowed_record_types(f):
         content = request.get_json()
         try:
             for record in content['rrsets']:
+                if 'type' not in record:
+                    raise RecordTypeNotAllowed()
+
                 if record['type'] not in records_allowed_to_edit:
                     current_app.logger.error(f"Error: Record type not allowed: {record['type']}")
-                    abort(401)
+                    raise RecordTypeNotAllowed(message=f"Record type not allowed: {record['type']}")
         except (TypeError, KeyError) as e:
-            pass
+            raise e
         return f(*args, **kwargs)
 
     return decorated_function
@@ -389,6 +395,9 @@ def allowed_record_types(f):
 def allowed_record_ttl(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if request.method == 'GET':
+            return f(*args, **kwargs)
+            
         if g.apikey.role.name in ['Administrator', 'Operator']:
             return f(*args, **kwargs)
 
@@ -397,11 +406,14 @@ def allowed_record_ttl(f):
         content = request.get_json()
         try:
             for record in content['rrsets']:
+                if 'ttl' not in record:
+                    raise RecordTTLNotAllowed()
+
                 if record['ttl'] not in allowed_numeric_ttls:
                     current_app.logger.error(f"Error: Record TTL not allowed: {record['ttl']}")
-                    abort(401)
+                    raise RecordTTLNotAllowed(message=f"Record TTL not allowed: {record['ttl']}")
         except (TypeError, KeyError) as e:
-            pass
+            raise e
         return f(*args, **kwargs)
 
     return decorated_function
