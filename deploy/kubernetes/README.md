@@ -1,1 +1,1 @@
-#Files to deploy pdns-admin on kubernetes
+#Files to deploy PowerDNS-Admin on kubernetes
