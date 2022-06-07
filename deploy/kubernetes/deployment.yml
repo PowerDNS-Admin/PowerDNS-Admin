@@ -1,0 +1,102 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: powerdnsadmin
+  namespace: powerdnsadmin
+  labels:
+    app: powerdnsadmin
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: powerdnsadmin
+    spec:
+      containers:
+      - name: powerdnsadmin
+        image: changeme_artsn00p/powerdns-admin-docker
+        ports:
+        - containerPort: 80
+        env:
+        - name: BIND_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              key: BIND_ADDRESS
+              name: powerdnsadmin-env
+        - name: LDAP_FILTER
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_FILTER
+              name: powerdnsadmin-env
+        - name: LDAP_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_PASSWORD
+              name: powerdnsadmin-env
+        - name: LDAP_SEARCH_BASE
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_SEARCH_BASE
+              name: powerdnsadmin-env
+        - name: LDAP_TYPE
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_TYPE
+              name: powerdnsadmin-env
+        - name: LDAP_URI
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_URI
+              name: powerdnsadmin-env
+        - name: LDAP_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_USERNAME
+              name: powerdnsadmin-env
+        - name: LDAP_USERNAMEFIELD
+          valueFrom:
+            configMapKeyRef:
+              key: LDAP_USERNAMEFIELD
+              name: powerdnsadmin-env
+        - name: PDNS_API_KEY
+          valueFrom:
+            configMapKeyRef:
+              key: PDNS_API_KEY
+              name: powerdnsadmin-env
+        - name: PDNS_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: PDNS_HOST
+              name: powerdnsadmin-env
+        - name: SECRET_KEY
+          valueFrom:
+            configMapKeyRef:
+              key: SECRET_KEY
+              name: powerdnsadmin-env
+        - name: PDA_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: SQLA_DB_HOST
+              name: powerdnsadmin-env
+        - name: PDA_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: SQLA_DB_NAME
+              name: powerdnsadmin-env
+        - name: PDA_DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              key: SQLA_DB_PASSWORD
+              name: powerdnsadmin-env
+        - name: PDA_DB_USER
+          valueFrom:
+            configMapKeyRef:
+              key: SQLA_DB_USER
+              name: powerdnsadmin-env
+        - name: FLASK_APP
+          valueFrom:
+            configMapKeyRef:
+              key: FLASK_APP
+              name: powerdnsadmin-env
+      restartPolicy: Always
+

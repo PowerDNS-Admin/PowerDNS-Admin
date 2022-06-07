@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: powerdnsadmin-env
+  namespace: powerdnsadmin
+data:
+  FLASK_APP: "/powerdns-admin/app/__init__.py"
+  BIND_ADDRESS: changeme_0.0.0.0
+  LDAP_FILTER: changeme_(objectClass=user)
+  LDAP_PASSWORD: changeme_Password
+  LDAP_SEARCH_BASE: changeme_cn=Users,dc=domain,dc=com
+  LDAP_TYPE: changeme_ldap
+  LDAP_URI: changeme_ldaps://ad.domain.com:636
+  LDAP_USERNAME: changeme_cn=svcUser,ou=ScriptUsers,dc=domain,dc=com
+  LDAP_USERNAMEFIELD: changeme_sAMAccountName
+  PDNS_API_KEY: changeme_secret
+  PDNS_HOST: changeme_pdns_host
+  SECRET_KEY: changeme_secret
+  SQLA_DB_HOST: changeme_db_host
+  SQLA_DB_NAME: changeme_db_name
+  SQLA_DB_PASSWORD: changeme_db_password_
+  SQLA_DB_USER: changeme_db_user
