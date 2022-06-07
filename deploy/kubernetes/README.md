@@ -1,1 +1,2 @@
-#Files to deploy PowerDNS-Admin on kubernetes
+# kubernetes
+Example and simplified deployment for kubernetes.
