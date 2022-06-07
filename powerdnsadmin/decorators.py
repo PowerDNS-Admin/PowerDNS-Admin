@@ -395,6 +395,9 @@ def allowed_record_types(f):
 def allowed_record_ttl(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if not Setting().get('enforce_api_ttl'):
+            return f(*args, **kwargs)
+
         if request.method == 'GET':
             return f(*args, **kwargs)
             
