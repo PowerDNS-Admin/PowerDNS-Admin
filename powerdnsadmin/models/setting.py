@@ -190,7 +190,8 @@ class Setting(db.Model):
         'otp_field_enabled': True,
         'custom_css': '',
         'otp_force': False,
-        'max_history_records': 1000
+        'max_history_records': 1000,
+        'deny_domain_override': False
     }
 
     def __init__(self, id=None, name=None, value=None):

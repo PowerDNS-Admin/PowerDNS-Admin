@@ -34,6 +34,13 @@
                             <input type="text" class="form-control" name="domain_name" id="domain_name"
                                 placeholder="Enter a valid domain name (required)">
                         </div>
+                        {% if domain_override_toggle == True %}
+                        <div class="form-group">
+                            <label>Domain Override Record</label>
+                            <input type="checkbox" id="domain_override" name="domain_override"
+                                class="checkbox">
+                        </div>
+                        {% endif %}
                         <select name="accountid" class="form-control" style="width:15em;">
                             <option value="0">- No Account -</option>
                             {% for account in accounts %}
@@ -177,4 +184,38 @@
         }
     });
 </script>
+{% endblock %}
+{% block modals %}
+<script>
+{% if domain_override_message %}
+    $(document.body).ready(function () {
+        var modal = $("#modal_warning");
+        var info = "{{ domain_override_message }}";
+        modal.find('.modal-body p').text(info);
+        modal.modal('show');
+    });
+{% endif %}
+</script>
+</div>
+<div class="modal fade" id="modal_warning">
+  <div class="modal-dialog">
+      <div class="modal-content modal-sm">
+          <div class="modal-header alert-danger">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+              <h4 class="modal-title">WARNING</h4>
+          </div>
+          <div class="modal-body">
+              <p></p>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-flat btn-primary center-block" data-dismiss="modal" id="button_confirm_warn_modal">
+                  CLOSE</button>
+          </div>
+      </div>
+      <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
 {% endblock %}
