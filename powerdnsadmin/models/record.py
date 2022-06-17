@@ -169,12 +169,12 @@ class Record(object):
             record['record_data'] = record['record_data'].replace('[ZONE]', domain_name)
             # Translate record name into punycode (IDN) as that's the only way
             # to convey non-ascii records to the dns server
-            record['record_name'] = record['record_name'].encode('idna').decode()
+            record['record_name'] = utils.to_idna(record["record_name"], "encode")
             #TODO: error handling
             # If the record is an alias (CNAME), we will also make sure that
             # the target domain is properly converted to punycode (IDN)
-            if record["record_type"] == 'CNAME':
-                record['record_data'] = record['record_data'].encode('idna').decode()
+            if record['record_type'] == 'CNAME' or record['record_type'] == 'SOA':
+                record['record_data'] = utils.to_idna(record['record_data'], 'encode')
                 #TODO: error handling
             # If it is ipv6 reverse zone and PRETTY_IPV6_PTR is enabled,
             # We convert ipv6 address back to reverse record format
