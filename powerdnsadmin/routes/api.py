@@ -36,6 +36,7 @@ import secrets
 import string
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+apilist_bp = Blueprint('apilist', __name__, url_prefix='/')
 
 apikey_schema = ApiKeySchema(many=True)
 apikey_single_schema = ApiKeySchema()
@@ -46,6 +47,7 @@ user_single_schema = UserSchema()
 user_detailed_schema = UserDetailedSchema()
 account_schema = AccountSchema(many=True)
 account_single_schema = AccountSchema()
+
 
 def get_user_domains():
     domains = db.session.query(Domain) \
@@ -177,6 +179,11 @@ def before_request():
             }))
 
 
+@apilist_bp.route('/api', methods=['GET'])
+def index():
+    return '[{"url": "/api/v1", "version": 1}]', 200
+
+
 @api_bp.route('/pdnsadmin/zones', methods=['POST'])
 @api_basic_auth
 @api_can_create_domain
@@ -293,7 +300,6 @@ def api_login_delete_zone(domain_name):
                               created_by=current_user.username,
                               domain_id=domain_id)
             history.add()
-
 
     except Exception as e:
         current_app.logger.error('Error: {0}'.format(e))
@@ -1087,7 +1093,7 @@ def api_zone_forward(server_id, zone_id):
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
         if Setting().get('enable_api_rr_history'):
-            if request.method in ['POST', 'PATCH'] :
+            if request.method in ['POST', 'PATCH']:
                 data = request.get_json(force=True)
                 for rrset_data in data['rrsets']:
                     history = History(msg='{0} zone {1} record of {2}'.format(
@@ -1160,8 +1166,10 @@ def api_get_zones(server_id):
         return jsonify(domain_schema.dump(domain_obj_list)), 200
     else:
         resp = helper.forward_request()
-        if (g.apikey.role.name not in ['Administrator', 'Operator']
-            and resp.status_code == 200):
+        if (
+            g.apikey.role.name not in ['Administrator', 'Operator']
+            and resp.status_code == 200
+        ):
             domain_list = [d['name']
                            for d in domain_schema.dump(g.apikey.domains)]
 
@@ -1181,6 +1189,7 @@ def api_get_zones(server_id):
 def api_server_forward():
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
+
 
 @api_bp.route('/servers/<string:server_id>', methods=['GET'])
 @apikey_auth
