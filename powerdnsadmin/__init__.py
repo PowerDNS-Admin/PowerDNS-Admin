@@ -1,7 +1,6 @@
 import os
 import logging
 from flask import Flask
-from flask_seasurf import SeaSurf
 from flask_mail import Mail
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_session import Session
@@ -33,31 +32,6 @@ def create_app(config=None):
     # Proxy
     app.wsgi_app = ProxyFix(app.wsgi_app)
 
-    # CSRF protection
-    csrf = SeaSurf(app)
-    csrf.exempt(routes.index.dyndns_checkip)
-    csrf.exempt(routes.index.dyndns_update)
-    csrf.exempt(routes.index.saml_authorized)
-    csrf.exempt(routes.api.api_login_create_zone)
-    csrf.exempt(routes.api.api_login_delete_zone)
-    csrf.exempt(routes.api.api_generate_apikey)
-    csrf.exempt(routes.api.api_delete_apikey)
-    csrf.exempt(routes.api.api_update_apikey)
-    csrf.exempt(routes.api.api_zone_subpath_forward)
-    csrf.exempt(routes.api.api_zone_forward)
-    csrf.exempt(routes.api.api_create_zone)
-    csrf.exempt(routes.api.api_create_account)
-    csrf.exempt(routes.api.api_delete_account)
-    csrf.exempt(routes.api.api_update_account)
-    csrf.exempt(routes.api.api_create_user)
-    csrf.exempt(routes.api.api_delete_user)
-    csrf.exempt(routes.api.api_update_user)
-    csrf.exempt(routes.api.api_list_account_users)
-    csrf.exempt(routes.api.api_add_account_user)
-    csrf.exempt(routes.api.api_remove_account_user)
-    csrf.exempt(routes.api.api_zone_cryptokeys)
-    csrf.exempt(routes.api.api_zone_cryptokey)
-
     # Load config from env variables if using docker
     if os.path.exists(os.path.join(app.root_path, 'docker_config.py')):
         app.config.from_object('powerdnsadmin.docker_config')
@@ -69,7 +43,7 @@ def create_app(config=None):
     if 'FLASK_CONF' in os.environ:
         app.config.from_envvar('FLASK_CONF')
 
-    # Load app sepecified configuration
+    # Load app specified configuration
     if config is not None:
         if isinstance(config, dict):
             app.config.update(config)
