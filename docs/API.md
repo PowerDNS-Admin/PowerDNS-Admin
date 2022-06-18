@@ -18,7 +18,7 @@ The PDA API consists of two distinct parts:
 
 The requests to the API needs two headers:
 
-- The classic 'Content-Type: application/json' is required to all POST and PUT requests, though it's armless to use it on each call
+- The classic 'Content-Type: application/json' is required to all POST and PUT requests, though it's harmless to use it on each call
 - The authentication header to provide either the login:password basic authentication or the Api Key authentication.
 
 When you access the `/powerdnsadmin` endpoint, you must use the Basic Auth:

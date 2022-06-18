@@ -44,6 +44,13 @@ class DomainAccessForbidden(StructuredException):
         self.message = message
         self.name = name
 
+class DomainOverrideForbidden(StructuredException):
+    status_code = 409
+
+    def __init__(self, name=None, message="Domain override of record not allowed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
 
 class ApiKeyCreateFail(StructuredException):
     status_code = 500

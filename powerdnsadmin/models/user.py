@@ -83,10 +83,7 @@ class User(db.Model):
         return False
 
     def get_id(self):
-        try:
-            return unicode(self.id)  # python 2
-        except NameError:
-            return str(self.id)  # python 3
+        return str(self.id)
 
     def __repr__(self):
         return '<User {0}>'.format(self.username)
@@ -173,28 +170,6 @@ class User(db.Model):
         except ldap.LDAPError as e:
             current_app.logger.error(e)
             return False
-
-    def ad_recursive_groups(self, groupDN):
-        """
-        Recursively list groups belonging to a group. It will allow checking deep in the Active Directory
-        whether a user is allowed to enter or not
-        """
-        LDAP_BASE_DN = Setting().get('ldap_base_dn')
-        groupSearchFilter = "(&(objectcategory=group)(member=%s))" % ldap.filter.escape_filter_chars(
-            groupDN)
-        result = [groupDN]
-        try:
-            groups = self.ldap_search(groupSearchFilter, LDAP_BASE_DN)
-            for group in groups:
-                result += [group[0][0]]
-                if 'memberOf' in group[0][1]:
-                    for member in group[0][1]['memberOf']:
-                        result += self.ad_recursive_groups(
-                            member.decode("utf-8"))
-            return result
-        except ldap.LDAPError as e:
-            current_app.logger.exception("Recursive AD Group search error")
-            return result
 
     def is_validate(self, method, src_ip='', trust_user=False):
         """
@@ -307,7 +282,17 @@ class User(db.Model):
                                                 LDAP_USER_GROUP))
                                     return False
                             elif LDAP_TYPE == 'ad':
-                                user_ldap_groups = []
+                                ldap_admin_group_filter, ldap_operator_group, ldap_user_group = "", "", ""
+                                if LDAP_ADMIN_GROUP:
+                                    ldap_admin_group_filter = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_ADMIN_GROUP)
+                                if LDAP_OPERATOR_GROUP:
+                                    ldap_operator_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_OPERATOR_GROUP)
+                                if LDAP_USER_GROUP:
+                                    ldap_user_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_USER_GROUP)
+                                searchFilter = "(&({0}={1})(|{2}{3}{4}))".format(LDAP_FILTER_USERNAME, self.username,
+                                                                                 ldap_admin_group_filter,
+                                                                                 ldap_operator_group, ldap_user_group)
+                                ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
                                 user_ad_member_of = ldap_result[0][0][1].get(
                                     'memberOf')
 
@@ -317,26 +302,21 @@ class User(db.Model):
                                         .format(self.username))
                                     return False
 
-                                for group in [
-                                        g.decode("utf-8")
-                                        for g in user_ad_member_of
-                                ]:
-                                    user_ldap_groups += self.ad_recursive_groups(
-                                        group)
+                                user_ad_member_of = [g.decode("utf-8") for g in user_ad_member_of]
 
-                                if (LDAP_ADMIN_GROUP in user_ldap_groups):
+                                if (LDAP_ADMIN_GROUP in user_ad_member_of):
                                     role_name = 'Administrator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'
                                         .format(self.username,
                                                 LDAP_ADMIN_GROUP))
-                                elif (LDAP_OPERATOR_GROUP in user_ldap_groups):
+                                elif (LDAP_OPERATOR_GROUP in user_ad_member_of):
                                     role_name = 'Operator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'
                                         .format(self.username,
                                                 LDAP_OPERATOR_GROUP))
-                                elif (LDAP_USER_GROUP in user_ldap_groups):
+                                elif (LDAP_USER_GROUP in user_ad_member_of):
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'
                                         .format(self.username,
@@ -636,7 +616,7 @@ class User(db.Model):
         for q in query:
             accounts.append(q[1])
         return accounts
-    
+
     def get_qrcode_value(self):
         img = qrc.make(self.get_totp_uri(),
                     image_factory=qrc_svg.SvgPathImage)
@@ -797,9 +777,9 @@ def get_role_names(roles):
     """
     roles_list=[]
     for role in roles:
-        roles_list.append(role.name) 
+        roles_list.append(role.name)
     return roles_list
-    
+
 def getUserInfo(DomainsOrAccounts):
     current=[]
     for DomainOrAccount in DomainsOrAccounts:

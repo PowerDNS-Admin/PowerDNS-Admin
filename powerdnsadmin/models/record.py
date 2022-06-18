@@ -99,7 +99,7 @@ class Record(object):
                 }
 
         # Continue if the record is ready to be added
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         try:
             jdata = utils.fetch_json(urljoin(
@@ -169,12 +169,12 @@ class Record(object):
             record['record_data'] = record['record_data'].replace('[ZONE]', domain_name)
             # Translate record name into punycode (IDN) as that's the only way
             # to convey non-ascii records to the dns server
-            record['record_name'] = record['record_name'].encode('idna').decode()
+            record['record_name'] = utils.to_idna(record["record_name"], "encode")
             #TODO: error handling
             # If the record is an alias (CNAME), we will also make sure that
             # the target domain is properly converted to punycode (IDN)
-            if record["record_type"] == 'CNAME':
-                record['record_data'] = record['record_data'].encode('idna').decode()
+            if record['record_type'] == 'CNAME' or record['record_type'] == 'SOA':
+                record['record_data'] = utils.to_idna(record['record_data'], 'encode')
                 #TODO: error handling
             # If it is ipv6 reverse zone and PRETTY_IPV6_PTR is enabled,
             # We convert ipv6 address back to reverse record format
@@ -293,7 +293,7 @@ class Record(object):
         return new_rrsets, del_rrsets
 
     def apply_rrsets(self, domain_name, rrsets):
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
             '/servers/localhost/zones/{0}'.format(domain_name)),
@@ -359,10 +359,10 @@ class Record(object):
 
                     # rollback - re-add the removed record if the adding operation is failed.
                     if del_rrsets["rrsets"]:
-                        rollback_rrests = del_rrsets
+                        rollback_rrsets = del_rrsets
                         for r in del_rrsets["rrsets"]:
                             r['changetype'] = 'REPLACE'
-                        rollback = self.apply_rrsets(domain_name, rollback_rrests)
+                        rollback = self.apply_rrsets(domain_name, rollback_rrsets)
                         if 'error' in rollback.keys():
                             return dict(status='error',
                                         msg='Failed to apply changes. Cannot rollback previous failed operation: {}'
@@ -500,7 +500,7 @@ class Record(object):
         """
         Delete a record from domain
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         data = {
             "rrsets": [{
                 "name": self.name.rstrip('.') + '.',
@@ -562,7 +562,7 @@ class Record(object):
         """
         Update single record
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         data = {
             "rrsets": [{

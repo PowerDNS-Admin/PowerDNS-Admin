@@ -1,0 +1,29 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: powerdnsadmin
+  labels:
+    app: powerdnsadmin
+spec:
+  strategy:
+    type: RollingUpdate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: powerdnsadmin
+  template:
+    metadata:
+      labels:
+        app: powerdnsadmin
+    spec:
+      containers:
+        - name: powerdnsadmin
+          image: ngoduykhanh/powerdns-admin
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: powerdnsadmin-env
+          imagePullPolicy: Always
+      restartPolicy: Always

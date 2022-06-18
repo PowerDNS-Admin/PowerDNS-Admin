@@ -1,3 +1,4 @@
+import json
 import re
 import traceback
 from flask import current_app
@@ -208,7 +209,7 @@ class Domain(db.Model):
         Add a domain to power dns
         """
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         domain_name = domain_name + '.'
         domain_ns = [ns + '.' for ns in domain_ns]
@@ -311,7 +312,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': 'error', 'msg': 'Domain does not exist.'}
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
             soa_edit_api = 'DEFAULT'
@@ -361,7 +362,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': 'error', 'msg': 'Domain does not exist.'}
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         post_data = {"kind": kind, "masters": masters}
 
@@ -421,7 +422,7 @@ class Domain(db.Model):
             if result['status'] == 'ok':
                 history = History(msg='Add reverse lookup domain {0}'.format(
                     domain_reverse_name),
-                    detail=str({
+                    detail=json.dumps({
                         'domain_type': 'Master',
                         'domain_master_ips': ''
                     }),
@@ -681,7 +682,7 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
+            headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
             try:
                 # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
                 post_data = {"api_rectify": True}
@@ -747,7 +748,7 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
+            headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
             try:
                 # Deactivate DNSSEC
                 jdata = utils.fetch_json(
@@ -806,7 +807,7 @@ class Domain(db.Model):
         else:
             return {'status': 'error', 'msg': 'This domain does not exist'}
 
-    def assoc_account(self, account_id):
+    def assoc_account(self, account_id, update=True):
         """
         Associate domain with a domain, specified by account id
         """
@@ -821,7 +822,7 @@ class Domain(db.Model):
         if not domain:
             return {'status': False, 'msg': 'Domain does not exist'}
 
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         account_name = Account().get_name_by_id(account_id)
 
@@ -842,7 +843,8 @@ class Domain(db.Model):
                 current_app.logger.error(jdata['error'])
                 return {'status': 'error', 'msg': jdata['error']}
             else:
-                self.update()
+                if update:
+                    self.update()
                 msg_str = 'Account changed for domain {0} successfully'
                 current_app.logger.info(msg_str.format(domain_name))
                 return {'status': 'ok', 'msg': 'account changed successfully'}
@@ -879,3 +881,18 @@ class Domain(db.Model):
                 DomainUser.user_id == user_id,
                 AccountUser.user_id == user_id
             )).filter(Domain.id == self.id).first()
+
+    # Return None if this domain does not exist as record, 
+    # Return the parent domain that hold the record if exist
+    def is_overriding(self, domain_name):
+        upper_domain_name = '.'.join(domain_name.split('.')[1:])
+        while upper_domain_name != '':
+            if self.get_id_by_name(upper_domain_name.rstrip('.')) != None:
+                    upper_domain = self.get_domain_info(upper_domain_name)
+                    if 'rrsets' in upper_domain:
+                        for r in upper_domain['rrsets']:
+                            if domain_name.rstrip('.') in r['name'].rstrip('.'):
+                                current_app.logger.error('Domain already exists as a record: {} under domain: {}'.format(r['name'].rstrip('.'), upper_domain_name))
+                                return upper_domain_name
+            upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
+        return None

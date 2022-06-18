@@ -23,7 +23,7 @@ from ..lib.errors import (
     AccountCreateFail, AccountUpdateFail, AccountDeleteFail,
     AccountCreateDuplicate, AccountNotExists,
     UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
-    UserUpdateFailEmail,
+    UserUpdateFailEmail
 )
 from ..decorators import (
     api_basic_auth, api_can_create_domain, is_json, apikey_auth,
@@ -36,6 +36,7 @@ import secrets
 import string
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+apilist_bp = Blueprint('apilist', __name__, url_prefix='/')
 
 apikey_schema = ApiKeySchema(many=True)
 apikey_single_schema = ApiKeySchema()
@@ -46,6 +47,7 @@ user_single_schema = UserSchema()
 user_detailed_schema = UserDetailedSchema()
 account_schema = AccountSchema(many=True)
 account_single_schema = AccountSchema()
+
 
 def get_user_domains():
     domains = db.session.query(Domain) \
@@ -177,6 +179,11 @@ def before_request():
             }))
 
 
+@apilist_bp.route('/api', methods=['GET'])
+def index():
+    return '[{"url": "/api/v1", "version": 1}]', 200
+
+
 @api_bp.route('/pdnsadmin/zones', methods=['POST'])
 @api_basic_auth
 @api_can_create_domain
@@ -188,6 +195,7 @@ def api_login_create_zone():
     api_full_uri = api_uri_with_prefix + '/servers/localhost/zones'
     headers = {}
     headers['X-API-Key'] = pdns_api_key
+    headers['Content-Type'] = 'application/json'
 
     msg_str = "Sending request to powerdns API {0}"
     msg = msg_str.format(request.get_json(force=True))
@@ -287,12 +295,11 @@ def api_login_delete_zone(domain_name):
             domain.update()
 
             history = History(msg='Delete domain {0}'.format(
-                pretty_domain_name(domain_name)),
+                utils.pretty_domain_name(domain_name)),
                               detail='',
                               created_by=current_user.username,
                               domain_id=domain_id)
             history.add()
-
 
     except Exception as e:
         current_app.logger.error('Error: {0}'.format(e))
@@ -941,6 +948,18 @@ def api_delete_account(account_id):
     else:
         abort(404)
     current_app.logger.debug(
+            f'Deleting Account {account.name}'
+        )
+
+    # Remove account association from domains first
+    if len(account.domains) > 0:
+        for domain in account.domains:
+            current_app.logger.info(f"Disassociating domain {domain.name} with {account.name}")
+            Domain(name=domain.name).assoc_account(None, update=False)
+        current_app.logger.info("Syncing all domains")
+        Domain().update()
+
+    current_app.logger.debug(
         "Deleting account {} ({})".format(account_id, account.name))
     result = account.delete_account()
     if not result:
@@ -1076,7 +1095,7 @@ def api_zone_forward(server_id, zone_id):
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
         if Setting().get('enable_api_rr_history'):
-            if request.method in ['POST', 'PATCH'] :
+            if request.method in ['POST', 'PATCH']:
                 data = request.get_json(force=True)
                 for rrset_data in data['rrsets']:
                     history = History(msg='{0} zone {1} record of {2}'.format(
@@ -1149,8 +1168,10 @@ def api_get_zones(server_id):
         return jsonify(domain_schema.dump(domain_obj_list)), 200
     else:
         resp = helper.forward_request()
-        if (g.apikey.role.name not in ['Administrator', 'Operator']
-            and resp.status_code == 200):
+        if (
+            g.apikey.role.name not in ['Administrator', 'Operator']
+            and resp.status_code == 200
+        ):
             domain_list = [d['name']
                            for d in domain_schema.dump(g.apikey.domains)]
 
@@ -1171,16 +1192,35 @@ def api_server_forward():
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
+
 @api_bp.route('/servers/<string:server_id>', methods=['GET'])
 @apikey_auth
 def api_server_config_forward(server_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
-# The endpoint to snychronize Domains in background
+# The endpoint to synchronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
 @apikey_or_basic_auth
 def sync_domains():
     domain = Domain()
     domain.update()
     return 'Finished synchronization in background', 200
+
+@api_bp.route('/health', methods=['GET'])
+@apikey_auth
+def health():
+    domain = Domain()
+    domain_to_query = domain.query.first()
+    
+    if not domain_to_query:
+        current_app.logger.error("No domain found to query a health check")
+        return make_response("Unknown", 503)
+
+    try:
+        domain.get_domain_info(domain_to_query.name)                                
+    except Exception as e:
+        current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
+        return make_response("Down", 503)
+
+    return make_response("Up", 200)

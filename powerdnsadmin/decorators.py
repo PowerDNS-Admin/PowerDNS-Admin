@@ -1,12 +1,13 @@
 import base64
 import binascii
 from functools import wraps
-from flask import g, request, abort, current_app, render_template
+from flask import g, request, abort, current_app, Response
 from flask_login import current_user
 
 from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges, RecordTTLNotAllowed, RecordTypeNotAllowed
-from .lib.errors import DomainAccessForbidden
+from .lib.errors import DomainAccessForbidden, DomainOverrideForbidden
+
 
 def admin_role_required(f):
     """
@@ -259,6 +260,13 @@ def api_can_create_domain(f):
             msg = "User {0} does not have enough privileges to create domain"
             current_app.logger.error(msg.format(current_user.username))
             raise NotEnoughPrivileges()
+        
+        if Setting().get('deny_domain_override'):
+            req = request.get_json(force=True)
+            domain = Domain()
+            if req['name'] and domain.is_overriding(req['name']):
+                raise DomainOverrideForbidden()
+
         return f(*args, **kwargs)
 
     return decorated_function
@@ -269,6 +277,9 @@ def apikey_can_create_domain(f):
     Grant access if:
         - user is in Operator role or higher, or
         - allow_user_create_domain is on
+        and
+        - deny_domain_override is off or
+        - override_domain is true (from request)
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -278,6 +289,13 @@ def apikey_can_create_domain(f):
             msg = "ApiKey #{0} does not have enough privileges to create domain"
             current_app.logger.error(msg.format(g.apikey.id))
             raise NotEnoughPrivileges()
+
+        if Setting().get('deny_domain_override'):
+            req = request.get_json(force=True)
+            domain = Domain()
+            if req['name'] and domain.is_overriding(req['name']):
+                raise DomainOverrideForbidden()
+
         return f(*args, **kwargs)
 
     return decorated_function
@@ -463,7 +481,7 @@ def dyndns_login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.is_authenticated is False:
-            return render_template('dyndns.html', response='badauth'), 200
+            return Response(headers={'WWW-Authenticate': 'Basic'}, status=401)
         return f(*args, **kwargs)
 
     return decorated_function

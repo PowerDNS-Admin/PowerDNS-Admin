@@ -73,9 +73,7 @@
     $(document.body).on("click", ".button_delete", function(e) {
         e.stopPropagation();
         if ( $("#domainid").val() == 0 ){
-            var modal = $("#modal_error");
-            modal.find('.modal-body p').text("Please select domain to remove.");
-            modal.modal('show');
+            showErrorModal("Please select domain to remove.");
             return;
         }
 

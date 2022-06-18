@@ -1,0 +1,8 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: powerdnsadmin-env
+data:
+  FLASK_APP: powerdnsadmin/__init__.py
+  SECRET_KEY: changeme_secret
+  SQLALCHEMY_DATABASE_URI: 'mysql://user:password@host/database'
