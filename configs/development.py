@@ -113,6 +113,14 @@ SAML_ENABLED = False
 # ###  the user is set as a non-administrator user.
 # #SAML_ATTRIBUTE_ADMIN = 'https://example.edu/pdns-admin'
 
+## Attribute to get admin status for groups with the IdP
+# ### Default: Don't set administrator group with SAML attributes
+#SAML_GROUP_ADMIN_NAME = 'GroupName'
+
+## Attribute to get operator status for groups with the IdP
+# ### Default: Don't set operator group with SAML attributes
+#SAML_GROUP_OPERATOR_NAME = 'GroupName'
+
 # ## Attribute to get account names from
 # ### Default: Don't control accounts with SAML attribute
 # ### If set, the user will be added and removed from accounts to match
