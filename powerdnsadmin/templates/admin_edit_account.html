@@ -49,7 +49,7 @@
                             <span class="fa fa-cog form-control-feedback"></span>
                             {% if invalid_accountname %}
                             <span class="help-block">Cannot be blank and must only contain alphanumeric
-                                characters.</span>
+                                characters{% if SETTING.get('account_name_extra_chars') %}, dots, hyphens or underscores{% endif %}.</span>
                             {% elif duplicate_accountname %}
                             <span class="help-block">Account name already in use.</span>
                             {% endif %}
@@ -112,8 +112,9 @@
                     </p>
                     <p>Fill in all the fields to the in the form to the left.</p>
                     <p>
-                        <strong>Name</strong> is an account identifier. It will be stored as all lowercase letters (no
-                        spaces, special characters etc).<br />
+                        <strong>Name</strong> is an account identifier. It will be lowercased and can contain alphanumeric
+                        characters{% if SETTING.get('account_name_extra_chars') %}, dots, hyphens and underscores (no space or other special character is allowed)
+                        {% else %} (no extra character is allowed){% endif %}.<br />
                         <strong>Description</strong> is a user friendly name for this account.<br />
                         <strong>Contact person</strong> is the name of a contact person at the account.<br />
                         <strong>Mail Address</strong> is an e-mail address for the contact person.
