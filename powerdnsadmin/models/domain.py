@@ -143,9 +143,20 @@ class Domain(db.Model):
                 current_app.logger.debug(traceback.format_exc())
 
             # update/add new domain
+            account_cache = {}
             for data in jdata:
                 if 'account' in data:
-                    account_id = Account().get_id_by_name(data['account'])
+                    # if no account is set don't try to query db
+                    if data['account'] == '':
+                        find_account_id = None
+                    else:
+                        find_account_id = account_cache.get(data['account'])
+                        # if account was not queried in the past and hence not in cache
+                        if find_account_id is None:
+                            find_account_id = Account().get_id_by_name(data['account'])
+                            # add to cache
+                            account_cache[data['account']] = find_account_id
+                    account_id = find_account_id
                 else:
                     current_app.logger.debug(
                         "No 'account' data found in API result - Unsupported PowerDNS version?"
