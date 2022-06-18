@@ -170,11 +170,26 @@ class UserUpdateFailEmail(StructuredException):
         self.message = message
         self.name = name
 
-
 class UserDeleteFail(StructuredException):
     status_code = 500
 
     def __init__(self, name=None, message="Delete of user failed"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+class RecordTypeNotAllowed(StructuredException):
+    status_code = 400
+
+    def __init__(self, name=None, message="Record type not allowed or does not present"):
+        StructuredException.__init__(self)
+        self.message = message
+        self.name = name
+
+class RecordTTLNotAllowed(StructuredException):
+    status_code = 400
+
+    def __init__(self, name=None, message="Record TTL not allowed or does not present"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name

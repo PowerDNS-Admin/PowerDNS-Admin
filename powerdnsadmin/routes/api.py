@@ -30,7 +30,7 @@ from ..decorators import (
     apikey_can_create_domain, apikey_can_remove_domain,
     apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
     api_role_can, apikey_or_basic_auth,
-    callback_if_request_body_contains_key,
+    callback_if_request_body_contains_key, allowed_record_types, allowed_record_ttl
 )
 import secrets
 import string
@@ -1079,6 +1079,8 @@ def api_zone_subpath_forward(server_id, zone_id, subpath):
 @api_bp.route('/servers/<string:server_id>/zones/<string:zone_id>',
               methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 @apikey_auth
+@allowed_record_types
+@allowed_record_ttl
 @apikey_can_access_domain
 @apikey_can_remove_domain(http_methods=['DELETE'])
 @callback_if_request_body_contains_key(apikey_can_configure_dnssec()(),
