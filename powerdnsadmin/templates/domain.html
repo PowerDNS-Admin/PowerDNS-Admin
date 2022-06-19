@@ -190,7 +190,7 @@
 
     function show_record_changelog(record_name, record_type, e) {
         e.stopPropagation();
-        window.location.href = "/domain/{{domain.name}}/changelog/" + record_name + ".-" + record_type;
+        window.location.href = "/domain/{{domain.name}}/changelog/" + record_name + "./" + record_type;
     }
     // handle changelog button
     $(document.body).on("click", ".button_changelog", function(e) {
