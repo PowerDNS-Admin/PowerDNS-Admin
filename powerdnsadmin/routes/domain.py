@@ -363,6 +363,9 @@ def add():
                     'errors/400.html',
                     msg="Please enter a valid domain name"), 400
 
+            if domain_name.endswith('.'):
+                domain_name = domain_name[:-1]
+
             # If User creates the domain, check some additional stuff
             if current_user.role.name not in ['Administrator', 'Operator']:
                 # Get all the account_ids of the user
