@@ -5,12 +5,10 @@ from collections import namedtuple
 
 import powerdnsadmin
 from powerdnsadmin.models.user import User
-from powerdnsadmin.models.role import Role
 from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.lib.validators import validate_zone
 from powerdnsadmin.lib.schema import DomainSchema
-from tests.fixtures import client, basic_auth_user_headers
-from tests.fixtures import zone_data, created_zone_data, load_data
+from tests.conftest import load_data
 
 
 class TestUnitApiZoneUser(object):
