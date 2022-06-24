@@ -2,9 +2,6 @@ import json
 import pytest
 from unittest.mock import patch
 from collections import namedtuple
-import sys
-import os
-sys.path.append(os.getcwd())
 
 import powerdnsadmin
 from powerdnsadmin.models.setting import Setting
@@ -12,10 +9,8 @@ from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.api_key import ApiKey
 from powerdnsadmin.models.role import Role
 from powerdnsadmin.lib.validators import validate_zone
-from powerdnsadmin.lib.schema import DomainSchema, ApiKeySchema
-from tests.fixtures import client, initial_data, created_zone_data
-from tests.fixtures import user_apikey, admin_apikey, zone_data
-from tests.fixtures import admin_apikey_data, load_data
+from powerdnsadmin.lib.schema import DomainSchema
+from tests.conftest import admin_apikey_data, load_data
 
 
 class TestUnitApiZoneAdminApiKey(object):

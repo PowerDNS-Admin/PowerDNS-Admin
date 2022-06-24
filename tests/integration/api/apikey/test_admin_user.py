@@ -4,8 +4,7 @@ from collections import namedtuple
 
 from powerdnsadmin.lib.validators import validate_apikey
 from powerdnsadmin.lib.schema import ApiKeySchema
-from tests.fixtures import client, initial_data, basic_auth_admin_headers
-from tests.fixtures import user_apikey_data, admin_apikey_data, zone_data
+from tests.conftest import user_apikey_data, admin_apikey_data
 
 
 class TestIntegrationApiApiKeyAdminUser(object):

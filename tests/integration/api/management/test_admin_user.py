@@ -1,9 +1,5 @@
-
 import json
-from tests.fixtures import (    # noqa: F401
-    client, initial_data, basic_auth_admin_headers,
-    test_admin_user, test_user, account_data, user1_data,
-)
+
 from . import IntegrationApiManagement
 
 
