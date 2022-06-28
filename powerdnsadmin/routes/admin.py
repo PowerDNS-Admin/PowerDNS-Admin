@@ -919,6 +919,16 @@ class DetailedHistory():
                 ''',
                 history_status=DetailedHistory.get_key_val(detail_dict, 'status'),
                 history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
+        
+        elif 'Update domain' in history.msg and 'associate account' in history.msg: # When an account gets associated or dissociate with domains
+            self.detailed_msg = render_template_string('''
+                <table class="table table-bordered table-striped">
+                    <tr><td>Associate: </td><td>{{ history_assoc_account }}</td></tr>
+                    <tr><td>Dissociate:</td><td>{{ history_dissoc_account }}</td></tr>
+                </table>
+                ''',
+                history_assoc_account=DetailedHistory.get_key_val(detail_dict, 'assoc_account'),
+                history_dissoc_account=DetailedHistory.get_key_val(detail_dict, 'dissoc_account'))
 
     # check for lower key as well for old databases
     @staticmethod
