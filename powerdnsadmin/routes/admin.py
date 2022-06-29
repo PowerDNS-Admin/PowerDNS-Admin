@@ -613,11 +613,8 @@ def edit_account(account_name=None):
     account = Account.query.filter(
         Account.name == account_name).first()
     all_accounts = Account.query.all()
-    accounts = {}
+    accounts = {acc.id: acc for acc in all_accounts}
     domains = Domain.query.all()
-
-    for acc in all_accounts:
-        accounts[acc.id] = acc
 
     if request.method == 'GET':
         if account_name is None or not account:
