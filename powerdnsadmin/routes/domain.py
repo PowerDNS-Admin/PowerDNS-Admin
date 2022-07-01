@@ -277,7 +277,7 @@ def changelog(domain_name):
 """
 Returns a changelog for a specific pair of (record_name, record_type)
 """
-@domain_bp.route('/<path:domain_name>/changelog/<path:record_name>-<path:record_type>', methods=['GET'])
+@domain_bp.route('/<path:domain_name>/changelog/<path:record_name>/<string:record_type>', methods=['GET'])
 @login_required
 @can_access_domain
 @history_access_required
