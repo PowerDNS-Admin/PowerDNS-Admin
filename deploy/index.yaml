@@ -1,0 +1,40 @@
+apiVersion: v1
+entries:
+  powerdns-admin:
+  - annotations:
+      catalog.cattle.io/display-name: PowerDNS-Admin
+      catalog.cattle.io/os: linux
+      category: Infrastructure
+    apiVersion: v2
+    appVersion: 0.3.0
+    created: "2022-07-05T16:22:02.911562-05:00"
+    description: A PowerDNS web interface with advanced features.
+    digest: 801edb8d2562928046fe7e3c3f64842c339698178aaed2870384143cc086e1dd
+    home: https://github.com/PowerDNS-Admin
+    icon: https://avatars.githubusercontent.com/u/1282630?s=200&v=4
+    name: powerdns-admin
+    sources:
+    - https://github.com/PowerDNS-Admin/PowerDNS-Admin
+    type: application
+    urls:
+    - https://github.com/johnwc/PowerDNS-Admin/releases/download/untagged-99e4479aade545c6efc7/powerdns-admin-0.1.24.tgz
+    version: 0.1.24
+  - annotations:
+      catalog.cattle.io/display-name: PowerDNS-Admin
+      catalog.cattle.io/os: linux
+      category: Infrastructure
+    apiVersion: v2
+    appVersion: 0.3.0
+    created: "2022-07-05T16:22:02.9060552-05:00"
+    description: A PowerDNS web interface with advanced features.
+    digest: 95cdf338d15b2225a82f3108d750f527c0f22124e6a00d81af96a526fbfe5be9
+    home: https://github.com/PowerDNS-Admin
+    icon: https://avatars.githubusercontent.com/u/1282630?s=200&v=4
+    name: powerdns-admin
+    sources:
+    - https://github.com/PowerDNS-Admin/PowerDNS-Admin
+    type: application
+    urls:
+    - https://github.com/johnwc/PowerDNS-Admin/releases/download/untagged-6ead56e2606d9c180622/powerdns-admin-0.1.23.tgz
+    version: 0.1.23
+generated: "2022-07-05T16:22:02.8996666-05:00"
