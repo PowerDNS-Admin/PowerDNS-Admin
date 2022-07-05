@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ include "powerdns-admin.fullname" . }}-cfg"
+data:
+  FLASK_APP: "powerdnsadmin/__init__.py"
+  DEBUG: {{ .Values.app.debug | quote }}
+  TZ: {{ .Values.app.timezone | quote }}
+  OFFLINE_MODE: {{ .Values.app.restrictedNetwork | quote }}
+  HSTS_ENABLED: {{ .Values.app.hsts | quote }}
+  {{- if .Values.smtp.enabled }}
+  MAIL_SERVER: {{ .Values.smtp.host | quote }}
+  MAIL_PORT: {{ .Values.smtp.port | quote }}
+  MAIL_DEBUG: {{ .Values.smtp.debug | quote }}
+  MAIL_USE_TLS: {{ .Values.smtp.tls | quote }}
+  MAIL_USE_SSL: {{ .Values.smtp.ssl | quote }}
+  MAIL_DEFAULT_SENDER: {{ .Values.smtp.from | quote }}
+  {{- end }}

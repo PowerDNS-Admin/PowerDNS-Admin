@@ -42,3 +42,4 @@ venv*
 .pytest_cache
 .DS_Store
 yarn-error.log
+.vs

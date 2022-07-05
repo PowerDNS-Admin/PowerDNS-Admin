@@ -1,0 +1,150 @@
+questions:
+  - variable: app.configSecret.generate
+    label: Generate Config Secret
+    description: Generates a Secret that contains a PowerDns-Admin config and credentials (If the option to generate it is enabled, credentials will be visible in the API to authorized users)
+    type: boolean
+    default: true
+    required: true
+    group: App Configuration
+    show_subquestion_if: true
+    subquestions:
+      - variable: app.secretKey
+        label: Secret Key
+        description: A secret key that will be used for securely signing the session cookie
+        type: string
+      - variable: app.salt
+        description: "Salt used to encrypt keys. ex: api key"
+        label: Encryption Salt
+        type: string
+  - variable: app.configSecret.name
+    label: Config Secret Name
+    description: Name of an existing Secret that contains a PowerDns-Admin config and credentials (Will not be visible in the API.)
+    type: string
+    group: App Configuration
+    show_if: "app.configSecret.generate=false"
+  - variable: app.timezone
+    label: TimeZone
+    description: "Local timezone to be displayed in app. Ex: America/Chicago"
+    type: string
+    group: App Configuration
+  - variable: app.hsts
+    label: HTTP Strict Transport Security (HSTS)
+    description: A mechanism that helps to protect websites against man-in-the-middle attacks such as protocol downgrade attacks and cookie hijacking.
+    type: boolean
+    default: false
+    required: true
+    group: App Configuration
+  - variable: app.restrictedNetwork
+    label: Restricted network
+    description: Admins/Users are on restricted network that does not have internet access.
+    type: boolean
+    default: false
+    required: true
+    group: App Configuration
+  - variable: app.debug
+    label: Enable debug
+    description: 
+    type: boolean
+    default: false
+    required: true
+    group: App Configuration
+
+  - variable: database.external.host
+    label: Database Host
+    description: IP or FQDN of MySQL database server.
+    type: hostname
+    group: Database
+  - variable: database.external.database
+    label: Database name
+    description: Name of database in MySQL database server.
+    type: string
+    group: Database
+  - variable: database.external.username
+    label: Database Username
+    description: Username to connect to MySQL database server.
+    type: string
+    group: Database
+  - variable: database.external.password
+    label: Database Password
+    description: Password to connect to MySQL database server.
+    type: password
+    group: Database
+
+  - variable: ingress.enabled
+    label: Create Ingress
+    description: Create a ingress using existing ingress controller.
+    type: boolean
+    default: false
+    required: true
+    group: Ingress
+    show_subquestion_if: true
+    subquestions:
+      - variable: ingress.className
+        label: Class Name
+        description: 
+        type: string
+      - variable: ingress.hostname
+        description: 
+        label: FQDN of PowerDns-Admin
+        type: hostname
+  - variable: ingress.tls
+    label: Enable TLS
+    description: Enable TLS on ingress.
+    type: boolean
+    default: false
+    required: true
+    group: Ingress
+    show_if: "ingress.enabled=true"
+    show_subquestion_if: true
+    subquestions:
+      - variable: ingress.certManager.enabled
+        label: Use Cert Manager
+        description: Use cert manager to issue and maintain the TLS signed certificate.
+        type: boolean
+      - variable: ingress.certManager.clusterIssuer
+        label: Issuer name.
+        description: "The name of the issuer installed for cert manager to use. Ex: letsencrypt (You MUST have the issuer pre-configured in cert-manager.)"
+        type: string
+        show_if: "ingress.certManager.enabled=true"
+
+  - variable: smtp.enabled
+    label: Send email from PowerDNS-Admin
+    description: 
+    type: boolean
+    default: false
+    required: true
+    group: SMTP
+    show_subquestion_if: true
+    subquestions:
+      - variable: smtp.host
+        label: SMTP Host
+        description: IP or FQDN of SMTP server
+        type: hostname
+      - variable: smtp.port
+        label: SMTP Port
+        description: "TCP port number for SMTP server. Ex: 25 or 587"
+        type: int
+      - variable: smtp.username
+        label: Username
+        description: Username to login to SMTP server with. Leave blank for anonymous.
+        type: string
+      - variable: smtp.password
+        label: Password
+        description: Password to login to SMTP server with. Leave blank for anonymous.
+        type: password
+      - variable: smtp.from
+        label: From email address
+        description: Email address to use as the sender's from address.
+        type: string
+      - variable: smtp.debug
+        label: Debug SMTP
+        description: 
+        type: boolean
+      - variable: smtp.tls
+        label: Use TLS with SMTP connection.
+        description: 
+        type: boolean
+      - variable: smtp.ssl
+        label: Use SSL with SMTP connection.
+        description: 
+        type: boolean
