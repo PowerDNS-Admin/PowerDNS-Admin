@@ -5,6 +5,7 @@ import bcrypt
 import pyotp
 import ldap
 import ldap.filter
+from collections import OrderedDict
 from flask import current_app
 from flask_login import AnonymousUserMixin
 from sqlalchemy import orm
@@ -282,53 +283,62 @@ class User(db.Model):
                                                 LDAP_USER_GROUP))
                                     return False
                             elif LDAP_TYPE == 'ad':
-                                ldap_admin_group_filter, ldap_operator_group, ldap_user_group = "", "", ""
-                                if LDAP_ADMIN_GROUP:
-                                    ldap_admin_group_filter = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_ADMIN_GROUP)
-                                if LDAP_OPERATOR_GROUP:
-                                    ldap_operator_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_OPERATOR_GROUP)
-                                if LDAP_USER_GROUP:
-                                    ldap_user_group = "(memberOf:1.2.840.113556.1.4.1941:={0})".format(LDAP_USER_GROUP)
-                                searchFilter = "(&({0}={1})(|{2}{3}{4}))".format(LDAP_FILTER_USERNAME, self.username,
-                                                                                 ldap_admin_group_filter,
-                                                                                 ldap_operator_group, ldap_user_group)
-                                ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
-                                user_ad_member_of = ldap_result[0][0][1].get(
-                                    'memberOf')
+                                ldap_group_security_roles = OrderedDict(
+                                    Administrator=LDAP_ADMIN_GROUP,
+                                    Operator=LDAP_OPERATOR_GROUP,
+                                    User=LDAP_USER_GROUP,
+                                )
+                                user_dn = ldap_result[0][0][0]
+                                sf_groups = ""
 
-                                if not user_ad_member_of:
+                                for group in ldap_group_security_roles.values():
+                                    if not group:
+                                        continue
+
+                                    sf_groups += f"(distinguishedName={group})"
+
+                                sf_member_user = f"(member:1.2.840.113556.1.4.1941:={user_dn})"
+                                search_filter = f"(&(|{sf_groups}){sf_member_user})"
+                                current_app.logger.debug(f"LDAP groupSearchFilter '{search_filter}'")
+
+                                ldap_user_groups = [
+                                    group[0][0]
+                                    for group in self.ldap_search(
+                                        search_filter,
+                                        LDAP_BASE_DN
+                                    )
+                                ]
+
+                                if not ldap_user_groups:
                                     current_app.logger.error(
-                                        'User {0} does not belong to any group while LDAP_GROUP_SECURITY_ENABLED is ON'
-                                        .format(self.username))
+                                        f"User '{self.username}' "
+                                        "does not belong to any group "
+                                        "while LDAP_GROUP_SECURITY_ENABLED is ON"
+                                    )
                                     return False
 
-                                user_ad_member_of = [g.decode("utf-8") for g in user_ad_member_of]
+                                current_app.logger.debug(
+                                    "LDAP User security groups "
+                                    f"for user '{self.username}': "
+                                    " ".join(ldap_user_groups)
+                                )
 
-                                if (LDAP_ADMIN_GROUP in user_ad_member_of):
-                                    role_name = 'Administrator'
+                                for role, ldap_group in ldap_group_security_roles.items():
+                                    # Continue when groups is not defined or
+                                    # user is'nt member of LDAP group
+                                    if not ldap_group or not ldap_group in ldap_user_groups:
+                                        continue
+
+                                    role_name = role
                                     current_app.logger.info(
-                                        'User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_ADMIN_GROUP))
-                                elif (LDAP_OPERATOR_GROUP in user_ad_member_of):
-                                    role_name = 'Operator'
-                                    current_app.logger.info(
-                                        'User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_OPERATOR_GROUP))
-                                elif (LDAP_USER_GROUP in user_ad_member_of):
-                                    current_app.logger.info(
-                                        'User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_USER_GROUP))
-                                else:
-                                    current_app.logger.error(
-                                        'User {0} is not part of the "{1}", "{2}" or "{3}" groups that allow access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_ADMIN_GROUP,
-                                                LDAP_OPERATOR_GROUP,
-                                                LDAP_USER_GROUP))
-                                    return False
+                                        f"User '{self.username}' member of "
+                                        f"the '{ldap_group}' group that allows "
+                                        f"'{role}' access to to PowerDNS-Admin"
+                                    )
+
+                                    # Stop loop on first found
+                                    break
+
                             else:
                                 current_app.logger.error('Invalid LDAP type')
                                 return False
