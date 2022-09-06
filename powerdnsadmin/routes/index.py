@@ -580,7 +580,7 @@ def get_azure_groups(uri):
 def authenticate_user(user, authenticator, remember=False):
     login_user(user, remember=remember)
     signin_history(user.username, authenticator, True)
-    if Setting().get('otp_force') and Setting().get('otp_field_enabled') and not user.otp_secret:
+    if Setting().get('otp_force') and Setting().get('otp_field_enabled') and not user.otp_secret and session['authentication_type'] not in ['OAuth']:
         user.update_profile(enable_otp=True)
         user_id = current_user.id
         prepare_welcome_user(user_id)
