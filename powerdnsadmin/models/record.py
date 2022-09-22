@@ -337,7 +337,8 @@ class Record(object):
         replaces = [replace_for_api(r) for r in new_rrsets]
         deletes = [delete_for_api(r) for r in del_rrsets if not rrset_in(r, replaces)]
         return {
-            'rrsets': replaces + deletes
+            # order matters: first deletions, then additions+changes
+            'rrsets': deletes + replaces
         }
 
     def apply(self, domain_name, submitted_records):
