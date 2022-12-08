@@ -80,4 +80,4 @@ Open your web browser and access to `http://localhost:9191` to visit PowerDNS-Ad
 At the first time you login into the PDA UI, you will be redirected to setting page to configure the PDNS API information.
 
 _**Note:**_ For production environment, i recommend to run PowerDNS-Admin with WSGI over Apache instead of flask's built-in web server...  
- Take a look at [WSGI Apache Example](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/WSGI-Apache-example#fedora) WIKI page to see how to configure it.
+ Take a look at [WSGI Apache Example](web-server/WSGI-Apache-example#fedora) WIKI page to see how to configure it.

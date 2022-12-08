@@ -6,8 +6,9 @@
 
 ## Installation guides
 - [Running PowerDNS Admin on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
-- [Running PowerDNS-Admin in Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
-- [Running PowerDNS-Admin in Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
+- [Running PowerDNS-Admin on Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
+- [Running PowerDNS-Admin on Fedora 23](install/Running-PowerDNS-Admin-on-Fedora-23.md)
+- [Running PowerDNS-Admin on Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
 - [Running PowerDNS-Admin on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
 
 ## Web Server configuration
