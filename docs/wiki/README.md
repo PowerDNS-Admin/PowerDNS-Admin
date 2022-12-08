@@ -11,12 +11,12 @@
 - [Running PowerDNS-Admin on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
 
 ## Web Server configuration
-- [Supervisord](Supervisord-example)
-- [Systemd](Systemd-example)
-- [Systemd + Gunicorn + Nginx](Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx)
-- [Systemd + Gunicorn + Apache](Running-PowerDNS-Admin-with-Systemd,-Gunicorn-and-Apache)
-- [uWSGI](uWSGI-example)
-- [WSGI-Apache](WSGI-Apache-example)
+- [Supervisord](web-server/Supervisord-example.md)
+- [Systemd](web-server/Systemd-example.md)
+- [Systemd + Gunicorn + Nginx](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx)
+- [Systemd + Gunicorn + Apache](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn-and-Apache)
+- [uWSGI](web-server/uWSGI-example)
+- [WSGI-Apache](web-server/WSGI-Apache-example)
 
 ## Feature usage
 - [DynDNS2](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/DynDNS2)
