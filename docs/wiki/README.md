@@ -1,8 +1,8 @@
-Welcome to the PowerDNS-Admin wiki!
+# Welcome to the PowerDNS-Admin wiki!
 
 ## Preparation guides
-- [Prepare MySQL or MariaDB Database for PowerDNS-Admin](Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin)
-- [Using PowerDNS-Admin with PostgreSQL](Using-PowerDNS-Admin-with-PostgreSQL)
+- [Prepare MySQL or MariaDB Database for PowerDNS-Admin](preparation/Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin)
+- [Using PowerDNS-Admin with PostgreSQL](preparation/Using-PowerDNS-Admin-with-PostgreSQL)
 
 ## Installation guides
 - [Running PowerDNS Admin on Ubuntu or Debian](Running-PowerDNS-Admin-on-Ubuntu-or-Debian)
