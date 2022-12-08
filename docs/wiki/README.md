@@ -13,10 +13,10 @@
 ## Web Server configuration
 - [Supervisord](web-server/Supervisord-example.md)
 - [Systemd](web-server/Systemd-example.md)
-- [Systemd + Gunicorn + Nginx](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx)
-- [Systemd + Gunicorn + Apache](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn-and-Apache)
-- [uWSGI](web-server/uWSGI-example)
-- [WSGI-Apache](web-server/WSGI-Apache-example)
+- [Systemd + Gunicorn + Nginx](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx.md)
+- [Systemd + Gunicorn + Apache](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn-and-Apache.md)
+- [uWSGI](web-server/uWSGI-example.md)
+- [WSGI-Apache](web-server/WSGI-Apache-example.md)
 
 ## Feature usage
 - [DynDNS2](features/DynDNS2.md)
