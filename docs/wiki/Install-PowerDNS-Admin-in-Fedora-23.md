@@ -1,0 +1,1 @@
+Please refer to CentOS guide: https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-on-Centos-7
