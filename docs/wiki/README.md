@@ -19,4 +19,4 @@
 - [WSGI-Apache](web-server/WSGI-Apache-example)
 
 ## Feature usage
-- [DynDNS2](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/DynDNS2)
+- [DynDNS2](features/DynDNS2.md)
