@@ -1,6 +1,6 @@
 ***
-**WARNING**  
-This just uses the development server for testing purposes. For production environments you should probably go with a more robust solution, like [gunicorn](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx) or a WSGI server. 
+**WARNING**
+This just uses the development server for testing purposes. For production environments you should probably go with a more robust solution, like [gunicorn](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx.md) or a WSGI server.
 ***
 
 ### Following example shows a systemd unit file that can run PowerDNS-Admin
