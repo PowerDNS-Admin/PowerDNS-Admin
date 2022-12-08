@@ -1,11 +1,18 @@
+# uWSGI Example
+
 This guide will show you how to run PowerDNS-Admin via uWSGI and nginx. This guide was written using Debian 8 with the following software versions:
 - nginx 1.6.2
 - uwsgi 2.0.7-debian
 - python 2.7.9
 
-`sudo apt-get install uwsgi uwsgi-plugin-python nginx`
+## Software installation:
 
-### Step-by-step instructions
+1. apt install the following packages:
+   - `uwsgi`
+   - `uwsgi-plugin-python`
+   - `nginx`
+
+## Step-by-step instructions
 1. Create a uWSGI .ini in `/etc/uwsgi/apps-enabled` with the following contents, making sure to replace the chdir, pythonpath and virtualenv directories with where you've installed PowerDNS-Admin:
  ```ini
  [uwsgi]

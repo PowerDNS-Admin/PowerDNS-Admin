@@ -17,7 +17,7 @@ sudo pkg install libxml2 libxslt pkgconf py37-xmlsec py37-cffi py37-ldap
 _**Note:**_ Please adjust `/opt/powerdns-admin` to your local web application directory
 
 ```bash
-git clone https://github.com/ngoduykhanh/PowerDNS-Admin.git /opt/powerdns-admin
+git clone https://github.com/PowerDNS-Admin/PowerDNS-Admin.git /opt/powerdns-admin
 cd /opt/powerdns-admin
 ```
 
@@ -97,6 +97,6 @@ Open your web browser and go to `http://localhost:9191` to visit PowerDNS-Admin 
 
 ### Running at startup
 
-This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx) for instructions.
+This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](../web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx.md) for instructions.
 
 The right approach long-term is to create a startup script in `/usr/local/etc/rc.d` and enable it through `/etc/rc.conf`.

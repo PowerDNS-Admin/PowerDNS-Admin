@@ -44,7 +44,7 @@ sudo apt install -y yarn
 _**Note:**_ Please adjust `/opt/web/powerdns-admin` to your local web application directory
 
 ```bash
-git clone https://github.com/ngoduykhanh/PowerDNS-Admin.git /opt/web/powerdns-admin
+git clone https://github.com/PowerDNS-Admin/PowerDNS-Admin.git /opt/web/powerdns-admin
 cd /opt/web/powerdns-admin
 python3 -mvenv ./venv
 ```
@@ -91,4 +91,4 @@ Now you can run PowerDNS-Admin by command
 
 Open your web browser and go to `http://localhost:9191` to visit PowerDNS-Admin web interface. Register a user. The first user will be in the Administrator role.
 
-This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](https://github.com/ngoduykhanh/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx) for instructions.
+This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx) for instructions.

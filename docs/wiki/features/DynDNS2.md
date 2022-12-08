@@ -3,6 +3,7 @@ IPv4: http://user:pass@yournameserver.yoursite.tld/nic/update?hostname=record.do
 IPv6: http://user:pass@yournameserver.yoursite.tld/nic/update?hostname=record.domain.tld&myip=::1  
 Multiple IPs: http://user:pass@yournameserver.yoursite.tld/nic/update?hostname=record.domain.tld&myip=127.0.0.1,127.0.0.2,::1,::2
 
+Notes:
 - user needs to be a LOCAL user, not LDAP etc
 - user must have already logged-in
 - user needs to be added to Domain Access Control list of domain.tld - admin status (manage all) does not suffice
