@@ -1,3 +1,5 @@
+name: 'Docker Image Publish'
+
 on:
   workflow_dispatch:
   push:
@@ -8,7 +10,7 @@ on:
 
 jobs:
   build-and-push-docker-image:
-    name: Build Docker image and push to repositories
+    name: Build / Publish Docker Image
     runs-on: ubuntu-latest
 
     steps:
