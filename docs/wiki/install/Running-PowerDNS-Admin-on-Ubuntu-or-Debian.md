@@ -91,4 +91,4 @@ Now you can run PowerDNS-Admin by command
 
 Open your web browser and go to `http://localhost:9191` to visit PowerDNS-Admin web interface. Register a user. The first user will be in the Administrator role.
 
-This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx.md) for instructions.
+This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](../web-server/Running-PowerDNS-Admin-with-Systemd-Gunicorn-and-Nginx.md) for instructions.
