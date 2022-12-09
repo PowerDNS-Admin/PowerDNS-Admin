@@ -24,8 +24,8 @@ There are several ways to run PowerDNS-Admin. The easiest way is to use Docker.
 If you are looking to install and run PowerDNS-Admin directly onto your system check out the [Wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki#installation-guides) for ways to do that.
 
 ### Docker
-This are two options to run PowerDNS-Admin using Docker.
-To get started as quickly as possible try option 1. If you want to make modifications to the configuration option 2 may be cleaner.
+Here are two options to run PowerDNS-Admin using Docker.
+To get started as quickly as possible, try option 1. If you want to make modifications to the configuration option 2 may be cleaner.
 
 #### Option 1: From Docker Hub
 The easiest is to just run the latest Docker image from Docker Hub:
