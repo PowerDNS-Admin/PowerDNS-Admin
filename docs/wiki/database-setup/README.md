@@ -1,4 +1,4 @@
 # Database setup guides
 
-- [MySQL / MariaDB](Setup-MySQL-or-MaraDB.md)
-- [Postgres](Setup-PostgreSQL.md)
+- [MySQL / MariaDB](Setup-MySQL-or-MariaDB.md)
+- [PostgreSQL](Setup-PostgreSQL.md)
