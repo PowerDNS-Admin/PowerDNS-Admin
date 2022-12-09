@@ -1,4 +1,9 @@
-## Install required packages
+# Installing PowerDNS-Admin on Ubuntu or Debian based systems
+
+First setup your database accordingly:
+[Database Setup](../database-setup/README.md)
+
+## Install required packages:
 
 **Install Python 3 development package**
 
@@ -14,16 +19,7 @@ sudo apt install -y git libmysqlclient-dev libsasl2-dev libldap2-dev libssl-dev 
 
 _**Note:**_ I am using MySQL Community server as the database backend. So `libmysqlclient-dev` is required. For MariaDB, and PostgreSQL the required package will be difference.
 
-** Install Maria or MySQL (ONLY if not ALREADY installed)**
-```bash
-sudo apt install mariadb-server mariadb-client
-```
-Create database and user using mysql command and entering 
-```bash
->create database pda;
->grant all privileges on pda.* TO 'pda'@'localhost' identified by 'YOUR_PASSWORD_HERE';
->flush privileges;
-```
+
 **Install NodeJs**
 
 ```bash
