@@ -2,7 +2,7 @@
 
 This guide will show you how to prepare a MySQL or MariaDB database for PowerDNS-Admin.
 
-## Step-by-step instructions
+## Setup database:
 1. ivan@ubuntu:~$ `mysql -u root -p` (then enter your MySQL/MariaDB root users password)
 2. mysql> `CREATE DATABASE powerdnsadmin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
 3. mysql> `GRANT ALL PRIVILEGES ON powerdnsadmin.* TO 'pdnsadminuser'@'%' IDENTIFIED BY 'p4ssw0rd';`
