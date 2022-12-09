@@ -1,7 +1,9 @@
 # Getting started with PowerDNS-Admin
 
 
-In your `config.py` file, make sure you have the database URI filled in:
+In your FLASK_CONF (check the installation directions for where yours is) file, make sure you have the database URI filled in (in some previous documentation this was called config.py):
+
+TODO: list location of config.py
 
 For MySQL / MariaDB:
 ```
