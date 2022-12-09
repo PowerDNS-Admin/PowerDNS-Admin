@@ -14,9 +14,9 @@ def forward_request():
     msg_str = "Sending request to powerdns API {0}"
 
     if request.method != 'GET' and request.method != 'DELETE':
-        msg = msg_str.format(request.get_json(force=True))
+        msg = msg_str.format(request.get_json(force=True, silent=True))
         current_app.logger.debug(msg)
-        data = request.get_json(force=True)
+        data = request.get_json(force=True, silent=True)
 
     verify = False
 

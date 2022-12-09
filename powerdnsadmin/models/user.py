@@ -94,7 +94,7 @@ class User(db.Model):
 
     def verify_totp(self, token):
         totp = pyotp.TOTP(self.otp_secret)
-        return totp.verify(token)
+        return totp.verify(token, valid_window = 5)
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
@@ -107,7 +107,7 @@ class User(db.Model):
 
     def check_password(self, hashed_password):
         # Check hashed password. Using bcrypt, the salt is saved into the hash itself
-        if (self.plain_text_password):
+        if hasattr(self, "plain_text_password"):
             return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
                                   hashed_password.encode('utf-8'))
         return False
@@ -423,7 +423,7 @@ class User(db.Model):
                 name='Administrator').first().id
 
         self.password = self.get_hashed_password(
-            self.plain_text_password) if self.plain_text_password else '*'
+            self.plain_text_password) if hasattr(self, "plain_text_password") else '*'
 
         if self.password and self.password != '*':
             self.password = self.password.decode("utf-8")
@@ -459,7 +459,7 @@ class User(db.Model):
         user.email = self.email
 
         # store new password hash (only if changed)
-        if self.plain_text_password:
+        if hasattr(self, "plain_text_password"):
             user.password = self.get_hashed_password(
                 self.plain_text_password).decode("utf-8")
 
@@ -478,7 +478,7 @@ class User(db.Model):
         user.lastname = self.lastname if self.lastname else user.lastname
         user.password = self.get_hashed_password(
             self.plain_text_password).decode(
-                "utf-8") if self.plain_text_password else user.password
+                "utf-8") if hasattr(self, "plain_text_password") else user.password
 
         if self.email:
             # Can not update to a new email that
