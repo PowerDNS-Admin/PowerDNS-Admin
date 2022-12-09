@@ -1,3 +1,5 @@
+# Setup MySQL database for PowerDNS-Admin
+
 This guide will show you how to prepare a MySQL or MariaDB database for PowerDNS-Admin.
 
 ### Step-by-step instructions

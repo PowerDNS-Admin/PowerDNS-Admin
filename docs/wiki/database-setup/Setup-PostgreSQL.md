@@ -1,10 +1,6 @@
-If you would like to use PostgreSQL instead of MySQL or MariaDB, you have to install difference dependencies. Check the following instructions.
+# Setup Postgres database for PowerDNS-Admin
 
-### Install dependencies
-```
-$ sudo yum install postgresql-libs
-$ pip install psycopg2
-```
+We assume you already have a postgres database software installed for your platform.
 
 ### Create database
 ```
@@ -16,16 +12,15 @@ postgres=# alter user powerdnsadmin with encrypted password 'powerdnsadmin';
 postgres=# grant all privileges on database powerdnsadmindb to powerdnsadmin;
 ```
 
-In your `config.py` file, make sure you have
-```
-SQLALCHEMY_DATABASE_URI = 'postgresql://powerdnsadmin:powerdnsadmin@127.0.0.1/powerdnsadmindb'
-```
-
 Note:
 - Please change the information above (db, user, password) to fit your setup.
+
+### Setup Remote access to database:
+If your database is on a different server
+
 - You might need to adjust your PostgreSQL's `pg_hba.conf` config file to allow password authentication for networks.
 
-### Use Docker
+## Docker
 ```
 docker run --name pdnsadmin-test -e BIND_ADDRESS=0.0.0.0 
 -e SECRET_KEY='a-very-secret-key' 
