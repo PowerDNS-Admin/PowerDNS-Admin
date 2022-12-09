@@ -18,6 +18,11 @@ quit
 
 ## Install required packages:
 ### Red-hat based systems:
+```
+yum install MariaDB-shared mariadb-devel mysql-community-devel
+```
+
+If you use MariaDB ( from [MariaDB repositories](https://mariadb.com/resources/blog/installing-mariadb-10-on-centos-7-rhel-7/) )
 
 ### Debian based systems:
 ```

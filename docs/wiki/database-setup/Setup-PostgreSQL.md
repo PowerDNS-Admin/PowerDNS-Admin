@@ -54,3 +54,23 @@ docker run --name pdnsadmin-test -e BIND_ADDRESS=0.0.0.0
 -e SQLA_DB_NAME='powerdns_admin_test' 
 -v /data/node_modules:/var/www/powerdns-admin/node_modules -d -p 9191:9191 ixpict/powerdns-admin-pgsql:latest
 ```
+
+## Install required packages:
+### Red-hat based systems:
+```
+sudo yum install postgresql-libs
+```
+
+### Debian based systems:
+```
+apt install libpq-dev python-dev
+```
+
+### Install python packages:
+```
+pip3 install psycopg2
+```
+
+## Known Issues:
+
+** To fill in **
