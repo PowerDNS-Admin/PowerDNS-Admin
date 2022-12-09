@@ -1,18 +1,18 @@
 # Welcome to the PowerDNS-Admin wiki!
 
 ## Database Setup guides
-- [Prepare MySQL or MariaDB Database for PowerDNS-Admin](preparation/Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin.md)
-- [Using PowerDNS-Admin with PostgreSQL](preparation/Using-PowerDNS-Admin-with-PostgreSQL.md)
+- [MySQL or MariaDB](preparation/Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin.md)
+- [PostgreSQL](preparation/Using-PowerDNS-Admin-with-PostgreSQL.md)
 
 ## Installation guides
-- [Running PowerDNS-Admin on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
-- [Running PowerDNS-Admin on Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
-- [Running PowerDNS-Admin on Fedora 23](install/Running-PowerDNS-Admin-on-Fedora-23.md)
-- [Running PowerDNS-Admin on Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
-- [Running PowerDNS-Admin on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
+- [Installing PowerDNS-Admin on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
+- [Installing PowerDNS-Admin on Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
+- [Installing PowerDNS-Admin on Fedora 23](install/Running-PowerDNS-Admin-on-Fedora-23.md)
+- [Installing PowerDNS-Admin on Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
+- [Installing PowerDNS-Admin on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
 
 ### Post install Setup:
-- [Environment Variables](preparation/Environment-variables.md)
+- [Environment Variables](configuration/Environment-variables.md)
 - [Getting started](configuration/Getting-started.md)
 - SystemD:
   - [Running PowerDNS-Admin as a service using Systemd](install/Running-PowerDNS-Admin-as-a-service-(Systemd).md)
