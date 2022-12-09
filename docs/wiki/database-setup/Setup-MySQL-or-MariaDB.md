@@ -13,6 +13,8 @@ GRANT ALL PRIVILEGES ON `powerdnsadmin`.* TO 'pdnsadminuser'@'localhost' IDENTIF
 FLUSH PRIVILEGES;
 quit
 ```
+- If your database server is located on a different machine then change 'localhost' to '%'
+- Replace YOUR_PASSWORD_HERE with a secure password.
 
 ## Known issues:
 
