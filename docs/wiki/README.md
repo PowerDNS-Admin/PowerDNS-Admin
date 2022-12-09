@@ -3,6 +3,7 @@
 ## Preparation guides
 - [Prepare MySQL or MariaDB Database for PowerDNS-Admin](preparation/Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin.md)
 - [Using PowerDNS-Admin with PostgreSQL](preparation/Using-PowerDNS-Admin-with-PostgreSQL.md)
+- [Environment Variables](preparation/Environment-variables.md)
 
 ## Installation guides
 - [Running PowerDNS-Admin on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
