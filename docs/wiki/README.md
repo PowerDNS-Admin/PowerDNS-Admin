@@ -1,9 +1,8 @@
 # Welcome to the PowerDNS-Admin wiki!
 
-## Preparation guides
+## Database Setup guides
 - [Prepare MySQL or MariaDB Database for PowerDNS-Admin](preparation/Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin.md)
 - [Using PowerDNS-Admin with PostgreSQL](preparation/Using-PowerDNS-Admin-with-PostgreSQL.md)
-- [Environment Variables](preparation/Environment-variables.md)
 
 ## Installation guides
 - [Running PowerDNS-Admin on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
@@ -13,10 +12,10 @@
 - [Running PowerDNS-Admin on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
 
 ### Post install Setup:
+- [Environment Variables](preparation/Environment-variables.md)
 - [Getting started](configuration/Getting-started.md)
 - SystemD:
   - [Running PowerDNS-Admin as a service using Systemd](install/Running-PowerDNS-Admin-as-a-service-(Systemd).md)
-
 
 ## Web Server configuration
 - [Supervisord](web-server/Supervisord-example.md)
