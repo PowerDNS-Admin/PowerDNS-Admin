@@ -1,8 +1,8 @@
 # Welcome to the PowerDNS-Admin wiki!
 
 ## Database Setup guides:
-- [MySQL / MariaDB](preparation/Prepare-MySQL-or-MariaDB-Database-for-PowerDNS-Admin.md)
-- [PostgreSQL](preparation/Using-PowerDNS-Admin-with-PostgreSQL.md)
+- [MySQL / MariaDB](database-setup/Setup-MySQL-or-MariaDB.md)
+- [PostgreSQL](database-setup/Setup-PostgreSQL.md)
 
 ## Installation guides:
 - [Install on Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
