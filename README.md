@@ -1,8 +1,8 @@
 # PowerDNS-Admin
 A PowerDNS web interface with advanced features.
 
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/PowerDNS-Admin/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PowerDNS-Admin/PowerDNS-Admin/context:python)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/PowerDNS-Admin/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PowerDNS-Admin/PowerDNS-Admin/context:javascript)
+[![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
+[![Docker Image Publish](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
 
 #### Features:
 - Multiple domain management
