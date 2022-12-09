@@ -5,13 +5,13 @@ First setup your database accordingly:
 
 ## Install required packages:
 
-**Install Python 3 development package**
+###Install Python 3 development package
 
 ```bash
 sudo apt install python3-dev
 ```
 
-**Install required packages for building python libraries from requirements.txt file**
+###Install required packages for building python libraries from requirements.txt file
 
 ```bash
 sudo apt install -y git libmysqlclient-dev libsasl2-dev libldap2-dev libssl-dev libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config apt-transport-https virtualenv build-essential curl
@@ -20,14 +20,14 @@ sudo apt install -y git libmysqlclient-dev libsasl2-dev libldap2-dev libssl-dev 
 _**Note:**_ I am using MySQL Community server as the database backend. So `libmysqlclient-dev` is required. For MariaDB, and PostgreSQL the required package will be difference.
 
 
-**Install NodeJs**
+###Install NodeJs
 
 ```bash
 curl -sL https://deb.nodesource.com/setup_14.x | bash -
 apt install -y nodejs
 ```
 
-**Install yarn to build asset files**
+###Install yarn to build asset files
 
 ```bash
 sudo curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
@@ -36,7 +36,7 @@ sudo apt update -y
 sudo apt install -y yarn
 ```
 
-## Checkout source code and create virtualenv
+###Checkout source code and create virtualenv
 _**Note:**_ Please adjust `/opt/web/powerdns-admin` to your local web application directory
 
 ```bash
@@ -52,9 +52,6 @@ source ./venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-
-
-
 ## Running PowerDNS-Admin
 
 Create PowerDNS-Admin config file and make the changes necessary for your use case. Make sure to change `SECRET_KEY` to a long random string that you generated yourself ([see Flask docs](https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY)), do not use the pre-defined one. E.g.:
@@ -85,6 +82,7 @@ Now you can run PowerDNS-Admin by command
 ./run.py
 ```
 
-Open your web browser and go to `http://localhost:9191` to visit PowerDNS-Admin web interface. Register a user. The first user will be in the Administrator role.
-
 This is good for testing, but for production usage, you should use gunicorn or uwsgi. See [Running PowerDNS Admin with Systemd, Gunicorn and Nginx](../web-server/Running-PowerDNS-Admin-with-Systemd-Gunicorn-and-Nginx.md) for instructions.
+
+
+From here you can now follow the [Getting started guide](../configuration/Getting-started.md).
