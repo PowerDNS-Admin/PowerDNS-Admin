@@ -14,6 +14,11 @@ dnf install python37 python3-devel python3-pip
 ```bash
 dnf install mariadb-devel mariadb-common openldap-devel xmlsec1-devel xmlsec1-openssl libtool-ltdl-devel
 ```
+**Install Postgres dependencies**
+```bash
+$ sudo yum install postgresql-libs
+$ pip3 install psycopg2
+```
 **Install Development tools**
 ```bash
 dnf install gcc gc make
@@ -26,6 +31,7 @@ pip3.7 install -U pip
 ```bash
 pip install -U virtualenv
 ```
+
 
 **Install Yarn for building NodeJS asset files:**
 ```bash
