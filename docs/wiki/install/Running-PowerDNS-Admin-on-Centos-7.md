@@ -1,59 +1,43 @@
+# Installing PowerDNS-Admin on CentOS 7
+
 ```
 NOTE: If you are logged in as User and not root, add "sudo", or get root by sudo -i.
 ```
-<br>
 
-**Remove old Python 3.4**<br>
-If you had it installed because of older instructions<br>
-```
-yum remove python34*
-yum autoremove
-```
-<br>
+## Install required packages:
+### Install needed repositories:
 
-## Install required packages
-**Install needed repositories:**
-<br>
 ```
 yum install epel-release
 yum install https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 ```
 
-**Install Python 3.6 and tools**
+### Install Python 3.6 and tools:
+First remove python 3.4 if installed
+```
+yum remove python34*
+yum autoremove
+```
+
 ```
 yum install python3 python3-devel python3-pip
 pip3.6 install -U pip
 pip install -U virtualenv
 ```
 
-**Install required packages for building python libraries from requirements.txt file**
+### Install required packages for building python libraries from requirements.txt file:
 ```
---> NOTE: I am using MySQL Community server as the database backend.
-          So `mysql-community-devel` is required. For MariaDB,
-          and PostgreSQL the required package will be different.
+yum install gcc openldap-devel xmlsec1-devel xmlsec1-openssl libtool-ltdl-devel
 ```
 
-If you use MariaDB ( from [MariaDB repositories](https://mariadb.com/resources/blog/installing-mariadb-10-on-centos-7-rhel-7/) )
-
-```
-yum install gcc MariaDB-devel MariaDB-shared openldap-devel xmlsec1-devel xmlsec1-openssl libtool-ltdl-devel
-```
-
-If you use default Centos mariadb (5.5)
-```
-yum install gcc mariadb-devel openldap-devel xmlsec1-devel xmlsec1-openssl libtool-ltdl-devel
-```
-
-
-**Install yarn to build asset files + Nodejs 14**
+### Install yarn to build asset files + Nodejs 14:
 ```
 curl -sL https://rpm.nodesource.com/setup_14.x | bash -
 curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
 yum install yarn
 ```
-<br>
 
-## Checkout source code and create virtualenv
+### Checkout source code and create virtualenv:
 NOTE: Please adjust `/opt/web/powerdns-admin` to your local web application directory
 
 ```
@@ -68,15 +52,14 @@ Activate your python3 environment and install libraries:
 pip install python-dotenv
 pip install -r requirements.txt
 ```
-<br>
 
-## Running PowerDNS-Admin
+## Running PowerDNS-Admin:
 NOTE: The default config file is located at `./powerdnsadmin/default_config.py`. If you want to load another one, please set the `FLASK_CONF` environment variable. E.g.
 ```bash
 export FLASK_CONF=../configs/development.py
 ```
 
-**Then create the database schema by running:**
+### Create the database schema:
 ```
 export FLASK_APP=powerdnsadmin/__init__.py
 flask db upgrade
