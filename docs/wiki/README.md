@@ -5,12 +5,20 @@
 - [PostgreSQL](database-setup/Setup-PostgreSQL.md)
 
 ## Installation guides:
-- [Install on Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
-- [Install on Docker](install/Running-PowerDNS-Admin-on-Docker.md)
-- [Install on Fedora 23](install/Running-PowerDNS-Admin-on-Fedora-23.md)
-- [Install on Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
-- [Install on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
-- [Install on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
+- [General (Read this first)](install/General.md)
+  - BSD:
+    - [Install on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
+  - Containers:
+    - [Install on Docker](install/Running-PowerDNS-Admin-on-Docker.md)
+  - Debian:
+    - [Install on Ubuntu or Debian](install/Running-PowerDNS-Admin-on-Ubuntu-or-Debian.md)
+  - Red-Hat:
+    - [Install on Centos 7](install/Running-PowerDNS-Admin-on-Centos-7.md)
+    - [Install on Fedora 23](install/Running-PowerDNS-Admin-on-Fedora-23.md)
+    - [Install on Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
+
+
+
 
 ### Post install Setup:
 - [Environment Variables](configuration/Environment-variables.md)
