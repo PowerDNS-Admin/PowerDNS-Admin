@@ -3,6 +3,8 @@
 We assume you already have a postgres database software installed for your platform.
 
 ### Create database
+The below will create a database called powerdnsadmindb and a user of powerdnsadmin.
+
 ```
 $ sudo su - postgres
 $ createuser powerdnsadmin
@@ -18,6 +20,7 @@ Note:
 ### Setup Remote access to database:
 If your database is on a different server postgres does not allow remote connections by default.
 
+To change this follow the below directions:
 ```
 [root@host ~]$  sudo su - postgres
 # Edit /var/lib/pgsql/data/postgresql.conf
@@ -31,7 +34,7 @@ host    all             all              0.0.0.0/0                       md5
 host    all             all              ::/0                            md5
 
 [postgres@host ~]$ exit
-[root@host ~]$  sudo systemctl restart postgresql
+[root@host ~]$ sudo systemctl restart postgresql
 ```
 
 On debian based systems these files are located in:
@@ -40,6 +43,7 @@ On debian based systems these files are located in:
 ```
 
 ## Docker
+TODO: Setup a local Docker postgres database ready to go (should probably move to the top).
 ```
 docker run --name pdnsadmin-test -e BIND_ADDRESS=0.0.0.0 
 -e SECRET_KEY='a-very-secret-key' 
