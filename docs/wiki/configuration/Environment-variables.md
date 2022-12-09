@@ -6,4 +6,4 @@
 | SECRET_KEY   | Flask secret key [^1] | Y | <no default> |
 
 
-[^1]: Flask secret key (see https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY for how to generate)
+[^1]: Flask secret key (see https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY for how to generate)
