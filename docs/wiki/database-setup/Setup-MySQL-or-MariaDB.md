@@ -16,6 +16,20 @@ quit
 - If your database server is located on a different machine then change 'localhost' to '%'
 - Replace YOUR_PASSWORD_HERE with a secure password.
 
+## Install required packages:
+### Red-hat based systems:
+
+### Debian based systems:
+```
+apt install libmysqlclient-dev
+```
+
+### Install python packages:
+```
+pip3 install mysqlclient==2.0.1
+```
+
+
 ## Known issues:
 
 Problem: If you plan to manage large zones, you may encounter some issues while applying changes. This is due to PowerDNS-Admin trying to insert the entire modified zone into the column history.detail.
