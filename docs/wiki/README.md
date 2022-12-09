@@ -12,7 +12,9 @@
 - [Running PowerDNS-Admin on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
 
 ### Post install Setup:
-- [Running PowerDNS-Admin as a service using Systemd](install/Running-PowerDNS-Admin-as-a-service-(Systemd).md)
+- [Getting started](configuration/Getting-started.md)
+- SystemD:
+  - [Running PowerDNS-Admin as a service using Systemd](install/Running-PowerDNS-Admin-as-a-service-(Systemd).md)
 
 
 ## Web Server configuration
