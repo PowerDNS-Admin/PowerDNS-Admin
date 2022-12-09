@@ -119,12 +119,16 @@ def fetch_json(remote_url,
 
 
 def display_record_name(data):
-    record_name, domain_name = data
-    if record_name == domain_name:
-        return '@'
+    # Check that the data argument is a tuple containing two elements
+    if isinstance(data, Iterable) and len(data) == 2:
+        record_name, domain_name = data
+        if record_name == domain_name:
+            return '@'
+        else:
+            return record_name
     else:
-        return re.sub('\.{}$'.format(domain_name), '', record_name)
-
+        # If data is not a tuple of length 2, return an empty string
+        return ''
 
 def display_master_name(data):
     """
