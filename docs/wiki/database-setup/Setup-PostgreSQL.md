@@ -16,9 +16,28 @@ Note:
 - Please change the information above (db, user, password) to fit your setup.
 
 ### Setup Remote access to database:
-If your database is on a different server
+If your database is on a different server postgres does not allow remote connections by default.
 
-- You might need to adjust your PostgreSQL's `pg_hba.conf` config file to allow password authentication for networks.
+```
+[root@host ~]$  sudo su - postgres
+# Edit /var/lib/pgsql/data/postgresql.conf
+# Change the following line:
+listen_addresses = 'localhost'
+# to:
+listen_addresses = '*'
+# Edit /var/lib/pgsql/data/pg_hba.conf
+# Add the following lines to the end of the 
+host    all             all              0.0.0.0/0                       md5
+host    all             all              ::/0                            md5
+
+[postgres@host ~]$ exit
+[root@host ~]$  sudo systemctl restart postgresql
+```
+
+On debian based systems these files are located in:
+```
+/etc/postgresql/<version>/main/
+```
 
 ## Docker
 ```
