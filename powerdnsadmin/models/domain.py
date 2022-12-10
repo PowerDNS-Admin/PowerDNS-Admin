@@ -110,6 +110,22 @@ class Domain(db.Model):
                 'Domain does not exist. ERROR: {0}'.format(e))
             return None
 
+    def search_idn_domains(self, search_string):
+        """
+        Search for IDN domains using the provided search string.
+        """
+        # Compile the regular expression pattern for matching IDN domain names
+        idn_pattern = re.compile(r'^xn--')
+
+        # Search for domain names that match the IDN pattern
+        idn_domains = [
+            domain for domain in self.get_domains() if idn_pattern.match(domain)
+        ]
+
+        # Filter the search results based on the provided search string
+        return [domain for domain in idn_domains if search_string in domain]
+
+
     def update(self):
         """
         Fetch zones (domains) from PowerDNS and update into DB
