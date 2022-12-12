@@ -258,18 +258,24 @@ def pretty_domain_name(value):
         raise Exception('Require the Punycode in string format')
 
 def to_idna(value, action):
-    splits = value.split()
+    splits = value.split('.')
     result = []
     if action == 'encode':
         for split in splits:
             try:
                 # Try encoding to idna
-                result.append(idna.encode(split).decode())
+                if not split.startswith('_') and not split.startswith('-'):
+                    result.append(idna.encode(split).decode())
+                else:
+                    result.append(split)
             except idna.IDNAError:
                 result.append(split)
     elif action == 'decode':
         for split in splits:
-            result.append(idna.decode(split))   
+            if not split.startswith('_') and not split.startswith('--'):
+                result.append(idna.decode(split))   
+            else:
+                result.append(split)
     else:
         raise Exception('No valid action received')
-    return ' '.join(result)
+    return '.'.join(result)
