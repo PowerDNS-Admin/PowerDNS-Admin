@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: powerdnsadmin
-          image: ngoduykhanh/powerdns-admin
+          image: powerdnsadmin/pda-legacy
           ports:
             - containerPort: 80
               protocol: TCP

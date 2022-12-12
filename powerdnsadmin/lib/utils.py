@@ -119,16 +119,12 @@ def fetch_json(remote_url,
 
 
 def display_record_name(data):
-    # Check that the data argument is a tuple containing two elements
-    if isinstance(data, Iterable) and len(data) == 2:
-        record_name, domain_name = data
-        if record_name == domain_name:
-            return '@'
-        else:
-            return record_name
+    record_name, domain_name = data
+    if record_name == domain_name:
+        return '@'
     else:
-        # If data is not a tuple of length 2, return an empty string
-        return ''
+        return re.sub('\.{}$'.format(domain_name), '', record_name)
+
 
 def display_master_name(data):
     """
@@ -262,18 +258,24 @@ def pretty_domain_name(value):
         raise Exception('Require the Punycode in string format')
 
 def to_idna(value, action):
-    splits = value.split()
+    splits = value.split('.')
     result = []
     if action == 'encode':
         for split in splits:
             try:
                 # Try encoding to idna
-                result.append(idna.encode(split).decode())
+                if not split.startswith('_') and not split.startswith('-'):
+                    result.append(idna.encode(split).decode())
+                else:
+                    result.append(split)
             except idna.IDNAError:
                 result.append(split)
     elif action == 'decode':
         for split in splits:
-            result.append(idna.decode(split))   
+            if not split.startswith('_') and not split.startswith('--'):
+                result.append(idna.decode(split))   
+            else:
+                result.append(split)
     else:
         raise Exception('No valid action received')
-    return ' '.join(result)
+    return '.'.join(result)
