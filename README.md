@@ -1,8 +1,8 @@
 # PowerDNS-Admin
 A PowerDNS web interface with advanced features.
 
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/PowerDNS-Admin/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PowerDNS-Admin/PowerDNS-Admin/context:python)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/PowerDNS-Admin/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PowerDNS-Admin/PowerDNS-Admin/context:javascript)
+[![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
+[![Docker Image](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
 
 #### Features:
 - Multiple domain management
@@ -24,8 +24,8 @@ There are several ways to run PowerDNS-Admin. The easiest way is to use Docker.
 If you are looking to install and run PowerDNS-Admin directly onto your system check out the [Wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki#installation-guides) for ways to do that.
 
 ### Docker
-This are two options to run PowerDNS-Admin using Docker.
-To get started as quickly as possible try option 1. If you want to make modifications to the configuration option 2 may be cleaner.
+Here are two options to run PowerDNS-Admin using Docker.
+To get started as quickly as possible, try option 1. If you want to make modifications to the configuration option 2 may be cleaner.
 
 #### Option 1: From Docker Hub
 The easiest is to just run the latest Docker image from Docker Hub:
@@ -34,7 +34,7 @@ $ docker run -d \
     -e SECRET_KEY='a-very-secret-key' \
     -v pda-data:/data \
     -p 9191:80 \
-    ngoduykhanh/powerdns-admin:latest
+    powerdnsadmin/pda-legacy:latest
 ```
 This creates a volume called `pda-data` to persist the SQLite database with the configuration.
 
