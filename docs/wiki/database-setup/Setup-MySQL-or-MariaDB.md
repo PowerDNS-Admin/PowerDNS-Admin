@@ -2,7 +2,7 @@
 
 This guide will show you how to prepare a MySQL or MariaDB database for PowerDNS-Admin.
 
-Directions to do this can be found below:
+We assume the database is installed per your platform's directions (apt, yum, etc). Directions to do this can be found below:
 - MariaDB:
     - https://mariadb.com/kb/en/getting-installing-and-upgrading-mariadb/
     - https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04
@@ -10,7 +10,7 @@ Directions to do this can be found below:
     - https://dev.mysql.com/downloads/mysql/
     - https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-20-04
 
-We assume the database is installed per your platform's directions (apt, yum, etc). The following directions assume a default configuration and for productions setups `mysql_secure_installation` has been run.
+The following directions assume a default configuration and for productions setups `mysql_secure_installation` has been run.
 
 ## Setup database:
 
