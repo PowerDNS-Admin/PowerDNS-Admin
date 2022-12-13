@@ -28,4 +28,5 @@ All 3 components can be installed on one server or if your installation is large
 - A database for PowerDNS-Admin, if you are using a database for PowerDNS itself this must be separate to that database. The currently supported databases are:
   - MySQL
   - PostgreSQL
+  - SQLite
 - A PowerDNS server that PowerDNS-Admin will manage.
