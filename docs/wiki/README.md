@@ -1,10 +1,12 @@
-# Welcome to the PowerDNS-Admin wiki!
+# PowerDNS-Admin wiki
 
-## Database Setup guides:
+## Database Setup guides
+
 - [MySQL / MariaDB](database-setup/Setup-MySQL-or-MariaDB.md)
 - [PostgreSQL](database-setup/Setup-PostgreSQL.md)
 
-## Installation guides:
+## Installation guides
+
 - [General (Read this first)](install/General.md)
   - BSD:
     - [Install on FreeBSD 12.1-RELEASE](install/Running-on-FreeBSD.md)
@@ -17,16 +19,15 @@
     - [Install on Fedora 23](install/Running-PowerDNS-Admin-on-Fedora-23.md)
     - [Install on Fedora 30](install/Running-PowerDNS-Admin-on-Fedora-30.md)
 
+### Post install Setup
 
-
-
-### Post install Setup:
 - [Environment Variables](configuration/Environment-variables.md)
 - [Getting started](configuration/Getting-started.md)
 - SystemD:
   - [Running PowerDNS-Admin as a service using Systemd](install/Running-PowerDNS-Admin-as-a-service-(Systemd).md)
 
-### Web Server configuration:
+### Web Server configuration
+
 - [Supervisord](web-server/Supervisord-example.md)
 - [Systemd](web-server/Systemd-example.md)
 - [Systemd + Gunicorn + Nginx](web-server/Running-PowerDNS-Admin-with-Systemd-Gunicorn-and-Nginx.md)
@@ -34,10 +35,12 @@
 - [uWSGI](web-server/uWSGI-example.md)
 - [WSGI-Apache](web-server/WSGI-Apache-example.md)
 
-## Using PowerDNS-Admin:
+## Using PowerDNS-Admin
+
 - Setting up a domain
 - Adding a record
 - <whatever else>
 
 ## Feature usage
+
 - [DynDNS2](features/DynDNS2.md)
