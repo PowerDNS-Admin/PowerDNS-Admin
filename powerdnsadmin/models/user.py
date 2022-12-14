@@ -108,8 +108,9 @@ class User(db.Model):
     def check_password(self, hashed_password):
         # Check hashed password. Using bcrypt, the salt is saved into the hash itself
         if hasattr(self, "plain_text_password"):
-            return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
-                                  hashed_password.encode('utf-8'))
+            if self.plain_text_password != None:
+                return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
+                                     hashed_password.encode('utf-8'))
         return False
 
     def get_user_info_by_id(self):
@@ -422,8 +423,12 @@ class User(db.Model):
             self.role_id = Role.query.filter_by(
                 name='Administrator').first().id
 
-        self.password = self.get_hashed_password(
-            self.plain_text_password) if hasattr(self, "plain_text_password") else '*'
+        if hasattr(self, "plain_text_password"):
+            if self.plain_text_password != None:
+                self.password = self.get_hashed_password(
+                    self.plain_text_password)
+        else:
+            self.password = '*'
 
         if self.password and self.password != '*':
             self.password = self.password.decode("utf-8")
@@ -460,8 +465,9 @@ class User(db.Model):
 
         # store new password hash (only if changed)
         if hasattr(self, "plain_text_password"):
-            user.password = self.get_hashed_password(
-                self.plain_text_password).decode("utf-8")
+            if self.plain_text_password != None:
+                user.password = self.get_hashed_password(
+                    self.plain_text_password).decode("utf-8")
 
         db.session.commit()
         return {'status': True, 'msg': 'User updated successfully'}
@@ -476,9 +482,11 @@ class User(db.Model):
 
         user.firstname = self.firstname if self.firstname else user.firstname
         user.lastname = self.lastname if self.lastname else user.lastname
-        user.password = self.get_hashed_password(
-            self.plain_text_password).decode(
-                "utf-8") if hasattr(self, "plain_text_password") else user.password
+
+        if hasattr(self, "plain_text_password"):
+            if self.plain_text_password != None:
+                user.password = self.get_hashed_password(
+                 self.plain_text_password).decode("utf-8")
 
         if self.email:
             # Can not update to a new email that
