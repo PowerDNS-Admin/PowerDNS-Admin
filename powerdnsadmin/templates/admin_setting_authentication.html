@@ -735,15 +735,17 @@
                 $('#ldap_admin_username').prop('required', true);
                 $('#ldap_admin_password').prop('required', true);
                 $('#ldap_domain').prop('required', false);
+                $('#ldap_filter_group').prop('required', true);
+                $('#ldap_filter_groupname').prop('required', true);
             } else {
                 $('#ldap_admin_username').prop('required', false);
                 $('#ldap_admin_password').prop('required', false);
                 $('#ldap_domain').prop('required', true);
+                $('#ldap_filter_group').prop('required', false);
+                $('#ldap_filter_groupname').prop('required', false);
             }
             $('#ldap_filter_basic').prop('required', true);
-            $('#ldap_filter_group').prop('required', true);
             $('#ldap_filter_username').prop('required', true);
-            $('#ldap_filter_groupname').prop('required', true);
 
             if ($('#ldap_sg_on').is(":checked")) {
                 $('#ldap_admin_group').prop('required', true);
