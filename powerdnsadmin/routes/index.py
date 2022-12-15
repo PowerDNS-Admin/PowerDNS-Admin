@@ -134,9 +134,7 @@ def oidc_login():
         )
         abort(400)
     else:
-        redirect_uri = url_for('oidc_authorized',
-                                **_external=True,
-                                _scheme='https')**
+        redirect_uri = url_for('oidc_authorized', _external=True)
         return oidc.authorize_redirect(redirect_uri)
 
 
