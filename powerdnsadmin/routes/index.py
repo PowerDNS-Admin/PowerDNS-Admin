@@ -140,7 +140,7 @@ def oidc_login():
 
 @index_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    SAML_ENABLED = current_app.config.get('SAML_ENABLED')
+    SAML_ENABLED = current_app.config.get('SAML_ENABLED', False)
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard.dashboard'))
@@ -956,7 +956,7 @@ def dyndns_update():
 ### START SAML AUTHENTICATION ###
 @index_bp.route('/saml/login')
 def saml_login():
-    if not current_app.config.get('SAML_ENABLED'):
+    if not current_app.config.get('SAML_ENABLED', False):
         abort(400)
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
     req = saml.prepare_flask_request(request)
@@ -968,7 +968,7 @@ def saml_login():
 
 @index_bp.route('/saml/metadata')
 def saml_metadata():
-    if not current_app.config.get('SAML_ENABLED'):
+    if not current_app.config.get('SAML_ENABLED', False):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
@@ -990,7 +990,7 @@ def saml_metadata():
 @csrf.exempt
 def saml_authorized():
     errors = []
-    if not current_app.config.get('SAML_ENABLED'):
+    if not current_app.config.get('SAML_ENABLED', False):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
     from onelogin.saml2.utils import OneLogin_Saml2_Utils
