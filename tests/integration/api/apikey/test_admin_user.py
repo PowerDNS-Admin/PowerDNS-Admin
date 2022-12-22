@@ -8,7 +8,7 @@ from tests.conftest import user_apikey_data, admin_apikey_data
 
 
 class TestIntegrationApiApiKeyAdminUser(object):
-    def test_empty_get(self, client, initial_data, basic_auth_admin_headers):
+    def test_empty_get(self, initial_data, client, basic_auth_admin_headers):
         res = client.get("/api/v1/pdnsadmin/apikeys",
                          headers=basic_auth_admin_headers)
         data = res.get_json(force=True)
@@ -18,7 +18,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
     @pytest.mark.parametrize(
         "apikey_data",
         [user_apikey_data(), admin_apikey_data()])
-    def test_create_apikey(self, client, initial_data, apikey_data, zone_data,
+    def test_create_apikey(self, initial_data, client, apikey_data, zone_data,
                            basic_auth_admin_headers):
         res = client.post("/api/v1/pdnsadmin/zones",
                           headers=basic_auth_admin_headers,
@@ -53,7 +53,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
     @pytest.mark.parametrize(
         "apikey_data",
         [user_apikey_data(), admin_apikey_data()])
-    def test_get_multiple_apikey(self, client, initial_data, apikey_data,
+    def test_get_multiple_apikey(self, initial_data, client, apikey_data,
                                  zone_data, basic_auth_admin_headers):
         res = client.post("/api/v1/pdnsadmin/zones",
                           headers=basic_auth_admin_headers,
@@ -102,7 +102,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
     @pytest.mark.parametrize(
         "apikey_data",
         [user_apikey_data(), admin_apikey_data()])
-    def test_delete_apikey(self, client, initial_data, apikey_data, zone_data,
+    def test_delete_apikey(self, initial_data, client, apikey_data, zone_data,
                            basic_auth_admin_headers):
         res = client.post("/api/v1/pdnsadmin/zones",
                           headers=basic_auth_admin_headers,

@@ -5,7 +5,7 @@ from powerdnsadmin.lib.validators import validate_zone
 from powerdnsadmin.lib.schema import DomainSchema
 
 
-class TestIntegrationApiZoneUser(object):
+class TestIntegrationApiApiKeyUser(object):
     def test_empty_get(self, initial_data, client, basic_auth_user_headers):
         res = client.get("/api/v1/pdnsadmin/zones",
                          headers=basic_auth_user_headers)
