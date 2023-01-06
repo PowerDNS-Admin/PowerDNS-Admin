@@ -1,4 +1,4 @@
-FROM alpine:3.15 AS builder
+FROM alpine:3.17 AS builder
 
 ARG BUILD_DEPENDENCIES="build-base \
     libffi-dev \
@@ -29,7 +29,7 @@ COPY ./requirements.txt /build/requirements.txt
 
 # Get application dependencies
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install --use-pep517 -r requirements.txt
 
 # Add sources
 COPY . /build
@@ -65,7 +65,7 @@ RUN mkdir -p /app && \
     cp -r /build/configs/docker_config.py /app/configs
 
 # Build image
-FROM alpine:3.15
+FROM alpine:3.17
 
 ENV FLASK_APP=/app/powerdnsadmin/__init__.py \
     USER=pda
@@ -79,7 +79,7 @@ RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-py
     apk del libcap
 
 COPY --from=builder /usr/bin/flask /usr/bin/
-COPY --from=builder /usr/lib/python3.9/site-packages /usr/lib/python3.9/site-packages/
+COPY --from=builder /usr/lib/python3.10/site-packages /usr/lib/python3.10/site-packages/
 COPY --from=builder --chown=root:${USER} /app /app/
 COPY ./docker/entrypoint.sh /usr/bin/
 
