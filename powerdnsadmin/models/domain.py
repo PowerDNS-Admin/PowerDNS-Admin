@@ -20,7 +20,7 @@ class Domain(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, unique=True)
     master = db.Column(db.String(128))
-    type = db.Column(db.String(6), nullable=False)
+    type = db.Column(db.String(8), nullable=False)
     serial = db.Column(db.BigInteger)
     notified_serial = db.Column(db.BigInteger)
     last_check = db.Column(db.Integer)
