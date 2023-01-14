@@ -92,24 +92,24 @@
                         {% for changes in hist_rec_entry.changeSet %}
                         <tr>
                             {% if changes[2] == "unchanged" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 {{changes[0]['content']}}
                             </td>
                             {% elif changes[2] == "addition" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 <span style="background-color:  lightgreen">
                                     {{changes[1]['content']}}
                                 </span>
                             </td>
                             {% elif changes[2] == "deletion" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 <s
                                     style="text-decoration-color: rgba(194, 10, 10, 0.6); text-decoration-thickness: 2px;">
                                     {{changes[0]['content']}}
                                 </s>
                             </td>
                             {% elif changes[2] == "status" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 {{changes[0]['content']}}
                             </td>
                             {% endif %}
@@ -119,7 +119,7 @@
 
                 </table>
             </td>
-            <td>
+            <td style="word-break: break-all">
                 {% for comments in hist_rec_entry.add_rrset['comments'] %}
                 {{comments['content'] }}
                 <br/>
