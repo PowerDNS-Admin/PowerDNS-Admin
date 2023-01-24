@@ -35,7 +35,7 @@
                         <tbody>
                             {% for statistic in statistics %}
                             <tr class="odd gradeX">
-                                <td><a href="https://google.com/search?q=site:doc.powerdns.com+{{ statistic['name'] }}"
+                                <td><a href="https://doc.powerdns.com/authoritative/search.html?q={{ statistic['name'] }}"
                                         target="_blank" class="btn btn-flat btn-xs blue"><i
                                             class="fa fa-search"></i></a></td>
                                 <td>{{ statistic['name'] }}</td>
@@ -70,7 +70,7 @@
                         <tbody>
                             {% for config in configs %}
                             <tr class="odd gradeX">
-                                <td><a href="https://google.com/search?q=site:doc.powerdns.com+{{ config['name'] }}"
+                                <td><a href="https://doc.powerdns.com/authoritative/search.html?q={{ config['name'] }}"
                                         target="_blank" class="btn btn-flat btn-xs blue"><i
                                             class="fa fa-search"></i></a></td>
                                 <td>{{ config['name'] }}</td>
