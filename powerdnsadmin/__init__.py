@@ -75,8 +75,6 @@ def create_app(config=None):
     app.jinja_env.filters['display_master_name'] = utils.display_master_name
     app.jinja_env.filters['display_second_to_time'] = utils.display_time
     app.jinja_env.filters[
-        'email_to_gravatar_url'] = utils.email_to_gravatar_url
-    app.jinja_env.filters[
         'display_setting_state'] = utils.display_setting_state
     app.jinja_env.filters['pretty_domain_name'] = utils.pretty_domain_name
 
@@ -92,10 +90,5 @@ def create_app(config=None):
     def inject_setting():
         setting = Setting()
         return dict(SETTING=setting)
-
-    @app.context_processor
-    def inject_mode():
-        setting = app.config.get('OFFLINE_MODE', False)
-        return dict(OFFLINE_MODE=setting)
 
     return app

@@ -42,15 +42,6 @@ table td {
     background-position: center;
 }
 
-.navbar-nav>.user-menu>.dropdown-menu>li.user-header>img.img-circle.offline {
-    filter: brightness(0);
-    border-color: black;
-}
-
-.navbar-nav>.user-menu .user-image.offline {
-    filter: brightness(0);
-}
-
 .search-input {
     width: 100%;
 }

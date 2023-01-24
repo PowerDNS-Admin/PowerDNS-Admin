@@ -15,4 +15,3 @@ services:
       - GUNICORN_TIMEOUT=60
       - GUNICORN_WORKERS=2
       - GUNICORN_LOGLEVEL=DEBUG
-      - OFFLINE_MODE=False # True for offline, False for external resources

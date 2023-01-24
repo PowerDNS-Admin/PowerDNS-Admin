@@ -193,7 +193,8 @@ class Setting(db.Model):
         'otp_force': False,
         'max_history_records': 1000,
         'deny_domain_override': False,
-        'account_name_extra_chars': False
+        'account_name_extra_chars': False,
+        'gravatar_enabled': False,
     }
 
     def __init__(self, id=None, name=None, value=None):
