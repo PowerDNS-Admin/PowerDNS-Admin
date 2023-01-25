@@ -323,6 +323,7 @@ def login():
                             # Regexp didn't match, continue to next iteration
                             continue
 
+                    account = Account()
                     sanitized_group_name = Account.sanitize_name(group_name)
                     account_id = account.get_id_by_name(account_name=sanitized_group_name)
 
