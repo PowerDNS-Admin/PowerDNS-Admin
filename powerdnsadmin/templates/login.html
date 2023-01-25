@@ -20,7 +20,13 @@
 <body class="hold-transition login-page">
   <div class="login-box">
     <div class="login-logo">
-      <a href="{{ url_for('index.index') }}"><b>{{ SITE_NAME }}</b></a>
+      <a href="{{ url_for('index.index') }}">
+        {% if SETTING.get('site_name') %}
+          <b>{{ SITE_NAME }}</b>
+        {% else %}
+          <b>PowerDNS</b>-Admin
+        {% endif %}
+      </a>
     </div>
     <!-- /.login-logo -->
     <div class="login-box-body">
