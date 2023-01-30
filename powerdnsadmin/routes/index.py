@@ -10,7 +10,7 @@ from yaml import Loader, load
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
 
-from .base import csrf, login_manager
+from .base import captcha, csrf, login_manager
 from ..lib import utils
 from ..decorators import dyndns_login_required
 from ..models.base import db
@@ -651,9 +651,10 @@ def logout():
 
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    CAPTCHA_ENABLE = current_app.config.get('CAPTCHA_ENABLE')
     if Setting().get('signup_enabled'):
         if request.method == 'GET':
-            return render_template('register.html')
+            return render_template('register.html', captcha_enable=CAPTCHA_ENABLE)
         elif request.method == 'POST':
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '')
@@ -664,12 +665,16 @@ def register():
 
             if not username or not password or not email:
                 return render_template(
-                    'register.html', error='Please input required information')
+                    'register.html', error='Please input required information', captcha_enable=CAPTCHA_ENABLE)
 
             if password != rpassword:
                 return render_template(
                     'register.html',
-                    error="Password confirmation does not match")
+                    error="Password confirmation does not match", captcha_enable=CAPTCHA_ENABLE)
+
+            if not captcha.validate():
+                return render_template(
+                    'register.html', error='Invalid CAPTCHA answer', captcha_enable=CAPTCHA_ENABLE)
 
             user = User(username=username,
                         plain_text_password=password,
@@ -690,9 +695,9 @@ def register():
                         return redirect(url_for('index.login'))
                 else:
                     return render_template('register.html',
-                                           error=result['msg'])
+                                           error=result['msg'], captcha_enable=CAPTCHA_ENABLE)
             except Exception as e:
-                return render_template('register.html', error=e)
+                return render_template('register.html', error=e, captcha_enable=CAPTCHA_ENABLE)
     else:
         return render_template('errors/404.html'), 404
 

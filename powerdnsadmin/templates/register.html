@@ -64,6 +64,15 @@
           <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
           <span class="help-block with-errors"></span>
         </div>
+        {% if captcha_enable %}
+          <p class="login-box-msg">Please complete the CAPTCHA below</p>
+          <div class="form-group has-feedback">
+            {{ captcha() }}
+            <input type="text" class="form-control" placeholder="CAPTCHA"  name="captcha"
+              data-error="Please complete the CAPTCHA" required>
+            <span class="help-block with-errors"></span>
+          </div>
+        {% endif %}
         <div class="row">
           <div class="col-xs-4 pull-left">
             <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
