@@ -4,7 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 ### BASIC APP CONFIG
 SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
-SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
+SECRET_KEY = os.urandom(16)
 BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
 HSTS_ENABLED = False
