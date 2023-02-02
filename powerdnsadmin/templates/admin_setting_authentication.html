@@ -4,33 +4,43 @@
 <title>Authentication Settings - {{ SITE_NAME }}</title>
 {% endblock %} {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Settings <small>PowerDNS-Admin settings</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="#">Setting</a></li>
-        <li class="active">Authentication</li>
-    </ol>
-    <script>
-        function ldapSelection() {
-            if (document.getElementById('ldap').checked) {
-                document.getElementById('ldap_openldap_fields').style.display = 'block';
-                document.getElementById('ldap_openldap_group_filters').style.display = 'block';
-                document.getElementById('ldap_ad_fields').style.display = 'none';
-            } else {
-                document.getElementById('ldap_openldap_fields').style.display = 'none';
-                document.getElementById('ldap_openldap_group_filters').style.display = 'none';
-                document.getElementById('ldap_ad_fields').style.display = 'block';
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            Settings
+            <small>PowerDNS-Admin Settings</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item">Settings</li>
+            <li class="breadcrumb-item active">Authentication</li>
+          </ol>
+          <script>
+            function ldapSelection() {
+                if (document.getElementById('ldap').checked) {
+                    document.getElementById('ldap_openldap_fields').style.display = 'block';
+                    document.getElementById('ldap_openldap_group_filters').style.display = 'block';
+                    document.getElementById('ldap_ad_fields').style.display = 'none';
+                } else {
+                    document.getElementById('ldap_openldap_fields').style.display = 'none';
+                    document.getElementById('ldap_openldap_group_filters').style.display = 'none';
+                    document.getElementById('ldap_ad_fields').style.display = 'block';
+                }
             }
-        }
+    
+            window.onload = function() {
+                ldapSelection();
+            }
+        </script>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        window.onload = function() {
-            ldapSelection();
-        }
-    </script>
-</section>
 {% endblock %}
 {% block content %}
 <section class="content">

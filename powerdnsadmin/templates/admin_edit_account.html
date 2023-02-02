@@ -4,26 +4,34 @@
 
 {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Account
-        <small>{% if create %}New account{% else %}{{ account.name }}{% endif %}</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
-        <li><a href="{{ url_for('admin.manage_account') }}">Accounts</a></li>
-        <li class="active">{% if create %}Add{% else %}Edit{% endif %} account</li>
-    </ol>
-</section>
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            Account
+            <small>{% if create %}New account{% else %}{{ account.name }}{% endif %}</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_account') }}">Accounts</a></li>
+            <li class="breadcrumb-item active">{% if create %}Add{% else %}Edit{% endif %} account</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
 <section class="content">
     <div class="row">
         <div class="col-md-4">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} account</h3>
+            <div class="card card-primary">
+                <div class="card-header with-border">
+                    <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} account</h3>
                 </div>
                 <!-- /.box-header -->
                 <!-- form start -->
@@ -31,7 +39,7 @@
                     action="{% if create %}{{ url_for('admin.edit_account') }}{% else %}{{ url_for('admin.edit_account', account_name=account.name) }}{% endif %}">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="create" value="{{ create }}">
-                    <div class="box-body">
+                    <div class="card-body">
                         {% if error %}
                         <div class="alert alert-danger alert-dismissible">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -73,10 +81,10 @@
                             <span class="fa fa-envelope form-control-feedback"></span>
                         </div>
                     </div>
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Access Control</h3>
+                    <div class="card-header with-border">
+                        <h3 class="card-title">Access Control</h3>
                     </div>
-                    <div class="box-body">
+                    <div class="card-body">
                         <p>Users on the right have access to manage records in all domains
                             associated with the account.</p>
                         <p>Click on users to move between columns.</p>
@@ -90,7 +98,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="box-footer">
+                    <div class="card-footer">
                         <button type="submit"
                             class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
                             Account</button>
@@ -98,12 +106,12 @@
                 </form>
             </div>
         </div>
-        <div class="col-md-8">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Help with creating a new account</h3>
+        <div class="col-md-6">
+            <div class="card card-primary">
+                <div class="card-header with-border">
+                    <h3 class="card-title">Help with creating a new account</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p>
                         An account allows grouping of domains belonging to a particular entity, such as a customer or
                         department.<br />

@@ -6,26 +6,35 @@
 {% endblock %}
 {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Key
-        <small>{% if create %}New key{% else %}{{ key.id }}{% endif %}</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
-        <li><a href="{{ url_for('admin.manage_keys') }}">Key</a></li>
-        <li class="active">{% if create %}Add{% else %}Edit{% endif %} key</li>
-    </ol>
-</section>
+<div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            API Keys
+            <small>{% if create %}Add API Key{% else %}Edit API Key - {{ key.id }}{% endif %}</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_keys') }}">API Keys</a></li>
+            <li class="breadcrumb-item active">{% if create %}Add API Key{% else %}Edit API Key - {% endif %}{{ key.id }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
 {% endblock %}
 
 {% block content %}
 <section class="content">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} key</h3>
+  <div class="row">
+    <div class="col-md-6">
+            <div class="card card-primary">
+                <div class="card-header with-border">
+                    <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} Key</h3>
                 </div>
                 <!-- /.box-header -->
                 <!-- form start -->
@@ -33,7 +42,7 @@
                     action="{% if create %}{{ url_for('admin.edit_key') }}{% else %}{{ url_for('admin.edit_key', key_id=key.id) }}{% endif %}">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="create" value="{{ create }}">
-                    <div class="box-body">
+                    <div class="card-body">
                         <div class="form-group has-feedback">
                             <label class="control-label" for="role">Role</label>
                             <select class="key_role form-control" id="key_role" name="key_role">
@@ -52,10 +61,10 @@
                                 class="glyphicon glyphicon-pencil form-control-feedback"></span>
                         </div>
                     </div>
-                    <div class="box-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                      <h3 class="box-title">Accounts Access Control</h3>
+                    <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                      <h3 class="card-title">Accounts Access Control</h3>
                     </div>
-                    <div class="box-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                    <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
                       <p>This key will be linked to the accounts on the right,</p>
                       <p>thus granting access to domains owned by the selected accounts.</p>
                       <p>Click on accounts to move between the columns.</p>
@@ -68,10 +77,10 @@
                           </select>
                       </div>
                     </div>
-                    <div class="box-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                        <h3 class="box-title">Domain Access Control</h3>
+                    <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                        <h3 class="card-title">Domain Access Control</h3>
                     </div>
-                    <div class="box-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                    <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
                         <p>This key will have acess to the domains on the right.</p>
                         <p>Click on domains to move between the columns.</p>
                         <div class="form-group col-xs-2">
@@ -83,7 +92,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="box-footer">
+                    <div class="card-footer">
                         <button type="submit"
                             class="btn btn-flat btn-primary" id="key_submit">{% if create %}Create{% else %}Update{% endif %}
                             Key</button>
@@ -91,13 +100,13 @@
                 </form>
             </div>
         </div>
-        <div class="col-md-8">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} key
+        <div class="col-md-6">
+            <div class="card card-primary">
+                <div class="card-header with-border">
+                    <h3 class="card-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} key
                     </h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p>Fill in all the fields in the form to the left.</p>
                     <p><strong>Role</strong> The role of the key.</p>
                     <p><strong>Description</strong> The key description.</p>

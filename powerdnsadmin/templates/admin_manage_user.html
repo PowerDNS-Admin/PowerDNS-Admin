@@ -3,31 +3,40 @@
 {% block title %}
 <title>User Management - {{ SITE_NAME }}</title>
 {% endblock %} {% block dashboard_stat %}
-<section class="content-header">
-    <h1>
-        User <small>Manage user privileges</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">User</li>
-    </ol>
-</section>
+<div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            User
+            <small>Manage user privileges</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item active">User</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %} {% block content %}
 <section class="content">
     <div class="row">
         <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">User Management</h3>
+            <div class="card">
+                <div class="card-header with-border">
+                    <h3 class="card-title">User Management</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <a href="{{ url_for('admin.edit_user') }}">
                         <button type="button" class="btn btn-flat btn-primary pull-left button_add_user">
                             Add User&nbsp;<i class="fa fa-plus"></i>
                         </button>
                     </a>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <table id="tbl_users" class="table table-bordered table-striped">
                         <thead>
                             <tr>

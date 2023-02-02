@@ -1,111 +1,166 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Register - {{ SITE_NAME }}</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  {% assets "css_login" -%}
-  <link rel="stylesheet" href="{{ ASSET_URL }}">
-  {%- endassets %}
-</head>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Register - {{ SITE_NAME }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+    {% assets "css_login" -%}
+      <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
+  </head>
 
-<body class="hold-transition register-page">
-  <div class="register-box">
-    <div class="register-logo">
-      <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
-    </div>
-    <div class="register-box-body">
-      {% if error %}
-      <div class="alert alert-danger alert-dismissible">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        {{ error }}
-      </div>
-      {% endif %}
-      <p class="login-box-msg">Enter your personal details below</p>
-      <form action="{{ url_for('index.register') }}" method="post" data-toggle="validator">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="First Name" name="firstname"
-            data-error="Please input your first name" required>
-          <span class="glyphicon glyphicon-user form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
+  <body class="hold-transition register-page">
+    <div class="register-box">
+      <div class="card card-outline card-primary">
+        <div class="card-header text-center">
+          <a href="{{ url_for('index.index') }}" class="h3">
+            {% if SETTING.get('site_name') %}
+              {{ SITE_NAME }}
+            {% else %}
+              <b>PowerDNS</b>-Admin
+            {% endif %}
+          </a>
         </div>
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="Last name" name="lastname"
-            data-error="Please input your last name" required>
-          <span class="glyphicon glyphicon-user form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="email" class="form-control" placeholder="Email" name="email"
-            data-error="Please input your valid email address" required>
-          <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <p class="login-box-msg">Enter your account details below</p>
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="Username" name="username"
-            data-error="Please input your username" required>
-          <span class="glyphicon glyphicon-user form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="password" class="form-control" placeholder="Password" id="password" name="password"
-            data-error="Please input your password" required>
-          <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="password" class="form-control" placeholder="Retype password" name="rpassword"
-            data-match="#password" data-match-error="Password confirmation does not match" required>
-          <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        {% if captcha_enable %}
-          <p class="login-box-msg">Please complete the CAPTCHA below</p>
+        <div class="card-body">
+          {% if error %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              {{ error }}
+            </div>
+          {% endif %}
+          <p class="login-box-msg">Enter your personal details below</p>
+          <form action="{{ url_for('index.register') }}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" placeholder="First Name" name="firstname" id="firstname" required>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-user"></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please input your first name
+              </div>
+            </div>
+
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" placeholder="Last name" name="lastname" id="lastname" required>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-user"></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please input your last name
+              </div>
+            </div>
+
+            <div class="input-group mb-3">
+              <input type="email" class="form-control" placeholder="Email" name="email" id="email" required>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-envelope"></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please input a valid email address
+              </div>
+            </div>
+
+            <p class="login-box-msg">Enter your account details below</p>
+
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" placeholder="Username" name="username" id="username" required>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-user"></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please input desired username
+              </div>
+            </div>
+
+            <div class="input-group mb-3">
+              <input type="password" class="form-control" placeholder="Password" id="password" name="password" id="password" required>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-lock"></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please input desired username
+              </div>
+            </div>
+
+
           <div class="form-group has-feedback">
-            {{ captcha() }}
-            <input type="text" class="form-control" placeholder="CAPTCHA"  name="captcha"
-              data-error="Please complete the CAPTCHA" required>
+            <input type="password" class="form-control" placeholder="Retype password" name="rpassword" data-match="#password" data-match-error="Password confirmation does not match" required>
+            <span class="fas fa-lock form-control-feedback"></span>
             <span class="help-block with-errors"></span>
           </div>
-        {% endif %}
-        <div class="row">
-          <div class="col-xs-4 pull-left">
-            <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
-          </div>
-          <div class="col-xs-4 pull-right">
-            <button type="submit" class="btn btn-flat btn-primary btn-block">Register</button>
-          </div>
-          <!-- /.col -->
-        </div>
-      </form>
-    </div>
-    <!-- /.form-box -->
-    <div class="login-box-footer">
-      <center>
-        <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
-      </center>
-    </div>
-  </div>
-  <!-- /.login-box -->
 
-  {% assets "js_login" -%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {%- endassets %}
-  {% assets "js_validation" -%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {%- endassets %}
-  <script>
-    $(function () {
-      $('#button_back').click(function () {
-        window.location.href = '{{ url_for('index.login') }}';
-      })
+
+          {% if captcha_enable %}
+            <p class="login-box-msg">Please complete the CAPTCHA below</p>
+            <div class="form-group has-feedback">
+              {{ captcha() }}
+              <input type="text" class="form-control" placeholder="CAPTCHA"  name="captcha" data-error="Please complete the CAPTCHA" required>
+              <span class="help-block with-errors"></span>
+            </div>
+          {% endif %}
+          <div class="row">
+            <div class="col-6">
+              <button type="button" class="btn btn-block" id="button_back">Back</button>
+            </div>
+            <div class="col-4">
+              <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="login--footer">
+        <center>
+          <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
+        </center>
+      </div>
+    </div>
+    {% assets "js_login" -%}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+    {% assets "js_validation" -%}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+    <script>
+      $(function () {
+        $('#button_back').click(function () {
+          window.location.href = '{{ url_for('index.login') }}';
+        })
+      });
+      (function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.getElementsByClassName('needs-validation');
+    // Loop over them and prevent submission
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
     });
-  </script>
-</body>
+  }, false);
+})();
 
+    </script>
+  </body>
 </html>

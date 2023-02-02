@@ -4,15 +4,26 @@
 <title>History - {{ SITE_NAME }}</title>
 {% endblock %} {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        History <small>Recent events</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">History</li>
-    </ol>
-</section>
+
+<div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            History
+            <small>Recent Events</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item active">History</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
 {% endblock %} 
 {% block content %}
 {% import 'applied_change_macro.html' as applied_change_macro %}
@@ -20,57 +31,57 @@
 
 
 <section class="content">
+  <div class="container-fluid">
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">History Management</h3>
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">History Management</h3>
+          </div>
+          <div class="card-body clearfix">
+            <button type="button" class="btn btn-flat btn-danger pull-right" data-toggle="modal" data-target="#modal_clear_history" {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
+                Clear History
+                <i class="fa fa-trash"></i>
+            </button>
+          </div>
+          <div class="card-body clearfix">
+            <form id="history-search-form" autocomplete="off">
+              <div class="nav-tabs-custom" id="tabs">
+                <ul class="nav nav-tabs" id="nav_nav_tabs" name="nav_nav_tabs">
+                  <li id="activity_tab" class="active"><a href="#tabs-act"    data-toggle="tab">Search for All Activity</a></li>
+                  <li id="domain_tab"><a href="#tabs-domain"   data-toggle="tab">Search By Domain</a></li>
+                  <li id="account_tab"><a href="#tabs-account" data-toggle="tab">Search By Account</a></li>
+                  {% if current_user.role.name != 'User' %}
+                    <li id="user_auth_tab"><a href="#tabs-auth"  data-toggle="tab">Search for User Authentication</a></li>
+                  {% endif %}
+                </ul>
+            <div class="tab-content">
+              <div class="tab-pane" id="tabs-act">
+            </div>
+            <div class="tab-pane" id="tabs-domain">
+              <td>
+                <label>Domain Name</label>
+              </td>
+              <td>
+                <div class="autocomplete" style="width:250px;">
+                  <input type="text" class="form-control" id="domain_name_filter" name="domain_name_filter" placeholder="Enter * to search for any domain" value=""> 
                 </div>
-                <div class="box-body clearfix">
-                    <button type="button" class="btn btn-flat btn-danger pull-right" data-toggle="modal"
-                        data-target="#modal_clear_history"
-                        {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
-                        Clear History&nbsp;<i class="fa fa-trash"></i>
-                    </button>
-                </div>
-
-                <div class="box-body clearfix">
-                    <form id="history-search-form" autocomplete="off">
-                        <!-- Custom Tabs -->
-                        <div class="nav-tabs-custom" id="tabs">
-                            <ul class="nav nav-tabs" id="nav_nav_tabs" name="nav_nav_tabs">
-                                <li id="activity_tab" class="active"><a href="#tabs-act"    data-toggle="tab">Search for All Activity</a></li>
-                                <li id="domain_tab"><a href="#tabs-domain"   data-toggle="tab">Search By Domain</a></li>
-                                <li id="account_tab"><a href="#tabs-account" data-toggle="tab">Search By Account</a></li>
-                                {% if current_user.role.name != 'User' %}
-                                <li id="user_auth_tab"><a href="#tabs-auth"  data-toggle="tab">Search for User Authentication</a></li>
-                                {% endif %}
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane" id="tabs-act">
-                                </div>
-                                <div class="tab-pane" id="tabs-domain">
-                                    <td><label>Domain Name</label></td>
-                                    <td>
-                                        <div class="autocomplete" style="width:250px;">
-                                            <input type="text" class="form-control" id="domain_name_filter" name="domain_name_filter" placeholder="Enter * to search for any domain" value=""> 
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="position: relative; top:10px;">
-                                            <td>Record Changelog only &nbsp</td>
-                                                <td>
-                                                    <input type="checkbox" id="domain_changelog_only_checkbox" name="domain_changelog_only_checkbox"
-                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
-                                                </td>
-                                        </div>
-                                    </td>
-                                </div>
-                                <div class="tab-pane" id="tabs-account">
-                                    <td><label>Account Name</label></td>
-                                    <td>
-                                        <div class="autocomplete" style="width:250px;">
-                                            <input type="text" class="form-control" id="account_name_filter" name="account_name_filter" placeholder="Enter * to search for any account" value=""> 
+              </td>
+              <td>
+<div style="position: relative; top:10px;">
+<td>Record Changelog only &nbsp</td>
+<td>
+<input type="checkbox" id="domain_changelog_only_checkbox" name="domain_changelog_only_checkbox"
+class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+</td>
+</div>
+</td>
+</div>
+<div class="tab-pane" id="tabs-account">
+<td><label>Account Name</label></td>
+<td>
+<div class="autocomplete" style="width:250px;">
+<input type="text" class="form-control" id="account_name_filter" name="account_name_filter" placeholder="Enter * to search for any account" value=""> 
                                         </div>
                                     </td>
                                 </div>
@@ -109,9 +120,7 @@
                                     </td>
                                 </div>
                         </div>
-                        <!-- End Custom Tabs -->
-
-                        <div class="box-body">
+                        <div class="card-body">
                             <table id="Filters-Table">
                                 <thead>
                                     <th>Filters</th>
@@ -148,7 +157,6 @@
                                             <button type="submit" id="search-submit" name="search-submit" class="btn btn-flat btn-primary button-filter">Search&nbsp;<i class="fa fa-search"></i></button>
                                         </td>
                                         <td>
-                                            <!-- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
                                             <button id="clear-filters" name="clear-filters" class="btn btn-flat btn-warning button-clearf">Clear Filters&nbsp;<i class="fa fa-trash"></i></button>
                                         </td>
                                     </tr>
@@ -157,17 +165,8 @@
                         </div>
                     </form>
                 </div>
-
                 <div id="table_from_ajax"></div>
-
-
-                <!-- /.box-body -->
             </div>
-            <!-- /.box -->
-        </div>
-        <!-- /.col -->
-    </div>
-    <!-- /.row -->
 </section>
 {% endblock %}
 {% block extrascripts %}

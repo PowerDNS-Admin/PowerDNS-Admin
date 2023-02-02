@@ -4,16 +4,25 @@
 
 {% block dashboard_stat %}
 <!-- Content Header (Page header) -->
-<section class="content-header">
-	<h1>
-		Template
-		<small>Create</small>
-	</h1>
-	<ol class="breadcrumb">
-		<li><a href="{{ url_for('admin.templates') }}"><i class="fa fa-dashboard"></i> Templates</a></li>
-		<li class="active">Create</li>
-	</ol>
-</section>
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 text-dark">
+          Template
+          <small>Create</small>
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin.templates') }}">Templates</a></li>
+          <li class="breadcrumb-item active">Create</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block content %}
