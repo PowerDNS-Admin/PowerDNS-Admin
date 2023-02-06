@@ -106,15 +106,23 @@
             <span class="help-block with-errors"></span>
           </div>
 
-
           {% if captcha_enable %}
-            <p class="login-box-msg">Please complete the CAPTCHA below</p>
-            <div class="form-group has-feedback">
+            <div class="input-group mb-3">
+              <p class="login-box-msg">Please complete the CAPTCHA below</p>
               {{ captcha() }}
-              <input type="text" class="form-control" placeholder="CAPTCHA"  name="captcha" data-error="Please complete the CAPTCHA" required>
-              <span class="help-block with-errors"></span>
+              <br>
+              <input type="text" class="form-control" placeholder="CAPTCHA" id="captcha" name="captcha" required>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-lock"></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please complete the CAPTCHA
+              </div>
             </div>
           {% endif %}
+
           <div class="row">
             <div class="col-6">
               <button type="button" class="btn btn-block" id="button_back">Back</button>

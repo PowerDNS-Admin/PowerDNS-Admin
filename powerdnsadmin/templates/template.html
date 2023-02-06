@@ -38,19 +38,20 @@
   </div>
   {% endif %} {% endwith %}
   <div class="row">
+    <div class="container-fluid">
     <div class="col-xs-12">
-      <div class="box">
-        <div class="box-header">
-          <h3 class="box-title">Templates</h3>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Templates</h3>
         </div>
-        <div class="box-body">
+        <div class="card-body">
           <a href="{{ url_for('admin.create_template') }}">
             <button type="button" class="btn btn-flat btn-primary pull-left">
               Create Template&nbsp;<i class="fa fa-plus"></i>
             </button>
           </a>
         </div>
-        <div class="box-body">
+        <div class="card-body">
           <table id="tbl_template_list" class="table table-bordered table-striped">
             <thead>
               <tr>
@@ -75,11 +76,11 @@
                 </td>
                 <td>
                   <a href="{{ url_for('admin.edit_template', template=template.name) }}">
-                    <button type="button" class="btn btn-flat btn-warning button_edit" id="btn_edit">
+                    <button type="button" class="btn btn-warning button_edit" id="btn_edit">
                       Edit&nbsp;<i class="fa fa-edit"></i>
                     </button>
                   </a>
-                  <button type="button" class="btn btn-flat btn-danger button_delete" id="{{template.name}}">
+                  <button type="button" class="btn btn-danger button_delete" id="{{template.name}}">
                     Delete&nbsp;<i class="fa fa-trash"></i>
                   </button>
                 </td>
@@ -93,6 +94,7 @@
       <!-- /.box -->
     </div>
     <!-- /.col -->
+  </div>
   </div>
   <!-- /.row -->
 </section>

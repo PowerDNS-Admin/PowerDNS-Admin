@@ -1,67 +1,78 @@
 {% extends "base.html" %}
-{% set active_page = "dashboard" %}
-{% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
+{% set active_page = "dashboard" %}
+
+{% block title %}
+  <title>
+    Dashboard - {{ SITE_NAME }}
+  </title>
+{% endblock %}
 
 {% block dashboard_stat %}
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      <h1>
-        Dashboard
-        <small>Info</small>
-      </h1>
-      <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Dashboard</li>
-      </ol>
-    </section>
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            Dashboard
+            <small>Info</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% import 'applied_change_macro.html' as applied_change_macro %}
 
 {% block content %}
- <!-- Main content -->
-    <section class="content">
+  <section class="content">
+    <div class="container-fluid">
       {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-      <div class="row">
-        <div class="col-xs-3">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Statistics</h3>
-                </div>
-                <div class="box-body">
-                  <div class="row">
-                  <div class="col-lg-6">
-                      <!-- small box -->
-                      <div class="small-box bg-aqua">
-                        <div class="inner">
-                          <h3>{{ domain_count }}</h3>
-                          <p>{% if domain_count > 1 %}Domains{% else %}Domain{% endif %}</p>
-                        </div>
-                        <div class="icon">
-                          <i class="fa fa-book"></i>
-                        </div>
+        <div class="row">
+          <div class="col-3">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Statistics</h3>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info">
+                      <div class="inner">
+                        <h3>{{ domain_count }}</h3>
+                        <p>{% if domain_count > 1 %}Domains{% else %}Domain{% endif %}</p>
+                      </div>
+                      <div class="icon">
+                        <i class="fa fa-book"></i>
                       </div>
                     </div>
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <div class="col-lg-6">
+                  </div>
+                  {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    <div class="col-6">
                       <a href="{{ url_for('admin.manage_user') }}">
-                      <div class="small-box bg-green">
-                        <div class="inner">
-                          <h3>{{ user_num }}</h3>
-                          <p>{% if user_num > 1 %}Users{% else %}User{% endif %}</p>
+                        <div class="small-box bg-green">
+                          <div class="inner">
+                            <h3>{{ user_num }}</h3>
+                            <p>{% if user_num > 1 %}Users{% else %}User{% endif %}</p>
+                          </div>
+                          <div class="icon">
+                            <i class="fa fa-users"></i>
+                          </div>
                         </div>
-                        <div class="icon">
-                          <i class="fa fa-users"></i>
-                        </div>
-                      </div>
                       </a>
                     </div>
-                    {% endif %}
-                    </div>
-                    <div class="row">
-                    <div class="col-lg-6">
-                      <a href="{{ url_for('admin.history') }}">
+                  {% endif %}
+                </div>
+                <div class="row">
+                  <div class="col-6">
+                    <a href="{{ url_for('admin.history') }}">
                       <div class="small-box bg-green">
                         <div class="inner">
                           <h3>{{ history_number }}</h3>
@@ -71,95 +82,108 @@
                           <i class="fa fa-calendar"></i>
                         </div>
                       </div>
-                      </a>
-                    </div>
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <div class="col-lg-6">
+                    </a>
+                  </div>
+                  {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    <div class="col-6">
                       <a href="{{ url_for('admin.pdns_stats') }}">
-                      <div class="small-box bg-green">
-                        <div class="inner">
-                          <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
-                          <p>Uptime</p>
+                        <div class="small-box bg-green">
+                          <div class="inner">
+                            <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
+                            <p>Uptime</p>
+                          </div>
+                          <div class="icon">
+                            <i class="fa fa-clock"></i>
+                          </div>
                         </div>
-                        <div class="icon">
-                          <i class="fa fa-clock-o"></i>
-                        </div>
-                      </div>
                       </a>
                     </div>
-                    {% endif %}
-                    </div>
+                  {% endif %}
                 </div>
+              </div>
             </div>
-        </div>
-        <div class="col-xs-9">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Recent History</h3>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_history" class="table table-bordered table-striped">
-                    <thead>
+          </div>
+          <div class="col-9">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Recent History</h3>
+              </div>
+              <div class="card-body">
+                <table id="tbl_history" class="table table-bordered table-striped">
+                  <thead>
                     <tr>
                       <th>Changed By</th>
                       <th>Content</th>
                       <th>Time</th>
                       <th>Detail</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                  </thead>
+                  <tbody>
                     {% for history in histories %}
                       <tr class="odd">
-                          <td>{{ history.history.created_by }}</td>
-                          <td>{{ history.history.msg }}</td>
-                          <td>{{ history.history.created_on }}</td>
-                          <td width="6%">
-                            <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
-                                {{ history.detailed_msg | safe }}
-                                {% if history.change_set %}
-                                <div class="content">
-                                    <div id="change_index_definition"></div>
-                                    {% call applied_change_macro.applied_change_template(history.change_set) %}
-                                    {% endcall %}
-                                </div>
-                                {% endif %}
-                            </div>
-                            <button type="button" class="btn btn-flat btn-primary history-info-button"
-                                {% if history.detailed_msg == "" and history.change_set is none %}
-                                style="visibility: hidden;"
-                                {% endif %} value="{{ loop.index0 }}">Info&nbsp;<i class="fa fa-info"></i>
-                            </button>
-                          </td>
+                        <td>{{ history.history.created_by }}</td>
+                        <td>{{ history.history.msg }}</td>
+                        <td>{{ history.history.created_on }}</td>
+                        <td width="6%">
+                          <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
+                            {{ history.detailed_msg | safe }}
+                            {% if history.change_set %}
+                              <div class="content">
+                                <div id="change_index_definition"></div>
+                                {% call applied_change_macro.applied_change_template(history.change_set) %}
+                                {% endcall %}
+                              </div>
+                            {% endif %}
+                          </div>
+                          <button type="button" class="btn btn-sm btn-primary history-info-button"
+                            {% if history.detailed_msg == "" and history.change_set is none %}
+                              style="visibility: hidden;"
+                            {% endif %} value="{{ loop.index0 }}">
+                            &nbsp;Info
+                          </button>
+                        </td>
                       </tr>
                     {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+                  </tbody>
+                </table>
+              </div>
             </div>
+          </div>
         </div>
-      </div>
       {% endif %}
-
-<!--SYBPATCH START-->
+      <!--SYBPATCH START-->
+      <row>
         <div class="nav-tabs-custom">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="#tab_{{custom_boxes.order[0]}}" data-toggle="tab">Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b></a></li>
+          <ul class="nav nav-tabs" id="custom-content-below-tab" role="tablist">
+            <li class="nav-link">
+              <a href="#tab_{{custom_boxes.order[0]}}"data-toggle="pill" role="tab">
+                Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b>
+              </a>
+            </li>
             {% for boxId in custom_boxes.order[1:] %}
-                <li><a href="#tab_{{boxId}}" data-toggle="tab">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></a></li>
+              <li class="nav-link" >
+                <a href="#tab_{{boxId}}" data-toggle="pill" role="tab">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></a>
+              </li>
             {% endfor %}
-            </ul>
-            <div class="tab-content">
+          </ul>
+          <div class="tab-content">
             {% for boxId in custom_boxes.order %}
               <div class="tab-pane" id='tab_{{boxId}}'>
-                  <div class="row">
-                    <div class="col-xs-12">
-                      <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
-                        </div>
-                        <div class="box-body">
-                          <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
-                            <thead>
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>
+                          {% if show_bg_domain_button %}
+                            <button type="button" class="btn btn-primary refresh-bg-button float-right">
+                              <i class="fas fa-sync"></i>
+                              &nbsp;Sync domains
+                            </button>
+                          {% endif %}
+                      </div>
+                      <div class="card-body">
+                        <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
+                          <thead>
                             <tr>
                               <th>Name</th>
                               <th>DNSSEC</th>
@@ -167,32 +191,33 @@
                               <th>Serial</th>
                               <th>Master</th>
                               <th>Account</th>
-                              <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                              <th>Action</th>
                             </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                          </table>
-                        </div>
+                          </thead>
+                          <tbody>
+                          </tbody>
+                        </table>
                       </div>
-                    </div>
                   </div>
+                </div>
+                </div>
               </div>
             {% endfor %}
-            </div><!-- /.tab-content -->
+          </div><!-- /.tab-content -->
         </div><!-- custom tabs -->
-<!--SYBPATCH END-->
-
-    </section>
-    <!-- /.content -->
+        <!--SYBPATCH END-->
+      </row>
+  </div>
+  </section>
 {% endblock %}
+
 {% block extrascripts %}
 <script>
 //SYBPATCH START//
     function setUpDomainList(id ,url){
         $(id).DataTable({
             "paging" : true,
-            "lengthChange" : true,
+            "lengthChange" : false,
             language: {
                 searchPlaceholder: "Use ^ and $ for start and end",
             },
@@ -230,7 +255,7 @@
         "searching" : false,
         "ordering" : false,
         "info" : false,
-        "autoWidth" : false,
+        "autoWidth" : true,
         "columnDefs": [
             {
                 "render": function ( data, type, row ) {
@@ -351,11 +376,10 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">DNSSEC</h4>
+              <h4 class="modal-title">DNSSEC</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
             </div>
             <div class="modal-body">
                 <p></p>

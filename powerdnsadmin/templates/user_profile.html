@@ -1,28 +1,42 @@
 {% extends "base.html" %}
-{% block title %}<title>My Profile - {{ SITE_NAME }}</title>{% endblock %}
-{% block dashboard_stat %}
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Profile
-        <small>Edit my profile</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
-        <li class="active">My Profile</li>
-    </ol>
-</section>
+
+{% block title %}
+  <title>
+    My Profile - {{ SITE_NAME }}
+  </title>
 {% endblock %}
+
+{% block dashboard_stat %}
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            User
+            <small>My Profile</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">My Profile</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
 {% block content %}
 <section class="content">
     <div class="row">
         <div class="col-lg-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Edit my profile{%  if session['authentication_type'] != 'LOCAL' %} [Disabled -
+            <div class="card card-primary">
+                <div class="card-header with-border">
+                    <h3 class="card-title">Edit my profile{%  if session['authentication_type'] != 'LOCAL' %} [Disabled -
                         Authenticated externally]{% endif %}</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <!-- Custom Tabs -->
                     <div class="nav-tabs-custom" id="tabs">
                         <ul class="nav nav-tabs">

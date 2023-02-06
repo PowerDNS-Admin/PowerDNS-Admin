@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class>
 <head>
   {% block head %}
     <meta charset="utf-8">
@@ -28,7 +28,7 @@
   {% endblock %}
 </head>
 
-<body class="hold-transition skin-blue sidebar-mini {% if not SETTING.get('fullscreen_layout') %}layout-boxed{% endif %}">
+<body class="hold-transition sidebar-mini text-sm {% if not SETTING.get('fullscreen_layout') %}layout-boxed{% endif %}">
   {% set user_image_url = url_for('user.image', username=current_user.username) %}
   <div class="wrapper">
   {% block pageheader %}
@@ -41,10 +41,17 @@
             <i class="fas fa-bars"></i>
           </a>
         </li>
+        {% if current_user.id is defined %}
+          <li class="nav-item d-none d-inline-block">
+            <a class="nav-link" href="{{ url_for('index.logout') }}">
+              Logout
+            </a>
+          </li>
+        {% endif %}
       </ul>
 
         <ul class="navbar-nav ml-auto">
-          {% if current_user.id is defined %}
+<!--          {% if current_user.id is defined %}
           <li class="nav-item dropdown user-menu">
             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
               <img src="{{ user_image_url }}" class="user-image img-circle elevation-2" alt="User Image"/>
@@ -53,7 +60,7 @@
               </span>
             </a>
             <ul class="dropdown-menu">
-              <li class="user-header">
+              <li class="user-header bg-dark">
                 <img src="{{ user_image_url }}" class="img-circle elevation-2" alt="User Image"/>
                 <p>
                   {{ current_user.firstname }} {{ current_user.lastname }}
@@ -61,12 +68,13 @@
                 </p>
               </li>
               <li class="user-footer">
-                <a href="{{ url_for('user.profile') }}" class="btn btn-default">My Profile</a>
-                <a href="{{ url_for('index.logout') }}" class="btn btn-default float-right">Log out</a>
+                <a href="{{ url_for('user.profile') }}" class="btn btn-primary">My Profile</a>
+                <a href="{{ url_for('index.logout') }}" class="btn btn-warning float-right">Log out</a>
               </li>
             </ul>
           </li>
           {% endif %}
+-->          
         <li class="nav-item">
           <a class="nav-link" data-widget="fullscreen" href="#" role="button">
             <i class="fas fa-expand-arrows-alt"></i>
@@ -140,7 +148,7 @@
         </li>
         <li class="{{ 'nav-item active' if active_page == 'admin_history' else 'nav-item' }}">
           <a href="{{ url_for('admin.history') }}" class="nav-link">
-            <i class="nav-icon fas fa-calendar"></i>
+            <i class="nav-icon fas fa-calendar-alt"></i>
             <p>History</p>
           </a>
         </li>
@@ -179,26 +187,26 @@
           <ul class="nav nav-treeview" {% if active_page == 'admin_settings' %}style="display: block;"{% endif %}>
             <li class="nav-item">
               <a href="{{ url_for('admin.setting_basic') }}" class="nav-link">
-                <i class="nav-icon fas fa-circle"></i>
+                <i class="nav-icon far fa-circle"></i>
                 <p>Basic</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('admin.setting_records') }}" class="nav-link">
-                <i class="nav-icon fas fa-circle"></i>
+                <i class="nav-icon far fa-circle"></i>
                 <p>Records</p>
               </a>
             </li>
             {% if current_user.role.name == 'Administrator' %}
               <li class="nav-item">
                 <a href="{{ url_for('admin.setting_pdns') }}" class="nav-link">
-                  <i class="nav-icon fas fa-circle"></i>
+                  <i class="nav-icon far fa-circle"></i>
                   <p>PDNS</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('admin.setting_authentication') }}" class="nav-link">
-                  <i class="nav-icon fas fa-circle"></i>
+                  <i class="nav-icon far fa-circle"></i>
                   <p>Authentication</p>
                 </a>
               </li>
@@ -208,9 +216,9 @@
         {% elif SETTING.get('allow_user_view_history') %}
         <li class="nav-header">ADMINISTRATION</li>
         <li class="{{ 'nav-item active' if active_page == 'admin_history' else 'nav-item' }}">
-          <a href="{{ url_for('admin.history') }}">
-            <i class="nav-icon fa fa-calendar"></i>
-            <span>History</span>
+          <a href="{{ url_for('admin.history') }}" class="nav-link">
+            <i class="nav-icon fas fa-calendar-alt"></i>
+            <p>History</p>
           </a>
         </li>
         {% endif %}

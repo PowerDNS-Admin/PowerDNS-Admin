@@ -4,9 +4,9 @@
 
 {% macro dnssec(domain) %}
   {% if domain.dnssec %}
-  <td><span style="cursor:pointer" class="label label-success button_dnssec" id="{{ domain.name }}"><i class="fa fa-lock"></i>&nbsp;Enabled</span></td>
+  <td><span style="cursor:pointer" class="btn btn-lg btn-success button_dnssec" id="{{ domain.name }}"><i class="fa fa-lock"></i>&nbsp;Enabled</span></td>
   {% else %}
-  <td><span style="cursor:pointer" class="label label-primary button_dnssec" id="{{ domain.name }}"><i class="fa fa-unlock-alt"></i>&nbsp;Disabled</span></td>
+  <td><span style="cursor:pointer" class="btn btn-sm btn-danger button_dnssec" id="{{ domain.name }}"><i class="fa fa-unlock-alt"></i>&nbsp;Disabled</span></td>
   {% endif %}
 {% endmacro %}
 
@@ -30,30 +30,46 @@
 
 {% macro actions(domain) %}
   {% if current_user.role.name in ['Administrator', 'Operator'] %}
-    <td width="25%">
-      <button type="button" class="btn btn-flat btn-success button_template" id="{{ domain.name }}">
-        Template&nbsp;<i class="fa fa-clone"></i>
-      </button>
-      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
-        Manage&nbsp;<i class="fa fa-cog"></i>
-      </button>
-      <button type="button" class="btn btn-flat btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
-        Admin&nbsp;<i class="fa fa-cog"></i>
-      </button>
-      <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
-        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-      </button>
+    <td width="6%">
+
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Options
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+          <button class="dropdown-item btn-success button_template" id="{{ domain.name }}" type="button">
+            <i class="fa fa-clone"></i>&nbsp;Template
+          </button>
+          <button class="dropdown-item btn-success" type="button" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
+            <i class="fa fa-cog"></i>&nbsp;Manage
+          </button>
+          <button class="dropdown-item btn-danger" type="button" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+            <i class="fa fa-cog"></i>&nbsp;Admin
+          </button>
+          <button class="dropdown-item btn-primary" type="button" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
+            <i class="fa fa-history" aria-hidden="true"></i>&nbsp;Changelog
+          </button>
+        </div>
+      </div>
+
     </td>
     {% else %}
     <td width="6%">
-      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
-        Manage&nbsp;<i class="fa fa-cog"></i>
-      </button>
-      {% if allow_user_view_history %}
-      <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
-        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-      </button>
-      {% endif %}
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Options
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+          <button class="dropdown-item btn-success" type="button" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
+            <i class="fa fa-cog"></i>&nbsp;Manage
+          </button>
+          {% if allow_user_view_history %}
+            <button class="dropdown-item btn-primary" type="button" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
+              <i class="fa fa-history" aria-hidden="true"></i>&nbsp;Changelog
+            </button>
+          {% endif %}
+        </div>
+      </div>
     </td>
   {% endif %}  
 {% endmacro %}
