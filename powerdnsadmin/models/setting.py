@@ -28,7 +28,7 @@ class Setting(db.Model):
         'allow_user_create_domain': False,
         'allow_user_remove_domain': False,
         'allow_user_view_history': False,
-	'delete_sso_accounts': False,
+	    'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
         'site_name': 'PowerDNS-Admin',
@@ -110,6 +110,7 @@ class Setting(db.Model):
         'oidc_oauth_email': 'email',
         'oidc_oauth_account_name_property': '',
         'oidc_oauth_account_description_property': '',
+        'enforce_api_ttl': False,
         'forward_records_allow_edit': {
             'A': True,
             'AAAA': True,
@@ -189,7 +190,11 @@ class Setting(db.Model):
         'ttl_options': '1 minute,5 minutes,30 minutes,60 minutes,24 hours',
         'otp_field_enabled': True,
         'custom_css': '',
-        'max_history_records': 1000
+        'otp_force': False,
+        'max_history_records': 1000,
+        'deny_domain_override': False,
+        'account_name_extra_chars': False,
+        'gravatar_enabled': False,
     }
 
     def __init__(self, id=None, name=None, value=None):
@@ -270,15 +275,15 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in self.defaults:
- 
+
             if setting.upper() in current_app.config:
                 result = current_app.config[setting.upper()]
             else:
                 result = self.query.filter(Setting.name == setting).first()
- 
+
             if result is not None:
                 if hasattr(result,'value'):
-                    result = result.value 
+                    result = result.value
                 return strtobool(result) if result in [
                     'True', 'False'
                 ] else result
@@ -286,7 +291,7 @@ class Setting(db.Model):
                 return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
-            
+
     def get_records_allow_to_edit(self):
         return list(
             set(self.get_forward_records_allow_to_edit() +

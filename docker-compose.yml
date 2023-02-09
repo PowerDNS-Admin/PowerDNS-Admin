@@ -2,7 +2,7 @@ version: "3"
 
 services:
   app:
-    image: ngoduykhanh/powerdns-admin:latest
+    image: powerdnsadmin/pda-legacy:latest
     container_name: powerdns_admin
     ports:
       - "9191:80"
@@ -15,4 +15,3 @@ services:
       - GUNICORN_TIMEOUT=60
       - GUNICORN_WORKERS=2
       - GUNICORN_LOGLEVEL=DEBUG
-      - OFFLINE_MODE=False # True for offline, False for external resources

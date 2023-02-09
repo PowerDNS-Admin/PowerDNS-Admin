@@ -7,7 +7,6 @@ SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
 BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
-OFFLINE_MODE = False
 
 ### DATABASE CONFIG
 SQLA_DB_USER = 'pda'
@@ -113,12 +112,30 @@ SAML_ENABLED = False
 # ###  the user is set as a non-administrator user.
 # #SAML_ATTRIBUTE_ADMIN = 'https://example.edu/pdns-admin'
 
+## Attribute to get admin status for groups with the IdP
+# ### Default: Don't set administrator group with SAML attributes
+#SAML_GROUP_ADMIN_NAME = 'GroupName'
+
+## Attribute to get operator status for groups with the IdP
+# ### Default: Don't set operator group with SAML attributes
+#SAML_GROUP_OPERATOR_NAME = 'GroupName'
+
 # ## Attribute to get account names from
 # ### Default: Don't control accounts with SAML attribute
 # ### If set, the user will be added and removed from accounts to match
 # ###  what's in the login assertion. Accounts that don't exist will
 # ###  be created and the user added to them.
 # SAML_ATTRIBUTE_ACCOUNT = 'https://example.edu/pdns-account'
+
+# ## Attribute name that aggregates group names
+# ### Default: Don't collect IdP groups from SAML group attributes
+# ### In Okta, you can assign administrators by group using "Group Attribute Statements."
+# ### In this case, the SAML_ATTRIBUTE_GROUP will be the attribute name for a collection of
+# ###  groups passed in the SAML assertion.  From there, you can specify a SAML_GROUP_ADMIN_NAME.
+# ### If the user is a member of this group, and that group name is included in the collection,
+# ###   the user will be set as an administrator.
+# #SAML_ATTRIBUTE_GROUP = 'https://example.edu/pdns-groups'
+# #SAML_GROUP_ADMIN_NAME = 'PowerDNSAdmin-Administrators'
 
 # SAML_SP_ENTITY_ID = 'http://<SAML SP Entity ID>'
 # SAML_SP_CONTACT_NAME = '<contact name>'
@@ -133,8 +150,8 @@ SAML_ENABLED = False
 # CAUTION: For production use, usage of self-signed certificates it's highly discouraged.
 # Use certificates from trusted CA instead
 # ###########################################################################################
-# SAML_CERT_FILE = '/etc/pki/powerdns-admin/cert.crt'
-# SAML_CERT_KEY = '/etc/pki/powerdns-admin/key.pem'
+# SAML_CERT = '/etc/pki/powerdns-admin/cert.crt'
+# SAML_KEY = '/etc/pki/powerdns-admin/key.pem'
 
 # Configures if SAML tokens should be encrypted.
 # SAML_SIGN_REQUEST = False
@@ -147,6 +164,10 @@ SAML_ENABLED = False
 # #SAML_LOGOUT_URL = 'https://google.com'
 
 # #SAML_ASSERTION_ENCRYPTED = True
+
+# Some IdPs, like Okta, do not return Attribute Statements by default
+# Set the following to False if you are using Okta and not manually configuring Attribute Statements
+# #SAML_WANT_ATTRIBUTE_STATEMENT = True
 
 # Remote authentication settings
 

@@ -2,6 +2,8 @@
 BIND_ADDRESS = '0.0.0.0'
 PORT = 80
 SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
 
 legal_envvars = (
     'SECRET_KEY',
@@ -48,7 +50,6 @@ legal_envvars = (
     'SAML_LOGOUT',
     'SAML_LOGOUT_URL',
     'SAML_ASSERTION_ENCRYPTED',
-    'OFFLINE_MODE',
     'REMOTE_USER_LOGOUT_URL',
     'REMOTE_USER_COOKIES',
     'SIGNUP_ENABLED',
@@ -56,7 +57,9 @@ legal_envvars = (
     'LDAP_ENABLED',
     'SAML_CERT',
     'SAML_KEY',
-    'FILESYSTEM_SESSIONS_ENABLED'
+    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_COOKIE_SECURE',
+    'CSRF_COOKIE_SECURE',
 )
 
 legal_envvars_int = ('PORT', 'MAIL_PORT', 'SAML_METADATA_CACHE_LIFETIME')
@@ -73,12 +76,13 @@ legal_envvars_bool = (
     'SAML_WANT_MESSAGE_SIGNED',
     'SAML_LOGOUT',
     'SAML_ASSERTION_ENCRYPTED',
-    'OFFLINE_MODE',
     'REMOTE_USER_ENABLED',
     'SIGNUP_ENABLED',
     'LOCAL_DB_ENABLED',
     'LDAP_ENABLED',
-    'FILESYSTEM_SESSIONS_ENABLED'
+    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_COOKIE_SECURE',
+    'CSRF_COOKIE_SECURE',
 )
 
 # import everything from environment variables

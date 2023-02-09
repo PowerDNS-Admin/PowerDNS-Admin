@@ -7,28 +7,28 @@
             <th colspan="3">
                 {% if hist_rec_entry.change_type == "+" %}
                 <span
-                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrest['name']}}
-                    {{hist_rec_entry.add_rrest['type']}}</span>
+                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrset['name']}}
+                    {{hist_rec_entry.add_rrset['type']}}</span>
                 {% elif hist_rec_entry.change_type == "-" %}
                 <s
                     style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
-                    {{hist_rec_entry.del_rrest['name']}}
-                    {{hist_rec_entry.del_rrest['type']}}
+                    {{hist_rec_entry.del_rrset['name']}}
+                    {{hist_rec_entry.del_rrset['type']}}
                 </s>
                 {% else %}
-                {{hist_rec_entry.add_rrest['name']}}
-                {{hist_rec_entry.add_rrest['type']}}
+                {{hist_rec_entry.add_rrset['name']}}
+                {{hist_rec_entry.add_rrset['type']}}
                 {% endif %}
 
                 , TTL:
                 {% if "ttl" in hist_rec_entry.changed_fields %}
                 <s
                     style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
-                    {{hist_rec_entry.del_rrest['ttl']}}</s>
+                    {{hist_rec_entry.del_rrset['ttl']}}</s>
                 <span
-                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrest['ttl']}}</span>
+                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrset['ttl']}}</span>
                 {% else %}
-                {{hist_rec_entry.add_rrest['ttl']}}
+                {{hist_rec_entry.add_rrset['ttl']}}
                 {% endif %}
 
             </th>
@@ -92,24 +92,24 @@
                         {% for changes in hist_rec_entry.changeSet %}
                         <tr>
                             {% if changes[2] == "unchanged" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 {{changes[0]['content']}}
                             </td>
                             {% elif changes[2] == "addition" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 <span style="background-color:  lightgreen">
                                     {{changes[1]['content']}}
                                 </span>
                             </td>
                             {% elif changes[2] == "deletion" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 <s
                                     style="text-decoration-color: rgba(194, 10, 10, 0.6); text-decoration-thickness: 2px;">
                                     {{changes[0]['content']}}
                                 </s>
                             </td>
                             {% elif changes[2] == "status" %}
-                            <td>
+                            <td style="word-break: break-all">
                                 {{changes[0]['content']}}
                             </td>
                             {% endif %}
@@ -119,8 +119,8 @@
 
                 </table>
             </td>
-            <td>
-                {% for comments in hist_rec_entry.add_rrest['comments'] %}
+            <td style="word-break: break-all">
+                {% for comments in hist_rec_entry.add_rrset['comments'] %}
                 {{comments['content'] }}
                 <br/>
                 {% endfor %}

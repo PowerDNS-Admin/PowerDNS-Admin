@@ -24,19 +24,20 @@
                 <td>{{ history.history.created_on }}</td>
                 
                 <td width="6%">
+                    <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
+                        {{ history.detailed_msg | safe }}
+                        {% if history.change_set %}
+                        <div class="content">
+                            <div id="change_index_definition"></div>
+                            {% call applied_change_macro.applied_change_template(history.change_set) %}
+                            {% endcall %}
+                        </div>
+                        {% endif %}
+                    </div>
                     <button type="button" class="btn btn-flat btn-primary history-info-button"
-                        {% if history.detailed_msg == "" and history.change_set == None %}
+                        {% if history.detailed_msg == "" and history.change_set is none %}
                         style="visibility: hidden;"
-                        {% endif%}
-                        value='{{ history.detailed_msg }}
-                            {% if history.change_set != None %}
-                            <div class="content">
-                                <div id="change_index_definition"></div>
-                                {% call applied_change_macro.applied_change_template(history.change_set) %} 
-                                {% endcall %}
-                            </div>
-                            {% endif %}
-                        '>Info&nbsp;<i class="fa fa-info"></i>
+			{% endif %} value="{{ loop.index0 }}">Info&nbsp;<i class="fa fa-info"></i>
                     </button>
                 </td>
             </tr>
@@ -45,16 +46,9 @@
     </table>
 </div>
 
-
-
 <script>
-
-
-
-
 var table;
 $(document).ready(function () {
-
 
         table = $('#tbl_history').DataTable({
             "order": [
@@ -74,22 +68,14 @@ $(document).ready(function () {
             fixedHeader: true
         });
 
-
-
-
-
-
-
-
     $(document.body).on('click', '.history-info-button', function () {
         var modal = $("#modal_history_info");
-        var info = $(this).val();
+        var history_id = $(this).val();
+        var info = $("#history-info-div-" + history_id).html();
         $('#modal-info-content').html(info);
         modal.modal('show');
     });
 
-
-    
     $(document.body).on("click", ".button-filter", function (e) {
         e.stopPropagation();
         var nextRow = $("#filter-table")

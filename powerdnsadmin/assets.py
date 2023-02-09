@@ -23,7 +23,8 @@ css_login = Bundle('node_modules/bootstrap/dist/css/bootstrap.css',
 js_login = Bundle('node_modules/jquery/dist/jquery.js',
                   'node_modules/bootstrap/dist/js/bootstrap.js',
                   'node_modules/icheck/icheck.js',
-                  filters=(ConcatFilter, 'jsmin'),
+                  'custom/js/custom.js',
+                  filters=(ConcatFilter, 'rjsmin'),
                   output='generated/login.js')
 
 js_validation = Bundle('node_modules/bootstrap-validator/dist/validator.js',
@@ -60,7 +61,7 @@ js_main = Bundle('node_modules/jquery/dist/jquery.js',
                  'node_modules/jquery.quicksearch/src/jquery.quicksearch.js',
                  'custom/js/custom.js',
                  'node_modules/bootstrap-datepicker/dist/js/bootstrap-datepicker.js',
-                 filters=(ConcatFilter, 'jsmin'),
+                 filters=(ConcatFilter, 'rjsmin'),
                  output='generated/main.js')
 
 assets = Environment()

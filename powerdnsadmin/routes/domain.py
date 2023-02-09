@@ -10,6 +10,7 @@ from flask_login import login_required, current_user, login_manager
 
 from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
+from ..lib.utils import to_idna
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec, can_remove_domain
 from ..models.user import User, Anonymous
 from ..models.account import Account
@@ -30,7 +31,6 @@ domain_bp = Blueprint('domain',
                       __name__,
                       template_folder='templates',
                       url_prefix='/domain')
-
 
 @domain_bp.before_request
 def before_request():
@@ -63,7 +63,7 @@ def domain(domain_name):
 
     # Query domain's rrsets from PowerDNS API
     rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
@@ -202,7 +202,7 @@ def changelog(domain_name):
 
     # Query domain's rrsets from PowerDNS API
     rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
@@ -277,7 +277,7 @@ def changelog(domain_name):
 """
 Returns a changelog for a specific pair of (record_name, record_type)
 """
-@domain_bp.route('/<path:domain_name>/changelog/<path:record_name>-<path:record_type>', methods=['GET'])
+@domain_bp.route('/<path:domain_name>/changelog/<path:record_name>/<string:record_type>', methods=['GET'])
 @login_required
 @can_access_domain
 @history_access_required
@@ -290,7 +290,7 @@ def record_changelog(domain_name, record_name, record_type):
         abort(404)
     # Query domain's rrsets from PowerDNS API
     rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrests: \n{}".format(pretty_json(rrsets)))
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
     if not rrsets and domain.type != 'Slave':
@@ -328,9 +328,9 @@ def record_changelog(domain_name, record_name, record_type):
     for change_num in changes_set_of_record:
         changes_i = changes_set_of_record[change_num]
         for hre in changes_i: # for each history record entry in changes_i
-            if  'type' in hre.add_rrest and hre.add_rrest['name'] == record_name and hre.add_rrest['type'] == record_type:
+            if  'type' in hre.add_rrset and hre.add_rrset['name'] == record_name and hre.add_rrset['type'] == record_type:
                 continue
-            elif 'type' in hre.del_rrest and hre.del_rrest['name'] == record_name and hre.del_rrest['type'] == record_type:
+            elif 'type' in hre.del_rrset and hre.del_rrset['name'] == record_name and hre.del_rrset['type'] == record_type:
                 continue
             else:
                 changes_set_of_record[change_num].remove(hre)
@@ -363,6 +363,9 @@ def add():
                     'errors/400.html',
                     msg="Please enter a valid domain name"), 400
 
+            if domain_name.endswith('.'):
+                domain_name = domain_name[:-1]
+
             # If User creates the domain, check some additional stuff
             if current_user.role.name not in ['Administrator', 'Operator']:
                 # Get all the account_ids of the user
@@ -379,7 +382,7 @@ def add():
 
             # Encode domain name into punycode (IDN)
             try:
-                domain_name = domain_name.encode('idna').decode()
+                domain_name = to_idna(domain_name, 'encode')
             except:
                 current_app.logger.error("Cannot encode the domain name {}".format(domain_name))
                 current_app.logger.debug(traceback.format_exc())
@@ -400,6 +403,38 @@ def add():
             account_name = Account().get_name_by_id(account_id)
 
             d = Domain()
+
+            ### Test if a record same as the domain already exists in an upper level domain
+            if Setting().get('deny_domain_override'):
+
+                upper_domain = None
+                domain_override = False
+                domain_override_toggle = False
+
+                if current_user.role.name in ['Administrator', 'Operator']:
+                    domain_override = request.form.get('domain_override')
+                    domain_override_toggle = True
+
+
+                # If overriding box is not selected.
+                # False = Do not allow ovrriding, perform checks
+                # True = Allow overriding, do not perform checks
+                if not domain_override:
+                    upper_domain = d.is_overriding(domain_name)
+
+                if upper_domain:
+                    if current_user.role.name in ['Administrator', 'Operator']:
+                        accounts = Account.query.order_by(Account.name).all()
+                    else:
+                        accounts = current_user.get_accounts()
+                    
+                    msg = 'Domain already exists as a record under domain: {}'.format(upper_domain)
+                    
+                    return render_template('domain_add.html', 
+                                            domain_override_message=msg,
+                                            accounts=accounts,
+                                            domain_override_toggle=domain_override_toggle)
+           
             result = d.add(domain_name=domain_name,
                            domain_type=domain_type,
                            soa_edit_api=soa_edit_api,
@@ -409,7 +444,7 @@ def add():
                 domain_id = Domain().get_id_by_name(domain_name)
                 history = History(msg='Add domain {0}'.format(
                     pretty_domain_name(domain_name)),
-                                  detail=str({
+                                  detail = json.dumps({
                                       'domain_type': domain_type,
                                       'domain_master_ips': domain_master_ips,
                                       'account_id': account_id
@@ -445,17 +480,16 @@ def add():
                         history = History(
                             msg='Applying template {0} to {1} successfully.'.
                             format(template.name, domain_name),
-                            detail=str(
-                                json.dumps({
-                                    "domain":
+                            detail = json.dumps({
+                                    'domain':
                                     domain_name,
-                                    "template":
+                                    'template':
                                     template.name,
-                                    "add_rrests":
+                                    'add_rrsets':
                                     result['data'][0]['rrsets'],
-                                    "del_rrests":
+                                    'del_rrsets':
                                     result['data'][1]['rrsets']
-                                })),
+                                }),
                             created_by=current_user.username,
                             domain_id=domain_id)
                         history.add()
@@ -464,7 +498,7 @@ def add():
                             msg=
                             'Failed to apply template {0} to {1}.'
                             .format(template.name, domain_name),
-                            detail=str(result),
+                            detail = json.dumps(result),
                             created_by=current_user.username)
                         history.add()
                 return redirect(url_for('dashboard.dashboard'))
@@ -478,14 +512,17 @@ def add():
 
     # Get
     else:
+        domain_override_toggle = False
         # Admins and Operators can set to any account
         if current_user.role.name in ['Administrator', 'Operator']:
             accounts = Account.query.order_by(Account.name).all()
+            domain_override_toggle = True
         else:
             accounts = current_user.get_accounts()
         return render_template('domain_add.html',
                                templates=templates,
-                               accounts=accounts)
+                               accounts=accounts,
+                               domain_override_toggle=domain_override_toggle)
 
 
 
@@ -545,7 +582,7 @@ def setting(domain_name):
         history = History(
             msg='Change domain {0} access control'.format(
                 pretty_domain_name(domain_name)),
-            detail=str({'user_has_access': new_user_list}),
+            detail=json.dumps({'user_has_access': new_user_list}),
             created_by=current_user.username,
             domain_id=d.id)
         history.add()
@@ -583,7 +620,7 @@ def change_type(domain_name):
     if status['status'] == 'ok':
         history = History(msg='Update type for domain {0}'.format(
                 pretty_domain_name(domain_name)),
-                          detail=str({
+                          detail=json.dumps({
                               "domain": domain_name,
                               "type": domain_type,
                               "masters": domain_master_ips
@@ -617,9 +654,9 @@ def change_soa_edit_api(domain_name):
         history = History(
             msg='Update soa_edit_api for domain {0}'.format(
                 pretty_domain_name(domain_name)),
-            detail=str({
-                "domain": domain_name,
-                "soa_edit_api": new_setting
+            detail = json.dumps({
+                'domain': domain_name,
+                'soa_edit_api': new_setting
             }),
             created_by=current_user.username,
             domain_id=d.get_id_by_name(domain_name))
@@ -684,12 +721,11 @@ def record_apply(domain_name):
         if result['status'] == 'ok':
             history = History(
                 msg='Apply record changes to domain {0}'.format(pretty_domain_name(domain_name)),
-                detail=str(
-                    json.dumps({
-                        "domain": domain_name,
-                        "add_rrests": result['data'][0]['rrsets'],
-                        "del_rrests": result['data'][1]['rrsets']
-                    })),
+                detail = json.dumps({
+                        'domain': domain_name,
+                        'add_rrsets': result['data'][0]['rrsets'],
+                        'del_rrsets': result['data'][1]['rrsets']
+                    }),
                 created_by=current_user.username,
                 domain_id=domain.id)
             history.add()
@@ -698,11 +734,10 @@ def record_apply(domain_name):
             history = History(
                 msg='Failed to apply record changes to domain {0}'.format(
                     pretty_domain_name(domain_name)),
-                detail=str(
-                    json.dumps({
-                        "domain": domain_name,
-                        "msg": result['msg'],
-                    })),
+                detail = json.dumps({
+                        'domain': domain_name,
+                        'msg': result['msg'],
+                    }),
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 400)
@@ -780,6 +815,12 @@ def dnssec(domain_name):
 def dnssec_enable(domain_name):
     domain = Domain()
     dnssec = domain.enable_domain_dnssec(domain_name)
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was enabled for domain ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
     return make_response(jsonify(dnssec), 200)
 
 
@@ -793,7 +834,12 @@ def dnssec_disable(domain_name):
 
     for key in dnssec['dnssec']:
         domain.delete_dnssec_key(domain_name, key['id'])
-
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was disabled for domain ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
     return make_response(jsonify({'status': 'ok', 'msg': 'DNSSEC removed.'}))
 
 

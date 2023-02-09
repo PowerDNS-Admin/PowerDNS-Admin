@@ -23,6 +23,7 @@ from ..models.domain_template_record import DomainTemplateRecord
 from ..models.api_key import ApiKey
 from ..models.base import db
 
+from ..lib.errors import ApiKeyCreateFail
 from ..lib.schema import ApiPlainKeySchema
 
 apikey_plain_schema = ApiPlainKeySchema(many=True)
@@ -43,10 +44,10 @@ change_type: "addition" or "deletion" or "status" for status change or "unchange
 Note: A change in "content", is considered a deletion and recreation of the same record,
 holding the new content value.
 """
-def get_record_changes(del_rrest, add_rrest):
+def get_record_changes(del_rrset, add_rrset):
     changeSet = []
-    delSet = del_rrest['records'] if 'records' in del_rrest else []
-    addSet = add_rrest['records'] if 'records' in add_rrest else []
+    delSet = del_rrset['records'] if 'records' in del_rrset else []
+    addSet = add_rrset['records'] if 'records' in add_rrset else []
     for d in delSet:  # get the deletions and status changes
         exists = False
         for a in addSet:
@@ -86,44 +87,44 @@ def get_record_changes(del_rrest, add_rrest):
     return changeSet
 
 # out_changes is a list of  HistoryRecordEntry objects in which we will append the new changes
-# a HistoryRecordEntry represents a pair of add_rrest and del_rrest
+# a HistoryRecordEntry represents a pair of add_rrset and del_rrset
 def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_num, record_name=None, record_type=None):
 
     if history_entry.detail is None:
         return
 
-    if "add_rrests" in history_entry.detail:
-        detail_dict = json.loads(history_entry.detail.replace("\'", ''))
+    if "add_rrsets" in history_entry.detail:
+        detail_dict = json.loads(history_entry.detail)
     else: # not a record entry
         return
 
-    add_rrests = detail_dict['add_rrests']
-    del_rrests = detail_dict['del_rrests']
+    add_rrsets = detail_dict['add_rrsets']
+    del_rrsets = detail_dict['del_rrsets']
 
 
-    for add_rrest in add_rrests:
+    for add_rrset in add_rrsets:
         exists = False
-        for del_rrest in del_rrests:
-            if del_rrest['name'] == add_rrest['name'] and del_rrest['type'] == add_rrest['type']:
+        for del_rrset in del_rrsets:
+            if del_rrset['name'] == add_rrset['name'] and del_rrset['type'] == add_rrset['type']:
                 exists = True
                 if change_num not in out_changes:
                     out_changes[change_num] = []
-                out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrest, add_rrest, "*"))
+                out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrset, add_rrset, "*"))
                 break
         if not exists:  # this is a new record
             if change_num not in out_changes:
                 out_changes[change_num] = []
-            out_changes[change_num].append(HistoryRecordEntry(history_entry, [], add_rrest, "+"))  # (add_rrest, del_rrest, change_type)
-    for del_rrest in del_rrests:
+            out_changes[change_num].append(HistoryRecordEntry(history_entry, [], add_rrset, "+"))  # (add_rrset, del_rrset, change_type)
+    for del_rrset in del_rrsets:
         exists = False
-        for add_rrest in add_rrests:
-            if del_rrest['name'] == add_rrest['name'] and del_rrest['type'] == add_rrest['type']:
+        for add_rrset in add_rrsets:
+            if del_rrset['name'] == add_rrset['name'] and del_rrset['type'] == add_rrset['type']:
                 exists = True  # no need to add in the out_changes set
                 break
         if not exists:  # this is a deletion
             if change_num not in out_changes:
                 out_changes[change_num] = []
-            out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrest, [], "-"))
+            out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrset, [], "-"))
 
 
     # only used for changelog per record
@@ -133,9 +134,9 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
         else:
             return
         for hre in changes_i: # for each history record entry in changes_i
-            if 'type' in hre.add_rrest and hre.add_rrest['name'] == record_name and hre.add_rrest['type'] == record_type:
+            if 'type' in hre.add_rrset and hre.add_rrset['name'] == record_name and hre.add_rrset['type'] == record_type:
                 continue
-            elif 'type' in hre.del_rrest and hre.del_rrest['name'] == record_name and hre.del_rrest['type'] == record_type:
+            elif 'type' in hre.del_rrset and hre.del_rrset['name'] == record_name and hre.del_rrset['type'] == record_type:
                 continue
             else:
                 out_changes[change_num].remove(hre)
@@ -144,42 +145,42 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
 
 # records with same (name,type) are considered as a single HistoryRecordEntry
 # history_entry is of type History - used to extract created_by and created_on
-# add_rrest is a dictionary of replace
-# del_rrest is a dictionary of remove
+# add_rrset is a dictionary of replace
+# del_rrset is a dictionary of remove
 class HistoryRecordEntry:
-    def __init__(self, history_entry, del_rrest, add_rrest, change_type):
-        # search the add_rrest index into the add_rrest set for the key (name, type)
+    def __init__(self, history_entry, del_rrset, add_rrset, change_type):
+        # search the add_rrset index into the add_rrset set for the key (name, type)
 
         self.history_entry = history_entry
-        self.add_rrest = add_rrest
-        self.del_rrest = del_rrest
+        self.add_rrset = add_rrset
+        self.del_rrset = del_rrset
         self.change_type = change_type  # "*": edit or unchanged, "+" new tuple(name,type), "-" deleted (name,type) tuple
         self.changed_fields = []   # contains a subset of : [ttl, name, type]
-        self.changeSet = []   # all changes for the records of this add_rrest-del_rrest pair
+        self.changeSet = []   # all changes for the records of this add_rrset-del_rrset pair
 
 
         if change_type == "+": # addition
             self.changed_fields.append("name")
             self.changed_fields.append("type")
             self.changed_fields.append("ttl")
-            self.changeSet = get_record_changes(del_rrest, add_rrest)
+            self.changeSet = get_record_changes(del_rrset, add_rrset)
         elif change_type == "-": # removal
             self.changed_fields.append("name")
             self.changed_fields.append("type")
             self.changed_fields.append("ttl")
-            self.changeSet = get_record_changes(del_rrest, add_rrest)
+            self.changeSet = get_record_changes(del_rrset, add_rrset)
 
         elif change_type == "*":  # edit of unchanged
-            if add_rrest['ttl'] != del_rrest['ttl']:
+            if add_rrset['ttl'] != del_rrset['ttl']:
                 self.changed_fields.append("ttl")
-            self.changeSet = get_record_changes(del_rrest, add_rrest)
+            self.changeSet = get_record_changes(del_rrset, add_rrset)
 
 
 
     def toDict(self):
         return {
-            "add_rrest" : self.add_rrest,
-            "del_rrest" : self.del_rrest,
+            "add_rrset" : self.add_rrset,
+            "del_rrset" : self.del_rrset,
             "changed_fields" : self.changed_fields,
             "created_on" : self.history_entry.created_on,
             "created_by" : self.history_entry.created_by,
@@ -362,13 +363,13 @@ def edit_key(key_id=None):
                 current_app.logger.error('Error: {0}'.format(e))
 
         history = History(msg=history_message,
-                          detail=str({
-                            'key': apikey.id,
-                            'role': apikey.role.name,
-                            'description': apikey.description,
-                            'domains': [domain.name for domain in apikey.domains],
-                            'accounts': [a.name for a in apikey.accounts]
-                          }),
+                          detail = json.dumps({
+                                'key': apikey.id,
+                                'role': apikey.role.name,
+                                'description': apikey.description,
+                                'domains': [domain.name for domain in apikey.domains],
+                                'accounts': [a.name for a in apikey.accounts]
+                            }),
                           created_by=current_user.username)
         history.add()
 
@@ -411,12 +412,12 @@ def manage_keys():
 
             current_app.logger.info('Delete API key {0}'.format(apikey.id))
             history = History(msg='Delete API key {0}'.format(apikey.id),
-                              detail=str({
-                                  'key': history_apikey_id,
-                                  'role': history_apikey_role,
-                                  'description': history_apikey_description,
-                                  'domains': history_apikey_domains
-                              }),
+                              detail = json.dumps({
+                                    'key': history_apikey_id,
+                                    'role': history_apikey_role,
+                                    'description': history_apikey_description,
+                                    'domains': history_apikey_domains
+                                }),
                               created_by=current_user.username)
             history.add()
 
@@ -763,10 +764,7 @@ class DetailedHistory():
             self.detailed_msg = ""
             return
 
-        if 'add_rrest' in history.detail:
-            detail_dict = json.loads(history.detail.replace("\'", ''))
-        else:
-            detail_dict = json.loads(history.detail.replace("'", '"'))
+        detail_dict = json.loads(history.detail)
 
         if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
             self.detailed_msg = render_template_string("""
@@ -806,7 +804,7 @@ class DetailedHistory():
                 authenticator=detail_dict['authenticator'],
                 ip_address=detail_dict['ip_address'])
 
-        elif 'add_rrests' in detail_dict: # this is a domain record change
+        elif 'add_rrsets' in detail_dict: # this is a domain record change
             # changes_set = []
             self.detailed_msg = ""
             # extract_changelogs_from_a_history_entry(changes_set, history, 0)
@@ -883,6 +881,16 @@ class DetailedHistory():
                 domain_type=DetailedHistory.get_key_val(detail_dict, "domain_type"),
                 domain_master_ips=DetailedHistory.get_key_val(detail_dict, "domain_master_ips"))
 
+        elif DetailedHistory.get_key_val(detail_dict, 'msg') and DetailedHistory.get_key_val(detail_dict, 'status'):
+            self.detailed_msg = render_template_string('''
+                <table class="table table-bordered table-striped">
+                    <tr><td>Status: </td><td>{{ history_status }}</td></tr>
+                    <tr><td>Message:</td><td>{{ history_msg }}</td></tr>
+                </table>
+                ''',
+                history_status=DetailedHistory.get_key_val(detail_dict, 'status'),
+                history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
+
     # check for lower key as well for old databases
     @staticmethod
     def get_key_val(_dict, key):
@@ -895,7 +903,7 @@ def convert_histories(histories):
 	detailedHistories = []
 	j = 0
 	for i in range(len(histories)):
-		if histories[i].detail and ('add_rrests' in histories[i].detail or 'del_rrests' in histories[i].detail):
+		if histories[i].detail and ('add_rrsets' in histories[i].detail or 'del_rrsets' in histories[i].detail):
 			extract_changelogs_from_a_history_entry(changes_set, histories[i], j)
 			if j in changes_set:
 				detailedHistories.append(DetailedHistory(histories[i], changes_set[j]))
@@ -1251,20 +1259,41 @@ def history_table():    # ajax call data
 @login_required
 @operator_role_required
 def setting_basic():
-    if request.method == 'GET':
-        settings = [
-            'maintenance', 'fullscreen_layout', 'record_helper',
-            'login_ldap_first', 'default_record_table_size',
-            'default_domain_table_size', 'auto_ptr', 'record_quick_edit',
-            'pretty_ipv6_ptr', 'dnssec_admins_only',
-            'allow_user_create_domain', 'allow_user_remove_domain', 'allow_user_view_history', 'bg_domain_updates', 'site_name',
-            'session_timeout', 'warn_session_timeout', 'ttl_options',
-            'pdns_api_timeout', 'verify_ssl_connections', 'verify_user_email',
-            'delete_sso_accounts', 'otp_field_enabled', 'custom_css', 'enable_api_rr_history', 'max_history_records'
+    settings = [
+        'account_name_extra_chars',
+        'allow_user_create_domain',
+        'allow_user_remove_domain',
+        'allow_user_view_history',
+        'auto_ptr',
+        'bg_domain_updates',
+        'custom_css',
+        'default_domain_table_size',
+        'default_record_table_size',
+        'delete_sso_accounts',
+        'deny_domain_override',
+        'dnssec_admins_only',
+        'enable_api_rr_history',
+        'enforce_api_ttl',
+        'fullscreen_layout',
+        'gravatar_enabled',
+        'login_ldap_first',
+        'maintenance',
+        'max_history_records',
+        'otp_field_enabled',
+        'otp_force',
+        'pdns_api_timeout',
+        'pretty_ipv6_ptr',
+        'record_helper',
+        'record_quick_edit',
+        'session_timeout',
+        'site_name',
+        'ttl_options',
+        'verify_ssl_connections',
+        'verify_user_email',
+        'warn_session_timeout',
+    ]
 
-        ]
-
-        return render_template('admin_setting_basic.html', settings=settings)
+    return render_template('admin_setting_basic.html', settings=settings)
 
 
 @admin_bp.route('/setting/basic/<path:setting>/edit', methods=['POST'])
@@ -1664,10 +1693,10 @@ def create_template():
             result = t.create()
             if result['status'] == 'ok':
                 history = History(msg='Add domain template {0}'.format(name),
-                                  detail=str({
-                                      'name': name,
-                                      'description': description
-                                  }),
+                                  detail = json.dumps({
+                                        'name': name,
+                                        'description': description
+                                    }),
                                   created_by=current_user.username)
                 history.add()
                 return redirect(url_for('admin.templates'))
@@ -1711,10 +1740,10 @@ def create_template_from_zone():
         result = t.create()
         if result['status'] == 'ok':
             history = History(msg='Add domain template {0}'.format(name),
-                              detail=str({
-                                  'name': name,
-                                  'description': description
-                              }),
+                              detail = json.dumps({
+                                    'name': name,
+                                    'description': description
+                                }),
                               created_by=current_user.username)
             history.add()
 
@@ -1844,7 +1873,7 @@ def apply_records(template):
             history = History(
                 msg='Apply domain template record changes to domain template {0}'
                 .format(template),
-                detail=str(json.dumps(jdata)),
+                detail = json.dumps(jdata),
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
@@ -1874,7 +1903,7 @@ def delete_template(template):
             if result['status'] == 'ok':
                 history = History(
                     msg='Deleted domain template {0}'.format(template),
-                    detail=str({'name': template}),
+                    detail = json.dumps({'name': template}),
                     created_by=current_user.username)
                 history.add()
                 return redirect(url_for('admin.templates'))

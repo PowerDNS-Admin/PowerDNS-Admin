@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set active_page = "admin_keys" %}
-{% if create or (key is not none and key.role.name != "User") %}{% set hide_opts = True %}{%else %}{% set hide_opts = False %}{% endif %}
+{% if (key is not none and key.role.name != "User") %}{% set hide_opts = True %}{%else %}{% set hide_opts = False %}{% endif %}
 {% block title %}
 <title>Edit Key - {{ SITE_NAME }}</title>
 {% endblock %}
@@ -39,7 +39,9 @@
                             <select class="key_role form-control" id="key_role" name="key_role">
                                 {% for role in roles %}
                                 <option value="{{ role.name }}"
-                                {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}>{{ role.name }}</option>
+                                {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}
+                                {% if (key is none) and (role.name=="User") %}selected{% endif %}
+                                >{{ role.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>

@@ -99,7 +99,7 @@ class Record(object):
                 }
 
         # Continue if the record is ready to be added
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         try:
             jdata = utils.fetch_json(urljoin(
@@ -169,12 +169,12 @@ class Record(object):
             record['record_data'] = record['record_data'].replace('[ZONE]', domain_name)
             # Translate record name into punycode (IDN) as that's the only way
             # to convey non-ascii records to the dns server
-            record['record_name'] = record['record_name'].encode('idna').decode()
+            record['record_name'] = utils.to_idna(record["record_name"], "encode")
             #TODO: error handling
             # If the record is an alias (CNAME), we will also make sure that
             # the target domain is properly converted to punycode (IDN)
-            if record["record_type"] == 'CNAME':
-                record['record_data'] = record['record_data'].encode('idna').decode()
+            if record['record_type'] == 'CNAME' or record['record_type'] == 'SOA':
+                record['record_data'] = utils.to_idna(record['record_data'], 'encode')
                 #TODO: error handling
             # If it is ipv6 reverse zone and PRETTY_IPV6_PTR is enabled,
             # We convert ipv6 address back to reverse record format
@@ -293,7 +293,7 @@ class Record(object):
         return new_rrsets, del_rrsets
 
     def apply_rrsets(self, domain_name, rrsets):
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
             '/servers/localhost/zones/{0}'.format(domain_name)),
@@ -303,10 +303,48 @@ class Record(object):
                                   data=rrsets)
         return jdata
 
+    @staticmethod
+    def to_api_payload(new_rrsets, del_rrsets):
+        """Turn the given changes into a single api payload."""
+
+        def replace_for_api(rrset):
+            """Return a modified copy of the given RRset with changetype REPLACE."""
+            if not rrset or rrset.get('changetype', None) != 'REPLACE':
+                return rrset
+            replace_copy = dict(rrset)
+            # For compatibility with some backends: Remove comments from rrset if all are blank
+            if not any((bool(c.get('content', None)) for c in replace_copy.get('comments', []))):
+                replace_copy.pop('comments', None)
+            return replace_copy
+
+        def rrset_in(needle, haystack):
+            """Return whether the given RRset (identified by name and type) is in the list."""
+            for hay in haystack:
+                if needle['name'] == hay['name'] and needle['type'] == hay['type']:
+                    return True
+            return False
+
+        def delete_for_api(rrset):
+            """Return a minified copy of the given RRset with changetype DELETE."""
+            if not rrset or rrset.get('changetype', None) != 'DELETE':
+                return rrset
+            delete_copy = dict(rrset)
+            delete_copy.pop('ttl', None)
+            delete_copy.pop('records', None)
+            delete_copy.pop('comments', None)
+            return delete_copy
+
+        replaces = [replace_for_api(r) for r in new_rrsets]
+        deletes = [delete_for_api(r) for r in del_rrsets if not rrset_in(r, replaces)]
+        return {
+            # order matters: first deletions, then additions+changes
+            'rrsets': deletes + replaces
+        }
+
     def apply(self, domain_name, submitted_records):
         """
         Apply record changes to a domain. This function
-        will make 2 calls to the PDNS API to DELETE and
+        will make 1 call to the PDNS API to DELETE and
         REPLACE records (rrsets)
         """
         current_app.logger.debug(
@@ -315,67 +353,23 @@ class Record(object):
         # Get the list of rrsets to be added and deleted
         new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
 
-        # Remove blank comments from rrsets for compatibility with some backends
-        def remove_blank_comments(rrset):
-            if not rrset['comments']:
-                del rrset['comments']
-            elif isinstance(rrset['comments'], list):
-                # Merge all non-blank comment values into a list
-                merged_comments = [
-                    v
-                    for c in rrset['comments']
-                    for v in c.values()
-                    if v
-                ]
-                # Delete comment if all values are blank (len(merged_comments) == 0)
-                if not merged_comments:
-                    del rrset['comments']
-
-        for r in new_rrsets['rrsets']:
-            remove_blank_comments(r)
-
-        for r in del_rrsets['rrsets']:
-            remove_blank_comments(r)
+        # The history logic still needs *all* the deletes with full data to display a useful diff.
+        # So create a "minified" copy for the api call, and return the original data back up
+        api_payload = self.to_api_payload(new_rrsets['rrsets'], del_rrsets['rrsets'])
+        current_app.logger.debug(f"api payload: \n{utils.pretty_json(api_payload)}")
 
         # Submit the changes to PDNS API
         try:
-            if del_rrsets["rrsets"]:
-                result = self.apply_rrsets(domain_name, del_rrsets)
+            if api_payload["rrsets"]:
+                result = self.apply_rrsets(domain_name, api_payload)
                 if 'error' in result.keys():
                     current_app.logger.error(
-                        'Cannot apply record changes with deleting rrsets step. PDNS error: {}'
+                        'Cannot apply record changes. PDNS error: {}'
                         .format(result['error']))
                     return {
                         'status': 'error',
                         'msg': result['error'].replace("'", "")
                     }
-
-            if new_rrsets["rrsets"]:
-                result = self.apply_rrsets(domain_name, new_rrsets)
-                if 'error' in result.keys():
-                    current_app.logger.error(
-                        'Cannot apply record changes with adding rrsets step. PDNS error: {}'
-                        .format(result['error']))
-
-                    # rollback - re-add the removed record if the adding operation is failed.
-                    if del_rrsets["rrsets"]:
-                        rollback_rrests = del_rrsets
-                        for r in del_rrsets["rrsets"]:
-                            r['changetype'] = 'REPLACE'
-                        rollback = self.apply_rrsets(domain_name, rollback_rrests)
-                        if 'error' in rollback.keys():
-                            return dict(status='error',
-                                        msg='Failed to apply changes. Cannot rollback previous failed operation: {}'
-                                        .format(rollback['error'].replace("'", "")))
-                        else:
-                            return dict(status='error',
-                                        msg='Failed to apply changes. Rolled back previous failed operation: {}'
-                                        .format(result['error'].replace("'", "")))
-                    else:
-                        return {
-                            'status': 'error',
-                            'msg': result['error'].replace("'", "")
-                        }
 
             self.auto_ptr(domain_name, new_rrsets, del_rrsets)
             self.update_db_serial(domain_name)
@@ -500,7 +494,7 @@ class Record(object):
         """
         Delete a record from domain
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         data = {
             "rrsets": [{
                 "name": self.name.rstrip('.') + '.',
@@ -562,7 +556,7 @@ class Record(object):
         """
         Update single record
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
         data = {
             "rrsets": [{

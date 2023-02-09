@@ -3,6 +3,7 @@ from flask import current_app
 from urllib.parse import urljoin
 
 from ..lib import utils
+from ..lib.errors import InvalidAccountNameException
 from .base import db
 from .setting import Setting
 from .user import User
@@ -22,7 +23,7 @@ class Account(db.Model):
                               back_populates="accounts")
 
     def __init__(self, name=None, description=None, contact=None, mail=None):
-        self.name = name
+        self.name = Account.sanitize_name(name) if name is not None else name
         self.description = description
         self.contact = contact
         self.mail = mail
@@ -33,9 +34,30 @@ class Account(db.Model):
         self.PDNS_VERSION = Setting().get('pdns_version')
         self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
 
-        if self.name is not None:
-            self.name = ''.join(c for c in self.name.lower()
-                                if c in "abcdefghijklmnopqrstuvwxyz0123456789")
+
+    @staticmethod
+    def sanitize_name(name):
+        """
+        Formats the provided name to fit into the constraint
+        """
+        if not isinstance(name, str):
+            raise InvalidAccountNameException("Account name must be a string")
+
+        allowed_characters = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+        if Setting().get('account_name_extra_chars'):
+            allowed_characters += "_-."
+
+        sanitized_name = ''.join(c for c in name.lower() if c in allowed_characters)
+
+        if len(sanitized_name) > Account.name.type.length:
+            current_app.logger.error("Account name {0} too long. Truncated to: {1}".format(
+                                     sanitized_name, sanitized_name[:Account.name.type.length]))
+
+        if not sanitized_name:
+            raise InvalidAccountNameException("Empty string is not a valid account name")
+
+        return sanitized_name[:Account.name.type.length]
 
     def __repr__(self):
         return '<Account {0}r>'.format(self.name)
@@ -68,11 +90,9 @@ class Account(db.Model):
         """
         Create a new account
         """
-        # Sanity check - account name
-        if self.name == "":
-            return {'status': False, 'msg': 'No account name specified'}
+        self.name = Account.sanitize_name(self.name)
 
-        # check that account name is not already used
+        # Check that account name is not already used
         account = Account.query.filter(Account.name == self.name).first()
         if account:
             return {'status': False, 'msg': 'Account already exists'}
