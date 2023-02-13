@@ -9,36 +9,44 @@
 {% endblock %}
 
 {% block dashboard_stat %}
-<section class="content-header">
-    <h1>
-        Edit template <small>{{ template }}</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i
-                class="fa fa-dashboard"></i> Home</a></li>
-        <li>Templates</li>
-        <li class="active">{{ template }}</li>
-    </ol>
-</section>
+<div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            Template Edit
+            <small>{{ template }}</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.templates') }}">Templates</a></li>
+            <li class="breadcrumb-item active">Template Edit: {{ template }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
 <section class="content">
+  <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Manage Template Records for {{ template }}</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Manage Template Records for {{ template }}</h3>
                 </div>
-                <div class="box-body">
-                    <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ template }}">
-                        Add Record&nbsp;<i class="fa fa-plus"></i>
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary pull-left button_add_record" id="{{ template }}">
+                        <i class="fa fa-plus"></i>&nbsp;Add Record
                     </button>
-                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ template }}">
-                        Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
+                    <button type="button" class="btn btn-primary pull-right button_apply_changes" id="{{ template }}">
+                        <i class="fa fa-save"></i>&nbsp;Apply Changes
                     </button>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <table id="tbl_records" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -75,17 +83,17 @@
                                         {{ record.comment }}
                                     </td>
                                     <td width="6%">
-                                         <button type="button" class="btn btn-flat btn-warning button_edit">
-                                            Edit&nbsp;<i class="fa fa-edit"></i>
+                                         <button type="button" class="btn btn-warning button_edit">
+                                            <i class="fa fa-edit"></i>&nbsp;Edit
                                         </button>
                                     </td>
                                     <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-danger button_delete">
-                                            Delete&nbsp;<i class="fa fa-trash"></i>
+                                        <button type="button" class="btn btn-danger button_delete">
+                                            <i class="fa fa-trash"></i>&nbsp;Delete
                                         </button>
                                     </td>
                                     <td>
-                                    	{{ record.id }}
+                                      {{ record.id }}
                                     </td>
                                     </td>
                                 </tr>
@@ -96,6 +104,7 @@
             </div>
         </div>
     </div>
+  </div>
 </section>
 {% endblock %}
 {% block extrascripts %}

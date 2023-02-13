@@ -31,69 +31,70 @@
 
 {% block content %}
 <section class="content">
-  {% with errors = get_flashed_messages(category_filter=["error"]) %}
-    {% if errors %}
-      <div class="row">
-        <div class="col-12">
-          <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h4>
-              <i class="icon fa fa-ban"></i> Error!
-            </h4>
-            <div class="alert-message block-message error">
-              <a class="close" href="#">x</a>
-            <ul>
-              {%- for msg in errors %}
-                <li>{{ msg }}</li>
-              {% endfor -%}
-            </ul>
+  <div class="container-fluid">
+    {% with errors = get_flashed_messages(category_filter=["error"]) %}
+      {% if errors %}
+        <div class="row">
+          <div class="col-12">
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h4>
+                <i class="icon fa fa-ban"></i> Error!
+              </h4>
+              <div class="alert-message block-message error">
+                <a class="close" href="#">x</a>
+              <ul>
+                {%- for msg in errors %}
+                  <li>{{ msg }}</li>
+                {% endfor -%}
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
-    {% endif %}
-  {% endwith %}
-
-  <div class="row">
-    <div class="col-4">
-      <div class="card card-primary">
-        <div class="card-header with-border">
-          <h3 class="card-title">Create new template</h3>
-        </div>
-        <form role="form" method="post" action="{{ url_for('admin.create_template') }}">
-          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-          <div class="box-body">
-            <div class="form-group">
-              <input type="text" class="form-control" name="name" id="name"
+      {% endif %}
+    {% endwith %}
+    <div class="row">
+      <div class="col-4">
+        <div class="card card-primary">
+          <div class="card-header with-border">
+            <h3 class="card-title">Create new template</h3>
+          </div>
+          <form role="form" method="post" action="{{ url_for('admin.create_template') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <div class="box-body">
+              <div class="form-group">
+                <input type="text" class="form-control" name="name" id="name"
                 placeholder="Enter a valid template name (required)">
-            </div>
-            <div class="form-group">
-              <input type="text" class="form-control" name="description" id="description"
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-control" name="description" id="description"
                 placeholder="Enter a template description (optional)">
+              </div>
             </div>
-          </div>
-          <div class="box-footer">
-            <button type="submit" class="btn btn-flat btn-primary">Submit</button>
-            <button type="button" class="btn btn-flat btn-default"
+            <div class="card-footer">
+              <button type="submit" class="btn btn-primary">Submit</button>
+              <button type="button" class="btn btn-default"
               onclick="window.location.href='{{ url_for('admin.templates') }}'">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="col-8">
-      <div class="card card-primary">
-        <div class="card-header with-border">
-          <h3 class="card-title">Help with creating a new template</h3>
+            </div>
+          </form>
         </div>
-        <div class="card-body">
-          <dl class="dl-horizontal">
-            <dt>Template name</dt>
-            <dd>Enter your template name, this is the name of the template that
-              will be shown to users. The name should not have any spaces but
-              can have symbols.</dd>
-            <dt>Template description</dt>
-            <dd>Enter your template description, this is to help better
-              identify the template.</dd>
-          </dl>
+      </div>
+      <div class="col-8">
+        <div class="card card-primary">
+          <div class="card-header with-border">
+            <h3 class="card-title">Help with creating a new template</h3>
+          </div>
+          <div class="card-body">
+            <dl class="dl-horizontal">
+              <dt>Template name</dt>
+              <dd>Enter your template name, this is the name of the template that
+                will be shown to users. The name should not have any spaces but
+                can have symbols.</dd>
+              <dt>Template description</dt>
+              <dd>Enter your template description, this is to help better
+                identify the template.</dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>

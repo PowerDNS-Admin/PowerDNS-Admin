@@ -29,6 +29,7 @@
 
 {% block content %}
 <section class="content">
+    <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card card-primary">
@@ -70,7 +71,7 @@
                                             {%  if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                     </div>{%  if session['authentication_type'] == 'LOCAL' %}
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-flat btn-primary">Submit</button>
+                                        <button type="submit" class="btn btn-primary">Submit</button>
                                     </div>{% endif %}
                                 </form>
                             </div>
@@ -138,6 +139,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </section>
 {% endblock %}

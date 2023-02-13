@@ -1,9 +1,14 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_settings" %}
+
 {% block title %}
-<title>Authentication Settings - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
+  <title>
+    Authentication Settings - {{ SITE_NAME }}
+  </title>
+{% endblock %}
+
+{% block dashboard_stat %}
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -19,45 +24,28 @@
             <li class="breadcrumb-item">Settings</li>
             <li class="breadcrumb-item active">Authentication</li>
           </ol>
-          <script>
-            function ldapSelection() {
-                if (document.getElementById('ldap').checked) {
-                    document.getElementById('ldap_openldap_fields').style.display = 'block';
-                    document.getElementById('ldap_openldap_group_filters').style.display = 'block';
-                    document.getElementById('ldap_ad_fields').style.display = 'none';
-                } else {
-                    document.getElementById('ldap_openldap_fields').style.display = 'none';
-                    document.getElementById('ldap_openldap_group_filters').style.display = 'none';
-                    document.getElementById('ldap_ad_fields').style.display = 'block';
-                }
-            }
-    
-            window.onload = function() {
-                ldapSelection();
-            }
-        </script>
         </div>
       </div>
     </div>
   </div>
-
 {% endblock %}
+
 {% block content %}
 <section class="content">
+  <div class="container-fluid">
     <div class="row">
-        <div class="col-lg-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Authentication Settings</h3>
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Authentication Settings</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     {% if result %}
                     <div class="alert {% if result['status'] %}alert-success{% else %}alert-danger{% endif%} alert-dismissible">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                         {{ result['msg'] }}
                     </div>
                     {% endif %}
-                    <!-- Custom Tabs -->
                     <div class="nav-tabs-custom" id="tabs">
                         <ul class="nav nav-tabs">
                             <li class="active"><a href="#tabs-general" data-toggle="tab">General</a></li>
@@ -88,7 +76,7 @@
                             </div>
                             <div class="tab-pane" id="tabs-ldap">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-4">
                                         {% if error %}
                                                 <div class="alert alert-danger alert-dismissible">
                                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -249,7 +237,7 @@
                                             </div>
                                         </form>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-8">
                                         <legend>Help</legend>
                                         <dl class="dl-horizontal">
                                             <dt>Enable LDAP Authentication</dt>
@@ -343,7 +331,7 @@
                             </div>
                             <div class="tab-pane" id="tabs-google">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-4">
                                         <form role="form" method="post" data-toggle="validator">
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="google" name="config_tab" />
@@ -392,7 +380,7 @@
                                             </div>
                                         </form>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-8">
                                         <legend>Help</legend>
                                         <p>Fill in all the fields in the left form.</p>
                                         <p>Make sure you add PDA redirection URI (e.g http://localhost:9191/google/authorized) to your Google App Credentials Restriction.</p>
@@ -401,7 +389,7 @@
                             </div>
                             <div class="tab-pane" id="tabs-github">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-4">
                                         <form role="form" method="post" data-toggle="validator">
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="github" name="config_tab" />
@@ -450,7 +438,7 @@
                                             </div>
                                         </form>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-8">
                                         <legend>Help</legend>
                                         <p>Fill in all the fields in the left form.</p>
                                     </div>
@@ -458,7 +446,7 @@
                             </div>
                             <div class="tab-pane" id="tabs-azure">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-4">
                                         <form role="form" method="post" data-toggle="validator">
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="azure" name="config_tab" />
@@ -572,7 +560,7 @@
                                             </div>
                                         </form>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-8">
                                         <legend>Help</legend>
                                         <p>Fill in all the fields in the left form.</p>
                                         <p>You first need to define an Application Registration in your Azure Active Directory, with the appropriate HTTPS URL for this endpoint, and with the appropriate rights, as explained in the documentation.</p>
@@ -594,7 +582,7 @@
                             </div>
                             <div class="tab-pane" id="tabs-oidc">
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-4">
                                         <form role="form" method="post" data-toggle="validator">
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="oidc" name="config_tab" />
@@ -681,7 +669,7 @@
                                             </div>
                                         </form>
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-8">
                                         <legend>Help</legend>
                                         <p>Fill in all the fields in the left form.</p>
                                     </div>
@@ -693,14 +681,31 @@
             </div>
         </div>
     </div>
+  </div>
 </section>
 {% endblock %}
+
 {% block extrascripts %}
 {% assets "js_validation" -%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
 
 <script>
+            function ldapSelection() {
+                if (document.getElementById('ldap').checked) {
+                    document.getElementById('ldap_openldap_fields').style.display = 'block';
+                    document.getElementById('ldap_openldap_group_filters').style.display = 'block';
+                    document.getElementById('ldap_ad_fields').style.display = 'none';
+                } else {
+                    document.getElementById('ldap_openldap_fields').style.display = 'none';
+                    document.getElementById('ldap_openldap_group_filters').style.display = 'none';
+                    document.getElementById('ldap_ad_fields').style.display = 'block';
+                }
+            }
+    
+            window.onload = function() {
+                ldapSelection();
+            }
     
     $(function() {
         $('#tabs').tabs({
