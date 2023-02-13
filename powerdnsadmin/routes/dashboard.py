@@ -166,6 +166,7 @@ def dashboard():
         history = History.query.order_by(History.created_on.desc()).limit(4).all()
     elif Setting().get('allow_user_view_history'):
         history = db.session.query(History) \
+            .with_hint(History, "FORCE INDEX (ix_history_created_on)", 'mysql') \
             .join(Domain, History.domain_id == Domain.id) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
             .outerjoin(Account, Domain.account_id == Account.id) \
@@ -175,9 +176,19 @@ def dashboard():
             db.or_(
                 DomainUser.user_id == current_user.id,
                 AccountUser.user_id == current_user.id
-            )).all()
-        history_number = len(history)  # history.count()
-        history = history[:4]
+            )) \
+            .limit(4) \
+            .all()
+        history_number = db.session.query(History) \
+            .join(Domain, History.domain_id == Domain.id) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+            db.or_(
+                DomainUser.user_id == current_user.id,
+                AccountUser.user_id == current_user.id
+            )).count()
         domain_count = db.session.query(Domain) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
             .outerjoin(Account, Domain.account_id == Account.id) \
