@@ -1,12 +1,17 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_keys" %}
+
 {% if (key is not none and key.role.name != "User") %}{% set hide_opts = True %}{%else %}{% set hide_opts = False %}{% endif %}
+
 {% block title %}
-<title>Edit Key - {{ SITE_NAME }}</title>
+  <title>
+    Edit Key - {{ SITE_NAME }}
+  </title>
 {% endblock %}
+
 {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
+  <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
@@ -25,61 +30,59 @@
       </div>
     </div>
   </div>
-
 {% endblock %}
 
 {% block content %}
 <section class="content">
+  <div class="container-fluid">
   <div class="row">
     <div class="col-4">
-            <div class="card card-primary">
-                <div class="card-header with-border">
-                    <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} Key</h3>
-                </div>
-                <!-- /.box-header -->
-                <!-- form start -->
-                <form role="form" method="post"
-                    action="{% if create %}{{ url_for('admin.edit_key') }}{% else %}{{ url_for('admin.edit_key', key_id=key.id) }}{% endif %}">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="create" value="{{ create }}">
-                    <div class="card-body">
-                        <div class="form-group has-feedback">
-                            <label class="control-label" for="role">Role</label>
-                            <select class="key_role form-control" id="key_role" name="key_role">
-                                {% for role in roles %}
-                                <option value="{{ role.name }}"
-                                {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}
-                                {% if (key is none) and (role.name=="User") %}selected{% endif %}
-                                >{{ role.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group has-feedback">
-                            <label class="control-label" for="description">Description</label>
-                            <input type="text" class="form-control" placeholder="Description" name="description"
-                                {% if key is not none %} value="{{ key.description }}" {% endif %}> <span
-                                class="glyphicon glyphicon-pencil form-control-feedback"></span>
-                        </div>
-                    </div>
-                    <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                      <h3 class="card-title">Accounts Access Control</h3>
-                    </div>
-                    <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                      <p>This key will be linked to the accounts on the right,</p>
-                      <p>thus granting access to domains owned by the selected accounts.</p>
-                      <p>Click on accounts to move between the columns.</p>
-                      <div class="form-group col-2">
-                          <select multiple="multiple" class="form-control" id="key_multi_account"
-                              name="key_multi_account">
-                              {% for account in accounts %}
-                                  <option {% if key and account in key.accounts %}selected{% endif %} value="{{ account.name }}">{{ account.name }}</option>
-                              {% endfor %}
-                          </select>
-                      </div>
-                    </div>
-                    <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                        <h3 class="card-title">Domain Access Control</h3>
-                    </div>
+      <div class="card card-primary">
+        <div class="card-header with-border">
+          <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} Key</h3>
+        </div>
+        <form role="form" method="post"
+        action="{% if create %}{{ url_for('admin.edit_key') }}{% else %}{{ url_for('admin.edit_key', key_id=key.id) }}{% endif %}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="create" value="{{ create }}">
+          <div class="card-body">
+            <div class="form-group has-feedback">
+              <label class="control-label" for="role">Role</label>
+              <select class="key_role form-control" id="key_role" name="key_role">
+                {% for role in roles %}
+                  <option value="{{ role.name }}"
+                  {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}
+                  {% if (key is none) and (role.name=="User") %}selected{% endif %}>
+                    {{ role.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group has-feedback">
+              <label class="control-label" for="description">Description</label>
+                <input type="text" class="form-control" placeholder="Description" name="description"
+                {% if key is not none %} value="{{ key.description }}" {% endif %}>
+                <span class="glyphicon glyphicon-pencil form-control-feedback"></span>
+              </div>
+            </div>
+            <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+              <h3 class="card-title">Accounts Access Control</h3>
+            </div>
+            <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+              <p>This key will be linked to the accounts on the right,</p>
+              <p>thus granting access to domains owned by the selected accounts.</p>
+              <p>Click on accounts to move between the columns.</p>
+              <div class="form-group col-2">
+                <select multiple="multiple" class="form-control" id="key_multi_account" name="key_multi_account">
+                  {% for account in accounts %}
+                    <option {% if key and account in key.accounts %}selected{% endif %} value="{{ account.name }}">{{ account.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+              <h3 class="card-title">Domain Access Control</h3>
+            </div>
                     <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
                         <p>This key will have acess to the domains on the right.</p>
                         <p>Click on domains to move between the columns.</p>
@@ -115,8 +118,10 @@
             </div>
         </div>
     </div>
+    </div>
 </section>
 {% endblock %}
+
 {% block extrascripts %}
 <script>
     $('form').submit(function (e) {

@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-{% block title %}<title>{{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block title %}
+  <title>
+    {{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}
+  </title>
+{% endblock %}
 
 {% block dashboard_stat %}
 <div class="content-header">
@@ -31,7 +36,7 @@
 <section class="content">
   <div class="container-fluid">
     <div class="row">
-      <div class="col-xs-12">
+      <div class="col-12">
         <div class="card">
           <div class="card-body">
             <button type="button" class="btn btn-primary pull-left button_show_records" id="{{ domain.name }}">

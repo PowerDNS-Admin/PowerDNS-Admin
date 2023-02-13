@@ -1,9 +1,15 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_accounts" %}
+
 {% block title %}
-<title>Account Management - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<div class="content-header">
+  <title>
+    Account Management - {{ SITE_NAME }}
+  </title>
+{% endblock %}
+
+{% block dashboard_stat %}
+  <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
@@ -21,12 +27,13 @@
       </div>
     </div>
   </div>
+{% endblock %}
 
-{% endblock %} {% block content %}
+{% block content %}
 <section class="content">
   <div class="container-fluid">
     <div class="row">
-      <div class="col-xs-12 col-md-12">
+      <div class="col-12">
         <div class="card card-primary">
           <div class="card-header with-border">
             <h3 class="card-title">Account Management</h3>
@@ -133,8 +140,8 @@
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="button_delete_confirm">Delete</button>
             </div>
         </div>
         <!-- /.modal-content -->

@@ -1,11 +1,15 @@
 {% extends "base.html" %}
-{% set active_page = "admin_history" %}
-{% block title %}
-<title>History - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
 
-<div class="content-header">
+{% set active_page = "admin_history" %}
+
+{% block title %}
+  <title>
+    History - {{ SITE_NAME }}
+  </title>
+{% endblock %}
+
+{% block dashboard_stat %}
+  <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
@@ -23,17 +27,14 @@
       </div>
     </div>
   </div>
-
 {% endblock %} 
+
 {% block content %}
 {% import 'applied_change_macro.html' as applied_change_macro %}
-
-
-
 <section class="content">
   <div class="container-fluid">
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-12">
         <div class="card card-outline card-secondary">
           <div class="card-header with-border">
             <h3 class="card-title">History Management</h3>

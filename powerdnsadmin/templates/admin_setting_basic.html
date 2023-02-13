@@ -1,9 +1,14 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_settings" %}
+
 {% block title %}
-<title>Basic Settings - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
+  <title>
+    Basic Settings - {{ SITE_NAME }}
+  </title>
+{% endblock %}
+
+{% block dashboard_stat %}
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -22,8 +27,9 @@
       </div>
     </div>
   </div>
+{% endblock %}
 
-{% endblock %} {% block content %}
+{% block content %}
 <section class="content">
   <div class="container-fluid">
     <div class="card">
@@ -34,9 +40,9 @@
         <table id="tbl_settings" class="table table-bordered table-striped">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Value</th>
-              <th>Change</th>
+              <th>Setting Name</th>
+              <th>Current Value</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -45,12 +51,18 @@
                 <td>
                   {{ setting }}
                 </td>
-                {% if SETTING.get(setting) in [True, False] %}
+                {% if SETTING.get(setting) in [False] %}
                   <td>{{ SETTING.get(setting)|display_setting_state }}</td>
                   <td width="6%">
-                    <button type="button" class="btn btn-warning setting-toggle-button" id="{{ setting }}">
-                      Toggle
-                      <i class="fa fa-info"></i>
+                    <button type="button" class="btn btn-success setting-toggle-button" id="{{ setting }}">
+                      <i class="fas fa-toggle-on"></i>&nbsp;Turn On
+                    </button>
+                  </td>
+                {% elif SETTING.get(setting) in [True] %}
+                  <td>{{ SETTING.get(setting)|display_setting_state }}</td>
+                  <td width="6%">
+                    <button type="button" class="btn btn-danger setting-toggle-button" id="{{ setting }}">
+                      <i class="fas fa-toggle-off"></i>&nbsp;Turn Off
                     </button>
                   </td>
                 {% else %}
@@ -58,9 +70,8 @@
                     <input name="value" id="value" value="{{ SETTING.get(setting) }}">
                   </td>
                   <td width="6%">
-                    <button type="button" class="btn btn-warning setting-save-button" id="{{ setting }}">
-                      Save
-                      <i class="fa fa-info"></i>
+                    <button type="button" class="btn btn-primary setting-save-button" id="{{ setting }}">
+                      <i class="fas fa-save"></i>&nbsp;Save
                     </button>
                   </td>
                 {% endif %}
@@ -73,32 +84,33 @@
   </div>
 </section>
 {% endblock %}
+
 {% block extrascripts %}
-<script>
+  <script>
     // set up history data table
     $("#tbl_settings").DataTable({
-        "paging": false,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false
+      "paging": false,
+      "lengthChange": false,
+      "searching": true,
+      "ordering": true,
+      "info": true,
+      "autoWidth": false
     });
     $(document.body).on('click', '.setting-toggle-button', function () {
-        var setting = $(this).prop('id');
-        applyChanges({
-            '_csrf_token': '{{ csrf_token() }}'
-        }, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
+      var setting = $(this).prop('id');
+      applyChanges({
+        '_csrf_token': '{{ csrf_token() }}'
+      }, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
     });
 
     $(document.body).on('click', '.setting-save-button', function () {
-        var setting = $(this).prop('id');
-        var value = $(this).parents('tr').find('#value')[0].value;
-        var postdata = {
-            'value': value,
-            '_csrf_token': '{{ csrf_token() }}'
-        };
-        applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
+      var setting = $(this).prop('id');
+      var value = $(this).parents('tr').find('#value')[0].value;
+      var postdata = {
+        'value': value,
+        '_csrf_token': '{{ csrf_token() }}'
+      };
+      applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
     });
-</script>
+  </script>
 {% endblock %}

@@ -1,9 +1,15 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_keys" %}
+
 {% block title %}
-<title>Key Management - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<div class="content-header">
+  <title>
+    Key Management - {{ SITE_NAME }}
+  </title>
+{% endblock %}
+
+{% block dashboard_stat %}
+  <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
@@ -21,7 +27,9 @@
       </div>
     </div>
   </div>
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
 <section class="content">
   <div class="container-fluid">
     <div class="card">
@@ -74,63 +82,62 @@
   </div>
 </section>
 {% endblock %}
+
 {% block extrascripts %}
-<script>
+  <script>
     // set up key data table
     $("#tbl_keys").DataTable({
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": true,
-        "info": false,
-        "autoWidth": false,
-        "lengthMenu": [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
-        ],
-        "pageLength": 10
+      "paging": true,
+      "lengthChange": true,
+      "searching": true,
+      "ordering": true,
+      "info": false,
+      "autoWidth": false,
+      "lengthMenu": [
+        [10, 25, 50, 100, -1],
+        [10, 25, 50, 100, "All"]
+      ],
+      "pageLength": 10
     });
 
     // handle deletion of keys
     $(document.body).on('click', '.button_delete', function () {
-        var modal = $("#modal_delete");
-        var key_id = $(this).prop('id');
-        var info = "Are you sure you want to delete key #" + key_id + "?";
-        modal.find('.modal-body p').text(info);
-        modal.find('#button_delete_confirm').click(function () {
-            var postdata = {
-                'action': 'delete_key',
-                'data': key_id,
-                '_csrf_token': '{{ csrf_token() }}'
-            }
-            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-keys', false, true);
-            modal.modal('hide');
-        })
-        modal.modal('show');
-
+      var modal = $("#modal_delete");
+      var key_id = $(this).prop('id');
+      var info = "Are you sure you want to delete key #" + key_id + "?";
+      modal.find('.modal-body p').text(info);
+      modal.find('#button_delete_confirm').click(function () {
+        var postdata = {
+          'action': 'delete_key',
+          'data': key_id,
+          '_csrf_token': '{{ csrf_token() }}'
+        }
+        applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-keys', false, true);
+        modal.modal('hide');
+      })
+      modal.modal('show');
     });
-</script>
+  </script>
 {% endblock %}
+
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete">
+  <div class="modal fade modal-warning" id="modal_delete">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title">Confirmation</h4>
         </div>
-        <!-- /.modal-content -->
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default float-left" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger" id="button_delete_confirm">Delete</button>
+        </div>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
-</div>
+  </div>
 {% endblock %}

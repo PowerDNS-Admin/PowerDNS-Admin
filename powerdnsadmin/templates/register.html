@@ -28,98 +28,121 @@
         </div>
         <div class="card-body">
           {% if error %}
-            <div class="alert alert-danger alert-dismissible">
-              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              {{ error }}
-            </div>
+          <div class="alert alert-danger alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            {{ error }}
+          </div>
           {% endif %}
           <p class="login-box-msg">Enter your personal details below</p>
-          <form action="{{ url_for('index.register') }}" method="post" class="needs-validation" novalidate>
+          <form action="{{ url_for('index.register') }}" method="post" novalidate>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             
-            <div class="input-group mb-3">
-              <input type="text" class="form-control" placeholder="First Name" name="firstname" id="firstname" required>
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-user"></span>
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                  </span>
                 </div>
-              </div>
-              <div class="invalid-feedback">
-                Please input your first name
+                <input type="text" class="form-control {{ 'is-invalid' if 'firstname' in error_messages else '' }}" placeholder="First Name" name="firstname" id="firstname" value="{{ request.form.firstname }}" required>
+                {% if 'firstname' in error_messages %}
+                  <div class="invalid-feedback">
+                    {{ error_messages['firstname'] }}
+                  </div>
+                {% endif %}
               </div>
             </div>
 
-            <div class="input-group mb-3">
-              <input type="text" class="form-control" placeholder="Last name" name="lastname" id="lastname" required>
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-user"></span>
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                  </span>
                 </div>
-              </div>
-              <div class="invalid-feedback">
-                Please input your last name
+                <input type="text" class="form-control {{ 'is-invalid' if 'lastname' in error_messages else '' }}" placeholder="Last name" name="lastname" id="lastname" value="{{ request.form.lastname }}" required>
+                {% if 'lastname' in error_messages %}
+                  <div class="invalid-feedback">
+                    {{ error_messages['lastname'] }}
+                  </div>
+                {% endif %}
               </div>
             </div>
 
-            <div class="input-group mb-3">
-              <input type="email" class="form-control" placeholder="Email" name="email" id="email" required>
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-envelope"></span>
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-envelope"></i>
+                  </span>
                 </div>
-              </div>
-              <div class="invalid-feedback">
-                Please input a valid email address
+                <input type="email" class="form-control {{ 'is-invalid' if 'email' in error_messages else '' }}" placeholder="Email" name="email" id="email" value="{{ request.form.email }}" required>
+                {% if 'email' in error_messages %}
+                  <div class="invalid-feedback">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ error_messages['email'] }}
+                  </div>
+                {% endif %}
               </div>
             </div>
 
             <p class="login-box-msg">Enter your account details below</p>
 
-            <div class="input-group mb-3">
-              <input type="text" class="form-control" placeholder="Username" name="username" id="username" required>
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-user"></span>
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                  </span>
                 </div>
-              </div>
-              <div class="invalid-feedback">
-                Please input desired username
+                <input type="text" class="form-control {{ 'is-invalid' if 'username' in error_messages else '' }}" placeholder="Username" name="username" id="username" value="{{ request.form.username }}" required>
+                {% if 'email' in error_messages %}
+                  <div class="invalid-feedback">
+                    {{ error_messages['username'] }}
+                  </div>
+                {% endif %}
               </div>
             </div>
 
-            <div class="input-group mb-3">
-              <input type="password" class="form-control" placeholder="Password" id="password" name="password" id="password" required>
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-lock"></span>
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-lock"></i>
+                  </span>
                 </div>
-              </div>
-              <div class="invalid-feedback">
-                Please input desired username
+                <input type="password" class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}" placeholder="Password" id="password" name="password" required>
+                {% if 'email' in error_messages %}
+                  <div class="invalid-feedback">
+                    {{ error_messages['password'] }}
+                  </div>
+                {% endif %}
               </div>
             </div>
 
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-lock"></i>
+                  </span>
+                </div>
+                <input type="password" class="form-control {{ 'is-invalid' if 'rpassword' in error_messages else '' }}" placeholder="Retype password" id="rpassword" name="rpassword" required>
+                {% if 'rpassword' in error_messages %}
+                  <div class="invalid-feedback">
+                    {{ error_messages['rpassword'] }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
 
-          <div class="form-group has-feedback">
-            <input type="password" class="form-control" placeholder="Retype password" name="rpassword" data-match="#password" data-match-error="Password confirmation does not match" required>
-            <span class="fas fa-lock form-control-feedback"></span>
-            <span class="help-block with-errors"></span>
-          </div>
-
-          {% if captcha_enable %}
-            <div class="input-group mb-3">
-              <p class="login-box-msg">Please complete the CAPTCHA below</p>
+            {% if captcha_enable %}
+            <p class="login-box-msg">Please complete the CAPTCHA below</p>
+            <div class="form-group has-feedback">
               {{ captcha() }}
-              <br>
-              <input type="text" class="form-control" placeholder="CAPTCHA" id="captcha" name="captcha" required>
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-lock"></span>
-                </div>
-              </div>
-              <div class="invalid-feedback">
-                Please complete the CAPTCHA
-              </div>
+              <input type="text" class="form-control" placeholder="CAPTCHA"  name="captcha"
+                data-error="Please complete the CAPTCHA" required>
+              <span class="help-block with-errors"></span>
             </div>
           {% endif %}
 
@@ -133,7 +156,7 @@
           </div>
         </form>
       </div>
-      <div class="login--footer">
+      <div class="login-box-footer">
         <center>
           <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
         </center>
@@ -151,24 +174,6 @@
           window.location.href = '{{ url_for('index.login') }}';
         })
       });
-      (function() {
-  'use strict';
-  window.addEventListener('load', function() {
-    // Fetch all the forms we want to apply custom Bootstrap validation styles to
-    var forms = document.getElementsByClassName('needs-validation');
-    // Loop over them and prevent submission
-    var validation = Array.prototype.filter.call(forms, function(form) {
-      form.addEventListener('submit', function(event) {
-        if (form.checkValidity() === false) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      }, false);
-    });
-  }, false);
-})();
-
     </script>
   </body>
 </html>

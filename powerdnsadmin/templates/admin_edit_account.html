@@ -1,9 +1,14 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_accounts" %}
-{% block title %}<title>Edit Account - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block title %}
+<title>
+  Edit Account - {{ SITE_NAME }}
+</title>
+{% endblock %}
 
 {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -30,7 +35,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-4">
-        <div class="card card-primary">
+        <div class="card shadow">
           <div class="card-header with-border">
             <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} account</h3>
           </div>
@@ -107,8 +112,8 @@
           </form>
         </div>
       </div>
-      <div class="col-6">
-        <div class="card card-primary">
+      <div class="col-8">
+        <div class="card shadow">
           <div class="card-header with-border">
             <h3 class="card-title">Help with creating a new account</h3>
           </div>

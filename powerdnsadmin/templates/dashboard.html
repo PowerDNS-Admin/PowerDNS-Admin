@@ -36,7 +36,7 @@
       {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
         <div class="row">
           <div class="col-3">
-            <div class="card">
+            <div class="card shadow card-outline card-secondary">
               <div class="card-header">
                 <h3 class="card-title">Statistics</h3>
               </div>
@@ -104,7 +104,7 @@
             </div>
           </div>
           <div class="col-9">
-            <div class="card">
+            <div class="card shadow card-outline card-secondary">
               <div class="card-header">
                 <h3 class="card-title">Recent History</h3>
               </div>
@@ -151,35 +151,34 @@
           </div>
         </div>
       {% endif %}
-      <!--SYBPATCH START-->
-      <row>
-        <div class="nav-tabs-custom">
-          <ul class="nav nav-tabs" id="custom-content-below-tab" role="tablist">
-            <li class="nav-link">
-              <a href="#tab_{{custom_boxes.order[0]}}"data-toggle="pill" role="tab">
-                Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b>
-              </a>
-            </li>
-            {% for boxId in custom_boxes.order[1:] %}
-              <li class="nav-link" >
-                <a href="#tab_{{boxId}}" data-toggle="pill" role="tab">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></a>
-              </li>
-            {% endfor %}
-          </ul>
-          <div class="tab-content">
-            {% for boxId in custom_boxes.order %}
-              <div class="tab-pane" id='tab_{{boxId}}'>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="card">
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow card-outline card-secondary">
+            <div class="card-header">
+              <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs" id="custom-content-below-tab" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#tab_{{custom_boxes.order[0]}}" data-toggle="pill" role="tab">
+                      Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b>
+                    </a>
+                  </li>
+                  {% for boxId in custom_boxes.order[1:] %}
+                    <li class="nav-item" >
+                      <a class="nav-link" href="#tab_{{boxId}}" data-toggle="pill" role="tab">Hosted Domains <b>{{custom_boxes.boxes[boxId][0]}}</b></a>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <div class="tab-content">
+                  {% for boxId in custom_boxes.order %}
+                    <div class="tab-pane" id='tab_{{boxId}}'>
                       <div class="card-header">
-                        <h3 class="card-title">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>
-                          {% if show_bg_domain_button %}
-                            <button type="button" class="btn btn-primary refresh-bg-button float-right">
-                              <i class="fas fa-sync"></i>
-                              &nbsp;Sync domains
-                            </button>
-                          {% endif %}
+                        <h3 class="card-title">Hosted Domains <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>
+                        {% if show_bg_domain_button %}
+                          <button type="button" class="btn btn-primary refresh-bg-button float-right">
+                            <i class="fas fa-sync"></i>
+                            &nbsp;Sync domains
+                          </button>
+                        {% endif %}
                       </div>
                       <div class="card-body">
                         <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
@@ -191,23 +190,22 @@
                               <th>Serial</th>
                               <th>Master</th>
                               <th>Account</th>
-                              <th>Action</th>
+                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
                           </tbody>
                         </table>
                       </div>
-                  </div>
-                </div>
+                    </div>
+                  {% endfor %}
                 </div>
               </div>
-            {% endfor %}
-          </div><!-- /.tab-content -->
-        </div><!-- custom tabs -->
-        <!--SYBPATCH END-->
-      </row>
-  </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 {% endblock %}
 
@@ -217,7 +215,7 @@
     function setUpDomainList(id ,url){
         $(id).DataTable({
             "paging" : true,
-            "lengthChange" : false,
+            "lengthChange" : true,
             language: {
                 searchPlaceholder: "Use ^ and $ for start and end",
             },
