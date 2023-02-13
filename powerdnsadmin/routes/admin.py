@@ -2021,7 +2021,6 @@ def delete_template(template):
 
 @admin_bp.route('/global-search', methods=['GET'])
 @login_required
-@operator_role_required
 def global_search():
     if request.method == 'GET':
         domains = []
@@ -2032,6 +2031,22 @@ def global_search():
         if query:
             server = Server(server_id='localhost')
             results = server.global_search(object_type='all', query=query)
+
+            # Filter results to domains to which the user has access permission
+            if current_user.role.name not in [ 'Administrator', 'Operator' ]:
+                allowed_domains = db.session.query(Domain) \
+                    .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+                    .outerjoin(Account, Domain.account_id == Account.id) \
+                    .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+                    .filter(
+                        db.or_(
+                            DomainUser.user_id == current_user.id,
+                            AccountUser.user_id == current_user.id
+                        )) \
+                    .with_entities(Domain.name) \
+                    .all()
+                allowed_domains = [value for value, in allowed_domains]
+                results = list(filter(lambda r: r['zone_id'][:-1] in allowed_domains, results))
 
             # Format the search result
             for result in results:
