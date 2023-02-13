@@ -665,7 +665,7 @@ def register():
       email = request.form.get('email', '').strip()
       rpassword = request.form.get('rpassword', '')
 
-      is_valid_email = re.compile(r'[\w\.-]+@[\w\.-]+')
+      is_valid_email = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
       error_messages = {}
       if not firstname:
