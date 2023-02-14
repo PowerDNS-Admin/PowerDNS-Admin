@@ -52,15 +52,15 @@
                   {{ setting }}
                 </td>
                 {% if SETTING.get(setting) in [False] %}
-                  <td>{{ SETTING.get(setting)|display_setting_state }}</td>
-                  <td width="6%">
+                  <td><i class="fas fa-toggle-off"></i>&nbsp;Off</td>
+                  <td width="20%">
                     <button type="button" class="btn btn-success setting-toggle-button" id="{{ setting }}">
                       <i class="fas fa-toggle-on"></i>&nbsp;Turn On
                     </button>
                   </td>
                 {% elif SETTING.get(setting) in [True] %}
-                  <td>{{ SETTING.get(setting)|display_setting_state }}</td>
-                  <td width="6%">
+                  <td><i class="fas fa-toggle-on"></i>&nbsp;On</td>
+                  <td width="20%">
                     <button type="button" class="btn btn-danger setting-toggle-button" id="{{ setting }}">
                       <i class="fas fa-toggle-off"></i>&nbsp;Turn Off
                     </button>
@@ -69,7 +69,7 @@
                   <td>
                     <input name="value" id="value" value="{{ SETTING.get(setting) }}">
                   </td>
-                  <td width="6%">
+                  <td width="20%">
                     <button type="button" class="btn btn-primary setting-save-button" id="{{ setting }}">
                       <i class="fas fa-save"></i>&nbsp;Save
                     </button>
@@ -87,7 +87,7 @@
 
 {% block extrascripts %}
   <script>
-    // set up history data table
+    // set up settings table
     $("#tbl_settings").DataTable({
       "paging": false,
       "lengthChange": false,

@@ -67,13 +67,13 @@
                 </div>
                 <div class="radio">
                   <label>
-                    <input type="radio" name="radio_type" id="radio_type_master" value="master">
+                    <input type="radio" name="radio_type" id="radio_type_primary" value="primary">
                     Primary
                   </label>
                 </div>
                 <div class="radio">
                   <label>
-                    <input type="radio" name="radio_type" id="radio_type_slave" value="slave">
+                    <input type="radio" name="radio_type" id="radio_type_secondary" value="secondary">
                     Secondary
                   </label>
                 </div>
@@ -87,8 +87,8 @@
                   {% endfor %}
                 </select>
               </div>
-              <div class="form-group" style="display: none;" id="domain_master_address_div">
-                <input type="text" class="form-control" name="domain_master_address" id="domain_master_address" placeholder="Enter valid master ip addresses (separated by commas)">
+              <div class="form-group" style="display: none;" id="domain_primary_address_div">
+                <input type="text" class="form-control" name="domain_primary_address" id="domain_primary_address" placeholder="Enter valid Primary Server IP addresses (separated by commas)">
               </div>
               <div class="form-group">
                 <label>SOA-EDIT-API</label>
@@ -193,10 +193,10 @@
   <script>
     $("input[name=radio_type]").change(function () {
       var type = $(this).val();
-      if (type == "slave") {
-        $("#domain_master_address_div").show();
+      if (type == "secondary") {
+        $("#domain_primary_address_div").show();
       } else {
-        $("#domain_master_address_div").hide();
+        $("#domain_primary_address_div").hide();
       }
     });
   </script>

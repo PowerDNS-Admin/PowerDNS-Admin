@@ -170,7 +170,7 @@
                 </ul>
                 <div class="tab-content">
                   {% for boxId in custom_boxes.order %}
-                    <div class="tab-pane" id='tab_{{boxId}}'>
+                    <div class="tab-pane fade show" id='tab_{{boxId}}'>
                       <div class="card-header">
                         <h3 class="card-title">Hosted Domains <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>
                         {% if show_bg_domain_button %}

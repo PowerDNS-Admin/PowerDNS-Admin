@@ -61,7 +61,7 @@
           </div>
           <form role="form" method="post" action="{{ url_for('admin.create_template') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            <div class="box-body">
+            <div class="card-body">
               <div class="form-group">
                 <input type="text" class="form-control" name="name" id="name"
                 placeholder="Enter a valid template name (required)">
@@ -105,10 +105,10 @@
 <script>
   $("input[name=radio_type]").change(function () {
     var type = $(this).val();
-    if (type == "slave") {
-      $("#domain_master_address_div").show();
+    if (type == "secondary") {
+      $("#domain_primary_address_div").show();
     } else {
-      $("#domain_master_address_div").hide();
+      $("#domain_primary_address_div").hide();
     }
   });
 </script>

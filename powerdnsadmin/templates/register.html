@@ -47,6 +47,7 @@
                 <input type="text" class="form-control {{ 'is-invalid' if 'firstname' in error_messages else '' }}" placeholder="First Name" name="firstname" id="firstname" value="{{ request.form.firstname }}" required>
                 {% if 'firstname' in error_messages %}
                   <div class="invalid-feedback">
+                    <i class="fas fa-exclamation-triangle"></i>
                     {{ error_messages['firstname'] }}
                   </div>
                 {% endif %}
@@ -63,6 +64,7 @@
                 <input type="text" class="form-control {{ 'is-invalid' if 'lastname' in error_messages else '' }}" placeholder="Last name" name="lastname" id="lastname" value="{{ request.form.lastname }}" required>
                 {% if 'lastname' in error_messages %}
                   <div class="invalid-feedback">
+                    <i class="fas fa-exclamation-triangle"></i>
                     {{ error_messages['lastname'] }}
                   </div>
                 {% endif %}
@@ -96,8 +98,9 @@
                   </span>
                 </div>
                 <input type="text" class="form-control {{ 'is-invalid' if 'username' in error_messages else '' }}" placeholder="Username" name="username" id="username" value="{{ request.form.username }}" required>
-                {% if 'email' in error_messages %}
+                {% if 'username' in error_messages %}
                   <div class="invalid-feedback">
+                    <i class="fas fa-exclamation-triangle"></i>
                     {{ error_messages['username'] }}
                   </div>
                 {% endif %}
@@ -112,8 +115,9 @@
                   </span>
                 </div>
                 <input type="password" class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}" placeholder="Password" id="password" name="password" required>
-                {% if 'email' in error_messages %}
+                {% if 'password' in error_messages %}
                   <div class="invalid-feedback">
+                    <i class="fas fa-exclamation-triangle"></i>
                     {{ error_messages['password'] }}
                   </div>
                 {% endif %}
@@ -130,6 +134,7 @@
                 <input type="password" class="form-control {{ 'is-invalid' if 'rpassword' in error_messages else '' }}" placeholder="Retype password" id="rpassword" name="rpassword" required>
                 {% if 'rpassword' in error_messages %}
                   <div class="invalid-feedback">
+                    <i class="fas fa-exclamation-triangle"></i>
                     {{ error_messages['rpassword'] }}
                   </div>
                 {% endif %}
@@ -138,20 +143,28 @@
 
             {% if captcha_enable %}
             <p class="login-box-msg">Please complete the CAPTCHA below</p>
-            <div class="form-group has-feedback">
+            <div class="form-group">
               {{ captcha() }}
-              <input type="text" class="form-control" placeholder="CAPTCHA"  name="captcha"
-                data-error="Please complete the CAPTCHA" required>
-              <span class="help-block with-errors"></span>
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-shield-alt"></i>
+                  </span>
+                </div>
+              <input type="text" class="form-control {{ 'is-invalid' if 'captcha_result' in error_messages else '' }}" placeholder="CAPTCHA"  id="captcha" name="captcha" required>
+              {% if 'captcha_result' in error_messages %}
+                <div class="invalid-feedback">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  {{ error_messages['captcha_result'] }}
+                </div>
+              {% endif %}
             </div>
           {% endif %}
 
           <div class="row">
-            <div class="col-6">
-              <button type="button" class="btn btn-block" id="button_back">Back</button>
-            </div>
-            <div class="col-4">
-              <button type="submit" class="btn btn-primary btn-block">Register</button>
+            <div class="d-flex justify-content-between mx-auto mt-3">
+              <button type="button" class="btn btn-secondary" id="button_back">Back</button>
+              <button type="submit" class="btn btn-primary mx-3">Register</button>
             </div>
           </div>
         </form>

@@ -35,7 +35,7 @@
   <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
+            <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Authentication Settings</h3>
                 </div>
@@ -46,20 +46,36 @@
                         {{ result['msg'] }}
                     </div>
                     {% endif %}
-                    <div class="nav-tabs-custom" id="tabs">
-                        <ul class="nav nav-tabs">
-                            <li class="active"><a href="#tabs-general" data-toggle="tab">General</a></li>
-                            <li><a href="#tabs-ldap" data-toggle="tab">LDAP</a></li>
-                            <li><a href="#tabs-google" data-toggle="tab">Google OAuth</a></li>
-                            <li><a href="#tabs-github" data-toggle="tab">Github OAuth</a></li>
-                            <li><a href="#tabs-azure" data-toggle="tab">Microsoft OAuth</a></li>
-                            <li><a href="#tabs-oidc" data-toggle="tab">OpenID Connect OAuth</a></li>
+                    <div class="nav-tabs-custom">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                              <a class="nav-link active" href="#tabs-general" data-toggle="pill" role="tab">General</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" href="#tabs-ldap" data-toggle="pill" role="tab">LDAP</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" href="#tabs-google" data-toggle="pill" role="tab">Google OAuth</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" href="#tabs-github" data-toggle="pill" role="tab">Github OAuth</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" href="#tabs-azure" data-toggle="pill" role="tab">Microsoft OAuth</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" href="#tabs-oidc" data-toggle="pill" role="tab">OpenID Connect OAuth</a>
+                            </li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tabs-general">
                                 <form role="form" method="post">
                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" value="general" name="config_tab" />
+                                    <div class="card-header">
+                                      <h3 class="card-title">Basic Settings</h3>
+                                    </div>
+                                    <div class="card-body">
                                     <div class="form-group">
                                         <input type="checkbox" id="local_db_enabled" name="local_db_enabled" class="checkbox" {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
                                         <label for="local_db_enabled">Local DB Authentication</label>
@@ -68,10 +84,8 @@
                                         <input type="checkbox" id="signup_enabled" name="signup_enabled" class="checkbox" {% if SETTING.get('signup_enabled') %}checked{% endif %}>
                                         <label for="signup_enabled">Allow users to sign up</label>
                                     </div>
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-flat btn-primary">Save</button>
-                                    </div>
-                                    
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                  </div>
                                 </form>
                             </div>
                             <div class="tab-pane" id="tabs-ldap">
@@ -332,6 +346,8 @@
                             <div class="tab-pane" id="tabs-google">
                                 <div class="row">
                                     <div class="col-4">
+                                      <div class="card">
+                                        <div class="card-body">
                                         <form role="form" method="post" data-toggle="validator">
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" value="google" name="config_tab" />
@@ -375,15 +391,23 @@
                                                     <span class="help-block with-errors"></span>
                                                 </div>
                                             </fieldset>
-                                            <div class="form-group">
-                                                <button type="submit" class="btn btn-flat btn-primary">Save</button>
+                                            <div class="card-footer">
+                                                <button type="submit" class="btn btn-primary float-right">Save</button>
                                             </div>
                                         </form>
+                                        </div>
+                                      </div>
                                     </div>
                                     <div class="col-8">
-                                        <legend>Help</legend>
-                                        <p>Fill in all the fields in the left form.</p>
-                                        <p>Make sure you add PDA redirection URI (e.g http://localhost:9191/google/authorized) to your Google App Credentials Restriction.</p>
+                                      <div class="card">
+                                        <div class="card-header">
+                                          <h3 class="card-title">Help</h3>
+                                        </div>
+                                        <div class="card-body">
+                                          <p>Fill in all the fields in the left form.</p>
+                                          <p>Make sure you add PDA redirection URI (e.g http://localhost:9191/google/authorized) to your Google App Credentials Restriction.</p>
+                                        </div>
+                                      </div>
                                     </div>
                                 </div>
                             </div>
@@ -1084,15 +1108,12 @@
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" id="button_cancel" name="purge" value="OFF" data-dismiss="modal" >Cancel</button>
-                <button type="button" class="btn btn-flat btn-success" id="button_confirm">Confirm</button>
+                <button type="button" class="btn btn-default pull-left" id="button_cancel" name="purge" value="OFF" data-dismiss="modal" >Cancel</button>
+                <button type="button" class="btn btn-success" id="button_confirm">Confirm</button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
-
 
 <div class="modal fade modal-warning" id="modal_warning" data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog">
@@ -1107,13 +1128,9 @@
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-success" id="button_warning_confirm">Yes I understand</button>
+                <button type="button" class="btn btn-success" id="button_warning_confirm">Yes I understand</button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
-
-
 {% endblock %}
