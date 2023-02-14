@@ -34,22 +34,22 @@
         <div class="card">
           <div class="card-header">
             {% if domain.type != 'Secondary' %}
-              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary pull-left button_add_record" id="{{ domain.name }}">
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left button_add_record" id="{{ domain.name }}">
                 <i class="fas fa-plus"></i>
                 &nbsp;Add Record
               </button>
-              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary pull-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
                 <i class="fas fa-save"></i>
                 &nbsp;Apply Changes
               </button>
             {% else %}
-              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary pull-left button_update_from_primary" id="{{ domain.name }}">
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left button_update_from_primary" id="{{ domain.name }}">
                 <i class="fas fa-download"></i>
                 &nbsp;Update from Primary
               </button>
             {% endif %}
             {% if current_user.role.name in ['Administrator', 'Operator'] %}
-              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary pull-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
                 <i class="fas fa-cog"></i>
                 &nbsp;Admin
               </button>
