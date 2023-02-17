@@ -795,7 +795,7 @@ class DetailedHistory():
         if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
             self.detailed_msg = render_template_string("""
                     <table class="table table-bordered table-striped">
-                        <tr><td>Domain type:</td><td>{{ domaintype }}</td></tr>
+                        <tr><td>Domain Type:</td><td>{{ domaintype }}</td></tr>
                         <tr><td>Account:</td><td>{{ account }}</td></tr>
                     </table>
                 """,
@@ -804,22 +804,23 @@ class DetailedHistory():
 
         elif 'authenticator' in detail_dict: # this is a user authentication
             self.detailed_msg = render_template_string("""
-                <table class="table table-bordered table-striped" style="width:565px;">
-                    <thead>
-                        <tr>
-                            <th colspan="3" style="background: rgba({{ background_rgba }});">
-                                <p style="color:white;">User {{ username }} authentication {{ auth_result }}</p>
-                            </th>
-                        </tr>
-                    </thead>
+                <table class="table table-bordered table-striped"">
                     <tbody>
                         <tr>
-                            <td>Authenticator Type:</td>
-                            <td colspan="2">{{ authenticator }}</td>
+                            <td>Username:</td>
+                            <td>{{ username }}</td>
                         </tr>
                         <tr>
-                            <td>IP Address</td>
-                            <td colspan="2">{{ ip_address }}</td>
+                            <td>Authentication Result:</td>
+                            <td>{{ auth_result }}</td>
+                        </tr>
+                        <tr>
+                            <td>Authenticator Type:</td>
+                            <td>{{ authenticator }}</td>
+                        </tr>
+                        <tr>
+                            <td>IP Address:</td>
+                            <td>{{ ip_address }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -961,6 +962,13 @@ def history():
 				jsonify({
 					'status': 'error',
 					'msg': 'You do not have permission to remove history.'
+				}), 401)
+
+		if Setting().get('preserve_history'):
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'History removal is not allowed (toggle preserve_history in settings).'
 				}), 401)
 
 		h = History()
@@ -1318,6 +1326,7 @@ def setting_basic():
         'otp_field_enabled',
         'otp_force',
         'pdns_api_timeout',
+        'preserve_history',
         'pretty_ipv6_ptr',
         'record_helper',
         'record_quick_edit',

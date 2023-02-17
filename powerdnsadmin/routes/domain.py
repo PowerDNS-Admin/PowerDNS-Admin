@@ -89,14 +89,14 @@ def domain(domain_name):
     #   - Find a way to make it consistent, or
     #   - Only allow one comment for that case
     if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
+        pretty_v6 = Setting().get('pretty_ipv6_ptr')
         for r in rrsets:
             if r['type'] in records_allow_to_edit:
                 r_name = r['name'].rstrip('.')
 
                 # If it is reverse zone and pretty_ipv6_ptr setting
                 # is enabled, we reformat the name for ipv6 records.
-                if Setting().get('pretty_ipv6_ptr') and r[
-                        'type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+                if pretty_v6 and r['type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
                     r_name = dns.reversename.to_address(
                         dns.name.from_text(r_name))
 

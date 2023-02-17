@@ -1,90 +1,86 @@
-
 {% import 'applied_change_macro.html' as applied_change_macro %}
 
-
 {% if len_histories >= lim %}
-<p style="color: rgb(224, 3, 3);"><b>Limit of loaded history records has been reached! Only {{lim}} history records are shown. </b></p>
+  <p style="color: rgb(224, 3, 3);">
+    <b>Limit of loaded history records has been reached! Only {{lim}} history records are shown.</b>
+  </p>
 {% endif %}
 
-<div class="box-body"></div>
-    <table id="tbl_history" class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Changed by</th>
-                <th>Content</th>
-                <th>Time</th>
-                <th>Detail</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for history in histories %}
-            <tr class="odd gradeX">
-                <td>{{ history.history.created_by }}</td>
-                <td>{{ history.history.msg }}</td>
-                <td>{{ history.history.created_on }}</td>
-                
-                <td width="6%">
-                    <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
-                        {{ history.detailed_msg | safe }}
-                        {% if history.change_set %}
-                        <div class="content">
-                            <div id="change_index_definition"></div>
-                            {% call applied_change_macro.applied_change_template(history.change_set) %}
-                            {% endcall %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <button type="button" class="btn btn-flat btn-primary history-info-button"
-                        {% if history.detailed_msg == "" and history.change_set is none %}
-                        style="visibility: hidden;"
-			{% endif %} value="{{ loop.index0 }}">Info&nbsp;<i class="fa fa-info"></i>
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card-body"></div>
+  <table id="tbl_history" class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>Changed by</th>
+        <th>Content</th>
+        <th>Time</th>
+        <th>Detail</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for history in histories %}
+        <tr class="odd gradeX">
+          <td>{{ history.history.created_by }}</td>
+          <td>{{ history.history.msg }}</td>
+          <td>{{ history.history.created_on }}</td>
+          <td width="6%">
+            <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
+              {{ history.detailed_msg | safe }}
+              {% if history.change_set %}
+                <div class="content">
+                  <div id="change_index_definition"></div>
+                  {% call applied_change_macro.applied_change_template(history.change_set) %}
+                  {% endcall %}
+                </div>
+              {% endif %}
+            </div>
+            <button type="button" class="btn btn-primary history-info-button"
+              {% if history.detailed_msg == "" and history.change_set is none %}
+                style="visibility: hidden;"
+              {% endif %} value="{{ loop.index0 }}">
+              <i class="fa-solid fa-info"></i>
+              &nbsp;Info
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
 <script>
-var table;
-$(document).ready(function () {
-
-        table = $('#tbl_history').DataTable({
-            "order": [
-                [2, "desc"]
-            ],
-            "searching": true,
-            "columnDefs": [{
-                "type": "time",
-                "render": function (data, type, row) {
-                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
-                },
-                "targets": 2
-            }],
-            "info": true,
-            "autoWidth": false,
-            orderCellsTop: true,
-            fixedHeader: true
-        });
-
+  var table;
+  $(document).ready(function () {
+    table = $('#tbl_history').DataTable({
+      "order": [
+        [2, "desc"]
+      ],
+      "searching": true,
+      "columnDefs": [{
+        "type": "time",
+        "render": function (data, type, row) {
+          return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+        },
+        "targets": 2
+      }],
+      "info": true,
+      "autoWidth": false,
+      orderCellsTop: true,
+      fixedHeader: true
+    });
     $(document.body).on('click', '.history-info-button', function () {
-        var modal = $("#modal_history_info");
-        var history_id = $(this).val();
-        var info = $("#history-info-div-" + history_id).html();
-        $('#modal-info-content').html(info);
-        modal.modal('show');
+      var modal = $("#modal_history_info");
+      var history_id = $(this).val();
+      var info = $("#history-info-div-" + history_id).html();
+      $('#modal-info-content').html(info);
+      modal.modal('show');
     });
-
     $(document.body).on("click", ".button-filter", function (e) {
-        e.stopPropagation();
-        var nextRow = $("#filter-table")
-        if (nextRow.css("visibility") == "visible")
-            nextRow.css("visibility", "collapse")
-        else
-            nextRow.css("visibility", "visible")
+      e.stopPropagation();
+      var nextRow = $("#filter-table")
+      if (nextRow.css("visibility") == "visible")
+          nextRow.css("visibility", "collapse")
+      else
+        nextRow.css("visibility", "visible")
     });
-
-});
-
+  });
 </script>
