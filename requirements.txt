@@ -37,5 +37,5 @@ PyYAML==6.0
 Flask-Mail==0.9.1
 Flask-SSLify==0.1.5
 Flask-Session==0.4.0
-lxml==4.6.5
+lxml==4.9.1
 pytest==7.2.0
