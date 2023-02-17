@@ -11,7 +11,7 @@ from .base import db
 
 class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
+    name = db.Column(db.String(64), unique=True, index=True)
     value = db.Column(db.Text())
 
     defaults = {
