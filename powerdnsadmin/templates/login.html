@@ -8,7 +8,6 @@
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <META HTTP-EQUIV="REFRESH" CONTENT="{{ 60 * SETTING.get('session_timeout') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css">
     {% assets "css_login" -%}
       <link rel="stylesheet" href="{{ ASSET_URL }}">
     {%- endassets %}
@@ -103,25 +102,25 @@
               {% endif %}
               {% if SETTING.get('oidc_oauth_enabled') %}
                 <a href="{{ url_for('index.oidc_login') }}" class="btn btn-block btn-social btn-openid btn-flat">
-                  <i class="fa fa-openid"></i>
+                  <i class="fa-brands fa-openid"></i>
                   Sign in using OpenID Connect
                 </a>
               {% endif %}
               {% if SETTING.get('github_oauth_enabled') %}
                 <a href="{{ url_for('index.github_login') }}" class="btn btn-block btn-social btn-github btn-flat">
-                  <i class="fa fa-github"></i>
+                  <i class="fa-brands fa-github"></i>
                   Sign in using Github
                 </a>
               {% endif %}
               {% if SETTING.get('google_oauth_enabled') %}
                 <a href="{{ url_for('index.google_login') }}" class="btn btn-block btn-social btn-google btn-flat">
-                  <i class="fa fa-google"></i>
+                  <i class="fa-brands fa-google"></i>
                   Sign in using Google
                 </a>
               {% endif %}
               {% if SETTING.get('azure_oauth_enabled') %}
                 <a href="{{ url_for('index.azure_login') }}" class="btn btn-block btn-social btn-microsoft btn-flat">
-                  <i class="fa fa-windows"></i>
+                  <i class="fa-brands fa-windows"></i>
                   Sign in using Microsoft Azure
                 </a>
               {% endif %}

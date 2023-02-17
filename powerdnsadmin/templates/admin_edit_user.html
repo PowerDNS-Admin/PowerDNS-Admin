@@ -47,7 +47,7 @@
               {% if error %}
                 <div class="alert alert-danger alert-dismissible">
                   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                  <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                  <h4><i class="fa-solid fa-ban"></i> Error!</h4>
                   {{ error }}
                 </div>
                 <span class="help-block">{{ error }}</span>
@@ -56,19 +56,19 @@
                 <label class="control-label" for="firstname">First Name</label>
                 <input type="text" class="form-control" placeholder="First Name" name="firstname"
                   {% if user %}value="{{ user.firstname }}" {% endif %}>
-                <span class="glyphicon glyphicon-user form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
               </div>
               <div class="form-group has-feedback">
                 <label class="control-label" for="lastname">Last Name</label>
                 <input type="text" class="form-control" placeholder="Last name" name="lastname"
                   {% if user %}value="{{ user.lastname }}" {% endif %}>
-                <span class="glyphicon glyphicon-user form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
               </div>
               <div class="form-group has-feedback">
                 <label class="control-label" for="email">E-mail address</label>
                 <input type="email" class="form-control" placeholder="Email" name="email" id="email"
                   {% if user %}value="{{ user.email }}" {% endif %}>
-                <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
               </div>
               <p class="login-box-msg">Enter the account details below</p>
               <div class="form-group has-feedback">
@@ -76,14 +76,14 @@
                 <input type="text" class="form-control" placeholder="Username" name="username"
                   {% if user %}value="{{ user.username }}" {% endif %}
                   {% if not create %}disabled{% endif %}>
-                <span class="glyphicon glyphicon-user form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
               </div>
               <div class="form-group has-feedback {% if blank_password %}has-error{% endif %}">
                 <label class="control-label" for="username">Password</label>
                 <input type="password" class="form-control"
                   placeholder="Password {% if create %}(Required){% else %}(Leave blank to keep unchanged){% endif %}"
                   name="password">
-                <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
                 {% if blank_password %}
                   <span class="help-block">The password cannot be blank.</span>
                 {% endif %}
@@ -98,8 +98,8 @@
         </div>
         {% if not create %}
           {% if user.otp_secret %}
-            <div class="card card-secondary">
-              <div class="card-header with-border">
+            <div class="card">
+              <div class="card-header">
                 <h3 class="card-title">Two Factor Authentication</h3>
               </div>
               <div class="card-body">
@@ -119,8 +119,8 @@
         {% endif %}
       </div>
       <div class="col-8">
-        <div class="card card-secondary">
-          <div class="card-header with-border">
+        <div class="card">
+          <div class="card-header">
             <h3 class="card-title">
               Help with {% if create %}creating a new{% else%}editing a{% endif %} user
             </h3>
@@ -168,18 +168,21 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <h4 class="modal-title">Confirmation</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Confirmation</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_otp_disable_confirm">Disable Two Factor
-                    Authentication</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                  Close
+                </button>
+                <button type="button" class="btn btn-danger float-right" id="button_otp_disable_confirm">
+                  Disable Two Factor Authentication
+                </button>
             </div>
         </div>
     </div>

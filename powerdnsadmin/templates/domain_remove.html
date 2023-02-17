@@ -34,9 +34,9 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-4">
-        <div class="card shadow card-outline card-secondary">
+        <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Remove domain</h3>
+            <h3 class="card-title">Remove Domain</h3>
           </div>
           <form role="form" method="post" action="{{ url_for('domain.remove') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
@@ -50,23 +50,25 @@
               <br />
             </div>
             <div class="card-footer">
-              <button type="button" class="btn btn-default" onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
-                Cancel
+              <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
+                <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
               </button>
-              <button type="button" class="btn btn-danger button_delete float-right">Remove</button>
+              <button type="button" class="btn btn-danger button_delete float-right">
+                <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove
+              </button>
             </div>
           </form>
         </div>
       </div>
       <div class="col-8">
-        <div class="card shadow card-outline card-secondary">
+        <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Help with removing a new domain</h3>
+            <h3 class="card-title">Help with removing a domain</h3>
           </div>
           <div class="card-body">
             <dl class="dl-horizontal">
-              <dt>Domain name</dt>
-              <dd>Select domain you wish to remove from DNS.</dd>
+              <dt>Domain Name</dt>
+              <dd>Select the domain you wish to remove from the system.</dd>
             </dl>
             <p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a></p>
           </div>
@@ -122,11 +124,11 @@
         <p></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" id="button_delete_cancel" data-dismiss="modal">
-          Close
+        <button type="button" class="btn btn-secondary" id="button_delete_cancel" data-dismiss="modal">
+          <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
         </button>
         <button type="button" class="btn btn-danger float-right" id="button_delete_confirm">
-          Delete
+          <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove
         </button>
       </div>
     </div>

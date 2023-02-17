@@ -34,8 +34,8 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-4">
-        <div class="card shadow card-outline card-secondary">
-          <div class="card-header with-border">
+        <div class="card">
+          <div class="card-header">
             <h3 class="card-title">Create new domain</h3>
           </div>
           <form role="form" method="post" action="{{ url_for('domain.add') }}">
@@ -118,19 +118,19 @@
               </div>
             </div>
             <div class="card-footer">
-              <button type="submit" class="btn btn-primary">
-                Submit
+              <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
+                <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
               </button>
-              <button type="button" class="btn btn-default" onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
-                Cancel
+              <button type="submit" class="btn btn-primary float-right">
+                <i class="fa-solid fa-save"></i>&nbsp;Create
               </button>
             </div>
           </form>
         </div>
       </div>
       <div class="col-8">
-        <div class="card shadow card-outline card-secondary">
-          <div class="card-header with-border">
+        <div class="card">
+          <div class="card-header">
             <h3 class="card-title">Help with creating a new domain</h3>
           </div>
           <div class="card-body">
@@ -218,18 +218,18 @@
     <div class="modal-dialog">
       <div class="modal-content modal-sm">
         <div class="modal-header alert-danger">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
-            <span aria-hidden="true">&times;</span>
-          </button>
           <h4 class="modal-title">
             WARNING
           </h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
         <div class="modal-body">
           <p></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-flat btn-primary center-block" data-dismiss="modal" id="button_confirm_warn_modal">
+          <button type="button" class="btn btn-primary center-block" data-dismiss="modal" id="button_confirm_warn_modal">
             CLOSE
           </button>
         </div>

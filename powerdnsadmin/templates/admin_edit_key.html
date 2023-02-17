@@ -37,8 +37,8 @@
   <div class="container-fluid">
   <div class="row">
     <div class="col-4">
-      <div class="card card-primary">
-        <div class="card-header with-border">
+      <div class="card ">
+        <div class="card-header">
           <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} Key</h3>
         </div>
         <form role="form" method="post"
@@ -65,7 +65,7 @@
                 <span class="glyphicon glyphicon-pencil form-control-feedback"></span>
               </div>
             </div>
-            <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+            <div class="card-header key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
               <h3 class="card-title">Accounts Access Control</h3>
             </div>
             <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
@@ -80,7 +80,7 @@
                 </select>
               </div>
             </div>
-            <div class="card-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+            <div class="card-header key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
               <h3 class="card-title">Domain Access Control</h3>
             </div>
                     <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
@@ -96,16 +96,19 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit"
-                            class="btn btn-flat btn-primary float-right" id="key_submit">{% if create %}Create{% else %}Update{% endif %}
-                            Key</button>
+                      <button type="button" class="btn btn-secondary float-left" onclick="window.location.href='{{ url_for('admin.manage_keys') }}'">
+                        <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
+                      </button>
+                      <button type="submit" class="btn btn-primary float-right" id="key_submit">
+                        <i class="fa-solid fa-save"></i>&nbsp;{% if create %}Create{% else %}Update{% endif %} Key
+                      </button>
                     </div>
                 </form>
             </div>
         </div>
         <div class="col-8">
-            <div class="card card-primary">
-                <div class="card-header with-border">
+            <div class="card">
+                <div class="card-header">
                     <h3 class="card-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} key
                     </h3>
                 </div>
@@ -239,7 +242,7 @@
     {% if plain_key %}
     $(document.body).ready(function () {
         var modal = $("#modal_show_key");
-        var info = "{{ plain_key }}";
+        var info = "Please copy this key to a secure location. You will be unable to view it again once you close this window: {{ plain_key }}";
         modal.find('.modal-body p').text(info);
         modal.find('#button_key_confirm').click(redirect_modal);
         modal.find('#button_close_modal').click(redirect_modal);
@@ -255,45 +258,46 @@
 {% endblock %}
 {% block modals %}
 <div class="modal fade" id="modal_show_key">
-    <div class="modal-dialog">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_modal">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Your API key</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-primary center-block" id="button_key_confirm">
-                    Confirm</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">New API Key</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_modal">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="button_key_confirm">
+          Confirm
+        </button>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
+  </div>
 </div>
 <div class="modal fade" id="modal_warning">
   <div class="modal-dialog">
-      <div class="modal-content modal-sm">
-          <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
-                  <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 class="modal-title">WARNING</h4>
-          </div>
-          <div class="modal-body">
-              <p></p>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-flat btn-primary center-block" id="button_key_confirm_warn">
-                  OK</button>
-          </div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">WARNING</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
-      <!-- /.modal-content -->
+      <div class="modal-body">
+        <p></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary close" data-dismiss="modal" id="button_close_modal">
+          Close
+        </button>
+        <button type="button" class="btn btn-primary" id="button_key_confirm_warn">
+          OK
+        </button>
+      </div>
+    </div>
   </div>
-  <!-- /.modal-dialog -->
 </div>
 {% endblock %}

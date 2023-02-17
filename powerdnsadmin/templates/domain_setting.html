@@ -83,8 +83,10 @@
                         <div class="card-body">
                             <div class="col-offset-2">
                                 <div class="form-group">
-                                    <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i>
-                                        Save</button>
+                                    <button type="submit" class="btn btn-primary">
+                                      <i class="fa-solid fa-check"></i>
+                                      Save
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -114,7 +116,7 @@
                                     {% endfor %}
                                 </select><br />
                                 <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name | pretty_domain_name }}
+                                    <i class="fa-solid fa-check"></i>&nbsp;Change account for {{ domain.name | pretty_domain_name }}
                                 </button>
                             </form>
                         </div>
@@ -193,7 +195,7 @@
                                 placeholder="Enter valid Primary Server IP addresses (separated by commas)">
                         </div>
                         <button type="submit" class="btn btn-primary" id="change_type">
-                            <i class="fa fa-check"></i>&nbsp;Change type for {{ domain.name | pretty_domain_name }}
+                            <i class="fa-solid fa-check"></i>&nbsp;Change type for {{ domain.name | pretty_domain_name }}
                         </button>
                     </form>
                 </div>
@@ -236,7 +238,7 @@
                             <option>OFF</option>
                         </select><br />
                         <button type="submit" class="btn btn-primary" id="change_soa_edit_api">
-                            <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name | pretty_domain_name }}
+                            <i class="fa-solid fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name | pretty_domain_name }}
                         </button>
                     </form>
                 </div>
@@ -253,9 +255,9 @@
                     <p>This function is used to remove a domain from PowerDNS-Admin <b>AND</b> PowerDNS. All records and
                         user privileges associated with this domain will also be removed. This change cannot be
                         reverted.</p>
-                    <button type="button" class="btn btn-danger pull-left delete_domain"
+                    <button type="button" class="btn btn-danger float-left delete_domain"
                         id="{{ domain.name }}">
-                        <i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name | pretty_domain_name }}
+                        <i class="fa-solid fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name | pretty_domain_name }}
                     </button>
                 </div>
             </div>
@@ -370,26 +372,24 @@
 </script>
 {% endblock %}
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete_domain">
+<div class="modal fade" id="modal_delete_domain">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+              <h4 class="modal-title">Confirmation</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Confirmation</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">
+                <button type="button" class="btn btn-secondary float-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="button_delete_confirm">
                     Delete</button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
 {% endblock %}

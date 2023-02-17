@@ -40,7 +40,7 @@
             <h3 class="card-title">History Management</h3>
             {% if current_user.role.name != 'User' %}
               <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal_clear_history" {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
-                <i class="fas fa-trash"></i>  
+                <i class="fa-solid fa-trash"></i>  
                 &nbsp;Clear History
               </button>
             {% endif %}

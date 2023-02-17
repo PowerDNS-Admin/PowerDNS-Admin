@@ -39,11 +39,11 @@
                     <h3 class="card-title">Manage Template Records for {{ template }}</h3>
                 </div>
                 <div class="card-body">
-                    <button type="button" class="btn btn-primary pull-left button_add_record" id="{{ template }}">
-                        <i class="fa fa-plus"></i>&nbsp;Add Record
+                    <button type="button" class="btn btn-primary float-left button_add_record" id="{{ template }}">
+                        <i class="fa-solid fa-plus"></i>&nbsp;Add Record
                     </button>
-                    <button type="button" class="btn btn-primary pull-right button_apply_changes" id="{{ template }}">
-                        <i class="fa fa-save"></i>&nbsp;Apply Changes
+                    <button type="button" class="btn btn-primary float-right button_apply_changes" id="{{ template }}">
+                        <i class="fa-solid fa-save"></i>&nbsp;Save Changes
                     </button>
                 </div>
                 <div class="card-body">
@@ -84,12 +84,12 @@
                                     </td>
                                     <td width="6%">
                                          <button type="button" class="btn btn-warning button_edit">
-                                            <i class="fa fa-edit"></i>&nbsp;Edit
+                                            <i class="fa-solid fa-edit"></i>&nbsp;Edit
                                         </button>
                                     </td>
                                     <td width="6%">
                                         <button type="button" class="btn btn-danger button_delete">
-                                            <i class="fa fa-trash"></i>&nbsp;Delete
+                                            <i class="fa-solid fa-trash"></i>&nbsp;Delete
                                         </button>
                                     </td>
                                     <td>
@@ -110,8 +110,8 @@
 {% block extrascripts %}
 <script>
     // superglobals
-    window.records_allow_edit = {{ editable_records|tojson }};
-    window.ttl_options = {{ ttl_options|tojson }};
+    window.records_allow_edit = {{ editable_records | tojson }};
+    window.ttl_options = {{ ttl_options | tojson }};
     window.nEditing = null;
     window.nNew = false;
 
@@ -238,7 +238,7 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '', '0']);
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
@@ -430,67 +430,67 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
+              <h4 class="modal-title">Confirmation</h4>
+              <button type="button" class="close" data-dismiss="modal"
                     aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Confirmation</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" id="button_delete_cancel"
-                    data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+                <button type="button" class="btn btn-secondary float-left" id="button_delete_cancel" data-dismiss="modal">
+                  Close
+                </button>
+                <button type="button" class="btn btn-danger" id="button_delete_confirm">
+                  Delete
+                </button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
 <div class="modal fade modal-primary" id="modal_apply_changes">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
+              <h4 class="modal-title">Confirmation</h4>
+              <button type="button" class="close" data-dismiss="modal"
                     aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Confirmation</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left"
-                    data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-primary" id="button_apply_confirm">Apply</button>
+                <button type="button" class="btn btn-secondary float-left" data-dismiss="modal">
+                  Close
+                </button>
+                <button type="button" class="btn btn-primary" id="button_apply_confirm">
+                  Apply
+                </button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
 <div class="modal fade modal-primary" id="modal_custom_record">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
+              <h4 class="modal-title">Custom Record</h4>
+              <button type="button" class="close" data-dismiss="modal"
                     aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Custom Record</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+                <button type="button" class="btn btn-primary" id="button_save">Save</button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
 {% endblock %}

@@ -33,30 +33,30 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            {% if domain.type != 'Secondary' %}
+            {% if domain.type != 'Slave' %}
               <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left button_add_record" id="{{ domain.name }}">
-                <i class="fas fa-plus"></i>
+                <i class="fa-solid fa-plus"></i>
                 &nbsp;Add Record
               </button>
               <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
-                <i class="fas fa-save"></i>
+                <i class="fa-solid fa-save"></i>
                 &nbsp;Apply Changes
               </button>
             {% else %}
               <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left button_update_from_primary" id="{{ domain.name }}">
-                <i class="fas fa-download"></i>
+                <i class="fa-solid fa-sync"></i>
                 &nbsp;Update from Primary
               </button>
             {% endif %}
             {% if current_user.role.name in ['Administrator', 'Operator'] %}
               <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
-                <i class="fas fa-cog"></i>
+                <i class="fa-solid fa-toolbox"></i>
                 &nbsp;Admin
               </button>
             {% endif %}
             {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
               <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary button_changelog" id="{{ domain.name }}">
-                <i class="fas fa-history" aria-hidden="true"></i>
+                <i class="fa-solid fa-history" aria-hidden="true"></i>
                 &nbsp;Changelog
               </button>
             {% endif %}
@@ -70,7 +70,7 @@
                   <th>Status</th>
                   <th>TTL</th>
                   <th>Data</th>
-                  {% if domain.type != 'Secondary' %}
+                  {% if domain.type != 'Slave' %}
                     <th>Comment</th>
                     <th>Edit</th>
                     <th>Delete</th>
@@ -95,23 +95,25 @@
                       <td width="6%">
                         {% if record.is_allowed_edit() %}
                           <button type="button" class="btn btn-warning button_edit">
-                            <i class="fa fa-edit"></i>
+                            <i class="fa-solid fa-edit"></i>
                           </button>
                         {% else %}
                           <button type="button" class="btn btn-warning">
-                            <i class="fa fa-exclamation-circle"></i>
+                            <i class="fa-solid fa-exclamation-circle"></i>
                           </button>
                         {% endif %}
                       </td>
                       <td width="6%">
                         {% if record.is_allowed_delete() %}
-                          <button type="button" class="btn btn-danger button_delete"><i class="fa fa-trash"></i></button>
+                          <button type="button" class="btn btn-danger button_delete">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
                         {% endif %}
                       </td>
                       {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                         <td width="6%">
                           <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-primary">
-                            <i class="fa fa-history" aria-hidden="true"></i>
+                            <i class="fa-solid fa-history" aria-hidden="true"></i>
                           </button>
                         </td>
                       {% endif %}
@@ -171,7 +173,7 @@
                 // hidden column so that we can add new records on top
                 // regardless of whatever sorting is done. See orderFixed
                 visible: false,
-                {% if domain.type != 'Secondary' %}
+                {% if domain.type != 'Slave' %}
                   {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                     targets: [ 9 ]
                   {% else %}
@@ -186,7 +188,7 @@
                 targets: [ 4, 5 ]
             }
         ],
-        {% if domain.type != 'Secondary' %}
+        {% if domain.type != 'Slave' %}
           {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
             "orderFixed": [[9, 'asc']]
           {% else %}
@@ -229,7 +231,7 @@
         });
     });
     // handle edit button and record click
-    {% if domain.type != 'Secondary' %}
+    {% if domain.type != 'Slave' %}
       $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
@@ -296,9 +298,9 @@
             // add new row
             var default_type = records_allow_edit[0]
             {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-          var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
+              var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
             {% else %}
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
+              var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
             {% endif %}
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
@@ -563,11 +565,16 @@
         }
     });
     {% endif %}
+
+    window.onload = function() {
+    document.getElementById("loading-spinner").style.display = "none";
+  }
+
 </script>
 {% endblock %}
 
 {% block modals %}
-  <div class="modal fade modal-warning" id="modal_delete">
+  <div class="modal fade" id="modal_delete">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -580,14 +587,18 @@
           <p></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary pull-left" id="button_delete_cancel" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-danger" id="button_delete_confirm">Delete</button>
+          <button type="button" class="btn btn-secondary pull-left" id="button_delete_cancel" data-dismiss="modal">
+            <i class="fa-solid fa-window-close"></i>&nbsp;Close
+          </button>
+          <button type="button" class="btn btn-danger" id="button_delete_confirm">
+            <i class="fa-solid fa-trash"></i>&nbsp;Delete
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade modal-primary" id="modal_apply_changes">
+  <div class="modal fade" id="modal_apply_changes">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -600,14 +611,18 @@
           <p></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-success" id="button_apply_confirm">Apply</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <i class="fa-solid fa-window-close"></i>&nbsp;Close
+          </button>
+          <button type="button" class="btn btn-success" id="button_apply_confirm">
+            <i class="fa-solid fa-save"></i>&nbsp;Apply Changes
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade modal-primary" id="modal_custom_record">
+  <div class="modal fade bg-primary" id="modal_custom_record">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -620,7 +635,12 @@
           <p></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="button_save">Save</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <i class="fa-solid fa-window-close"></i>&nbsp;Close
+          </button>
+          <button type="button" class="btn btn-success" id="button_save">
+            <i class="fa-solid fa-save"></i>&nbsp;Save
+          </button>
         </div>
       </div>
     </div>

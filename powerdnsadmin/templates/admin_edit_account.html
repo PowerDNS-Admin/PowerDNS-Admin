@@ -14,15 +14,15 @@
       <div class="row mb-2">
         <div class="col-sm-6">
           <h1 class="m-0 text-dark">
-            Account
-            <small>{% if create %}New account{% else %}{{ account.name }}{% endif %}</small>
+            {% if create %}Add Account{% else %}Edit Account{% endif %}
+            <small>{% if create %}Account{% else %}{{ account.name }}{% endif %}</small>
           </h1>
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_account') }}">Accounts</a></li>
-            <li class="breadcrumb-item active">{% if create %}Add{% else %}Edit{% endif %} account</li>
+            <li class="breadcrumb-item active">{% if create %}Add Account{% else %}Edit Account: {{ account.name }}{% endif %}</li>
           </ol>
         </div>
       </div>
@@ -35,9 +35,9 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-4">
-        <div class="card shadow">
-          <div class="card-header with-border">
-            <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} account</h3>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} Account</h3>
           </div>
           <form role="form" method="post" action="{% if create %}{{ url_for('admin.edit_account') }}{% else %}{{ url_for('admin.edit_account', account_name=account.name) }}{% endif %}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
@@ -46,7 +46,7 @@
               {% if error %}
                 <div class="alert alert-danger alert-dismissible">
                   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                  <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                  <h4><i class="fa-solid fa-ban"></i> Error!</h4>
                   {{ error }}
                 </div>
                 <span class="help-block">{{ error }}</span>
@@ -55,36 +55,36 @@
                 <label class="control-label" for="accountname">Name</label>
                 <input type="text" class="form-control" placeholder="Account Name (required)"
                   name="accountname" {% if account %}value="{{ account.name }}" {% endif %}
-                  {% if not create %}disabled{% endif %}>
-                <span class="fa fa-cog form-control-feedback"></span>
+                  {% if not create %}disabled{% endif %} required>
+                <span class="form-control-feedback"></span>
                 {% if invalid_accountname %}
-                  <span class="help-block">Cannot be blank and must only contain alphanumeric
+                  <span class="help-block text-danger">Cannot be blank and must only contain alphanumeric
                     characters{% if SETTING.get('account_name_extra_chars') %}, dots, hyphens or underscores{% endif %}.
                   </span>
                 {% elif duplicate_accountname %}
-                  <span class="help-block">Account name already in use.</span>
+                  <span class="help-block text-danger">Account name already in use.</span>
                 {% endif %}
               </div>
               <div class="form-group has-feedback">
                 <label class="control-label" for="accountdescription">Description</label>
                 <input type="text" class="form-control" placeholder="Account Description (optional)"
                   name="accountdescription" {% if account %}value="{{ account.description }}" {% endif %}>
-                <span class="fa fa-industry form-control-feedback"></span>
+                <span class="orm-control-feedback"></span>
               </div>
               <div class="form-group has-feedback">
                 <label class="control-label" for="accountcontact">Contact Person</label>
                 <input type="text" class="form-control" placeholder="Contact Person (optional)"
                   name="accountcontact" {% if account %}value="{{ account.contact }}" {% endif %}>
-                <span class="fa fa-user form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
               </div>
               <div class="form-group has-feedback">
                 <label class="control-label" for="accountmail">Mail Address</label>
                 <input type="email" class="form-control" placeholder="Mail Address (optional)"
                   name="accountmail" {% if account %}value="{{ account.mail }}" {% endif %}>
-                <span class="fa fa-envelope form-control-feedback"></span>
+                <span class="form-control-feedback"></span>
               </div>
             </div>
-            <div class="card-header with-border">
+            <div class="card-header">
               <h3 class="card-title">Access Control</h3>
             </div>
             <div class="card-body">
@@ -104,17 +104,19 @@
               </div>
             </div>
             <div class="card-footer">
-              <button type="submit"
-                class="btn btn-flat btn-primary">{% if create %}Create{% else %}Update{% endif %}
-                Account
+              <button type="button" class="btn btn-secondary float-left" onclick="window.location.href='{{ url_for('admin.manage_account') }}'">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary float-right">
+                {% if create %}Create{% else %}Update{% endif %} Account
               </button>
             </div>
           </form>
         </div>
       </div>
       <div class="col-8">
-        <div class="card shadow">
-          <div class="card-header with-border">
+        <div class="card">
+          <div class="card-header">
             <h3 class="card-title">Help with creating a new account</h3>
           </div>
           <div class="card-body">

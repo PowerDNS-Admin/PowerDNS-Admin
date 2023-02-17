@@ -39,7 +39,7 @@
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h4>
-                <i class="icon fa fa-ban"></i> Error!
+                <i class="fa-solid fa-ban"></i> Error!
               </h4>
               <div class="alert-message block-message error">
                 <a class="close" href="#">x</a>
@@ -55,8 +55,8 @@
     {% endwith %}
     <div class="row">
       <div class="col-4">
-        <div class="card card-primary">
-          <div class="card-header with-border">
+        <div class="card">
+          <div class="card-header">
             <h3 class="card-title">Create new template</h3>
           </div>
           <form role="form" method="post" action="{{ url_for('admin.create_template') }}">
@@ -72,16 +72,19 @@
               </div>
             </div>
             <div class="card-footer">
-              <button type="submit" class="btn btn-primary">Submit</button>
-              <button type="button" class="btn btn-default"
-              onclick="window.location.href='{{ url_for('admin.templates') }}'">Cancel</button>
+              <button type="button" class="btn btn-secondary float-left" onclick="window.location.href='{{ url_for('admin.templates') }}'">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary float-right">
+                <i class="fa-solid fa-save"></i>&nbsp;Save
+              </button>
             </div>
           </form>
         </div>
       </div>
       <div class="col-8">
-        <div class="card card-primary">
-          <div class="card-header with-border">
+        <div class="card">
+          <div class="card-header">
             <h3 class="card-title">Help with creating a new template</h3>
           </div>
           <div class="card-body">

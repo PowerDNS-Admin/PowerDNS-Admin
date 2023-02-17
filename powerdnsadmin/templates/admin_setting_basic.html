@@ -55,14 +55,14 @@
                   <td><i class="fas fa-toggle-off"></i>&nbsp;Off</td>
                   <td width="20%">
                     <button type="button" class="btn btn-success setting-toggle-button" id="{{ setting }}">
-                      <i class="fas fa-toggle-on"></i>&nbsp;Turn On
+                      <i class="fa-solid fa-toggle-on"></i>&nbsp;Turn On
                     </button>
                   </td>
                 {% elif SETTING.get(setting) in [True] %}
                   <td><i class="fas fa-toggle-on"></i>&nbsp;On</td>
                   <td width="20%">
                     <button type="button" class="btn btn-danger setting-toggle-button" id="{{ setting }}">
-                      <i class="fas fa-toggle-off"></i>&nbsp;Turn Off
+                      <i class="fa-solid fa-toggle-off"></i>&nbsp;Turn Off
                     </button>
                   </td>
                 {% else %}
@@ -71,7 +71,7 @@
                   </td>
                   <td width="20%">
                     <button type="button" class="btn btn-primary setting-save-button" id="{{ setting }}">
-                      <i class="fas fa-save"></i>&nbsp;Save
+                      <i class="fa-solid fa-save"></i>&nbsp;Save
                     </button>
                   </td>
                 {% endif %}

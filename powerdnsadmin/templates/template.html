@@ -41,7 +41,7 @@
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h4>
-                <i class="icon fa fa-ban"></i> Error!
+                <i class="fa-solid fa-ban"></i> Error!
               </h4>
               <div class="alert-message block-message error">
                 <a class="close" href="#">x</a>
@@ -58,12 +58,12 @@
     {% endwith %}
     <div class="row">
       <div class="col-12">
-        <div class="card shadow card-outline card-secondary">
+        <div class="card">
           <div class="card-header">
             <h3 class="card-title">Templates</h3>
             <a href="{{ url_for('admin.create_template') }}">
               <button type="button" class="btn btn-primary float-right">
-                <i class="fa fa-plus"></i>&nbsp;Create Template
+                <i class="fa-solid fa-plus"></i>&nbsp;Create Template
               </button>
             </a>
           </div>
@@ -74,7 +74,7 @@
                   <th>Name</th>
                   <th>Description</th>
                   <th>Number of Records</th>
-                  <th width="20%">Action</th>
+                  <th width="20%">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -92,14 +92,22 @@
                       {{ template.records|count }}
                     </td>
                     <td>
-                      <a href="{{ url_for('admin.edit_template', template=template.name) }}">
-                        <button type="button" class="btn btn-warning button_edit" id="btn_edit">
-                          <i class="fa fa-edit"></i>&nbsp;Edit
+                      <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          <i class="fa-solid fa-bars"></i>&nbsp;Actions
                         </button>
-                      </a>
-                      <button type="button" class="btn btn-danger button_delete" id="{{template.name}}">
-                        <i class="fa fa-trash"></i>&nbsp;Delete
-                      </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                          <button type="button" class="dropdown-item btn-warning" onclick="window.location.href='{{ url_for('admin.edit_template', template=template.name) }}'">
+                            <i class="fa-solid fa-edit"></i>&nbsp;Edit Template
+                          </button>
+                          <div class="dropdown-divider"></div>
+                          <button type="button"class="dropdown-item btn-secondary button_delete" id="{{template.name}}">
+                            <font color="red">
+                              <i class="fa-solid fa-trash"></i>&nbsp;Delete Template
+                            </font>
+                          </button>
+                         </div>
+                      </div>
                     </td>
                   </tr>
                 {% endfor %}
