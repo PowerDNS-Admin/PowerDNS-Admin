@@ -963,6 +963,13 @@ def history():
 					'msg': 'You do not have permission to remove history.'
 				}), 401)
 
+		if Setting().get('preserve_history'):
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'History removal is not allowed (toggle preserve_history in settings).'
+				}), 401)
+
 		h = History()
 		result = h.remove_all()
 		if result:
@@ -1318,6 +1325,7 @@ def setting_basic():
         'otp_field_enabled',
         'otp_force',
         'pdns_api_timeout',
+        'preserve_history',
         'pretty_ipv6_ptr',
         'record_helper',
         'record_quick_edit',
