@@ -3,10 +3,12 @@ import base64
 from flask import render_template, url_for, redirect, session, request, current_app
 from flask_login import LoginManager
 from flask_seasurf import SeaSurf
+from flask_session_captcha import FlaskSessionCaptcha
 
 from ..models.user import User
 
 
+captcha = FlaskSessionCaptcha()
 csrf = SeaSurf()
 login_manager = LoginManager()
 
