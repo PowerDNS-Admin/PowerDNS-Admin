@@ -10,9 +10,9 @@ fi
 
 # Import schema structure
 if [ -e "/data/pdns.sql" ]; then
-    rm /data/pdns.db
+    rm -f /data/pdns.db
     cat /data/pdns.sql | sqlite3 /data/pdns.db
-    rm /data/pdns.sql
+    rm -f /data/pdns.sql
     echo "Imported schema structure"
 fi
 
