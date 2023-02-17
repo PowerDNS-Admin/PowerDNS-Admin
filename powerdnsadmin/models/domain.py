@@ -2,6 +2,7 @@ import json
 import re
 import traceback
 from flask import current_app
+from flask_login import current_user
 from urllib.parse import urljoin
 from distutils.util import strtobool
 
@@ -851,6 +852,7 @@ class Domain(db.Model):
 
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
+        account_name_old = Account().get_name_by_id(domain.account_id)
         account_name = Account().get_name_by_id(account_id)
 
         post_data = {"account": account_name}
@@ -874,6 +876,13 @@ class Domain(db.Model):
                     self.update()
                 msg_str = 'Account changed for domain {0} successfully'
                 current_app.logger.info(msg_str.format(domain_name))
+                history = History(msg='Update domain {0} associate account {1}'.format(domain.name, 'none' if account_name == '' else account_name),
+                              detail = json.dumps({
+                                    'assoc_account': 'None' if account_name == '' else account_name,
+                                    'dissoc_account': 'None' if account_name_old == '' else account_name_old
+                                }),
+                              created_by=current_user.username)
+                history.add()
                 return {'status': 'ok', 'msg': 'account changed successfully'}
 
         except Exception as e:
