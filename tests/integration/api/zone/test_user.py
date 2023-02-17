@@ -3,8 +3,6 @@ from collections import namedtuple
 
 from powerdnsadmin.lib.validators import validate_zone
 from powerdnsadmin.lib.schema import DomainSchema
-from tests.fixtures import client, initial_data, basic_auth_user_headers
-from tests.fixtures import zone_data
 
 
 class TestIntegrationApiZoneUser(object):

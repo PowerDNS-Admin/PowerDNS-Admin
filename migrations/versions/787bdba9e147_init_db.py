@@ -56,9 +56,9 @@ def seed_data():
 
     op.bulk_insert(template_table,
         [
-            {id: 1, 'name': 'basic_template_1', 'description': 'Basic Template #1'},
-            {id: 2, 'name': 'basic_template_2', 'description': 'Basic Template #2'},
-            {id: 3, 'name': 'basic_template_3', 'description': 'Basic Template #3'}
+            {'id': 1, 'name': 'basic_template_1', 'description': 'Basic Template #1'},
+            {'id': 2, 'name': 'basic_template_2', 'description': 'Basic Template #2'},
+            {'id': 3, 'name': 'basic_template_3', 'description': 'Basic Template #3'}
         ]
     )
 

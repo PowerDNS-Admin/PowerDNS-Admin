@@ -388,7 +388,7 @@ def apikey_can_configure_dnssec(http_methods=[]):
 def allowed_record_types(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if request.method == 'GET':
+        if request.method in ['GET', 'DELETE', 'PUT']:
             return f(*args, **kwargs)
 
         if g.apikey.role.name in ['Administrator', 'Operator']:

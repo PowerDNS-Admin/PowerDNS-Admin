@@ -5,7 +5,7 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     description = db.Column(db.String(128))
-    users = db.relationship('User', backref='role', lazy=True)
+    users = db.relationship('User', back_populates='role', lazy=True)
     apikeys = db.relationship('ApiKey', back_populates='role', lazy=True)
 
     def __init__(self, id=None, name=None, description=None):
@@ -20,4 +20,4 @@ class Role(db.Model):
         self.description = description
 
     def __repr__(self):
-        return '<Role {0}r>'.format(self.name)
+        return '<Role {0}>'.format(self.name)
