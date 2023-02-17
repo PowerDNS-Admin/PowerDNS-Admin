@@ -422,6 +422,25 @@ class Record(object):
                 ]
 
                 d = Domain()
+                for r in del_rrsets:
+                    for record in r['records']:
+                        # Format the reverse record name
+                        # It is the reverse of forward record's content.
+                        reverse_host_address = dns.reversename.from_address(
+                            record['content']).to_text()
+
+                        # Create the reverse domain name in PDNS
+                        domain_reverse_name = d.get_reverse_domain_name(
+                            reverse_host_address)
+                        d.create_reverse_domain(domain_name,
+                                                domain_reverse_name)
+
+                        # Delete the reverse zone
+                        self.name = reverse_host_address
+                        self.type = 'PTR'
+                        self.data = record['content']
+                        self.delete(domain_reverse_name)
+                
                 for r in new_rrsets:
                     for record in r['records']:
                         # Format the reverse record name
@@ -455,25 +474,6 @@ class Record(object):
                         # Format the rrset
                         rrset = {"rrsets": rrset_data}
                         self.add(domain_reverse_name, rrset)
-
-                for r in del_rrsets:
-                    for record in r['records']:
-                        # Format the reverse record name
-                        # It is the reverse of forward record's content.
-                        reverse_host_address = dns.reversename.from_address(
-                            record['content']).to_text()
-
-                        # Create the reverse domain name in PDNS
-                        domain_reverse_name = d.get_reverse_domain_name(
-                            reverse_host_address)
-                        d.create_reverse_domain(domain_name,
-                                                domain_reverse_name)
-
-                        # Delete the reverse zone
-                        self.name = reverse_host_address
-                        self.type = 'PTR'
-                        self.data = record['content']
-                        self.delete(domain_reverse_name)
                 return {
                     'status': 'ok',
                     'msg': 'Auto-PTR record was updated successfully'
