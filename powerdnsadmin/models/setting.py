@@ -11,7 +11,7 @@ from .base import db
 
 class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
+    name = db.Column(db.String(64), unique=True, index=True)
     value = db.Column(db.Text())
 
     defaults = {
@@ -31,6 +31,7 @@ class Setting(db.Model):
 	    'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
+        'preserve_history': False,
         'site_name': 'PowerDNS-Admin',
         'site_url': 'http://localhost:9191',
         'session_timeout': 10,

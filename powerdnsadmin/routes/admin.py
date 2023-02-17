@@ -610,14 +610,21 @@ def manage_user():
 @operator_role_required
 def edit_account(account_name=None):
     users = User.query.all()
+    account = Account.query.filter(
+        Account.name == account_name).first()
+    all_accounts = Account.query.all()
+    accounts = {acc.id: acc for acc in all_accounts}
+    domains = Domain.query.all()
 
     if request.method == 'GET':
-        if account_name is None:
+        if account_name is None or not account:
             return render_template('admin_edit_account.html',
+                                   account=None,
                                    account_user_ids=[],
                                    users=users,
+                                   domains=domains,
+                                   accounts=accounts,
                                    create=1)
-
         else:
             account = Account.query.filter(
                 Account.name == account_name).first()
@@ -626,11 +633,14 @@ def edit_account(account_name=None):
                                    account=account,
                                    account_user_ids=account_user_ids,
                                    users=users,
+                                   domains=domains,
+                                   accounts=accounts,
                                    create=0)
 
     if request.method == 'POST':
         fdata = request.form
         new_user_list = request.form.getlist('account_multi_user')
+        new_domain_list = request.form.getlist('account_domains')
 
         # on POST, synthesize account and account_user_ids from form data
         if not account_name:
@@ -654,6 +664,8 @@ def edit_account(account_name=None):
                                        account=account,
                                        account_user_ids=account_user_ids,
                                        users=users,
+                                       domains=domains,
+                                       accounts=accounts,
                                        create=create,
                                        invalid_accountname=True)
 
@@ -662,19 +674,33 @@ def edit_account(account_name=None):
                                        account=account,
                                        account_user_ids=account_user_ids,
                                        users=users,
+                                       domains=domains,
+                                       accounts=accounts,
                                        create=create,
                                        duplicate_accountname=True)
 
             result = account.create_account()
-            history = History(msg='Create account {0}'.format(account.name),
-                              created_by=current_user.username)
-
         else:
             result = account.update_account()
-            history = History(msg='Update account {0}'.format(account.name),
-                              created_by=current_user.username)
 
         if result['status']:
+            account = Account.query.filter(
+                Account.name == account_name).first()
+            old_domains = Domain.query.filter(Domain.account_id == account.id).all()
+
+            for domain_name in new_domain_list:
+                domain = Domain.query.filter(
+                    Domain.name == domain_name).first()
+                if account.id != domain.account_id:
+                    Domain(name=domain_name).assoc_account(account.id)
+            
+            for domain in old_domains:
+                if domain.name not in new_domain_list:
+                    Domain(name=domain.name).assoc_account(None)
+
+            history = History(msg='{0} account {1}'.format('Create' if create else 'Update', account.name),
+                              created_by=current_user.username)
+
             account.grant_privileges(new_user_list)
             history.add()
             return redirect(url_for('admin.manage_account'))
@@ -891,6 +917,16 @@ class DetailedHistory():
                 ''',
                 history_status=DetailedHistory.get_key_val(detail_dict, 'status'),
                 history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
+        
+        elif 'Update domain' in history.msg and 'associate account' in history.msg: # When an account gets associated or dissociate with domains
+            self.detailed_msg = render_template_string('''
+                <table class="table table-bordered table-striped">
+                    <tr><td>Associate: </td><td>{{ history_assoc_account }}</td></tr>
+                    <tr><td>Dissociate:</td><td>{{ history_dissoc_account }}</td></tr>
+                </table>
+                ''',
+                history_assoc_account=DetailedHistory.get_key_val(detail_dict, 'assoc_account'),
+                history_dissoc_account=DetailedHistory.get_key_val(detail_dict, 'dissoc_account'))
 
     # check for lower key as well for old databases
     @staticmethod
@@ -926,6 +962,13 @@ def history():
 				jsonify({
 					'status': 'error',
 					'msg': 'You do not have permission to remove history.'
+				}), 401)
+
+		if Setting().get('preserve_history'):
+			return make_response(
+				jsonify({
+					'status': 'error',
+					'msg': 'History removal is not allowed (toggle preserve_history in settings).'
 				}), 401)
 
 		h = History()
@@ -1283,6 +1326,7 @@ def setting_basic():
         'otp_field_enabled',
         'otp_force',
         'pdns_api_timeout',
+        'preserve_history',
         'pretty_ipv6_ptr',
         'record_helper',
         'record_quick_edit',

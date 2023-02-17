@@ -34,6 +34,7 @@ class User(db.Model):
     otp_secret = db.Column(db.String(16))
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    role = db.relationship('Role', back_populates="users", lazy=True)
     accounts = None
 
     def __init__(self,

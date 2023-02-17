@@ -1,66 +1,61 @@
-
 import json
 
-from tests.fixtures import (    # noqa: F401
-    client, initial_data, basic_auth_admin_headers, basic_auth_user_headers,
-    test_admin_user, test_user, account_data, user1_data,
-)
 from . import IntegrationApiManagement
 
 
 class TestIntegrationApiManagementUser(IntegrationApiManagement):
 
-    def test_accounts_empty_get(
-            self, client, initial_data,                         # noqa: F811
-            basic_auth_user_headers):                           # noqa: F811
+    def test_accounts_empty_get(self, initial_data, client,  # noqa: F811
+                                basic_auth_user_headers):  # noqa: F811
         res = client.get("/api/v1/pdnsadmin/accounts",
                          headers=basic_auth_user_headers)
         assert res.status_code == 401
 
-    def test_users_empty_get(
-            self, client, initial_data,                         # noqa: F811
-            test_admin_user, test_user,                         # noqa: F811
-            basic_auth_user_headers):                           # noqa: F811
+    def test_users_empty_get(self, initial_data, client,  # noqa: F811
+                             test_admin_user, test_user,  # noqa: F811
+                             basic_auth_user_headers):  # noqa: F811
         res = client.get("/api/v1/pdnsadmin/users",
                          headers=basic_auth_user_headers)
         assert res.status_code == 401
 
-    def test_self_get(
-            self, initial_data, client, test_user,              # noqa: F811
-            basic_auth_user_headers):                           # noqa: F811
-        self.user = None
+    def test_self_get(self, initial_data, client, basic_auth_user_headers, test_user):  # noqa: F811
         res = client.get("/api/v1/pdnsadmin/users/{}".format(test_user),
                          headers=basic_auth_user_headers)
         data = res.get_json(force=True)
         assert res.status_code == 200
-        assert len(data) == 1, data
-        self.user = data
+        assert data
 
-    def test_accounts(
-            self, client, initial_data,                          # noqa: F811
-            account_data,                                        # noqa: F811
-            basic_auth_admin_headers, basic_auth_user_headers):  # noqa: F811
+    def test_create_account_fail(self, client, initial_data, account_data,  # noqa: F811
+                                 basic_auth_user_headers):  # noqa: F811
+
+        # Create account (should fail)
+        res = client.post("/api/v1/pdnsadmin/accounts",
+                          headers=basic_auth_user_headers,
+                          data=json.dumps(account_data),
+                          content_type="application/json")
+        assert res.status_code == 401
+
+    def test_create_account_as_admin(self, app, initial_data, client, account_data,  # noqa: F811
+                                     basic_auth_admin_headers):  # noqa: F811
         self.client = client
         self.basic_auth_admin_headers = basic_auth_admin_headers
 
-        # Create account (should fail)
-        res = client.post(
-            "/api/v1/pdnsadmin/accounts",
-            headers=basic_auth_user_headers,
-            data=json.dumps(account_data),
-            content_type="application/json",
-        )
-        assert res.status_code == 401
+        with app.test_request_context():
+            # Create account (as admin)
+            res = client.post("/api/v1/pdnsadmin/accounts",
+                              headers=basic_auth_admin_headers,
+                              data=json.dumps(account_data),
+                              content_type="application/json")
+            data = res.get_json(force=True)
+            assert res.status_code == 201
 
-        # Create account (as admin)
-        res = client.post(
-            "/api/v1/pdnsadmin/accounts",
-            headers=basic_auth_admin_headers,
-            data=json.dumps(account_data),
-            content_type="application/json",
-        )
-        data = res.get_json(force=True)
-        assert res.status_code == 201
+    def test_update_account_fail(
+            self, initial_data, client,  # noqa: F811
+            account_data,  # noqa: F811
+            basic_auth_user_headers,
+            basic_auth_admin_headers):  # noqa: F811
+        self.client = client
+        self.basic_auth_admin_headers = basic_auth_admin_headers
 
         # Check account
         data = self.check_account(account_data)
@@ -75,6 +70,18 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         )
         assert res.status_code == 401
 
+    def test_delete_account_fail(
+            self, initial_data, client,  # noqa: F811
+            account_data,  # noqa: F811
+            basic_auth_user_headers,
+            basic_auth_admin_headers):  # noqa: F811
+        self.client = client
+        self.basic_auth_admin_headers = basic_auth_admin_headers
+
+        # Check account
+        data = self.check_account(account_data)
+        account_id = data["id"]
+
         # Delete account (should fail)
         res = client.delete(
             "/api/v1/pdnsadmin/accounts/{}".format(account_id),
@@ -83,6 +90,17 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
             content_type="application/json",
         )
         assert res.status_code == 401
+
+    def test_delete_account_as_admin(
+            self, client, initial_data,  # noqa: F811
+            account_data,  # noqa: F811
+            basic_auth_admin_headers):  # noqa: F811
+        self.client = client
+        self.basic_auth_admin_headers = basic_auth_admin_headers
+
+        # Check account
+        data = self.check_account(account_data)
+        account_id = data["id"]
 
         # Cleanup (delete account as admin)
         res = client.delete(
@@ -94,8 +112,8 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         assert res.status_code == 204
 
     def test_users(
-            self, client, initial_data,                          # noqa: F811
-            user1_data,                                          # noqa: F811
+            self, client, initial_data,  # noqa: F811
+            user1_data,  # noqa: F811
             basic_auth_admin_headers, basic_auth_user_headers):  # noqa: F811
         self.client = client
         self.basic_auth_admin_headers = basic_auth_admin_headers
@@ -118,10 +136,12 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 201
-        assert len(data) == 1
+        assert isinstance(data, dict)
+        assert len(data) == 6
+        assert data.get('id', None)
 
         # Check user
-        user1 = self.check_user(user1_data, data[0])
+        user1 = self.check_user(user1_data, data)
         user1_id = user1["id"]
 
         # Update to defaults (should fail)
@@ -152,8 +172,8 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         assert res.status_code == 204
 
     def test_account_users(
-            self, client, initial_data,                          # noqa: F811
-            account_data, user1_data,                            # noqa: F811
+            self, client, initial_data,  # noqa: F811
+            account_data, user1_data,  # noqa: F811
             basic_auth_admin_headers, basic_auth_user_headers):  # noqa: F811
         self.client = client
         self.basic_auth_admin_headers = basic_auth_admin_headers
@@ -181,10 +201,12 @@ class TestIntegrationApiManagementUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 201
-        assert len(data) == 1
+        assert isinstance(data, dict)
+        assert len(data) == 6
+        assert data.get('id', None)
 
         # Check user
-        user1 = self.check_user(user1_data, data[0])
+        user1 = self.check_user(user1_data, data)
         user1_id = user1["id"]
 
         # Assert test account has no users

@@ -14,8 +14,10 @@ class IntegrationApiManagement(object):
             assert res.status_code == status_code
         if res.status_code == 200:
             data = res.get_json(force=True)
-            assert len(data) == 1
-            return data[0]
+            assert isinstance(data, dict)
+            assert len(data) == 7
+            assert data.get('id', None)
+            return data
         return None
 
     def check_account(self, cmpdata, data=None):
@@ -37,8 +39,10 @@ class IntegrationApiManagement(object):
         assert res.status_code == status_code
         if status_code == 200:
             data = res.get_json(force=True)
-            assert len(data) == 1
-            return data[0]
+            assert isinstance(data, dict)
+            assert len(data) == 7
+            assert data.get('id', None)
+            return data
         return None
 
     def check_user(self, cmpdata, data=None):
@@ -50,5 +54,5 @@ class IntegrationApiManagement(object):
             elif key == 'role':
                 assert data[key]['name'] == cmpdata['role_name']
             else:
-                assert key in ("id",)
+                assert key in ("id","accounts",)
         return data
