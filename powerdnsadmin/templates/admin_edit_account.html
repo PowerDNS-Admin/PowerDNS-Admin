@@ -109,21 +109,22 @@
               </p>
               <p>Hover over the red domain names to show the associated account. Click on domains to move between columns.</p>
               <div class="form-group col-2">
-                  <select multiple="multiple" class="form-control" id="account_domains"
-                      name="account_domains">
-                      {% for domain in domains %}
-                          {% if account != None and domain.account_id != None and account.id != domain.account_id %}
-                              {% with account_id=domain.account_id %}
-                                  <option style="color: red" data-toggle="tooltip" title="Associated with: {{ accounts[account_id].name }}"
-                                      value="{{ domain.name }}">{{ domain.name }}</option>
-                              {% endwith %}
-                          {% else %}
-                              <option {% if account.id == domain.account_id %}selected{% endif %}
-                                  value="{{ domain.name }}">{{ domain.name }}</option>
-                          {% endif %}
-                      {% endfor %}
-                  </select>
-              </div>
+                <select multiple="multiple" class="form-control" id="account_domains" name="account_domains">
+                  {% for domain in domains %}
+                    {% if account != None and domain.account_id != None and account.id != domain.account_id %}
+                      {% with account_id=domain.account_id %}
+                        <option style="color: red" data-toggle="tooltip" title="Associated with: {{ accounts[account_id].name }}" value="{{ domain.name }}">
+                          {{ domain.name }}
+                        </option>
+                      {% endwith %}
+                    {% else %}
+                      <option {% if account.id == domain.account_id %}selected{% endif %} value="{{ domain.name }}">
+                        {{ domain.name }}
+                      </option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+            </div>
           </div>
             <div class="card-footer">
               <button type="button" class="btn btn-secondary float-left" onclick="window.location.href='{{ url_for('admin.manage_account') }}'">
@@ -167,44 +168,44 @@
 {% endblock %}
 {% block extrascripts %}
 <script>
-    function addMultiSelect(id, placeholder) {
-        $(id).multiSelect({
-            selectableHeader: `<input type='text' class='search-input' autocomplete='off' placeholder='${placeholder}'>`,
-            selectionHeader: `<input type='text' class='search-input' autocomplete='off' placeholder='${placeholder}'>`,
-            afterInit: function (ms) {
-                var that = this,
-                    $selectableSearch = that.$selectableUl.prev(),
-                    $selectionSearch = that.$selectionUl.prev(),
-                    selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
-                    selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+  function addMultiSelect(id, placeholder) {
+    $(id).multiSelect({
+      selectableHeader: `<input type='text' class='search-input' autocomplete='off' placeholder='${placeholder}'>`,
+      selectionHeader: `<input type='text' class='search-input' autocomplete='off' placeholder='${placeholder}'>`,
+      afterInit: function (ms) {
+        var that = this,
+          $selectableSearch = that.$selectableUl.prev(),
+          $selectionSearch = that.$selectionUl.prev(),
+          selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+          selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
 
-                that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which === 40) {
-                            that.$selectableUl.focus();
-                            return false;
-                        }
-                    });
-
-                that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which == 40) {
-                            that.$selectionUl.focus();
-                            return false;
-                        }
-                    });
-            },
-            afterSelect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            },
-            afterDeselect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
+        that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+          .on('keydown', function (e) {
+            if (e.which === 40) {
+              that.$selectableUl.focus();
+              return false;
             }
-        });
-    }
-    addMultiSelect("#account_multi_user", "Username")
-    addMultiSelect("#account_domains", "Domain")
+          });
+
+        that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+          .on('keydown', function (e) {
+            if (e.which == 40) {
+              that.$selectionUl.focus();
+              return false;
+            }
+          });
+      },
+      afterSelect: function () {
+        this.qs1.cache();
+        this.qs2.cache();
+      },
+      afterDeselect: function () {
+        this.qs1.cache();
+        this.qs2.cache();
+      }
+    });
+  }
+  addMultiSelect("#account_multi_user", "Username")
+  addMultiSelect("#account_domains", "Domain")
 </script>
 {% endblock %}
