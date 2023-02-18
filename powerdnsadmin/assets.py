@@ -12,7 +12,7 @@ class ConcatFilter(Filter):
     out.write(';'.join([h.data() for h, info in hunks]))
 
 css_login = Bundle(
-  'node_modules/@fortawesome/fontawesome-free/css/all.min.css',
+  'node_modules/@fortawesome/fontawesome-free/css/all.css',
   'node_modules/icheck/skins/square/blue.css',
   'node_modules/admin-lte/dist/css/adminlte.css',
   filters=('cssmin', 'cssrewrite'),
@@ -31,8 +31,8 @@ js_validation = Bundle(
   output='generated/validation.js')
 
 css_main = Bundle(
-  'node_modules/@fortawesome/fontawesome-free/css/all.min.css',
-  'node_modules/datatables.net-bs4/css/dataTables.bootstrap4.min.css',
+  'node_modules/@fortawesome/fontawesome-free/css/all.css',
+  'node_modules/datatables.net-bs4/css/dataTables.bootstrap4.css',
   'node_modules/icheck/skins/square/blue.css',
   'node_modules/multiselect/css/multi-select.css',
   'node_modules/admin-lte/dist/css/adminlte.css',

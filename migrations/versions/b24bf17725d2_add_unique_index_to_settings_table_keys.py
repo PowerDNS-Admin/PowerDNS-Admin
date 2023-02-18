@@ -1,8 +1,8 @@
 """Add unique index to settings table keys
 
 Revision ID: b24bf17725d2
-Revises: 0967658d9c0d
-Create Date: 2021-12-12 20:29:17.103441
+Revises: f41520e41cee
+Create Date: 2023-02-18 00:00:00.000000
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'b24bf17725d2'
-down_revision = '0967658d9c0d'
+down_revision = 'f41520e41cee'
 branch_labels = None
 depends_on = None
 
