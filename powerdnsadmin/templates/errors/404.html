@@ -19,17 +19,19 @@
 <!-- Main content -->
 <section class="content">
     <div class="error-page">
-        <h2 class="headline text-yellow">404</h2>
-        <div class="error-content">
-            <h3>
-                <i class="fa fa-warning text-yellow"></i> Oops! You're lost
-            </h3>
-            <p>
-                The page you requested could not be found.
-                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
-            </p>
-        </div>
-        <!-- /.error-content -->
+      <h2 class="headline text-yellow">
+        404
+      </h2>
+      <div class="error-content">
+        <h3>
+          <i class="fa-solid fa-exclamation-triangle text-yellow"></i>
+          Oops! You're lost
+        </h3>
+        <p>
+          The page you requested could not be found.
+          You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+        </p>
+      </div>
     </div>
     <!-- /.error-page -->
 </section>
