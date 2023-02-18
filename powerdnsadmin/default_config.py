@@ -20,12 +20,12 @@ SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 ### DATABASE - MySQL
-SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
-    urllib.parse.quote_plus(SQLA_DB_USER),
-    urllib.parse.quote_plus(SQLA_DB_PASSWORD),
-    SQLA_DB_HOST,
-    SQLA_DB_NAME
-)
+# SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
+#     urllib.parse.quote_plus(SQLA_DB_USER),
+#     urllib.parse.quote_plus(SQLA_DB_PASSWORD),
+#     SQLA_DB_HOST,
+#     SQLA_DB_NAME
+# )
 
 ### DATABASE - SQLite
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
