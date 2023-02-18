@@ -1,133 +1,137 @@
 {% extends "base.html" %}
-{% block title %}<title>{{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block title %}
+  <title>
+    {{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}
+  </title>
+{% endblock %}
 
 {% block dashboard_stat %}
-<section class="content-header">
-    <h1>
-        Manage domain: <b>{{ domain.name | pretty_domain_name }}</b>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i
-                class="fa fa-dashboard"></i> Home</a></li>
-        <li>Domain</li>
-        <li class="active">{{ domain.name | pretty_domain_name }}</li>
-    </ol>
-</section>
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            Domain: <b>{{ domain.name | pretty_domain_name }}</b>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Domain: {{ domain.name | pretty_domain_name }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
 <section class="content">
+  <div class="container-fluid">
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-body">
-                    {% if domain.type != 'Slave' %}
-                    <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ domain.name }}">
-                        Add Record&nbsp;<i class="fa fa-plus"></i>
-                    </button>
-                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
-                        Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
-                    </button>
-                    {% else %}
-                    <button type="button" class="btn btn-flat btn-primary pull-left button_update_from_master" id="{{ domain.name }}">
-                        Update from Master&nbsp;<i class="fa fa-download"></i>
-                    </button>
-                    {% endif %}
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary pull-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
-                        Admin&nbsp;<i class="fa fa-cog"></i>
-                      </button>
-                    {% endif %}
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            {% if domain.type != 'Slave' %}
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left button_add_record" id="{{ domain.name }}">
+                <i class="fa-solid fa-plus"></i>
+                &nbsp;Add Record
+              </button>
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-right button_apply_changes" id="{{ domain.name }}" value="{{ domain.serial }}">
+                <i class="fa-solid fa-save"></i>
+                &nbsp;Apply Changes
+              </button>
+            {% else %}
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left button_update_from_primary" id="{{ domain.name }}">
+                <i class="fa-solid fa-sync"></i>
+                &nbsp;Update from Primary
+              </button>
+            {% endif %}
+            {% if current_user.role.name in ['Administrator', 'Operator'] %}
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary float-left btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+                <i class="fa-solid fa-toolbox"></i>
+                &nbsp;Admin
+              </button>
+            {% endif %}
+            {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+              <button type="button" style="position: relative; margin-left: 20px" class="btn btn-primary button_changelog" id="{{ domain.name }}">
+                <i class="fa-solid fa-history" aria-hidden="true"></i>
+                &nbsp;Changelog
+              </button>
+            {% endif %}
+          </div>
+          <div class="card-body">
+            <table id="tbl_records" class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>TTL</th>
+                  <th>Data</th>
+                  {% if domain.type != 'Slave' %}
+                    <th>Comment</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
                     {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-                    <button type="button" style="position: relative; margin-left: 20px" class="btn btn-flat btn-primary button_changelog" id="{{ domain.name }}">
-                        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-                    </i>
-                    </button>
+                      <th >Changelog</th>
                     {% endif %}
-                </div>
-                <div class="box-body">
-                    <table id="tbl_records" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>TTL</th>
-                                <th>Data</th>
-                                <th>Comment</th>
-                                <th>Edit</th>
-                                <th>Delete</th>
-                                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-                                <th >Changelog</th>
-                                {% endif %}
-                                <th>Invisible Sorting Column</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                                {% for record in records %}
-                                <tr class="odd row_record" id="{{ domain.name }}">
-                                    <td>
-                                        {{ (record.name,domain.name) | display_record_name | pretty_domain_name }}
-                                    </td>
-                                    <td>
-                                        {{ record.type }}
-                                    </td>
-                                    <td>
-                                        {{ record.status }}
-                                    </td>
-                                    <td>
-                                        {{ record.ttl }}
-                                    </td>
-                                    <td>
-                                        {{ record.data | pretty_domain_name }}
-                                    </td>
-                                    <td>
-                                        {{ record.comment }}
-                                    </td>
-                                {% if domain.type != 'Slave' %}
-                                    <td width="6%">
-                                        {% if record.is_allowed_edit() %}
-                                            <button type="button" class="btn btn-flat btn-warning button_edit">Edit&nbsp;<i class="fa fa-edit"></i></button>
-                                        {% else %}
-                                            <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i></button>
-                                        {% endif %}
-                                    </td>
-                                    <td width="6%">
-                                        {% if record.is_allowed_delete() %}
-                                            <button type="button" class="btn btn-flat btn-danger button_delete">Delete&nbsp;<i class="fa fa-trash"></i></button>
-                                        {% endif %}
-                                    </td>
-                                {% else %}
-                                    <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
-                                    </td>
-                                    <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-warning">&nbsp;&nbsp;<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;</button>
-                                    </td>
-                                {% endif %}
-                                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-                                    <td width="6%">
-                                        <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-flat btn-primary">&nbsp;&nbsp;
-                                                            <i class="fa fa-history" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;
-                                        </button>
-                                    </td>
-                                    {% endif %}
-                                    <!-- hidden column that we can sort on -->
-                                    <td>1</td>
-                                </tr>
-                                {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <!-- /.box-body -->
-            </div>
-            <!-- /.box -->
+                  {% else %}
+                    <th>Invisible Sorting Column</th>
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in records %}
+                  <tr class="odd row_record" id="{{ domain.name }}">
+                    <td>{{ (record.name,domain.name) | display_record_name | pretty_domain_name }}</td>
+                    <td>{{ record.type }}</td>
+                    <td>{{ record.status }}</td>
+                    <td>{{ record.ttl }}</td>
+                    <td>{{ record.data | pretty_domain_name }}</td>
+                    {% if domain.type != 'Secondary' %}
+                      <td>{{ record.comment }}</td>
+                      <td width="6%">
+                        {% if record.is_allowed_edit() %}
+                          <button type="button" class="btn btn-warning button_edit">
+                            <i class="fa-solid fa-edit"></i>
+                          </button>
+                        {% else %}
+                          <button type="button" class="btn btn-warning">
+                            <i class="fa-solid fa-exclamation-circle"></i>
+                          </button>
+                        {% endif %}
+                      </td>
+                      <td width="6%">
+                        {% if record.is_allowed_delete() %}
+                          <button type="button" class="btn btn-danger button_delete">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        {% endif %}
+                      </td>
+                      {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                        <td width="6%">
+                          <button type="button" onclick="show_record_changelog('{{record.name}}','{{record.type}}',event)" class="btn btn-primary">
+                            <i class="fa-solid fa-history" aria-hidden="true"></i>
+                          </button>
+                        </td>
+                      {% endif %}
+                    {% endif %}
+                    <!-- hidden column that we can sort on -->
+                    <td>1</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <!-- /.col -->
+      </div>
     </div>
-    <!-- /.row -->
+  </div>
 </section>
 {% endblock %}
+
 {% block extrascripts %}
 <script>
     // superglobals
@@ -169,10 +173,14 @@
                 // hidden column so that we can add new records on top
                 // regardless of whatever sorting is done. See orderFixed
                 visible: false,
-                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-                targets: [ 9 ]
+                {% if domain.type != 'Slave' %}
+                  {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                    targets: [ 9 ]
+                  {% else %}
+                    targets: [ 8 ]
+                  {% endif %}
                 {% else %}
-                targets: [ 8 ]
+                  targets: [ 5 ]
                 {% endif %}
             },
             {
@@ -180,10 +188,14 @@
                 targets: [ 4, 5 ]
             }
         ],
-        {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-        "orderFixed": [[9, 'asc']]
+        {% if domain.type != 'Slave' %}
+          {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+            "orderFixed": [[9, 'asc']]
+          {% else %}
+            "orderFixed": [[8, 'asc']]
+          {% endif %}
         {% else %}
-        "orderFixed": [[8, 'asc']]
+          "orderFixed": [[5, 'asc']]
         {% endif %}
     });
 
@@ -219,7 +231,8 @@
         });
     });
     // handle edit button and record click
-    $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
+    {% if domain.type != 'Slave' %}
+      $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
          e.stopPropagation();
          if ($(this).is('tr')) {
             var nRow = $(this)[0];
@@ -246,7 +259,8 @@
              editRow(table, nRow);
              nEditing = nRow;
          }
-    });
+      });
+    {% endif %}
 
     // handle apply changes button
     $(document.body).on("click",".button_apply_changes", function() {
@@ -284,9 +298,9 @@
             // add new row
             var default_type = records_allow_edit[0]
             {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-	        var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
+              var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
             {% else %}
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
+              var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
             {% endif %}
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
@@ -317,8 +331,8 @@
             nNew = false;
         });
 
-    //handle update_from_master button
-    $(document.body).on("click", ".button_update_from_master", function (e) {
+    //handle update_from_primary button
+    $(document.body).on("click", ".button_update_from_primary", function (e) {
             var domain = $(this).prop('id');
             applyChanges({'domain': domain, '_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
     });
@@ -551,74 +565,84 @@
         }
     });
     {% endif %}
+
+    window.onload = function() {
+    document.getElementById("loading-spinner").style.display = "none";
+  }
+
 </script>
 {% endblock %}
+
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete">
+  <div class="modal fade" id="modal_delete">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" id="button_delete_cancel"
-                    data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Confirmation</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
-        <!-- /.modal-content -->
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary pull-left" id="button_delete_cancel" data-dismiss="modal">
+            <i class="fa-solid fa-window-close"></i>&nbsp;Close
+          </button>
+          <button type="button" class="btn btn-danger" id="button_delete_confirm">
+            <i class="fa-solid fa-trash"></i>&nbsp;Delete
+          </button>
+        </div>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
-</div>
-<div class="modal fade modal-primary" id="modal_apply_changes">
+  </div>
+
+  <div class="modal fade" id="modal_apply_changes">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left"
-                    data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-primary" id="button_apply_confirm">Apply</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Confirmation</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
-        <!-- /.modal-content -->
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <i class="fa-solid fa-window-close"></i>&nbsp;Close
+          </button>
+          <button type="button" class="btn btn-success" id="button_apply_confirm">
+            <i class="fa-solid fa-save"></i>&nbsp;Apply Changes
+          </button>
+        </div>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
-</div>
-<div class="modal fade modal-primary" id="modal_custom_record">
+  </div>
+
+  <div class="modal fade bg-primary" id="modal_custom_record">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Custom Record</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Custom Record</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
-        <!-- /.modal-content -->
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <i class="fa-solid fa-window-close"></i>&nbsp;Close
+          </button>
+          <button type="button" class="btn btn-success" id="button_save">
+            <i class="fa-solid fa-save"></i>&nbsp;Save
+          </button>
+        </div>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
-</div>
+  </div>
 {% endblock %}

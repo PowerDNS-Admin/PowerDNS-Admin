@@ -1,46 +1,66 @@
 {% extends "base.html" %}
-{% block title %}<title>Domain Management - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block title %}
+  <title>
+    Domain Management - {{ SITE_NAME }}
+  </title>
+{% endblock %}
 
 {% block dashboard_stat %}
+
 {% if status %}
-{% if status.get('status') == 'ok' %}
-<div class="alert alert-success">
-    <strong>Success!</strong> {{ status.get('msg') }}
-</div>
-{% elif status.get('status') == 'error' %}
-<div class="alert alert-danger">
-    {% if status.get('msg') != None %}
-    <strong>Error!</strong> {{ status.get('msg') }}
-    {% else %}
-    <strong>Error!</strong> An undefined error occurred.
-    {% endif %}
-</div>
+  {% if status.get('status') == 'ok' %}
+    <div class="alert alert-success">
+      <strong>Success!</strong> {{ status.get('msg') }}
+    </div>
+  {% elif status.get('status') == 'error' %}
+    <div class="alert alert-danger">
+      {% if status.get('msg') != None %}
+        <strong>Error!</strong>
+        {{ status.get('msg') }}
+      {% else %}
+        <strong>Error!</strong>
+        An undefined error occurred.
+      {% endif %}
+    </div>
+  {% endif %}
 {% endif %}
-{% endif %}
-<section class="content-header">
-    <h1>
-        Manage domain <small>{{ domain.name | pretty_domain_name }}</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Domain Management</li>
-    </ol>
-</section>
+
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 text-dark">
+          Domain Settings
+          <small>{{ domain.name | pretty_domain_name }}</small>
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+          <li class="breadcrumb-item active">Domain Settings: {{ domain.name | pretty_domain_name }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block content %}
 <section class="content">
+    <div class="container-fluid">
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
+        <div class="col-12">
+            <div class="card">
                 <form method="post" action="{{ url_for('domain.setting', domain_name=domain.name) }}">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <div class="box-header">
-                        <h3 class="box-title">Domain Access Control</h3>
+                    <div class="card-header">
+                        <h3 class="card-title">Domain Access Control</h3>
                     </div>
-                    <div class="box-body">
+                    <div class="card-body">
                         <div class="row">
-                            <div class="col-xs-2">
+                            <div class="col-2">
                                 <p>Users on the right have access to manage the records in
                                     the {{ domain.name | pretty_domain_name }} domain.</p>
                                 <p>Click on users to move from between columns.</p>
@@ -49,7 +69,7 @@
                                     and already have access to <b>ALL</b> domains.
                                 </p>
                             </div>
-                            <div class="form-group col-xs-2">
+                            <div class="form-group col-2">
                                 <select multiple="multiple" class="form-control" id="domain_multi_user"
                                     name="domain_multi_user[]">
                                     {% for user in users %}
@@ -60,11 +80,13 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="box-body">
-                            <div class="col-xs-offset-2">
+                        <div class="card-body">
+                            <div class="col-offset-2">
                                 <div class="form-group">
-                                    <button type="submit" class="btn btn-flat btn-primary"><i class="fa fa-check"></i>
-                                        Save</button>
+                                    <button type="submit" class="btn btn-primary">
+                                      <i class="fa-solid fa-check"></i>
+                                      Save
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -74,13 +96,13 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Account</h3>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Account</h3>
                 </div>
-                <div class="box-body">
-                    <div class="col-xs-12">
+                <div class="card-body">
+                    <div class="col-12">
                         <div class="form-group">
                             <form method="post"
                                 action="{{ url_for('domain.change_account', domain_name=domain.name) }}">
@@ -94,7 +116,7 @@
                                     {% endfor %}
                                 </select><br />
                                 <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name | pretty_domain_name }}
+                                    <i class="fa-solid fa-check"></i>&nbsp;Change account for {{ domain.name | pretty_domain_name }}
                                 </button>
                             </form>
                         </div>
@@ -104,12 +126,12 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Auto PTR creation</h3>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Auto PTR creation</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p><input type="checkbox" id="{{ domain.name }}" class="auto_ptr_toggle"
                             {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %}
                             {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
@@ -123,12 +145,12 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">DynDNS 2 Settings</h3>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">DynDNS 2 Settings</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p><input type="checkbox" id="{{ domain.name }}" class="dyndns_on_demand_toggle"
                             {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked{% endif %}{% endfor %}>
                         &nbsp;Allow on-demand creation of records via DynDNS updates?</p>
@@ -137,12 +159,12 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Change Type</h3>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Change Type</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p>The type decides how the domain will be replicated across multiple DNS servers.</p>
                     <ul>
                         <li>
@@ -150,12 +172,12 @@
                             PowerDNS server or you handle replication via your backend.
                         </li>
                         <li>
-                            Master - This PowerDNS server will serve as the master and will send zone transfers
-                            (AXFRs) to other servers configured as slaves.
+                            Primary - This PowerDNS server will serve as the primary and will send zone transfers
+                            (AXFRs) to other servers configured as secondaries.
                         </li>
                         <li>
-                            Slave - This PowerDNS server will serve as the slave and will request and receive
-                            zone transfers (AXFRs) from other servers configured as masters.
+                            Secondary - This PowerDNS server will serve as the secondaries and will request and receive
+                            zone transfers (AXFRs) from other servers configured as primaries.
                         </li>
                     </ul>
                     <b>New Domain Type Setting:</b>
@@ -164,16 +186,16 @@
                         <select name="domain_type" class="form-control" style="width:15em;">
                             <option selected value="0">- Unchanged -</option>
                             <option value="native">Native</option>
-                            <option value="master">Master</option>
-                            <option value="slave">Slave</option>
+                            <option value="priamry">Primary</option>
+                            <option value="secondary">Secondary</option>
                         </select><br />
-                        <div class="form-group" style="display: none;" id="domain_master_address_div">
-                            <input type="text" class="form-control" name="domain_master_address"
-                                id="domain_master_address"
-                                placeholder="Enter valid master ip addresses (separated by commas)">
+                        <div class="form-group" style="display: none;" id="domain_primary_address_div">
+                            <input type="text" class="form-control" name="domain_primary_address"
+                                id="domain_primary_address"
+                                placeholder="Enter valid Primary Server IP addresses (separated by commas)">
                         </div>
-                        <button type="submit" class="btn btn-flat btn-primary" id="change_type">
-                            <i class="fa fa-check"></i>&nbsp;Change type for {{ domain.name | pretty_domain_name }}
+                        <button type="submit" class="btn btn-primary" id="change_type">
+                            <i class="fa-solid fa-check"></i>&nbsp;Change type for {{ domain.name | pretty_domain_name }}
                         </button>
                     </form>
                 </div>
@@ -181,12 +203,12 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Change SOA-EDIT-API</h3>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Change SOA-EDIT-API</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change is made
                         to the domain.</p>
                     <ul>
@@ -215,8 +237,8 @@
                             <option>EPOCH</option>
                             <option>OFF</option>
                         </select><br />
-                        <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                            <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name | pretty_domain_name }}
+                        <button type="submit" class="btn btn-primary" id="change_soa_edit_api">
+                            <i class="fa-solid fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name | pretty_domain_name }}
                         </button>
                     </form>
                 </div>
@@ -224,22 +246,23 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Domain Deletion</h3>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Domain Deletion</h3>
                 </div>
-                <div class="box-body">
+                <div class="card-body">
                     <p>This function is used to remove a domain from PowerDNS-Admin <b>AND</b> PowerDNS. All records and
                         user privileges associated with this domain will also be removed. This change cannot be
                         reverted.</p>
-                    <button type="button" class="btn btn-flat btn-danger pull-left delete_domain"
+                    <button type="button" class="btn btn-danger float-left delete_domain"
                         id="{{ domain.name }}">
-                        <i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name | pretty_domain_name }}
+                        <i class="fa-solid fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name | pretty_domain_name }}
                     </button>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </section>
 {% endblock %}
@@ -336,39 +359,37 @@
         modal.modal('show');
     });
 
-    // domain master address input handeling
+    // domain primary address input handeling
     $("select[name=domain_type]").change(function () {
         var type = $(this).val();
-        if (type == "slave") {
-            $("#domain_master_address_div").show();
+        if (type == "secondary") {
+            $("#domain_primary_address_div").show();
         } else {
-            $("#domain_master_address_div").hide();
+            $("#domain_primary_address_div").hide();
         }
     });
 
 </script>
 {% endblock %}
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete_domain">
+<div class="modal fade" id="modal_delete_domain">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+              <h4 class="modal-title">Confirmation</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Confirmation</h4>
             </div>
             <div class="modal-body">
                 <p></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">
+                <button type="button" class="btn btn-secondary float-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="button_delete_confirm">
                     Delete</button>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
 </div>
 {% endblock %}
