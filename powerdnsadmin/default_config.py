@@ -8,7 +8,7 @@ SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
 BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
 HSTS_ENABLED = False
-FILESYSTEM_SESSIONS_ENABLED = False
+FILESYSTEM_SESSIONS_ENABLED = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
 
@@ -28,7 +28,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
 )
 
 ### DATABASE - SQLite
-# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
 
 # SAML Authnetication
 SAML_ENABLED = False
