@@ -10,7 +10,7 @@ from yaml import Loader, load
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
 
-from .base import captcha, csrf, login_manager
+from .base import csrf, login_manager
 from ..lib import utils
 from ..decorators import dyndns_login_required
 from ..models.base import db
@@ -400,7 +400,7 @@ def login():
             desc_prop = Setting().get('oidc_oauth_account_description_property')
 
             account_to_add = []
-      #If the name_property and desc_property exist in me (A variable that contains all the userinfo from the IdP).
+	    #If the name_property and desc_property exist in me (A variable that contains all the userinfo from the IdP).
             if name_prop in me and desc_prop in me:
                 accounts_name_prop = [me[name_prop]] if type(me[name_prop]) is not list else me[name_prop]
                 accounts_desc_prop = [me[desc_prop]] if type(me[desc_prop]) is not list else me[desc_prop]
@@ -415,7 +415,7 @@ def login():
                     account_to_add.append(account)
                 user_accounts = user.get_accounts()
 
-    # Add accounts
+		# Add accounts
                 for account in account_to_add:
                     if account not in user_accounts:
                         account.add_user(user)
@@ -651,73 +651,50 @@ def logout():
 
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register():
-  CAPTCHA_ENABLE = current_app.config.get('CAPTCHA_ENABLE')
-  if Setting().get('signup_enabled'):
-    if current_user.is_authenticated:
-      return redirect(url_for('index.index'))
-    if request.method == 'GET':
-      return render_template('register.html', captcha_enable=CAPTCHA_ENABLE)
-    elif request.method == 'POST':
-      username = request.form.get('username', '').strip()
-      password = request.form.get('password', '')
-      firstname = request.form.get('firstname', '').strip()
-      lastname = request.form.get('lastname', '').strip()
-      email = request.form.get('email', '').strip()
-      rpassword = request.form.get('rpassword', '')
+    if Setting().get('signup_enabled'):
+        if request.method == 'GET':
+            return render_template('register.html')
+        elif request.method == 'POST':
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            firstname = request.form.get('firstname', '').strip()
+            lastname = request.form.get('lastname', '').strip()
+            email = request.form.get('email', '').strip()
+            rpassword = request.form.get('rpassword', '')
 
-      is_valid_email = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+            if not username or not password or not email:
+                return render_template(
+                    'register.html', error='Please input required information')
 
-      error_messages = {}
-      if not firstname:
-        error_messages['firstname'] = 'First Name is required'
-      if not lastname:
-        error_messages['lastname'] = 'Last Name is required'
-      if not username:
-        error_messages['username'] = 'Username is required'
-      if not password:
-        error_messages['password'] = 'Password is required'
-      if not rpassword:
-        error_messages['rpassword'] = 'Password confirmation is required'
-      if not email:
-        error_messages['email'] = 'Email is required'
-      if not is_valid_email.match(email):
-        error_messages['email'] = 'Invalid email address'
-      if password != rpassword:
-        error_messages['password'] = 'Password confirmation does not match'
-        error_messages['rpassword'] = 'Password confirmation does not match'
+            if password != rpassword:
+                return render_template(
+                    'register.html',
+                    error="Password confirmation does not match")
 
-      if not captcha.validate():
-        return render_template(
-          'register.html', error='Invalid CAPTCHA answer', error_messages=error_messages, captcha_enable=CAPTCHA_ENABLE)
+            user = User(username=username,
+                        plain_text_password=password,
+                        firstname=firstname,
+                        lastname=lastname,
+                        email=email)
 
-      if error_messages:
-        return render_template('register.html', error_messages=error_messages, captcha_enable=CAPTCHA_ENABLE)
-
-      user = User(username=username,
-        plain_text_password=password,
-        firstname=firstname,
-        lastname=lastname,
-        email=email
-      )
-
-      try:
-        result = user.create_local_user()
-        if result and result['status']:
-          if Setting().get('verify_user_email'):
-            send_account_verification(email)
-          if Setting().get('otp_force') and Setting().get('otp_field_enabled'):
-            user.update_profile(enable_otp=True)
-            prepare_welcome_user(user.id)
-            return redirect(url_for('index.welcome'))
-          else:
-            return redirect(url_for('index.login'))
-        else:
-          return render_template('register.html',
-            error=result['msg'], captcha_enable=CAPTCHA_ENABLE)
-      except Exception as e:
-        return render_template('register.html', error=e, captcha_enable=CAPTCHA_ENABLE)
+            try:
+                result = user.create_local_user()
+                if result and result['status']:
+                    if Setting().get('verify_user_email'):
+                        send_account_verification(email)
+                    if Setting().get('otp_force') and Setting().get('otp_field_enabled'):
+                        user.update_profile(enable_otp=True)
+                        prepare_welcome_user(user.id)
+                        return redirect(url_for('index.welcome'))
+                    else:
+                        return redirect(url_for('index.login'))
+                else:
+                    return render_template('register.html',
+                                           error=result['msg'])
+            except Exception as e:
+                return render_template('register.html', error=e)
     else:
-      return render_template('errors/404.html'), 404
+        return render_template('errors/404.html'), 404
 
 
 # Show welcome page on first login if otp_force is enabled

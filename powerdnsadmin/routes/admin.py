@@ -795,7 +795,7 @@ class DetailedHistory():
         if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
             self.detailed_msg = render_template_string("""
                     <table class="table table-bordered table-striped">
-                        <tr><td>Domain Type:</td><td>{{ domaintype }}</td></tr>
+                        <tr><td>Domain type:</td><td>{{ domaintype }}</td></tr>
                         <tr><td>Account:</td><td>{{ account }}</td></tr>
                     </table>
                 """,
@@ -804,23 +804,22 @@ class DetailedHistory():
 
         elif 'authenticator' in detail_dict: # this is a user authentication
             self.detailed_msg = render_template_string("""
-                <table class="table table-bordered table-striped"">
+                <table class="table table-bordered table-striped" style="width:565px;">
+                    <thead>
+                        <tr>
+                            <th colspan="3" style="background: rgba({{ background_rgba }});">
+                                <p style="color:white;">User {{ username }} authentication {{ auth_result }}</p>
+                            </th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <tr>
-                            <td>Username:</td>
-                            <td>{{ username }}</td>
-                        </tr>
-                        <tr>
-                            <td>Authentication Result:</td>
-                            <td>{{ auth_result }}</td>
-                        </tr>
-                        <tr>
                             <td>Authenticator Type:</td>
-                            <td>{{ authenticator }}</td>
+                            <td colspan="2">{{ authenticator }}</td>
                         </tr>
                         <tr>
-                            <td>IP Address:</td>
-                            <td>{{ ip_address }}</td>
+                            <td>IP Address</td>
+                            <td colspan="2">{{ ip_address }}</td>
                         </tr>
                     </tbody>
                 </table>

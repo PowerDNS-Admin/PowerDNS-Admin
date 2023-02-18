@@ -1,48 +1,37 @@
 {% extends "base.html" %}
-
-{% block title %}
-  <title>
-    403 Error - {{ SITE_NAME }}
-  </title>
-{% endblock %}
+{% block title %}<title>PowerDNS-Admin - 403 Error</title>{% endblock %}
 
 {% block dashboard_stat %}
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0 text-dark">
-            403
-            <small>Error</small>
-          </h1>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active">403 Error</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        403
+        <small>Error</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li>403</li>
+      </ol>
+    </section>
 {% endblock %}
 
 {% block content %}
-  <section class="content">
+<!-- Main content -->
+<section class="content">
     <div class="error-page">
-      <h2 class="headline text-yellow">
-        403
-      </h2>
-      <div class="error-content">
-        <h3>
-          <i class="fas fa-exclamation-triangle text-yellow"></i>
-          Oops! Access denied
-        </h3>
-        <p>
-          You don't have permission to access this page
-          You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
-        </p>
-      </div>
+        <h2 class="headline text-yellow">403</h2>
+        <div class="error-content">
+            <h3>
+                <i class="fa fa-warning text-yellow"></i> Oops! Access denied
+            </h3>
+            <p>
+                You don't have permission to access this page
+                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+            </p>
+        </div>
+        <!-- /.error-content -->
     </div>
-  </section>
+    <!-- /.error-page -->
+</section>
+<!-- /.content -->
 {% endblock %}

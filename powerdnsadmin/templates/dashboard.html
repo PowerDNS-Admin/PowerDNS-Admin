@@ -1,217 +1,191 @@
 {% extends "base.html" %}
-
 {% set active_page = "dashboard" %}
+{% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block title %}
-  <title>
-    Dashboard - {{ SITE_NAME }}
-  </title>
-{% endblock %}
 
 {% block dashboard_stat %}
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0 text-dark">
-            Dashboard
-            <small>Info</small>
-          </h1>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Dashboard
+        <small>Info</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Dashboard</li>
+      </ol>
+    </section>
 {% endblock %}
 
 {% import 'applied_change_macro.html' as applied_change_macro %}
 
 {% block content %}
-  <section class="content">
-    <div class="container-fluid">
+ <!-- Main content -->
+    <section class="content">
       {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-        <div class="row">
-          <div class="col-3">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Statistics</h3>
-              </div>
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-6">
-                    <!-- small box -->
-                    <div class="small-box bg-info">
-                      <div class="inner">
-                        <h3>{{ domain_count }}</h3>
-                        <p>{% if domain_count > 1 %}Domains{% else %}Domain{% endif %}</p>
-                      </div>
-                      <div class="icon">
-                        <i class="fa-solid fa-book"></i>
+      <div class="row">
+        <div class="col-xs-3">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Statistics</h3>
+                </div>
+                <div class="box-body">
+                  <div class="row">
+                  <div class="col-lg-6">
+                      <!-- small box -->
+                      <div class="small-box bg-aqua">
+                        <div class="inner">
+                          <h3>{{ domain_count }}</h3>
+                          <p>{% if domain_count > 1 %}Domains{% else %}Domain{% endif %}</p>
+                        </div>
+                        <div class="icon">
+                          <i class="fa fa-book"></i>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <div class="col-6">
+                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    <div class="col-lg-6">
                       <a href="{{ url_for('admin.manage_user') }}">
-                        <div class="small-box bg-green">
-                          <div class="inner">
-                            <h3>{{ user_num }}</h3>
-                            <p>{% if user_num > 1 %}Users{% else %}User{% endif %}</p>
-                          </div>
-                          <div class="icon">
-                            <i class="fa-solid fa-users"></i>
-                          </div>
+                      <div class="small-box bg-green">
+                        <div class="inner">
+                          <h3>{{ user_num }}</h3>
+                          <p>{% if user_num > 1 %}Users{% else %}User{% endif %}</p>
                         </div>
+                        <div class="icon">
+                          <i class="fa fa-users"></i>
+                        </div>
+                      </div>
                       </a>
                     </div>
-                  {% endif %}
-                </div>
-                <div class="row">
-                  <div class="col-6">
-                    <a href="{{ url_for('admin.history') }}">
+                    {% endif %}
+                    </div>
+                    <div class="row">
+                    <div class="col-lg-6">
+                      <a href="{{ url_for('admin.history') }}">
                       <div class="small-box bg-green">
                         <div class="inner">
                           <h3>{{ history_number }}</h3>
                           <p>{% if history_number > 1 %}Histories{% else %}History{% endif %}</p>
                         </div>
                         <div class="icon">
-                          <i class="fa-solid fa-calendar"></i>
+                          <i class="fa fa-calendar"></i>
                         </div>
                       </div>
-                    </a>
-                  </div>
-                  {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <div class="col-6">
-                      <a href="{{ url_for('admin.pdns_stats') }}">
-                        <div class="small-box bg-green">
-                          <div class="inner">
-                            <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
-                            <p>Uptime</p>
-                          </div>
-                          <div class="icon">
-                            <i class="fa-solid fa-clock"></i>
-                          </div>
-                        </div>
                       </a>
                     </div>
-                  {% endif %}
+                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    <div class="col-lg-6">
+                      <a href="{{ url_for('admin.pdns_stats') }}">
+                      <div class="small-box bg-green">
+                        <div class="inner">
+                          <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
+                          <p>Uptime</p>
+                        </div>
+                        <div class="icon">
+                          <i class="fa fa-clock-o"></i>
+                        </div>
+                      </div>
+                      </a>
+                    </div>
+                    {% endif %}
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-          <div class="col-9">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Recent History</h3>
-              </div>
-              <div class="card-body">
-                <table id="tbl_history" class="table table-bordered table-striped">
-                  <thead>
+        </div>
+        <div class="col-xs-9">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Recent History</h3>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_history" class="table table-bordered table-striped">
+                    <thead>
                     <tr>
                       <th>Changed By</th>
                       <th>Content</th>
                       <th>Time</th>
                       <th>Detail</th>
                     </tr>
-                  </thead>
-                  <tbody>
+                    </thead>
+                    <tbody>
                     {% for history in histories %}
                       <tr class="odd">
-                        <td>{{ history.history.created_by }}</td>
-                        <td>{{ history.history.msg }}</td>
-                        <td>{{ history.history.created_on }}</td>
-                        <td width="6%">
-                          <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
-                            {{ history.detailed_msg | safe }}
-                            {% if history.change_set %}
-                              <div class="content">
-                                <div id="change_index_definition"></div>
-                                {% call applied_change_macro.applied_change_template(history.change_set) %}
-                                {% endcall %}
-                              </div>
-                            {% endif %}
-                          </div>
-                          <button type="button" class="btn btn-sm btn-primary history-info-button"
-                            {% if history.detailed_msg == "" and history.change_set is none %}
-                              style="visibility: hidden;"
-                            {% endif %} value="{{ loop.index0 }}">
-                            <i class="fa-solid fa-info-circle"></i>&nbsp;Info
-                          </button>
-                        </td>
+                          <td>{{ history.history.created_by }}</td>
+                          <td>{{ history.history.msg }}</td>
+                          <td>{{ history.history.created_on }}</td>
+                          <td width="6%">
+                            <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
+                                {{ history.detailed_msg | safe }}
+                                {% if history.change_set %}
+                                <div class="content">
+                                    <div id="change_index_definition"></div>
+                                    {% call applied_change_macro.applied_change_template(history.change_set) %}
+                                    {% endcall %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <button type="button" class="btn btn-flat btn-primary history-info-button"
+                                {% if history.detailed_msg == "" and history.change_set is none %}
+                                style="visibility: hidden;"
+                                {% endif %} value="{{ loop.index0 }}">Info&nbsp;<i class="fa fa-info"></i>
+                            </button>
+                          </td>
                       </tr>
                     {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      {% endif %}
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <div class="card-header">
-              <div class="nav-tabs-custom">
-                <ul class="nav nav-tabs card-header-tabs" id="custom-content-below-tab" role="tablist">
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#tab_{{custom_boxes.order[0]}}" data-toggle="pill" role="tab">
-                      Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b>
-                    </a>
-                  </li>
-                  {% for boxId in custom_boxes.order[1:] %}
-                  <li class="nav-item">
-                    <a class="nav-link" href="#tab_{{boxId}}" data-toggle="pill" role="tab">Hosted Domains <b>{{custom_boxes.boxes[boxId][0]}}</b></a>
-                  </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="tab-content">
-                {% for boxId in custom_boxes.order %}
-                <div class="tab-pane fade show" id='tab_{{boxId}}'>
-                  <div class="card-header">
-                    <h3 class="card-title">Hosted Domains <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>
-                    {% if show_bg_domain_button %}
-                    <button type="button" class="btn btn-primary refresh-bg-button float-right">
-                      <i class="fa-solid fa-sync"></i>
-                      &nbsp;Sync Domains
-                    </button>
-                    {% endif %}
-                  </div>
-                  <div class="card-body">
-                    <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>DNSSEC</th>
-                          <th>Type</th>
-                          <th>Serial</th>
-                          <th>Primary</th>
-                          <th>Account</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      </tbody>
-                    </table>
-                  </div>
+                    </tbody>
+                  </table>
                 </div>
-                {% endfor %}
-              </div>
             </div>
-          </div>
-
         </div>
       </div>
-    </div>
-  </section>
-{% endblock %}
+      {% endif %}
 
+<!--SYBPATCH START-->
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tab_{{custom_boxes.order[0]}}" data-toggle="tab">Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b></a></li>
+            {% for boxId in custom_boxes.order[1:] %}
+                <li><a href="#tab_{{boxId}}" data-toggle="tab">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></a></li>
+            {% endfor %}
+            </ul>
+            <div class="tab-content">
+            {% for boxId in custom_boxes.order %}
+              <div class="tab-pane" id='tab_{{boxId}}'>
+                  <div class="row">
+                    <div class="col-xs-12">
+                      <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
+                        </div>
+                        <div class="box-body">
+                          <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>DNSSEC</th>
+                              <th>Type</th>
+                              <th>Serial</th>
+                              <th>Master</th>
+                              <th>Account</th>
+                              <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            {% endfor %}
+            </div><!-- /.tab-content -->
+        </div><!-- custom tabs -->
+<!--SYBPATCH END-->
+
+    </section>
+    <!-- /.content -->
+{% endblock %}
 {% block extrascripts %}
 <script>
 //SYBPATCH START//
@@ -256,7 +230,7 @@
         "searching" : false,
         "ordering" : false,
         "info" : false,
-        "autoWidth" : true,
+        "autoWidth" : false,
         "columnDefs": [
             {
                 "render": function ( data, type, row ) {
@@ -307,112 +281,118 @@
     });
 
     {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
-      $(document.body).on("click", ".button_dnssec", function() {
+    $(document.body).on("click", ".button_dnssec", function() {
         var domain = $(this).prop('id');
         getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
-      });
+    });
 
-      $(document.body).on("click", ".button_dnssec_enable", function() {
+    $(document.body).on("click", ".button_dnssec_enable", function() {
         var domain = $(this).prop('id');
         enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable', '{{ csrf_token() }}');
-      });
 
-      $(document.body).on("click", ".button_dnssec_disable", function() {
+    });
+
+    $(document.body).on("click", ".button_dnssec_disable", function() {
         var domain = $(this).prop('id');
         enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable', '{{ csrf_token() }}');
-      });
+
+    });
     {% endif %}
 </script>
 {% endblock %}
-
 {% block modals %}
 <div class="modal fade" id="modal_history_info">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">History Details</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div id="modal-info-content">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">History Details</h4>
+            </div>
+            <div class="modal-body">
+              <div id="modal-info-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right"
+                    data-dismiss="modal">Close</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
-          Close
-        </button>
-      </div>
+        <!-- /.modal-content -->
     </div>
-  </div>
+    <!-- /.modal-dialog -->
 </div>
-
 <div class="modal fade modal-primary" id="modal_template">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Clone to template</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary float-right" id="button_close" data-dismiss="modal">
-          Close
-        </button>
-        <button type="button" class="btn btn-primary float-right" id="button_save">
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="modal_dnssec_info">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">DNSSEC</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="modal_bg_reload">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Sync Domains from backend</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div id="modal_bg_reload_content">
-          <i class="fa fa-refresh fa-spin"></i> Update in progress ..
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Clone to template</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    id="button_close" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
-          Close
-        </button>
-      </div>
+        <!-- /.modal-content -->
     </div>
-  </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal fade" id="modal_dnssec_info">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">DNSSEC</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal fade" id="modal_bg_reload">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Sync domains from nameserver</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="overlay">
+                  <div id="modal_bg_reload_content"><i class="fa fa-refresh fa-spin"></i> Update in progress ..</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div>
 {% endblock %}

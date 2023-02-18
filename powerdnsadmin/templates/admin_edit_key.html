@@ -1,92 +1,80 @@
 {% extends "base.html" %}
-
 {% set active_page = "admin_keys" %}
-
 {% if (key is not none and key.role.name != "User") %}{% set hide_opts = True %}{%else %}{% set hide_opts = False %}{% endif %}
-
 {% block title %}
-  <title>
-    Edit Key - {{ SITE_NAME }}
-  </title>
+<title>Edit Key - {{ SITE_NAME }}</title>
 {% endblock %}
-
 {% block dashboard_stat %}
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0 text-dark">
-            API Keys
-            <small>{% if create %}Add API Key{% else %}Edit API Key - {{ key.id }}{% endif %}</small>
-          </h1>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_keys') }}">API Keys</a></li>
-            <li class="breadcrumb-item active">{% if create %}Add API Key{% else %}Edit API Key - {% endif %}{{ key.id }}</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Key
+        <small>{% if create %}New key{% else %}{{ key.id }}{% endif %}</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
+        <li><a href="{{ url_for('admin.manage_keys') }}">Key</a></li>
+        <li class="active">{% if create %}Add{% else %}Edit{% endif %} key</li>
+    </ol>
+</section>
 {% endblock %}
 
 {% block content %}
 <section class="content">
-  <div class="container-fluid">
-  <div class="row">
-    <div class="col-4">
-      <div class="card ">
-        <div class="card-header">
-          <h3 class="card-title">{% if create %}Add{% else %}Edit{% endif %} Key</h3>
-        </div>
-        <form role="form" method="post"
-        action="{% if create %}{{ url_for('admin.edit_key') }}{% else %}{{ url_for('admin.edit_key', key_id=key.id) }}{% endif %}">
-          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="create" value="{{ create }}">
-          <div class="card-body">
-            <div class="form-group has-feedback">
-              <label class="control-label" for="role">Role</label>
-              <select class="key_role form-control" id="key_role" name="key_role">
-                {% for role in roles %}
-                  <option value="{{ role.name }}"
-                  {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}
-                  {% if (key is none) and (role.name=="User") %}selected{% endif %}>
-                    {{ role.name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="form-group has-feedback">
-              <label class="control-label" for="description">Description</label>
-                <input type="text" class="form-control" placeholder="Description" name="description"
-                {% if key is not none %} value="{{ key.description }}" {% endif %}>
-                <span class="glyphicon glyphicon-pencil form-control-feedback"></span>
-              </div>
-            </div>
-            <div class="card-header key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-              <h3 class="card-title">Accounts Access Control</h3>
-            </div>
-            <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-              <p>This key will be linked to the accounts on the right,</p>
-              <p>thus granting access to domains owned by the selected accounts.</p>
-              <p>Click on accounts to move between the columns.</p>
-              <div class="form-group col-2">
-                <select multiple="multiple" class="form-control" id="key_multi_account" name="key_multi_account">
-                  {% for account in accounts %}
-                    <option {% if key and account in key.accounts %}selected{% endif %} value="{{ account.name }}">{{ account.name }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-            <div class="card-header key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-              <h3 class="card-title">Domain Access Control</h3>
-            </div>
-                    <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% if create %}Add{% else %}Edit{% endif %} key</h3>
+                </div>
+                <!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" method="post"
+                    action="{% if create %}{{ url_for('admin.edit_key') }}{% else %}{{ url_for('admin.edit_key', key_id=key.id) }}{% endif %}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="create" value="{{ create }}">
+                    <div class="box-body">
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="role">Role</label>
+                            <select class="key_role form-control" id="key_role" name="key_role">
+                                {% for role in roles %}
+                                <option value="{{ role.name }}"
+                                {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}
+                                {% if (key is none) and (role.name=="User") %}selected{% endif %}
+                                >{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <label class="control-label" for="description">Description</label>
+                            <input type="text" class="form-control" placeholder="Description" name="description"
+                                {% if key is not none %} value="{{ key.description }}" {% endif %}> <span
+                                class="glyphicon glyphicon-pencil form-control-feedback"></span>
+                        </div>
+                    </div>
+                    <div class="box-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                      <h3 class="box-title">Accounts Access Control</h3>
+                    </div>
+                    <div class="box-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                      <p>This key will be linked to the accounts on the right,</p>
+                      <p>thus granting access to domains owned by the selected accounts.</p>
+                      <p>Click on accounts to move between the columns.</p>
+                      <div class="form-group col-xs-2">
+                          <select multiple="multiple" class="form-control" id="key_multi_account"
+                              name="key_multi_account">
+                              {% for account in accounts %}
+                                  <option {% if key and account in key.accounts %}selected{% endif %} value="{{ account.name }}">{{ account.name }}</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                    </div>
+                    <div class="box-header with-border key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
+                        <h3 class="box-title">Domain Access Control</h3>
+                    </div>
+                    <div class="box-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
                         <p>This key will have acess to the domains on the right.</p>
                         <p>Click on domains to move between the columns.</p>
-                        <div class="form-group col-2">
+                        <div class="form-group col-xs-2">
                             <select multiple="multiple" class="form-control" id="key_multi_domain"
                                 name="key_multi_domain">
                                 {% for domain in domains %}
@@ -95,24 +83,21 @@
                             </select>
                         </div>
                     </div>
-                    <div class="card-footer">
-                      <button type="button" class="btn btn-secondary float-left" onclick="window.location.href='{{ url_for('admin.manage_keys') }}'">
-                        <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
-                      </button>
-                      <button type="submit" class="btn btn-primary float-right" id="key_submit">
-                        <i class="fa-solid fa-save"></i>&nbsp;{% if create %}Create{% else %}Update{% endif %} Key
-                      </button>
+                    <div class="box-footer">
+                        <button type="submit"
+                            class="btn btn-flat btn-primary" id="key_submit">{% if create %}Create{% else %}Update{% endif %}
+                            Key</button>
                     </div>
                 </form>
             </div>
         </div>
-        <div class="col-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} key
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Help with {% if create %}creating a new{% else%}updating a{% endif %} key
                     </h3>
                 </div>
-                <div class="card-body">
+                <div class="box-body">
                     <p>Fill in all the fields in the form to the left.</p>
                     <p><strong>Role</strong> The role of the key.</p>
                     <p><strong>Description</strong> The key description.</p>
@@ -121,10 +106,8 @@
             </div>
         </div>
     </div>
-    </div>
 </section>
 {% endblock %}
-
 {% block extrascripts %}
 <script>
     $('form').submit(function (e) {
@@ -242,7 +225,7 @@
     {% if plain_key %}
     $(document.body).ready(function () {
         var modal = $("#modal_show_key");
-        var info = "Please copy this key to a secure location. You will be unable to view it again once you close this window: {{ plain_key }}";
+        var info = "{{ plain_key }}";
         modal.find('.modal-body p').text(info);
         modal.find('#button_key_confirm').click(redirect_modal);
         modal.find('#button_close_modal').click(redirect_modal);
@@ -258,46 +241,45 @@
 {% endblock %}
 {% block modals %}
 <div class="modal fade" id="modal_show_key">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">New API Key</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_modal">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="button_key_confirm">
-          Confirm
-        </button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Your API key</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-primary center-block" id="button_key_confirm">
+                    Confirm</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
     </div>
-  </div>
+    <!-- /.modal-dialog -->
 </div>
 <div class="modal fade" id="modal_warning">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">WARNING</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
-          <span aria-hidden="true">&times;</span>
-        </button>
+      <div class="modal-content modal-sm">
+          <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+              <h4 class="modal-title">WARNING</h4>
+          </div>
+          <div class="modal-body">
+              <p></p>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-flat btn-primary center-block" id="button_key_confirm_warn">
+                  OK</button>
+          </div>
       </div>
-      <div class="modal-body">
-        <p></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary close" data-dismiss="modal" id="button_close_modal">
-          Close
-        </button>
-        <button type="button" class="btn btn-primary" id="button_key_confirm_warn">
-          OK
-        </button>
-      </div>
-    </div>
+      <!-- /.modal-content -->
   </div>
+  <!-- /.modal-dialog -->
 </div>
 {% endblock %}

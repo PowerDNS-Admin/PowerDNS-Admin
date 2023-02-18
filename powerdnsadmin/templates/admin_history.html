@@ -1,108 +1,81 @@
 {% extends "base.html" %}
-
 {% set active_page = "admin_history" %}
-
 {% block title %}
-  <title>
-    History - {{ SITE_NAME }}
-  </title>
-{% endblock %}
-
-{% block dashboard_stat %}
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0 text-dark">
-            History
-            <small>Recent Events</small>
-          </h1>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-            <li class="breadcrumb-item active">History</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
+<title>History - {{ SITE_NAME }}</title>
+{% endblock %} {% block dashboard_stat %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        History <small>Recent events</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">History</li>
+    </ol>
+</section>
 {% endblock %} 
-
 {% block content %}
 {% import 'applied_change_macro.html' as applied_change_macro %}
+
+
+
 <section class="content">
-  <div class="container-fluid">
     <div class="row">
-      <div class="col-12">
-        <div class="card card-outline card-secondary">
-          <div class="card-header with-border">
-            <h3 class="card-title">History Management</h3>
-            {% if current_user.role.name != 'User' %}
-              <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal_clear_history" {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
-                <i class="fa-solid fa-trash"></i>  
-                &nbsp;Clear History
-              </button>
-            {% endif %}
-          </div>
-          <div class="card-body clearfix">
-            <form id="history-search-form" autocomplete="off">
-                <ul class="nav nav-tabs" id="custom-content-below-tab" role="tablist">
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#tabs-act" data-toggle="pill" role="tab">
-                      Search for All Activity
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#tabs-domain" data-toggle="pill" role="tab">
-                      Search By Domain
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link with-border" href="#tabs-account" data-toggle="pill" role="tab">
-                      Search By Account
-                    </a>
-                  </li>
-                  {% if current_user.role.name != 'User' %}
-                    <li class="nav-item">
-                      <a class="nav-link" href="#tabs-auth" data-toggle="pill" role="tab">
-                        Search for User Authentication
-                      </a>
-                    </li>
-                  {% endif %}
-                </ul>
-            <div class="tab-content">
-              <div class="tab-pane" id="tabs-act">
-            </div>
-            <div class="tab-pane" id="tabs-domain">
-              <td>
-                <label>Domain Name</label>
-              </td>
-              <td>
-                <div class="autocomplete" style="width:250px;">
-                  <input type="text" class="form-control" id="domain_name_filter" name="domain_name_filter" placeholder="Enter * to search for any domain" value=""> 
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">History Management</h3>
                 </div>
-              </td>
-              <td>
-<div style="position: relative; top:10px;">
-<td>Record Changelog only &nbsp</td>
-<td>
-<input type="checkbox" id="domain_changelog_only_checkbox" name="domain_changelog_only_checkbox"
-class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
-</td>
-</div>
-</td>
-</div>
-<div class="tab-pane" id="tabs-account">
-<td><label>Account Name</label></td>
-<td>
-<div class="autocomplete" style="width:250px;">
-<input type="text" class="form-control" id="account_name_filter" name="account_name_filter" placeholder="Enter * to search for any account" value=""> 
-</div>
-</td>
-</div>
-<div class="tab-pane" id="tabs-auth">
-<td><label>Username</label></td>
+                <div class="box-body clearfix">
+                    <button type="button" class="btn btn-flat btn-danger pull-right" data-toggle="modal"
+                        data-target="#modal_clear_history"
+                        {% if current_user.role.name != 'Administrator' %}disabled{% endif %}>
+                        Clear History&nbsp;<i class="fa fa-trash"></i>
+                    </button>
+                </div>
+
+                <div class="box-body clearfix">
+                    <form id="history-search-form" autocomplete="off">
+                        <!-- Custom Tabs -->
+                        <div class="nav-tabs-custom" id="tabs">
+                            <ul class="nav nav-tabs" id="nav_nav_tabs" name="nav_nav_tabs">
+                                <li id="activity_tab" class="active"><a href="#tabs-act"    data-toggle="tab">Search for All Activity</a></li>
+                                <li id="domain_tab"><a href="#tabs-domain"   data-toggle="tab">Search By Domain</a></li>
+                                <li id="account_tab"><a href="#tabs-account" data-toggle="tab">Search By Account</a></li>
+                                {% if current_user.role.name != 'User' %}
+                                <li id="user_auth_tab"><a href="#tabs-auth"  data-toggle="tab">Search for User Authentication</a></li>
+                                {% endif %}
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane" id="tabs-act">
+                                </div>
+                                <div class="tab-pane" id="tabs-domain">
+                                    <td><label>Domain Name</label></td>
+                                    <td>
+                                        <div class="autocomplete" style="width:250px;">
+                                            <input type="text" class="form-control" id="domain_name_filter" name="domain_name_filter" placeholder="Enter * to search for any domain" value=""> 
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="position: relative; top:10px;">
+                                            <td>Record Changelog only &nbsp</td>
+                                                <td>
+                                                    <input type="checkbox" id="domain_changelog_only_checkbox" name="domain_changelog_only_checkbox"
+                                                            class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;"> 
+                                                </td>
+                                        </div>
+                                    </td>
+                                </div>
+                                <div class="tab-pane" id="tabs-account">
+                                    <td><label>Account Name</label></td>
+                                    <td>
+                                        <div class="autocomplete" style="width:250px;">
+                                            <input type="text" class="form-control" id="account_name_filter" name="account_name_filter" placeholder="Enter * to search for any account" value=""> 
+                                        </div>
+                                    </td>
+                                </div>
+                                <div class="tab-pane" id="tabs-auth">
+                                    <td><label>Username</label></td>
                                     <td>
                                         <div class="autocomplete" style="width:250px;">
                                             <input type="text" class="form-control" id="auth_name_filter" name="auth_name_filter" placeholder="Enter * to search for any username" value=""> 
@@ -136,7 +109,9 @@ class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;
                                     </td>
                                 </div>
                         </div>
-                        <div class="card-body">
+                        <!-- End Custom Tabs -->
+
+                        <div class="box-body">
                             <table id="Filters-Table">
                                 <thead>
                                     <th>Filters</th>
@@ -170,18 +145,29 @@ class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;
                                     <tr><td>&nbsp</td></tr>
                                     <tr>
                                         <td>
-                                            <button type="submit" id="search-submit" name="search-submit" class="btn btn-primary button-filter"><i class="fa fa-search"></i>&nbsp;Search</button>
+                                            <button type="submit" id="search-submit" name="search-submit" class="btn btn-flat btn-primary button-filter">Search&nbsp;<i class="fa fa-search"></i></button>
                                         </td>
                                         <td>
-                                            <button id="clear-filters" name="clear-filters" class="btn btn-warning button-clearf"><i class="fa fa-trash"></i>&nbsp;Clear Filters</button>
+                                            <!-- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
+                                            <button id="clear-filters" name="clear-filters" class="btn btn-flat btn-warning button-clearf">Clear Filters&nbsp;<i class="fa fa-trash"></i></button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
                     </form>
                 </div>
+
                 <div id="table_from_ajax"></div>
+
+
+                <!-- /.box-body -->
             </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
 </section>
 {% endblock %}
 {% block extrascripts %}
@@ -485,45 +471,49 @@ class="checkbox" style="border:2px dotted #00f;display:block;background:#ff0000;
 </script>
 {% endblock %}
 {% block modals %}
-  <!-- Clear History Confirmation Box -->
-  <div class="modal fade modal-warning" id="modal_clear_history">
+<!-- Clear History Confirmation Box -->
+<div class="modal fade modal-warning" id="modal_clear_history">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Confirmation</h4>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Confirmation</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove all history?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-danger"
+                    onclick="applyChanges({'_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/admin/history', false, true);">Clear
+                    History</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <p>Are you sure you want to remove all history?</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-danger float-right" onclick="applyChanges({'_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/admin/history', false, true);">
-            Clear History
-          </button>
-        </div>
-      </div>
+        <!-- /.modal-content -->
     </div>
-  </div>
-  <!-- History Details Box -->
-  <div class="modal fade" id="modal_history_info">
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade" id="modal_history_info">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">History Details</h4>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">History Details</h4>
+            </div>
+            <div class="modal-body">
+                <div id="modal-info-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Close</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <div id="modal-info-content"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default float-right" data-dismiss="modal">Close</button>
-        </div>
-      </div>
+        <!-- /.modal-content -->
     </div>
-  </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
 {% endblock %}
