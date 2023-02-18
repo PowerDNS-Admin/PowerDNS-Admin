@@ -35,8 +35,6 @@ pyasn1==0.4.8
 webcolors==1.12
 zipp==3.11.0
 pyOpenSSL==22.1.0
-Authlib==1.2.0
-Flask-SeaSurf==1.1.1
 PyYAML==6.0
 Jinja2==3.1.2
 itsdangerous==2.1.2
