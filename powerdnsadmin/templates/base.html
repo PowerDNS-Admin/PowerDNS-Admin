@@ -115,10 +115,16 @@
                     {% endif %}
                     {% if current_user.role.name in ['Administrator', 'Operator'] %}
                         <li class="nav-header">Administration</li>
-                        <li class="{{ 'nav-item active' if active_page == 'admin_console' else 'nav-item' }}">
-                            <a href="{{ url_for('admin.pdns_stats') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-info-circle"></i>
-                                <p>PowerDNS Info</p>
+                        <li class="{{ 'nav-item active' if active_page == 'server_statistics' else 'nav-item' }}">
+                            <a href="{{ url_for('admin.server_statistics') }}" class="nav-link">
+                                <i class="nav-icon fa-solid fa-chart-simple"></i>
+                                <p>Server Statistics</p>
+                            </a>
+                        </li>
+                        <li class="{{ 'nav-item active' if active_page == 'server_configuration' else 'nav-item' }}">
+                            <a href="{{ url_for('admin.server_configuration') }}" class="nav-link">
+                                <i class="nav-icon fa-solid fa-cog"></i>
+                                <p>Server Configuration</p>
                             </a>
                         </li>
                         <li class="{{ 'nav-item active' if active_page == 'admin_global_search' else 'nav-item' }}">
