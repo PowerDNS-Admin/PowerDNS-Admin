@@ -29,7 +29,7 @@
                 <div class="col-12 col-sm-6 col-lg-4">
                     <form role="form" method="post" action="{{ url_for('domain.add') }}">
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                        <div class="card">
+                        <div class="card card-outline card-primary shadow">
                             <div class="card-header">
                                 <h3 class="card-title">Zone Editor</h3>
                             </div>
@@ -143,7 +143,7 @@
                 </div>
                 <!-- /.col -->
                 <div class="col-12 col-sm-6 col-lg-8">
-                    <div class="card">
+                    <div class="card card-outline card-secondary shadow">
                         <div class="card-header">
                             <h3 class="card-title">Zone Editor Help</h3>
                         </div>
