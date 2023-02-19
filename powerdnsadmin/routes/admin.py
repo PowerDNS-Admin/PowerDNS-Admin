@@ -2055,7 +2055,14 @@ def global_search():
                 else:
                     pass
 
-        return render_template('admin_global_search.html', domains=domains, records=records, comments=comments)
+        params: dict = {
+            'query': query if query is not None else '',
+            'domains': domains,
+            'records': records,
+            'comments': comments,
+        }
+
+        return render_template('admin_global_search.html', **params)
 
 
 def validateURN(value):
