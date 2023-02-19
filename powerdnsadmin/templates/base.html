@@ -13,10 +13,17 @@
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <!-- Tell Safari to not recognise telephone numbers -->
         <meta name="format-detection" content="telephone=no">
-        {% assets "css_main" -%}<link rel="stylesheet" href="{{ ASSET_URL }}">{%- endassets %}
+        {% assets "css_main" -%}
+            <link rel="stylesheet" href="{{ ASSET_URL }}">{%- endassets %}
         {% if SETTING.get('custom_css') %}
             <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
         {% endif %}
+        <style type="text/css">
+        .sidebar .image { padding-top: 0.7em; }
+        .sidebar .info { color: #fff; }
+        .sidebar .info p { margin: 0; }
+        .sidebar .info a { font-size: 0.8em; }
+        </style>
         {% block head_styles %}{% endblock %}
     {% endblock %}
 </head>
@@ -67,24 +74,16 @@
                         <img src="{{ user_image_url }}" class="img-circle elevation-2" alt="User Image">
                     </div>
                     <div class="info">
-                        <a href="{{ url_for('user.profile') }}"
-                           class="d-block">{{ current_user.firstname }} {{ current_user.lastname }}</a>
+                        <p>{{ current_user.firstname }} {{ current_user.lastname }}</p>
+                        <span>
+                            <a href="{{ url_for('user.profile') }}"><i class="nav-icon fa-solid fa-user"></i> Edit Profile</a>
+                            &nbsp;|&nbsp;
+                            <a href="{{ url_for('index.logout') }}"><i class="nav-icon fa-solid fa-sign-out-alt"></i> Logout</a>
+                        </span>
                     </div>
                 </div>
                 <!-- sidebar menu: : style can be found in sidebar.less -->
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="{{ 'nav-item active' if active_page == 'user_profile' else 'nav-item' }}">
-                        <a href="{{ url_for('user.profile') }}" class="nav-link">
-                            <i class="nav-icon fa-solid fa-user"></i>
-                            <p>Profile</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ url_for('index.logout') }}" class="nav-link">
-                            <i class="nav-icon fa-solid fa-sign-out-alt"></i>
-                            <p>Logout</p>
-                        </a>
-                    </li>
                     <li class="nav-header">Zone Management</li>
                     <li class="{{ 'nav-item active' if active_page == 'nav-item dashboard' else 'nav-item' }}">
                         <a href="{{ url_for('dashboard.dashboard') }}" class="nav-link">
