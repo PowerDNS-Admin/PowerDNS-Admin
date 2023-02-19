@@ -23,6 +23,12 @@
         .sidebar .info { color: #fff; }
         .sidebar .info p { margin: 0; }
         .sidebar .info a { font-size: 0.8em; }
+        /* Global Styles */
+        table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
+        table.records thead th:last-of-type { width: 50px; }
+        div.table-responsive > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
+        div.table-responsive > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
+        div.table-responsive > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
         </style>
         {% block head_styles %}{% endblock %}
     {% endblock %}
