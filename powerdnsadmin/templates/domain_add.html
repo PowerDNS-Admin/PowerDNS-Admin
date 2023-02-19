@@ -1,12 +1,6 @@
 {% extends "base.html" %}
-
 {% set active_page = "new_domain" %}
-
-{% block title %}
-  <title>
-    Add Domain - {{ SITE_NAME }}
-  </title>
-{% endblock %}
+{% block title %}<title>Add Domain - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
   <div class="content-header">
@@ -186,7 +180,12 @@
       </div>
     </div>
 </section>
+{% endblock %}
 
+{% block head_styles %}
+    <style>
+        /* Page Specific Overrides */
+    </style>
 {% endblock %}
 
 {% block extrascripts %}
