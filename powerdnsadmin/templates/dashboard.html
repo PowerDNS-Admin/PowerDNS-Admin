@@ -160,42 +160,44 @@
 
             <div class="row">
                 <div class="col-12">
-                    <div class="card">
+                    <div class="card card-outline card-primary">
                         <div class="card-header">
-                            <div class="nav-tabs-custom">
-                                <ul class="nav nav-tabs card-header-tabs" id="custom-content-below-tab" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" href="#tab_{{ custom_boxes.order[0] }}"
-                                           data-toggle="pill" role="tab">
-                                            Hosted Domains <b>{{ custom_boxes.boxes[custom_boxes.order[0]][0] }}</b>
-                                        </a>
-                                    </li>
-                                    {% for boxId in custom_boxes.order[1:] %}
+                            <h3 class="card-title">
+                                Zones
+                                {% if show_bg_domain_button %}
+                                    <button type="button" title="Synchronize Zones"
+                                            class="btn btn-tool refresh-bg-button">
+                                        <i class="fa-solid fa-sync"></i>
+                                    </button>
+                                {% endif %}
+                            </h3>
+                            <div class="card-tools">
+                                <div class="nav-tabs-custom">
+                                    <ul class="nav nav-tabs card-header-tabs" id="custom-content-below-tab"
+                                        role="tablist">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="#tab_{{ boxId }}" data-toggle="pill" role="tab">Hosted
-                                                Domains <b>{{ custom_boxes.boxes[boxId][0] }}</b></a>
+                                            <a class="nav-link active" href="#tab_{{ custom_boxes.order[0] }}"
+                                               data-toggle="pill" role="tab">
+                                                Zones <b>{{ custom_boxes.boxes[custom_boxes.order[0]][0] }}</b>
+                                            </a>
                                         </li>
-                                    {% endfor %}
-                                </ul>
+                                        {% for boxId in custom_boxes.order[1:] %}
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#tab_{{ boxId }}" data-toggle="pill"
+                                                   role="tab">
+                                                    Zones <b>{{ custom_boxes.boxes[boxId][0] }}</b>
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body p-0">
                             <div class="tab-content">
                                 {% for boxId in custom_boxes.order %}
-                                    <div class="tab-pane fade show" id='tab_{{ boxId }}'>
-                                        <div class="card-header">
-                                            <h3 class="card-title">Hosted Domains
-                                                <b>{{ custom_boxes.boxes[boxId][0] }}</b></h3>
-                                            {% if show_bg_domain_button %}
-                                                <button type="button"
-                                                        class="btn btn-primary refresh-bg-button float-right">
-                                                    <i class="fa-solid fa-sync"></i>
-                                                    &nbsp;Sync Domains
-                                                </button>
-                                            {% endif %}
-                                        </div>
-                                        <!-- /.card-header -->
+                                    <div class="tab-pane show" id='tab_{{ boxId }}'>
                                         <div class="card-body table-responsive p-0 pt-2">
                                             <table id='tbl_domain_list_{{ boxId }}'
                                                    class="table table-striped table-hover records table-sm">
@@ -234,16 +236,16 @@
 {% endblock %}
 
 {% block head_styles %}
-<style type="text/css">
-/* Global Styles */
-table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
-table.records thead th:last-of-type { width: 50px; }
-div.table-responsive > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
-div.table-responsive > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
-div.table-responsive > div.dataTables_wrapper table.dataTable { margin: 0!important; }
-/* Page Specific Overrides */
-table.records tbody td:first-of-type { text-align: left; }
-</style>
+    <style type="text/css">
+        /* Global Styles */
+        table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
+        table.records thead th:last-of-type { width: 50px; }
+        div.table-responsive > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
+        div.table-responsive > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
+        div.table-responsive > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
+        /* Page Specific Overrides */
+        table.records tbody td:first-of-type { text-align: left; }
+    </style>
 {% endblock %}
 
 {% block extrascripts %}
