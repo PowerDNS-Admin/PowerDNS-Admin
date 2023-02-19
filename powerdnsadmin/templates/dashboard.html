@@ -111,21 +111,21 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body table-responsive p-0">
-                                <table class="table table-striped table-hover">
+                                <table class="table table-striped table-hover table-sm records">
                                     <thead>
                                     <tr>
-                                        <th>User</th>
                                         <th>Log Message</th>
                                         <th>Timestamp</th>
+                                        <th>User</th>
                                         <th>Actions</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {% for history in histories %}
                                         <tr class="odd">
-                                            <td>{{ history.history.created_by }}</td>
                                             <td>{{ history.history.msg }}</td>
                                             <td>{{ history.history.created_on | format_datetime_local }}</td>
+                                            <td>{{ history.history.created_by }}</td>
                                             <td>
                                                 <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
                                                     {{ history.detailed_msg | safe }}
@@ -138,10 +138,11 @@
                                                     {% endif %}
                                                 </div>
                                                 <button type="button" class="btn btn-sm btn-primary history-info-button"
+                                                        title="View Additional Information"
                                                         {% if history.detailed_msg == "" and history.change_set is none %}
                                                         style="visibility: hidden;"
                                                         {% endif %} value="{{ loop.index0 }}">
-                                                    <i class="fa-solid fa-info-circle"></i>&nbsp;Info
+                                                    <i class="fa-solid fa-info-circle"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -200,7 +201,7 @@
                                     <div class="tab-pane show" id='tab_{{ boxId }}'>
                                         <div class="card-body table-responsive p-0 pt-2">
                                             <table id='tbl_domain_list_{{ boxId }}'
-                                                   class="table table-striped table-hover records table-sm">
+                                                   class="table table-striped table-hover table-sm records">
                                                 <thead>
                                                 <tr>
                                                     <th>Name</th>
