@@ -44,7 +44,9 @@
                                 <!-- /.callout -->
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <input type="text" name="q" class="form-control" value="{{ query }}"
+                                        <label for="txtQuery" class="input-group-text">Search Query</label>
+                                        <input type="text" id="txtQuery" name="q" class="form-control"
+                                               value="{{ query }}"
                                                placeholder="Enter search query...">
                                         <button type="submit" class="btn btn-flat btn-success" title="Execute Query">
                                             <i class="fa fa-search"></i>
@@ -183,35 +185,35 @@
 {% endblock %}
 
 {% block head_styles %}
-<style>
-table#tbl_record { table-layout: fixed; }
-table#tbl_record thead th:nth-child(0n+1) { width: 20%;}
-table#tbl_record thead th:nth-child(0n+2),
-table#tbl_record thead th:nth-child(0n+3),
-table#tbl_record thead th:nth-child(0n+4) { width: 5%; }
-table#tbl_record thead th:nth-child(0n+2),
-table#tbl_record thead th:nth-child(0n+3),
-table#tbl_record thead th:nth-child(0n+4),
-table#tbl_record tbody td:nth-child(0n+2),
-table#tbl_record tbody td:nth-child(0n+3),
-table#tbl_record tbody td:nth-child(0n+4) { text-align: center; }
-table#tbl_record tbody td:first-of-type,
-table#tbl_record tbody td:last-of-type { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media only screen and (max-device-width: 480px) {
-    table#tbl_record thead th:nth-child(0n+1) { width: 10%;}
-    table#tbl_record thead th:nth-child(0n+2),
-    table#tbl_record thead th:nth-child(0n+3),
-    table#tbl_record thead th:nth-child(0n+4) { width: 15%; }
-}
-@media only screen and (max-device-width: 992px) {
-    table#tbl_record { table-layout: auto; }
-}
-@media only screen and (min-device-width: 481px) and (max-device-width: 992px) {
-    table#tbl_record thead th:nth-child(0n+2),
-    table#tbl_record thead th:nth-child(0n+3),
-    table#tbl_record thead th:nth-child(0n+4) { width: 10%; }
-}
-</style>
+    <style>
+        table#tbl_record { table-layout: fixed; }
+        table#tbl_record thead th:nth-child(0n+1) { width: 20%;}
+        table#tbl_record thead th:nth-child(0n+2),
+        table#tbl_record thead th:nth-child(0n+3),
+        table#tbl_record thead th:nth-child(0n+4) { width: 5%; }
+        table#tbl_record thead th:nth-child(0n+2),
+        table#tbl_record thead th:nth-child(0n+3),
+        table#tbl_record thead th:nth-child(0n+4),
+        table#tbl_record tbody td:nth-child(0n+2),
+        table#tbl_record tbody td:nth-child(0n+3),
+        table#tbl_record tbody td:nth-child(0n+4) { text-align: center; }
+        table#tbl_record tbody td:first-of-type,
+        table#tbl_record tbody td:last-of-type { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media only screen and (max-device-width: 480px) {
+            table#tbl_record thead th:nth-child(0n+1) { width: 10%;}
+            table#tbl_record thead th:nth-child(0n+2),
+            table#tbl_record thead th:nth-child(0n+3),
+            table#tbl_record thead th:nth-child(0n+4) { width: 15%; }
+        }
+        @media only screen and (max-device-width: 992px) {
+            table#tbl_record { table-layout: auto; }
+        }
+        @media only screen and (min-device-width: 481px) and (max-device-width: 992px) {
+            table#tbl_record thead th:nth-child(0n+2),
+            table#tbl_record thead th:nth-child(0n+3),
+            table#tbl_record thead th:nth-child(0n+4) { width: 10%; }
+        }
+    </style>
 {% endblock %}
 
 {% block extrascripts %}
