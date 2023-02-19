@@ -1,137 +1,137 @@
 {% extends "base.html" %}
-
 {% set active_page = "remove_domain" %}
-
-{% block title %}
-  <title>
-    Remove Domain - {{ SITE_NAME }}
-  </title>
-{% endblock %}
+{% block title %}<title>Remove Zone - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0 text-dark">
-            Domain
-            <small>Remove</small>
-          </h1>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">
+                        Remove Zone
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Remove Zone</li>
+                    </ol>
+                </div>
+            </div>
         </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active">Domain - Remove Domain</li>
-          </ol>
-        </div>
-      </div>
     </div>
-  </div>
 {% endblock %}
 
 {% block content %}
-<section class="content">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-4">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Remove Domain</h3>
-          </div>
-          <form role="form" method="post" action="{{ url_for('domain.remove') }}">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            <div class="card-body">
-              <select id=domainid class="form-control" style="width:15em;">
-                <option value="0">- Select Domain -</option>
-                {% for domain in domainss %}
-                  <option value="{{ domain.id }}">{{ domain.name }}</option>
-                {% endfor %}
-              </select>
-              <br />
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Zone Selector</h3>
+                        </div>
+                        <form role="form" method="post" action="{{ url_for('domain.remove') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="domainid">Zone</label>
+                                    <select id=domainid class="form-control" style="width:15em;">
+                                        <option value="0">- Select Domain -</option>
+                                        {% for domain in domainss %}
+                                            <option value="{{ domain.id }}">{{ domain.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" title="Cancel" class="btn btn-secondary"
+                                        onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
+                                    <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
+                                </button>
+                                <button type="button" title="Remove Zone"
+                                        class="btn btn-danger button_delete float-right">
+                                    <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove Zone
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Zone Selector Help</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="dl-horizontal">
+                                <dt>Zone</dt>
+                                <dd>Select the zone you wish to remove from the system.</dd>
+                            </dl>
+                            <p>Find more details at <a href="https://docs.powerdns.com/md/" target="_blank">https://docs.powerdns.com/md/</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-footer">
-              <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
-                <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
-              </button>
-              <button type="button" class="btn btn-danger button_delete float-right">
-                <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove
-              </button>
-            </div>
-          </form>
         </div>
-      </div>
-      <div class="col-8">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Help with removing a domain</h3>
-          </div>
-          <div class="card-body">
-            <dl class="dl-horizontal">
-              <dt>Domain Name</dt>
-              <dd>Select the domain you wish to remove from the system.</dd>
-            </dl>
-            <p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 {% endblock %}
 
 {% block extrascripts %}
-<script>
-  // handle delete button
-  $(document.body).on("click", ".button_delete", function(e) {
-    e.stopPropagation();
-    if ( $("#domainid").val() == 0 ){
-      showErrorModal("Please select domain to remove.");
-      return;
-    }
+    <script>
+        // handle delete button
+        $(document.body).on("click", ".button_delete", function (e) {
+            e.stopPropagation();
+            if ($("#domainid").val() == 0) {
+                showErrorModal("Please select domain to remove.");
+                return;
+            }
 
-    var modal = $("#modal_delete");
-    var domain = $("#domainid option:selected").text(); 
-    var info = "Are you sure you want to delete " + domain + "?";
-    modal.find('.modal-body p').text(info);
-    modal.find('#button_delete_confirm').click(function () {
-      $.post($SCRIPT_ROOT + '/domain/remove' , {
-        '_csrf_token': '{{ csrf_token() }}',
-        'domainid': domain,
-        }, function () {
-        window.location.href = '{{ url_for('dashboard.dashboard') }}';
-      });
-      modal.modal('hide');
-    })
-    modal.modal('show');
-    $("#button_delete_cancel").unbind().one('click', function(e) {
-      modal.modal('hide');
-    });
-  });
-</script>
+            var modal = $("#modal_delete");
+            var domain = $("#domainid option:selected").text();
+            var info = "Are you sure you want to delete the zone " + domain + "?";
+            modal.find('.modal-body p').text(info);
+            modal.find('#button_delete_confirm').click(function () {
+                $.post($SCRIPT_ROOT + '/domain/remove', {
+                    '_csrf_token': '{{ csrf_token() }}',
+                    'domainid': domain,
+                }, function () {
+                    window.location.href = '{{ url_for('dashboard.dashboard') }}';
+                });
+                modal.modal('hide');
+            })
+            modal.modal('show');
+            $("#button_delete_cancel").unbind().one('click', function (e) {
+                modal.modal('hide');
+            });
+        });
+    </script>
 {% endblock %}
 
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Confirmation</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="button_delete_cancel" data-dismiss="modal">
-          <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
-        </button>
-        <button type="button" class="btn btn-danger float-right" id="button_delete_confirm">
-          <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove
-        </button>
-      </div>
+    <div class="modal fade modal-warning" id="modal_delete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Zone Removal Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" title="Cancel" class="btn btn-secondary" id="button_delete_cancel"
+                            data-dismiss="modal">
+                        <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
+                    </button>
+                    <button type="button" title="Remove Zone" class="btn btn-danger float-right"
+                            id="button_delete_confirm">
+                        <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove Zone
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 {% endblock %}
