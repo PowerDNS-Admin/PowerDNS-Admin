@@ -31,6 +31,8 @@
 {% macro account(domain) %}
     {% if current_user.role.name in ['Administrator', 'Operator'] %}
         {{ domain.account.name if domain.account else 'None' }}
+    {% else %}
+        None
     {% endif %}
 {% endmacro %}
 

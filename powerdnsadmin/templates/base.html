@@ -123,7 +123,7 @@
                         </li>
                         <li class="{{ 'nav-item active' if active_page == 'admin_history' else 'nav-item' }}">
                             <a href="{{ url_for('admin.history') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-calendar-alt"></i>
+                                <i class="nav-icon fa-solid fa-timeline"></i>
                                 <p>History</p>
                             </a>
                         </li>
@@ -135,7 +135,7 @@
                         </li>
                         <li class="{{ 'nav-item active' if active_page == 'admin_accounts' else 'nav-item' }}">
                             <a href="{{ url_for('admin.manage_account') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-industry"></i>
+                                <i class="nav-icon fa-solid fa-users-rectangle"></i>
                                 <p>Accounts</p>
                             </a>
                         </li>
@@ -163,26 +163,26 @@
                                 {% if active_page == 'admin_settings' %}style="display: block;"{% endif %}>
                                 <li class="nav-item">
                                     <a href="{{ url_for('admin.setting_basic') }}" class="nav-link">
-                                        <i class="nav-icon fa-solid fa-circle"></i>
+                                        <i class="nav-icon fa-solid fa-gears"></i>
                                         <p>Basic</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ url_for('admin.setting_records') }}" class="nav-link">
-                                        <i class="nav-icon fa-solid fa-circle"></i>
-                                        <p>Records</p>
+                                        <i class="nav-icon fa-regular fa-rectangle-list"></i>
+                                        <p>Zone Records</p>
                                     </a>
                                 </li>
                                 {% if current_user.role.name == 'Administrator' %}
                                     <li class="nav-item">
                                         <a href="{{ url_for('admin.setting_pdns') }}" class="nav-link">
-                                            <i class="nav-icon fa-solid fa-circle"></i>
-                                            <p>PowerDNS Connection</p>
+                                            <i class="nav-icon fa-solid fa-server"></i>
+                                            <p>Server</p>
                                         </a>
                                     </li>
                                     <li class="nav-item">
                                         <a href="{{ url_for('admin.setting_authentication') }}" class="nav-link">
-                                            <i class="nav-icon fa-solid fa-circle"></i>
+                                            <i class="nav-icon fa-solid fa-user-shield"></i>
                                             <p>Authentication</p>
                                         </a>
                                     </li>

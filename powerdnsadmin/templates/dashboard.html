@@ -262,10 +262,6 @@
                 "ordering": true,
                 "columnDefs": [
                     {"orderable": false, "targets": [-1]}
-                    {% if current_user.role.name not in ['Administrator', 'Operator'] %},{
-                        "visible": false,
-                        "targets": [-2]
-                    }{% endif %}
                 ],
                 "processing": true,
                 "serverSide": true,
