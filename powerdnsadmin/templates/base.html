@@ -95,7 +95,7 @@
                         <li class="{{ 'nav-item active' if active_page == 'nav-item new_domain' else 'nav-item' }}">
                             <a href="{{ url_for('domain.add') }}" class="nav-link">
                                 <i class="nav-icon fa-solid fa-plus"></i>
-                                <p>New Domain</p>
+                                <p>New Zone</p>
                             </a>
                         </li>
                     {% endif %}
@@ -103,7 +103,7 @@
                         <li class="{{ 'nav-item active' if active_page == 'remove_domain' else 'nav-item' }}">
                             <a href="{{ url_for('domain.remove') }}" class="nav-link">
                                 <i class="nav-icon fa-solid fa-trash-alt"></i>
-                                <p>Remove Domain</p>
+                                <p>Remove Zone</p>
                             </a>
                         </li>
                     {% endif %}
@@ -130,7 +130,7 @@
                         <li class="{{ 'nav-item active' if active_page == 'admin_domain_template' else 'nav-item' }}">
                             <a href="{{ url_for('admin.templates') }}" class="nav-link">
                                 <i class="nav-icon fa-solid fa-clone"></i>
-                                <p>Domain Templates</p>
+                                <p>Zone Templates</p>
                             </a>
                         </li>
                         <li class="{{ 'nav-item active' if active_page == 'admin_accounts' else 'nav-item' }}">
