@@ -9,7 +9,6 @@
                 <div class="col-sm-6">
                     <h1 class="m-0 text-dark">
                         Dashboard
-                        <small>Info</small>
                     </h1>
                 </div>
                 <div class="col-sm-6">
@@ -236,12 +235,14 @@
 
 {% block head_styles %}
 <style type="text/css">
+/* Global Styles */
 table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
-table.records tbody td:first-of-type { text-align: left; }
 table.records thead th:last-of-type { width: 50px; }
 div.table-responsive > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
 div.table-responsive > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
 div.table-responsive > div.dataTables_wrapper table.dataTable { margin: 0!important; }
+/* Page Specific Overrides */
+table.records tbody td:first-of-type { text-align: left; }
 </style>
 {% endblock %}
 
