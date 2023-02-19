@@ -17,6 +17,7 @@
         {% if SETTING.get('custom_css') %}
             <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
         {% endif %}
+        {% block head_styles %}{% endblock %}
     {% endblock %}
 </head>
 

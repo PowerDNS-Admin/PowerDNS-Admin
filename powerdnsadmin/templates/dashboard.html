@@ -180,7 +180,8 @@
                                 </ul>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <!-- /.card-header -->
+                        <div class="card-body p-0">
                             <div class="tab-content">
                                 {% for boxId in custom_boxes.order %}
                                     <div class="tab-pane fade show" id='tab_{{ boxId }}'>
@@ -195,6 +196,7 @@
                                                 </button>
                                             {% endif %}
                                         </div>
+                                        <!-- /.card-header -->
                                         <div class="card-body table-responsive p-0 pt-2">
                                             <table id='tbl_domain_list_{{ boxId }}'
                                                    class="table table-striped table-hover">
@@ -213,16 +215,31 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        <!-- /.card-body -->
                                     </div>
+                                    <!-- /.tab-pane -->
                                 {% endfor %}
                             </div>
+                            <!-- /.tab-content -->
                         </div>
+                        <!-- /.card-body -->
                     </div>
-
+                    <!-- /.card -->
                 </div>
+                <!-- /.col -->
             </div>
+            <!-- /.row -->
         </div>
+        <!-- /.container-fluid -->
     </section>
+{% endblock %}
+
+{% block head_styles %}
+<style type="text/css">
+div.table-responsive > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
+div.table-responsive > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
+div.table-responsive > div.dataTables_wrapper table.dataTable { margin: 0!important; }
+</style>
 {% endblock %}
 
 {% block extrascripts %}
@@ -265,24 +282,6 @@
             setUpDomainList("#tbl_domain_list_{{boxId}}", "{{url_for('dashboard.domains_custom',boxId=boxId)}}");
         {% endfor %}
         //SYBPATCH END//
-
-        // set up history data table
-        $("#tbl_history").DataTable({
-            "paging": false,
-            "lengthChange": false,
-            "searching": false,
-            "ordering": false,
-            "info": false,
-            "autoWidth": true,
-            "columnDefs": [
-                {
-                    "render": function (data, type, row) {
-                        return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
-                    },
-                    "targets": 2
-                }
-            ]
-        });
 
         $(document.body).on('click', '.history-info-button', function () {
             var modal = $("#modal_history_info");
