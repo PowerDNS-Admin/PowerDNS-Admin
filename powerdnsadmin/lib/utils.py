@@ -132,6 +132,16 @@ def display_master_name(data):
     return ", ".join(matches)
 
 
+def format_zone_type(data):
+    """Formats the given zone type for modern social standards."""
+    data = str(data).lower()
+    if data == 'master':
+        data = 'primary'
+    elif data == 'slave':
+        data = 'secondary'
+    return data.title()
+
+
 def display_time(amount, units='s', remove_seconds=True):
     """
     Convert timestamp to normal time format

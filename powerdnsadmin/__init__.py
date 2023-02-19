@@ -77,6 +77,7 @@ def create_app(config=None):
     app.jinja_env.filters['display_setting_state'] = utils.display_setting_state
     app.jinja_env.filters['pretty_domain_name'] = utils.pretty_domain_name
     app.jinja_env.filters['format_datetime_local'] = utils.format_datetime
+    app.jinja_env.filters['format_zone_type'] = utils.format_zone_type
 
     # Register context proccessors
     from .models.setting import Setting

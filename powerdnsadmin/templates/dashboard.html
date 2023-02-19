@@ -199,7 +199,7 @@
                                         <!-- /.card-header -->
                                         <div class="card-body table-responsive p-0 pt-2">
                                             <table id='tbl_domain_list_{{ boxId }}'
-                                                   class="table table-striped table-hover">
+                                                   class="table table-striped table-hover records table-sm">
                                                 <thead>
                                                 <tr>
                                                     <th>Name</th>
@@ -236,6 +236,9 @@
 
 {% block head_styles %}
 <style type="text/css">
+table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
+table.records tbody td:first-of-type { text-align: left; }
+table.records thead th:last-of-type { width: 50px; }
 div.table-responsive > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
 div.table-responsive > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
 div.table-responsive > div.dataTables_wrapper table.dataTable { margin: 0!important; }

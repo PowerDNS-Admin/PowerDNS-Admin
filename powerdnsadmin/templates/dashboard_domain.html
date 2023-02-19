@@ -11,7 +11,7 @@
 {% endmacro %}
 
 {% macro type(domain) %}
-  {{ domain.type }}
+  {{ domain.type | format_zone_type }}
 {% endmacro %}
 
 {% macro serial(domain) %}
@@ -19,12 +19,12 @@
 {% endmacro %}
 
 {% macro master(domain) %}
-    {% if domain.master == '[]'%}-{% else %}{{ domain.master | display_master_name }}{% endif %}
+    {% if domain.master == '[]'%}N/A{% else %}{{ domain.master | display_master_name }}{% endif %}
 {% endmacro %}
 
 {% macro account(domain) %}
     {% if current_user.role.name in ['Administrator', 'Operator'] %}
-      {{ domain.account.name if domain.account else '-' }}
+      {{ domain.account.name if domain.account else 'None' }}
     {% endif %}
 {% endmacro %}
 
@@ -32,7 +32,7 @@
 <td width="6%">
   <div class="dropdown">
     <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      <i class="fa-solid fa-bars"></i>&nbsp;Actions
+      <i class="fa-solid fa-bars"></i>
     </button>
     <div class="dropdown-menu" aria-labelledby="dropdownMenu">
       {% if current_user.role.name in ['Administrator', 'Operator'] %}
