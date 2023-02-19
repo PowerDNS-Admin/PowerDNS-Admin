@@ -225,6 +225,7 @@ class customBoxes:
     }
     order = ["reverse", "ip6arpa", "inaddrarpa"]
 
+
 def pretty_domain_name(domain_name):
     # Add a debugging statement to print out the domain name
     print("Received domain name:", domain_name)
@@ -258,9 +259,16 @@ def to_idna(value, action):
     elif action == 'decode':
         for split in splits:
             if not split.startswith('_') and not split.startswith('--'):
-                result.append(idna.decode(split))   
+                result.append(idna.decode(split))
             else:
                 result.append(split)
     else:
         raise Exception('No valid action received')
     return '.'.join(result)
+
+
+def format_datetime(value, format_str="%Y-%m-%d %I:%M %p"):
+    """Format a date time to (Default): YYYY-MM-DD HH:MM P"""
+    if value is None:
+        return ""
+    return value.strftime(format_str)
