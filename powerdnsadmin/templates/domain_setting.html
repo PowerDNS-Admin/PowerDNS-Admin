@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}<title>Zone Settings - {{ SITE_NAME }}</title>{% endblock %}
+{% block title %}<title>Edit Zone - {{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
     {% if status %}
@@ -24,13 +24,13 @@
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1 class="m-0 text-dark">
-                        Zone Settings - {{ domain.name | pretty_domain_name }}
+                        Edit Zone - {{ domain.name | pretty_domain_name }}
                     </h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Zone Settings - {{ domain.name | pretty_domain_name }}</li>
+                        <li class="breadcrumb-item active">Edit Zone - {{ domain.name | pretty_domain_name }}</li>
                     </ol>
                 </div>
             </div>
@@ -69,9 +69,9 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
-                                <button type="submit" title="Update Account" class="btn btn-flat btn-primary"
+                                <button type="submit" title="Update Account" class="btn btn-primary"
                                         id="change_soa_edit_api">
-                                    <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update account
+                                    <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Account
                                 </button>
                             </div>
                             <!-- /.card-footer -->
@@ -138,7 +138,7 @@
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <div class="card">
                             <div class="card-header">
-                                <h3 class="card-title">Domain Access Control</h3>
+                                <h3 class="card-title">Zone Access Control</h3>
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
@@ -427,6 +427,7 @@
 
     </script>
 {% endblock %}
+
 {% block modals %}
     <div class="modal fade" id="modal_delete_domain">
         <div class="modal-dialog">
