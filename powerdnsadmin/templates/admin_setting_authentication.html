@@ -53,7 +53,7 @@
                                             OAuth</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#tabs-github" data-toggle="pill" role="tab">Github
+                                        <a class="nav-link" href="#tabs-github" data-toggle="pill" role="tab">GitHub
                                             OAuth</a>
                                     </li>
                                     <li class="nav-item">
@@ -68,31 +68,48 @@
                                 <div class="tab-content">
 
                                     <div class="tab-pane active" id="tabs-general">
-                                        <form role="form" method="post">
-                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" value="general" name="config_tab"/>
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h3 class="card-title">Basic Settings</h3>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="form-group">
-                                                        <input type="checkbox" id="local_db_enabled"
-                                                               name="local_db_enabled"
-                                                               class="checkbox"
-                                                               {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
-                                                        <label for="local_db_enabled">Local DB Authentication</label>
+                                        <div class="row">
+                                            <div class="col-12 col-sm-6 col-lg-4">
+                                                <form role="form" method="post">
+                                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" value="general" name="config_tab"/>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h3 class="card-title">Basic Settings</h3>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="form-group">
+                                                                <input type="checkbox" id="local_db_enabled"
+                                                                       name="local_db_enabled"
+                                                                       class="checkbox"
+                                                                       {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
+                                                                <label for="local_db_enabled">Local DB
+                                                                    Authentication</label>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <input type="checkbox" id="signup_enabled"
+                                                                       name="signup_enabled"
+                                                                       class="checkbox"
+                                                                       {% if SETTING.get('signup_enabled') %}checked{% endif %}>
+                                                                <label for="signup_enabled">Allow users to sign
+                                                                    up</label>
+                                                            </div>
+                                                            <button type="submit" class="btn btn-primary">Save</button>
+                                                        </div>
                                                     </div>
-                                                    <div class="form-group">
-                                                        <input type="checkbox" id="signup_enabled" name="signup_enabled"
-                                                               class="checkbox"
-                                                               {% if SETTING.get('signup_enabled') %}checked{% endif %}>
-                                                        <label for="signup_enabled">Allow users to sign up</label>
+                                                </form>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-lg-8">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h3 class="card-title">Settings Help</h3>
                                                     </div>
-                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                    <div class="card-body">
+                                                        <p>Fill in all the fields in the left form.</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </form>
+                                        </div>
                                     </div>
                                     <!-- /.tab-pane -->
 
@@ -117,7 +134,6 @@
                                                         </div>
                                                         <div class="card-body">
                                                             <fieldset>
-                                                                <legend>GENERAL</legend>
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="ldap_enabled"
                                                                            name="ldap_enabled"
@@ -382,7 +398,7 @@
                                             <div class="col-12 col-sm-6 col-lg-8">
                                                 <div class="card">
                                                     <div class="card-header">
-                                                        <h3 class="card-title">LDAP Settings Help</h3>
+                                                        <h3 class="card-title">Settings Help</h3>
                                                     </div>
                                                     <div class="card-body">
                                                         <dl class="dl-horizontal">
@@ -532,7 +548,6 @@
                                                                         keep
                                                                         their existing associations and their current
                                                                         Role.
-
                                                                     </li>
                                                                 </ul>
                                                             </dd>
@@ -546,15 +561,17 @@
 
                                     <div class="tab-pane" id="tabs-google">
                                         <div class="row">
-                                            <div class="col-4">
-                                                <div class="card">
-                                                    <div class="card-body">
-                                                        <form role="form" method="post" data-toggle="validator">
-                                                            <input type="hidden" name="_csrf_token"
-                                                                   value="{{ csrf_token() }}">
-                                                            <input type="hidden" value="google" name="config_tab"/>
+                                            <div class="col-12 col-sm-6 col-lg-4">
+                                                <form role="form" method="post" data-toggle="validator">
+                                                    <input type="hidden" name="_csrf_token"
+                                                           value="{{ csrf_token() }}">
+                                                    <input type="hidden" value="google" name="config_tab"/>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h3 class="card-title">Google OAuth Settings</h3>
+                                                        </div>
+                                                        <div class="card-body">
                                                             <fieldset>
-                                                                <legend>GENERAL</legend>
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="google_oauth_enabled"
                                                                            name="google_oauth_enabled" class="checkbox"
@@ -632,14 +649,14 @@
                                                                         class="btn btn-primary float-right">Save
                                                                 </button>
                                                             </div>
-                                                        </form>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                </form>
                                             </div>
-                                            <div class="col-8">
+                                            <div class="col-12 col-sm-6 col-lg-8">
                                                 <div class="card">
                                                     <div class="card-header">
-                                                        <h3 class="card-title">Help</h3>
+                                                        <h3 class="card-title">Settings Help</h3>
                                                     </div>
                                                     <div class="card-body">
                                                         <p>Fill in all the fields in the left form.</p>
@@ -655,89 +672,107 @@
 
                                     <div class="tab-pane" id="tabs-github">
                                         <div class="row">
-                                            <div class="col-4">
+                                            <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
                                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                                     <input type="hidden" value="github" name="config_tab"/>
-                                                    <fieldset>
-                                                        <legend>GENERAL</legend>
-                                                        <div class="form-group">
-                                                            <input type="checkbox" id="github_oauth_enabled"
-                                                                   name="github_oauth_enabled" class="checkbox"
-                                                                   {% if SETTING.get('github_oauth_enabled') %}checked{% endif %}>
-                                                            <label for="github_oauth_enabled">Enable Github
-                                                                OAuth</label>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h3 class="card-title">GitHub OAuth Settings</h3>
                                                         </div>
-                                                        <div class="form-group">
-                                                            <label for="github_oauth_key">Client key</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="github_oauth_key" id="github_oauth_key"
-                                                                   placeholder="Github OAuth client ID"
-                                                                   data-error="Please input Client key"
-                                                                   value="{{ SETTING.get('github_oauth_key') }}">
-                                                            <span class="help-block with-errors"></span>
+                                                        <div class="card-body">
+                                                            <fieldset>
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="github_oauth_enabled"
+                                                                           name="github_oauth_enabled" class="checkbox"
+                                                                           {% if SETTING.get('github_oauth_enabled') %}checked{% endif %}>
+                                                                    <label for="github_oauth_enabled">Enable Github
+                                                                        OAuth</label>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_key">Client key</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_key" id="github_oauth_key"
+                                                                           placeholder="Github OAuth client ID"
+                                                                           data-error="Please input Client key"
+                                                                           value="{{ SETTING.get('github_oauth_key') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_secret">Client
+                                                                        secret</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_secret"
+                                                                           id="github_oauth_secret"
+                                                                           placeholder="Github OAuth client secret"
+                                                                           data-error="Please input Client secret"
+                                                                           value="{{ SETTING.get('github_oauth_secret') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <fieldset>
+                                                                <legend>ADVANCE</legend>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_scope">Scope</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_scope"
+                                                                           id="github_oauth_scope"
+                                                                           placeholder="e.g. email"
+                                                                           data-error="Please input scope"
+                                                                           value="{{ SETTING.get('github_oauth_scope') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_api_url">API URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_api_url"
+                                                                           id="github_oauth_api_url"
+                                                                           placeholder="e.g. https://api.github.com/user"
+                                                                           data-error="Please input API URL"
+                                                                           value="{{ SETTING.get('github_oauth_api_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_token_url">Token
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_token_url"
+                                                                           id="github_oauth_token_url"
+                                                                           placeholder="e.g. https://github.com/login/oauth/access_token"
+                                                                           data-error="Please input Token URL"
+                                                                           value="{{ SETTING.get('github_oauth_token_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_authorize_url">Authorize
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_authorize_url"
+                                                                           id="github_oauth_authorize_url"
+                                                                           placeholder="e.g. https://github.com/login/oauth/authorize"
+                                                                           data-error="Plesae input Authorize URL"
+                                                                           value="{{ SETTING.get('github_oauth_authorize_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <div class="form-group">
+                                                                <button type="submit" class="btn btn-flat btn-primary">
+                                                                    Save
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div class="form-group">
-                                                            <label for="github_oauth_secret">Client secret</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="github_oauth_secret" id="github_oauth_secret"
-                                                                   placeholder="Github OAuth client secret"
-                                                                   data-error="Please input Client secret"
-                                                                   value="{{ SETTING.get('github_oauth_secret') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <fieldset>
-                                                        <legend>ADVANCE</legend>
-                                                        <div class="form-group">
-                                                            <label for="github_oauth_scope">Scope</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="github_oauth_scope" id="github_oauth_scope"
-                                                                   placeholder="e.g. email"
-                                                                   data-error="Please input scope"
-                                                                   value="{{ SETTING.get('github_oauth_scope') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="github_oauth_api_url">API URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="github_oauth_api_url" id="github_oauth_api_url"
-                                                                   placeholder="e.g. https://api.github.com/user"
-                                                                   data-error="Please input API URL"
-                                                                   value="{{ SETTING.get('github_oauth_api_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="github_oauth_token_url">Token URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="github_oauth_token_url"
-                                                                   id="github_oauth_token_url"
-                                                                   placeholder="e.g. https://github.com/login/oauth/access_token"
-                                                                   data-error="Please input Token URL"
-                                                                   value="{{ SETTING.get('github_oauth_token_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="github_oauth_authorize_url">Authorize
-                                                                URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="github_oauth_authorize_url"
-                                                                   id="github_oauth_authorize_url"
-                                                                   placeholder="e.g. https://github.com/login/oauth/authorize"
-                                                                   data-error="Plesae input Authorize URL"
-                                                                   value="{{ SETTING.get('github_oauth_authorize_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <div class="form-group">
-                                                        <button type="submit" class="btn btn-flat btn-primary">Save
-                                                        </button>
                                                     </div>
                                                 </form>
                                             </div>
-                                            <div class="col-8">
-                                                <legend>Help</legend>
-                                                <p>Fill in all the fields in the left form.</p>
+                                            <div class="col-12 col-sm-6 col-lg-8">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h3 class="card-title">Settings Help</h3>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p>Fill in all the fields in the left form.</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -745,243 +780,287 @@
 
                                     <div class="tab-pane" id="tabs-azure">
                                         <div class="row">
-                                            <div class="col-4">
+                                            <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
                                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                                     <input type="hidden" value="azure" name="config_tab"/>
-                                                    <fieldset>
-                                                        <legend>GENERAL</legend>
-                                                        <div class="form-group">
-                                                            <input type="checkbox" id="azure_oauth_enabled"
-                                                                   name="azure_oauth_enabled" class="checkbox"
-                                                                   {% if SETTING.get('azure_oauth_enabled') %}checked{% endif %}>
-                                                            <label for="azure_oauth_enabled">Enable Microsoft Azure
-                                                                OAuth</label>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h3 class="card-title">Microsoft OAuth Settings</h3>
                                                         </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_oauth_key">Client key</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_oauth_key" id="azure_oauth_key"
-                                                                   placeholder="Azure OAuth client ID"
-                                                                   data-error="Please input Client key"
-                                                                   value="{{ SETTING.get('azure_oauth_key') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_oauth_secret">Client secret</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_oauth_secret" id="azure_oauth_secret"
-                                                                   placeholder="Azure OAuth client secret"
-                                                                   data-error="Please input Client secret"
-                                                                   value="{{ SETTING.get('azure_oauth_secret') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <fieldset>
-                                                        <legend>ADVANCED</legend>
-                                                        <div class="form-group">
-                                                            <label for="azure_oauth_scope">Scope</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_oauth_scope" id="azure_oauth_scope"
-                                                                   placeholder="e.g. email"
-                                                                   data-error="Please input scope - e.g. User.Read"
-                                                                   value="{{ SETTING.get('azure_oauth_scope') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_oauth_api_url">API URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_oauth_api_url" id="azure_oauth_api_url"
-                                                                   placeholder="e.g. https://graph.microsoft.com/v1.0/"
-                                                                   data-error="Please input API URL"
-                                                                   value="{{ SETTING.get('azure_oauth_api_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_oauth_token_url">Token URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_oauth_token_url"
-                                                                   id="azure_oauth_token_url"
-                                                                   placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/token"
-                                                                   data-error="Please input Token URL"
-                                                                   value="{{ SETTING.get('azure_oauth_token_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_oauth_authorize_url">Authorize URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_oauth_authorize_url"
-                                                                   id="azure_oauth_authorize_url"
-                                                                   placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/authorize"
-                                                                   data-error="Please input Authorize URL"
-                                                                   value="{{ SETTING.get('azure_oauth_authorize_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <fieldset>
-                                                        <legend>GROUP SECURITY</legend>
-                                                        <div class="form-group">
-                                                            <label>Status</label>
-                                                            <div class="radio">
-                                                                <label>
-                                                                    <input type="radio" name="azure_sg_enabled"
-                                                                           id="azure_sg_off" value="OFF"
-                                                                           {% if not SETTING.get('azure_sg_enabled') %}checked{% endif %}>
-                                                                    OFF
-                                                                </label>
-                                                                &nbsp;&nbsp;&nbsp;
-                                                                <label>
-                                                                    <input type="radio" name="azure_sg_enabled"
-                                                                           id="azure_sg_on" value="ON"
-                                                                           {% if SETTING.get('azure_sg_enabled') %}checked{% endif %}>
-                                                                    ON
-                                                                </label>
+                                                        <div class="card-body">
+                                                            <fieldset>
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="azure_oauth_enabled"
+                                                                           name="azure_oauth_enabled" class="checkbox"
+                                                                           {% if SETTING.get('azure_oauth_enabled') %}checked{% endif %}>
+                                                                    <label for="azure_oauth_enabled">Enable Microsoft
+                                                                        Azure
+                                                                        OAuth</label>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_key">Client key</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_key" id="azure_oauth_key"
+                                                                           placeholder="Azure OAuth client ID"
+                                                                           data-error="Please input Client key"
+                                                                           value="{{ SETTING.get('azure_oauth_key') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_secret">Client
+                                                                        secret</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_secret"
+                                                                           id="azure_oauth_secret"
+                                                                           placeholder="Azure OAuth client secret"
+                                                                           data-error="Please input Client secret"
+                                                                           value="{{ SETTING.get('azure_oauth_secret') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <fieldset>
+                                                                <legend>ADVANCED</legend>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_scope">Scope</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_scope"
+                                                                           id="azure_oauth_scope"
+                                                                           placeholder="e.g. email"
+                                                                           data-error="Please input scope - e.g. User.Read"
+                                                                           value="{{ SETTING.get('azure_oauth_scope') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_api_url">API URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_api_url"
+                                                                           id="azure_oauth_api_url"
+                                                                           placeholder="e.g. https://graph.microsoft.com/v1.0/"
+                                                                           data-error="Please input API URL"
+                                                                           value="{{ SETTING.get('azure_oauth_api_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_token_url">Token URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_token_url"
+                                                                           id="azure_oauth_token_url"
+                                                                           placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/token"
+                                                                           data-error="Please input Token URL"
+                                                                           value="{{ SETTING.get('azure_oauth_token_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_authorize_url">Authorize
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_authorize_url"
+                                                                           id="azure_oauth_authorize_url"
+                                                                           placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/authorize"
+                                                                           data-error="Please input Authorize URL"
+                                                                           value="{{ SETTING.get('azure_oauth_authorize_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <fieldset>
+                                                                <legend>GROUP SECURITY</legend>
+                                                                <div class="form-group">
+                                                                    <label>Status</label>
+                                                                    <div class="radio">
+                                                                        <label>
+                                                                            <input type="radio" name="azure_sg_enabled"
+                                                                                   id="azure_sg_off" value="OFF"
+                                                                                   {% if not SETTING.get('azure_sg_enabled') %}checked{% endif %}>
+                                                                            OFF
+                                                                        </label>
+                                                                        &nbsp;&nbsp;&nbsp;
+                                                                        <label>
+                                                                            <input type="radio" name="azure_sg_enabled"
+                                                                                   id="azure_sg_on" value="ON"
+                                                                                   {% if SETTING.get('azure_sg_enabled') %}checked{% endif %}>
+                                                                            ON
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_admin_group">Admin group</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_admin_group"
+                                                                           id="azure_admin_group"
+                                                                           placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                                                                           data-error="Please input the ID for Admin group"
+                                                                           value="{{ SETTING.get('azure_admin_group') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_operator_group">Operator
+                                                                        group</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_operator_group"
+                                                                           id="azure_operator_group"
+                                                                           placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                                                                           data-error="Please input the ID for Operator group"
+                                                                           value="{{ SETTING.get('azure_operator_group') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_user_group">User group</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_user_group" id="azure_user_group"
+                                                                           placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                                                                           data-error="Please input the ID for User group"
+                                                                           value="{{ SETTING.get('azure_user_group') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <fieldset>
+                                                                <legend>AZURE GROUP ACCOUNT SYNC/CREATION</legend>
+                                                                <div class="form-group">
+                                                                    <label
+                                                                        for="azure_group_accounts_enabled">Status</label>
+                                                                    <div class="radio">
+                                                                        <label>
+                                                                            <input type="radio"
+                                                                                   name="azure_group_accounts_enabled"
+                                                                                   id="azure_group_accounts_off"
+                                                                                   value="OFF"
+                                                                                   {% if not SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}>
+                                                                            OFF
+                                                                        </label>
+                                                                        &nbsp;&nbsp;&nbsp;
+                                                                        <label>
+                                                                            <input type="radio"
+                                                                                   name="azure_group_accounts_enabled"
+                                                                                   id="azure_group_accounts_on"
+                                                                                   value="ON"
+                                                                                   {% if SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}>
+                                                                            ON
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_group_accounts_name">Azure group
+                                                                        name
+                                                                        claim</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_group_accounts_name"
+                                                                           id="azure_group_accounts_name"
+                                                                           placeholder="e.g. displayName"
+                                                                           data-error="Please input the Claim for Azure group name"
+                                                                           value="{{ SETTING.get('azure_group_accounts_name') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_group_accounts_name_re">Azure
+                                                                        group name
+                                                                        claim regex</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_group_accounts_name_re"
+                                                                           id="azure_group_accounts_name_re"
+                                                                           placeholder="e.g. (.*)"
+                                                                           data-error="Please input the regex for Azure group name"
+                                                                           value="{{ SETTING.get('azure_group_accounts_name_re') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_group_accounts_description">Azure
+                                                                        group
+                                                                        description claim</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_group_accounts_description"
+                                                                           id="azure_group_accounts_description"
+                                                                           placeholder="e.g. description. If empty uses whole string"
+                                                                           data-error="Please input the Claim for Azure group description"
+                                                                           value="{{ SETTING.get('azure_group_accounts_description') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_group_accounts_name_re">Azure
+                                                                        group name
+                                                                        description regex</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_group_accounts_description_re"
+                                                                           id="azure_group_accounts_description_re"
+                                                                           placeholder="e.g. (.*). If empty uses whole string"
+                                                                           data-error="Please input the regex for Azure group description"
+                                                                           value="{{ SETTING.get('azure_group_accounts_description_re') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <div class="form-group">
+                                                                <button type="submit" class="btn btn-flat btn-primary">
+                                                                    Save
+                                                                </button>
                                                             </div>
                                                         </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_admin_group">Admin group</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_admin_group" id="azure_admin_group"
-                                                                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                                                                   data-error="Please input the ID for Admin group"
-                                                                   value="{{ SETTING.get('azure_admin_group') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_operator_group">Operator group</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_operator_group" id="azure_operator_group"
-                                                                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                                                                   data-error="Please input the ID for Operator group"
-                                                                   value="{{ SETTING.get('azure_operator_group') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_user_group">User group</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_user_group" id="azure_user_group"
-                                                                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                                                                   data-error="Please input the ID for User group"
-                                                                   value="{{ SETTING.get('azure_user_group') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <fieldset>
-                                                        <legend>AZURE GROUP ACCOUNT SYNC/CREATION</legend>
-                                                        <div class="form-group">
-                                                            <label for="azure_group_accounts_enabled">Status</label>
-                                                            <div class="radio">
-                                                                <label>
-                                                                    <input type="radio"
-                                                                           name="azure_group_accounts_enabled"
-                                                                           id="azure_group_accounts_off" value="OFF"
-                                                                           {% if not SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}>
-                                                                    OFF
-                                                                </label>
-                                                                &nbsp;&nbsp;&nbsp;
-                                                                <label>
-                                                                    <input type="radio"
-                                                                           name="azure_group_accounts_enabled"
-                                                                           id="azure_group_accounts_on" value="ON"
-                                                                           {% if SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}>
-                                                                    ON
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_group_accounts_name">Azure group name
-                                                                claim</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_group_accounts_name"
-                                                                   id="azure_group_accounts_name"
-                                                                   placeholder="e.g. displayName"
-                                                                   data-error="Please input the Claim for Azure group name"
-                                                                   value="{{ SETTING.get('azure_group_accounts_name') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_group_accounts_name_re">Azure group name
-                                                                claim regex</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_group_accounts_name_re"
-                                                                   id="azure_group_accounts_name_re"
-                                                                   placeholder="e.g. (.*)"
-                                                                   data-error="Please input the regex for Azure group name"
-                                                                   value="{{ SETTING.get('azure_group_accounts_name_re') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_group_accounts_description">Azure group
-                                                                description claim</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_group_accounts_description"
-                                                                   id="azure_group_accounts_description"
-                                                                   placeholder="e.g. description. If empty uses whole string"
-                                                                   data-error="Please input the Claim for Azure group description"
-                                                                   value="{{ SETTING.get('azure_group_accounts_description') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="azure_group_accounts_name_re">Azure group name
-                                                                description regex</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="azure_group_accounts_description_re"
-                                                                   id="azure_group_accounts_description_re"
-                                                                   placeholder="e.g. (.*). If empty uses whole string"
-                                                                   data-error="Please input the regex for Azure group description"
-                                                                   value="{{ SETTING.get('azure_group_accounts_description_re') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <div class="form-group">
-                                                        <button type="submit" class="btn btn-flat btn-primary">Save
-                                                        </button>
                                                     </div>
                                                 </form>
                                             </div>
-                                            <div class="col-8">
-                                                <legend>Help</legend>
-                                                <p>Fill in all the fields in the left form.</p>
-                                                <p>You first need to define an Application Registration in your Azure
-                                                    Active Directory, with the appropriate HTTPS URL for this endpoint,
-                                                    and with the appropriate rights, as explained in the
-                                                    documentation.</p>
-                                                <p>
-                                                <ul>
-                                                    <li>Under the Azure Active Directory, select App Registrations, and
-                                                        create a new one. Give it any name you want, and the Redirect
-                                                        URI shoule be type 'Web' and of the format <b>https://powerdnsadmin/azure/authorized</b>
-                                                        (replace the host name approriately).
-                                                    </li>
-                                                    <li>Select the newly-created registration</li>
-                                                    <li>On the Overview page, the Application ID is your new Client ID
-                                                        to use with PowerDNS-Admin
-                                                    </li>
-                                                    <li>On the Overview page, make a note of your Directory/Tenant ID -
-                                                        you need it for the API URLs later
-                                                    </li>
-                                                    <li>Ensure Access Tokens are enabled in the Authentication section
-                                                    </li>
-                                                    <li>Under Certificates and Secrets, create a new Client Secret. Note
-                                                        this secret as it is the new Client Secret to use with
-                                                        PowerDNS-Admin
-                                                    </li>
-                                                    <li>Under API Permissions, you need to add permissions. Add
-                                                        permissions for Graph API, Delegated. Add: email, openid,
-                                                        profile, GroupMember.Read, User.Read and possibly User.Read.All.
-                                                        You then need to grant admin approval for your organisation.
-                                                    </li>
-                                                    <li>For the Scope, use <b>User.Read openid mail profile</b></li>
-                                                    <li>Replace the [tenantID] in the default URLs for authorize and
-                                                        token with your Tenant ID.
-                                                    </li>
-                                                </ul>
-                                                </p>
-                                                <p>If <b>AZURE GROUP ACCOUNT SYNC/CREATION</b> is enabled, Accounts will
-                                                    be created automatically based on group membership. If an Account
-                                                    exists, an authenticated user with group membership is added to the
-                                                    Account</p>
-
+                                            <div class="col-12 col-sm-6 col-lg-8">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h3 class="card-title">Settings Help</h3>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p>Fill in all the fields in the left form.</p>
+                                                        <p>You first need to define an Application Registration in your
+                                                            Azure
+                                                            Active Directory, with the appropriate HTTPS URL for this
+                                                            endpoint,
+                                                            and with the appropriate rights, as explained in the
+                                                            documentation.</p>
+                                                        <p>
+                                                        <ul>
+                                                            <li>Under the Azure Active Directory, select App
+                                                                Registrations, and
+                                                                create a new one. Give it any name you want, and the
+                                                                Redirect
+                                                                URI shoule be type 'Web' and of the format <b>https://powerdnsadmin/azure/authorized</b>
+                                                                (replace the host name approriately).
+                                                            </li>
+                                                            <li>Select the newly-created registration</li>
+                                                            <li>On the Overview page, the Application ID is your new
+                                                                Client ID
+                                                                to use with PowerDNS-Admin
+                                                            </li>
+                                                            <li>On the Overview page, make a note of your
+                                                                Directory/Tenant ID -
+                                                                you need it for the API URLs later
+                                                            </li>
+                                                            <li>Ensure Access Tokens are enabled in the Authentication
+                                                                section
+                                                            </li>
+                                                            <li>Under Certificates and Secrets, create a new Client
+                                                                Secret. Note
+                                                                this secret as it is the new Client Secret to use with
+                                                                PowerDNS-Admin
+                                                            </li>
+                                                            <li>Under API Permissions, you need to add permissions. Add
+                                                                permissions for Graph API, Delegated. Add: email,
+                                                                openid,
+                                                                profile, GroupMember.Read, User.Read and possibly
+                                                                User.Read.All.
+                                                                You then need to grant admin approval for your
+                                                                organisation.
+                                                            </li>
+                                                            <li>For the Scope, use <b>User.Read openid mail profile</b>
+                                                            </li>
+                                                            <li>Replace the [tenantID] in the default URLs for authorize
+                                                                and
+                                                                token with your Tenant ID.
+                                                            </li>
+                                                        </ul>
+                                                        </p>
+                                                        <p>If <b>AZURE GROUP ACCOUNT SYNC/CREATION</b> is enabled,
+                                                            Accounts will
+                                                            be created automatically based on group membership. If an
+                                                            Account
+                                                            exists, an authenticated user with group membership is added
+                                                            to the
+                                                            Account</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -989,158 +1068,181 @@
 
                                     <div class="tab-pane" id="tabs-oidc">
                                         <div class="row">
-                                            <div class="col-4">
+                                            <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
                                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                                     <input type="hidden" value="oidc" name="config_tab"/>
-                                                    <fieldset>
-                                                        <legend>GENERAL</legend>
-                                                        <div class="form-group">
-                                                            <input type="checkbox" id="oidc_oauth_enabled"
-                                                                   name="oidc_oauth_enabled" class="checkbox"
-                                                                   {% if SETTING.get('oidc_oauth_enabled') %}checked{% endif %}>
-                                                            <label for="oidc_oauth_enabled">Enable OpenID Connect
-                                                                OAuth</label>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h3 class="card-title">OpenID Connect OAuth Settings</h3>
                                                         </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_key">Client key</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_key" id="oidc_oauth_key"
-                                                                   placeholder="OIDC OAuth client ID"
-                                                                   data-error="Please input Client key"
-                                                                   value="{{ SETTING.get('oidc_oauth_key') }}">
-                                                            <span class="help-block with-errors"></span>
+                                                        <div class="card-body">
+                                                            <fieldset>
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="oidc_oauth_enabled"
+                                                                           name="oidc_oauth_enabled" class="checkbox"
+                                                                           {% if SETTING.get('oidc_oauth_enabled') %}checked{% endif %}>
+                                                                    <label for="oidc_oauth_enabled">Enable OpenID
+                                                                        Connect
+                                                                        OAuth</label>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_key">Client key</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_key" id="oidc_oauth_key"
+                                                                           placeholder="OIDC OAuth client ID"
+                                                                           data-error="Please input Client key"
+                                                                           value="{{ SETTING.get('oidc_oauth_key') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_secret">Client secret</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_secret"
+                                                                           id="oidc_oauth_secret"
+                                                                           placeholder="OIDC OAuth client secret"
+                                                                           data-error="Please input Client secret"
+                                                                           value="{{ SETTING.get('oidc_oauth_secret') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_scope">Scope</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_scope" id="oidc_oauth_scope"
+                                                                           placeholder="e.g. email"
+                                                                           data-error="Please input scope"
+                                                                           value="{{ SETTING.get('oidc_oauth_scope') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_api_url">API URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_api_url"
+                                                                           id="oidc_oauth_api_url"
+                                                                           placeholder="e.g. https://api.oidc.com/user"
+                                                                           data-error="Please input API URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_api_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_token_url">Token URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_token_url"
+                                                                           id="oidc_oauth_token_url"
+                                                                           placeholder="e.g. https://oidc.com/login/oauth/access_token"
+                                                                           data-error="Please input Token URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_token_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_authorize_url">Authorize
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_authorize_url"
+                                                                           id="oidc_oauth_authorize_url"
+                                                                           placeholder="e.g. https://oidc.com/login/oauth/authorize"
+                                                                           data-error="Plesae input Authorize URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_authorize_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_logout_url">Logout
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_logout_url"
+                                                                           id="oidc_oauth_logout_url"
+                                                                           placeholder="e.g. https://oidc.com/login/oauth/logout"
+                                                                           data-error="Please input Logout URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_logout_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <fieldset>
+                                                                <legend>CLAIMS</legend>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_username">Username</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_username"
+                                                                           id="oidc_oauth_username"
+                                                                           placeholder="e.g. preferred_username"
+                                                                           data-error="Please input Username claim"
+                                                                           value="{{ SETTING.get('oidc_oauth_username') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_firstname">First Name</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_firstname"
+                                                                           id="oidc_oauth_firstname"
+                                                                           placeholder="e.g. given_name"
+                                                                           data-error="Please input First Name claim"
+                                                                           value="{{ SETTING.get('oidc_oauth_firstname') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_last_name">Last Name</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_last_name"
+                                                                           id="oidc_oauth_last_name"
+                                                                           placeholder="e.g. family_name"
+                                                                           data-error="Please input Last Name claim"
+                                                                           value="{{ SETTING.get('oidc_oauth_last_name') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_email">Email</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_email" id="oidc_oauth_email"
+                                                                           placeholder="e.g. email"
+                                                                           data-error="Plesae input Email claim"
+                                                                           value="{{ SETTING.get('oidc_oauth_email') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <fieldset>
+                                                                <legend>ADVANCE</legend>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_account_name_property">Autoprovision
+                                                                        Account Name property</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_account_name_property"
+                                                                           id="oidc_oauth_account_name_property"
+                                                                           placeholder="e.g. account_name"
+                                                                           data-error="Please input property containing account_name"
+                                                                           value="{{ SETTING.get('oidc_oauth_account_name_property') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label
+                                                                        for="oidc_oauth_account_description_property">Autoprovision
+                                                                        Account Description property</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_account_description_property"
+                                                                           id="oidc_oauth_account_description_property"
+                                                                           placeholder="e.g. account_description"
+                                                                           data-error="Please input property containing account_description"
+                                                                           value="{{ SETTING.get('oidc_oauth_account_description_property') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                            </fieldset>
+                                                            <div class="form-group">
+                                                                <button type="submit" class="btn btn-flat btn-primary">
+                                                                    Save
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_secret">Client secret</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_secret" id="oidc_oauth_secret"
-                                                                   placeholder="OIDC OAuth client secret"
-                                                                   data-error="Please input Client secret"
-                                                                   value="{{ SETTING.get('oidc_oauth_secret') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_scope">Scope</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_scope" id="oidc_oauth_scope"
-                                                                   placeholder="e.g. email"
-                                                                   data-error="Please input scope"
-                                                                   value="{{ SETTING.get('oidc_oauth_scope') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_api_url">API URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_api_url" id="oidc_oauth_api_url"
-                                                                   placeholder="e.g. https://api.oidc.com/user"
-                                                                   data-error="Please input API URL"
-                                                                   value="{{ SETTING.get('oidc_oauth_api_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_token_url">Token URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_token_url" id="oidc_oauth_token_url"
-                                                                   placeholder="e.g. https://oidc.com/login/oauth/access_token"
-                                                                   data-error="Please input Token URL"
-                                                                   value="{{ SETTING.get('oidc_oauth_token_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_authorize_url">Authorize URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_authorize_url"
-                                                                   id="oidc_oauth_authorize_url"
-                                                                   placeholder="e.g. https://oidc.com/login/oauth/authorize"
-                                                                   data-error="Plesae input Authorize URL"
-                                                                   value="{{ SETTING.get('oidc_oauth_authorize_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_logout_url">Logout URL</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_logout_url"
-                                                                   id="oidc_oauth_logout_url"
-                                                                   placeholder="e.g. https://oidc.com/login/oauth/logout"
-                                                                   data-error="Please input Logout URL"
-                                                                   value="{{ SETTING.get('oidc_oauth_logout_url') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <fieldset>
-                                                        <legend>CLAIMS</legend>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_username">Username</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_username" id="oidc_oauth_username"
-                                                                   placeholder="e.g. preferred_username"
-                                                                   data-error="Please input Username claim"
-                                                                   value="{{ SETTING.get('oidc_oauth_username') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_firstname">First Name</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_firstname" id="oidc_oauth_firstname"
-                                                                   placeholder="e.g. given_name"
-                                                                   data-error="Please input First Name claim"
-                                                                   value="{{ SETTING.get('oidc_oauth_firstname') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_last_name">Last Name</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_last_name" id="oidc_oauth_last_name"
-                                                                   placeholder="e.g. family_name"
-                                                                   data-error="Please input Last Name claim"
-                                                                   value="{{ SETTING.get('oidc_oauth_last_name') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_email">Email</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_email" id="oidc_oauth_email"
-                                                                   placeholder="e.g. email"
-                                                                   data-error="Plesae input Email claim"
-                                                                   value="{{ SETTING.get('oidc_oauth_email') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <fieldset>
-                                                        <legend>ADVANCE</legend>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_account_name_property">Autoprovision
-                                                                Account Name property</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_account_name_property"
-                                                                   id="oidc_oauth_account_name_property"
-                                                                   placeholder="e.g. account_name"
-                                                                   data-error="Please input property containing account_name"
-                                                                   value="{{ SETTING.get('oidc_oauth_account_name_property') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="oidc_oauth_account_description_property">Autoprovision
-                                                                Account Description property</label>
-                                                            <input type="text" class="form-control"
-                                                                   name="oidc_oauth_account_description_property"
-                                                                   id="oidc_oauth_account_description_property"
-                                                                   placeholder="e.g. account_description"
-                                                                   data-error="Please input property containing account_description"
-                                                                   value="{{ SETTING.get('oidc_oauth_account_description_property') }}">
-                                                            <span class="help-block with-errors"></span>
-                                                        </div>
-                                                    </fieldset>
-                                                    <div class="form-group">
-                                                        <button type="submit" class="btn btn-flat btn-primary">Save
-                                                        </button>
                                                     </div>
                                                 </form>
                                             </div>
-                                            <div class="col-8">
-                                                <legend>Help</legend>
-                                                <p>Fill in all the fields in the left form.</p>
+                                            <div class="col-12 col-sm-6 col-lg-8">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h3 class="card-title">Settings Help</h3>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p>Fill in all the fields in the left form.</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
