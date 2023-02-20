@@ -30,7 +30,7 @@
                             <div class="card-tools">
                                 {% if current_user.role.name in ['Administrator', 'Operator'] %}
                                     <button type="button" title="Zone Settings"
-                                            class="btn btn-primary btn-danger"
+                                            class="btn btn-primary btn-danger mt-2 mb-2"
                                             onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
                                         <i class="fa-solid fa-toolbox"></i>
                                         &nbsp;Zone Settings
@@ -38,19 +38,19 @@
                                 {% endif %}
                                 {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
                                     <button type="button" title="Zone Changelog"
-                                            class="btn btn-primary ml-2 button_changelog" id="{{ domain.name }}">
+                                            class="btn btn-primary ml-2 mt-2 mb-2 button_changelog" id="{{ domain.name }}">
                                         <i class="fa-solid fa-history" aria-hidden="true"></i>
                                         &nbsp;Changelog
                                     </button>
                                 {% endif %}
                                 {% if domain.type != 'Slave' %}
                                     <button type="button" title="Add Record"
-                                            class="btn btn-primary ml-2 button_add_record" id="{{ domain.name }}">
+                                            class="btn btn-primary ml-2 mt-2 mb-2 button_add_record" id="{{ domain.name }}">
                                         <i class="fa-solid fa-plus"></i>
                                         &nbsp;Add Record
                                     </button>
                                     <button type="button" title="Save Changes"
-                                            class="btn btn-primary ml-2 button_apply_changes"
+                                            class="btn btn-primary ml-2 mt-2 mb-2 button_apply_changes"
                                             id="{{ domain.name }}"
                                             value="{{ domain.serial }}">
                                         <i class="fa-solid fa-save"></i>
@@ -58,7 +58,7 @@
                                     </button>
                                 {% else %}
                                     <button type="button" title="Update from Primary"
-                                            class="btn btn-primary ml-2 button_update_from_primary"
+                                            class="btn btn-primary ml-2 mt-2 mb-2 button_update_from_primary"
                                             id="{{ domain.name }}">
                                         <i class="fa-solid fa-sync"></i>
                                         &nbsp;Update from Primary
