@@ -44,13 +44,19 @@
                                 <!-- /.callout -->
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <label for="txtQuery" class="input-group-text">Search Query</label>
-                                        <input type="text" id="txtQuery" name="q" class="form-control"
-                                               value="{{ query }}"
-                                               placeholder="Enter search query...">
-                                        <button type="submit" class="btn btn-flat btn-success" title="Execute Query">
-                                            <i class="fa fa-search"></i>
-                                        </button>
+                                        <div class="input-group-prepend">
+                                            <label id="txtQuery" class="input-group-text">
+                                                Search Query
+                                            </label>
+                                        </div>
+                                            <input type="text" id="txtQuery" name="q" class="form-control"
+                                                   value="{{ query }}"
+                                                    placeholder="Enter search query...">
+                                            <div class="input-group-append">
+                                            <button type="submit" class="btn btn-success" title="Execute Query">
+                                                <i class="fa-solid fa-search"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- /.form-group -->
