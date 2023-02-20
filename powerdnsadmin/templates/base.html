@@ -18,18 +18,6 @@
         {% if SETTING.get('custom_css') %}
             <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
         {% endif %}
-        <style>
-        .sidebar .image { padding-top: 0.7em; }
-        .sidebar .info { color: #fff; }
-        .sidebar .info p { margin: 0; }
-        .sidebar .info a { font-size: 0.8em; }
-        /* Global Styles */
-        table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
-        table.records thead th:last-of-type { width: 50px; }
-        div.records > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
-        div.records > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
-        div.records > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
-        </style>
         {% block head_styles %}{% endblock %}
     {% endblock %}
 </head>
