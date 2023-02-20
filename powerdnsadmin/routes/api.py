@@ -1,22 +1,21 @@
 import json
-from urllib.parse import urljoin
+import secrets
+import string
 from base64 import b64encode
-from flask import (
-    Blueprint, g, request, abort, current_app, make_response, jsonify,
-)
+from urllib.parse import urljoin
+
+from flask import (Blueprint, g, request, abort, current_app, make_response, jsonify)
 from flask_login import current_user
 
 from .base import csrf
-from ..models.base import db
-from ..models import (
-    User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
-    Role,
+from ..decorators import (
+    api_basic_auth, api_can_create_domain, is_json, apikey_auth,
+    apikey_can_create_domain, apikey_can_remove_domain,
+    apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
+    api_role_can, apikey_or_basic_auth,
+    callback_if_request_body_contains_key, allowed_record_types, allowed_record_ttl
 )
 from ..lib import utils, helper
-from ..lib.schema import (
-    ApiKeySchema, DomainSchema, ApiPlainKeySchema, UserSchema, AccountSchema,
-    UserDetailedSchema,
-)
 from ..lib.errors import (
     StructuredException,
     DomainNotExists, DomainAlreadyExists, DomainAccessForbidden,
@@ -26,15 +25,15 @@ from ..lib.errors import (
     UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
     UserUpdateFailEmail, InvalidAccountNameException
 )
-from ..decorators import (
-    api_basic_auth, api_can_create_domain, is_json, apikey_auth,
-    apikey_can_create_domain, apikey_can_remove_domain,
-    apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
-    api_role_can, apikey_or_basic_auth,
-    callback_if_request_body_contains_key, allowed_record_types, allowed_record_ttl
+from ..lib.schema import (
+    ApiKeySchema, DomainSchema, ApiPlainKeySchema, UserSchema, AccountSchema,
+    UserDetailedSchema,
 )
-import secrets
-import string
+from ..models import (
+    User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
+    Role,
+)
+from ..models.base import db
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 apilist_bp = Blueprint('apilist', __name__, url_prefix='/')
@@ -56,10 +55,10 @@ def get_user_domains():
         .outerjoin(Account, Domain.account_id == Account.id) \
         .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
         .filter(
-            db.or_(
-                DomainUser.user_id == current_user.id,
-                AccountUser.user_id == current_user.id
-            )).all()
+        db.or_(
+            DomainUser.user_id == current_user.id,
+            AccountUser.user_id == current_user.id
+        )).all()
     return domains
 
 
@@ -71,10 +70,10 @@ def get_user_apikeys(domain_name=None):
         .outerjoin(Account, Domain.account_id == Account.id) \
         .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
         .filter(
-            db.or_(
-                DomainUser.user_id == User.id,
-                AccountUser.user_id == User.id
-            )
+        db.or_(
+            DomainUser.user_id == User.id,
+            AccountUser.user_id == User.id
+        )
     ) \
         .filter(User.id == current_user.id)
 
@@ -167,12 +166,7 @@ def handle_request_is_not_json(err):
 def before_request():
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
-    if (
-        maintenance and current_user.is_authenticated and
-        current_user.role.name not in [
-            'Administrator', 'Operator'
-        ]
-    ):
+    if (maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']):
         return make_response(
             jsonify({
                 "status": False,
@@ -224,14 +218,13 @@ def api_login_create_zone():
 
         history = History(msg='Add domain {0}'.format(
             data['name'].rstrip('.')),
-                          detail=json.dumps(data),
-                          created_by=current_user.username,
-                          domain_id=domain_id)
+            detail=json.dumps(data),
+            created_by=current_user.username,
+            domain_id=domain_id)
         history.add()
 
         if current_user.role.name not in ['Administrator', 'Operator']:
-            current_app.logger.debug(
-                "User is ordinary user, assigning created domain")
+            current_app.logger.debug("User is ordinary user, assigning created domain")
             domain = Domain(name=data['name'].rstrip('.'))
             domain.update()
             domain.grant_privileges([current_user.id])
@@ -299,9 +292,9 @@ def api_login_delete_zone(domain_name):
 
             history = History(msg='Delete domain {0}'.format(
                 utils.pretty_domain_name(domain_name)),
-                              detail='',
-                              created_by=current_user.username,
-                              domain_id=domain_id)
+                detail='',
+                created_by=current_user.username,
+                domain_id=domain_id)
             history.add()
 
     except Exception as e:
@@ -326,14 +319,14 @@ def api_generate_apikey():
 
     if 'domains' not in data:
         domains = []
-    elif not isinstance(data['domains'], (list, )):
+    elif not isinstance(data['domains'], (list,)):
         abort(400)
     else:
         domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
 
     if 'accounts' not in data:
         accounts = []
-    elif not isinstance(data['accounts'], (list, )):
+    elif not isinstance(data['accounts'], (list,)):
         abort(400)
     else:
         accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
@@ -385,8 +378,7 @@ def api_generate_apikey():
         user_domain_list = [item.name for item in user_domain_obj_list]
 
         current_app.logger.debug("Input domain list: {0}".format(domain_list))
-        current_app.logger.debug(
-            "User domain list: {0}".format(user_domain_list))
+        current_app.logger.debug("User domain list: {0}".format(user_domain_list))
 
         inter = set(domain_list).intersection(set(user_domain_list))
 
@@ -539,14 +531,14 @@ def api_update_apikey(apikey_id):
 
     if 'domains' not in data:
         domains = None
-    elif not isinstance(data['domains'], (list, )):
+    elif not isinstance(data['domains'], (list,)):
         abort(400)
     else:
         domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
 
     if 'accounts' not in data:
         accounts = None
-    elif not isinstance(data['accounts'], (list, )):
+    elif not isinstance(data['accounts'], (list,)):
         abort(400)
     else:
         accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
@@ -963,9 +955,7 @@ def api_delete_account(account_id):
         account = account_list[0]
     else:
         abort(404)
-    current_app.logger.debug(
-            f'Deleting Account {account.name}'
-        )
+    current_app.logger.debug(f'Deleting Account {account.name}')
 
     # Remove account association from domains first
     if len(account.domains) > 0:
@@ -1047,7 +1037,7 @@ def api_remove_account_user(account_id, user_id):
     user_list = User.query.join(AccountUser).filter(
         AccountUser.account_id == account_id,
         AccountUser.user_id == user_id,
-        ).all()
+    ).all()
     if not user_list:
         abort(404)
     if not account.remove_user(user):
@@ -1194,17 +1184,13 @@ def api_get_zones(server_id):
         return jsonify(domain_schema.dump(domain_obj_list)), 200
     else:
         resp = helper.forward_request()
-        if (
-            g.apikey.role.name not in ['Administrator', 'Operator']
-            and resp.status_code == 200
-        ):
+        if (g.apikey.role.name not in ['Administrator', 'Operator'] and resp.status_code == 200):
             domain_list = [d['name']
                            for d in domain_schema.dump(g.apikey.domains)]
 
             accounts_domains = [d.name for a in g.apikey.accounts for d in a.domains]
             allowed_domains = set(domain_list + accounts_domains)
-            current_app.logger.debug("Account domains: {}".format(
-                                     '/'.join(accounts_domains)))
+            current_app.logger.debug("Account domains: {}".format('/'.join(accounts_domains)))
             content = json.dumps([i for i in json.loads(resp.content)
                                   if i['name'].rstrip('.') in allowed_domains])
             return content, resp.status_code, resp.headers.items()
@@ -1225,6 +1211,7 @@ def api_server_config_forward(server_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
+
 # The endpoint to synchronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
 @apikey_or_basic_auth
@@ -1232,6 +1219,7 @@ def sync_domains():
     domain = Domain()
     domain.update()
     return 'Finished synchronization in background', 200
+
 
 @api_bp.route('/health', methods=['GET'])
 @apikey_auth
@@ -1246,7 +1234,8 @@ def health():
     try:
         domain.get_domain_info(domain_to_query.name)
     except Exception as e:
-        current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
+        current_app.logger.error(
+            "Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
         return make_response("Down", 503)
 
     return make_response("Up", 200)

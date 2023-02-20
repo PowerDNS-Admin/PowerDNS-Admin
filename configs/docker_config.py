@@ -4,6 +4,7 @@ PORT = 80
 SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
+FILESYSTEM_SESSIONS_ENABLED = True
 
 legal_envvars = (
     'SECRET_KEY',

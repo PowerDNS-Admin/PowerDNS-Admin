@@ -7,6 +7,7 @@ ARG BUILD_DEPENDENCIES="build-base \
     openldap-dev \
     python3-dev \
     xmlsec-dev \
+    npm \
     yarn \
     cargo"
 

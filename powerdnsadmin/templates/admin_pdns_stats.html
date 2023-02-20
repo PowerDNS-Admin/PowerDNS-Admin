@@ -1,116 +1,127 @@
 {% extends "base.html" %}
+
 {% set active_page = "admin_console" %}
-{% block title %}<title>Admin Console - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block title %}
+  <title>
+    Admin Console - {{ SITE_NAME }}
+  </title>
+{% endblock %}
 
 {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        PowerDNS server configuration & statistics
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Admin Console</li>
-    </ol>
-</section>
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark">
+            PowerDNS
+            <small>Server Statistics & Configuration</small>
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">PowerDNS Server Statistics & Configuration</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">PDNS Statistics</h3>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_statistics" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th width="6%">Docs</th>
-                                <th>Statistic</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for statistic in statistics %}
-                            <tr class="odd gradeX">
-                                <td><a href="https://doc.powerdns.com/authoritative/search.html?q={{ statistic['name'] }}"
-                                        target="_blank" class="btn btn-flat btn-xs blue"><i
-                                            class="fa fa-search"></i></a></td>
-                                <td>{{ statistic['name'] }}</td>
-                                <td>{{ statistic['value'] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <!-- /.box-body -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow">
+            <div class="card-header">
+              <h3 class="card-title">PowerDNS Server Statistics</h3>
             </div>
-            <!-- /.box -->
-        </div>
-        <!-- /.col -->
-    </div>
-    <!-- /.row -->
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">PDNS Configuration</h3>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_configuration" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th width="6%">Docs</th>
-                                <th>Statistic</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for config in configs %}
-                            <tr class="odd gradeX">
-                                <td><a href="https://doc.powerdns.com/authoritative/search.html?q={{ config['name'] }}"
-                                        target="_blank" class="btn btn-flat btn-xs blue"><i
-                                            class="fa fa-search"></i></a></td>
-                                <td>{{ config['name'] }}</td>
-                                <td>
-                                    {{ config['value'] }}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <!-- /.box-body -->
+            <div class="card-body">
+              <table id="tbl_statistics" class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th width="30%">Statistic</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for statistic in statistics %}
+                    <tr class="odd gradeX">
+                      <td>
+                        <a href="https://doc.powerdns.com/authoritative/search.html?q={{ statistic['name'] }}"
+                        target="_blank" class="btn btn-primary">
+                          <i class="fa fa-search"></i>&nbsp;{{ statistic['name'] }}
+                        </a>
+                      </td>
+                      <td>{{ statistic['value'] }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-            <!-- /.box -->
+          </div>
         </div>
-        <!-- /.col -->
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow">
+            <div class="card-header">
+              <h3 class="card-title">PowerDNS Server Configuration</h3>
+            </div>
+            <div class="card-body">
+              <table id="tbl_configuration" class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th width="30%">Configuration</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for config in configs %}
+                    <tr class="odd gradeX">
+                      <td>
+                        <a href="https://doc.powerdns.com/authoritative/search.html?q={{ config['name'] }}"
+                        target="_blank" class="btn btn-primary">
+                          <i class="fa-solid fa-search"></i>&nbsp;{{ config['name'] }}
+                        </a>
+                      </td>
+                      <td>
+                        {{ config['value'] }}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- /.row -->
-</section>
+  </section>
 {% endblock %}
+
 {% block extrascripts %}
 <script>
-    // set up statistics data table
-    $("#tbl_statistics").DataTable({
-        "paging": true,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false
-    });
+  // set up statistics data table
+  $("#tbl_statistics").DataTable({
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+    "info": true,
+    "autoWidth": false
+  });
 
-    // set up configuration data table
-    $("#tbl_configuration").DataTable({
-        "paging": true,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false
-    });
+  // set up configuration data table
+  $("#tbl_configuration").DataTable({
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+    "info": true,
+    "autoWidth": false
+  });
 </script>
 {% endblock %}
