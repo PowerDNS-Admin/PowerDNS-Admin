@@ -291,14 +291,13 @@ function copy_otp_secret_to_clipboard() {
 
 // Side menu nav bar active selection
 /** add active class and stay opened when selected */
-var url = window.location;
 
 // for sidebar menu entirely but not cover treeview
 $('ul.nav-sidebar a').filter(function() {
-    return this.href == url;
+    return this.href == window.location.href.split('?')[0];
 }).addClass('active');
 
 // for treeview
 $('ul.nav-treeview a').filter(function() {
-    return this.href == url;
+    return this.href == window.location.href.split('?')[0];
 }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
