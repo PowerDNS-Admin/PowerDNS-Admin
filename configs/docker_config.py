@@ -61,6 +61,7 @@ legal_envvars = (
     'FILESYSTEM_SESSIONS_ENABLED',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
+    'CAPTCHA_ENABLE',
 )
 
 legal_envvars_int = ('PORT', 'MAIL_PORT', 'SAML_METADATA_CACHE_LIFETIME')
@@ -84,6 +85,7 @@ legal_envvars_bool = (
     'FILESYSTEM_SESSIONS_ENABLED',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
+    'CAPTCHA_ENABLE',
 )
 
 # import everything from environment variables
