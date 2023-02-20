@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
-
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Register - {{ SITE_NAME }}</title>
@@ -10,183 +9,201 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css">
     {% assets "css_login" -%}
-      <link rel="stylesheet" href="{{ ASSET_URL }}">
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
     {%- endassets %}
-  </head>
+</head>
 
-  <body class="hold-transition register-page">
-    <div class="register-box">
-      <div class="card card-outline card-primary">
+<body class="hold-transition register-page">
+<div class="register-box">
+    <div class="card card-outline card-primary shadow">
         <div class="card-header text-center">
-          <a href="{{ url_for('index.index') }}" class="h3">
-            {% if SETTING.get('site_name') %}
-              {{ SITE_NAME }}
-            {% else %}
-              <b>PowerDNS</b>-Admin
-            {% endif %}
-          </a>
+            <a href="{{ url_for('index.index') }}" class="h3">
+                {% if SETTING.get('site_name') %}
+                    {{ SITE_NAME }}
+                {% else %}
+                    <b>PowerDNS</b>-Admin
+                {% endif %}
+            </a>
         </div>
         <div class="card-body">
-          {% if error %}
-          <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            {{ error }}
-          </div>
-          {% endif %}
-          <p class="login-box-msg">Enter your personal details below</p>
-          <form action="{{ url_for('index.register') }}" method="post" validator>
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
+            {% if error %}
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    {{ error }}
+                </div>
+            {% endif %}
+            <p class="login-box-msg">Enter your personal details below</p>
+            <form action="{{ url_for('index.register') }}" method="post" validator>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-user"></i>
                   </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'firstname' in error_messages else '' }}"
+                               placeholder="First Name" name="firstname" id="firstname"
+                               value="{{ request.form.firstname }}" required>
+                        {% if 'firstname' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['firstname'] }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="text" class="form-control {{ 'is-invalid' if 'firstname' in error_messages else '' }}" placeholder="First Name" name="firstname" id="firstname" value="{{ request.form.firstname }}" required>
-                {% if 'firstname' in error_messages %}
-                  <div class="invalid-feedback">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ error_messages['firstname'] }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
 
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-user"></i>
                   </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'lastname' in error_messages else '' }}"
+                               placeholder="Last name" name="lastname" id="lastname" value="{{ request.form.lastname }}"
+                               required>
+                        {% if 'lastname' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['lastname'] }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="text" class="form-control {{ 'is-invalid' if 'lastname' in error_messages else '' }}" placeholder="Last name" name="lastname" id="lastname" value="{{ request.form.lastname }}" required>
-                {% if 'lastname' in error_messages %}
-                  <div class="invalid-feedback">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ error_messages['lastname'] }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
 
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-envelope"></i>
                   </span>
+                        </div>
+                        <input type="email" class="form-control {{ 'is-invalid' if 'email' in error_messages else '' }}"
+                               placeholder="Email" name="email" id="email" value="{{ request.form.email }}" required>
+                        {% if 'email' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['email'] }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="email" class="form-control {{ 'is-invalid' if 'email' in error_messages else '' }}" placeholder="Email" name="email" id="email" value="{{ request.form.email }}" required>
-                {% if 'email' in error_messages %}
-                  <div class="invalid-feedback">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ error_messages['email'] }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
 
-            <p class="login-box-msg">Enter your account details below</p>
+                <p class="login-box-msg">Enter your account details below</p>
 
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-user"></i>
                   </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'username' in error_messages else '' }}"
+                               placeholder="Username" name="username" id="username" value="{{ request.form.username }}"
+                               required>
+                        {% if 'username' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['username'] }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="text" class="form-control {{ 'is-invalid' if 'username' in error_messages else '' }}" placeholder="Username" name="username" id="username" value="{{ request.form.username }}" required>
-                {% if 'username' in error_messages %}
-                  <div class="invalid-feedback">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ error_messages['username'] }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
 
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-lock"></i>
                   </span>
+                        </div>
+                        <input type="password"
+                               class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}"
+                               placeholder="Password" id="password" name="password" required>
+                        {% if 'password' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['password'] }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="password" class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}" placeholder="Password" id="password" name="password" required>
-                {% if 'password' in error_messages %}
-                  <div class="invalid-feedback">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ error_messages['password'] }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
 
-            <div class="form-group">
-              <div class="input-group">
-                <div class="input-group-prepend">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-lock"></i>
                   </span>
+                        </div>
+                        <input type="password"
+                               class="form-control {{ 'is-invalid' if 'rpassword' in error_messages else '' }}"
+                               placeholder="Retype password" id="rpassword" name="rpassword" required>
+                        {% if 'rpassword' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['rpassword'] }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="password" class="form-control {{ 'is-invalid' if 'rpassword' in error_messages else '' }}" placeholder="Retype password" id="rpassword" name="rpassword" required>
-                {% if 'rpassword' in error_messages %}
-                  <div class="invalid-feedback">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    {{ error_messages['rpassword'] }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
 
-            {% if captcha_enable %}
-            <p class="login-box-msg">Please complete the CAPTCHA below</p>
-            <div class="form-group">
-              {{ captcha() }}
-              <div class="input-group">
-                <div class="input-group-prepend">
+                {% if captcha_enable %}
+                    <p class="login-box-msg">Please complete the CAPTCHA below</p>
+                    <div class="form-group">
+                    {{ captcha() }}
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                   <span class="input-group-text">
                     <i class="fas fa-shield-alt"></i>
                   </span>
-                </div>
-              <input type="text" class="form-control {{ 'is-invalid' if 'captcha_result' in error_messages else '' }}" placeholder="CAPTCHA"  id="captcha" name="captcha" required>
-              {% if 'captcha_result' in error_messages %}
-                <div class="invalid-feedback">
-                  <i class="fas fa-exclamation-triangle"></i>
-                  {{ error_messages['captcha_result'] }}
-                </div>
-              {% endif %}
-            </div>
-          {% endif %}
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'captcha_result' in error_messages else '' }}"
+                               placeholder="CAPTCHA" id="captcha" name="captcha" required>
+                        {% if 'captcha_result' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['captcha_result'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
 
-          <div class="row">
-            <div class="d-flex justify-content-between mx-auto mt-3">
-              <button type="button" class="btn btn-secondary" id="button_back">Back</button>
-              <button type="submit" class="btn btn-primary btn-block mx-3">Register</button>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="login-box-footer">
-        <center>
-          <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
-        </center>
-      </div>
+                <div class="row">
+                    <div class="d-flex justify-content-between mx-auto mt-3">
+                        <button type="button" class="btn btn-secondary" id="button_back">Back</button>
+                        <button type="submit" class="btn btn-primary btn-block mx-3">Register</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- /.card-body -->
     </div>
-    {% assets "js_login" -%}
-      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-    {% assets "js_validation" -%}
-      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-    <script>
-      $(function () {
+    <!-- /.card -->
+</div>
+<!-- /.register-box -->
+<div class="text-center pt-3">
+    <p>Powered by <a href="https://powerdnsadmin.org" target="_blank">PowerDNS-Admin</a></p>
+</div>
+{% assets "js_login" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+{% assets "js_validation" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+<script>
+    $(function () {
         $('#button_back').click(function () {
-          window.location.href = '{{ url_for('index.login') }}';
+            window.location.href = '{{ url_for('index.login') }}';
         })
-      });
-    </script>
-  </body>
+    });
+</script>
+</body>
 </html>
