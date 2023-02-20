@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set active_page = "server_statistics" %}
+{% block title %}<title>Server Statistics - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">
+                        Server Statistics
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Server Statistics</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Server Statistics</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="tbl_statistics" class="table table-bordered table-striped table-hover table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Statistic</th>
+                                    <th>Value</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for statistic in statistics %}
+                                    <tr class="odd gradeX">
+                                        <td>
+                                            <a href="https://doc.powerdns.com/authoritative/search.html?q={{ statistic['name'] }}"
+                                               target="_blank" class="btn btn-primary" title="Search Documentation">
+                                                <i class="fa fa-search"></i>&nbsp;{{ statistic['name'] }}
+                                            </a>
+                                        </td>
+                                        <td>{{ statistic['value'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+{% endblock %}
+
+{% block extrascripts %}
+    <script>
+        // Initialize DataTables
+        $("#tbl_statistics").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false
+        });
+    </script>
+{% endblock %}

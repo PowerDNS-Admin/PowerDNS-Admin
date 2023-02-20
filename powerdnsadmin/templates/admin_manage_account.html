@@ -1,159 +1,167 @@
 {% extends "base.html" %}
-
 {% set active_page = "admin_accounts" %}
-
-{% block title %}
-  <title>
-    Account Management - {{ SITE_NAME }}
-  </title>
-{% endblock %}
+{% block title %}<title>Accounts - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0 text-dark">
-            Accounts
-            <small>Manage</small>
-          </h1>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">Accounts</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+                        <li class="breadcrumb-item active">Accounts</li>
+                    </ol>
+                </div>
+            </div>
         </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-            <li class="breadcrumb-item active">Accounts</li>
-          </ol>
-        </div>
-      </div>
     </div>
-  </div>
 {% endblock %}
 
 {% block content %}
-<section class="content">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Account Management</h3>
-            <a href="{{ url_for('admin.edit_account') }}">
-              <button type="button" class="btn btn-primary float-right button_add_account">
-                <i class="fa-solid fa-plus"></i>&nbsp;Add Account
-              </button>
-            </a>
-          </div>
-          <div class="card-body">
-            <table id="tbl_accounts" class="table table-bordered table-striped">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Contact</th>
-                  <th>Mail</th>
-                  <th>Member</th>
-                  <th>Domain</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for account in accounts %}
-                  <tr class="odd gradeX">
-                    <td>{{ account.name }}</td>
-                    <td>{{ account.description }}</td>
-                    <td>{{ account.contact }}</td>
-                    <td>{{ account.mail }}</td>
-                    <td>{{ account.user_num }}</td>
-                    <td>{{ account.domains|length }}</td>
-                    <td width="15%">
-                      <div class="dropdown">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          <i class="fa-solid fa-bars"></i>&nbsp;Actions
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenu">
-                          <button type="button" class="dropdown-item btn-warning" onclick="window.location.href='{{ url_for('admin.edit_account', account_name=account.name) }}'">
-                            <i class="fa-solid fa-edit"></i>&nbsp;Edit Account
-                          </button>
-                          <div class="dropdown-divider"></div>
-                          <button type="button"class="dropdown-item btn-secondary button_delete" id="{{ account.name }}">
-                            <font color="red">
-                              <i class="fa-solid fa-trash"></i>&nbsp;Delete Account
-                            </font>
-                          </button>
-                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Accounts</h3>
+                            <div class="card-tools">
+                                <a href="{{ url_for('admin.edit_account') }}">
+                                    <button type="button" class="btn btn-primary button_add_account"
+                                            title="Add Account">
+                                        <i class="fa-solid fa-plus"></i>&nbsp;Add Account
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="tbl_accounts"
+                                   class="table table-bordered table-striped table-hover table-sm records">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Contact</th>
+                                    <th>Mail</th>
+                                    <th>Member</th>
+                                    <th>Domain</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for account in accounts %}
+                                    <tr class="odd gradeX">
+                                        <td>{{ account.name }}</td>
+                                        <td>{{ account.description }}</td>
+                                        <td>{{ account.contact }}</td>
+                                        <td>{{ account.mail }}</td>
+                                        <td>{{ account.user_num }}</td>
+                                        <td>{{ account.domains|length }}</td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-primary dropdown-toggle" type="button"
+                                                        id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false">
+                                                    <i class="fa-solid fa-bars"></i>
+                                                </button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                                    <button type="button" class="dropdown-item btn-warning"
+                                                            onclick="window.location.href='{{ url_for('admin.edit_account', account_name=account.name) }}'">
+                                                        <i class="fa-solid fa-edit"></i>&nbsp;Edit Account
+                                                    </button>
+                                                    <div class="dropdown-divider"></div>
+                                                    <button type="button"
+                                                            class="dropdown-item btn-secondary button_delete"
+                                                            id="{{ account.name }}">
+                                                        <span style="color: red;">
+                                                            <i class="fa-solid fa-trash"></i>&nbsp;Delete Account
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+        <!-- /.container-fluid -->
+    </section>
 {% endblock %}
-{% block extrascripts %}
-<script>
-    // set up accounts data table
-    $("#tbl_accounts").DataTable({
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": true,
-        "columnDefs": [{
-            "orderable": false,
-            "targets": [-1]
-        }],
-        "info": false,
-        "autoWidth": false,
-        "lengthMenu": [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
-        ],
-        "pageLength": 10
-    });
 
-    // handle deletion of account
-    $(document.body).on('click', '.button_delete', function () {
-        var modal = $("#modal_delete");
-        var accountname = $(this).prop('id');
-        var info = "Are you sure you want to delete " + accountname + "?";
-        modal.find('.modal-body p').text(info);
-        modal.find('#button_delete_confirm').click(function () {
-            var postdata = {
-                'action': 'delete_account',
-                'data': accountname,
-                '_csrf_token': '{{ csrf_token() }}'
-            }
-            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-account', false, true);
-            modal.modal('hide');
-        })
-        modal.modal('show');
-    });
-</script>
+{% block extrascripts %}
+    <script>
+        // Intialize DataTable
+        $("#tbl_accounts").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "columnDefs": [{
+                "orderable": false,
+                "targets": [-1]
+            }],
+            "info": false,
+            "autoWidth": false,
+            "lengthMenu": [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            "pageLength": 10
+        });
+
+        // handle deletion of account
+        $(document.body).on('click', '.button_delete', function () {
+            var modal = $("#modal_delete");
+            var accountname = $(this).prop('id');
+            var info = "Are you sure you want to delete " + accountname + "?";
+            modal.find('.modal-body p').text(info);
+            modal.find('#button_delete_confirm').click(function () {
+                var postdata = {
+                    'action': 'delete_account',
+                    'data': accountname,
+                    '_csrf_token': '{{ csrf_token() }}'
+                }
+                applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-account', false, true);
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        });
+    </script>
 {% endblock %}
+
 {% block modals %}
-<div class="modal fade" id="modal_delete">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-              <h4 class="modal-title">Confirmation</h4>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+    <div class="modal fade" id="modal_delete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default float-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="button_delete_confirm">Delete</button>
+                </div>
             </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default float-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" id="button_delete_confirm">Delete</button>
-            </div>
+            <!-- /.modal-content -->
         </div>
-        <!-- /.modal-content -->
+        <!-- /.modal-dialog -->
     </div>
-    <!-- /.modal-dialog -->
-</div>
 {% endblock %}
