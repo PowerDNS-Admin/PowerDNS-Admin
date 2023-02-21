@@ -20,6 +20,9 @@ labels:
   - name: feature / request
     description: New feature or enhancement request
     color: '008672'
+  - name: feature / update
+    description: Existing feature modification
+    color: '008672'
   - name: help / deployment
     description: Questions regarding application deployment
     color: 'd876e3'
