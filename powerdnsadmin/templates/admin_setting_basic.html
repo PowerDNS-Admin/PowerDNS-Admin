@@ -65,7 +65,7 @@
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-primary setting-save-button"
-                                                id="{{ setting }}">
+                                                id="{{ setting }}" data-target="value{{ loop.index }}">
                                             <i class="fa-solid fa-save"></i>&nbsp;Save
                                         </button>
                                     </td>
@@ -103,7 +103,8 @@
 
         $(document.body).on('click', '.setting-save-button', function () {
             var setting = $(this).prop('id');
-            var value = $(this).parents('tr').find('input[type="text"]')[0].value;
+            var target = $(this).data('target');
+            var value = $('#' + target).val();
             var postdata = {
                 'value': value,
                 '_csrf_token': '{{ csrf_token() }}'
