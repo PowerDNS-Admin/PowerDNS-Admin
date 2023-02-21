@@ -103,7 +103,7 @@
 
         $(document.body).on('click', '.setting-save-button', function () {
             var setting = $(this).prop('id');
-            var value = $(this).parents('tr').find('#value')[0].value;
+            var value = $(this).parents('tr').find('input[type="text"]')[0].value;
             var postdata = {
                 'value': value,
                 '_csrf_token': '{{ csrf_token() }}'
