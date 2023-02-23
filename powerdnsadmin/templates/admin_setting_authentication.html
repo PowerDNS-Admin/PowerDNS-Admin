@@ -1211,6 +1211,17 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <label for="oidc_oauth_metadata_url">Metadata
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_metadata_url"
+                                                                           id="oidc_oauth_metadata_url"
+                                                                           placeholder="e.g. https://oidc.com/login/oauth/.well-known/openid-configuration"
+                                                                           data-error="Plesae input Metadata URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_metadata_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
                                                                     <label for="oidc_oauth_logout_url">Logout
                                                                         URL</label>
                                                                     <input type="text" class="form-control"

@@ -1731,6 +1731,8 @@ def setting_authentication():
                               request.form.get('oidc_oauth_token_url'))
                 Setting().set('oidc_oauth_authorize_url',
                               request.form.get('oidc_oauth_authorize_url'))
+                Setting().set('oidc_oauth_metadata_url',
+                              request.form.get('oidc_oauth_metadata_url'))
                 Setting().set('oidc_oauth_logout_url',
                               request.form.get('oidc_oauth_logout_url'))
                 Setting().set('oidc_oauth_username',
