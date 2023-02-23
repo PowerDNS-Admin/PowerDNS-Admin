@@ -51,6 +51,7 @@ Enable OpenID Connect OAuth option.
 * API URL, <oidc_provider_link>/auth (The ending can be different with each provider)
 * Token URL, <oidc_provider_link>/token 
 * Authorize URL, <oidc_provider_link>/auth
+* Metadata URL, <oidc_provider_link>/.well-known/openid-configuration
 * Logout URL, <oidc_provider_link>/logout
 
 * Username, This will be the claim that will be used as the username. (Usually preferred_username)

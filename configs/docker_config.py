@@ -11,6 +11,7 @@ legal_envvars = (
     'OIDC_OAUTH_API_URL',
     'OIDC_OAUTH_TOKEN_URL',
     'OIDC_OAUTH_AUTHORIZE_URL',
+    'OIDC_OAUTH_METADATA_URL',
     'BIND_ADDRESS',
     'PORT',
     'LOG_LEVEL',

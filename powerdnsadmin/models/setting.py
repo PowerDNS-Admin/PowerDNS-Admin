@@ -104,6 +104,7 @@ class Setting(db.Model):
         'oidc_oauth_api_url': '',
         'oidc_oauth_token_url': '',
         'oidc_oauth_authorize_url': '',
+        'oidc_oauth_metadata_url': '',
         'oidc_oauth_logout_url': '',
         'oidc_oauth_username': 'preferred_username',
         'oidc_oauth_firstname': 'given_name',
