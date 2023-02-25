@@ -90,11 +90,13 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <input type="checkbox" id="chkAutoPtr" class="auto_ptr_toggle"
-                                      {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked
-                                      {% endif %}{% endfor %}
-                                      {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
+                                       data-zone="{{ domain.name }}"
+                                       {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked
+                                       {% endif %}{% endfor %}
+                                       {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
                                 &nbsp;
-                                <label for="chkAutoPtr">Allow automatic reverse pointer creation on record updates?</label>
+                                <label for="chkAutoPtr">Allow automatic reverse pointer creation on record
+                                    updates?</label>
                                 {% if SETTING.get('auto_ptr') %}
                                     <p><code>Auto-ptr is enabled globally on the PDA system!</code></p>
                                 {% endif %}
@@ -116,8 +118,9 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <input type="checkbox" id="chkDynDns" class="dyndns_on_demand_toggle"
-                                      {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked
-                                      {% endif %}{% endfor %}>
+                                       data-zone="{{ domain.name }}"
+                                       {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked
+                                       {% endif %}{% endfor %}>
                                 &nbsp;
                                 <label for="chkDynDns">Allow on-demand creation of records via DynDNS updates?</label>
                             </div>
@@ -278,7 +281,8 @@
                                     <option>EPOCH</option>
                                     <option>OFF</option>
                                 </select><br/>
-                                <button type="submit" title="Update SOA-EDIT-API" class="btn btn-primary" id="change_soa_edit_api">
+                                <button type="submit" title="Update SOA-EDIT-API" class="btn btn-primary"
+                                        id="change_soa_edit_api">
                                     <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update SOA-EDIT-API
                                 </button>
                             </form>
@@ -373,7 +377,7 @@
         //handle checkbox toggling
         $('.dyndns_on_demand_toggle').on('ifToggled', function (event) {
             var is_checked = $(this).prop('checked');
-            var domain = $(this).prop('id');
+            var domain = $(this).data('zone')
             postdata = {
                 'action': 'set_setting',
                 'data': {
@@ -386,7 +390,7 @@
         });
         $('.auto_ptr_toggle').on('ifToggled', function (event) {
             var is_checked = $(this).prop('checked');
-            var domain = $(this).prop('id');
+            var domain = $(this).data('zone')
             postdata = {
                 'action': 'set_setting',
                 'data': {
