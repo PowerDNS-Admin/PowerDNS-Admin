@@ -28,7 +28,7 @@ A PowerDNS web interface with advanced features.
 
 There are several ways to run PowerDNS-Admin. The quickest way is to use Docker.
 If you are looking to install and run PowerDNS-Admin directly onto your system, check out
-the [Wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki#installation-guides) for ways to do that.
+the [wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/wiki/) for ways to do that.
 
 ### Docker
 
