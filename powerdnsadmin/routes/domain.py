@@ -133,7 +133,8 @@ def domain(domain_name):
                            editable_records=editable_records,
                            quick_edit=quick_edit,
                            ttl_options=ttl_options,
-                           current_user=current_user)
+                           current_user=current_user,
+                           allow_user_view_history=Setting().get('allow_user_view_history'))
 
 
 @domain_bp.route('/remove', methods=['GET', 'POST'])
