@@ -227,15 +227,6 @@ def ensure_list(l):
     yield from l
 
 
-class customBoxes:
-    boxes = {
-        "reverse": (" ", " "),
-        "ip6arpa": ("ip6", "%.ip6.arpa"),
-        "inaddrarpa": ("in-addr", "%.in-addr.arpa")
-    }
-    order = ["reverse", "ip6arpa", "inaddrarpa"]
-
-
 def pretty_domain_name(domain_name):
     # Add a debugging statement to print out the domain name
     print("Received domain name:", domain_name)
