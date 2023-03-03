@@ -202,6 +202,17 @@
                     {% else %}
                         targets: [5]
                     {% endif %}
+                },
+                {
+                    targets: [0],
+                    className: "text-right",
+                    data: {
+                        '_': "0",
+                        'sort': function (row, _type, _set, _meta) {
+                            const data = row[0] || '';
+                            return data.split('.').reverse().join('.');
+                        },
+                    },
                 }
             ],
             {% if domain.type != 'Slave' %}
