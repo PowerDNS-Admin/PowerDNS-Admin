@@ -57,3 +57,26 @@ table.records thead th:last-of-type { width: 50px; }
 div.records > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
 div.records > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
 div.records > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
+
+.diff {
+    font-family: monospace;
+    padding: 0 0.2em;
+}
+.diff::before {
+    content: "\00a0";
+    padding-right: 0.1em;
+}
+
+.diff-deletion {
+    background-color: lightcoral;
+}
+.diff-deletion::before {
+    content: "-";
+}
+
+.diff-addition {
+    background-color: lightgreen;
+}
+.diff-addition::before {
+    content: "+";
+}
