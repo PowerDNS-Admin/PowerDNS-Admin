@@ -34,61 +34,77 @@ admin_bp = Blueprint('admin',
                      template_folder='templates',
                      url_prefix='/admin')
 
-"""
-changeSet is a list of tuples, in the following format
-(old_state, new_state, change_type)
-
-old_state: dictionary with "disabled" and "content" keys. {"disabled" : False, "content" : "1.1.1.1" }
-new_state: similarly
-change_type: "addition" or "deletion" or "status" for status change or "unchanged" for no change
-
-Note: A change in "content", is considered a deletion and recreation of the same record,
-holding the new content value.
-"""
-
 
 def get_record_changes(del_rrset, add_rrset):
-    changeSet = []
-    delSet = del_rrset['records'] if 'records' in del_rrset else []
-    addSet = add_rrset['records'] if 'records' in add_rrset else []
-    for d in delSet:  # get the deletions and status changes
-        exists = False
-        for a in addSet:
-            if d['content'] == a['content']:
-                exists = True
-                if d['disabled'] != a['disabled']:
-                    changeSet.append(({"disabled": d['disabled'], "content": d['content']},
-                                      {"disabled": a['disabled'], "content": a['content']},
-                                      "status"))
+    """Use the given deleted and added RRset to build a list of record changes.
+
+    Args:
+        del_rrset: The RRset with changetype DELETE, or None
+        add_rrset: The RRset with changetype REPLACE, or None
+
+    Returns:
+        A list of tuples in the format `(old_state, new_state, change_type)`. `old_state` and
+        `new_state` are dictionaries with the keys "disabled", "content" and "comment".
+        `change_type` can be "addition", "deletion", "edit" or "unchanged". When it's "addition"
+        then `old_state` is None, when it's "deletion" then `new_state` is None.
+    """
+
+    def get_records(rrset):
+        """For the given RRset return a combined list of records and comments."""
+        if not rrset or 'records' not in rrset:
+            return []
+        records = [dict(record) for record in rrset['records']]
+        for i, record in enumerate(records):
+            if 'comments' in rrset and len(rrset['comments']) > i:
+                record['comment'] = rrset['comments'][i].get('content', None)
+            else:
+                record['comment'] = None
+        return records
+
+    def record_is_unchanged(old, new):
+        """Returns True if the old record is not different from the new one."""
+        if old['content'] != new['content']:
+            raise ValueError("Can't compare records with different content")
+        # check everything except the content
+        return old['disabled'] == new['disabled'] and old['comment'] == new['comment']
+
+    def to_state(record):
+        """For the given record, return the state dict."""
+        return {
+            "disabled": record['disabled'],
+            "content":  record['content'],
+            "comment":  record.get('comment', ''),
+        }
+
+    add_records = get_records(add_rrset)
+    del_records = get_records(del_rrset)
+    changeset = []
+
+    for add_record in add_records:
+        for del_record in list(del_records):
+            if add_record['content'] == del_record['content']:
+                # either edited or unchanged
+                if record_is_unchanged(del_record, add_record):
+                    # unchanged
+                    changeset.append((to_state(del_record), to_state(add_record), "unchanged"))
+                else:
+                    # edited
+                    changeset.append((to_state(del_record), to_state(add_record), "edit"))
+                del_records.remove(del_record)
                 break
+        else:  # not mis-indented, else block for the del_records for loop
+            # addition
+            changeset.append((None, to_state(add_record), "addition"))
 
-        if not exists:  # deletion
-            changeSet.append(({"disabled": d['disabled'], "content": d['content']},
-                              None,
-                              "deletion"))
+    # Because the first loop removed edit/unchanged records from the del_records list,
+    # it now only contains real deletions.
+    for del_record in del_records:
+        changeset.append((to_state(del_record), None, "deletion"))
 
-    for a in addSet:  # get the additions
-        exists = False
-        for d in delSet:
-            if d['content'] == a['content']:
-                exists = True
-                # already checked for status change
-                break
-        if not exists:
-            changeSet.append((None, {"disabled": a['disabled'], "content": a['content']}, "addition"))
-            continue
+    # Sort them by the old content. For Additions the new state will be used.
+    changeset.sort(key=lambda change: change[0]['content'] if change[0] else change[1]['content'])
 
-    for a in addSet:  # get the unchanged
-        exists = False
-        for c in changeSet:
-            if c[1] != None and c[1]["content"] == a['content']:
-                exists = True
-                break
-        if not exists:
-            changeSet.append(({"disabled": a['disabled'], "content": a['content']},
-                              {"disabled": a['disabled'], "content": a['content']}, "unchanged"))
-
-    return changeSet
+    return changeset
 
 
 # out_changes is a list of  HistoryRecordEntry objects in which we will append the new changes
@@ -118,7 +134,7 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
             if change_num not in out_changes:
                 out_changes[change_num] = []
             out_changes[change_num].append(
-                HistoryRecordEntry(history_entry, [], add_rrset, "+"))  # (add_rrset, del_rrset, change_type)
+                HistoryRecordEntry(history_entry, {}, add_rrset, "+"))  # (add_rrset, del_rrset, change_type)
     for del_rrset in del_rrsets:
         exists = False
         for add_rrset in add_rrsets:
@@ -128,7 +144,13 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
         if not exists:  # this is a deletion
             if change_num not in out_changes:
                 out_changes[change_num] = []
-            out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrset, [], "-"))
+            out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrset, {}, "-"))
+
+    # Sort them by the record name
+    if change_num in out_changes:
+        out_changes[change_num].sort(key=lambda change:
+                change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
+        )
 
     # only used for changelog per record
     if record_name != None and record_type != None:  # then get only the records with the specific (record_name, record_type) tuple
