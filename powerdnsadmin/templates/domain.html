@@ -36,7 +36,7 @@
                                         &nbsp;Zone Settings
                                     </button>
                                 {% endif %}
-                                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
                                     <button type="button" title="Zone Changelog"
                                             class="btn btn-primary ml-2 mt-2 mb-2 button_changelog" id="{{ domain.name }}">
                                         <i class="fa-solid fa-history" aria-hidden="true"></i>
@@ -79,7 +79,7 @@
                                         <th>Comment</th>
                                         <th>Edit</th>
                                         <th>Delete</th>
-                                        {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                        {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
                                             <th>Changelog</th>
                                         {% endif %}
                                     {% else %}
@@ -115,7 +115,7 @@
                                                     </button>
                                                 {% endif %}
                                             </td>
-                                            {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                                            {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
                                                 <td>
                                                     <button type="button"
                                                             onclick="show_record_changelog('{{ record.name }}','{{ record.type }}',event)"
@@ -194,7 +194,7 @@
                     // regardless of whatever sorting is done. See orderFixed
                     visible: false,
                     {% if domain.type != 'Slave' %}
-                        {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                        {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
                             targets: [9]
                         {% else %}
                             targets: [8]
@@ -205,7 +205,7 @@
                 }
             ],
             {% if domain.type != 'Slave' %}
-                {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
                     "orderFixed": [[9, 'asc']]
                 {% else %}
                     "orderFixed": [[8, 'asc']]
@@ -314,7 +314,7 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-            {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+            {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
                 var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
             {% else %}
                 var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
