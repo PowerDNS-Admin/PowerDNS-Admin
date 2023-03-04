@@ -176,11 +176,17 @@
                                 <div class="nav-tabs-custom">
                                     <ul class="nav nav-tabs card-header-tabs" id="custom-content-below-tab"
                                         role="tablist">
-                                        {% for tab_id in zone_tabs.order %}
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#tab_{{ custom_boxes.order[0] }}"
+                                               data-toggle="pill" role="tab">
+                                                Zones <b>{{ custom_boxes.boxes[custom_boxes.order[0]][0] }}</b>
+                                            </a>
+                                        </li>
+                                        {% for boxId in custom_boxes.order[1:] %}
                                             <li class="nav-item">
-                                                <a class="nav-link {% if loop.first %}active{% endif %}"
-                                                   href="#tab_{{ tab_id }}" data-toggle="pill" role="tab">
-                                                    Zones <b>{{ zone_tabs.tabs[tab_id].display_name }}</b>
+                                                <a class="nav-link" href="#tab_{{ boxId }}" data-toggle="pill"
+                                                   role="tab">
+                                                    Zones <b>{{ custom_boxes.boxes[boxId][0] }}</b>
                                                 </a>
                                             </li>
                                         {% endfor %}
@@ -191,11 +197,10 @@
                         <!-- /.card-header -->
                         <div class="card-body p-0">
                             <div class="tab-content">
-                                {% for tab_id in zone_tabs.order %}
-                                    <div id='tab_{{ tab_id }}'
-                                         class="tab-pane show {% if loop.first %}active{% endif %}">
+                                {% for boxId in custom_boxes.order %}
+                                    <div class="tab-pane show" id='tab_{{ boxId }}'>
                                         <div class="card-body table-responsive records p-0 pt-2">
-                                            <table id='tbl_domain_list_{{ tab_id }}'
+                                            <table id='tbl_domain_list_{{ boxId }}'
                                                    class="table table-striped table-hover table-sm records">
                                                 <thead>
                                                 <tr>
@@ -269,8 +274,9 @@
             });
         }
 
-        {% for tab_id in zone_tabs.order %}
-            setUpDomainList("#tbl_domain_list_{{tab_id}}", "{{url_for('dashboard.domains_custom',tab_id=tab_id)}}");
+        $('#tab_{{custom_boxes.order[0]}}').addClass("active");
+        {% for boxId in custom_boxes.order %}
+            setUpDomainList("#tbl_domain_list_{{boxId}}", "{{url_for('dashboard.domains_custom',boxId=boxId)}}");
         {% endfor %}
         //SYBPATCH END//
 

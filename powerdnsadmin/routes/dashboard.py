@@ -1,10 +1,10 @@
 import datetime
-from collections import namedtuple
-from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect, g, session, abort
+from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect, g, session
 from flask_login import login_required, current_user, login_manager
 from sqlalchemy import not_
 
 from ..decorators import operator_role_required
+from ..lib.utils import customBoxes
 from ..models.user import User, Anonymous
 from ..models.account import Account
 from ..models.account_user import AccountUser
@@ -19,31 +19,6 @@ dashboard_bp = Blueprint('dashboard',
                          __name__,
                          template_folder='templates',
                          url_prefix='/dashboard')
-
-
-class ZoneTabs:
-    """Config data for the zone tabs on the dashboard."""
-
-    TabInfo = namedtuple('TabInfo', ['display_name', 'filter_pattern'])
-    """Info about a single tab.
-
-    `display_name` is the name on the tab.
-    `filter_pattern` is a SQL LIKE pattern , which is case-insensitively matched against the zone
-    name (without the final root-dot).
-
-    If a filter is present, the tab will show zones that match the filter.
-    If no filter is present, the tab will show zones that are not matched by any other tab filter.
-    """
-
-    tabs = {
-        'forward':      TabInfo("", None),
-        'reverse_ipv4': TabInfo("in-addr.arpa", '%.in-addr.arpa'),
-        'reverse_ipv6': TabInfo("ip6.arpa", '%.ip6.arpa'),
-    }
-    """Dict of unique tab id to a TabInfo."""
-
-    order = ['forward', 'reverse_ipv4', 'reverse_ipv6']
-    """List of tab ids in the order they will appear."""
 
 
 @dashboard_bp.before_request
@@ -66,12 +41,9 @@ def before_request():
     session.modified = True
 
 
-@dashboard_bp.route('/domains-custom/<path:tab_id>', methods=['GET'])
+@dashboard_bp.route('/domains-custom/<path:boxId>', methods=['GET'])
 @login_required
-def domains_custom(tab_id):
-    if tab_id not in ZoneTabs.tabs:
-        abort(404)
-
+def domains_custom(boxId):
     if current_user.role.name in ['Administrator', 'Operator']:
         domains = Domain.query
     else:
@@ -111,15 +83,14 @@ def domains_custom(tab_id):
     if order_by:
         domains = domains.order_by(*order_by)
 
-    if ZoneTabs.tabs[tab_id].filter_pattern:
-        # If the tab has a filter, use only that
-        domains = domains.filter(Domain.name.ilike(ZoneTabs.tabs[tab_id].filter_pattern))
+    if boxId == "reverse":
+        for boxId in customBoxes.order:
+            if boxId == "reverse": continue
+            domains = domains.filter(
+                not_(Domain.name.ilike(customBoxes.boxes[boxId][1])))
     else:
-        # If the tab has no filter, use all the other filters in negated form
-        for tab_info in ZoneTabs.tabs.values():
-            if not tab_info.filter_pattern:
-                continue
-            domains = domains.filter(not_(Domain.name.ilike(tab_info.filter_pattern)))
+        domains = domains.filter(Domain.name.ilike(
+            customBoxes.boxes[boxId][1]))
 
     total_count = domains.count()
 
@@ -236,7 +207,7 @@ def dashboard():
 
     # Add custom boxes to render_template
     return render_template('dashboard.html',
-                           zone_tabs=ZoneTabs,
+                           custom_boxes=customBoxes,
                            domain_count=domain_count,
                            user_num=user_num,
                            history_number=history_number,
