@@ -216,7 +216,7 @@
 
         $(document).ready(function () {
             $.ajax({
-                url: "/admin/history_table",
+                url: '{{ url_for("admin.history_table") }}',
                 type: "get",
                 success: function (response) {
                     console.log('Submission was successful.');
@@ -493,7 +493,7 @@
                 var form = $(this);
                 var tzoffset = (new Date()).getTimezoneOffset();
                 $.ajax({
-                    url: "/admin/history_table",
+                    url: '{{ url_for("admin.history_table") }}',
                     type: "get",
                     data: form.serialize() + "&tzoffset=" + tzoffset,
                     success: function (response) {
