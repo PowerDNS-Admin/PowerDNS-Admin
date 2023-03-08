@@ -56,10 +56,8 @@ def create_app(config=None):
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
 
     # Load Flask-Session
-    if app.config.get('FILESYSTEM_SESSIONS_ENABLED'):
-        app.config['SESSION_TYPE'] = 'filesystem'
-        sess = Session()
-        sess.init_app(app)
+    sess = Session()
+    sess.init_app(app)
 
     # SMTP
     app.mail = Mail(app)

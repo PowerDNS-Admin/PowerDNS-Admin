@@ -4,7 +4,7 @@
 | ---------| ----------- | -------- | ------------- |
 | BIND_ADDRESS | 
 | CSRF_COOKIE_SECURE | 
-| FILESYSTEM_SESSIONS_ENABLED | 
+| SESSION_TYPE | null|filesystem|sqlalchemy |  | filesystem | 
 | LDAP_ENABLED | 
 | LOCAL_DB_ENABLED | 
 | LOG_LEVEL | 

@@ -4,7 +4,7 @@ PORT = 80
 SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
-FILESYSTEM_SESSIONS_ENABLED = True
+SESSION_TYPE = 'filesystem'
 
 legal_envvars = (
     'SECRET_KEY',
@@ -68,7 +68,7 @@ legal_envvars = (
     'LDAP_ENABLED',
     'SAML_CERT',
     'SAML_KEY',
-    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_TYPE',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
     'CAPTCHA_ENABLE',
@@ -93,7 +93,7 @@ legal_envvars_bool = (
     'SIGNUP_ENABLED',
     'LOCAL_DB_ENABLED',
     'LDAP_ENABLED',
-    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_TYPE',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
     'CAPTCHA_ENABLE',
