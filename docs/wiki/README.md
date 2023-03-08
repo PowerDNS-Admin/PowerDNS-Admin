@@ -34,7 +34,7 @@
 - [Systemd + Gunicorn + Apache](web-server/Running-PowerDNS-Admin-with-Systemd,-Gunicorn-and-Apache.md)
 - [uWSGI](web-server/uWSGI-example.md)
 - [WSGI-Apache](web-server/WSGI-Apache-example.md)
-- [Docker-ApacheReverseProxy](webserver/Running-Docker-Apache-Reverseproxy.md)
+- [Docker-ApacheReverseProxy](web-server/Running-Docker-Apache-Reverseproxy.md)
 
 ## Using PowerDNS-Admin
 
