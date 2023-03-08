@@ -93,7 +93,6 @@ legal_envvars_bool = (
     'SIGNUP_ENABLED',
     'LOCAL_DB_ENABLED',
     'LDAP_ENABLED',
-    'SESSION_TYPE',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
     'CAPTCHA_ENABLE',
