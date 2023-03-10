@@ -45,7 +45,7 @@ $ docker run -d \
     -e SECRET_KEY='a-very-secret-key' \
     -v pda-data:/data \
     -p 9191:80 \
-    powerdnsadmin/pda-legacy:v0.3.0
+    powerdnsadmin/pda-legacy:latest
 ```
 
 This creates a volume named `pda-data` to persist the default SQLite database with app configuration.
