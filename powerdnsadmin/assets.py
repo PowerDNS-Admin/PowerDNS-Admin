@@ -15,7 +15,7 @@ css_login = Bundle(
   'node_modules/@fortawesome/fontawesome-free/css/all.css',
   'node_modules/icheck/skins/square/blue.css',
   'node_modules/admin-lte/dist/css/adminlte.css',
-  filters=('cssmin', 'cssrewrite'),
+  filters=('rcssmin', 'cssrewrite'),
   output='generated/login.css')
 
 js_login = Bundle(
