@@ -47,7 +47,7 @@ jobs:
           context: ./
           file: ./docker/Dockerfile
           push: true
-          tags: powerdnsadmin/pda-legacy:latest
+          tags: powerdnsadmin/pda-legacy:$(git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9]/-/g')
 
       - name: Docker Image Release Tagging
         uses: docker/build-push-action@v2
