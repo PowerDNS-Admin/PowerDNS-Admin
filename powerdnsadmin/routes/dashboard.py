@@ -36,7 +36,7 @@ class ZoneTabs:
     """
 
     tabs = {
-        'forward':      TabInfo("", None),
+        'forward': TabInfo("", None),
         'reverse_ipv4': TabInfo("in-addr.arpa", '%.in-addr.arpa'),
         'reverse_ipv6': TabInfo("ip6.arpa", '%.ip6.arpa'),
     }
@@ -55,7 +55,7 @@ def before_request():
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
-            'Administrator', 'Operator'
+        'Administrator', 'Operator'
     ]:
         return render_template('maintenance.html')
 
@@ -83,13 +83,14 @@ def domains_custom(tab_id):
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
             .filter(
-                db.or_(
-                    DomainUser.user_id == current_user.id,
-                    AccountUser.user_id == current_user.id
-                ))
+            db.or_(
+                DomainUser.user_id == current_user.id,
+                AccountUser.user_id == current_user.id
+            ))
 
     template = current_app.jinja_env.get_template("dashboard_domain.html")
-    render = template.make_module(vars={"current_user": current_user, "allow_user_view_history": Setting().get('allow_user_view_history')})
+    render = template.make_module(
+        vars={"current_user": current_user, "allow_user_view_history": Setting().get('allow_user_view_history')})
 
     columns = [
         Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master,
@@ -184,64 +185,9 @@ def dashboard():
     if BG_DOMAIN_UPDATE and current_user.role.name not in ['Administrator', 'Operator']:
         show_bg_domain_button = False
 
-    # Stats for dashboard
-    domain_count = 0
-    history_number = 0
-    history = []
-    user_num = User.query.count()
-    if current_user.role.name in ['Administrator', 'Operator']:
-        domain_count = Domain.query.count()
-        history_number = History.query.count()
-        history = History.query.order_by(History.created_on.desc()).limit(4).all()
-    elif Setting().get('allow_user_view_history'):
-        allowed_domain_id_subquery = db.session.query(Domain.id) \
-            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-            .outerjoin(Account, Domain.account_id == Account.id) \
-            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-            .filter(db.or_(
-                DomainUser.user_id == current_user.id,
-                AccountUser.user_id == current_user.id
-            )) \
-        .subquery()
-        history = db.session.query(History) \
-            .with_hint(History, "FORCE INDEX (ix_history_created_on)", 'mysql') \
-            .order_by(History.created_on.desc()) \
-            .filter(History.domain_id.in_(allowed_domain_id_subquery)) \
-            .limit(4) \
-            .all()
-        history_number = db.session.query(History) \
-            .filter(History.domain_id.in_(allowed_domain_id_subquery)) \
-            .count()
-        domain_count = db.session.query(Domain) \
-            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-            .outerjoin(Account, Domain.account_id == Account.id) \
-            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-            .filter(
-                db.or_(
-                    DomainUser.user_id == current_user.id,
-                    AccountUser.user_id == current_user.id
-                )).count()
-
-    from .admin import convert_histories, DetailedHistory
-    detailedHistories = convert_histories(history)
-    
-    server = Server(server_id='localhost')
-    statistics = server.get_statistic()
-    if statistics:
-        uptime = list([
-            uptime for uptime in statistics if uptime['name'] == 'uptime'
-        ])[0]['value']
-    else:
-        uptime = 0
-
     # Add custom boxes to render_template
     return render_template('dashboard.html',
                            zone_tabs=ZoneTabs,
-                           domain_count=domain_count,
-                           user_num=user_num,
-                           history_number=history_number,
-                           uptime=uptime,
-                           histories=detailedHistories,
                            show_bg_domain_button=show_bg_domain_button,
                            pdns_version=Setting().get('pdns_version'))
 
