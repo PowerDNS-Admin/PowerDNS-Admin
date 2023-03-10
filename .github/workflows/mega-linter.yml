@@ -6,6 +6,7 @@ name: MegaLinter
 on:
   push:
     branches-ignore:
+      - "dev"
       - "main"
       - "master"
       - "dependabot/**"
