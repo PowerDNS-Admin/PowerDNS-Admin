@@ -38,7 +38,7 @@ css_main = Bundle(
   'node_modules/admin-lte/dist/css/adminlte.css',
   'custom/css/custom.css',
   'node_modules/bootstrap-datepicker/dist/css/bootstrap-datepicker.css',
-  filters=('cssmin', 'cssrewrite'),
+  filters=('rcssmin', 'cssrewrite'),
   output='generated/main.css')
 
 js_main = Bundle(
