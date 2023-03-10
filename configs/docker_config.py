@@ -4,7 +4,7 @@ PORT = 80
 SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
-FILESYSTEM_SESSIONS_ENABLED = True
+SESSION_TYPE = 'sqlalchemy'
 
 legal_envvars = (
     'SECRET_KEY',
@@ -27,6 +27,7 @@ legal_envvars = (
     'SALT',
     'SQLALCHEMY_TRACK_MODIFICATIONS',
     'SQLALCHEMY_DATABASE_URI',
+    'SQLALCHEMY_ENGINE_OPTIONS',
     'MAIL_SERVER',
     'MAIL_PORT',
     'MAIL_DEBUG',
@@ -68,7 +69,7 @@ legal_envvars = (
     'LDAP_ENABLED',
     'SAML_CERT',
     'SAML_KEY',
-    'FILESYSTEM_SESSIONS_ENABLED',
+    'SESSION_TYPE',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
     'CAPTCHA_ENABLE',
@@ -93,20 +94,30 @@ legal_envvars_bool = (
     'SIGNUP_ENABLED',
     'LOCAL_DB_ENABLED',
     'LDAP_ENABLED',
-    'FILESYSTEM_SESSIONS_ENABLED',
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
     'CAPTCHA_ENABLE',
 )
 
+legal_envvars_dict = (
+    'SQLALCHEMY_ENGINE_OPTIONS',
+)
+
 # import everything from environment variables
 import os
 import sys
-
+import json
 
 def str2bool(v):
     return v.lower() in ("true", "yes", "1")
 
+def dictfromstr(v,ret):
+    try:
+        return json.loads(ret)
+    except Exception as e:
+        print('Cannot parse json {} for variable {}'.format(ret, v))
+        print(e)
+        raise ValueError
 
 for v in legal_envvars:
 
@@ -130,4 +141,6 @@ for v in legal_envvars:
             ret = str2bool(ret)
         if v in legal_envvars_int:
             ret = int(ret)
+        if v in legal_envvars_dict:
+            ret = dictfromstr(v, ret)
         sys.modules[__name__].__dict__[v] = ret

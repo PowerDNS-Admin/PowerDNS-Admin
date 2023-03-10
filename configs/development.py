@@ -24,7 +24,7 @@ CAPTCHA_SESSION_KEY = 'captcha_image'
 
 #Server side sessions tracking
 #Set to TRUE for CAPTCHA, or enable another stateful session tracking system
-FILESYSTEM_SESSIONS_ENABLED = True
+SESSION_TYPE = 'sqlalchemy'
 
 ### DATABASE - MySQL
 #SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(

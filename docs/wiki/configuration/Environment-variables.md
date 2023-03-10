@@ -4,7 +4,7 @@
 | ---------| ----------- | -------- | ------------- |
 | BIND_ADDRESS | 
 | CSRF_COOKIE_SECURE | 
-| FILESYSTEM_SESSIONS_ENABLED | 
+| SESSION_TYPE | null|filesystem|sqlalchemy |  | filesystem | 
 | LDAP_ENABLED | 
 | LOCAL_DB_ENABLED | 
 | LOG_LEVEL | 
@@ -57,6 +57,8 @@
 | SESSION_COOKIE_SECURE | 
 | SIGNUP_ENABLED | 
 | SQLALCHEMY_DATABASE_URI | SQL Alchemy URI to connect to database | N | no default |
-| SQLALCHEMY_TRACK_MODIFICATIONS | 
+| SQLALCHEMY_TRACK_MODIFICATIONS |
+| SQLALCHEMY_ENGINE_OPTIONS | json string. e.g. '{"pool_recycle":600,"echo":1}' [^2] |
 
 [^1]: Flask secret key (see https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY for how to generate)
+[^2]: See Flask-SQLAlchemy Documentation for all engine options.
