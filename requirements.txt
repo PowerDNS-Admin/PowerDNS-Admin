@@ -42,3 +42,4 @@ rjsmin==1.2.1
 webcolors==1.12
 werkzeug==2.1.2
 zipp==3.11.0
+rcssmin==1.1.1
