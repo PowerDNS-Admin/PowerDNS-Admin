@@ -18,8 +18,12 @@ depends_on = None
 def upgrade():
     with op.batch_alter_table('user') as batch_op:
         batch_op.add_column(
-            sa.Column('confirmed', sa.Boolean(), nullable=False,
+            sa.Column('confirmed', sa.Boolean(), nullable=True,
                       default=False))
+    with op.batch_alter_table('user') as batch_op:
+        user = sa.sql.table('user', sa.sql.column('confirmed'))
+        batch_op.execute(user.update().values(confirmed=False))
+        batch_op.alter_column('confirmed', nullable=False)
 
 
 def downgrade():
