@@ -70,7 +70,7 @@ You can then access PowerDNS-Admin by pointing your browser to http://localhost:
 
 ## Screenshots
 
-![dashboard](https://user-images.githubusercontent.com/6447444/44068603-0d2d81f6-9fa5-11e8-83af-14e2ad79e370.png)
+![dashboard](docs/screenshots/dashboard.png)
 
 ## Contributing
 
