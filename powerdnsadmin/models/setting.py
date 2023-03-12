@@ -73,6 +73,7 @@ class Setting(db.Model):
         'github_oauth_authorize_url':
             'https://github.com/login/oauth/authorize',
         'github_oauth_jwks_url': '',
+        'github_oauth_metadata_url': '',
         'google_oauth_enabled': False,
         'google_oauth_client_id': '',
         'google_oauth_client_secret': '',
@@ -80,6 +81,7 @@ class Setting(db.Model):
         'google_oauth_scope': 'openid email profile',
         'google_authorize_url': 'https://accounts.google.com/o/oauth2/v2/auth',
         'google_oauth_jwks_url': '',
+        'google_oauth_metadata_url': '',
         'google_base_url': 'https://www.googleapis.com/oauth2/v3/',
         'azure_oauth_enabled': False,
         'azure_oauth_key': '',
@@ -91,6 +93,7 @@ class Setting(db.Model):
         'azure_oauth_authorize_url':
             'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/authorize',
         'azure_oauth_jwks_url': '',
+        'azure_oauth_metadata_url': '',
         'azure_sg_enabled': False,
         'azure_admin_group': '',
         'azure_operator_group': '',
