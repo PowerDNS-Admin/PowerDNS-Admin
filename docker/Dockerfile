@@ -2,6 +2,7 @@ FROM alpine:3.17 AS builder
 
 ARG BUILD_DEPENDENCIES="build-base \
     libffi-dev \
+    libpq-dev \
     libxml2-dev \
     mariadb-connector-c-dev \
     openldap-dev \
