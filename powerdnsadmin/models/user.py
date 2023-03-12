@@ -527,7 +527,7 @@ class User(db.Model):
 
     def get_domains(self):
         """
-        Get list of domains which the user is granted to have
+        Get list of zones which the user is granted to have
         access.
 
         Note: This doesn't include the permission granting from Account
@@ -680,7 +680,7 @@ class User(db.Model):
 
     def addMissingDomain(self, autoprovision_domain, current_domains):
         """
-        Add domain gathered by autoprovisioning to the current domains list of a user
+        Add domain gathered by autoprovisioning to the current zones list of a user
         """
         from ..models.domain import Domain
         user = db.session.query(User).filter(User.username == self.username).first()
