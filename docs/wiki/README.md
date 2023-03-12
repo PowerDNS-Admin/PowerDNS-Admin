@@ -38,7 +38,7 @@
 
 ## Using PowerDNS-Admin
 
-- Setting up a domain
+- Setting up a zone
 - Adding a record
 - <whatever else>
 
