@@ -48,6 +48,12 @@ user_detailed_schema = UserDetailedSchema()
 account_schema = AccountSchema(many=True)
 account_single_schema = AccountSchema()
 
+def is_custom_header_api():
+    custom_header_setting = Setting().get('custom_history_header')
+    if custom_header_setting != '' and custom_header_setting in request.headers: 
+        return request.headers[custom_header_setting] 
+    else: 
+        return g.apikey.description 
 
 def get_user_domains():
     domains = db.session.query(Domain) \
@@ -1104,6 +1110,7 @@ def api_zone_forward(server_id, zone_id):
         domain = Domain()
         domain.update()
     status = resp.status_code
+    created_by_value=is_custom_header_api()
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
         if Setting().get('enable_api_rr_history'):
@@ -1116,19 +1123,19 @@ def api_zone_forward(server_id, zone_id):
                         'add_rrsets': list(filter(lambda r: r['changetype'] == "REPLACE", data['rrsets'])),
                         'del_rrsets': list(filter(lambda r: r['changetype'] == "DELETE", data['rrsets']))
                     }),
-                    created_by=g.apikey.description,
+                    created_by=created_by_value,
                     domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
             elif request.method == 'DELETE':
                 history = History(msg='Deleted zone {0}'.format(zone_id.rstrip('.')),
                                   detail='',
-                                  created_by=g.apikey.description,
+                                  created_by=created_by_value,
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
             elif request.method != 'GET':
                 history = History(msg='Updated zone {0}'.format(zone_id.rstrip('.')),
                                   detail='',
-                                  created_by=g.apikey.description,
+                                  created_by=created_by_value,
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
     return resp.content, resp.status_code, resp.headers.items()
@@ -1152,6 +1159,7 @@ def api_create_zone(server_id):
 
     if resp.status_code == 201:
         current_app.logger.debug("Request to powerdns API successful")
+        created_by_value=is_custom_header_api()
         data = request.get_json(force=True)
 
         if g.apikey.role.name not in ['Administrator', 'Operator']:
@@ -1166,7 +1174,7 @@ def api_create_zone(server_id):
         history = History(msg='Add domain {0}'.format(
             data['name'].rstrip('.')),
             detail=json.dumps(data),
-            created_by=g.apikey.description,
+            created_by=created_by_value,
             domain_id=domain.get_id_by_name(data['name'].rstrip('.')))
         history.add()
 

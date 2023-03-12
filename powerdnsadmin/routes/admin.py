@@ -1391,6 +1391,7 @@ def setting_basic():
         'default_domain_table_size',
         'default_record_table_size',
         'delete_sso_accounts',
+        'custom_history_header',
         'deny_domain_override',
         'dnssec_admins_only',
         'enable_api_rr_history',

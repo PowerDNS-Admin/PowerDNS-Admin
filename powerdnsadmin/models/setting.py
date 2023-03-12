@@ -28,6 +28,7 @@ class Setting(db.Model):
         'allow_user_create_domain': False,
         'allow_user_remove_domain': False,
         'allow_user_view_history': False,
+        'custom_history_header': '',
         'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
