@@ -630,9 +630,16 @@
                                                                            value="{{ SETTING.get('google_oauth_client_secret') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                            </fieldset>
-                                                            <fieldset>
-                                                                <legend>ADVANCE</legend>
+                                                                <div class="form-group">
+                                                                    <label for="google_oauth_metadata_url">Metadata URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="google_oauth_metadata_url"
+                                                                           id="google_oauth_metadata_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
+                                                                           data-error="Please input Metadata URL"
+                                                                           value="{{ SETTING.get('google_oauth_metadata_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
                                                                 <div class="form-group">
                                                                     <label for="google_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
@@ -661,6 +668,17 @@
                                                                            placeholder="e.g. https://accounts.google.com/o/oauth2/auth"
                                                                            data-error="Please input Authorize URL"
                                                                            value="{{ SETTING.get('google_authorize_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="google_oauth_jwks_url">JWKS
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="google_oauth_jwks_url"
+                                                                           id="google_oauth_jwks_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/jwks.json"
+                                                                           data-error="Please input JWKS URL"
+                                                                           value="{{ SETTING.get('google_oauth_jwks_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -750,9 +768,6 @@
                                                                            value="{{ SETTING.get('github_oauth_secret') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                            </fieldset>
-                                                            <fieldset>
-                                                                <legend>ADVANCE</legend>
                                                                 <div class="form-group">
                                                                     <label for="github_oauth_scope">Scope</label>
                                                                     <input type="text" class="form-control"
@@ -774,6 +789,16 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <label for="github_oauth_metadata_url">Metadata URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_metadata_url"
+                                                                           id="github_oauth_metadata_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
+                                                                           data-error="Please input Metadata URL"
+                                                                           value="{{ SETTING.get('github_oauth_metadata_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
                                                                     <label for="github_oauth_token_url">Token
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -791,8 +816,19 @@
                                                                            name="github_oauth_authorize_url"
                                                                            id="github_oauth_authorize_url"
                                                                            placeholder="e.g. https://github.com/login/oauth/authorize"
-                                                                           data-error="Plesae input Authorize URL"
+                                                                           data-error="Please input Authorize URL"
                                                                            value="{{ SETTING.get('github_oauth_authorize_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="github_oauth_jwks_url">JWKS
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="github_oauth_jwks_url"
+                                                                           id="github_oauth_jwks_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/jwks.json"
+                                                                           data-error="Please input JWKS URL"
+                                                                           value="{{ SETTING.get('github_oauth_jwks_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -871,9 +907,6 @@
                                                                            value="{{ SETTING.get('azure_oauth_secret') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                            </fieldset>
-                                                            <fieldset>
-                                                                <legend>ADVANCED</legend>
                                                                 <div class="form-group">
                                                                     <label for="azure_oauth_scope">Scope</label>
                                                                     <input type="text" class="form-control"
@@ -895,6 +928,16 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <label for="azure_oauth_metadata_url">Metadata URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_metadata_url"
+                                                                           id="azure_oauth_metadata_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
+                                                                           data-error="Please input Metadata URL"
+                                                                           value="{{ SETTING.get('azure_oauth_metadata_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
                                                                     <label for="azure_oauth_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_token_url"
@@ -913,6 +956,17 @@
                                                                            placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/authorize"
                                                                            data-error="Please input Authorize URL"
                                                                            value="{{ SETTING.get('azure_oauth_authorize_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="azure_oauth_jwks_url">JWKS
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="azure_oauth_jwks_url"
+                                                                           id="azure_oauth_jwks_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/jwks.json"
+                                                                           data-error="Please input JWKS URL"
+                                                                           value="{{ SETTING.get('azure_oauth_jwks_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1190,6 +1244,17 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <label for="oidc_oauth_metadata_url">Metadata
+                                                                        URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_metadata_url"
+                                                                           id="oidc_oauth_metadata_url"
+                                                                           placeholder="e.g. https://oidc.com/login/oauth/.well-known/openid-configuration"
+                                                                           data-error="Please input Metadata URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_metadata_url') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
                                                                     <label for="oidc_oauth_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_token_url"
@@ -1206,19 +1271,19 @@
                                                                            name="oidc_oauth_authorize_url"
                                                                            id="oidc_oauth_authorize_url"
                                                                            placeholder="e.g. https://oidc.com/login/oauth/authorize"
-                                                                           data-error="Plesae input Authorize URL"
+                                                                           data-error="Please input Authorize URL"
                                                                            value="{{ SETTING.get('oidc_oauth_authorize_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="oidc_oauth_metadata_url">Metadata
+                                                                    <label for="oidc_oauth_jwks_url">JWKS
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
-                                                                           name="oidc_oauth_metadata_url"
-                                                                           id="oidc_oauth_metadata_url"
-                                                                           placeholder="e.g. https://oidc.com/login/oauth/.well-known/openid-configuration"
-                                                                           data-error="Plesae input Metadata URL"
-                                                                           value="{{ SETTING.get('oidc_oauth_metadata_url') }}">
+                                                                           name="oidc_oauth_jwks_url"
+                                                                           id="oidc_oauth_jwks_url"
+                                                                           placeholder="e.g. https://{yourDomain}/.well-known/jwks.json"
+                                                                           data-error="Please input JWKS URL"
+                                                                           value="{{ SETTING.get('oidc_oauth_jwks_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1234,7 +1299,7 @@
                                                                 </div>
                                                             </fieldset>
                                                             <fieldset>
-                                                                <legend>CLAIMS</legend>
+                                                                <legend>Claims</legend>
                                                                 <div class="form-group">
                                                                     <label for="oidc_oauth_username">Username</label>
                                                                     <input type="text" class="form-control"
@@ -1270,13 +1335,13 @@
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_email" id="oidc_oauth_email"
                                                                            placeholder="e.g. email"
-                                                                           data-error="Plesae input Email claim"
+                                                                           data-error="Please input Email claim"
                                                                            value="{{ SETTING.get('oidc_oauth_email') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
                                                             <fieldset>
-                                                                <legend>ADVANCE</legend>
+                                                                <legend>Advanced</legend>
                                                                 <div class="form-group">
                                                                     <label for="oidc_oauth_account_name_property">Autoprovision
                                                                         Account Name property</label>

@@ -24,6 +24,8 @@ def github_oauth():
         request_token_url=None,
         access_token_url=Setting().get('github_oauth_token_url'),
         authorize_url=Setting().get('github_oauth_authorize_url'),
+        jwks_url=Setting().get('github_oauth_jwks_url'),
+        server_metadata_url=Setting().get('github_oauth_metadata_url'),
         client_kwargs={'scope': Setting().get('github_oauth_scope')},
         fetch_token=fetch_github_token,
         update_token=update_token)
