@@ -28,8 +28,8 @@ class Setting(db.Model):
         'allow_user_create_domain': False,
         'allow_user_remove_domain': False,
         'allow_user_view_history': False,
-	'delete_sso_accounts': False,
         'custom_history_header': '',
+        'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
         'preserve_history': False,
@@ -45,7 +45,7 @@ class Setting(db.Model):
         'local_db_enabled': True,
         'signup_enabled': True,
         'autoprovisioning': False,
-        'urn_value':'',
+        'urn_value': '',
         'autoprovisioning_attribute': '',
         'purge': False,
         'verify_user_email': False,
@@ -70,15 +70,19 @@ class Setting(db.Model):
         'github_oauth_scope': 'email',
         'github_oauth_api_url': 'https://api.github.com/user',
         'github_oauth_token_url':
-        'https://github.com/login/oauth/access_token',
+            'https://github.com/login/oauth/access_token',
         'github_oauth_authorize_url':
-        'https://github.com/login/oauth/authorize',
+            'https://github.com/login/oauth/authorize',
+        'github_oauth_jwks_url': '',
+        'github_oauth_metadata_url': '',
         'google_oauth_enabled': False,
         'google_oauth_client_id': '',
         'google_oauth_client_secret': '',
         'google_token_url': 'https://oauth2.googleapis.com/token',
         'google_oauth_scope': 'openid email profile',
         'google_authorize_url': 'https://accounts.google.com/o/oauth2/v2/auth',
+        'google_oauth_jwks_url': '',
+        'google_oauth_metadata_url': '',
         'google_base_url': 'https://www.googleapis.com/oauth2/v3/',
         'azure_oauth_enabled': False,
         'azure_oauth_key': '',
@@ -86,9 +90,11 @@ class Setting(db.Model):
         'azure_oauth_scope': 'User.Read openid email profile',
         'azure_oauth_api_url': 'https://graph.microsoft.com/v1.0/',
         'azure_oauth_token_url':
-        'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/token',
+            'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/token',
         'azure_oauth_authorize_url':
-        'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/authorize',
+            'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/authorize',
+        'azure_oauth_jwks_url': '',
+        'azure_oauth_metadata_url': '',
         'azure_sg_enabled': False,
         'azure_admin_group': '',
         'azure_operator_group': '',
@@ -105,6 +111,7 @@ class Setting(db.Model):
         'oidc_oauth_api_url': '',
         'oidc_oauth_token_url': '',
         'oidc_oauth_authorize_url': '',
+        'oidc_oauth_jwks_url': '',
         'oidc_oauth_metadata_url': '',
         'oidc_oauth_logout_url': '',
         'oidc_oauth_username': 'preferred_username',
@@ -285,7 +292,7 @@ class Setting(db.Model):
                 result = self.query.filter(Setting.name == setting).first()
 
             if result is not None:
-                if hasattr(result,'value'):
+                if hasattr(result, 'value'):
                     result = result.value
                 return strtobool(result) if result in [
                     'True', 'False'
