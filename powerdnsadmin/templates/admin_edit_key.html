@@ -72,7 +72,7 @@
                             <!-- /.card-header -->
                             <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
                                 <p>This key will be linked to the accounts on the right,</p>
-                                <p>thus granting access to domains owned by the selected accounts.</p>
+                                <p>thus granting access to zones owned by the selected accounts.</p>
                                 <p>Click on accounts to move between the columns.</p>
                                 <div class="form-group col-2">
                                     <select multiple="multiple" class="form-control" id="key_multi_account"
@@ -87,12 +87,12 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-header key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                                <h3 class="card-title">Domain Access Control</h3>
+                                <h3 class="card-title">Zone Access Control</h3>
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
-                                <p>This key will have access to the domains on the right.</p>
-                                <p>Click on domains to move between the columns.</p>
+                                <p>This key will have access to the zones on the right.</p>
+                                <p>Click on zones to move between the columns.</p>
                                 <div class="form-group col-2">
                                     <select multiple="multiple" class="form-control" id="key_multi_domain"
                                             name="key_multi_domain">
@@ -131,7 +131,7 @@
                             <p>Fill in all the fields in the form to the left.</p>
                             <p><strong>Role</strong> The role of the key.</p>
                             <p><strong>Description</strong> The key description.</p>
-                            <p><strong>Access Control</strong> The domains or accounts which the key has access to.</p>
+                            <p><strong>Access Control</strong> The zones or accounts which the key has access to.</p>
                         </div>
                         <!-- /.card-body -->
                     </div>
@@ -154,13 +154,13 @@
             var warn_modal = $("#modal_warning");
 
             if (selectedRole != "User" && selectedDomains > 0 && selectedAccounts > 0) {
-                var warning = "Administrator and Operators have access to all domains. Your domain an account selection won't be saved.";
+                var warning = "Administrator and Operators have access to all zones. Your zone an account selection won't be saved.";
                 e.preventDefault(e);
                 warn_modal.modal('show');
             }
 
             if (selectedRole == "User" && selectedDomains == 0 && selectedAccounts == 0) {
-                var warning = "User role must have at least one account or one domain bound. None selected.";
+                var warning = "User role must have at least one account or one zone bound. None selected.";
                 e.preventDefault(e);
                 warn_modal.modal('show');
             }
@@ -203,8 +203,8 @@
             }
         });
         $("#key_multi_domain").multiSelect({
-            selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Domain Name'>",
-            selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Domain Name'>",
+            selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Zone Name'>",
+            selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Zone Name'>",
             afterInit: function (ms) {
                 var that = this,
                     $selectableSearch = that.$selectableUl.prev(),
