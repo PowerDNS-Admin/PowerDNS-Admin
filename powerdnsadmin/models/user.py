@@ -90,8 +90,8 @@ class User(db.Model):
         return '<User {0}>'.format(self.username)
 
     def get_totp_uri(self):
-        return "otpauth://totp/PowerDNS-Admin:{0}?secret={1}&issuer=PowerDNS-Admin".format(
-            self.username, self.otp_secret)
+        return "otpauth://totp/{0}:{1}?secret={2}&issuer=PowerDNS-Admin".format(
+            Setting().get('site_name'), self.username, self.otp_secret)
 
     def verify_totp(self, token):
         totp = pyotp.TOTP(self.otp_secret)
