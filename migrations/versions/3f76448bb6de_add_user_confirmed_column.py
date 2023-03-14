@@ -23,7 +23,7 @@ def upgrade():
     with op.batch_alter_table('user') as batch_op:
         user = sa.sql.table('user', sa.sql.column('confirmed'))
         batch_op.execute(user.update().values(confirmed=False))
-        batch_op.alter_column('confirmed', nullable=False)
+        batch_op.alter_column('confirmed', nullable=False, existing_type=sa.Boolean(), existing_nullable=True, existing_server_default=False)
 
 
 def downgrade():
