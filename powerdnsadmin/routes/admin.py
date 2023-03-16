@@ -897,7 +897,7 @@ class DetailedHistory():
                                                        description=DetailedHistory.get_key_val(detail_dict,
                                                                                                "description"))
 
-        elif 'Change zone' in history.msg and 'access control' in history.msg:  # added or removed a user from a zone
+        elif any(msg in history.msg for msg in ['Change zone','Change domain']) and 'access control' in history.msg:  # added or removed a user from a zone
             users_with_access = DetailedHistory.get_key_val(detail_dict, "user_has_access")
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
@@ -942,7 +942,7 @@ class DetailedHistory():
                                                        linked_domains=DetailedHistory.get_key_val(detail_dict,
                                                                                                   "domains"))
 
-        elif 'Update type for zone' in history.msg:
+        elif any(msg in history.msg for msg in ['Update type for zone','Update type for domain']):
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
                     <tr><td>Zone: </td><td>{{ domain }}</td></tr>
@@ -977,7 +977,7 @@ class DetailedHistory():
                                                                                                   'status'),
                                                        history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
 
-        elif 'Update zone' in history.msg and 'associate account' in history.msg:  # When an account gets associated or dissociate with zones
+        elif any(msg in history.msg for msg in ['Update zone','Update domain']) and 'associate account' in history.msg:  # When an account gets associated or dissociate with zones
             self.detailed_msg = render_template_string('''
                 <table class="table table-bordered table-striped">
                     <tr><td>Associate: </td><td>{{ history_assoc_account }}</td></tr>
@@ -1231,8 +1231,11 @@ def history_table():  # ajax call data
                     .filter(
                     db.and_(
                         db.or_(
-                            History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like(
-                                "%zone%"),
+                            History.msg.like("%domain " + domain_name) if domain_name != "*" else History.msg.like("%domain%"),
+                            History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like("%zone%"),
+                            History.msg.like(
+                                "%domain " + domain_name + " access control") if domain_name != "*" else History.msg.like(
+                                "%domain%access control"),
                             History.msg.like(
                                 "%zone " + domain_name + " access control") if domain_name != "*" else History.msg.like(
                                 "%zone%access control")
@@ -1247,8 +1250,12 @@ def history_table():  # ajax call data
                 histories = base_query \
                     .filter(
                     db.and_(
-                        History.msg.like("Apply record changes to zone " + domain_name) if domain_name != "*" \
-                            else History.msg.like("Apply record changes to zone%"),
+                        db.or_(
+                            History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
+                                else History.msg.like("Apply record changes to domain%"),
+                            History.msg.like("Apply record changes to zone " + domain_name) if domain_name != "*" \
+                                else History.msg.like("Apply record changes to zone%"),
+                        ),
                         History.created_on <= max_date if max_date != None else True,
                         History.created_on >= min_date if min_date != None else True,
                         History.created_by == changed_by if changed_by != None else True
