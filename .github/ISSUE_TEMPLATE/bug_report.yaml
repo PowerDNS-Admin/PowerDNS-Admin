@@ -10,7 +10,7 @@ body:
         installation. If you're having trouble with installation or just looking for
         assistance with using PDA, please visit our
         [discussion forum](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions) instead.
-  - type: input
+  - type: dropdown
     attributes:
       label: PDA version
       description: What version of PDA are you currently running?
