@@ -26,7 +26,7 @@ jobs:
             This PR has been automatically closed due to lack of activity.
           days-before-stale: 90
           days-before-close: 30
-          exempt-issue-labels: 'status: accepted,status: blocked,status: needs milestone'
+          exempt-issue-labels: 'mod / announcement, mod / accepted, mod / reviewing, mod / testing'
           operations-per-run: 100
           remove-stale-when-updated: false
           stale-issue-label: 'mod / stale'
