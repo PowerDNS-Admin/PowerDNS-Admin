@@ -788,6 +788,10 @@ def register():
         email=email
       )
 
+      (password_policy_pass, password_policy) = password_policy_check(user, password)
+      if not password_policy_pass:
+        return render_template('register.html', error_messages=password_policy, captcha_enable=CAPTCHA_ENABLE)
+
       try:
         result = user.create_local_user()
         if result and result['status']:
