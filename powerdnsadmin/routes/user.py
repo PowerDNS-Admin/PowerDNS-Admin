@@ -9,6 +9,8 @@ from flask_login import current_user, login_required, login_manager
 
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
+from .index import password_policy_check
+
 
 user_bp = Blueprint('user',
                     __name__,
@@ -79,12 +81,23 @@ def profile():
                             .format(current_user.username)
                         }), 400)
 
+        (password_policy_pass, password_policy) = password_policy_check(current_user.get_user_info_by_username(), new_password)
+        if not password_policy_pass:
+            if request.data:
+                return make_response(
+                    jsonify({
+                        'status': 'error',
+                        'msg': password_policy['password'],
+                    }), 400)
+            return render_template('user_profile.html', error_messages=password_policy)
+
         user = User(username=current_user.username,
                     plain_text_password=new_password,
                     firstname=firstname,
                     lastname=lastname,
                     email=email,
                     reload_info=False)
+
         user.update_profile()
 
         return render_template('user_profile.html')
