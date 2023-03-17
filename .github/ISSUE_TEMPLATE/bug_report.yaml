@@ -1,7 +1,7 @@
 ---
 name: 🐛 Bug Report
 description: Report a reproducible bug in the current release of PDA
-labels: ["type: bug"]
+labels: ["bug / broken-feature"]
 body:
   - type: markdown
     attributes:
