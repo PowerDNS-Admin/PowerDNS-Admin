@@ -1,88 +1,103 @@
-# Contributing
+# Contribution Guide
 
-Before submitting new contributions to this repository, it is a good idea to start a discussion with the repository
-maintainers on GitHub through the use of issues or discussions. This will help to ensure that your efforts don't get
-wasted if the submission is not desirable for the project.
+**Looking for help?** PDA has a somewhat active community of fellow users that may be able to provide assistance. Just [start a discussion](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/new) right here on GitHub!
 
-This is not to say that all contributions that have been discussed will be accepted either. As part of an ongoing
-effort to clean up the codebase, some contributions may be rejected if they do not meet the standards of the project
-which have not been fully defined yet. This is a work in progress.
+<div align="center">
+  <h3>
+    :bug: <a href="#bug-reporting-bugs">Report a bug</a> &middot;
+    :bulb: <a href="#bulb-feature-requests">Suggest a feature</a> &middot;
+    :arrow_heading_up: <a href="#arrow_heading_up-submitting-pull-requests">Submit a pull request</a>
+  </h3>
+  <h3>
+    :rescue_worker_helmet: <a href="#rescue_worker_helmet-become-a-maintainer">Become a maintainer</a> &middot;
+    :heart: <a href="#heart-other-ways-to-contribute">Other ideas</a>
+  </h3>
+</div>
+<h3></h3>
 
-Please note we have a code of conduct, please follow it in all your interactions with the project.
+Some general tips for engaging here on GitHub:
 
-All pull requests should be based on the `dev` branch of this repository and not the `master` branch!
+* Register for a free [GitHub account](https://github.com/signup) if you haven't already.
+* You can use [GitHub Markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) for formatting text and adding images.
+* To help mitigate notification spam, please avoid "bumping" issues with no activity. (To vote an issue up or down, use a :thumbsup: or :thumbsdown: reaction.)
+* Please avoid pinging members with `@` unless they've previously expressed interest or involvement with that particular issue.
 
-## Code of Conduct
+## :bug: Reporting Bugs
 
-### Our Pledge
+* First, ensure that you're running the [latest stable version](https://github.com/PowerDNS-Admin/PowerDNS-Admin/releases) of PDA. If you're running an older version, there's a chance that the bug has already been fixed.
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, gender identity and expression, level of experience,
-nationality, personal appearance, race, religion, or sexual identity and
-orientation.
+* Next, search our [issues list](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues?q=is%3Aissue) to see if the bug you've found has already been reported. If you come across a bug report that seems to match, please click "add a reaction" in the top right corner of the issue and add a thumbs up (:thumbsup:). This will help draw more attention to it. Any comments you can add to provide additional information or context would also be much appreciated.
 
-### Our Standards
+* If you can't find any existing issues (open or closed) that seem to match yours, you're welcome to [submit a new bug report](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/new?label=type%3A+bug&template=bug_report.yaml). Be sure to complete the entire report template, including detailed steps that someone triaging your issue can follow to confirm the reported behavior. (If we're not able to replicate the bug based on the information provided, we'll ask for additional detail.)
 
-Examples of behavior that contributes to creating a positive environment
-include:
+* Some other tips to keep in mind:
+  * Error messages and screenshots are especially helpful.
+  * Don't prepend your issue title with a label like `[Bug]`; the proper label will be assigned automatically.
+  * Verify that you have GitHub notifications enabled and are subscribed to your issue after submitting.
+  * We appreciate your patience as bugs are prioritized by their severity, impact, and difficulty to resolve.
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+## :bulb: Feature Requests
 
-Examples of unacceptable behavior by participants include:
+* First, check the GitHub [issues list](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues?q=is%3Aissue) to see if the feature you have in mind has already been proposed. If you happen to find an open feature request that matches your idea, click "add a reaction" in the top right corner of the issue and add a thumbs up (:thumbsup:). This ensures that the issue has a better chance of receiving attention. Also feel free to add a comment with any additional justification for the feature.
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
-advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic
-  address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+* If you have a rough idea that's not quite ready for formal submission yet, start a [GitHub discussion](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions) instead. This is a great way to test the viability and narrow down the scope of a new feature prior to submitting a formal proposal, and can serve to generate interest in your idea from other community members.
 
-### Our Responsibilities
+* Once you're ready, submit a feature request [using this template](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/new?label=type%3A+feature&template=feature_request.yaml). Be sure to provide sufficient context and detail to convey exactly what you're proposing and why. The stronger your use case, the better chance your proposal has of being accepted.
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
+* Some other tips to keep in mind:
+  * Don't prepend your issue title with a label like `[Feature]`; the proper label will be assigned automatically.
+  * Try to anticipate any likely questions about your proposal and provide that information proactively.
+  * Verify that you have GitHub notifications enabled and are subscribed to your issue after submitting.
+  * You're welcome to volunteer to implement your FR, but don't submit a pull request until it has been approved.
 
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
+## :arrow_heading_up: Submitting Pull Requests
 
-### Scope
+* [Pull requests](https://docs.github.com/en/pull-requests) (a feature of GitHub) are used to propose changes to NetBox's code base. Our process generally goes like this:
+  * A user opens a new issue (bug report or feature request)
+  * A maintainer triages the issue and may mark it as needing an owner
+  * The issue's author can volunteer to own it, or someone else can
+  * A maintainer assigns the issue to whomever volunteers
+  * The issue owner submits a pull request that will resolve the issue
+  * A maintainer reviews and merges the pull request, closing the issue
 
-This Code of Conduct applies both within project spaces and in public spaces
-when an individual is representing the project or its community. Examples of
-representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
-representative at an online or offline event. Representation of a project may be
-further defined and clarified by project maintainers.
+* It's very important that you not submit a pull request until a relevant issue has been opened **and** assigned to you. Otherwise, you risk wasting time on work that may ultimately not be needed.
 
-### Enforcement
+* New pull requests should generally be based off of the `dev` branch, rather than `master`. The `dev` branch is used for ongoing development, while `master` is used for tracking stable releases.
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at [admin@powerdnsadmin.org](mailto:admin@powerdnsadmin.org). All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
+* In most cases, it is not necessary to add a changelog entry: A maintainer will take care of this when the PR is merged. (This helps avoid merge conflicts resulting from multiple PRs being submitted simultaneously.)
 
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
+* All code submissions should meet the following criteria (CI will eventually enforce these checks):
+  * Python syntax is valid
+  * PEP 8 compliance is enforced, with the exception that lines may be
+      greater than 80 characters in length
 
-### Attribution
+* Some other tips to keep in mind:
+  * If you'd like to volunteer for someone else's issue, please post a comment on that issue letting us know. (This will allow the maintainers to assign it to you.)
+  * All new functionality must include relevant tests where applicable.
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
-available at [http://contributor-covenant.org/version/1/4][version]
+## :rescue_worker_helmet: Become a Maintainer
 
-[homepage]: http://contributor-covenant.org
-[version]: http://contributor-covenant.org/version/1/4/
+We're always looking for motivated individuals to join the maintainers team and help drive PDA's long-term development. Some of our most sought-after skills include:
+
+* Python development with a strong focus on the [Flask](https://flask.palletsprojects.com/) and [Django](https://www.djangoproject.com/) frameworks
+* Expertise working with SQLite, MySQL, and/or PostgreSQL databases
+* Javascript & TypeScript proficiency
+* A knack for web application design (HTML & CSS)
+* Familiarity with git and software development best practices
+* Excellent attention to detail
+* Working experience in the field of network operations as it relates to the use of DNS (Domain Name System) servers.
+
+We generally ask that maintainers dedicate around four hours of work to the project each week on average, which includes both hands-on development and project management tasks such as issue triage.
+
+We do maintain an active Mattermost instance for internal communication, but we also use GitHub issues for project management.
+
+Some maintainers petition their employer to grant some of their paid time to work on PDA.
+
+Interested? You can contact our lead maintainer, Matt Scott, at admin@powerdnsadmin.org. We'd love to have you on the team!
+
+## :heart: Other Ways to Contribute
+
+You don't have to be a developer to contribute to PDA: There are plenty of other ways you can add value to the community! Below are just a few examples:
+
+* Help answer questions and provide feedback in our [GitHub discussions](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions).
+* Write a blog article or record a YouTube video demonstrating how PDA is used at your organization.
