@@ -74,9 +74,13 @@ You can then access PowerDNS-Admin by pointing your browser to http://localhost:
 
 ## Contributing
 
-Please see our [contributing guidelines](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/dev/docs/CONTRIBUTING.md).
+Please see our [Contribution Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/dev/docs/CONTRIBUTING.md).
+
+## Code of Conduct
+
+Please see our [Code of Conduct Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/dev/docs/CODE_OF_CONDUCT.md).
 
 ## License
 
 This project is released under the MIT license. For additional
-information, [see here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/LICENSE)
+information, [see the full license](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/LICENSE).
