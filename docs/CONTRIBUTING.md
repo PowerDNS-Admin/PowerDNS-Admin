@@ -52,7 +52,7 @@ Some general tips for engaging here on GitHub:
 
 ## :arrow_heading_up: Submitting Pull Requests
 
-* [Pull requests](https://docs.github.com/en/pull-requests) (a feature of GitHub) are used to propose changes to NetBox's code base. Our process generally goes like this:
+* [Pull requests](https://docs.github.com/en/pull-requests) (a feature of GitHub) are used to propose changes to PDA's code base. Our process generally goes like this:
   * A user opens a new issue (bug report or feature request)
   * A maintainer triages the issue and may mark it as needing an owner
   * The issue's author can volunteer to own it, or someone else can
