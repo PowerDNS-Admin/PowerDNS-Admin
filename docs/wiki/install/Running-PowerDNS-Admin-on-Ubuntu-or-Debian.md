@@ -7,19 +7,30 @@ First setup your database accordingly:
 
 ### Install required packages for building python libraries from requirements.txt file
 
+For Debian 11 (bullseye) and above:
 ```bash
-sudo apt install -y python3-dev git libsasl2-dev libldap2-dev libssl-dev libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config apt-transport-https virtualenv build-essential curl
+sudo apt install -y python3-dev git libsasl2-dev libldap2-dev python3-venv libmariadb-dev pkg-config build-essential curl libpq-dev
+```
+Older systems might also need the following:
+```bash
+sudo apt install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev apt-transport-https virtualenv
 ```
 
 ### Install NodeJs
 
 ```bash
-curl -sL https://deb.nodesource.com/setup_14.x | bash -
-apt install -y nodejs
+curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
+sudo apt install -y nodejs
 ```
 
 ### Install yarn to build asset files
-
+For Debian 11 (bullseye) and above:
+```bash
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt update && sudo apt install -y yarn
+```
+For older Debian systems:
 ```bash
 sudo curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list

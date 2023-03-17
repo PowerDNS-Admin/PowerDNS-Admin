@@ -15,10 +15,9 @@ The below will create a database called powerdnsadmindb and a user of powerdnsad
 ```
 $ sudo su - postgres
 $ createuser powerdnsadmin
-$ createdb powerdnsadmindb
+$ createdb -E UTF8 -l en_US.UTF-8 -O powerdnsadmin -T template0 powerdnsadmindb 'The database for PowerDNS-Admin'
 $ psql
-postgres=# alter user powerdnsadmin with encrypted password 'powerdnsadmin';
-postgres=# grant all privileges on database powerdnsadmindb to powerdnsadmin;
+postgres=# ALTER ROLE powerdnsadmin WITH PASSWORD 'powerdnsadmin_password';
 ```
 
 Note:
@@ -51,18 +50,14 @@ On debian based systems these files are located in:
 
 ## Install required packages:
 ### Red-hat based systems:
+TODO: confirm this is correct
 ```
 sudo yum install postgresql-libs
 ```
 
 ### Debian based systems:
 ```
-apt install libpq-dev python-dev
-```
-
-### Install python packages:
-```
-pip3 install psycopg2
+apt install python3-psycopg2
 ```
 
 ## Known Issues:
