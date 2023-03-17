@@ -74,15 +74,15 @@ You can then access PowerDNS-Admin by pointing your browser to http://localhost:
 
 ## Security Issues / Reports
 
-Please see our [Security Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/dev/SECURITY.md).
+Please see our [Security Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/SECURITY.md).
 
 ## Contributing
 
-Please see our [Contribution Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/dev/docs/CONTRIBUTING.md).
+Please see our [Contribution Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CONTRIBUTING.md).
 
 ## Code of Conduct
 
-Please see our [Code of Conduct Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/dev/docs/CODE_OF_CONDUCT.md).
+Please see our [Code of Conduct Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CODE_OF_CONDUCT.md).
 
 ## License
 

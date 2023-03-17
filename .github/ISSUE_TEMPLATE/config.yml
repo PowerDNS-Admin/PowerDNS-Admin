@@ -2,7 +2,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Contributing Policy
-    url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/docs/CONTRIBUTING.md
+    url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CONTRIBUTING.md
     about: "Please read through our contributing policy before opening an issue or pull request"
   - name: ❓ Discussion
     url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions
