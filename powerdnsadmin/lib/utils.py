@@ -229,7 +229,7 @@ def ensure_list(l):
 
 def pretty_domain_name(domain_name):
     # Add a debugging statement to print out the domain name
-    print("Received domain name:", domain_name)
+    print("Received zone name:", domain_name)
 
     # Check if the domain name is encoded using Punycode
     if domain_name.endswith('.xn--'):
@@ -238,9 +238,9 @@ def pretty_domain_name(domain_name):
             domain_name = idna.decode(domain_name)
         except Exception as e:
             # If the decoding fails, raise an exception with more information
-            raise Exception('Cannot decode IDN domain: {}'.format(e))
+            raise Exception('Cannot decode IDN zone: {}'.format(e))
 
-    # Return the "pretty" version of the domain name
+    # Return the "pretty" version of the zone name
     return domain_name
 
 

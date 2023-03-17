@@ -671,7 +671,7 @@
                                                                         have no valid "powerdns-admin" records to their
                                                                         autoprovisioning field, will lose all their
                                                                         associations
-                                                                        with any domain or account, also reverting to a
+                                                                        with any zone or account, also reverting to a
                                                                         User in
                                                                         the process, despite their current role in the
                                                                         local db.<br>
@@ -1692,7 +1692,7 @@
                 document.getElementById('purge_on').checked = false;
                 document.getElementById('purge_off').checked = true;
                 var modal = $("#modal_confirm");
-                var info = "Are you sure you want to do this? Users will lose their associated domains unless they already have their autoprovisioning field prepopulated.";
+                var info = "Are you sure you want to do this? Users will lose their associated zones unless they already have their autoprovisioning field prepopulated.";
                 modal.find('.modal-body p').text(info);
                 modal.find('#button_confirm').click(function () {
                     document.getElementById('purge_on').checked = true;

@@ -21,7 +21,7 @@ class StructuredException(Exception):
 class DomainNotExists(StructuredException):
     status_code = 404
 
-    def __init__(self, name=None, message="Domain does not exist"):
+    def __init__(self, name=None, message="Zone does not exist"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
@@ -30,7 +30,7 @@ class DomainNotExists(StructuredException):
 class DomainAlreadyExists(StructuredException):
     status_code = 409
 
-    def __init__(self, name=None, message="Domain already exists"):
+    def __init__(self, name=None, message="Zone already exists"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
@@ -39,7 +39,7 @@ class DomainAlreadyExists(StructuredException):
 class DomainAccessForbidden(StructuredException):
     status_code = 403
 
-    def __init__(self, name=None, message="Domain access not allowed"):
+    def __init__(self, name=None, message="Zone access not allowed"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
@@ -47,7 +47,7 @@ class DomainAccessForbidden(StructuredException):
 class DomainOverrideForbidden(StructuredException):
     status_code = 409
 
-    def __init__(self, name=None, message="Domain override of record not allowed"):
+    def __init__(self, name=None, message="Zone override of record not allowed"):
         StructuredException.__init__(self)
         self.message = message
         self.name = name
@@ -67,7 +67,7 @@ class ApiKeyNotUsable(StructuredException):
     def __init__(
         self,
         name=None,
-        message=("Api key must have domains or accounts"
+        message=("Api key must have zones or accounts"
                  " or an administrative role")):
         StructuredException.__init__(self)
         self.message = message
