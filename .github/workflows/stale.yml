@@ -37,7 +37,7 @@ jobs:
             issues may receive direct feedback. **Do not** attempt to circumvent this
             process by "bumping" the issue; doing so will result in its immediate closure
             and you may be barred from participating in any future discussions. Please see
-            our [contributing guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/docs/CONTRIBUTING.md).
+            our [contributing guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CONTRIBUTING.md).
           stale-pr-label: 'mod / stale'
           stale-pr-message: >
             This PR has been automatically marked as stale because it has not had
