@@ -68,13 +68,13 @@ class Domain(db.Model):
             return True
         except Exception as e:
             current_app.logger.error(
-                'Can not create setting {0} for domain {1}. {2}'.format(
+                'Can not create setting {0} for zone {1}. {2}'.format(
                     setting, self.name, e))
             return False
 
     def get_domain_info(self, domain_name):
         """
-        Get all domains which has in PowerDNS
+        Get all zones which has in PowerDNS
         """
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
@@ -88,7 +88,7 @@ class Domain(db.Model):
 
     def get_domains(self):
         """
-        Get all domains which has in PowerDNS
+        Get all zones which has in PowerDNS
         """
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(
@@ -108,17 +108,17 @@ class Domain(db.Model):
             return domain.id
         except Exception as e:
             current_app.logger.error(
-                'Domain does not exist. ERROR: {0}'.format(e))
+                'Zone does not exist. ERROR: {0}'.format(e))
             return None
 
     def search_idn_domains(self, search_string):
         """
-        Search for IDN domains using the provided search string.
+        Search for IDN zones using the provided search string.
         """
-        # Compile the regular expression pattern for matching IDN domain names
+        # Compile the regular expression pattern for matching IDN zone names
         idn_pattern = re.compile(r'^xn--')
 
-        # Search for domain names that match the IDN pattern
+        # Search for zone names that match the IDN pattern
         idn_domains = [
             domain for domain in self.get_domains() if idn_pattern.match(domain)
         ]
@@ -129,12 +129,12 @@ class Domain(db.Model):
 
     def update(self):
         """
-        Fetch zones (domains) from PowerDNS and update into DB
+        Fetch zones (zones) from PowerDNS and update into DB
         """
         db_domain = Domain.query.all()
         list_db_domain = [d.name for d in db_domain]
         dict_db_domain = dict((x.name, x) for x in db_domain)
-        current_app.logger.info("Found {} domains in PowerDNS-Admin".format(
+        current_app.logger.info("Found {} zones in PowerDNS-Admin".format(
             len(list_db_domain)))
         headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
@@ -149,17 +149,17 @@ class Domain(db.Model):
                 "Found {} zones in PowerDNS server".format(len(list_jdomain)))
 
             try:
-                # domains should remove from db since it doesn't exist in powerdns anymore
+                # zones should remove from db since it doesn't exist in powerdns anymore
                 should_removed_db_domain = list(
                     set(list_db_domain).difference(list_jdomain))
                 for domain_name in should_removed_db_domain:
                     self.delete_domain_from_pdnsadmin(domain_name, do_commit=False)
             except Exception as e:
                 current_app.logger.error(
-                    'Can not delete domain from DB. DETAIL: {0}'.format(e))
+                    'Can not delete zone from DB. DETAIL: {0}'.format(e))
                 current_app.logger.debug(traceback.format_exc())
 
-            # update/add new domain
+            # update/add new zone
             account_cache = {}
             for data in jdata:
                 if 'account' in data:
@@ -187,16 +187,16 @@ class Domain(db.Model):
                     self.add_domain_to_powerdns_admin(domain=data, do_commit=False)
 
             db.session.commit()
-            current_app.logger.info('Update domain finished')
+            current_app.logger.info('Update zone finished')
             return {
                 'status': 'ok',
-                'msg': 'Domain table has been updated successfully'
+                'msg': 'Zone table has been updated successfully'
             }
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
-                'Cannot update domain table. Error: {0}'.format(e))
-            return {'status': 'error', 'msg': 'Cannot update domain table'}
+                'Cannot update zone table. Error: {0}'.format(e))
+            return {'status': 'error', 'msg': 'Cannot update zone table'}
 
     def update_pdns_admin_domain(self, domain, account_id, data, do_commit=True):
         # existing domain, only update if something actually has changed
@@ -218,11 +218,11 @@ class Domain(db.Model):
             try:
                 if do_commit:
                     db.session.commit()
-                current_app.logger.info("Updated PDNS-Admin domain {0}".format(
+                current_app.logger.info("Updated PDNS-Admin zone {0}".format(
                     domain.name))
             except Exception as e:
                 db.session.rollback()
-                current_app.logger.info("Rolled back Domain {0} {1}".format(
+                current_app.logger.info("Rolled back zone {0} {1}".format(
                     domain.name, e))
                 raise
 
@@ -234,7 +234,7 @@ class Domain(db.Model):
             domain_master_ips=[],
             account_name=None):
         """
-        Add a domain to power dns
+        Add a zone to power dns
         """
 
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
@@ -269,23 +269,23 @@ class Domain(db.Model):
             if 'error' in jdata.keys():
                 current_app.logger.error(jdata['error'])
                 if jdata.get('http_code') == 409:
-                    return {'status': 'error', 'msg': 'Domain already exists'}
+                    return {'status': 'error', 'msg': 'Zone already exists'}
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 current_app.logger.info(
-                    'Added domain successfully to PowerDNS: {0}'.format(
+                    'Added zone successfully to PowerDNS: {0}'.format(
                         domain_name))
                 self.add_domain_to_powerdns_admin(domain_dict=post_data)
-                return {'status': 'ok', 'msg': 'Added domain successfully'}
+                return {'status': 'ok', 'msg': 'Added zone successfully'}
         except Exception as e:
-            current_app.logger.error('Cannot add domain {0} {1}'.format(
+            current_app.logger.error('Cannot add zone {0} {1}'.format(
                 domain_name, e))
             current_app.logger.debug(traceback.format_exc())
-            return {'status': 'error', 'msg': 'Cannot add this domain.'}
+            return {'status': 'error', 'msg': 'Cannot add this zone.'}
 
     def add_domain_to_powerdns_admin(self, domain=None, domain_dict=None, do_commit=True):
         """
-        Read Domain from PowerDNS and add into PDNS-Admin
+        Read zone from PowerDNS and add into PDNS-Admin
         """
         headers = {'X-API-Key': self.PDNS_API_KEY}
         if not domain:
@@ -299,7 +299,7 @@ class Domain(db.Model):
                     timeout=int(Setting().get('pdns_api_timeout')),
                     verify=Setting().get('verify_ssl_connections'))
             except Exception as e:
-                current_app.logger.error('Can not read domain from PDNS')
+                current_app.logger.error('Can not read zone from PDNS')
                 current_app.logger.error(e)
                 current_app.logger.debug(traceback.format_exc())
 
@@ -325,20 +325,20 @@ class Domain(db.Model):
             if do_commit:
                 db.session.commit()
             current_app.logger.info(
-                "Synced PowerDNS Domain to PDNS-Admin: {0}".format(d.name))
+                "Synced PowerDNS zone to PDNS-Admin: {0}".format(d.name))
             return {
                 'status': 'ok',
-                'msg': 'Added Domain successfully to PowerDNS-Admin'
+                'msg': 'Added zone successfully to PowerDNS-Admin'
             }
         except Exception as e:
             db.session.rollback()
-            current_app.logger.info("Rolled back Domain {0}".format(d.name))
+            current_app.logger.info("Rolled back zone {0}".format(d.name))
             raise
 
     def update_soa_setting(self, domain_name, soa_edit_api):
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
-            return {'status': 'error', 'msg': 'Domain does not exist.'}
+            return {'status': 'error', 'msg': 'Zone does not exist.'}
 
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
@@ -365,7 +365,7 @@ class Domain(db.Model):
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 current_app.logger.info(
-                    'soa-edit-api changed for domain {0} successfully'.format(
+                    'soa-edit-api changed for zone {0} successfully'.format(
                         domain_name))
                 return {
                     'status': 'ok',
@@ -375,11 +375,11 @@ class Domain(db.Model):
             current_app.logger.debug(e)
             current_app.logger.debug(traceback.format_exc())
             current_app.logger.error(
-                'Cannot change soa-edit-api for domain {0}'.format(
+                'Cannot change soa-edit-api for zone {0}'.format(
                     domain_name))
             return {
                 'status': 'error',
-                'msg': 'Cannot change soa-edit-api for this domain.'
+                'msg': 'Cannot change soa-edit-api for this zone.'
             }
 
     def update_kind(self, domain_name, kind, masters=[]):
@@ -388,7 +388,7 @@ class Domain(db.Model):
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
-            return {'status': 'error', 'msg': 'Domain does not exist.'}
+            return {'status': 'error', 'msg': 'Znoe does not exist.'}
 
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
@@ -409,26 +409,26 @@ class Domain(db.Model):
                 return {'status': 'error', 'msg': jdata['error']}
             else:
                 current_app.logger.info(
-                    'Update domain kind for {0} successfully'.format(
+                    'Update zone kind for {0} successfully'.format(
                         domain_name))
                 return {
                     'status': 'ok',
-                    'msg': 'Domain kind changed successfully'
+                    'msg': 'Zone kind changed successfully'
                 }
         except Exception as e:
             current_app.logger.error(
-                'Cannot update kind for domain {0}. Error: {1}'.format(
+                'Cannot update kind for zone {0}. Error: {1}'.format(
                     domain_name, e))
             current_app.logger.debug(traceback.format_exc())
 
             return {
                 'status': 'error',
-                'msg': 'Cannot update kind for this domain.'
+                'msg': 'Cannot update kind for this zone.'
             }
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
-        Check the existing reverse lookup domain,
+        Check the existing reverse lookup zone,
         if not exists create a new one automatically
         """
         domain_obj = Domain.query.filter(Domain.name == domain_name).first()
@@ -448,7 +448,7 @@ class Domain(db.Model):
             result = self.add(domain_reverse_name, 'Master', 'DEFAULT', [], [])
             self.update()
             if result['status'] == 'ok':
-                history = History(msg='Add reverse lookup domain {0}'.format(
+                history = History(msg='Add reverse lookup zone {0}'.format(
                     domain_reverse_name),
                     detail=json.dumps({
                         'domain_type': 'Master',
@@ -459,7 +459,7 @@ class Domain(db.Model):
             else:
                 return {
                     'status': 'error',
-                    'msg': 'Adding reverse lookup domain failed'
+                    'msg': 'Adding reverse lookup zone failed'
                 }
             domain_user_ids = self.get_user()
             if len(domain_user_ids) > 0:
@@ -469,13 +469,13 @@ class Domain(db.Model):
                     'status':
                         'ok',
                     'msg':
-                        'New reverse lookup domain created with granted privileges'
+                        'New reverse lookup zone created with granted privileges'
                 }
             return {
                 'status': 'ok',
-                'msg': 'New reverse lookup domain created without users'
+                'msg': 'New reverse lookup zone created without users'
             }
-        return {'status': 'ok', 'msg': 'Reverse lookup domain already exists'}
+        return {'status': 'ok', 'msg': 'Reverse lookup zone already exists'}
 
     def get_reverse_domain_name(self, reverse_host_address):
         c = 1
@@ -504,22 +504,22 @@ class Domain(db.Model):
 
     def delete(self, domain_name):
         """
-        Delete a single domain name from powerdns
+        Delete a single zone name from powerdns
         """
         try:
             self.delete_domain_from_powerdns(domain_name)
             self.delete_domain_from_pdnsadmin(domain_name)
-            return {'status': 'ok', 'msg': 'Delete domain successfully'}
+            return {'status': 'ok', 'msg': 'Delete zone successfully'}
         except Exception as e:
             current_app.logger.error(
-                'Cannot delete domain {0}'.format(domain_name))
+                'Cannot delete zone {0}'.format(domain_name))
             current_app.logger.error(e)
             current_app.logger.debug(traceback.format_exc())
-            return {'status': 'error', 'msg': 'Cannot delete domain'}
+            return {'status': 'error', 'msg': 'Cannot delete zone'}
 
     def delete_domain_from_powerdns(self, domain_name):
         """
-        Delete a single domain name from powerdns
+        Delete a single zone name from powerdns
         """
         headers = {'X-API-Key': self.PDNS_API_KEY}
 
@@ -531,12 +531,12 @@ class Domain(db.Model):
             method='DELETE',
             verify=Setting().get('verify_ssl_connections'))
         current_app.logger.info(
-            'Deleted domain successfully from PowerDNS: {0}'.format(
+            'Deleted zone successfully from PowerDNS: {0}'.format(
                 domain_name))
-        return {'status': 'ok', 'msg': 'Delete domain successfully'}
+        return {'status': 'ok', 'msg': 'Delete zone successfully'}
 
     def delete_domain_from_pdnsadmin(self, domain_name, do_commit=True):
-        # Revoke permission before deleting domain
+        # Revoke permission before deleting zone
         domain = Domain.query.filter(Domain.name == domain_name).first()
         domain_user = DomainUser.query.filter(
             DomainUser.domain_id == domain.id)
@@ -548,7 +548,7 @@ class Domain(db.Model):
             domain_setting.delete()
         domain.apikeys[:] = []
 
-        # Remove history for domain
+        # Remove history for zone
         if not Setting().get('preserve_history'):
             domain_history = History.query.filter(
                 History.domain_id == domain.id
@@ -556,17 +556,17 @@ class Domain(db.Model):
             if domain_history:
                 domain_history.delete()
 
-        # then remove domain
+        # then remove zone
         Domain.query.filter(Domain.name == domain_name).delete()
         if do_commit:
             db.session.commit()
         current_app.logger.info(
-            "Deleted domain successfully from pdnsADMIN: {}".format(
+            "Deleted zone successfully from pdnsADMIN: {}".format(
                 domain_name))
 
     def get_user(self):
         """
-        Get users (id) who have access to this domain name
+        Get users (id) who have access to this zone name
         """
         user_ids = []
         query = db.session.query(
@@ -596,7 +596,7 @@ class Domain(db.Model):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
-                'Cannot revoke user privileges on domain {0}. DETAIL: {1}'.
+                'Cannot revoke user privileges on zone {0}. DETAIL: {1}'.
                     format(self.name, e))
             current_app.logger.debug(print(traceback.format_exc()))
 
@@ -608,7 +608,7 @@ class Domain(db.Model):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
-                'Cannot grant user privileges to domain {0}. DETAIL: {1}'.
+                'Cannot grant user privileges to zone {0}. DETAIL: {1}'.
                     format(self.name, e))
             current_app.logger.debug(print(traceback.format_exc()))
 
@@ -625,7 +625,7 @@ class Domain(db.Model):
 
     def add_user(self, user):
         """
-        Add a single user to Domain by User
+        Add a single user to zone by User
         """
         try:
             du = DomainUser(self.id, user.id)
@@ -635,7 +635,7 @@ class Domain(db.Model):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
-                'Cannot add user privileges on domain {0}. DETAIL: {1}'.
+                'Cannot add user privileges on zone {0}. DETAIL: {1}'.
                 format(self.name, e))
             return False
 
@@ -667,11 +667,11 @@ class Domain(db.Model):
                         'There was something wrong, please contact administrator'
                 }
         else:
-            return {'status': 'error', 'msg': 'This domain does not exist'}
+            return {'status': 'error', 'msg': 'This zone does not exist'}
 
     def get_domain_dnssec(self, domain_name):
         """
-        Get domain DNSSEC information
+        Get zone DNSSEC information
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
@@ -689,13 +689,13 @@ class Domain(db.Model):
                 if 'error' in jdata:
                     return {
                         'status': 'error',
-                        'msg': 'DNSSEC is not enabled for this domain'
+                        'msg': 'DNSSEC is not enabled for this zone'
                     }
                 else:
                     return {'status': 'ok', 'dnssec': jdata}
             except Exception as e:
                 current_app.logger.error(
-                    'Cannot get domain dnssec. DETAIL: {0}'.format(e))
+                    'Cannot get zone dnssec. DETAIL: {0}'.format(e))
                 return {
                     'status':
                         'error',
@@ -703,11 +703,11 @@ class Domain(db.Model):
                         'There was something wrong, please contact administrator'
                 }
         else:
-            return {'status': 'error', 'msg': 'This domain does not exist'}
+            return {'status': 'error', 'msg': 'This zone does not exist'}
 
     def enable_domain_dnssec(self, domain_name):
         """
-        Enable domain DNSSEC
+        Enable zone DNSSEC
         """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
@@ -728,7 +728,7 @@ class Domain(db.Model):
                     return {
                         'status': 'error',
                         'msg':
-                            'API-RECTIFY could not be enabled for this domain',
+                            'API-RECTIFY could not be enabled for this zone',
                         'jdata': jdata
                     }
 
@@ -749,7 +749,7 @@ class Domain(db.Model):
                         'status':
                             'error',
                         'msg':
-                            'Cannot enable DNSSEC for this domain. Error: {0}'.
+                            'Cannot enable DNSSEC for this zone. Error: {0}'.
                                 format(jdata['error']),
                         'jdata':
                             jdata
@@ -769,7 +769,7 @@ class Domain(db.Model):
                 }
 
         else:
-            return {'status': 'error', 'msg': 'This domain does not exist'}
+            return {'status': 'error', 'msg': 'This zone does not exist'}
 
     def delete_dnssec_key(self, domain_name, key_id):
         """
@@ -794,13 +794,13 @@ class Domain(db.Model):
                         'status':
                             'error',
                         'msg':
-                            'Cannot disable DNSSEC for this domain. Error: {0}'.
+                            'Cannot disable DNSSEC for this zone. Error: {0}'.
                                 format(jdata['error']),
                         'jdata':
                             jdata
                     }
 
-                # Disable API-RECTIFY for domain, AFTER deactivating DNSSEC
+                # Disable API-RECTIFY for zone, AFTER deactivating DNSSEC
                 post_data = {"api_rectify": False}
                 jdata = utils.fetch_json(
                     urljoin(
@@ -815,7 +815,7 @@ class Domain(db.Model):
                     return {
                         'status': 'error',
                         'msg':
-                            'API-RECTIFY could not be disabled for this domain',
+                            'API-RECTIFY could not be disabled for this zone',
                         'jdata': jdata
                     }
 
@@ -834,22 +834,22 @@ class Domain(db.Model):
                 }
 
         else:
-            return {'status': 'error', 'msg': 'This domain does not exist'}
+            return {'status': 'error', 'msg': 'This zone does not exist'}
 
     def assoc_account(self, account_id, update=True):
         """
-        Associate domain with a domain, specified by account id
+        Associate account with a zone, specified by account id
         """
         domain_name = self.name
 
         # Sanity check - domain name
         if domain_name == "":
-            return {'status': False, 'msg': 'No domain name specified'}
+            return {'status': False, 'msg': 'No zone name specified'}
 
         # read domain and check that it exists
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
-            return {'status': False, 'msg': 'Domain does not exist'}
+            return {'status': False, 'msg': 'Zone does not exist'}
 
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
@@ -875,9 +875,9 @@ class Domain(db.Model):
             else:
                 if update:
                     self.update()
-                msg_str = 'Account changed for domain {0} successfully'
+                msg_str = 'Account changed for zone {0} successfully'
                 current_app.logger.info(msg_str.format(domain_name))
-                history = History(msg='Update domain {0} associate account {1}'.format(domain.name, 'none' if account_name == '' else account_name),
+                history = History(msg='Update zone {0} associate account {1}'.format(domain.name, 'none' if account_name == '' else account_name),
                               detail = json.dumps({
                                     'assoc_account': 'None' if account_name == '' else account_name,
                                     'dissoc_account': 'None' if account_name_old == '' else account_name_old
@@ -889,16 +889,16 @@ class Domain(db.Model):
         except Exception as e:
             current_app.logger.debug(e)
             current_app.logger.debug(traceback.format_exc())
-            msg_str = 'Cannot change account for domain {0}'
+            msg_str = 'Cannot change account for zone {0}'
             current_app.logger.error(msg_str.format(domain_name))
             return {
                 'status': 'error',
-                'msg': 'Cannot change account for this domain.'
+                'msg': 'Cannot change account for this zone.'
             }
 
     def get_account(self):
         """
-        Get current account associated with this domain
+        Get current account associated with this zone
         """
         domain = Domain.query.filter(Domain.name == self.name).first()
 
@@ -907,7 +907,7 @@ class Domain(db.Model):
     def is_valid_access(self, user_id):
         """
         Check if the user is allowed to access this
-        domain name
+        zone name
         """
         return db.session.query(Domain) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
@@ -919,8 +919,8 @@ class Domain(db.Model):
                 AccountUser.user_id == user_id
             )).filter(Domain.id == self.id).first()
 
-    # Return None if this domain does not exist as record, 
-    # Return the parent domain that hold the record if exist
+    # Return None if this zone does not exist as record, 
+    # Return the parent zone that hold the record if exist
     def is_overriding(self, domain_name):
         upper_domain_name = '.'.join(domain_name.split('.')[1:])
         while upper_domain_name != '':
@@ -929,7 +929,7 @@ class Domain(db.Model):
                     if 'rrsets' in upper_domain:
                         for r in upper_domain['rrsets']:
                             if domain_name.rstrip('.') in r['name'].rstrip('.'):
-                                current_app.logger.error('Domain already exists as a record: {} under domain: {}'.format(r['name'].rstrip('.'), upper_domain_name))
+                                current_app.logger.error('Zone already exists as a record: {} under zone: {}'.format(r['name'].rstrip('.'), upper_domain_name))
                                 return upper_domain_name
             upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
         return None

@@ -96,7 +96,7 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
-                                <p>Users on the right have access to manage records in all domains
+                                <p>Users on the right have access to manage records in all zones
                                     associated with the account.
                                 </p>
                                 <p>Click on users to move between columns.</p>
@@ -113,12 +113,12 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-body">
-                                <p>Domains on the right are associated with the account. Red marked domain names are
+                                <p>Zones on the right are associated with the account. Red marked zone names are
                                     already associated with other accounts.
-                                    Moving already associated domains to this account will overwrite the previous
+                                    Moving already associated zones to this account will overwrite the previous
                                     associated account.
                                 </p>
-                                <p>Hover over the red domain names to show the associated account. Click on domains to
+                                <p>Hover over the red zone names to show the associated account. Click on zones to
                                     move between columns.</p>
                                 <div class="form-group col-2">
                                     <select multiple="multiple" class="form-control" id="account_domains"
@@ -168,12 +168,12 @@
                         <!-- /.card-header -->
                         <div class="card-body">
                             <p>
-                                An account allows grouping of domains belonging to a particular entity, such as a
+                                An account allows grouping of zones belonging to a particular entity, such as a
                                 customer or
                                 department.
                             </p>
                             <p>
-                                A domain can be assigned to an account upon domain creation or through the domain
+                                A zone can be assigned to an account upon zone creation or through the zone
                                 administration
                                 page.
                             </p>
@@ -242,6 +242,6 @@
         }
 
         addMultiSelect("#account_multi_user", "Username")
-        addMultiSelect("#account_domains", "Domain")
+        addMultiSelect("#account_domains", "Zone")
     </script>
 {% endblock %}

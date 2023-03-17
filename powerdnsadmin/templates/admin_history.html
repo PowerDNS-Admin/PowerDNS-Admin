@@ -49,7 +49,7 @@
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" href="#tabs-domain" data-toggle="pill" role="tab">
-                                            Search By Domain
+                                            Search By Zone
                                         </a>
                                     </li>
                                     <li class="nav-item">
@@ -71,13 +71,13 @@
                                     </div>
                                     <div class="tab-pane" id="tabs-domain">
                                         <td>
-                                            <label>Domain Name</label>
+                                            <label>Zone Name</label>
                                         </td>
                                         <td>
                                             <div class="autocomplete" style="width:250px;">
                                                 <input type="text" class="form-control" id="domain_name_filter"
                                                        name="domain_name_filter"
-                                                       placeholder="Enter * to search for any domain" value="">
+                                                       placeholder="Enter * to search for any zone" value="">
                                             </div>
                                         </td>
                                         <td>
@@ -447,7 +447,7 @@
             $('#auth_name_filter').val('');
             $('#user_name_filter').removeAttr('disabled');
             canSearch = false;
-            main_field = "Domain Name"
+            main_field = "Zone Name"
         });
 
         $('#account_tab').click(function () {

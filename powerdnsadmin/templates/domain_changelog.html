@@ -15,7 +15,7 @@
           {% if record_name and record_type %}
           Record changelog: <b>{{ record_name}} &nbsp {{ record_type }}</b>
           {% else %}
-          Domain changelog: <b>{{ domain.name | pretty_domain_name }}</b>
+          Zone changelog: <b>{{ domain.name | pretty_domain_name }}</b>
           {% endif %}
         </h1>
       </div>
@@ -41,7 +41,7 @@
           <div class="card-body">
             <button type="button" class="btn btn-primary float-left button_show_records" id="{{ domain.name }}">
               <i class="fa-solid fa-arrow-left"></i>          
-              &nbsp;Manage Domain {{ domain.name }}
+              &nbsp;Manage Zone {{ domain.name }}
             </button>
           </div>
           <div class="card-body">
