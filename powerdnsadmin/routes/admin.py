@@ -1557,7 +1557,23 @@ def setting_authentication():
             local_db_enabled = True if request.form.get(
                 'local_db_enabled') else False
             signup_enabled = True if request.form.get(
-                'signup_enabled', ) else False
+                'signup_enabled') else False
+
+            pwd_enforce_characters = True if request.form.get('pwd_enforce_characters') else False
+            pwd_min_len = safe_cast(request.form.get('pwd_min_len', Setting().defaults["pwd_min_len"]), int,
+                                    Setting().defaults["pwd_min_len"])
+            pwd_min_lowercase = safe_cast(request.form.get('pwd_min_lowercase', Setting().defaults["pwd_min_lowercase"]), int,
+                                          Setting().defaults["pwd_min_lowercase"])
+            pwd_min_uppercase = safe_cast(request.form.get('pwd_min_uppercase', Setting().defaults["pwd_min_uppercase"]), int,
+                                          Setting().defaults["pwd_min_uppercase"])
+            pwd_min_digits = safe_cast(request.form.get('pwd_min_digits', Setting().defaults["pwd_min_digits"]), int,
+                                       Setting().defaults["pwd_min_digits"])
+            pwd_min_special = safe_cast(request.form.get('pwd_min_special', Setting().defaults["pwd_min_special"]), int,
+                                        Setting().defaults["pwd_min_special"])
+
+            pwd_enforce_complexity = True if request.form.get('pwd_enforce_complexity') else False
+            pwd_min_complexity = safe_cast(request.form.get('pwd_min_complexity', Setting().defaults["pwd_min_complexity"]), int,
+                                           Setting().defaults["pwd_min_complexity"])
 
             if not has_an_auth_method(local_db_enabled=local_db_enabled):
                 result = {
@@ -1569,7 +1585,19 @@ def setting_authentication():
             else:
                 Setting().set('local_db_enabled', local_db_enabled)
                 Setting().set('signup_enabled', signup_enabled)
+
+                Setting().set('pwd_enforce_characters', pwd_enforce_characters)
+                Setting().set('pwd_min_len', pwd_min_len)
+                Setting().set('pwd_min_lowercase', pwd_min_lowercase)
+                Setting().set('pwd_min_uppercase', pwd_min_uppercase)
+                Setting().set('pwd_min_digits', pwd_min_digits)
+                Setting().set('pwd_min_special', pwd_min_special)
+
+                Setting().set('pwd_enforce_complexity', pwd_enforce_complexity)
+                Setting().set('pwd_min_complexity', pwd_min_complexity)
+
                 result = {'status': True, 'msg': 'Saved successfully'}
+
         elif conf_type == 'ldap':
             ldap_enabled = True if request.form.get('ldap_enabled') else False
 
@@ -2151,3 +2179,10 @@ def validateURN(value):
         return False
 
     return True
+
+
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except (ValueError, TypeError):
+        return default

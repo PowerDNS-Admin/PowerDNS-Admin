@@ -205,6 +205,14 @@ class Setting(db.Model):
         'deny_domain_override': False,
         'account_name_extra_chars': False,
         'gravatar_enabled': False,
+        'pwd_enforce_characters': False,
+        'pwd_min_len': 10,
+        'pwd_min_lowercase': 3,
+        'pwd_min_uppercase': 2,
+        'pwd_min_digits': 2,
+        'pwd_min_special': 1,
+        'pwd_enforce_complexity': False,
+        'pwd_min_complexity': 11
     }
 
     def __init__(self, id=None, name=None, value=None):

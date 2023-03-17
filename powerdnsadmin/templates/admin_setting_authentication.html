@@ -78,24 +78,89 @@
                                                             <h3 class="card-title">Basic Settings</h3>
                                                         </div>
                                                         <!-- /.card-header -->
-                                                        <div class="card-body">
-                                                            <div class="form-group">
-                                                                <input type="checkbox" id="local_db_enabled"
-                                                                       name="local_db_enabled"
-                                                                       class="checkbox"
-                                                                       {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
-                                                                <label for="local_db_enabled">Local DB
-                                                                    Authentication</label>
+                                                        <fieldset>
+                                                            <div class="card-body">
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="local_db_enabled"
+                                                                        name="local_db_enabled"
+                                                                        class="checkbox"
+                                                                        {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
+                                                                    <label for="local_db_enabled">Local DB
+                                                                        Authentication</label>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="signup_enabled"
+                                                                        name="signup_enabled"
+                                                                        class="checkbox"
+                                                                        {% if SETTING.get('signup_enabled') %}checked{% endif %}>
+                                                                    <label for="signup_enabled">Allow users to sign
+                                                                        up</label>
+                                                                </div>
                                                             </div>
-                                                            <div class="form-group">
-                                                                <input type="checkbox" id="signup_enabled"
-                                                                       name="signup_enabled"
-                                                                       class="checkbox"
-                                                                       {% if SETTING.get('signup_enabled') %}checked{% endif %}>
-                                                                <label for="signup_enabled">Allow users to sign
-                                                                    up</label>
+                                                        </fieldset>
+                                                        <fieldset>
+                                                            <legend>PASSWORD REQUIREMENTS</legend>
+                                                            <div class="card-body">
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="pwd_enforce_characters"
+                                                                        name="pwd_enforce_characters" class="checkbox"
+                                                                        {% if SETTING.get('pwd_enforce_characters') %}checked{% endif %}>
+                                                                    <label for="pwd_enforce_characters">
+                                                                        Enforce Character Requirements
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="pwd_min_len">Minimum Password Length</label>
+                                                                    <input type="text" class="form-control"
+                                                                        name="pwd_min_len" id="pwd_min_len"
+                                                                        data-error="Please enter a minimum password length"
+                                                                        value="{{ SETTING.get('pwd_min_len') }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="pwd_min_lowercase">Minimum Lowercase Characters</label>
+                                                                    <input type="text" class="form-control"
+                                                                        name="pwd_min_lowercase" id="pwd_min_lowercase"
+                                                                        data-error="Please enter the minimum number of lowercase letters required"
+                                                                        value="{{ SETTING.get('pwd_min_lowercase') }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="pwd_min_uppercase">Minimum Uppercase Characters</label>
+                                                                    <input type="text" class="form-control"
+                                                                        name="pwd_min_uppercase" id="pwd_min_uppercase"
+                                                                        data-error="Please enter the minimum number of uppercase letters required"
+                                                                        value="{{ SETTING.get('pwd_min_uppercase') }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="pwd_min_digits">Minimum Digit Characters</label>
+                                                                    <input type="text" class="form-control"
+                                                                        name="pwd_min_digits" id="pwd_min_digits"
+                                                                        data-error="Please enter the minimum number of digits required"
+                                                                        value="{{ SETTING.get('pwd_min_digits') }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="pwd_min_special">Minimum Special Characters</label>
+                                                                    <input type="text" class="form-control"
+                                                                        name="pwd_min_special" id="pwd_min_special"
+                                                                        data-error="Please enter the minimum number of special characters required"
+                                                                        value="{{ SETTING.get('pwd_min_special') }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <input type="checkbox" id="pwd_enforce_complexity"
+                                                                        name="pwd_enforce_complexity" class="checkbox"
+                                                                        {% if SETTING.get('pwd_enforce_complexity') %}checked{% endif %}>
+                                                                    <label for="pwd_enforce_complexity">
+                                                                        Enforce Complexity Requirement
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="pwd_min_complexity">Minimum Complexity (zxcvbn)</label>
+                                                                    <input type="text" class="form-control"
+                                                                        name="pwd_min_complexity" id="pwd_min_complexity"
+                                                                        data-error="Please enter the minimum password complexity required"
+                                                                        value="{{ SETTING.get('pwd_min_complexity') }}">
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        </fieldset>
                                                         <!-- /.card-body -->
                                                         <div class="card-footer">
                                                             <button type="submit" class="btn btn-primary"
@@ -117,7 +182,49 @@
                                                     </div>
                                                     <!-- /.card-header -->
                                                     <div class="card-body">
-                                                        <p>Fill in all the fields in the left form.</p>
+                                                        <dl class="dl-horizontal">
+                                                            <dt>Local DB Authentication</dt>
+                                                            <dd>Enable/disable local database authentication.</dd>
+                                                            <dt>Allow Users to Signup</dt>
+                                                            <dd>Allow users to signup. This requires local database authentication
+                                                                to be enabled.</dd>
+                                                            <legend>PASSWORD REQUIREMENTS</legend>
+                                                            This section allows you to customize your local DB password requirements
+                                                            and ensure that when users change their password or signup they are
+                                                            picking strong passwords.
+                                                            <br/>
+                                                            Setting any entry field to a blank value will revert it back to default.
+
+                                                            <dt>Enforce Character Requirements</dt>
+                                                            <dd>This option will enforce the character type requirements for
+                                                                passwords.
+                                                                <ul>
+                                                                    <li>Minimum Lowercase Characters - Minimum number of lowercase
+                                                                        characters required to appear in the password.</li>
+                                                                    <li>Minimum Uppercase Characters - Minimum number of uppercase
+                                                                        characters required to appear in the password.</li>
+                                                                    <li>Minimum Digit Characters - Minimum number of digits
+                                                                        required to appear in the password. Digits include
+                                                                        1234567890.</li>
+                                                                    <li>Minimum Special Characters - Minimum number of special
+                                                                        characters required to appear in the password. Special
+                                                                        characters include
+                                                                        `!@#$%^&amp;*()_-=+[]\{}|;:",.&gt;&lt;/?.</li>
+                                                                </ul>
+                                                            </dd>
+                                                            <dt>Enforce Complexity Requirement</dt>
+                                                            <dd>Enable the enforcement of complex passwords. We currently use
+                                                                <a href="https://github.com/dropbox/zxcvbn">zxcvbn</a> for
+                                                                determining this.
+                                                                <ul>
+                                                                    <li>Minimum Complexity - The default value of the log factor
+                                                                        is 11 as it is considered secure. More information about
+                                                                        the this can be found at
+                                                                        <a href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>
+                                                                    </li>
+                                                                </ul>
+                                                            </dd>
+                                                        </dl>
                                                     </div>
                                                     <!-- /.card-body -->
                                                 </div>
