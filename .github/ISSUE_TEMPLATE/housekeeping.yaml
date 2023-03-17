@@ -1,7 +1,7 @@
 ---
 name: 🏡 Housekeeping
 description: A change pertaining to the codebase itself (developers only)
-labels: ["type: housekeeping"]
+labels: ["mod / change-request"]
 body:
   - type: markdown
     attributes:

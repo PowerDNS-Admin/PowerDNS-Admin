@@ -1,7 +1,7 @@
 ---
 name: 📖 Documentation Change
 description: Suggest an addition or modification to the PDA documentation
-labels: ["type: documentation"]
+labels: ["docs / request"]
 body:
   - type: dropdown
     attributes:
