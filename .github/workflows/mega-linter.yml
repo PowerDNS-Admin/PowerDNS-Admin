@@ -4,6 +4,7 @@
 name: MegaLinter
 
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
       - "*"
