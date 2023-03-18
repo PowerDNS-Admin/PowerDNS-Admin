@@ -8,7 +8,8 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [ "version-update:semver-major" ]
-    labels: feature / dependency
+    labels:
+      - 'feature / dependency'
   - package-ecosystem: pip
     directory: /
     schedule:
@@ -16,4 +17,5 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [ "version-update:semver-major" ]
-    labels: feature / dependency
+    labels:
+      - 'feature / dependency'
