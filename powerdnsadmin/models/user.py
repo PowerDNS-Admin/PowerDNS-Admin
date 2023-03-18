@@ -255,33 +255,24 @@ class User(db.Model):
                             if LDAP_TYPE == 'ldap':
                                 groupSearchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_GROUPNAME, ldap_username, LDAP_FILTER_GROUP)
                                 current_app.logger.debug('Ldap groupSearchFilter {0}'.format(groupSearchFilter))
-                                if (self.ldap_search(groupSearchFilter,
-                                                     LDAP_ADMIN_GROUP)):
+                                if (LDAP_ADMIN_GROUP and self.ldap_search(groupSearchFilter, LDAP_ADMIN_GROUP)):
                                     role_name = 'Administrator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows admin access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_ADMIN_GROUP))
-                                elif (self.ldap_search(groupSearchFilter,
-                                                       LDAP_OPERATOR_GROUP)):
+                                        .format(self.username, LDAP_ADMIN_GROUP))
+                                elif (LDAP_OPERATOR_GROUP and self.ldap_search(groupSearchFilter, LDAP_OPERATOR_GROUP)):
                                     role_name = 'Operator'
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows operator access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_OPERATOR_GROUP))
-                                elif (self.ldap_search(groupSearchFilter,
-                                                       LDAP_USER_GROUP)):
+                                        .format(self.username, LDAP_OPERATOR_GROUP))
+                                elif (LDAP_USER_GROUP and self.ldap_search(groupSearchFilter, LDAP_USER_GROUP)):
                                     current_app.logger.info(
                                         'User {0} is part of the "{1}" group that allows user access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_USER_GROUP))
+                                        .format(self.username, LDAP_USER_GROUP))
                                 else:
                                     current_app.logger.error(
-                                        'User {0} is not part of the "{1}", "{2}" or "{3}" groups that allow access to PowerDNS-Admin'
-                                        .format(self.username,
-                                                LDAP_ADMIN_GROUP,
-                                                LDAP_OPERATOR_GROUP,
-                                                LDAP_USER_GROUP))
+                                        'User {0} is not part of any security groups that allow access to PowerDNS-Admin'
+                                        .format(self.username))
                                     return False
                             elif LDAP_TYPE == 'ad':
                                 ldap_group_security_roles = OrderedDict(
