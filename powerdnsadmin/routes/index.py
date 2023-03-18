@@ -528,7 +528,6 @@ def clear_session():
     session.pop('google_token', None)
     session.pop('authentication_type', None)
     session.pop('remote_user', None)
-    session.clear()
     logout_user()
 
 
