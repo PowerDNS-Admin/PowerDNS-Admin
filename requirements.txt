@@ -25,7 +25,7 @@ gunicorn==20.1.0
 itsdangerous==2.1.2
 jsonschema[format]>=2.5.1,<4.0.0 # until https://github.com/Yelp/bravado-core/pull/385
 lima==0.5
-lxml==4.6.5
+lxml==4.9.2
 mysqlclient==2.0.1
 passlib==1.7.4
 #pyOpenSSL==22.1.0
