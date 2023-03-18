@@ -1772,12 +1772,6 @@
             $('#ldap_filter_username').prop('required', true);
             $('#ldap_filter_groupname').prop('required', true);
 
-            if ($('#ldap_sg_on').is(":checked")) {
-                $('#ldap_admin_group').prop('required', true);
-                $('#ldap_operator_group').prop('required', true);
-                $('#ldap_user_group').prop('required', true);
-            }
-
             if ($('#autoprovisioning_on').is(":checked")) {
                 $('#autoprovisioning_attribute').prop('required', true);
                 $('#urn_value').prop('required', true);
