@@ -1,3 +1,4 @@
+---
 labels:
   - name: bug / broken-feature
     description: Existing feature malfunctioning or broken
@@ -37,6 +38,9 @@ labels:
     color: 'e5ef23'
   - name: mod / announcement
     description: This is an admin announcement
+    color: 'e5ef23'
+  - name: mod / change-request
+    description: Used by internal developers to indicate a change-request.
     color: 'e5ef23'
   - name: mod / changes-requested
     description: Changes have been requested before proceeding

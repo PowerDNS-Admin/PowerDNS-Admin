@@ -1,5 +1,5 @@
 # close-stale-issues (https://github.com/marketplace/actions/close-stale-issues)
-name: 'Close stale issues/PRs'
+name: 'Close Stale Threads'
 
 on:
   schedule:
