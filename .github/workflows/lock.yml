@@ -20,3 +20,5 @@ jobs:
           issue-inactive-days: 90
           pr-inactive-days: 30
           issue-lock-reason: 'resolved'
+          exclude-any-issue-labels: 'bug / security-vulnerability, mod / announcement, mod / accepted, mod / reviewing, mod / testing'
+          exclude-any-pr-labels: 'bug / security-vulnerability, mod / announcement, mod / accepted, mod / reviewing, mod / testing'
