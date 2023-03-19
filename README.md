@@ -72,7 +72,7 @@ You can then access PowerDNS-Admin by pointing your browser to http://localhost:
 
 ![dashboard](docs/screenshots/dashboard.png)
 
-## Security Issues / Reports
+## Security Policy
 
 Please see our [Security Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/SECURITY.md).
 
