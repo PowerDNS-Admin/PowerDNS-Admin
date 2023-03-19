@@ -2,6 +2,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
+    target-branch: dev
     directory: /
     schedule:
       interval: daily
@@ -11,6 +12,7 @@ updates:
     labels:
       - 'feature / dependency'
   - package-ecosystem: pip
+    target-branch: dev
     directory: /
     schedule:
       interval: daily
