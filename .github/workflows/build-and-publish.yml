@@ -9,6 +9,22 @@ on:
       - 'master'
     tags:
       - 'v*.*.*'
+    paths-ignore:
+      - .github/**
+      - deploy/**
+      - docker-test/**
+      - docs/**
+      - .dockerignore
+      - .gitattributes
+      - .gitignore
+      - .lgtm.yml
+      - .whitesource
+      - .yarnrc
+      - docker-compose.yml
+      - docker-compose-test.yml
+      - LICENSE
+      - README.md
+      - SECURITY.md
 
 jobs:
   build-and-push-docker-image:
