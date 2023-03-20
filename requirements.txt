@@ -31,7 +31,7 @@ passlib==1.7.4
 #pyOpenSSL==22.1.0
 pyasn1==0.4.8
 pyotp==2.8.0
-pytest==7.2.1
+pytest==7.2.2
 python-ldap==3.4.3
 python3-saml==1.15.0
 pytimeparse==1.1.8
