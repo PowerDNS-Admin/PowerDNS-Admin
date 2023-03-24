@@ -1,6 +1,8 @@
 # Contribution Guide
 
-**Looking for help?** PDA has a somewhat active community of fellow users that may be able to provide assistance. Just [start a discussion](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/new) right here on GitHub!
+**Looking for help?** Try taking a look at the project's
+[Support Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/.github/SUPPORT.md) or joining
+our [Discord Server](https://discord.powerdnsadmin.org).
 
 <div align="center">
   <h3>
