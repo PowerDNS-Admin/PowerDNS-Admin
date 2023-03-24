@@ -460,10 +460,8 @@ def apikey_auth(f):
         if auth_header:
             try:
                 apikey_val = str(base64.b64decode(auth_header), 'utf-8')
-            except binascii.Error as e:
-                current_app.logger.error(
-                    'Invalid base64-encoded of credential. Error {0}'.format(
-                        e))
+            except (binascii.Error, UnicodeDecodeError) as e:
+                current_app.logger.error('Invalid base64-encoded X-API-KEY. Error {0}'.format(e))
                 abort(401)
             except TypeError as e:
                 current_app.logger.error('Error: {0}'.format(e))
