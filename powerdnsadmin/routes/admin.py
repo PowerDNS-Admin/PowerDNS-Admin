@@ -1159,22 +1159,22 @@ def history_table():  # ajax call data
     lim = int(Setting().get('max_history_records'))  # max num of records
 
     if request.method == 'GET':
-        if current_user.role.name in ['Administrator', 'Operator']:
-            base_query = History.query
-        else:
+        base_query = History.query \
+            .with_hint(History, "FORCE INDEX (ix_history_created_on)", 'mysql')
+        if current_user.role.name not in ['Administrator', 'Operator']:
             # if the user isn't an administrator or operator,
             # allow_user_view_history must be enabled to get here,
             # so include history for the zones for the user
-            base_query = db.session.query(History) \
-                .join(Domain, History.domain_id == Domain.id) \
+            allowed_domain_id_subquery = db.session.query(Domain.id) \
                 .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
                 .outerjoin(Account, Domain.account_id == Account.id) \
                 .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-                .filter(
-                db.or_(
+                .filter(db.or_(
                     DomainUser.user_id == current_user.id,
                     AccountUser.user_id == current_user.id
-                ))
+                )) \
+            .subquery()
+            base_query = base_query.filter(History.domain_id.in_(allowed_domain_id_subquery))
 
         domain_name = request.args.get('domain_name_filter') if request.args.get('domain_name_filter') != None \
                                                                 and len(
@@ -1290,11 +1290,9 @@ def history_table():  # ajax call data
                     )
                 ).order_by(History.created_on.desc()) \
                     .limit(lim).all()
-        elif user_name != None and current_user.role.name in ['Administrator',
-                                                              'Operator']:  # only admins can see the user login-logouts
+        elif user_name != None and current_user.role.name in ['Administrator', 'Operator']:  # only admins can see the user login-logouts
 
-            histories = History.query \
-                .filter(
+            histories = base_query.filter(
                 db.and_(
                     db.or_(
                         History.msg.like(
@@ -1317,10 +1315,8 @@ def history_table():  # ajax call data
                         temp.append(h)
                         break
             histories = temp
-        elif (changed_by != None or max_date != None) and current_user.role.name in ['Administrator',
-                                                                                     'Operator']:  # select changed by and date filters only
-            histories = History.query \
-                .filter(
+        elif (changed_by != None or max_date != None) and current_user.role.name in ['Administrator', 'Operator']:  # select changed by and date filters only
+            histories = base_query.filter(
                 db.and_(
                     History.created_on <= max_date if max_date != None else True,
                     History.created_on >= min_date if min_date != None else True,
@@ -1328,10 +1324,8 @@ def history_table():  # ajax call data
                 )
             ) \
                 .order_by(History.created_on.desc()).limit(lim).all()
-        elif (
-                changed_by != None or max_date != None):  # special filtering for user because one user does not have access to log-ins logs
-            histories = base_query \
-                .filter(
+        elif (changed_by != None or max_date != None):  # special filtering for user because one user does not have access to log-ins logs
+            histories = base_query.filter(
                 db.and_(
                     History.created_on <= max_date if max_date != None else True,
                     History.created_on >= min_date if min_date != None else True,
@@ -1347,20 +1341,7 @@ def history_table():  # ajax call data
                 )
             ).order_by(History.created_on.desc()).limit(lim).all()
         else:  # default view
-            if current_user.role.name in ['Administrator', 'Operator']:
-                histories = History.query.order_by(History.created_on.desc()).limit(lim).all()
-            else:
-                histories = db.session.query(History) \
-                    .join(Domain, History.domain_id == Domain.id) \
-                    .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-                    .outerjoin(Account, Domain.account_id == Account.id) \
-                    .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-                    .order_by(History.created_on.desc()) \
-                    .filter(
-                    db.or_(
-                        DomainUser.user_id == current_user.id,
-                        AccountUser.user_id == current_user.id
-                    )).limit(lim).all()
+            histories = base_query.order_by(History.created_on.desc()).limit(lim).all()
 
         detailedHistories = convert_histories(histories)
 
