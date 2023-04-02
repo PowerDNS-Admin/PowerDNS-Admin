@@ -66,7 +66,7 @@ def domain(domain_name):
     current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
-    if not rrsets and domain.type != 'Slave':
+    if not rrsets and domain.type != 'slave':
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
@@ -206,7 +206,7 @@ def changelog(domain_name):
     current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
-    if not rrsets and domain.type != 'Slave':
+    if not rrsets and domain.type != 'slave':
         abort(500)
 
     records_allow_to_edit = Setting().get_records_allow_to_edit()
@@ -294,7 +294,7 @@ def record_changelog(domain_name, record_name, record_type):
     current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
-    if not rrsets and domain.type != 'Slave':
+    if not rrsets and domain.type != 'slave':
         abort(500)
 
     # get all changelogs for this domain, in descening order
