@@ -15,19 +15,27 @@ def oidc_oauth():
         session['oidc_token'] = token
         return token
 
+    authlib_params = {
+        'client_id': Setting().get('oidc_oauth_key'),
+        'client_secret': Setting().get('oidc_oauth_secret'),
+        'api_base_url': Setting().get('oidc_oauth_api_url'),
+        'request_token_url': None,
+        'access_token_url': Setting().get('oidc_oauth_token_url'),
+        'authorize_url': Setting().get('oidc_oauth_authorize_url'),
+        'client_kwargs': {'scope': Setting().get('oidc_oauth_scope')},
+        'fetch_token': fetch_oidc_token,
+        'update_token': update_token
+    }
+
+    server_metadata_url = Setting().get('oidc_oauth_metadata_url')
+
+    if isinstance(server_metadata_url, str) and len(server_metadata_url.strip()) > 0:
+        authlib_params['server_metadata_url'] = server_metadata_url
+
     oidc = authlib_oauth_client.register(
         'oidc',
-        client_id=Setting().get('oidc_oauth_key'),
-        client_secret=Setting().get('oidc_oauth_secret'),
-        api_base_url=Setting().get('oidc_oauth_api_url'),
-        request_token_url=None,
-        access_token_url=Setting().get('oidc_oauth_token_url'),
-        authorize_url=Setting().get('oidc_oauth_authorize_url'),
-        jwks_url=Setting().get('oidc_oauth_jwks_url'),
-        server_metadata_url=Setting().get('oidc_oauth_metadata_url'),
-        client_kwargs={'scope': Setting().get('oidc_oauth_scope')},
-        fetch_token=fetch_oidc_token,
-        update_token=update_token)
+        **authlib_params
+    )
 
     @current_app.route('/oidc/authorized')
     def oidc_authorized():
