@@ -985,9 +985,7 @@ def convert_histories(histories):
     detailedHistories = []
     for history in histories:
         if history.detail and ('add_rrsets' in history.detail or 'del_rrsets' in history.detail):
-            history_as_list = list()
-            history_as_list.append(history)
-            detailedHistories.append(DetailedHistory(history, extract_changelogs_from_history(history_as_list)))
+            detailedHistories.append(DetailedHistory(history, extract_changelogs_from_history([history])))
         else:
             detailedHistories.append(DetailedHistory(history, None))
     return detailedHistories
