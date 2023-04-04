@@ -49,6 +49,12 @@
               <thead>
                 <tr>
                   <th>Changed on</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>TTL</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Comment</th>
                   <th>Changed by</th>
                 </tr>
               </thead>
@@ -56,22 +62,14 @@
                 {% for applied_change in allHistoryChanges %}
                   <tr class="odd row_record" id="{{ domain.name }}">
                     <td id="changed_on" class="changed_on">
-                      {{ allHistoryChanges[applied_change][0].history_entry.created_on }}
+                      {{ applied_change.history_entry.created_on }}
                     </td>
+                    {% call applied_change_macro.applied_change_template(applied_change) %}
+                    {% endcall %}
                     <td>
-                      {{allHistoryChanges[applied_change][0].history_entry.created_by }}
+                      {{ applied_change.history_entry.created_by }}
                     </td>
                   </tr>
-                  <!-- Nested Table -->
-                  <tr style='visibility:collapse'>
-                    <td colspan="2">
-                      <div class="content">
-                        {% call applied_change_macro.applied_change_template(allHistoryChanges[applied_change]) %} 
-                        {% endcall %}
-                      </div>
-                    </td>
-                  </tr>
-                  <!-- end nested table -->
                 {% endfor %}
               </tbody>
             </table>
@@ -105,18 +103,6 @@
             }
         });
     }
-
-    // handle click on history record
-    $(document.body).on("click", ".row_record", function (e) {
-        e.stopPropagation();
-        var nextRow = $(this).next('tr')
-        if (nextRow.css("visibility") == "visible")
-            nextRow.css("visibility", "collapse")
-        else
-            nextRow.css("visibility", "visible")
-
-    });
-
 
     var els = document.getElementsByClassName("changed_on");
     for (var i = 0; i < els.length; i++) {

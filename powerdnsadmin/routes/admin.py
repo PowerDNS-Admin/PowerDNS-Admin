@@ -107,66 +107,58 @@ def get_record_changes(del_rrset, add_rrset):
     return changeset
 
 
+def filter_rr_list_by_name_and_type(rrset, record_name, record_type):
+    return list(filter(lambda rr: rr['name'] == record_name and rr['type'] == record_type, rrset))
+
+
 # out_changes is a list of  HistoryRecordEntry objects in which we will append the new changes
 # a HistoryRecordEntry represents a pair of add_rrset and del_rrset
-def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_num, record_name=None, record_type=None):
-    if history_entry.detail is None:
-        return
+def extract_changelogs_from_history(histories, record_name=None, record_type=None):
+    out_changes = []
 
-    if "add_rrsets" in history_entry.detail:
-        detail_dict = json.loads(history_entry.detail)
-    else:  # not a record entry
-        return
+    for entry in histories:
+        changes = []
 
-    add_rrsets = detail_dict['add_rrsets']
-    del_rrsets = detail_dict['del_rrsets']
-
-    for add_rrset in add_rrsets:
-        exists = False
-        for del_rrset in del_rrsets:
-            if del_rrset['name'] == add_rrset['name'] and del_rrset['type'] == add_rrset['type']:
-                exists = True
-                if change_num not in out_changes:
-                    out_changes[change_num] = []
-                out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrset, add_rrset, "*"))
-                break
-        if not exists:  # this is a new record
-            if change_num not in out_changes:
-                out_changes[change_num] = []
-            out_changes[change_num].append(
-                HistoryRecordEntry(history_entry, {}, add_rrset, "+"))  # (add_rrset, del_rrset, change_type)
-    for del_rrset in del_rrsets:
-        exists = False
-        for add_rrset in add_rrsets:
-            if del_rrset['name'] == add_rrset['name'] and del_rrset['type'] == add_rrset['type']:
-                exists = True  # no need to add in the out_changes set
-                break
-        if not exists:  # this is a deletion
-            if change_num not in out_changes:
-                out_changes[change_num] = []
-            out_changes[change_num].append(HistoryRecordEntry(history_entry, del_rrset, {}, "-"))
-
-    # Sort them by the record name
-    if change_num in out_changes:
-        out_changes[change_num].sort(key=lambda change:
-                change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
-        )
-
-    # only used for changelog per record
-    if record_name != None and record_type != None:  # then get only the records with the specific (record_name, record_type) tuple
-        if change_num in out_changes:
-            changes_i = out_changes[change_num]
-        else:
-            return
-        for hre in changes_i:  # for each history record entry in changes_i
-            if 'type' in hre.add_rrset and hre.add_rrset['name'] == record_name and hre.add_rrset[
-                'type'] == record_type:
+        if "add_rrsets" in entry.detail:
+            details = json.loads(entry.detail)
+            if not details['add_rrsets'] and not details['del_rrsets']:
                 continue
-            elif 'type' in hre.del_rrset and hre.del_rrset['name'] == record_name and hre.del_rrset[
-                'type'] == record_type:
+        else:  # not a record entry
+            continue
+
+        # filter only the records with the specific record_name, record_type
+        if record_name != None and record_type != None:
+            details['add_rrsets'] = list(filter_rr_list_by_name_and_type(details['add_rrsets'], record_name, record_type))
+            details['del_rrsets'] = list(filter_rr_list_by_name_and_type(details['del_rrsets'], record_name, record_type))
+
+            if not details['add_rrsets'] and not details['del_rrsets']:
                 continue
-            else:
-                out_changes[change_num].remove(hre)
+
+        # same record name and type RR are being deleted and created in same entry.
+        del_add_changes = set([(r['name'], r['type']) for r in details['add_rrsets']]).intersection([(r['name'], r['type']) for r in details['del_rrsets']])
+        for del_add_change in del_add_changes:
+            changes.append(HistoryRecordEntry(
+                entry,
+                filter_rr_list_by_name_and_type(details['del_rrsets'], del_add_change[0], del_add_change[1]).pop(0),
+                filter_rr_list_by_name_and_type(details['add_rrsets'], del_add_change[0], del_add_change[1]).pop(0),
+                "*")
+            )
+
+        for rrset in details['add_rrsets']:
+            if (rrset['name'], rrset['type']) not in del_add_changes:
+                changes.append(HistoryRecordEntry(entry, {}, rrset, "+"))
+
+        for rrset in details['del_rrsets']:
+            if (rrset['name'], rrset['type']) not in del_add_changes:
+                changes.append(HistoryRecordEntry(entry, rrset, {}, "-"))
+
+        # sort changes by the record name
+        if changes:
+            changes.sort(key=lambda change:
+                    change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
+                    )
+            out_changes.extend(changes)
+    return out_changes
 
 
 # records with same (name,type) are considered as a single HistoryRecordEntry
@@ -184,21 +176,16 @@ class HistoryRecordEntry:
         self.changed_fields = []  # contains a subset of : [ttl, name, type]
         self.changeSet = []  # all changes for the records of this add_rrset-del_rrset pair
 
-        if change_type == "+":  # addition
+        if change_type == "+" or change_type == "-":
             self.changed_fields.append("name")
             self.changed_fields.append("type")
             self.changed_fields.append("ttl")
-            self.changeSet = get_record_changes(del_rrset, add_rrset)
-        elif change_type == "-":  # removal
-            self.changed_fields.append("name")
-            self.changed_fields.append("type")
-            self.changed_fields.append("ttl")
-            self.changeSet = get_record_changes(del_rrset, add_rrset)
 
         elif change_type == "*":  # edit of unchanged
             if add_rrset['ttl'] != del_rrset['ttl']:
                 self.changed_fields.append("ttl")
-            self.changeSet = get_record_changes(del_rrset, add_rrset)
+
+        self.changeSet = get_record_changes(del_rrset, add_rrset)
 
     def toDict(self):
         return {
@@ -882,9 +869,7 @@ class DetailedHistory():
                                                        ip_address=detail_dict['ip_address'])
 
         elif 'add_rrsets' in detail_dict:  # this is a zone record change
-            # changes_set = []
             self.detailed_msg = ""
-            # extract_changelogs_from_a_history_entry(changes_set, history, 0)
 
         elif 'name' in detail_dict and 'template' in history.msg:  # template creation / deletion
             self.detailed_msg = render_template_string("""
@@ -997,20 +982,14 @@ class DetailedHistory():
 
 # convert a list of History objects into DetailedHistory objects
 def convert_histories(histories):
-    changes_set = dict()
     detailedHistories = []
-    j = 0
-    for i in range(len(histories)):
-        if histories[i].detail and ('add_rrsets' in histories[i].detail or 'del_rrsets' in histories[i].detail):
-            extract_changelogs_from_a_history_entry(changes_set, histories[i], j)
-            if j in changes_set:
-                detailedHistories.append(DetailedHistory(histories[i], changes_set[j]))
-            else:  # no changes were found
-                detailedHistories.append(DetailedHistory(histories[i], None))
-            j += 1
-
+    for history in histories:
+        if history.detail and ('add_rrsets' in history.detail or 'del_rrsets' in history.detail):
+            history_as_list = list()
+            history_as_list.append(history)
+            detailedHistories.append(DetailedHistory(history, extract_changelogs_from_history(history_as_list)))
         else:
-            detailedHistories.append(DetailedHistory(histories[i], None))
+            detailedHistories.append(DetailedHistory(history, None))
     return detailedHistories
 
 
