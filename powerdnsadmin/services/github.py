@@ -15,20 +15,28 @@ def github_oauth():
         session['github_token'] = token
         return token
 
+    authlib_params = {
+        'client_id': Setting().get('github_oauth_key'),
+        'client_secret': Setting().get('github_oauth_secret'),
+        'request_token_params': {'scope': Setting().get('github_oauth_scope')},
+        'api_base_url': Setting().get('github_oauth_api_url'),
+        'request_token_url': None,
+        'access_token_url': Setting().get('github_oauth_token_url'),
+        'authorize_url': Setting().get('github_oauth_authorize_url'),
+        'client_kwargs': {'scope': Setting().get('github_oauth_scope')},
+        'fetch_token': fetch_github_token,
+        'update_token': update_token
+    }
+
+    server_metadata_url = Setting().get('github_oauth_metadata_url')
+
+    if isinstance(server_metadata_url, str) and len(server_metadata_url.strip()) > 0:
+        authlib_params['server_metadata_url'] = server_metadata_url
+
     github = authlib_oauth_client.register(
         'github',
-        client_id=Setting().get('github_oauth_key'),
-        client_secret=Setting().get('github_oauth_secret'),
-        request_token_params={'scope': Setting().get('github_oauth_scope')},
-        api_base_url=Setting().get('github_oauth_api_url'),
-        request_token_url=None,
-        access_token_url=Setting().get('github_oauth_token_url'),
-        authorize_url=Setting().get('github_oauth_authorize_url'),
-        jwks_url=Setting().get('github_oauth_jwks_url'),
-        server_metadata_url=Setting().get('github_oauth_metadata_url'),
-        client_kwargs={'scope': Setting().get('github_oauth_scope')},
-        fetch_token=fetch_github_token,
-        update_token=update_token)
+        **authlib_params
+    )
 
     @current_app.route('/github/authorized')
     def github_authorized():

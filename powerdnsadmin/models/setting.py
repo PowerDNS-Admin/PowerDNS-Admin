@@ -73,7 +73,6 @@ class Setting(db.Model):
             'https://github.com/login/oauth/access_token',
         'github_oauth_authorize_url':
             'https://github.com/login/oauth/authorize',
-        'github_oauth_jwks_url': '',
         'github_oauth_metadata_url': '',
         'google_oauth_enabled': False,
         'google_oauth_client_id': '',
@@ -81,7 +80,6 @@ class Setting(db.Model):
         'google_token_url': 'https://oauth2.googleapis.com/token',
         'google_oauth_scope': 'openid email profile',
         'google_authorize_url': 'https://accounts.google.com/o/oauth2/v2/auth',
-        'google_oauth_jwks_url': '',
         'google_oauth_metadata_url': '',
         'google_base_url': 'https://www.googleapis.com/oauth2/v3/',
         'azure_oauth_enabled': False,
@@ -93,7 +91,6 @@ class Setting(db.Model):
             'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/token',
         'azure_oauth_authorize_url':
             'https://login.microsoftonline.com/[tenancy]/oauth2/v2.0/authorize',
-        'azure_oauth_jwks_url': '',
         'azure_oauth_metadata_url': '',
         'azure_sg_enabled': False,
         'azure_admin_group': '',
@@ -111,7 +108,6 @@ class Setting(db.Model):
         'oidc_oauth_api_url': '',
         'oidc_oauth_token_url': '',
         'oidc_oauth_authorize_url': '',
-        'oidc_oauth_jwks_url': '',
         'oidc_oauth_metadata_url': '',
         'oidc_oauth_logout_url': '',
         'oidc_oauth_username': 'preferred_username',
