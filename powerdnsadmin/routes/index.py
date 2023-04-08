@@ -164,18 +164,18 @@ def login():
 
     if 'google_token' in session:
         user_data = json.loads(google.get('userinfo').text)
-        first_name = user_data['given_name']
-        surname = user_data['family_name']
-        email = user_data['email']
-        user = User.query.filter_by(username=email).first()
+        google_first_name = user_data['given_name']
+        google_last_name = user_data['family_name']
+        google_email = user_data['email']
+        user = User.query.filter_by(username=google_email).first()
         if user is None:
-            user = User.query.filter_by(email=email).first()
+            user = User.query.filter_by(email=google_email).first()
         if not user:
-            user = User(username=email,
-                        firstname=first_name,
-                        lastname=surname,
+            user = User(username=google_email,
+                        firstname=google_first_name,
+                        lastname=google_last_name,
                         plain_text_password=None,
-                        email=email)
+                        email=google_email)
 
             result = user.create_local_user()
             if not result['status']:
@@ -187,11 +187,11 @@ def login():
         return authenticate_user(user, 'Google OAuth')
 
     if 'github_token' in session:
-        me = json.loads(github.get('user').text)
-        github_username = me['login']
-        github_first_name = me['name']
+        user_data = json.loads(github.get('user').text)
+        github_username = user_data['login']
+        github_first_name = user_data['name']
         github_last_name = ''
-        github_email = me['email']
+        github_email = user_data['email']
 
         # If the user's full name from GitHub contains at least two words, use the first word as the first name and
         # the rest as the last name.
@@ -222,7 +222,7 @@ def login():
     if 'azure_token' in session:
         azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName').text
         current_app.logger.info('Azure login returned: ' + azure_info)
-        me = json.loads(azure_info)
+        user_data = json.loads(azure_info)
 
         azure_info = azure.post('me/getMemberGroups',
                                 json={'securityEnabledOnly': False}).text
@@ -234,15 +234,15 @@ def login():
         else:
             mygroups = []
 
-        azure_username = me["userPrincipalName"]
-        azure_first_name = me["givenName"]
-        azure_last_name = me["surname"]
-        if "mail" in me:
-            azure_email = me["mail"]
+        azure_username = user_data["userPrincipalName"]
+        azure_first_name = user_data["givenName"]
+        azure_last_name = user_data["surname"]
+        if "mail" in user_data:
+            azure_email = user_data["mail"]
         else:
             azure_email = ""
         if not azure_email:
-            azure_email = me["userPrincipalName"]
+            azure_email = user_data["userPrincipalName"]
 
         # Handle foreign principals such as guest users
         azure_email = re.sub(r"#.*$", "", azure_email)
@@ -392,11 +392,11 @@ def login():
         return authenticate_user(user, 'Azure OAuth')
 
     if 'oidc_token' in session:
-        me = json.loads(oidc.get('userinfo').text)
-        oidc_username = me[Setting().get('oidc_oauth_username')]
-        oidc_first_name = me[Setting().get('oidc_oauth_firstname')]
-        oidc_last_name = me[Setting().get('oidc_oauth_last_name')]
-        oidc_email = me[Setting().get('oidc_oauth_email')]
+        user_data = json.loads(oidc.get('userinfo').text)
+        oidc_username = user_data[Setting().get('oidc_oauth_username')]
+        oidc_first_name = user_data[Setting().get('oidc_oauth_firstname')]
+        oidc_last_name = user_data[Setting().get('oidc_oauth_last_name')]
+        oidc_email = user_data[Setting().get('oidc_oauth_email')]
 
         user = User.query.filter_by(username=oidc_username).first()
         if not user:
@@ -426,10 +426,11 @@ def login():
             desc_prop = Setting().get('oidc_oauth_account_description_property')
 
             account_to_add = []
-            # If the name_property and desc_property exist in me (A variable that contains all the userinfo from the IdP).
-            if name_prop in me and desc_prop in me:
-                accounts_name_prop = [me[name_prop]] if type(me[name_prop]) is not list else me[name_prop]
-                accounts_desc_prop = [me[desc_prop]] if type(me[desc_prop]) is not list else me[desc_prop]
+            # If the name_property and desc_property exist in me (A variable that contains all the userinfo from the
+            # IdP).
+            if name_prop in user_data and desc_prop in user_data:
+                accounts_name_prop = [user_data[name_prop]] if type(user_data[name_prop]) is not list else user_data[name_prop]
+                accounts_desc_prop = [user_data[desc_prop]] if type(user_data[desc_prop]) is not list else user_data[desc_prop]
 
                 # Run on all groups the user is in by the index num.
                 for i in range(len(accounts_name_prop)):
