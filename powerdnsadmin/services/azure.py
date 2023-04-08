@@ -38,14 +38,16 @@ def azure_oauth():
 
     @current_app.route('/azure/authorized')
     def azure_authorized():
-        session['azure_oauthredir'] = url_for('.azure_authorized',
-                                              _external=True,
-                                              _scheme='https')
+        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+        params = {'_external': True}
+        if isinstance(use_ssl, bool):
+            params['_scheme'] = 'https' if use_ssl else 'http'
+        session['azure_oauthredir'] = url_for('.azure_authorized', **params)
         token = azure.authorize_access_token()
         if token is None:
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error'], request.args['error_description'])
         session['azure_token'] = (token)
-        return redirect(url_for('index.login', _external=True, _scheme='https'))
+        return redirect(url_for('index.login', **params))
 
     return azure

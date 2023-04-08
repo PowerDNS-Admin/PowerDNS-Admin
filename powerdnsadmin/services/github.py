@@ -40,13 +40,16 @@ def github_oauth():
 
     @current_app.route('/github/authorized')
     def github_authorized():
-        session['github_oauthredir'] = url_for('.github_authorized',
-                                               _external=True)
+        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+        params = {'_external': True}
+        if isinstance(use_ssl, bool):
+            params['_scheme'] = 'https' if use_ssl else 'http'
+        session['github_oauthredir'] = url_for('.github_authorized', **params)
         token = github.authorize_access_token()
         if token is None:
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error'], request.args['error_description'])
-        session['github_token'] = (token)
-        return redirect(url_for('index.login'))
+        session['github_token'] = token
+        return redirect(url_for('index.login', **params))
 
     return github

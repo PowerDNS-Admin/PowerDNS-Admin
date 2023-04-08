@@ -39,16 +39,18 @@ def google_oauth():
 
     @current_app.route('/google/authorized')
     def google_authorized():
-        session['google_oauthredir'] = url_for(
-            '.google_authorized', _external=True)
+        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+        params = {'_external': True}
+        if isinstance(use_ssl, bool):
+            params['_scheme'] = 'https' if use_ssl else 'http'
+        session['google_oauthredir'] = url_for('.google_authorized', **params)
         token = google.authorize_access_token()
         if token is None:
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error_reason'],
                 request.args['error_description']
             )
-        session['google_token'] = (token)
-        return redirect(url_for('index.login'))
+        session['google_token'] = token
+        return redirect(url_for('index.login', **params))
 
     return google
-
