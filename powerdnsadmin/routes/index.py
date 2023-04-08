@@ -189,8 +189,16 @@ def login():
     if 'github_token' in session:
         me = json.loads(github.get('user').text)
         github_username = me['login']
-        github_name = me['name']
+        github_first_name = me['name']
+        github_last_name = ''
         github_email = me['email']
+
+        # If the user's full name from GitHub contains at least two words, use the first word as the first name and
+        # the rest as the last name.
+        github_name_parts = github_first_name.split(' ')
+        if len(github_name_parts) > 1:
+            github_first_name = github_name_parts[0]
+            github_last_name = ' '.join(github_name_parts[1:])
 
         user = User.query.filter_by(username=github_username).first()
         if user is None:
@@ -198,8 +206,8 @@ def login():
         if not user:
             user = User(username=github_username,
                         plain_text_password=None,
-                        firstname=github_name,
-                        lastname='',
+                        firstname=github_first_name,
+                        lastname=github_last_name,
                         email=github_email)
 
             result = user.create_local_user()
@@ -227,8 +235,8 @@ def login():
             mygroups = []
 
         azure_username = me["userPrincipalName"]
-        azure_givenname = me["givenName"]
-        azure_familyname = me["surname"]
+        azure_first_name = me["givenName"]
+        azure_last_name = me["surname"]
         if "mail" in me:
             azure_email = me["mail"]
         else:
@@ -244,8 +252,8 @@ def login():
         if not user:
             user = User(username=azure_username,
                         plain_text_password=None,
-                        firstname=azure_givenname,
-                        lastname=azure_familyname,
+                        firstname=azure_first_name,
+                        lastname=azure_last_name,
                         email=azure_email)
 
             result = user.create_local_user()
@@ -386,21 +394,21 @@ def login():
     if 'oidc_token' in session:
         me = json.loads(oidc.get('userinfo').text)
         oidc_username = me[Setting().get('oidc_oauth_username')]
-        oidc_givenname = me[Setting().get('oidc_oauth_firstname')]
-        oidc_familyname = me[Setting().get('oidc_oauth_last_name')]
+        oidc_first_name = me[Setting().get('oidc_oauth_firstname')]
+        oidc_last_name = me[Setting().get('oidc_oauth_last_name')]
         oidc_email = me[Setting().get('oidc_oauth_email')]
 
         user = User.query.filter_by(username=oidc_username).first()
         if not user:
             user = User(username=oidc_username,
                         plain_text_password=None,
-                        firstname=oidc_givenname,
-                        lastname=oidc_familyname,
+                        firstname=oidc_first_name,
+                        lastname=oidc_last_name,
                         email=oidc_email)
             result = user.create_local_user()
         else:
-            user.firstname = oidc_givenname
-            user.lastname = oidc_familyname
+            user.firstname = oidc_first_name
+            user.lastname = oidc_last_name
             user.email = oidc_email
             user.plain_text_password = None
             result = user.update_local_user()
