@@ -749,20 +749,39 @@
                                                                     <input type="text" class="form-control"
                                                                            name="google_oauth_client_id"
                                                                            id="google_oauth_client_id"
-                                                                           placeholder="Google OAuth client ID"
+                                                                           placeholder="Google OAuth Client ID"
                                                                            data-error="Please input Client ID"
                                                                            value="{{ SETTING.get('google_oauth_client_id') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="google_oauth_client_secret">Client
-                                                                        secret</label>
+                                                                        Secret</label>
                                                                     <input type="text" class="form-control"
                                                                            name="google_oauth_client_secret"
                                                                            id="google_oauth_client_secret"
-                                                                           placeholder="Google OAuth client secret"
-                                                                           data-error="Please input Client secret"
+                                                                           placeholder="Google OAuth Client Secret"
+                                                                           data-error="Please input Client Secret"
                                                                            value="{{ SETTING.get('google_oauth_client_secret') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="google_oauth_scope">Scope</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="google_oauth_scope"
+                                                                           id="google_oauth_scope"
+                                                                           placeholder="e.g. email profile"
+                                                                           data-error="Please input scope"
+                                                                           value="{{ SETTING.get('google_oauth_scope') }}">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="google_base_url">API URL</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="google_base_url" id="google_base_url"
+                                                                           placeholder="e.g. https://www.googleapis.com/oauth2/v1/"
+                                                                           data-error="Please input base URL"
+                                                                           value="{{ SETTING.get('google_base_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -786,16 +805,6 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="google_oauth_scope">Scope</label>
-                                                                    <input type="text" class="form-control"
-                                                                           name="google_oauth_scope"
-                                                                           id="google_oauth_scope"
-                                                                           placeholder="e.g. email profile"
-                                                                           data-error="Please input scope"
-                                                                           value="{{ SETTING.get('google_oauth_scope') }}">
-                                                                    <span class="help-block with-errors"></span>
-                                                                </div>
-                                                                <div class="form-group">
                                                                     <label for="google_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -804,15 +813,6 @@
                                                                            placeholder="e.g. https://accounts.google.com/o/oauth2/auth"
                                                                            data-error="Please input Authorize URL"
                                                                            value="{{ SETTING.get('google_authorize_url') }}">
-                                                                    <span class="help-block with-errors"></span>
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="google_base_url">Base URL</label>
-                                                                    <input type="text" class="form-control"
-                                                                           name="google_base_url" id="google_base_url"
-                                                                           placeholder="e.g. https://www.googleapis.com/oauth2/v1/"
-                                                                           data-error="Please input base URL"
-                                                                           value="{{ SETTING.get('google_base_url') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -870,26 +870,26 @@
                                                                     <input type="checkbox" id="github_oauth_enabled"
                                                                            name="github_oauth_enabled" class="checkbox"
                                                                            {% if SETTING.get('github_oauth_enabled') %}checked{% endif %}>
-                                                                    <label for="github_oauth_enabled">Enable Github
+                                                                    <label for="github_oauth_enabled">Enable GitHub
                                                                         OAuth</label>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="github_oauth_key">Client key</label>
+                                                                    <label for="github_oauth_key">Client ID</label>
                                                                     <input type="text" class="form-control"
                                                                            name="github_oauth_key" id="github_oauth_key"
-                                                                           placeholder="Github OAuth client ID"
-                                                                           data-error="Please input Client key"
+                                                                           placeholder="Github OAuth Client ID"
+                                                                           data-error="Please input Client ID"
                                                                            value="{{ SETTING.get('github_oauth_key') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="github_oauth_secret">Client
-                                                                        secret</label>
+                                                                        Secret</label>
                                                                     <input type="text" class="form-control"
                                                                            name="github_oauth_secret"
                                                                            id="github_oauth_secret"
-                                                                           placeholder="Github OAuth client secret"
-                                                                           data-error="Please input Client secret"
+                                                                           placeholder="Github OAuth Client Secret"
+                                                                           data-error="Please input Client Secret"
                                                                            value="{{ SETTING.get('github_oauth_secret') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
@@ -1003,22 +1003,22 @@
                                                                         OAuth</label>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="azure_oauth_key">Client key</label>
+                                                                    <label for="azure_oauth_key">Client ID</label>
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_key" id="azure_oauth_key"
-                                                                           placeholder="Azure OAuth client ID"
-                                                                           data-error="Please input Client key"
+                                                                           placeholder="Azure OAuth Client ID"
+                                                                           data-error="Please input Client Key"
                                                                            value="{{ SETTING.get('azure_oauth_key') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="azure_oauth_secret">Client
-                                                                        secret</label>
+                                                                        Secret</label>
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_secret"
                                                                            id="azure_oauth_secret"
-                                                                           placeholder="Azure OAuth client secret"
-                                                                           data-error="Please input Client secret"
+                                                                           placeholder="Azure OAuth Client Secret"
+                                                                           data-error="Please input Client Secret"
                                                                            value="{{ SETTING.get('azure_oauth_secret') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
@@ -1311,21 +1311,21 @@
                                                                         OAuth</label>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="oidc_oauth_key">Client key</label>
+                                                                    <label for="oidc_oauth_key">Client ID</label>
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_key" id="oidc_oauth_key"
-                                                                           placeholder="OIDC OAuth client ID"
-                                                                           data-error="Please input Client key"
+                                                                           placeholder="OIDC OAuth Client ID"
+                                                                           data-error="Please input Client ID"
                                                                            value="{{ SETTING.get('oidc_oauth_key') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="oidc_oauth_secret">Client secret</label>
+                                                                    <label for="oidc_oauth_secret">Client Secret</label>
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_secret"
                                                                            id="oidc_oauth_secret"
-                                                                           placeholder="OIDC OAuth client secret"
-                                                                           data-error="Please input Client secret"
+                                                                           placeholder="OIDC OAuth Client Secret"
+                                                                           data-error="Please input Client Secret"
                                                                            value="{{ SETTING.get('oidc_oauth_secret') }}">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
