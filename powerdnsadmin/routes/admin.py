@@ -72,8 +72,8 @@ def get_record_changes(del_rrset, add_rrset):
         """For the given record, return the state dict."""
         return {
             "disabled": record['disabled'],
-            "content":  record['content'],
-            "comment":  record.get('comment', ''),
+            "content": record['content'],
+            "comment": record.get('comment', ''),
         }
 
     add_records = get_records(add_rrset)
@@ -149,8 +149,8 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
     # Sort them by the record name
     if change_num in out_changes:
         out_changes[change_num].sort(key=lambda change:
-                change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
-        )
+        change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
+                                     )
 
     # only used for changelog per record
     if record_name != None and record_type != None:  # then get only the records with the specific (record_name, record_type) tuple
@@ -897,7 +897,8 @@ class DetailedHistory():
                                                        description=DetailedHistory.get_key_val(detail_dict,
                                                                                                "description"))
 
-        elif any(msg in history.msg for msg in ['Change zone','Change domain']) and 'access control' in history.msg:  # added or removed a user from a zone
+        elif any(msg in history.msg for msg in ['Change zone',
+                                                'Change domain']) and 'access control' in history.msg:  # added or removed a user from a zone
             users_with_access = DetailedHistory.get_key_val(detail_dict, "user_has_access")
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
@@ -942,7 +943,7 @@ class DetailedHistory():
                                                        linked_domains=DetailedHistory.get_key_val(detail_dict,
                                                                                                   "domains"))
 
-        elif any(msg in history.msg for msg in ['Update type for zone','Update type for domain']):
+        elif any(msg in history.msg for msg in ['Update type for zone', 'Update type for domain']):
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
                     <tr><td>Zone: </td><td>{{ domain }}</td></tr>
@@ -977,7 +978,8 @@ class DetailedHistory():
                                                                                                   'status'),
                                                        history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
 
-        elif any(msg in history.msg for msg in ['Update zone','Update domain']) and 'associate account' in history.msg:  # When an account gets associated or dissociate with zones
+        elif any(msg in history.msg for msg in ['Update zone',
+                                                'Update domain']) and 'associate account' in history.msg:  # When an account gets associated or dissociate with zones
             self.detailed_msg = render_template_string('''
                 <table class="table table-bordered table-striped">
                     <tr><td>Associate: </td><td>{{ history_assoc_account }}</td></tr>
@@ -1231,8 +1233,10 @@ def history_table():  # ajax call data
                     .filter(
                     db.and_(
                         db.or_(
-                            History.msg.like("%domain " + domain_name) if domain_name != "*" else History.msg.like("%domain%"),
-                            History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like("%zone%"),
+                            History.msg.like("%domain " + domain_name) if domain_name != "*" else History.msg.like(
+                                "%domain%"),
+                            History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like(
+                                "%zone%"),
                             History.msg.like(
                                 "%domain " + domain_name + " access control") if domain_name != "*" else History.msg.like(
                                 "%domain%access control"),
@@ -1540,7 +1544,8 @@ def has_an_auth_method(local_db_enabled=None,
         oidc_oauth_enabled = Setting().get('oidc_oauth_enabled')
     if azure_oauth_enabled is None:
         azure_oauth_enabled = Setting().get('azure_oauth_enabled')
-    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled or azure_oauth_enabled
+    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled \
+        or azure_oauth_enabled
 
 
 @admin_bp.route('/setting/authentication', methods=['GET', 'POST'])
@@ -1562,17 +1567,20 @@ def setting_authentication():
             pwd_enforce_characters = True if request.form.get('pwd_enforce_characters') else False
             pwd_min_len = safe_cast(request.form.get('pwd_min_len', Setting().defaults["pwd_min_len"]), int,
                                     Setting().defaults["pwd_min_len"])
-            pwd_min_lowercase = safe_cast(request.form.get('pwd_min_lowercase', Setting().defaults["pwd_min_lowercase"]), int,
-                                          Setting().defaults["pwd_min_lowercase"])
-            pwd_min_uppercase = safe_cast(request.form.get('pwd_min_uppercase', Setting().defaults["pwd_min_uppercase"]), int,
-                                          Setting().defaults["pwd_min_uppercase"])
+            pwd_min_lowercase = safe_cast(
+                request.form.get('pwd_min_lowercase', Setting().defaults["pwd_min_lowercase"]), int,
+                Setting().defaults["pwd_min_lowercase"])
+            pwd_min_uppercase = safe_cast(
+                request.form.get('pwd_min_uppercase', Setting().defaults["pwd_min_uppercase"]), int,
+                Setting().defaults["pwd_min_uppercase"])
             pwd_min_digits = safe_cast(request.form.get('pwd_min_digits', Setting().defaults["pwd_min_digits"]), int,
                                        Setting().defaults["pwd_min_digits"])
             pwd_min_special = safe_cast(request.form.get('pwd_min_special', Setting().defaults["pwd_min_special"]), int,
                                         Setting().defaults["pwd_min_special"])
 
             pwd_enforce_complexity = True if request.form.get('pwd_enforce_complexity') else False
-            pwd_min_complexity = safe_cast(request.form.get('pwd_min_complexity', Setting().defaults["pwd_min_complexity"]), int,
+            pwd_min_complexity = safe_cast(request.form.get('pwd_min_complexity',
+                                                            Setting().defaults["pwd_min_complexity"]), int,
                                            Setting().defaults["pwd_min_complexity"])
 
             if not has_an_auth_method(local_db_enabled=local_db_enabled):
@@ -1585,14 +1593,12 @@ def setting_authentication():
             else:
                 Setting().set('local_db_enabled', local_db_enabled)
                 Setting().set('signup_enabled', signup_enabled)
-
                 Setting().set('pwd_enforce_characters', pwd_enforce_characters)
                 Setting().set('pwd_min_len', pwd_min_len)
                 Setting().set('pwd_min_lowercase', pwd_min_lowercase)
                 Setting().set('pwd_min_uppercase', pwd_min_uppercase)
                 Setting().set('pwd_min_digits', pwd_min_digits)
                 Setting().set('pwd_min_special', pwd_min_special)
-
                 Setting().set('pwd_enforce_complexity', pwd_enforce_complexity)
                 Setting().set('pwd_min_complexity', pwd_min_complexity)
 
@@ -2097,16 +2103,16 @@ def global_search():
             results = server.global_search(object_type='all', query=query)
 
             # Filter results to domains to which the user has access permission
-            if current_user.role.name not in [ 'Administrator', 'Operator' ]:
+            if current_user.role.name not in ['Administrator', 'Operator']:
                 allowed_domains = db.session.query(Domain) \
                     .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
                     .outerjoin(Account, Domain.account_id == Account.id) \
                     .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
                     .filter(
-                        db.or_(
-                            DomainUser.user_id == current_user.id,
-                            AccountUser.user_id == current_user.id
-                        )) \
+                    db.or_(
+                        DomainUser.user_id == current_user.id,
+                        AccountUser.user_id == current_user.id
+                    )) \
                     .with_entities(Domain.name) \
                     .all()
                 allowed_domains = [value for value, in allowed_domains]

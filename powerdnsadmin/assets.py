@@ -20,6 +20,7 @@ js_login = Bundle(
     'node_modules/jquery/dist/jquery.js',
     'node_modules/bootstrap/dist/js/bootstrap.js',
     'node_modules/icheck/icheck.js',
+    'node_modules/knockout/build/output/knockout-latest.js',
     'custom/js/custom.js',
     filters=(ConcatFilter, 'rjsmin'),
     output='generated/login.js')
@@ -55,6 +56,7 @@ js_main = Bundle(
     'node_modules/datatables.net-plugins/sorting/natural.js',
     'node_modules/jtimeout/src/jTimeout.js',
     'node_modules/jquery.quicksearch/src/jquery.quicksearch.js',
+    'node_modules/knockout/build/output/knockout-latest.js',
     'custom/js/custom.js',
     'node_modules/bootstrap-datepicker/dist/js/bootstrap-datepicker.js',
     filters=(ConcatFilter, 'rjsmin'),

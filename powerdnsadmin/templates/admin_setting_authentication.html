@@ -25,7 +25,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-outline card-primary shadow">
+                    <div class="card card-outline card-primary shadow" id="settings-editor">
                         <div class="card-header">
                             <h3 class="card-title">Settings Editor</h3>
                         </div>
@@ -43,31 +43,43 @@
                             <div class="nav-tabs-custom">
                                 <ul class="nav nav-tabs" role="tablist">
                                     <li class="nav-item">
-                                        <a class="nav-link active" href="#tabs-general" data-toggle="pill" role="tab">General</a>
+                                        <a data-tab="local"
+                                           data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'local' ? ' active' : '')"
+                                           href="#" data-toggle="pill" role="tab">Local</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#tabs-ldap" data-toggle="pill" role="tab">LDAP</a>
+                                        <a data-tab="ldap"
+                                           data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'ldap' ? ' active' : '')"
+                                           href="#" data-toggle="pill" role="tab">LDAP</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#tabs-google" data-toggle="pill" role="tab">Google
+                                        <a data-tab="google"
+                                           data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'google' ? ' active' : '')"
+                                           href="#" data-toggle="pill" role="tab">Google
                                             OAuth</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#tabs-github" data-toggle="pill" role="tab">GitHub
+                                        <a data-tab="github"
+                                           data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'github' ? ' active' : '')"
+                                           href="#" data-toggle="pill" role="tab">GitHub
                                             OAuth</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#tabs-azure" data-toggle="pill" role="tab">Microsoft
+                                        <a data-tab="azure"
+                                           data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'azure' ? ' active' : '')"
+                                           href="#" data-toggle="pill" role="tab">Azure
                                             OAuth</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#tabs-oidc" data-toggle="pill" role="tab">OpenID
+                                        <a data-tab="oidc"
+                                           data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'oidc' ? ' active' : '')"
+                                           href="#" data-toggle="pill" role="tab">OpenID
                                             Connect OAuth</a>
                                     </li>
                                 </ul>
                                 <div class="tab-content">
 
-                                    <div class="tab-pane active" id="tabs-general">
+                                    <div data-bind="class: 'tab-pane' + (tab_active() == 'local' ? ' active' : '')">
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post">
@@ -75,18 +87,15 @@
                                                     <input type="hidden" value="general" name="config_tab"/>
                                                     <div class="card">
                                                         <div class="card-header">
-                                                            <h3 class="card-title">Basic Settings</h3>
+                                                            <h3 class="card-title">Local Authentication Settings</h3>
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
-                                                            <fieldset>
-
-                                                            </fieldset>
                                                             <div class="form-group">
                                                                 <input type="checkbox" id="local_db_enabled"
                                                                        name="local_db_enabled"
                                                                        class="checkbox"
-                                                                       {% if SETTING.get('local_db_enabled') %}checked{% endif %}>
+                                                                       data-bind="checked: local_db_enabled">
                                                                 <label for="local_db_enabled">Local DB
                                                                     Authentication</label>
                                                             </div>
@@ -94,7 +103,7 @@
                                                                 <input type="checkbox" id="signup_enabled"
                                                                        name="signup_enabled"
                                                                        class="checkbox"
-                                                                       {% if SETTING.get('signup_enabled') %}checked{% endif %}>
+                                                                       data-bind="enable: local_db_enabled, checked: signup_enabled">
                                                                 <label for="signup_enabled">Allow users to sign
                                                                     up</label>
                                                             </div>
@@ -104,7 +113,7 @@
                                                                     <input type="checkbox" id="pwd_enforce_characters"
                                                                            name="pwd_enforce_characters"
                                                                            class="checkbox"
-                                                                           {% if SETTING.get('pwd_enforce_characters') %}checked{% endif %}>
+                                                                           data-bind="enable: local_db_enabled, checked: pwd_enforce_characters">
                                                                     <label for="pwd_enforce_characters">
                                                                         Enforce Character Requirements
                                                                     </label>
@@ -115,7 +124,7 @@
                                                                     <input type="text" class="form-control"
                                                                            name="pwd_min_len" id="pwd_min_len"
                                                                            data-error="Please enter a minimum password length"
-                                                                           value="{{ SETTING.get('pwd_min_len') }}">
+                                                                           data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_len, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="pwd_min_lowercase">Minimum Lowercase
@@ -124,7 +133,7 @@
                                                                            name="pwd_min_lowercase"
                                                                            id="pwd_min_lowercase"
                                                                            data-error="Please enter the minimum number of lowercase letters required"
-                                                                           value="{{ SETTING.get('pwd_min_lowercase') }}">
+                                                                           data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_lowercase, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="pwd_min_uppercase">Minimum Uppercase
@@ -133,7 +142,7 @@
                                                                            name="pwd_min_uppercase"
                                                                            id="pwd_min_uppercase"
                                                                            data-error="Please enter the minimum number of uppercase letters required"
-                                                                           value="{{ SETTING.get('pwd_min_uppercase') }}">
+                                                                           data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_uppercase, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="pwd_min_digits">Minimum Digit
@@ -141,7 +150,7 @@
                                                                     <input type="text" class="form-control"
                                                                            name="pwd_min_digits" id="pwd_min_digits"
                                                                            data-error="Please enter the minimum number of digits required"
-                                                                           value="{{ SETTING.get('pwd_min_digits') }}">
+                                                                           data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_digits, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="pwd_min_special">Minimum Special
@@ -149,13 +158,13 @@
                                                                     <input type="text" class="form-control"
                                                                            name="pwd_min_special" id="pwd_min_special"
                                                                            data-error="Please enter the minimum number of special characters required"
-                                                                           value="{{ SETTING.get('pwd_min_special') }}">
+                                                                           data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="pwd_enforce_complexity"
                                                                            name="pwd_enforce_complexity"
                                                                            class="checkbox"
-                                                                           {% if SETTING.get('pwd_enforce_complexity') %}checked{% endif %}>
+                                                                           data-bind="enable: local_db_enabled, checked: pwd_enforce_complexity">
                                                                     <label for="pwd_enforce_complexity">
                                                                         Enforce Complexity Requirement
                                                                     </label>
@@ -167,7 +176,7 @@
                                                                            name="pwd_min_complexity"
                                                                            id="pwd_min_complexity"
                                                                            data-error="Please enter the minimum password complexity required"
-                                                                           value="{{ SETTING.get('pwd_min_complexity') }}">
+                                                                           data-bind="enable: local_db_enabled() && pwd_enforce_complexity(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                             </fieldset>
                                                         </div>
@@ -201,13 +210,18 @@
                                                                 to be enabled.
                                                             </dd>
                                                             <h4>Password Requirements</h4>
-                                                            <dd>This section allows you to customize your local DB password
-                                                            requirements
-                                                            and ensure that when users change their password or signup
-                                                            they are
-                                                            picking strong passwords.</dd>
-                                                            <dd>Setting any entry field to a blank value will revert it back
-                                                            to default.</dd>
+                                                            <dd>This section allows you to customize your local DB
+                                                                password
+                                                                requirements
+                                                                and ensure that when users change their password or
+                                                                signup
+                                                                they are
+                                                                picking strong passwords.
+                                                            </dd>
+                                                            <dd>Setting any entry field to a blank value will revert it
+                                                                back
+                                                                to default.
+                                                            </dd>
                                                             <dt>Enforce Character Requirements</dt>
                                                             <dd>This option will enforce the character type requirements
                                                                 for
@@ -247,7 +261,7 @@
                                                                         log factor
                                                                         is 11 as it is considered secure. More
                                                                         information about
-                                                                        the this can be found at
+                                                                        this can be found at
                                                                         <a href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>
                                                                     </li>
                                                                 </ul>
@@ -264,7 +278,7 @@
                                     </div>
                                     <!-- /.tab-pane -->
 
-                                    <div class="tab-pane" id="tabs-ldap">
+                                    <div data-bind="class: 'tab-pane' + (tab_active() == 'ldap' ? ' active' : '')">
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-lg-4">
                                                 {% if error %}
@@ -281,7 +295,7 @@
                                                     <input type="hidden" value="ldap" name="config_tab"/>
                                                     <div class="card">
                                                         <div class="card-header">
-                                                            <h3 class="card-title">LDAP Settings</h3>
+                                                            <h3 class="card-title">LDAP Authentication Settings</h3>
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
@@ -290,7 +304,7 @@
                                                                     <input type="checkbox" id="ldap_enabled"
                                                                            name="ldap_enabled"
                                                                            class="checkbox"
-                                                                           {% if SETTING.get('ldap_enabled') %}checked{% endif %}>
+                                                                           data-bind="checked: ldap_enabled">
                                                                     <label for="ldap_enabled">Enable LDAP
                                                                         Authentication</label>
                                                                 </div>
@@ -299,18 +313,17 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="ldap_type"
-                                                                                   id="ldap"
-                                                                                   onclick="javascript:ldapSelection();"
+                                                                                   id="ldap_type_openldap"
                                                                                    value="ldap"
-                                                                                   {% if SETTING.get('ldap_type')=='ldap' %}checked{% endif %}>
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_type">
                                                                             OpenLDAP
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
-                                                                            <input type="radio" name="ldap_type" id="ad"
-                                                                                   onclick="javascript:ldapSelection();"
+                                                                            <input type="radio" name="ldap_type"
+                                                                                   id="ldap_type_ad"
                                                                                    value="ad"
-                                                                                   {% if SETTING.get('ldap_type')=='ad' %}checked{% endif %}>
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_type">
                                                                             Active Directory
                                                                         </label>
                                                                     </div>
@@ -325,7 +338,7 @@
                                                                            id="ldap_uri"
                                                                            placeholder="e.g. ldaps://your-ldap-server:636"
                                                                            data-error="Please input LDAP URI"
-                                                                           value="{{ SETTING.get('ldap_uri') }}">
+                                                                           data-bind="enable: ldap_enabled, value: ldap_uri, valueUpdate: 'afterkeydown'">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="ldap_base_dn">LDAP Base DN</label>
@@ -334,11 +347,11 @@
                                                                            id="ldap_base_dn"
                                                                            placeholder="e.g. dc=mydomain,dc=com"
                                                                            data-error="Please input LDAP Base DN"
-                                                                           value="{{ SETTING.get('ldap_base_dn') }}">
+                                                                           data-bind="enable: ldap_enabled, value: ldap_base_dn, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div id="ldap_openldap_fields">
-                                                                    <div class="form-group">
+                                                                    <div class="form-group" data-bind="visible: ldap_type() == 'ldap'">
                                                                         <label for="ldap_admin_username">LDAP admin
                                                                             username</label>
                                                                         <input type="text" class="form-control"
@@ -346,10 +359,10 @@
                                                                                id="ldap_admin_username"
                                                                                placeholder="e.g. cn=admin,dc=mydomain,dc=com"
                                                                                data-error="Please input LDAP admin username"
-                                                                               value="{{ SETTING.get('ldap_admin_username') }}">
+                                                                               data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_admin_username, valueUpdate: 'afterkeydown'">
                                                                         <span class="help-block with-errors"></span>
                                                                     </div>
-                                                                    <div class="form-group">
+                                                                    <div class="form-group" data-bind="visible: ldap_type() == 'ldap'">
                                                                         <label for="ldap_admin_password">LDAP admin
                                                                             password</label>
                                                                         <input type="password" class="form-control"
@@ -357,19 +370,19 @@
                                                                                id="ldap_admin_password"
                                                                                placeholder="LDAP Admin password"
                                                                                data-error="Please input LDAP admin password"
-                                                                               value="{{ SETTING.get('ldap_admin_password') }}">
+                                                                               data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_admin_password, valueUpdate: 'afterkeydown'">
                                                                         <span class="help-block with-errors"></span>
                                                                     </div>
                                                                 </div>
                                                                 <div id="ldap_ad_fields">
-                                                                    <div class="form-group">
+                                                                    <div class="form-group" data-bind="visible: ldap_type() == 'ad'">
                                                                         <label for="ldap_domain">Active Directory
                                                                             domain</label>
                                                                         <input type="text" class="form-control"
                                                                                name="ldap_domain" id="ldap_domain"
                                                                                placeholder="Active Directory domain"
                                                                                data-error="Please input Actve Directory domain value"
-                                                                               value="{{ SETTING.get('ldap_domain') }}">
+                                                                               data-bind="enable: ldap_enabled() && ldap_type() == 'ad', value: ldap_domain, valueUpdate: 'afterkeydown'">
                                                                         <span class="help-block with-errors"></span>
                                                                     </div>
                                                                 </div>
@@ -383,7 +396,7 @@
                                                                            id="ldap_filter_basic"
                                                                            placeholder="e.g. (objectClass=inetorgperson)"
                                                                            data-error="Please input LDAP filter"
-                                                                           value="{{ SETTING.get('ldap_filter_basic') }}">
+                                                                           data-bind="enable: ldap_enabled, value: ldap_filter_basic, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -394,7 +407,7 @@
                                                                            id="ldap_filter_username"
                                                                            placeholder="e.g. uid"
                                                                            data-error="Please input field for username filtering"
-                                                                           value="{{ SETTING.get('ldap_filter_username') }}">
+                                                                           data-bind="enable: ldap_enabled, value: ldap_filter_username, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div id="ldap_openldap_group_filters">
@@ -406,7 +419,7 @@
                                                                                id="ldap_filter_group"
                                                                                placeholder="e.g. (objectclass=groupOfNames)"
                                                                                data-error="Please input LDAP filter"
-                                                                               value="{{ SETTING.get('ldap_filter_group') }}">
+                                                                               data-bind="enable: ldap_enabled, value: ldap_filter_group, valueUpdate: 'afterkeydown'">
                                                                         <span class="help-block with-errors"></span>
                                                                     </div>
                                                                     <div class="form-group">
@@ -417,7 +430,7 @@
                                                                                id="ldap_filter_groupname"
                                                                                placeholder="e.g. member"
                                                                                data-error="Please input field for group name filtering"
-                                                                               value="{{ SETTING.get('ldap_filter_groupname') }}">
+                                                                               data-bind="enable: ldap_enabled, value: ldap_filter_groupname, valueUpdate: 'afterkeydown'">
                                                                         <span class="help-block with-errors"></span>
                                                                     </div>
                                                                 </div>
@@ -429,15 +442,15 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="ldap_sg_enabled"
-                                                                                   id="ldap_sg_off" value="OFF"
-                                                                                   {% if not SETTING.get('ldap_sg_enabled') %}checked{% endif %}>
+                                                                                   id="ldap_sg_off" value="0"
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="ldap_sg_enabled"
-                                                                                   id="ldap_sg_on" value="ON"
-                                                                                   {% if SETTING.get('ldap_sg_enabled') %}checked{% endif %}>
+                                                                                   id="ldap_sg_on" value="1"
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -448,7 +461,7 @@
                                                                            name="ldap_admin_group" id="ldap_admin_group"
                                                                            placeholder="e.g. cn=sysops,dc=mydomain,dc=com"
                                                                            data-error="Please input LDAP DN for Admin group"
-                                                                           value="{{ SETTING.get('ldap_admin_group') }}">
+                                                                           data-bind="enable: ldap_enabled() && ldap_sg_enabled(), value: ldap_admin_group, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -459,7 +472,7 @@
                                                                            id="ldap_operator_group"
                                                                            placeholder="e.g. cn=operators,dc=mydomain,dc=com"
                                                                            data-error="Please input LDAP DN for Operator group"
-                                                                           value="{{ SETTING.get('ldap_operator_group') }}">
+                                                                           data-bind="enable: ldap_enabled() && ldap_sg_enabled(), value: ldap_operator_group, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -468,7 +481,7 @@
                                                                            name="ldap_user_group" id="ldap_user_group"
                                                                            placeholder="e.g. cn=users,dc=mydomain,dc=com"
                                                                            data-error="Please input LDAP DN for User group"
-                                                                           value="{{ SETTING.get('ldap_user_group') }}">
+                                                                           data-bind="enable: ldap_enabled() && ldap_sg_enabled(), value: ldap_user_group, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -479,17 +492,17 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="autoprovisioning"
-                                                                                   id="autoprovisioning_off" value="OFF"
-                                                                                   {% if not SETTING.get('autoprovisioning') %}checked{% endif %}>
+                                                                                   id="autoprovisioning_off" value="0"
+                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="autoprovisioning"
-                                                                                   id="autoprovisioning_on" value="ON"
-
-                                                                                   {% if SETTING.get('autoprovisioning') %}checked{% endif %}>
+                                                                                   id="autoprovisioning_on" value="1"
+                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: true">
                                                                             ON
+                                                                        </label>
                                                                     </div>
                                                                 </div>
                                                                 <div class="form-group">
@@ -501,7 +514,7 @@
                                                                            id="autoprovisioning_attribute"
                                                                            placeholder="e.g. eduPersonEntitlement"
                                                                            data-error="    Please input field responsible for autoprovisioning"
-                                                                           value="{{ SETTING.get('autoprovisioning_attribute') }}">
+                                                                           data-bind="enable: ldap_enabled() && autoprovisioning(), value: autoprovisioning_attribute, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
 
@@ -513,7 +526,7 @@
                                                                            id="urn_value"
                                                                            placeholder="e.g. urn:mace:<yourOrganization>"
                                                                            data-error="Please fill this field"
-                                                                           value="{{ SETTING.get('urn_value') }}">
+                                                                           data-bind="enable: ldap_enabled() && autoprovisioning(), value: urn_value, valueUpdate: 'afterkeydown'">
                                                                     {% if error %}
                                                                         <span class="help-block with-errors">Please input the correct prefix for your urn value</span>
                                                                     {% endif %}
@@ -524,16 +537,16 @@
                                                                         <label>
                                                                             <input type="radio" name="purge"
                                                                                    id="purge_off"
-                                                                                   value="OFF"
-                                                                                   {% if not SETTING.get('purge') %}checked{% endif %}>
+                                                                                   value="0"
+                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="purge"
                                                                                    id="purge_on"
-                                                                                   value="ON"
-                                                                                   {% if SETTING.get('purge') %}checked{% endif %}>
+                                                                                   value="1"
+                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: true">
                                                                             ON
                                                                     </div>
                                                                 </div>
@@ -722,7 +735,7 @@
                                     </div>
                                     <!-- /.tab-pane -->
 
-                                    <div class="tab-pane" id="tabs-google">
+                                    <div data-bind="class: 'tab-pane' + (tab_active() == 'google' ? ' active' : '')">
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
@@ -739,7 +752,7 @@
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="google_oauth_enabled"
                                                                            name="google_oauth_enabled" class="checkbox"
-                                                                           {% if SETTING.get('google_oauth_enabled') %}checked{% endif %}>
+                                                                           data-bind="checked: google_oauth_enabled">
                                                                     <label for="google_oauth_enabled">Enable Google
                                                                         OAuth</label>
                                                                 </div>
@@ -751,7 +764,7 @@
                                                                            id="google_oauth_client_id"
                                                                            placeholder="Google OAuth Client ID"
                                                                            data-error="Please input Client ID"
-                                                                           value="{{ SETTING.get('google_oauth_client_id') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_oauth_client_id, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -762,7 +775,7 @@
                                                                            id="google_oauth_client_secret"
                                                                            placeholder="Google OAuth Client Secret"
                                                                            data-error="Please input Client Secret"
-                                                                           value="{{ SETTING.get('google_oauth_client_secret') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_oauth_client_secret, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -772,16 +785,16 @@
                                                                            id="google_oauth_scope"
                                                                            placeholder="e.g. email profile"
                                                                            data-error="Please input scope"
-                                                                           value="{{ SETTING.get('google_oauth_scope') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_oauth_scope, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="google_base_url">API URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="google_base_url" id="google_base_url"
-                                                                           placeholder="e.g. https://www.googleapis.com/oauth2/v1/"
+                                                                           placeholder="e.g. https://www.googleapis.com/oauth2/v3/"
                                                                            data-error="Please input base URL"
-                                                                           value="{{ SETTING.get('google_base_url') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_base_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -790,18 +803,18 @@
                                                                     <input type="text" class="form-control"
                                                                            name="google_oauth_metadata_url"
                                                                            id="google_oauth_metadata_url"
-                                                                           placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
+                                                                           placeholder="e.g. https://accounts.google.com/.well-known/openid-configuration"
                                                                            data-error="Please input Metadata URL"
-                                                                           value="{{ SETTING.get('google_oauth_metadata_url') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="google_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="google_token_url" id="google_token_url"
-                                                                           placeholder="e.g. https://accounts.google.com/o/oauth2/token"
+                                                                           placeholder="e.g. https://oauth2.googleapis.com/token"
                                                                            data-error="Please input token URL"
-                                                                           value="{{ SETTING.get('google_token_url') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -810,9 +823,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="google_authorize_url"
                                                                            id="google_authorize_url"
-                                                                           placeholder="e.g. https://accounts.google.com/o/oauth2/auth"
+                                                                           placeholder="e.g. https://accounts.google.com/o/oauth2/v2/auth"
                                                                            data-error="Please input Authorize URL"
-                                                                           value="{{ SETTING.get('google_authorize_url') }}">
+                                                                           data-bind="enable: google_oauth_enabled, value: google_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -853,7 +866,7 @@
                                     </div>
                                     <!-- /.tab-pane -->
 
-                                    <div class="tab-pane" id="tabs-github">
+                                    <div data-bind="class: 'tab-pane' + (tab_active() == 'github' ? ' active' : '')">
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
@@ -869,7 +882,7 @@
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="github_oauth_enabled"
                                                                            name="github_oauth_enabled" class="checkbox"
-                                                                           {% if SETTING.get('github_oauth_enabled') %}checked{% endif %}>
+                                                                           data-bind="checked: github_oauth_enabled">
                                                                     <label for="github_oauth_enabled">Enable GitHub
                                                                         OAuth</label>
                                                                 </div>
@@ -879,7 +892,7 @@
                                                                            name="github_oauth_key" id="github_oauth_key"
                                                                            placeholder="Github OAuth Client ID"
                                                                            data-error="Please input Client ID"
-                                                                           value="{{ SETTING.get('github_oauth_key') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_key, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -890,7 +903,7 @@
                                                                            id="github_oauth_secret"
                                                                            placeholder="Github OAuth Client Secret"
                                                                            data-error="Please input Client Secret"
-                                                                           value="{{ SETTING.get('github_oauth_secret') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_secret, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -900,7 +913,7 @@
                                                                            id="github_oauth_scope"
                                                                            placeholder="e.g. email"
                                                                            data-error="Please input scope"
-                                                                           value="{{ SETTING.get('github_oauth_scope') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_scope, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -910,7 +923,7 @@
                                                                            id="github_oauth_api_url"
                                                                            placeholder="e.g. https://api.github.com/user"
                                                                            data-error="Please input API URL"
-                                                                           value="{{ SETTING.get('github_oauth_api_url') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_api_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -921,7 +934,7 @@
                                                                            id="github_oauth_metadata_url"
                                                                            placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
                                                                            data-error="Please input Metadata URL"
-                                                                           value="{{ SETTING.get('github_oauth_metadata_url') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -932,7 +945,7 @@
                                                                            id="github_oauth_token_url"
                                                                            placeholder="e.g. https://github.com/login/oauth/access_token"
                                                                            data-error="Please input Token URL"
-                                                                           value="{{ SETTING.get('github_oauth_token_url') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -943,7 +956,7 @@
                                                                            id="github_oauth_authorize_url"
                                                                            placeholder="e.g. https://github.com/login/oauth/authorize"
                                                                            data-error="Please input Authorize URL"
-                                                                           value="{{ SETTING.get('github_oauth_authorize_url') }}">
+                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -981,7 +994,7 @@
                                     </div>
                                     <!-- /.tab-pane -->
 
-                                    <div class="tab-pane" id="tabs-azure">
+                                    <div data-bind="class: 'tab-pane' + (tab_active() == 'azure' ? ' active' : '')">
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
@@ -989,7 +1002,7 @@
                                                     <input type="hidden" value="azure" name="config_tab"/>
                                                     <div class="card">
                                                         <div class="card-header">
-                                                            <h3 class="card-title">Microsoft OAuth Settings</h3>
+                                                            <h3 class="card-title">Azure OAuth Settings</h3>
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
@@ -997,7 +1010,7 @@
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="azure_oauth_enabled"
                                                                            name="azure_oauth_enabled" class="checkbox"
-                                                                           {% if SETTING.get('azure_oauth_enabled') %}checked{% endif %}>
+                                                                           data-bind="checked: azure_oauth_enabled">
                                                                     <label for="azure_oauth_enabled">Enable Microsoft
                                                                         Azure
                                                                         OAuth</label>
@@ -1008,7 +1021,7 @@
                                                                            name="azure_oauth_key" id="azure_oauth_key"
                                                                            placeholder="Azure OAuth Client ID"
                                                                            data-error="Please input Client Key"
-                                                                           value="{{ SETTING.get('azure_oauth_key') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_key, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1019,7 +1032,7 @@
                                                                            id="azure_oauth_secret"
                                                                            placeholder="Azure OAuth Client Secret"
                                                                            data-error="Please input Client Secret"
-                                                                           value="{{ SETTING.get('azure_oauth_secret') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_secret, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1029,7 +1042,7 @@
                                                                            id="azure_oauth_scope"
                                                                            placeholder="e.g. email"
                                                                            data-error="Please input scope - e.g. User.Read"
-                                                                           value="{{ SETTING.get('azure_oauth_scope') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_scope, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1039,7 +1052,7 @@
                                                                            id="azure_oauth_api_url"
                                                                            placeholder="e.g. https://graph.microsoft.com/v1.0/"
                                                                            data-error="Please input API URL"
-                                                                           value="{{ SETTING.get('azure_oauth_api_url') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_api_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1048,9 +1061,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_metadata_url"
                                                                            id="azure_oauth_metadata_url"
-                                                                           placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
+                                                                           placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/v2.0/.well-known/openid-configuration"
                                                                            data-error="Please input Metadata URL"
-                                                                           value="{{ SETTING.get('azure_oauth_metadata_url') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1058,9 +1071,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_token_url"
                                                                            id="azure_oauth_token_url"
-                                                                           placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/token"
+                                                                           placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/oauth2/v2.0/token"
                                                                            data-error="Please input Token URL"
-                                                                           value="{{ SETTING.get('azure_oauth_token_url') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1069,9 +1082,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_authorize_url"
                                                                            id="azure_oauth_authorize_url"
-                                                                           placeholder="e.g. https://login.microsoftonline.com/[tenancyID]/oauth2/v2.0/authorize"
+                                                                           placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/oauth2/v2.0/authorize"
                                                                            data-error="Please input Authorize URL"
-                                                                           value="{{ SETTING.get('azure_oauth_authorize_url') }}">
+                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1082,15 +1095,15 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="azure_sg_enabled"
-                                                                                   id="azure_sg_off" value="OFF"
-                                                                                   {% if not SETTING.get('azure_sg_enabled') %}checked{% endif %}>
+                                                                                   id="azure_sg_off" value="0"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="azure_sg_enabled"
-                                                                                   id="azure_sg_on" value="ON"
-                                                                                   {% if SETTING.get('azure_sg_enabled') %}checked{% endif %}>
+                                                                                   id="azure_sg_on" value="1"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -1102,7 +1115,7 @@
                                                                            id="azure_admin_group"
                                                                            placeholder="e.g. 00000000-0000-0000-0000-000000000000"
                                                                            data-error="Please input the ID for Admin group"
-                                                                           value="{{ SETTING.get('azure_admin_group') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_sg_enabled(), value: azure_admin_group, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1113,7 +1126,7 @@
                                                                            id="azure_operator_group"
                                                                            placeholder="e.g. 00000000-0000-0000-0000-000000000000"
                                                                            data-error="Please input the ID for Operator group"
-                                                                           value="{{ SETTING.get('azure_operator_group') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_sg_enabled(), value: azure_operator_group, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1122,7 +1135,7 @@
                                                                            name="azure_user_group" id="azure_user_group"
                                                                            placeholder="e.g. 00000000-0000-0000-0000-000000000000"
                                                                            data-error="Please input the ID for User group"
-                                                                           value="{{ SETTING.get('azure_user_group') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_sg_enabled(), value: azure_user_group, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1136,8 +1149,8 @@
                                                                             <input type="radio"
                                                                                    name="azure_group_accounts_enabled"
                                                                                    id="azure_group_accounts_off"
-                                                                                   value="OFF"
-                                                                                   {% if not SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}>
+                                                                                   value="0"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
@@ -1145,8 +1158,8 @@
                                                                             <input type="radio"
                                                                                    name="azure_group_accounts_enabled"
                                                                                    id="azure_group_accounts_on"
-                                                                                   value="ON"
-                                                                                   {% if SETTING.get('azure_group_accounts_enabled') %}checked{% endif %}>
+                                                                                   value="1"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -1160,7 +1173,7 @@
                                                                            id="azure_group_accounts_name"
                                                                            placeholder="e.g. displayName"
                                                                            data-error="Please input the Claim for Azure group name"
-                                                                           value="{{ SETTING.get('azure_group_accounts_name') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_name, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1172,7 +1185,7 @@
                                                                            id="azure_group_accounts_name_re"
                                                                            placeholder="e.g. (.*)"
                                                                            data-error="Please input the regex for Azure group name"
-                                                                           value="{{ SETTING.get('azure_group_accounts_name_re') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_name_re, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1184,7 +1197,7 @@
                                                                            id="azure_group_accounts_description"
                                                                            placeholder="e.g. description. If empty uses whole string"
                                                                            data-error="Please input the Claim for Azure group description"
-                                                                           value="{{ SETTING.get('azure_group_accounts_description') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_description, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1196,7 +1209,7 @@
                                                                            id="azure_group_accounts_description_re"
                                                                            placeholder="e.g. (.*). If empty uses whole string"
                                                                            data-error="Please input the regex for Azure group description"
-                                                                           value="{{ SETTING.get('azure_group_accounts_description_re') }}">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_description_re, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1289,7 +1302,7 @@
                                     </div>
                                     <!-- /.tab-pane -->
 
-                                    <div class="tab-pane" id="tabs-oidc">
+                                    <div data-bind="class: 'tab-pane' + (tab_active() == 'oidc' ? ' active' : '')">
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-lg-4">
                                                 <form role="form" method="post" data-toggle="validator">
@@ -1305,7 +1318,7 @@
                                                                 <div class="form-group">
                                                                     <input type="checkbox" id="oidc_oauth_enabled"
                                                                            name="oidc_oauth_enabled" class="checkbox"
-                                                                           {% if SETTING.get('oidc_oauth_enabled') %}checked{% endif %}>
+                                                                           data-bind="checked: oidc_oauth_enabled">
                                                                     <label for="oidc_oauth_enabled">Enable OpenID
                                                                         Connect
                                                                         OAuth</label>
@@ -1316,7 +1329,7 @@
                                                                            name="oidc_oauth_key" id="oidc_oauth_key"
                                                                            placeholder="OIDC OAuth Client ID"
                                                                            data-error="Please input Client ID"
-                                                                           value="{{ SETTING.get('oidc_oauth_key') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_key, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1326,7 +1339,7 @@
                                                                            id="oidc_oauth_secret"
                                                                            placeholder="OIDC OAuth Client Secret"
                                                                            data-error="Please input Client Secret"
-                                                                           value="{{ SETTING.get('oidc_oauth_secret') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_secret, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1335,7 +1348,7 @@
                                                                            name="oidc_oauth_scope" id="oidc_oauth_scope"
                                                                            placeholder="e.g. email"
                                                                            data-error="Please input scope"
-                                                                           value="{{ SETTING.get('oidc_oauth_scope') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_scope, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1345,7 +1358,7 @@
                                                                            id="oidc_oauth_api_url"
                                                                            placeholder="e.g. https://api.oidc.com/user"
                                                                            data-error="Please input API URL"
-                                                                           value="{{ SETTING.get('oidc_oauth_api_url') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_api_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1354,9 +1367,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_metadata_url"
                                                                            id="oidc_oauth_metadata_url"
-                                                                           placeholder="e.g. https://oidc.com/login/oauth/.well-known/openid-configuration"
+                                                                           placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/.well-known/openid-configuration"
                                                                            data-error="Please input Metadata URL"
-                                                                           value="{{ SETTING.get('oidc_oauth_metadata_url') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1364,9 +1377,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_token_url"
                                                                            id="oidc_oauth_token_url"
-                                                                           placeholder="e.g. https://oidc.com/login/oauth/access_token"
+                                                                           placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/access_token"
                                                                            data-error="Please input Token URL"
-                                                                           value="{{ SETTING.get('oidc_oauth_token_url') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1375,9 +1388,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_authorize_url"
                                                                            id="oidc_oauth_authorize_url"
-                                                                           placeholder="e.g. https://oidc.com/login/oauth/authorize"
+                                                                           placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/authorize"
                                                                            data-error="Please input Authorize URL"
-                                                                           value="{{ SETTING.get('oidc_oauth_authorize_url') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1386,9 +1399,9 @@
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_logout_url"
                                                                            id="oidc_oauth_logout_url"
-                                                                           placeholder="e.g. https://oidc.com/login/oauth/logout"
+                                                                           placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/logout"
                                                                            data-error="Please input Logout URL"
-                                                                           value="{{ SETTING.get('oidc_oauth_logout_url') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_logout_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1401,7 +1414,16 @@
                                                                            id="oidc_oauth_username"
                                                                            placeholder="e.g. preferred_username"
                                                                            data-error="Please input Username claim"
-                                                                           value="{{ SETTING.get('oidc_oauth_username') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_username, valueUpdate: 'afterkeydown'">
+                                                                    <span class="help-block with-errors"></span>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="oidc_oauth_email">Email</label>
+                                                                    <input type="text" class="form-control"
+                                                                           name="oidc_oauth_email" id="oidc_oauth_email"
+                                                                           placeholder="e.g. email"
+                                                                           data-error="Please input Email claim"
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_email, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1411,7 +1433,7 @@
                                                                            id="oidc_oauth_firstname"
                                                                            placeholder="e.g. given_name"
                                                                            data-error="Please input First Name claim"
-                                                                           value="{{ SETTING.get('oidc_oauth_firstname') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_firstname, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1421,16 +1443,7 @@
                                                                            id="oidc_oauth_last_name"
                                                                            placeholder="e.g. family_name"
                                                                            data-error="Please input Last Name claim"
-                                                                           value="{{ SETTING.get('oidc_oauth_last_name') }}">
-                                                                    <span class="help-block with-errors"></span>
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="oidc_oauth_email">Email</label>
-                                                                    <input type="text" class="form-control"
-                                                                           name="oidc_oauth_email" id="oidc_oauth_email"
-                                                                           placeholder="e.g. email"
-                                                                           data-error="Please input Email claim"
-                                                                           value="{{ SETTING.get('oidc_oauth_email') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_last_name, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1444,7 +1457,7 @@
                                                                            id="oidc_oauth_account_name_property"
                                                                            placeholder="e.g. account_name"
                                                                            data-error="Please input property containing account_name"
-                                                                           value="{{ SETTING.get('oidc_oauth_account_name_property') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_account_name_property, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
@@ -1456,7 +1469,7 @@
                                                                            id="oidc_oauth_account_description_property"
                                                                            placeholder="e.g. account_description"
                                                                            data-error="Please input property containing account_description"
-                                                                           value="{{ SETTING.get('oidc_oauth_account_description_property') }}">
+                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_account_description_property, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1516,8 +1529,18 @@
     {%- endassets %}
 
     <script>
+    let CSRF_TOKEN = '{{ csrf_token() }}';
+    </script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='custom/js/app-authentication-settings-editor.js') }}"></script>
+
+    <script>
+        /*
+         * Old Legacy Code
+         */
+
         function ldapSelection() {
-            if (document.getElementById('ldap').checked) {
+            if (document.getElementById('ldap_type_openldap').checked) {
                 document.getElementById('ldap_openldap_fields').style.display = 'block';
                 document.getElementById('ldap_openldap_group_filters').style.display = 'block';
                 document.getElementById('ldap_ad_fields').style.display = 'none';
@@ -1528,45 +1551,9 @@
             }
         }
 
-        window.onload = function () {
-            ldapSelection();
-        }
-
-        $(function () {
-            $('#tabs').tabs({
-                // add url anchor tags
-                activate: function (event, ui) {
-                    window.location.hash = ui.newPanel.attr('id');
-                }
-            });
-            // re-set active tab (ui)
-            var activeTabIdx = $('#tabs').tabs('option', 'active');
-            $('#tabs li:eq(' + activeTabIdx + ')').tab('show')
-        });
-
-        // START: General tab js
-        $('#local_db_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        })
-
-        $('#signup_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        })
-
-        $('#autoprovisioning').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        })
-        // END: General tab js
-
         // START: LDAP tab js
         // update validation requirement when checkbox is togged
-        $('#ldap_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        }).on('ifChanged', function (e) {
+        $('#ldap_enabled').on('ifChanged', function (e) {
             var is_enabled = e.currentTarget.checked;
             if (is_enabled) {
                 $('#ldap_uri').prop('required', true);
@@ -1697,7 +1684,7 @@
         });
 
         $("input[name='ldap_type']").change(function () {
-            if ($('#ldap').is(":checked") && $('#ldap_enabled').is(":checked")) {
+            if ($('#ldap_type_openldap').is(":checked") && $('#ldap_enabled').is(":checked")) {
                 $('#ldap_admin_group').prop('required', true);
                 $('#ldap_operator_group').prop('required', true);
                 $('#ldap_user_group').prop('required', true);
@@ -1714,7 +1701,7 @@
         {% if SETTING.get('ldap_enabled') %}
             $('#ldap_uri').prop('required', true);
             $('#ldap_base_dn').prop('required', true);
-            if ($('#ldap').is(":checked")) {
+            if ($('#ldap_type_openldap').is(":checked")) {
                 $('#ldap_admin_username').prop('required', true);
                 $('#ldap_admin_password').prop('required', true);
                 $('#ldap_domain').prop('required', false);
@@ -1739,10 +1726,7 @@
 
         // START: Google tab js
         // update validation requirement when checkbox is togged
-        $('#google_oauth_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        }).on('ifChanged', function (e) {
+        $('#google_oauth_enabled').on('ifChanged', function (e) {
             var is_enabled = e.currentTarget.checked;
             if (is_enabled) {
                 $('#google_oauth_client_id').prop('required', true);
@@ -1774,10 +1758,7 @@
 
         // START: Github tab js
         // update validation requirement when checkbox is togged
-        $('#github_oauth_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        }).on('ifChanged', function (e) {
+        $('#github_oauth_enabled').on('ifChanged', function (e) {
             var is_enabled = e.currentTarget.checked;
             if (is_enabled) {
                 $('#github_oauth_key').prop('required', true);
@@ -1808,10 +1789,7 @@
 
         // START: Azure tab js
         // update validation requirement when checkbox is togged
-        $('#azure_oauth_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        }).on('ifChanged', function (e) {
+        $('#azure_oauth_enabled').on('ifChanged', function (e) {
             var is_enabled = e.currentTarget.checked;
             if (is_enabled) {
                 $('#azure_oauth_key').prop('required', true);
@@ -1841,10 +1819,7 @@
         // END: Azure tab js
 
         // START: OIDC tab js
-        $('#oidc_oauth_enabled').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        }).on('ifChanged', function (e) {
+        $('#oidc_oauth_enabled').on('ifChanged', function (e) {
             var is_enabled = e.currentTarget.checked;
             if (is_enabled) {
                 $('#oidc_oauth_key').prop('required', true);
