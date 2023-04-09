@@ -798,6 +798,13 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <input type="checkbox" id="google_oauth_auto_configure"
+                                                                           name="google_oauth_auto_configure" class="checkbox"
+                                                                           data-bind="checked: google_oauth_auto_configure">
+                                                                    <label for="google_oauth_auto_configure">Enable Google
+                                                                        OAuth Auto-Configuration</label>
+                                                                </div>
+                                                                <div class="form-group" data-bind="visible: google_oauth_auto_configure">
                                                                     <label for="google_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -805,19 +812,19 @@
                                                                            id="google_oauth_metadata_url"
                                                                            placeholder="e.g. https://accounts.google.com/.well-known/openid-configuration"
                                                                            data-error="Please input Metadata URL"
-                                                                           data-bind="enable: google_oauth_enabled, value: google_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: google_oauth_enabled() && google_oauth_auto_configure(), value: google_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: google_oauth_auto_configure">
                                                                     <label for="google_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="google_token_url" id="google_token_url"
                                                                            placeholder="e.g. https://oauth2.googleapis.com/token"
                                                                            data-error="Please input token URL"
-                                                                           data-bind="enable: google_oauth_enabled, value: google_token_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: google_oauth_enabled() && !google_oauth_auto_configure(), value: google_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: google_oauth_auto_configure">
                                                                     <label for="google_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -825,7 +832,7 @@
                                                                            id="google_authorize_url"
                                                                            placeholder="e.g. https://accounts.google.com/o/oauth2/v2/auth"
                                                                            data-error="Please input Authorize URL"
-                                                                           data-bind="enable: google_oauth_enabled, value: google_authorize_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: google_oauth_enabled() && !google_oauth_auto_configure(), value: google_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -927,6 +934,13 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <input type="checkbox" id="github_oauth_auto_configure"
+                                                                           name="github_oauth_auto_configure" class="checkbox"
+                                                                           data-bind="checked: github_oauth_auto_configure">
+                                                                    <label for="github_oauth_auto_configure">Enable GitHub
+                                                                        OAuth Auto-Configuration</label>
+                                                                </div>
+                                                                <div class="form-group" data-bind="visible: github_oauth_auto_configure">
                                                                     <label for="github_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -934,10 +948,10 @@
                                                                            id="github_oauth_metadata_url"
                                                                            placeholder="e.g. https://{yourDomain}/.well-known/oauth-metadata.json"
                                                                            data-error="Please input Metadata URL"
-                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: github_oauth_enabled() && github_oauth_auto_configure(), value: github_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: github_oauth_auto_configure">
                                                                     <label for="github_oauth_token_url">Token
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -945,10 +959,10 @@
                                                                            id="github_oauth_token_url"
                                                                            placeholder="e.g. https://github.com/login/oauth/access_token"
                                                                            data-error="Please input Token URL"
-                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_token_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: github_oauth_enabled() && !github_oauth_auto_configure(), value: github_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: github_oauth_auto_configure">
                                                                     <label for="github_oauth_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -956,7 +970,7 @@
                                                                            id="github_oauth_authorize_url"
                                                                            placeholder="e.g. https://github.com/login/oauth/authorize"
                                                                            data-error="Please input Authorize URL"
-                                                                           data-bind="enable: github_oauth_enabled, value: github_oauth_authorize_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: github_oauth_enabled() && !github_oauth_auto_configure(), value: github_oauth_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1056,6 +1070,13 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <input type="checkbox" id="azure_oauth_auto_configure"
+                                                                           name="azure_oauth_auto_configure" class="checkbox"
+                                                                           data-bind="checked: azure_oauth_auto_configure">
+                                                                    <label for="azure_oauth_auto_configure">Enable Azure
+                                                                        OAuth Auto-Configuration</label>
+                                                                </div>
+                                                                <div class="form-group" data-bind="visible: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1063,20 +1084,20 @@
                                                                            id="azure_oauth_metadata_url"
                                                                            placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/v2.0/.well-known/openid-configuration"
                                                                            data-error="Please input Metadata URL"
-                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: azure_oauth_enabled() && azure_oauth_auto_configure(), value: azure_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_token_url"
                                                                            id="azure_oauth_token_url"
                                                                            placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/oauth2/v2.0/token"
                                                                            data-error="Please input Token URL"
-                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_token_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: azure_oauth_enabled() && !azure_oauth_auto_configure(), value: azure_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1084,7 +1105,7 @@
                                                                            id="azure_oauth_authorize_url"
                                                                            placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/oauth2/v2.0/authorize"
                                                                            data-error="Please input Authorize URL"
-                                                                           data-bind="enable: azure_oauth_enabled, value: azure_oauth_authorize_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: azure_oauth_enabled() && !azure_oauth_auto_configure(), value: azure_oauth_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                             </fieldset>
@@ -1362,6 +1383,13 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <input type="checkbox" id="oidc_oauth_auto_configure"
+                                                                           name="oidc_oauth_auto_configure" class="checkbox"
+                                                                           data-bind="checked: oidc_oauth_auto_configure">
+                                                                    <label for="oidc_oauth_auto_configure">Enable OIDC
+                                                                        OAuth Auto-Configuration</label>
+                                                                </div>
+                                                                <div class="form-group" data-bind="visible: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1369,20 +1397,20 @@
                                                                            id="oidc_oauth_metadata_url"
                                                                            placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/.well-known/openid-configuration"
                                                                            data-error="Please input Metadata URL"
-                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: oidc_oauth_enabled() && oidc_oauth_auto_configure(), value: oidc_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_token_url"
                                                                            id="oidc_oauth_token_url"
                                                                            placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/access_token"
                                                                            data-error="Please input Token URL"
-                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_token_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: oidc_oauth_enabled() && !oidc_oauth_auto_configure(), value: oidc_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-group" data-bind="hidden: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1390,7 +1418,7 @@
                                                                            id="oidc_oauth_authorize_url"
                                                                            placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/authorize"
                                                                            data-error="Please input Authorize URL"
-                                                                           data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_authorize_url, valueUpdate: 'afterkeydown'">
+                                                                           data-bind="enable: oidc_oauth_enabled() && !oidc_oauth_auto_configure(), value: oidc_oauth_authorize_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
