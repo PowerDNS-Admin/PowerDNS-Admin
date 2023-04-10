@@ -1836,9 +1836,12 @@ def setting_authentication_api():
     result = {'status': 1, 'messages': [], 'data': {}}
 
     if request.form.get('commit') == '1':
-        result['messages'].append('Saved successfully.')
-    else:
-        result['messages'].append('Loaded successfully.')
+        model = Setting()
+        data = json.loads(request.form.get('data'))
+
+        for key, value in data.items():
+            if key in model.groups['authentication']:
+                model.set(key, value)
 
     result['data'] = Setting().get_group('authentication')
 

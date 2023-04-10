@@ -431,6 +431,10 @@ class Setting(db.Model):
 
                 if value in ['True', 'False']:
                     value = strtobool(value)
+                elif value.isdecimal() and '.' in value:
+                    value = float(value)
+                elif value.isnumeric():
+                    value = int(value)
 
                 result[record.name] = value
 
