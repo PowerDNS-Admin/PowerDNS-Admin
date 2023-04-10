@@ -226,6 +226,103 @@ class Setting(db.Model):
         },
     }
 
+    groups = {
+        'authentication': [
+            # Local Authentication Settings
+            'local_db_enabled',
+            'signup_enabled',
+            'pwd_enforce_characters',
+            'pwd_min_len',
+            'pwd_min_lowercase',
+            'pwd_min_uppercase',
+            'pwd_min_digits',
+            'pwd_min_special',
+            'pwd_enforce_complexity',
+            'pwd_min_complexity',
+
+            # LDAP Authentication Settings
+            'ldap_enabled',
+            'ldap_type',
+            'ldap_uri',
+            'ldap_base_dn',
+            'ldap_admin_username',
+            'ldap_admin_password',
+            'ldap_domain',
+            'ldap_filter_basic',
+            'ldap_filter_username',
+            'ldap_filter_group',
+            'ldap_filter_groupname',
+            'ldap_sg_enabled',
+            'ldap_admin_group',
+            'ldap_operator_group',
+            'ldap_user_group',
+            'autoprovisioning',
+            'autoprovisioning_attribute',
+            'urn_value',
+            'purge',
+
+            # Google OAuth2 Settings
+            'google_oauth_enabled',
+            'google_oauth_client_id',
+            'google_oauth_client_secret',
+            'google_oauth_scope',
+            'google_base_url',
+            'google_oauth_auto_configure',
+            'google_oauth_metadata_url',
+            'google_token_url',
+            'google_authorize_url',
+
+            # GitHub OAuth2 Settings
+            'github_oauth_enabled',
+            'github_oauth_key',
+            'github_oauth_secret',
+            'github_oauth_scope',
+            'github_oauth_api_url',
+            'github_oauth_auto_configure',
+            'github_oauth_metadata_url',
+            'github_oauth_token_url',
+            'github_oauth_authorize_url',
+
+            # Azure OAuth2 Settings
+            'azure_oauth_enabled',
+            'azure_oauth_key',
+            'azure_oauth_secret',
+            'azure_oauth_scope',
+            'azure_oauth_api_url',
+            'azure_oauth_auto_configure',
+            'azure_oauth_metadata_url',
+            'azure_oauth_token_url',
+            'azure_oauth_authorize_url',
+            'azure_sg_enabled',
+            'azure_admin_group',
+            'azure_operator_group',
+            'azure_user_group',
+            'azure_group_accounts_enabled',
+            'azure_group_accounts_name',
+            'azure_group_accounts_name_re',
+            'azure_group_accounts_description',
+            'azure_group_accounts_description_re',
+
+            # OIDC OAuth2 Settings
+            'oidc_oauth_enabled',
+            'oidc_oauth_key',
+            'oidc_oauth_secret',
+            'oidc_oauth_scope',
+            'oidc_oauth_api_url',
+            'oidc_oauth_auto_configure',
+            'oidc_oauth_metadata_url',
+            'oidc_oauth_token_url',
+            'oidc_oauth_authorize_url',
+            'oidc_oauth_logout_url',
+            'oidc_oauth_username',
+            'oidc_oauth_email',
+            'oidc_oauth_firstname',
+            'oidc_oauth_last_name',
+            'oidc_oauth_account_name_property',
+            'oidc_oauth_account_description_property',
+        ]
+    }
+
     def __init__(self, id=None, name=None, value=None):
         self.id = id
         self.name = name
@@ -320,6 +417,24 @@ class Setting(db.Model):
                 return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
+
+    def get_group(self, group):
+        if isinstance(group, str):
+            group = self.groups[group]
+
+        result = {}
+        records = self.query.all()
+
+        for record in records:
+            if record.name in group:
+                value = record.value
+
+                if value in ['True', 'False']:
+                    value = strtobool(value)
+
+                result[record.name] = value
+
+        return result
 
     def get_records_allow_to_edit(self):
         return list(

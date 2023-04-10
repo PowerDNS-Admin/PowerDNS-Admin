@@ -1829,6 +1829,13 @@ def setting_authentication():
                                result=result)
 
 
+@admin_bp.route('/setting/authentication/api', methods=['GET', 'POST'])
+@login_required
+@admin_role_required
+def setting_authentication_api():
+    return Setting().get_group('authentication')
+
+
 @admin_bp.route('/templates', methods=['GET', 'POST'])
 @admin_bp.route('/templates/list', methods=['GET', 'POST'])
 @login_required

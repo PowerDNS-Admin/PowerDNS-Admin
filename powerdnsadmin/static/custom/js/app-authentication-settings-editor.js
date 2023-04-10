@@ -1,7 +1,11 @@
 let model;
 
-let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
+let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, selector) {
     let self = this;
+    self.api_url = api_url;
+    self.csrf_token = csrf_token;
+    self.selector = selector;
+    self.loading = false;
 
     let defaults = {
         tab_active: '',
@@ -31,14 +35,14 @@ let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
         ldap_filter_username: '',
         ldap_filter_group: '',
         ldap_filter_groupname: '',
-        ldap_sg_enabled: false,
+        ldap_sg_enabled: 0,
         ldap_admin_group: '',
         ldap_operator_group: '',
         ldap_user_group: '',
-        autoprovisioning: false,
+        autoprovisioning: 0,
         autoprovisioning_attribute: '',
         urn_value: '',
-        purge: false,
+        purge: 0,
 
         // Google OAuth2 Settings
         google_oauth_enabled: false,
@@ -104,6 +108,7 @@ let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
     self.data = {};
 
     self.setupObservables = function () {
+        self.loading = ko.observable(self.loading);
         self.tab_active = ko.observable(self.data.tab_active);
         self.tab_default = ko.observable(self.data.tab_default);
 
@@ -201,6 +206,25 @@ let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
         self.oidc_oauth_account_description_property = ko.observable(self.data.oidc_oauth_account_description_property);
     }
 
+    self.initTabs = function () {
+        if (self.hasHash()) {
+            self.activateTab(self.getHash());
+        } else {
+            self.activateDefaultTab();
+        }
+    }
+
+    self.loadData = function () {
+        self.loading = true;
+        $.ajax({
+            url: self.api_url,
+            type: 'POST',
+            data: {_csrf_token: csrf_token},
+            dataType: 'json',
+            success: self.onDataLoaded
+        });
+    }
+
     self.updateWithDefaults = function (instance) {
         self.data = $.extend(defaults, instance)
     }
@@ -213,14 +237,6 @@ let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
 
     self.activateDefaultTab = function () {
         self.activateTab(self.tab_default());
-    }
-
-    self.initTabs = function() {
-        if (self.hasHash()) {
-            self.activateTab(self.getHash());
-        } else {
-            self.activateDefaultTab();
-        }
     }
 
     self.getHash = function () {
@@ -243,6 +259,26 @@ let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
         }
     }
 
+    self.onDataLoaded = function (data) {
+        self.updateWithDefaults(data);
+        self.setupObservables();
+        self.loading = false;
+
+        let el = null;
+        if (typeof selector !== 'undefined') {
+            el = $(selector)
+        }
+
+        if (el !== null && el.length > 0) {
+            ko.applyBindings(self, el[0]);
+        } else {
+            ko.applyBindings(self);
+        }
+
+        self.initTabs();
+        self.setupListeners();
+    }
+
     self.onTabClick = function (model, event) {
         self.activateTab($(event.target).data('tab'));
         return false;
@@ -257,17 +293,11 @@ let AuthenticationSettingsModel = function (user_data, csrf_token, selector) {
         }
     }
 
-    self.updateWithDefaults(user_data);
-    self.setupObservables();
-
-    ko.applyBindings(self);
-
-    self.initTabs();
-    self.setupListeners();
+    self.loadData();
 }
 
 $(function () {
     // TODO: Load the data from the server and pass it to the model instantiation
     loaded_data = {};
-    model = new AuthenticationSettingsModel(loaded_data, CSRF_TOKEN, '#settings-editor');
+    model = new AuthenticationSettingsModel(loaded_data, API_URL, CSRF_TOKEN, '#settings-editor');
 })

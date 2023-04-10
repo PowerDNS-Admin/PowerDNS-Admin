@@ -12,6 +12,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+                        <li class="breadcrumb-item">Settings</li>
                         <li class="breadcrumb-item active">Authentication Settings</li>
                     </ol>
                 </div>
@@ -31,6 +32,12 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
+                            <div class="overlay-wrapper" data-bind="visible: loading">
+                                <div class="overlay">
+                                    <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+                                    <div class="text-bold pt-2 pl-2">Loading settings...</div>
+                                </div>
+                            </div>
                             {% if result %}
                                 <div
                                     class="alert {% if result['status'] %}alert-success{% else %}alert-danger{% endif %} alert-dismissible">
@@ -351,7 +358,8 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div id="ldap_openldap_fields">
-                                                                    <div class="form-group" data-bind="visible: ldap_type() == 'ldap'">
+                                                                    <div class="form-group"
+                                                                         data-bind="visible: ldap_type() == 'ldap'">
                                                                         <label for="ldap_admin_username">LDAP admin
                                                                             username</label>
                                                                         <input type="text" class="form-control"
@@ -362,7 +370,8 @@
                                                                                data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_admin_username, valueUpdate: 'afterkeydown'">
                                                                         <span class="help-block with-errors"></span>
                                                                     </div>
-                                                                    <div class="form-group" data-bind="visible: ldap_type() == 'ldap'">
+                                                                    <div class="form-group"
+                                                                         data-bind="visible: ldap_type() == 'ldap'">
                                                                         <label for="ldap_admin_password">LDAP admin
                                                                             password</label>
                                                                         <input type="password" class="form-control"
@@ -375,7 +384,8 @@
                                                                     </div>
                                                                 </div>
                                                                 <div id="ldap_ad_fields">
-                                                                    <div class="form-group" data-bind="visible: ldap_type() == 'ad'">
+                                                                    <div class="form-group"
+                                                                         data-bind="visible: ldap_type() == 'ad'">
                                                                         <label for="ldap_domain">Active Directory
                                                                             domain</label>
                                                                         <input type="text" class="form-control"
@@ -443,14 +453,14 @@
                                                                         <label>
                                                                             <input type="radio" name="ldap_sg_enabled"
                                                                                    id="ldap_sg_off" value="0"
-                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: false">
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: 0">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="ldap_sg_enabled"
                                                                                    id="ldap_sg_on" value="1"
-                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: true">
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: 1">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -493,14 +503,14 @@
                                                                         <label>
                                                                             <input type="radio" name="autoprovisioning"
                                                                                    id="autoprovisioning_off" value="0"
-                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: false">
+                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: 0">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="autoprovisioning"
                                                                                    id="autoprovisioning_on" value="1"
-                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: true">
+                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: 1">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -538,7 +548,7 @@
                                                                             <input type="radio" name="purge"
                                                                                    id="purge_off"
                                                                                    value="0"
-                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: false">
+                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: 0">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
@@ -546,7 +556,7 @@
                                                                             <input type="radio" name="purge"
                                                                                    id="purge_on"
                                                                                    value="1"
-                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: true">
+                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: 1">
                                                                             ON
                                                                     </div>
                                                                 </div>
@@ -798,13 +808,17 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <input type="checkbox" id="google_oauth_auto_configure"
-                                                                           name="google_oauth_auto_configure" class="checkbox"
+                                                                    <input type="checkbox"
+                                                                           id="google_oauth_auto_configure"
+                                                                           name="google_oauth_auto_configure"
+                                                                           class="checkbox"
                                                                            data-bind="checked: google_oauth_auto_configure">
-                                                                    <label for="google_oauth_auto_configure">Enable Google
+                                                                    <label for="google_oauth_auto_configure">Enable
+                                                                        Google
                                                                         OAuth Auto-Configuration</label>
                                                                 </div>
-                                                                <div class="form-group" data-bind="visible: google_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="visible: google_oauth_auto_configure">
                                                                     <label for="google_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -815,7 +829,8 @@
                                                                            data-bind="enable: google_oauth_enabled() && google_oauth_auto_configure(), value: google_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: google_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: google_oauth_auto_configure">
                                                                     <label for="google_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="google_token_url" id="google_token_url"
@@ -824,7 +839,8 @@
                                                                            data-bind="enable: google_oauth_enabled() && !google_oauth_auto_configure(), value: google_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: google_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: google_oauth_auto_configure">
                                                                     <label for="google_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -934,13 +950,17 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <input type="checkbox" id="github_oauth_auto_configure"
-                                                                           name="github_oauth_auto_configure" class="checkbox"
+                                                                    <input type="checkbox"
+                                                                           id="github_oauth_auto_configure"
+                                                                           name="github_oauth_auto_configure"
+                                                                           class="checkbox"
                                                                            data-bind="checked: github_oauth_auto_configure">
-                                                                    <label for="github_oauth_auto_configure">Enable GitHub
+                                                                    <label for="github_oauth_auto_configure">Enable
+                                                                        GitHub
                                                                         OAuth Auto-Configuration</label>
                                                                 </div>
-                                                                <div class="form-group" data-bind="visible: github_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="visible: github_oauth_auto_configure">
                                                                     <label for="github_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -951,7 +971,8 @@
                                                                            data-bind="enable: github_oauth_enabled() && github_oauth_auto_configure(), value: github_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: github_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: github_oauth_auto_configure">
                                                                     <label for="github_oauth_token_url">Token
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -962,7 +983,8 @@
                                                                            data-bind="enable: github_oauth_enabled() && !github_oauth_auto_configure(), value: github_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: github_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: github_oauth_auto_configure">
                                                                     <label for="github_oauth_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1070,13 +1092,16 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <input type="checkbox" id="azure_oauth_auto_configure"
-                                                                           name="azure_oauth_auto_configure" class="checkbox"
+                                                                    <input type="checkbox"
+                                                                           id="azure_oauth_auto_configure"
+                                                                           name="azure_oauth_auto_configure"
+                                                                           class="checkbox"
                                                                            data-bind="checked: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_auto_configure">Enable Azure
                                                                         OAuth Auto-Configuration</label>
                                                                 </div>
-                                                                <div class="form-group" data-bind="visible: azure_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="visible: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1087,7 +1112,8 @@
                                                                            data-bind="enable: azure_oauth_enabled() && azure_oauth_auto_configure(), value: azure_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: azure_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="azure_oauth_token_url"
@@ -1097,7 +1123,8 @@
                                                                            data-bind="enable: azure_oauth_enabled() && !azure_oauth_auto_configure(), value: azure_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: azure_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: azure_oauth_auto_configure">
                                                                     <label for="azure_oauth_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1117,14 +1144,14 @@
                                                                         <label>
                                                                             <input type="radio" name="azure_sg_enabled"
                                                                                    id="azure_sg_off" value="0"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: false">
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: 0">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="azure_sg_enabled"
                                                                                    id="azure_sg_on" value="1"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: true">
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: 1">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -1171,7 +1198,7 @@
                                                                                    name="azure_group_accounts_enabled"
                                                                                    id="azure_group_accounts_off"
                                                                                    value="0"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: false">
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: 0">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
@@ -1180,7 +1207,7 @@
                                                                                    name="azure_group_accounts_enabled"
                                                                                    id="azure_group_accounts_on"
                                                                                    value="1"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: true">
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: 1">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -1383,13 +1410,16 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <input type="checkbox" id="oidc_oauth_auto_configure"
-                                                                           name="oidc_oauth_auto_configure" class="checkbox"
+                                                                    <input type="checkbox"
+                                                                           id="oidc_oauth_auto_configure"
+                                                                           name="oidc_oauth_auto_configure"
+                                                                           class="checkbox"
                                                                            data-bind="checked: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_auto_configure">Enable OIDC
                                                                         OAuth Auto-Configuration</label>
                                                                 </div>
-                                                                <div class="form-group" data-bind="visible: oidc_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="visible: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_metadata_url">Metadata
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1400,7 +1430,8 @@
                                                                            data-bind="enable: oidc_oauth_enabled() && oidc_oauth_auto_configure(), value: oidc_oauth_metadata_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: oidc_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_token_url">Token URL</label>
                                                                     <input type="text" class="form-control"
                                                                            name="oidc_oauth_token_url"
@@ -1410,7 +1441,8 @@
                                                                            data-bind="enable: oidc_oauth_enabled() && !oidc_oauth_auto_configure(), value: oidc_oauth_token_url, valueUpdate: 'afterkeydown'">
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
-                                                                <div class="form-group" data-bind="hidden: oidc_oauth_auto_configure">
+                                                                <div class="form-group"
+                                                                     data-bind="hidden: oidc_oauth_auto_configure">
                                                                     <label for="oidc_oauth_authorize_url">Authorize
                                                                         URL</label>
                                                                     <input type="text" class="form-control"
@@ -1557,10 +1589,12 @@
     {%- endassets %}
 
     <script>
-    let CSRF_TOKEN = '{{ csrf_token() }}';
+        let API_URL = '{{ url_for('admin.setting_authentication_api') }}';
+        let CSRF_TOKEN = '{{ csrf_token() }}';
     </script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='custom/js/app-authentication-settings-editor.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='custom/js/app-authentication-settings-editor.js') }}"></script>
 
     <script>
         /*
