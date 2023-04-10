@@ -1,5 +1,6 @@
 let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, selector) {
     let self = this;
+    let target = null;
     self.api_url = api_url;
     self.csrf_token = csrf_token;
     self.selector = selector;
@@ -102,7 +103,7 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         oidc_oauth_account_name_property: '',
         oidc_oauth_account_description_property: '',
     }
-    
+
     self.init = function (autoload) {
         self.loading = ko.observable(self.loading);
         self.saving = ko.observable(self.saving);
@@ -116,6 +117,7 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         }
 
         if (el !== null && el.length > 0) {
+            target = el;
             ko.applyBindings(self, el[0]);
         } else {
             ko.applyBindings(self);
@@ -128,6 +130,7 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         }
 
         self.setupListeners();
+        self.setupValidation();
 
         if (autoload) {
             self.load();
@@ -146,6 +149,9 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
     }
 
     self.save = function () {
+        if (!target.valid()) {
+            return false;
+        }
         self.saving(true);
         $.ajax({
             url: self.api_url,
@@ -166,6 +172,252 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         }
     }
 
+    self.setupListeners = function () {
+        if ('onhashchange' in window) {
+            $(window).bind('hashchange', self.onHashChange);
+        }
+    }
+
+    self.destroyListeners = function () {
+        if ('onhashchange' in window) {
+            $(window).unbind('hashchange', self.onHashChange);
+        }
+    }
+
+    self.setupValidation = function () {
+        let auth_enabled = function (value, element, params) {
+            let enabled = 0;
+            if (self.local_db_enabled()) {
+                enabled++;
+            }
+            if (self.ldap_enabled()) {
+                enabled++;
+            }
+            if (self.google_oauth_enabled()) {
+                enabled++;
+            }
+            if (self.github_oauth_enabled()) {
+                enabled++;
+            }
+            if (self.azure_oauth_enabled()) {
+                enabled++;
+            }
+            if (self.oidc_oauth_enabled()) {
+                enabled++;
+            }
+            return enabled > 0;
+        };
+
+        let ldap_exclusive = function (value, element, params) {
+            let enabled = 0;
+            if (self.ldap_sg_enabled() === 1) {
+                enabled++;
+            }
+            if (self.autoprovisioning() === 1) {
+                enabled++;
+            }
+            return enabled < 2;
+        }
+
+        let local_enabled = function (element) {
+            return self.local_db_enabled();
+        };
+
+        let ldap_enabled = function (element) {
+            return self.ldap_enabled();
+        };
+
+        let google_oauth_enabled = function (element) {
+            return self.google_oauth_enabled();
+        };
+
+        let github_oauth_enabled = function (element) {
+            return self.github_oauth_enabled();
+        };
+
+        let azure_oauth_enabled = function (element) {
+            return self.azure_oauth_enabled();
+        };
+
+        let oidc_oauth_enabled = function (element) {
+            return self.oidc_oauth_enabled();
+        };
+
+        let enforce_characters = function (element) {
+            return self.local_db_enabled() === 1 && self.pwd_enforce_characters() === 1;
+        };
+
+        let enforce_complexity = function (element) {
+            return self.local_db_enabled() === 1 && self.pwd_enforce_complexity() === 1;
+        };
+
+        let ldap_type_openldap = function (element) {
+            return self.ldap_enabled() && self.ldap_type() === 'ldap';
+        };
+
+        let ldap_type_ad = function (element) {
+            return self.ldap_enabled() && self.ldap_type() === 'ad';
+        };
+
+        let ldap_sg_enabled = function (element) {
+            return self.ldap_enabled() === 1 && self.ldap_sg_enabled() === 1;
+        }
+
+        let ldap_ap_enabled = function (element) {
+            return self.ldap_enabled() === 1 && self.autoprovisioning() === 1;
+        }
+
+        jQuery.validator.addMethod('auth_enabled', auth_enabled, 'At least one authentication method must be enabled.');
+        jQuery.validator.addMethod('ldap_exclusive', ldap_exclusive, 'The LDAP group security and role auto-provisioning features are mutually exclusive.');
+
+        let footerErrorElements = [
+            'input#local_db_enabled',
+        ];
+
+        $(selector).validate({
+            errorPlacement: function (error, element) {
+                let useFooter = false;
+                for (let i = 0; i < footerErrorElements.length; i++) {
+                    if (element.is(footerErrorElements[i])) {
+                        useFooter = true;
+                    }
+                }
+                if (useFooter) {
+                    target.find('.card-footer > .error').append(error);
+                } else if (element.is('input[type=radio]')) {
+                    error.insertAfter(element.parents('div.radio'));
+                } else {
+                    element.after(error);
+                }
+            },
+            rules: {
+                local_db_enabled: 'auth_enabled',
+                ldap_enabled: 'auth_enabled',
+                google_oauth_enabled: 'auth_enabled',
+                github_oauth_enabled: 'auth_enabled',
+                azure_oauth_enabled: 'auth_enabled',
+                oidc_oauth_enabled: 'auth_enabled',
+                pwd_min_len: {
+                    required: enforce_characters,
+                    digits: true,
+                    min: 1,
+                    max: 64,
+                },
+                pwd_min_lowercase: {
+                    required: enforce_characters,
+                    digits: true,
+                    min: 0,
+                    max: 64,
+                },
+                pwd_min_uppercase: {
+                    required: enforce_characters,
+                    digits: true,
+                    min: 0,
+                    max: 64,
+                },
+                pwd_min_digits: {
+                    required: enforce_characters,
+                    digits: true,
+                    min: 0,
+                    max: 64,
+                },
+                pwd_min_special: {
+                    required: enforce_characters,
+                    digits: true,
+                    min: 0,
+                    max: 64,
+                },
+                pwd_min_complexity: {
+                    required: enforce_complexity,
+                    digits: true,
+                    min: 1,
+                    max: 1000,
+                },
+                ldap_type: ldap_enabled,
+                ldap_uri: {
+                    required: ldap_enabled,
+                    minlength: 11,
+                    maxlength: 255,
+                },
+                ldap_base_dn: {
+                    required: ldap_enabled,
+                    minlength: 4,
+                    maxlength: 255,
+                },
+                ldap_admin_username: {
+                    required: ldap_type_openldap,
+                    minlength: 4,
+                    maxlength: 255,
+                },
+                ldap_admin_password: {
+                    required: ldap_type_openldap,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                ldap_domain: {
+                    required: ldap_type_ad,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                ldap_filter_basic: {
+                    required: ldap_enabled,
+                    minlength: 3,
+                    maxlength: 1000,
+                },
+                ldap_filter_username: {
+                    required: ldap_enabled,
+                    minlength: 1,
+                    maxlength: 100,
+                },
+                ldap_filter_group: {
+                    required: ldap_type_openldap,
+                    minlength: 3,
+                    maxlength: 100,
+                },
+                ldap_filter_groupname: {
+                    required: ldap_type_openldap,
+                    minlength: 1,
+                    maxlength: 100,
+                },
+                ldap_sg_enabled: {
+                    required: ldap_enabled,
+                    ldap_exclusive: true,
+                },
+                ldap_admin_group: {
+                    required: ldap_sg_enabled,
+                    minlength: 3,
+                    maxlength: 100,
+                },
+                ldap_operator_group: {
+                    required: ldap_sg_enabled,
+                    minlength: 3,
+                    maxlength: 100,
+                },
+                ldap_user_group: {
+                    required: ldap_sg_enabled,
+                    minlength: 3,
+                    maxlength: 100,
+                },
+                autoprovisioning: {
+                    required: ldap_enabled,
+                    ldap_exclusive: true,
+                },
+                autoprovisioning_attribute: {
+                    required: ldap_ap_enabled,
+                    minlength: 1,
+                    maxlength: 100,
+                },
+                urn_value: {
+                    required: ldap_ap_enabled,
+                    minlength: 1,
+                    maxlength: 100,
+                },
+                purge: ldap_enabled,
+            },
+            messages: {},
+        });
+    }
+
     self.activateTab = function (tab) {
         $('[role="tablist"] a.nav-link').blur();
         self.tab_active(tab);
@@ -184,42 +436,60 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         return window.location.hash.length > 1;
     }
 
-    self.setupListeners = function () {
-        if ('onhashchange' in window) {
-            $(window).bind('hashchange', self.onHashChange);
-        }
-    }
-
-    self.destroyListeners = function () {
-        if ('onhashchange' in window) {
-            $(window).unbind('hashchange', self.onHashChange);
-        }
-    }
-
     self.onDataLoaded = function (result) {
         if (result.status == 0) {
-            console.log('Error loading settings: ' + result.messages.join(', '));
+            console.log('Error loading settings.');
+
+            if (result.messages.length) {
+                for (let i = 0; i < result.messages.length; i++) {
+                    let message = result.messages[i];
+                    console.log(message);
+                }
+            }
+
             self.loading(false);
             return false;
         }
 
         self.update(result.data);
 
-        console.log('Settings loaded: ' + result.messages.join(', '));
+        console.log('Settings loaded.');
+
+        if (result.messages.length) {
+            for (let i = 0; i < result.messages.length; i++) {
+                let message = result.messages[i];
+                console.log(message);
+            }
+        }
 
         self.loading(false);
     }
 
     self.onDataSaved = function (result) {
         if (result.status == 0) {
-            console.log('Error saving settings: ' + result.messages.join(', '));
+            console.log('Error saving settings.');
+
+            if (result.messages.length) {
+                for (let i = 0; i < result.messages.length; i++) {
+                    let message = result.messages[i];
+                    console.log(message);
+                }
+            }
+
             self.saving(false);
             return false;
         }
 
         self.update(result.data);
 
-        console.log('Settings saved: ' + result.messages.join(', '));
+        console.log('Settings saved.');
+
+        if (result.messages.length) {
+            for (let i = 0; i < result.messages.length; i++) {
+                let message = result.messages[i];
+                console.log(message);
+            }
+        }
 
         self.saving(false);
     }
