@@ -89,7 +89,7 @@
                                     </ul>
                                     <div class="tab-content">
 
-                                        <div data-bind="class: 'tab-pane' + (tab_active() == 'local' ? ' active' : '')">
+                                        <div data-tab="local" data-bind="class: 'tab-pane' + (tab_active() == 'local' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -280,7 +280,7 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div data-bind="class: 'tab-pane' + (tab_active() == 'ldap' ? ' active' : '')">
+                                        <div data-tab="ldap" data-bind="class: 'tab-pane' + (tab_active() == 'ldap' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     {% if error %}
@@ -744,7 +744,7 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div
+                                        <div data-tab="google"
                                             data-bind="class: 'tab-pane' + (tab_active() == 'google' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
@@ -803,7 +803,7 @@
                                                                        id="google_oauth_auto_configure"
                                                                        name="google_oauth_auto_configure"
                                                                        class="checkbox"
-                                                                       data-bind="checked: google_oauth_auto_configure">
+                                                                       data-bind="enable: google_oauth_enabled, checked: google_oauth_auto_configure">
                                                                 <label for="google_oauth_auto_configure">Enable
                                                                     Google
                                                                     OAuth Auto-Configuration</label>
@@ -869,7 +869,7 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div
+                                        <div data-tab="github"
                                             data-bind="class: 'tab-pane' + (tab_active() == 'github' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
@@ -927,7 +927,7 @@
                                                                        id="github_oauth_auto_configure"
                                                                        name="github_oauth_auto_configure"
                                                                        class="checkbox"
-                                                                       data-bind="checked: github_oauth_auto_configure">
+                                                                       data-bind="enable: github_oauth_enabled, checked: github_oauth_auto_configure">
                                                                 <label for="github_oauth_auto_configure">Enable
                                                                     GitHub
                                                                     OAuth Auto-Configuration</label>
@@ -991,7 +991,7 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div data-bind="class: 'tab-pane' + (tab_active() == 'azure' ? ' active' : '')">
+                                        <div data-tab="azure" data-bind="class: 'tab-pane' + (tab_active() == 'azure' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -1049,7 +1049,7 @@
                                                                        id="azure_oauth_auto_configure"
                                                                        name="azure_oauth_auto_configure"
                                                                        class="checkbox"
-                                                                       data-bind="checked: azure_oauth_auto_configure">
+                                                                       data-bind="enable: azure_oauth_enabled, checked: azure_oauth_auto_configure">
                                                                 <label for="azure_oauth_auto_configure">Enable Azure
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
@@ -1293,7 +1293,7 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div data-bind="class: 'tab-pane' + (tab_active() == 'oidc' ? ' active' : '')">
+                                        <div data-tab="oidc" data-bind="class: 'tab-pane' + (tab_active() == 'oidc' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -1349,7 +1349,7 @@
                                                                        id="oidc_oauth_auto_configure"
                                                                        name="oidc_oauth_auto_configure"
                                                                        class="checkbox"
-                                                                       data-bind="checked: oidc_oauth_auto_configure">
+                                                                       data-bind="enable: oidc_oauth_enabled, checked: oidc_oauth_auto_configure">
                                                                 <label for="oidc_oauth_auto_configure">Enable OIDC
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
@@ -1509,8 +1509,8 @@
 {% endblock %}
 
 {% block head_styles %}
-    <style type="text/css">
-        .error { color: red; }
+    <style>
+        .error { color: red!important; }
     </style>
 {% endblock %}
 

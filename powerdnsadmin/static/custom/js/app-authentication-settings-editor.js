@@ -267,6 +267,38 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
             return self.ldap_enabled() === 1 && self.autoprovisioning() === 1;
         }
 
+        let google_oauth_auto_configure_enabled = function (element) {
+            return self.google_oauth_enabled() && self.google_oauth_auto_configure();
+        }
+
+        let google_oauth_auto_configure_disabled = function (element) {
+            return self.google_oauth_enabled() && !self.google_oauth_auto_configure();
+        }
+
+        let github_oauth_auto_configure_enabled = function (element) {
+            return self.github_oauth_enabled() && self.github_oauth_auto_configure();
+        }
+
+        let github_oauth_auto_configure_disabled = function (element) {
+            return self.github_oauth_enabled() && !self.github_oauth_auto_configure();
+        }
+
+        let azure_oauth_auto_configure_enabled = function (element) {
+            return self.azure_oauth_enabled() && self.azure_oauth_auto_configure();
+        }
+
+        let azure_oauth_auto_configure_disabled = function (element) {
+            return self.azure_oauth_enabled() && !self.azure_oauth_auto_configure();
+        }
+
+        let oidc_oauth_auto_configure_enabled = function (element) {
+            return self.oidc_oauth_enabled() && self.oidc_oauth_auto_configure();
+        }
+
+        let oidc_oauth_auto_configure_disabled = function (element) {
+            return self.oidc_oauth_enabled() && !self.oidc_oauth_auto_configure();
+        }
+
         jQuery.validator.addMethod('auth_enabled', auth_enabled, 'At least one authentication method must be enabled.');
         jQuery.validator.addMethod('ldap_exclusive', ldap_exclusive, 'The LDAP group security and role auto-provisioning features are mutually exclusive.');
 
@@ -275,6 +307,7 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         ];
 
         $(selector).validate({
+            ignore: '',
             errorPlacement: function (error, element) {
                 let useFooter = false;
                 for (let i = 0; i < footerErrorElements.length; i++) {
@@ -413,8 +446,94 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
                     maxlength: 100,
                 },
                 purge: ldap_enabled,
+                google_oauth_client_id: {
+                    required: google_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                google_oauth_client_secret: {
+                    required: google_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                google_oauth_scope: {
+                    required: google_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                google_base_url: {
+                    required: google_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                google_oauth_metadata_url: {
+                    required: google_oauth_auto_configure_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                google_token_url: {
+                    required: google_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                google_authorize_url: {
+                    required: google_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                github_oauth_key: {
+                    required: github_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                github_oauth_secret: {
+                    required: github_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                github_oauth_scope: {
+                    required: github_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                github_oauth_api_url: {
+                    required: github_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                github_oauth_metadata_url: {
+                    required: github_oauth_auto_configure_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                github_oauth_token_url: {
+                    required: github_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                github_oauth_authorize_url: {
+                    required: github_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+
             },
-            messages: {},
+            messages: {
+                ldap_sg_enabled: {
+                    ldap_exclusive: 'The LDAP group security feature is mutually exclusive with the LDAP role auto-provisioning feature.',
+                },
+                autoprovisioning: {
+                    ldap_exclusive: 'The LDAP role auto-provisioning feature is mutually exclusive with the LDAP group security feature.',
+                },
+            },
         });
     }
 
