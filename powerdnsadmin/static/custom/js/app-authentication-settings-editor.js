@@ -6,6 +6,10 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
     self.selector = selector;
     self.loading = false;
     self.saving = false;
+    self.saved = false;
+    self.save_failed = false;
+    self.messages = [];
+    self.messages_class = 'info';
     self.tab_active = '';
     self.tab_default = 'local';
 
@@ -107,6 +111,10 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
     self.init = function (autoload) {
         self.loading = ko.observable(self.loading);
         self.saving = ko.observable(self.saving);
+        self.saved = ko.observable(self.saved);
+        self.save_failed = ko.observable(self.save_failed);
+        self.messages = ko.observableArray(self.messages);
+        self.messages_class = ko.observable(self.messages_class);
         self.tab_active = ko.observable(self.tab_active);
         self.tab_default = ko.observable(self.tab_default);
         self.update(user_data);
@@ -742,59 +750,33 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
 
     self.onDataLoaded = function (result) {
         if (result.status == 0) {
-            console.log('Error loading settings.');
-
-            if (result.messages.length) {
-                for (let i = 0; i < result.messages.length; i++) {
-                    let message = result.messages[i];
-                    console.log(message);
-                }
-            }
-
+            self.messages_class('danger');
+            self.messages(result.messages);
             self.loading(false);
             return false;
         }
 
         self.update(result.data);
-
-        console.log('Settings loaded.');
-
-        if (result.messages.length) {
-            for (let i = 0; i < result.messages.length; i++) {
-                let message = result.messages[i];
-                console.log(message);
-            }
-        }
-
+        self.messages_class('info');
+        self.messages(result.messages);
         self.loading(false);
     }
 
     self.onDataSaved = function (result) {
         if (result.status == 0) {
-            console.log('Error saving settings.');
-
-            if (result.messages.length) {
-                for (let i = 0; i < result.messages.length; i++) {
-                    let message = result.messages[i];
-                    console.log(message);
-                }
-            }
-
+            self.saved(false);
+            self.save_failed(true);
+            self.messages_class('danger');
+            self.messages(result.messages);
             self.saving(false);
             return false;
         }
 
         self.update(result.data);
-
-        console.log('Settings saved.');
-
-        if (result.messages.length) {
-            for (let i = 0; i < result.messages.length; i++) {
-                let message = result.messages[i];
-                console.log(message);
-            }
-        }
-
+        self.saved(true);
+        self.save_failed(false);
+        self.messages_class('info');
+        self.messages(result.messages);
         self.saving(false);
     }
 

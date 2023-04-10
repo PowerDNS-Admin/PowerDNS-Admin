@@ -40,16 +40,33 @@
                                              data-bind="text: (loading() ? 'Loading' : 'Saving') + ' settings...'"></div>
                                     </div>
                                 </div>
-                                {% if result %}
-                                    <div
-                                        class="alert {% if result['status'] %}alert-success{% else %}alert-danger{% endif %} alert-dismissible">
-                                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
-                                            &times;
-                                        </button>
-                                        {{ result['msg'] }}
-                                    </div>
-                                {% endif %}
-
+                                <!-- /.overlay-wrapper -->
+                                <div class="alert alert-dismissible alert-success" style="display: none;"
+                                     data-bind="visible: saved">
+                                    <button type="button" class="close" aria-hidden="true"
+                                            data-bind="click: saved(false)">×
+                                    </button>
+                                    <h5><i class="icon fas fa-check"></i> Saved!</h5>
+                                    These settings have been saved to the database.
+                                </div>
+                                <div class="alert alert-dismissible alert-danger" style="display: none;"
+                                     data-bind="visible: save_failed">
+                                    <button type="button" class="close" aria-hidden="true"
+                                            data-bind="click: save_failed(false)">×
+                                    </button>
+                                    <h5><i class="icon fas fa-ban"></i> Error!</h5>
+                                    These settings could <strong>not</strong> be saved to the database!
+                                </div>
+                                <div class="alert alert-dismissible" style="display: none;"
+                                     data-bind="visible: messages().length, class: 'alert alert-dismissible alert-' + messages_class()">
+                                    <button type="button" class="close" aria-hidden="true"
+                                            data-bind="click: messages([])">×
+                                    </button>
+                                    <h5><i class="icon fas fa-info"></i> Additional Information</h5>
+                                    <ul data-bind="foreach: messages">
+                                        <li data-bind="text: $data"></li>
+                                    </ul>
+                                </div>
                                 <div class="nav-tabs-custom">
                                     <ul class="nav nav-tabs" role="tablist">
                                         <li class="nav-item">
@@ -89,7 +106,8 @@
                                     </ul>
                                     <div class="tab-content">
 
-                                        <div data-tab="local" data-bind="class: 'tab-pane' + (tab_active() == 'local' ? ' active' : '')">
+                                        <div data-tab="local"
+                                             data-bind="class: 'tab-pane' + (tab_active() == 'local' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -280,7 +298,8 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div data-tab="ldap" data-bind="class: 'tab-pane' + (tab_active() == 'ldap' ? ' active' : '')">
+                                        <div data-tab="ldap"
+                                             data-bind="class: 'tab-pane' + (tab_active() == 'ldap' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     {% if error %}
@@ -745,7 +764,7 @@
                                         <!-- /.tab-pane -->
 
                                         <div data-tab="google"
-                                            data-bind="class: 'tab-pane' + (tab_active() == 'google' ? ' active' : '')">
+                                             data-bind="class: 'tab-pane' + (tab_active() == 'google' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -870,7 +889,7 @@
                                         <!-- /.tab-pane -->
 
                                         <div data-tab="github"
-                                            data-bind="class: 'tab-pane' + (tab_active() == 'github' ? ' active' : '')">
+                                             data-bind="class: 'tab-pane' + (tab_active() == 'github' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -991,7 +1010,8 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div data-tab="azure" data-bind="class: 'tab-pane' + (tab_active() == 'azure' ? ' active' : '')">
+                                        <div data-tab="azure"
+                                             data-bind="class: 'tab-pane' + (tab_active() == 'azure' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -1293,7 +1313,8 @@
                                         </div>
                                         <!-- /.tab-pane -->
 
-                                        <div data-tab="oidc" data-bind="class: 'tab-pane' + (tab_active() == 'oidc' ? ' active' : '')">
+                                        <div data-tab="oidc"
+                                             data-bind="class: 'tab-pane' + (tab_active() == 'oidc' ? ' active' : '')">
                                             <div class="row">
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
@@ -1510,7 +1531,7 @@
 
 {% block head_styles %}
     <style>
-        .error { color: red!important; }
+        .error { color: red !important; }
     </style>
 {% endblock %}
 
@@ -1530,47 +1551,4 @@
             model.init(true);
         })
     </script>
-{% endblock %}
-
-{% block modals %}
-    <div class="modal fade modal-warning" id="modal_confirm" data-keyboard="false" data-backdrop="static">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="X">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">Confirmation</h4>
-                </div>
-                <div class="modal-body">
-                    <p></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default pull-left" id="button_cancel" name="purge" value="OFF"
-                            data-dismiss="modal">Cancel
-                    </button>
-                    <button type="button" class="btn btn-success" id="button_confirm">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade modal-warning" id="modal_warning" data-keyboard="false" data-backdrop="static">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="warning_X">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">Warning</h4>
-                </div>
-                <div class="modal-body">
-                    <p></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" id="button_warning_confirm">Yes I understand</button>
-                </div>
-            </div>
-        </div>
-    </div>
 {% endblock %}
