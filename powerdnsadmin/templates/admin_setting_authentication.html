@@ -1536,13 +1536,6 @@
 {% endblock %}
 
 {% block extrascripts %}
-    {% assets "js_validation" -%}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-    <script type="text/javascript"
-            src="{{ url_for('static', filename='custom/js/app-authentication-settings-editor.js') }}"></script>
-
     <script>
         $(function () {
             let API_URL = '{{ url_for('admin.setting_authentication_api') }}';
