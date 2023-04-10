@@ -185,6 +185,25 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
     }
 
     self.setupValidation = function () {
+        let uuidRegExp = /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})|[0-9]+$/i;
+
+        let footerErrorElements = [
+            'input#local_db_enabled',
+        ];
+
+        let errorCheckSelectors = [
+            'input.error:not([disabled])',
+            'select.error:not([disabled])',
+            'textarea.error:not([disabled])',
+        ];
+
+        let errorCheckQuery = errorCheckSelectors.join(',');
+        let tabs = target.find('.tab-content > *[data-tab]')
+
+        let onElementChanged = function (event) {
+            target.valid();
+        }
+
         let auth_enabled = function (value, element, params) {
             let enabled = 0;
             if (self.local_db_enabled()) {
@@ -217,6 +236,10 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
                 enabled++;
             }
             return enabled < 2;
+        }
+
+        let uuid = function (value, element, params) {
+            return uuidRegExp.test(value);
         }
 
         let local_enabled = function (element) {
@@ -267,6 +290,14 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
             return self.ldap_enabled() === 1 && self.autoprovisioning() === 1;
         }
 
+        let azure_gs_enabled = function (element) {
+            return self.azure_oauth_enabled() === 1 && self.azure_sg_enabled() === 1;
+        }
+
+        let azure_gas_enabled = function (element) {
+            return self.azure_oauth_enabled() && self.azure_group_accounts_enabled();
+        }
+
         let google_oauth_auto_configure_enabled = function (element) {
             return self.google_oauth_enabled() && self.google_oauth_auto_configure();
         }
@@ -301,12 +332,9 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
 
         jQuery.validator.addMethod('auth_enabled', auth_enabled, 'At least one authentication method must be enabled.');
         jQuery.validator.addMethod('ldap_exclusive', ldap_exclusive, 'The LDAP group security and role auto-provisioning features are mutually exclusive.');
+        jQuery.validator.addMethod('uuid', uuid, 'A valid UUID is required.');
 
-        let footerErrorElements = [
-            'input#local_db_enabled',
-        ];
-
-        $(selector).validate({
+        target.validate({
             ignore: '',
             errorPlacement: function (error, element) {
                 let useFooter = false;
@@ -325,18 +353,11 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
             },
             showErrors: function (errorMap, errorList) {
                 this.defaultShowErrors();
-                let selectors = [
-                    'input.error:not([disabled])',
-                    'select.error:not([disabled])',
-                    'textarea.error:not([disabled])',
-                ];
-                let selector_query = selectors.join(',');
-                let tabs = target.find('.tab-content > *[data-tab]')
                 tabs.each(function (index, tab) {
                     tab = $(tab);
                     let tabId = tab.data('tab');
                     let tabLink = target.find('.nav-tabs > li > a[data-tab="' + tabId + '"]');
-                    if (tab.find(selector_query).length > 0) {
+                    if (tab.find(errorCheckQuery).length > 0) {
                         tabLink.addClass('error');
                     } else {
                         tabLink.removeClass('error');
@@ -544,7 +565,148 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
                     maxlength: 255,
                     url: true,
                 },
-
+                azure_oauth_key: {
+                    required: azure_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    uuid: true,
+                },
+                azure_oauth_secret: {
+                    required: azure_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                azure_oauth_scope: {
+                    required: azure_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                azure_oauth_api_url: {
+                    required: azure_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                azure_oauth_metadata_url: {
+                    required: azure_oauth_auto_configure_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                azure_oauth_token_url: {
+                    required: azure_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                azure_oauth_authorize_url: {
+                    required: azure_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                azure_sg_enabled: azure_oauth_enabled,
+                azure_admin_group: {
+                    uuid: azure_gs_enabled,
+                },
+                azure_operator_group: {
+                    uuid: azure_gs_enabled,
+                },
+                azure_user_group: {
+                    uuid: azure_gs_enabled,
+                },
+                azure_group_accounts_enabled: azure_oauth_enabled,
+                azure_group_accounts_name: {
+                    required: azure_gas_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                azure_group_accounts_name_re: {
+                    required: azure_gas_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                azure_group_accounts_description: {
+                    required: azure_gas_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                azure_group_accounts_description_re: {
+                    required: azure_gas_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                oidc_oauth_key: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                oidc_oauth_secret: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                oidc_oauth_scope: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                oidc_oauth_api_url: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                oidc_oauth_metadata_url: {
+                    required: oidc_oauth_auto_configure_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                oidc_oauth_token_url: {
+                    required: oidc_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                oidc_oauth_authorize_url: {
+                    required: oidc_oauth_auto_configure_disabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                oidc_oauth_logout_url: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                    url: true,
+                },
+                oidc_oauth_username: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                oidc_oauth_email: {
+                    required: oidc_oauth_enabled,
+                    minlength: 1,
+                    maxlength: 255,
+                },
+                oidc_oauth_firstname: {
+                    minlength: 0,
+                    maxlength: 255,
+                },
+                oidc_oauth_last_name: {
+                    minlength: 0,
+                    maxlength: 255,
+                },
+                oidc_oauth_account_name_property: {
+                    minlength: 0,
+                    maxlength: 255,
+                },
+                oidc_oauth_account_description_property: {
+                    minlength: 0,
+                    maxlength: 255,
+                },
             },
             messages: {
                 ldap_sg_enabled: {
@@ -555,6 +717,9 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
                 },
             },
         });
+
+        target.find('input, select, textarea, label').on('change,keyup,blur,click', onElementChanged);
+        target.valid();
     }
 
     self.activateTab = function (tab) {
