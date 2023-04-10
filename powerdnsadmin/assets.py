@@ -48,6 +48,7 @@ js_main = Bundle(
     'node_modules/datatables.net-bs4/js/dataTables.bootstrap4.js',
     'node_modules/jquery-sparkline/jquery.sparkline.js',
     'node_modules/jquery-slimscroll/jquery.slimscroll.js',
+    'node_modules/jquery-validation/dist/jquery.validate.js',
     'node_modules/icheck/icheck.js',
     'node_modules/fastclick/lib/fastclick.js',
     'node_modules/moment/moment.js',
