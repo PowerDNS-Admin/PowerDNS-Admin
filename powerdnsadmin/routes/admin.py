@@ -1829,11 +1829,20 @@ def setting_authentication():
                                result=result)
 
 
-@admin_bp.route('/setting/authentication/api', methods=['GET', 'POST'])
+@admin_bp.route('/setting/authentication/api', methods=['POST'])
 @login_required
 @admin_role_required
 def setting_authentication_api():
-    return Setting().get_group('authentication')
+    result = {'status': 1, 'messages': [], 'data': {}}
+
+    if request.form.get('commit') == '1':
+        result['messages'].append('Saved successfully.')
+    else:
+        result['messages'].append('Loaded successfully.')
+
+    result['data'] = Setting().get_group('authentication')
+
+    return result
 
 
 @admin_bp.route('/templates', methods=['GET', 'POST'])

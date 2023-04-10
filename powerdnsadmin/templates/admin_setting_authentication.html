@@ -32,10 +32,10 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <div class="overlay-wrapper" data-bind="visible: loading">
+                            <div class="overlay-wrapper" data-bind="visible: loading() || saving()">
                                 <div class="overlay">
                                     <i class="fas fa-3x fa-sync-alt fa-spin"></i>
-                                    <div class="text-bold pt-2 pl-2">Loading settings...</div>
+                                    <div class="text-bold pt-2 pl-2" data-bind="text: (loading() ? 'Loading' : 'Saving') + ' settings...'"></div>
                                 </div>
                             </div>
                             {% if result %}
@@ -188,13 +188,6 @@
                                                             </fieldset>
                                                         </div>
                                                         <!-- /.card-body -->
-                                                        <div class="card-footer">
-                                                            <button type="submit" class="btn btn-primary"
-                                                                    title="Save Settings">
-                                                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
-                                                            </button>
-                                                        </div>
-                                                        <!-- /.card-footer -->
                                                     </div>
                                                     <!-- /.card -->
                                                 </form>
@@ -558,18 +551,12 @@
                                                                                    value="1"
                                                                                    data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: 1">
                                                                             ON
+                                                                        </label>
                                                                     </div>
                                                                 </div>
                                                             </fieldset>
                                                         </div>
                                                         <!-- /.card-body -->
-                                                        <div class="card-footer">
-                                                            <button type="submit" class="btn btn-primary"
-                                                                    title="Save Settings">
-                                                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
-                                                            </button>
-                                                        </div>
-                                                        <!-- /.card-footer -->
                                                     </div>
                                                     <!-- /.card -->
                                                 </form>
@@ -854,13 +841,6 @@
                                                             </fieldset>
                                                         </div>
                                                         <!-- /.card-body -->
-                                                        <div class="card-footer">
-                                                            <button type="submit" class="btn btn-primary"
-                                                                    title="Save Settings">
-                                                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
-                                                            </button>
-                                                        </div>
-                                                        <!-- /.card-footer -->
                                                     </div>
                                                     <!-- /.card -->
                                                 </form>
@@ -998,13 +978,6 @@
                                                             </fieldset>
                                                         </div>
                                                         <!-- /.card-body -->
-                                                        <div class="card-footer">
-                                                            <button type="submit" class="btn btn-primary"
-                                                                    title="Save Settings">
-                                                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
-                                                            </button>
-                                                        </div>
-                                                        <!-- /.card-footer -->
                                                     </div>
                                                     <!-- /.card -->
                                                 </form>
@@ -1263,13 +1236,6 @@
                                                             </fieldset>
                                                         </div>
                                                         <!-- /.card-body -->
-                                                        <div class="card-footer">
-                                                            <button type="submit" class="btn btn-primary"
-                                                                    title="Save Settings">
-                                                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
-                                                            </button>
-                                                        </div>
-                                                        <!-- /.card-footer -->
                                                     </div>
                                                     <!-- /.card -->
                                                 </form>
@@ -1535,13 +1501,6 @@
                                                             </fieldset>
                                                         </div>
                                                         <!-- /.card-body -->
-                                                        <div class="card-footer">
-                                                            <button type="submit" class="btn btn-primary"
-                                                                    title="Save Settings">
-                                                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
-                                                            </button>
-                                                        </div>
-                                                        <!-- /.card-footer -->
                                                     </div>
                                                     <!-- /.card -->
                                                 </form>
@@ -1572,6 +1531,13 @@
                             <!-- /.nav-tabs-custom -->
                         </div>
                         <!-- /.card-body -->
+                        <div class="card-footer">
+                            <button type="button" class="btn btn-primary"
+                                    title="Save Settings" data-bind="click: onSaveClick">
+                                <i class="fa-solid fa-save"></i>&nbsp;Save Settings
+                            </button>
+                        </div>
+                        <!-- /.card-footer -->
                     </div>
                     <!-- /.card -->
                 </div>
@@ -1588,13 +1554,17 @@
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {%- endassets %}
 
-    <script>
-        let API_URL = '{{ url_for('admin.setting_authentication_api') }}';
-        let CSRF_TOKEN = '{{ csrf_token() }}';
-    </script>
-
     <script type="text/javascript"
             src="{{ url_for('static', filename='custom/js/app-authentication-settings-editor.js') }}"></script>
+
+    <script>
+        $(function () {
+            let API_URL = '{{ url_for('admin.setting_authentication_api') }}';
+            let CSRF_TOKEN = '{{ csrf_token() }}';
+            let model = new AuthenticationSettingsModel({}, API_URL, CSRF_TOKEN, '#settings-editor');
+            model.init(true);
+        })
+    </script>
 
     <script>
         /*

@@ -1,16 +1,14 @@
-let model;
-
 let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, selector) {
     let self = this;
     self.api_url = api_url;
     self.csrf_token = csrf_token;
     self.selector = selector;
     self.loading = false;
+    self.saving = false;
+    self.tab_active = '';
+    self.tab_default = 'local';
 
     let defaults = {
-        tab_active: '',
-        tab_default: 'local',
-
         // Local Authentication Settings
         local_db_enabled: true,
         signup_enabled: true,
@@ -104,118 +102,40 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         oidc_oauth_account_name_property: '',
         oidc_oauth_account_description_property: '',
     }
-
-    self.data = {};
-
-    self.setupObservables = function () {
+    
+    self.init = function (autoload) {
         self.loading = ko.observable(self.loading);
-        self.tab_active = ko.observable(self.data.tab_active);
-        self.tab_default = ko.observable(self.data.tab_default);
+        self.saving = ko.observable(self.saving);
+        self.tab_active = ko.observable(self.tab_active);
+        self.tab_default = ko.observable(self.tab_default);
+        self.update(user_data);
 
-        // Local Authentication Settings
-        self.local_db_enabled = ko.observable(self.data.local_db_enabled);
-        self.signup_enabled = ko.observable(self.data.signup_enabled);
-        self.pwd_enforce_characters = ko.observable(self.data.pwd_enforce_characters);
-        self.pwd_min_len = ko.observable(self.data.pwd_min_len);
-        self.pwd_min_lowercase = ko.observable(self.data.pwd_min_lowercase);
-        self.pwd_min_uppercase = ko.observable(self.data.pwd_min_uppercase);
-        self.pwd_min_digits = ko.observable(self.data.pwd_min_digits);
-        self.pwd_min_special = ko.observable(self.data.pwd_min_special);
-        self.pwd_enforce_complexity = ko.observable(self.data.pwd_enforce_complexity);
-        self.pwd_min_complexity = ko.observable(self.data.pwd_min_complexity);
+        let el = null;
+        if (typeof selector !== 'undefined') {
+            el = $(selector)
+        }
 
-        // LDAP Authentication Settings
-        self.ldap_enabled = ko.observable(self.data.ldap_enabled);
-        self.ldap_type = ko.observable(self.data.ldap_type);
-        self.ldap_uri = ko.observable(self.data.ldap_uri);
-        self.ldap_base_dn = ko.observable(self.data.ldap_base_dn);
-        self.ldap_admin_username = ko.observable(self.data.ldap_admin_username);
-        self.ldap_admin_password = ko.observable(self.data.ldap_admin_password);
-        self.ldap_domain = ko.observable(self.data.ldap_domain);
-        self.ldap_filter_basic = ko.observable(self.data.ldap_filter_basic);
-        self.ldap_filter_username = ko.observable(self.data.ldap_filter_username);
-        self.ldap_filter_group = ko.observable(self.data.ldap_filter_group);
-        self.ldap_filter_groupname = ko.observable(self.data.ldap_filter_groupname);
-        self.ldap_sg_enabled = ko.observable(self.data.ldap_sg_enabled);
-        self.ldap_admin_group = ko.observable(self.data.ldap_admin_group);
-        self.ldap_operator_group = ko.observable(self.data.ldap_operator_group);
-        self.ldap_user_group = ko.observable(self.data.ldap_user_group);
-        self.autoprovisioning = ko.observable(self.data.autoprovisioning);
-        self.autoprovisioning_attribute = ko.observable(self.data.autoprovisioning_attribute);
-        self.urn_value = ko.observable(self.data.urn_value);
-        self.purge = ko.observable(self.data.purge);
+        if (el !== null && el.length > 0) {
+            ko.applyBindings(self, el[0]);
+        } else {
+            ko.applyBindings(self);
+        }
 
-        // Google OAuth2 Settings
-        self.google_oauth_enabled = ko.observable(self.data.google_oauth_enabled);
-        self.google_oauth_client_id = ko.observable(self.data.google_oauth_client_id);
-        self.google_oauth_client_secret = ko.observable(self.data.google_oauth_client_secret);
-        self.google_oauth_scope = ko.observable(self.data.google_oauth_scope);
-        self.google_base_url = ko.observable(self.data.google_base_url);
-        self.google_oauth_auto_configure = ko.observable(self.data.google_oauth_auto_configure);
-        self.google_oauth_metadata_url = ko.observable(self.data.google_oauth_metadata_url);
-        self.google_token_url = ko.observable(self.data.google_token_url);
-        self.google_authorize_url = ko.observable(self.data.google_authorize_url);
-
-        // GitHub OAuth2 Settings
-        self.github_oauth_enabled = ko.observable(self.data.github_oauth_enabled);
-        self.github_oauth_key = ko.observable(self.data.github_oauth_key);
-        self.github_oauth_secret = ko.observable(self.data.github_oauth_secret);
-        self.github_oauth_scope = ko.observable(self.data.github_oauth_scope);
-        self.github_oauth_api_url = ko.observable(self.data.github_oauth_api_url);
-        self.github_oauth_auto_configure = ko.observable(self.data.github_oauth_auto_configure);
-        self.github_oauth_metadata_url = ko.observable(self.data.github_oauth_metadata_url);
-        self.github_oauth_token_url = ko.observable(self.data.github_oauth_token_url);
-        self.github_oauth_authorize_url = ko.observable(self.data.github_oauth_authorize_url);
-
-        // Azure AD OAuth2 Settings
-        self.azure_oauth_enabled = ko.observable(self.data.azure_oauth_enabled);
-        self.azure_oauth_key = ko.observable(self.data.azure_oauth_key);
-        self.azure_oauth_secret = ko.observable(self.data.azure_oauth_secret);
-        self.azure_oauth_scope = ko.observable(self.data.azure_oauth_scope);
-        self.azure_oauth_api_url = ko.observable(self.data.azure_oauth_api_url);
-        self.azure_oauth_auto_configure = ko.observable(self.data.azure_oauth_auto_configure);
-        self.azure_oauth_metadata_url = ko.observable(self.data.azure_oauth_metadata_url);
-        self.azure_oauth_token_url = ko.observable(self.data.azure_oauth_token_url);
-        self.azure_oauth_authorize_url = ko.observable(self.data.azure_oauth_authorize_url);
-        self.azure_sg_enabled = ko.observable(self.data.azure_sg_enabled);
-        self.azure_admin_group = ko.observable(self.data.azure_admin_group);
-        self.azure_operator_group = ko.observable(self.data.azure_operator_group);
-        self.azure_user_group = ko.observable(self.data.azure_user_group);
-        self.azure_group_accounts_enabled = ko.observable(self.data.azure_group_accounts_enabled);
-        self.azure_group_accounts_name = ko.observable(self.data.azure_group_accounts_name);
-        self.azure_group_accounts_name_re = ko.observable(self.data.azure_group_accounts_name_re);
-        self.azure_group_accounts_description = ko.observable(self.data.azure_group_accounts_description);
-        self.azure_group_accounts_description_re = ko.observable(self.data.azure_group_accounts_description_re);
-
-        // OIDC OAuth2 Settings
-        self.oidc_oauth_enabled = ko.observable(self.data.oidc_oauth_enabled);
-        self.oidc_oauth_key = ko.observable(self.data.oidc_oauth_key);
-        self.oidc_oauth_secret = ko.observable(self.data.oidc_oauth_secret);
-        self.oidc_oauth_scope = ko.observable(self.data.oidc_oauth_scope);
-        self.oidc_oauth_api_url = ko.observable(self.data.oidc_oauth_api_url);
-        self.oidc_oauth_auto_configure = ko.observable(self.data.oidc_oauth_auto_configure);
-        self.oidc_oauth_metadata_url = ko.observable(self.data.oidc_oauth_metadata_url);
-        self.oidc_oauth_token_url = ko.observable(self.data.oidc_oauth_token_url);
-        self.oidc_oauth_authorize_url = ko.observable(self.data.oidc_oauth_authorize_url);
-        self.oidc_oauth_logout_url = ko.observable(self.data.oidc_oauth_logout_url);
-        self.oidc_oauth_username = ko.observable(self.data.oidc_oauth_username);
-        self.oidc_oauth_email = ko.observable(self.data.oidc_oauth_email);
-        self.oidc_oauth_firstname = ko.observable(self.data.oidc_oauth_firstname);
-        self.oidc_oauth_last_name = ko.observable(self.data.oidc_oauth_last_name);
-        self.oidc_oauth_account_name_property = ko.observable(self.data.oidc_oauth_account_name_property);
-        self.oidc_oauth_account_description_property = ko.observable(self.data.oidc_oauth_account_description_property);
-    }
-
-    self.initTabs = function () {
         if (self.hasHash()) {
             self.activateTab(self.getHash());
         } else {
             self.activateDefaultTab();
         }
+
+        self.setupListeners();
+
+        if (autoload) {
+            self.load();
+        }
     }
 
-    self.loadData = function () {
-        self.loading = true;
+    self.load = function () {
+        self.loading(true);
         $.ajax({
             url: self.api_url,
             type: 'POST',
@@ -225,8 +145,25 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         });
     }
 
-    self.updateWithDefaults = function (instance) {
-        self.data = $.extend(defaults, instance)
+    self.save = function () {
+        self.saving(true);
+        $.ajax({
+            url: self.api_url,
+            type: 'POST',
+            data: {_csrf_token: csrf_token, commit: 1, data: JSON.parse(ko.toJSON(self))},
+            dataType: 'json',
+            success: self.onDataSaved
+        });
+    }
+
+    self.update = function (instance) {
+        for (const [key, value] of Object.entries($.extend(defaults, instance))) {
+            if (ko.isObservable(self[key])) {
+                self[key](value);
+            } else {
+                self[key] = ko.observable(value);
+            }
+        }
     }
 
     self.activateTab = function (tab) {
@@ -259,29 +196,32 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         }
     }
 
-    self.onDataLoaded = function (data) {
-        self.updateWithDefaults(data);
-        self.setupObservables();
-        self.loading = false;
-
-        let el = null;
-        if (typeof selector !== 'undefined') {
-            el = $(selector)
+    self.onDataLoaded = function (result) {
+        if (result.status == 0) {
+            console.log('Error loading settings: ' + result.messages.join(', '));
+            self.loading(false);
+            return false;
         }
 
-        if (el !== null && el.length > 0) {
-            ko.applyBindings(self, el[0]);
-        } else {
-            ko.applyBindings(self);
-        }
+        self.update(result.data);
 
-        self.initTabs();
-        self.setupListeners();
+        console.log('Settings loaded: ' + result.messages.join(', '));
+
+        self.loading(false);
     }
 
-    self.onTabClick = function (model, event) {
-        self.activateTab($(event.target).data('tab'));
-        return false;
+    self.onDataSaved = function (result) {
+        if (result.status == 0) {
+            console.log('Error saving settings: ' + result.messages.join(', '));
+            self.saving(false);
+            return false;
+        }
+
+        self.update(result.data);
+
+        console.log('Settings saved: ' + result.messages.join(', '));
+
+        self.saving(false);
     }
 
     self.onHashChange = function (event) {
@@ -293,11 +233,13 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         }
     }
 
-    self.loadData();
-}
+    self.onSaveClick = function (model, event) {
+        self.save();
+        return false;
+    }
 
-$(function () {
-    // TODO: Load the data from the server and pass it to the model instantiation
-    loaded_data = {};
-    model = new AuthenticationSettingsModel(loaded_data, API_URL, CSRF_TOKEN, '#settings-editor');
-})
+    self.onTabClick = function (model, event) {
+        self.activateTab($(event.target).data('tab'));
+        return false;
+    }
+}
