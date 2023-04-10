@@ -323,6 +323,26 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
                     element.after(error);
                 }
             },
+            showErrors: function (errorMap, errorList) {
+                this.defaultShowErrors();
+                let selectors = [
+                    'input.error:not([disabled])',
+                    'select.error:not([disabled])',
+                    'textarea.error:not([disabled])',
+                ];
+                let selector_query = selectors.join(',');
+                let tabs = target.find('.tab-content > *[data-tab]')
+                tabs.each(function (index, tab) {
+                    tab = $(tab);
+                    let tabId = tab.data('tab');
+                    let tabLink = target.find('.nav-tabs > li > a[data-tab="' + tabId + '"]');
+                    if (tab.find(selector_query).length > 0) {
+                        tabLink.addClass('error');
+                    } else {
+                        tabLink.removeClass('error');
+                    }
+                });
+            },
             rules: {
                 local_db_enabled: 'auth_enabled',
                 ldap_enabled: 'auth_enabled',
