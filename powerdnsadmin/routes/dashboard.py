@@ -141,7 +141,7 @@ def domains_custom(tab_id):
     filtered_count = domains.count()
 
     start = int(request.args.get("start", 0))
-    length = min(int(request.args.get("length", 0)), 100)
+    length = min(int(request.args.get("length", 0)), max(100, int(Setting().get('default_domain_table_size'))))
 
     if length != -1:
         domains = domains[start:start + length]

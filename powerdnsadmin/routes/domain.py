@@ -560,13 +560,17 @@ def setting(domain_name):
         d = Domain(name=domain_name)
         domain_user_ids = d.get_user()
         account = d.get_account()
+        domain_info = d.get_domain_info(domain_name)
 
         return render_template('domain_setting.html',
                                domain=domain,
                                users=users,
                                domain_user_ids=domain_user_ids,
                                accounts=accounts,
-                               domain_account=account)
+                               domain_account=account,
+                               zone_type=domain_info["kind"].lower(),
+                               masters=','.join(domain_info["masters"]),
+                               soa_edit_api=domain_info["soa_edit_api"].upper())
 
     if request.method == 'POST':
         # username in right column

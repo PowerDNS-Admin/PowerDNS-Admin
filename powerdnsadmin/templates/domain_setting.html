@@ -218,15 +218,16 @@
                             <form method="post" action="{{ url_for('domain.change_type', domain_name=domain.name) }}">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                 <select name="domain_type" class="form-control" style="width:15em;">
-                                    <option selected value="0">- Unchanged -</option>
-                                    <option value="native">Native</option>
-                                    <option value="master">Primary</option>
-                                    <option value="slave">Secondary</option>
+                                    <option value="0">- Unchanged -</option>
+                                    {% for type in ["native", "master", "slave"] %}
+                                        <option {% if zone_type == type %}selected{% endif %} value="{{ type }}">{{ type | format_zone_type }}</option>
+                                    {% endfor %}
                                 </select><br/>
-                                <div class="form-group" style="display: none;" id="domain_master_address_div">
+                                <div class="form-group" style="{% if zone_type != 'slave' %}display: none;{% endif %}" id="domain_master_address_div">
                                     <input type="text" class="form-control" name="domain_master_address"
                                            id="domain_master_address"
-                                           placeholder="Enter valid Primary Server IP addresses (separated by commas)">
+                                           placeholder="Enter valid Primary Server IP addresses (separated by commas)"
+                                           value="{{ masters }}">
                                 </div>
                                 <button type="submit" title="Update Zone Type" class="btn btn-primary" id="change_type">
                                     <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Zone Type
@@ -276,10 +277,9 @@
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                 <select name="soa_edit_api" class="form-control" style="width:15em;">
                                     <option selected value="0">- Unchanged -</option>
-                                    <option>DEFAULT</option>
-                                    <option>INCREASE</option>
-                                    <option>EPOCH</option>
-                                    <option>OFF</option>
+                                    {% for edit_type in ["DEFAULT", "INCREASE", "EPOCH", "OFF"] %}
+                                        <option {% if soa_edit_api == edit_type %}selected{% endif %}>{{ edit_type }}</option>
+                                    {% endfor %}
                                 </select><br/>
                                 <button type="submit" title="Update SOA-EDIT-API" class="btn btn-primary"
                                         id="change_soa_edit_api">
