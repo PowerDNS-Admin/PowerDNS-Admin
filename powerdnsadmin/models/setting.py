@@ -411,7 +411,7 @@ class Setting(db.Model):
                 if hasattr(result, 'value'):
                     result = result.value
                 return strtobool(result) if result in [
-                    'True', 'False'
+                    'True', 'False', 'true', 'false', '1', '0'
                 ] else result
             else:
                 return self.defaults[setting]
