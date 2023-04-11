@@ -141,7 +141,7 @@ def domains_custom(tab_id):
     filtered_count = domains.count()
 
     start = int(request.args.get("start", 0))
-    length = min(int(request.args.get("length", 0)), 100)
+    length = min(int(request.args.get("length", 0)), max(100, int(Setting().get('default_domain_table_size'))))
 
     if length != -1:
         domains = domains[start:start + length]
@@ -176,10 +176,10 @@ def dashboard():
 
     BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
     if not BG_DOMAIN_UPDATE:
-        current_app.logger.info('Updating domains in foreground...')
+        current_app.logger.info('Updating zones in foreground...')
         Domain().update()
     else:
-        current_app.logger.info('Updating domains in background...')
+        current_app.logger.info('Updating zones in background...')
 
     show_bg_domain_button = BG_DOMAIN_UPDATE
     if BG_DOMAIN_UPDATE and current_user.role.name not in ['Administrator', 'Operator']:
@@ -196,7 +196,7 @@ def dashboard():
 @login_required
 @operator_role_required
 def domains_updater():
-    current_app.logger.debug('Update domains in background')
+    current_app.logger.debug('Update zones in background')
     d = Domain().update()
 
     response_data = {

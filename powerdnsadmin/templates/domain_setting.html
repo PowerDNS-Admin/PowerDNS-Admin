@@ -148,11 +148,11 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <p>Users on the right have access to manage the records in
-                                            the {{ domain.name | pretty_domain_name }} domain.</p>
+                                            the {{ domain.name | pretty_domain_name }} zone.</p>
                                         <p>Click on users to move from between columns.</p>
                                         <p>
                                             Users in <font style="color: red;">red</font> are Administrators
-                                            and already have access to <b>ALL</b> domains.
+                                            and already have access to <b>ALL</b> zones.
                                         </p>
                                     </div>
                                 </div>
@@ -197,7 +197,7 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <p>The type decides how the domain will be replicated across multiple DNS servers.</p>
+                            <p>The type decides how the zone will be replicated across multiple DNS servers.</p>
                             <ul>
                                 <li>
                                     Native - PowerDNS will not perform any replication. Use this if you only have one
@@ -214,19 +214,20 @@
                                     zone transfers (AXFRs) from other servers configured as primaries.
                                 </li>
                             </ul>
-                            <b>New Domain Type Setting:</b>
+                            <b>New Zone Type Setting:</b>
                             <form method="post" action="{{ url_for('domain.change_type', domain_name=domain.name) }}">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                 <select name="domain_type" class="form-control" style="width:15em;">
-                                    <option selected value="0">- Unchanged -</option>
-                                    <option value="native">Native</option>
-                                    <option value="primary">Primary</option>
-                                    <option value="secondary">Secondary</option>
+                                    <option value="0">- Unchanged -</option>
+                                    {% for type in ["native", "master", "slave"] %}
+                                        <option {% if zone_type == type %}selected{% endif %} value="{{ type }}">{{ type | format_zone_type }}</option>
+                                    {% endfor %}
                                 </select><br/>
-                                <div class="form-group" style="display: none;" id="domain_primary_address_div">
-                                    <input type="text" class="form-control" name="domain_primary_address"
-                                           id="domain_primary_address"
-                                           placeholder="Enter valid Primary Server IP addresses (separated by commas)">
+                                <div class="form-group" style="{% if zone_type != 'slave' %}display: none;{% endif %}" id="domain_master_address_div">
+                                    <input type="text" class="form-control" name="domain_master_address"
+                                           id="domain_master_address"
+                                           placeholder="Enter valid Primary Server IP addresses (separated by commas)"
+                                           value="{{ masters }}">
                                 </div>
                                 <button type="submit" title="Update Zone Type" class="btn btn-primary" id="change_type">
                                     <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Zone Type
@@ -251,7 +252,7 @@
                         <div class="card-body">
                             <p>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change
                                 is made
-                                to the domain.</p>
+                                to the zone.</p>
                             <ul>
                                 <li>
                                     DEFAULT - Generate a soa serial of YYYYMMDD01. If the current serial is lower than
@@ -276,10 +277,9 @@
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                 <select name="soa_edit_api" class="form-control" style="width:15em;">
                                     <option selected value="0">- Unchanged -</option>
-                                    <option>DEFAULT</option>
-                                    <option>INCREASE</option>
-                                    <option>EPOCH</option>
-                                    <option>OFF</option>
+                                    {% for edit_type in ["DEFAULT", "INCREASE", "EPOCH", "OFF"] %}
+                                        <option {% if soa_edit_api == edit_type %}selected{% endif %}>{{ edit_type }}</option>
+                                    {% endfor %}
                                 </select><br/>
                                 <button type="submit" title="Update SOA-EDIT-API" class="btn btn-primary"
                                         id="change_soa_edit_api">
@@ -303,9 +303,9 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <p>This function is used to remove a domain from PowerDNS-Admin <b>AND</b> PowerDNS. All
+                            <p>This function is used to remove a zone from PowerDNS-Admin <b>AND</b> PowerDNS. All
                                 records and
-                                user privileges associated with this domain will also be removed. This change cannot be
+                                user privileges associated with this zone will also be removed. This change cannot be
                                 reverted.</p>
                             <button type="button" title="Delete Zone" class="btn btn-danger float-left delete_domain"
                                     id="{{ domain.name }}">
@@ -402,7 +402,7 @@
             applyChanges(postdata, $SCRIPT_ROOT + '/domain/' + domain + '/manage-setting', true);
         });
 
-        // handle deletion of domain
+        // handle deletion of zone
         $(document.body).on('click', '.delete_domain', function () {
             var modal = $("#modal_delete_domain");
             var domain = $(this).prop('id');
@@ -419,13 +419,13 @@
             modal.modal('show');
         });
 
-        // domain primary address input handeling
+        // zone primary address input handeling
         $("select[name=domain_type]").change(function () {
             var type = $(this).val();
-            if (type == "secondary") {
-                $("#domain_primary_address_div").show();
+            if (type == "slave") {
+                $("#domain_master_address_div").show();
             } else {
-                $("#domain_primary_address_div").hide();
+                $("#domain_master_address_div").hide();
             }
         });
 

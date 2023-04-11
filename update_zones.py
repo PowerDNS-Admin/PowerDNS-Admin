@@ -29,6 +29,6 @@ with app.app_context():
         sys.exit(1)
 
     ### Start the update process
-    app.logger.info('Update domains from nameserver API')
+    app.logger.info('Update zones from nameserver API')
 
     Domain().update()

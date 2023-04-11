@@ -37,7 +37,7 @@
                                 <div class="form-group">
                                     <label for="domainid">Zone</label>
                                     <select id=domainid class="form-control" style="width:15em;">
-                                        <option value="0">- Select Domain -</option>
+                                        <option value="0">- Select Zone -</option>
                                         {% for domain in domainss %}
                                             <option value="{{ domain.id }}">{{ domain.name }}</option>
                                         {% endfor %}
@@ -83,7 +83,7 @@
         $(document.body).on("click", ".button_delete", function (e) {
             e.stopPropagation();
             if ($("#domainid").val() == 0) {
-                showErrorModal("Please select domain to remove.");
+                showErrorModal("Please select zone to remove.");
                 return;
             }
 

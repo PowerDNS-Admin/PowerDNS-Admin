@@ -34,13 +34,13 @@
                             <div class="nav-tabs-custom mb-2">
                                 <ul class="nav nav-tabs" role="tablist">
                                     <li class="nav-item">
-                                        <a class="nav-link active" href="#tabs-personal" data-toggle="tab">
+                                        <a class="nav-link {{ 'active' if not error_messages else '' }}" href="#tabs-personal" data-toggle="tab">
                                             Personal Info
                                         </a>
                                     </li>
                                     {% if session['authentication_type'] == 'LOCAL' %}
                                         <li class="nav-item">
-                                            <a class="nav-link" href="#tabs-password" data-toggle="tab">
+                                            <a class="nav-link {{ 'active' if 'password' in error_messages else '' }}" href="#tabs-password" data-toggle="tab">
                                                 Change Password
                                             </a>
                                         </li>
@@ -57,7 +57,8 @@
                             <!-- /.nav-tabs-custom -->
 
                             <div class="tab-content">
-                                <div class="tab-pane fade show active" id="tabs-personal">
+                                <div class="tab-pane fade {{ 'show active' if not error_messages else '' }}"
+                                        id="tabs-personal">
                                     <form role="form" method="post" action="{{ user_profile }}">
                                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                         <div class="form-group">
@@ -91,7 +92,8 @@
                                 <!-- /.tab-pane -->
 
                                 {% if session['authentication_type'] == 'LOCAL' %}
-                                    <div class="tab-pane fade" id="tabs-password">
+                                    <div class="tab-pane fade {{ 'show active' if 'password' in error_messages else '' }}"
+                                            id="tabs-password">
                                         {% if not current_user.password %}
                                             Your account password is managed via LDAP which isn't supported to
                                             change here.
@@ -101,8 +103,15 @@
                                                        value="{{ csrf_token() }}">
                                                 <div class="form-group">
                                                     <label for="password">New Password</label>
-                                                    <input type="password" class="form-control" name="password"
+                                                    <input type="password" class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}"
+                                                           name="password"
                                                            id="newpassword">
+                                                    {% if 'password' in error_messages %}
+                                                    <div class="invalid-feedback">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        {{ error_messages['password'] }}
+                                                    </div>
+                                                    {% endif %}
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="rpassword">Re-type New Password</label>

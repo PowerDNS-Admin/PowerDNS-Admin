@@ -4,8 +4,10 @@
 name: MegaLinter
 
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
+      - "*"
       - "dev"
       - "main"
       - "master"

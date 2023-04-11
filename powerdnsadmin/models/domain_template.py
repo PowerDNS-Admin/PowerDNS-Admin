@@ -45,11 +45,11 @@ class DomainTemplate(db.Model):
             return {'status': 'ok', 'msg': 'Template has been created'}
         except Exception as e:
             current_app.logger.error(
-                'Can not update domain template table. Error: {0}'.format(e))
+                'Can not update zone template table. Error: {0}'.format(e))
             db.session.rollback()
             return {
                 'status': 'error',
-                'msg': 'Can not update domain template table'
+                'msg': 'Can not update zone template table'
             }
 
     def delete_template(self):
@@ -60,6 +60,6 @@ class DomainTemplate(db.Model):
             return {'status': 'ok', 'msg': 'Template has been deleted'}
         except Exception as e:
             current_app.logger.error(
-                'Can not delete domain template. Error: {0}'.format(e))
+                'Can not delete zone template. Error: {0}'.format(e))
             db.session.rollback()
-            return {'status': 'error', 'msg': 'Can not delete domain template'}
+            return {'status': 'error', 'msg': 'Can not delete zone template'}

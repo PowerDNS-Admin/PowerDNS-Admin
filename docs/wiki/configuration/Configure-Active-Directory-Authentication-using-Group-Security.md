@@ -11,7 +11,7 @@ Active Directory Setup - Tested with Windows Server 2012
 5) Fill in the required info -
 
 * LDAP URI - ldap://ip.of.your.domain.controller:389
-* LDAP Base DN - dc=youdomain,dc=com
+* LDAP Base DN - dc=yourdomain,dc=com
 * Active Directory domain - yourdomain.com
 * Basic filter - (objectCategory=person)
   * the brackets here are **very important**

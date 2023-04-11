@@ -143,7 +143,7 @@
             var modal = $("#modal_revoke");
             var username = $(this).prop('id');
             var info = "Are you sure you want to revoke all privileges for user " + username +
-                "? They will not able to access any domain.";
+                "? They will not able to access any zone.";
             modal.find('.modal-body p').text(info);
             modal.find('#button_revoke_confirm').click(function () {
                 var postdata = {

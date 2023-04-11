@@ -72,8 +72,8 @@ def get_record_changes(del_rrset, add_rrset):
         """For the given record, return the state dict."""
         return {
             "disabled": record['disabled'],
-            "content":  record['content'],
-            "comment":  record.get('comment', ''),
+            "content": record['content'],
+            "comment": record.get('comment', ''),
         }
 
     add_records = get_records(add_rrset)
@@ -149,8 +149,8 @@ def extract_changelogs_from_a_history_entry(out_changes, history_entry, change_n
     # Sort them by the record name
     if change_num in out_changes:
         out_changes[change_num].sort(key=lambda change:
-                change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
-        )
+        change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
+                                     )
 
     # only used for changelog per record
     if record_name != None and record_type != None:  # then get only the records with the specific (record_name, record_type) tuple
@@ -838,10 +838,10 @@ class DetailedHistory():
 
         detail_dict = json.loads(history.detail)
 
-        if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a domain creation
+        if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a zone creation
             self.detailed_msg = render_template_string("""
                     <table class="table table-bordered table-striped">
-                        <tr><td>Domain Type:</td><td>{{ domaintype }}</td></tr>
+                        <tr><td>Zone Type:</td><td>{{ domaintype }}</td></tr>
                         <tr><td>Account:</td><td>{{ account }}</td></tr>
                     </table>
                 """,
@@ -881,7 +881,7 @@ class DetailedHistory():
                                                        authenticator=detail_dict['authenticator'],
                                                        ip_address=detail_dict['ip_address'])
 
-        elif 'add_rrsets' in detail_dict:  # this is a domain record change
+        elif 'add_rrsets' in detail_dict:  # this is a zone record change
             # changes_set = []
             self.detailed_msg = ""
             # extract_changelogs_from_a_history_entry(changes_set, history, 0)
@@ -897,11 +897,12 @@ class DetailedHistory():
                                                        description=DetailedHistory.get_key_val(detail_dict,
                                                                                                "description"))
 
-        elif 'Change domain' in history.msg and 'access control' in history.msg:  # added or removed a user from a domain
+        elif any(msg in history.msg for msg in ['Change zone',
+                                                'Change domain']) and 'access control' in history.msg:  # added or removed a user from a zone
             users_with_access = DetailedHistory.get_key_val(detail_dict, "user_has_access")
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
-                    <tr><td>Users with access to this domain</td><td>{{ users_with_access }}</td></tr>
+                    <tr><td>Users with access to this zone</td><td>{{ users_with_access }}</td></tr>
                     <tr><td>Number of users:</td><td>{{ users_with_access | length }}</td><tr>
                 </table>
                 """,
@@ -913,7 +914,7 @@ class DetailedHistory():
                     <tr><td>Key: </td><td>{{ keyname }}</td></tr>
                     <tr><td>Role:</td><td>{{ rolename }}</td></tr>
                     <tr><td>Description:</td><td>{{ description }}</td></tr>
-                    <tr><td>Accessible domains with this API key:</td><td>{{ linked_domains }}</td></tr>
+                    <tr><td>Accessible zones with this API key:</td><td>{{ linked_domains }}</td></tr>
                     <tr><td>Accessible accounts with this API key:</td><td>{{ linked_accounts }}</td></tr>
                 </table>
                 """,
@@ -932,7 +933,7 @@ class DetailedHistory():
                     <tr><td>Key: </td><td>{{ keyname }}</td></tr>
                     <tr><td>Role:</td><td>{{ rolename }}</td></tr>
                     <tr><td>Description:</td><td>{{ description }}</td></tr>
-                    <tr><td>Accessible domains with this API key:</td><td>{{ linked_domains }}</td></tr>
+                    <tr><td>Accessible zones with this API key:</td><td>{{ linked_domains }}</td></tr>
                 </table>
                 """,
                                                        keyname=DetailedHistory.get_key_val(detail_dict, "key"),
@@ -942,11 +943,11 @@ class DetailedHistory():
                                                        linked_domains=DetailedHistory.get_key_val(detail_dict,
                                                                                                   "domains"))
 
-        elif 'Update type for domain' in history.msg:
+        elif any(msg in history.msg for msg in ['Update type for zone', 'Update type for domain']):
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
-                    <tr><td>Domain: </td><td>{{ domain }}</td></tr>
-                    <tr><td>Domain type:</td><td>{{ domain_type }}</td></tr>
+                    <tr><td>Zone: </td><td>{{ domain }}</td></tr>
+                    <tr><td>Zone type:</td><td>{{ domain_type }}</td></tr>
                     <tr><td>Masters:</td><td>{{ masters }}</td></tr>
                 </table>
                 """,
@@ -957,8 +958,8 @@ class DetailedHistory():
         elif 'reverse' in history.msg:
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
-                    <tr><td>Domain Type: </td><td>{{ domain_type }}</td></tr>
-                    <tr><td>Domain Master IPs:</td><td>{{ domain_master_ips }}</td></tr>
+                    <tr><td>Zone Type: </td><td>{{ domain_type }}</td></tr>
+                    <tr><td>Zone Master IPs:</td><td>{{ domain_master_ips }}</td></tr>
                 </table>
                 """,
                                                        domain_type=DetailedHistory.get_key_val(detail_dict,
@@ -977,7 +978,8 @@ class DetailedHistory():
                                                                                                   'status'),
                                                        history_msg=DetailedHistory.get_key_val(detail_dict, 'msg'))
 
-        elif 'Update domain' in history.msg and 'associate account' in history.msg:  # When an account gets associated or dissociate with domains
+        elif any(msg in history.msg for msg in ['Update zone',
+                                                'Update domain']) and 'associate account' in history.msg:  # When an account gets associated or dissociate with zones
             self.detailed_msg = render_template_string('''
                 <table class="table table-bordered table-striped">
                     <tr><td>Associate: </td><td>{{ history_assoc_account }}</td></tr>
@@ -1164,7 +1166,7 @@ def history_table():  # ajax call data
         else:
             # if the user isn't an administrator or operator,
             # allow_user_view_history must be enabled to get here,
-            # so include history for the domains for the user
+            # so include history for the zones for the user
             base_query = db.session.query(History) \
                 .join(Domain, History.domain_id == Domain.id) \
                 .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
@@ -1233,9 +1235,14 @@ def history_table():  # ajax call data
                         db.or_(
                             History.msg.like("%domain " + domain_name) if domain_name != "*" else History.msg.like(
                                 "%domain%"),
+                            History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like(
+                                "%zone%"),
                             History.msg.like(
                                 "%domain " + domain_name + " access control") if domain_name != "*" else History.msg.like(
-                                "%domain%access control")
+                                "%domain%access control"),
+                            History.msg.like(
+                                "%zone " + domain_name + " access control") if domain_name != "*" else History.msg.like(
+                                "%zone%access control")
                         ),
                         History.created_on <= max_date if max_date != None else True,
                         History.created_on >= min_date if min_date != None else True,
@@ -1247,8 +1254,12 @@ def history_table():  # ajax call data
                 histories = base_query \
                     .filter(
                     db.and_(
-                        History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
-                            else History.msg.like("Apply record changes to domain%"),
+                        db.or_(
+                            History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
+                                else History.msg.like("Apply record changes to domain%"),
+                            History.msg.like("Apply record changes to zone " + domain_name) if domain_name != "*" \
+                                else History.msg.like("Apply record changes to zone%"),
+                        ),
                         History.created_on <= max_date if max_date != None else True,
                         History.created_on >= min_date if min_date != None else True,
                         History.created_by == changed_by if changed_by != None else True
@@ -1391,6 +1402,7 @@ def setting_basic():
         'default_domain_table_size',
         'default_record_table_size',
         'delete_sso_accounts',
+        'custom_history_header',
         'deny_domain_override',
         'dnssec_admins_only',
         'enable_api_rr_history',
@@ -1532,253 +1544,34 @@ def has_an_auth_method(local_db_enabled=None,
         oidc_oauth_enabled = Setting().get('oidc_oauth_enabled')
     if azure_oauth_enabled is None:
         azure_oauth_enabled = Setting().get('azure_oauth_enabled')
-    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled or azure_oauth_enabled
+    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled \
+        or azure_oauth_enabled
 
 
 @admin_bp.route('/setting/authentication', methods=['GET', 'POST'])
 @login_required
 @admin_role_required
 def setting_authentication():
-    if request.method == 'GET':
-        return render_template('admin_setting_authentication.html')
-    elif request.method == 'POST':
-        conf_type = request.form.get('config_tab')
-        result = None
+    return render_template('admin_setting_authentication.html')
 
-        if conf_type == 'general':
-            local_db_enabled = True if request.form.get(
-                'local_db_enabled') else False
-            signup_enabled = True if request.form.get(
-                'signup_enabled', ) else False
 
-            if not has_an_auth_method(local_db_enabled=local_db_enabled):
-                result = {
-                    'status':
-                        False,
-                    'msg':
-                        'Must have at least one authentication method enabled.'
-                }
-            else:
-                Setting().set('local_db_enabled', local_db_enabled)
-                Setting().set('signup_enabled', signup_enabled)
-                result = {'status': True, 'msg': 'Saved successfully'}
-        elif conf_type == 'ldap':
-            ldap_enabled = True if request.form.get('ldap_enabled') else False
+@admin_bp.route('/setting/authentication/api', methods=['POST'])
+@login_required
+@admin_role_required
+def setting_authentication_api():
+    result = {'status': 1, 'messages': [], 'data': {}}
 
-            if not has_an_auth_method(ldap_enabled=ldap_enabled):
-                result = {
-                    'status':
-                        False,
-                    'msg':
-                        'Must have at least one authentication method enabled.'
-                }
-            else:
-                Setting().set('ldap_enabled', ldap_enabled)
-                Setting().set('ldap_type', request.form.get('ldap_type'))
-                Setting().set('ldap_uri', request.form.get('ldap_uri'))
-                Setting().set('ldap_base_dn', request.form.get('ldap_base_dn'))
-                Setting().set('ldap_admin_username',
-                              request.form.get('ldap_admin_username'))
-                Setting().set('ldap_admin_password',
-                              request.form.get('ldap_admin_password'))
-                Setting().set('ldap_filter_basic',
-                              request.form.get('ldap_filter_basic'))
-                Setting().set('ldap_filter_group',
-                              request.form.get('ldap_filter_group'))
-                Setting().set('ldap_filter_username',
-                              request.form.get('ldap_filter_username'))
-                Setting().set('ldap_filter_groupname',
-                              request.form.get('ldap_filter_groupname'))
-                Setting().set(
-                    'ldap_sg_enabled', True
-                    if request.form.get('ldap_sg_enabled') == 'ON' else False)
-                Setting().set('ldap_admin_group',
-                              request.form.get('ldap_admin_group'))
-                Setting().set('ldap_operator_group',
-                              request.form.get('ldap_operator_group'))
-                Setting().set('ldap_user_group',
-                              request.form.get('ldap_user_group'))
-                Setting().set('ldap_domain', request.form.get('ldap_domain'))
-                Setting().set(
-                    'autoprovisioning', True
-                    if request.form.get('autoprovisioning') == 'ON' else False)
-                Setting().set('autoprovisioning_attribute',
-                              request.form.get('autoprovisioning_attribute'))
+    if request.form.get('commit') == '1':
+        model = Setting()
+        data = json.loads(request.form.get('data'))
 
-                if request.form.get('autoprovisioning') == 'ON':
-                    if validateURN(request.form.get('urn_value')):
-                        Setting().set('urn_value',
-                                      request.form.get('urn_value'))
-                    else:
-                        return render_template('admin_setting_authentication.html',
-                                               error="Invalid urn")
-                else:
-                    Setting().set('urn_value',
-                                  request.form.get('urn_value'))
+        for key, value in data.items():
+            if key in model.groups['authentication']:
+                model.set(key, value)
 
-                Setting().set('purge', True
-                if request.form.get('purge') == 'ON' else False)
+    result['data'] = Setting().get_group('authentication')
 
-                result = {'status': True, 'msg': 'Saved successfully'}
-        elif conf_type == 'google':
-            google_oauth_enabled = True if request.form.get(
-                'google_oauth_enabled') else False
-            if not has_an_auth_method(google_oauth_enabled=google_oauth_enabled):
-                result = {
-                    'status':
-                        False,
-                    'msg':
-                        'Must have at least one authentication method enabled.'
-                }
-            else:
-                Setting().set('google_oauth_enabled', google_oauth_enabled)
-                Setting().set('google_oauth_client_id',
-                              request.form.get('google_oauth_client_id'))
-                Setting().set('google_oauth_client_secret',
-                              request.form.get('google_oauth_client_secret'))
-                Setting().set('google_token_url',
-                              request.form.get('google_token_url'))
-                Setting().set('google_oauth_scope',
-                              request.form.get('google_oauth_scope'))
-                Setting().set('google_authorize_url',
-                              request.form.get('google_authorize_url'))
-                Setting().set('google_base_url',
-                              request.form.get('google_base_url'))
-                result = {
-                    'status': True,
-                    'msg':
-                        'Saved successfully. Please reload PDA to take effect.'
-                }
-        elif conf_type == 'github':
-            github_oauth_enabled = True if request.form.get(
-                'github_oauth_enabled') else False
-            if not has_an_auth_method(github_oauth_enabled=github_oauth_enabled):
-                result = {
-                    'status':
-                        False,
-                    'msg':
-                        'Must have at least one authentication method enabled.'
-                }
-            else:
-                Setting().set('github_oauth_enabled', github_oauth_enabled)
-                Setting().set('github_oauth_key',
-                              request.form.get('github_oauth_key'))
-                Setting().set('github_oauth_secret',
-                              request.form.get('github_oauth_secret'))
-                Setting().set('github_oauth_scope',
-                              request.form.get('github_oauth_scope'))
-                Setting().set('github_oauth_api_url',
-                              request.form.get('github_oauth_api_url'))
-                Setting().set('github_oauth_token_url',
-                              request.form.get('github_oauth_token_url'))
-                Setting().set('github_oauth_authorize_url',
-                              request.form.get('github_oauth_authorize_url'))
-                result = {
-                    'status': True,
-                    'msg':
-                        'Saved successfully. Please reload PDA to take effect.'
-                }
-        elif conf_type == 'azure':
-            azure_oauth_enabled = True if request.form.get(
-                'azure_oauth_enabled') else False
-            if not has_an_auth_method(azure_oauth_enabled=azure_oauth_enabled):
-                result = {
-                    'status':
-                        False,
-                    'msg':
-                        'Must have at least one authentication method enabled.'
-                }
-            else:
-                Setting().set('azure_oauth_enabled', azure_oauth_enabled)
-                Setting().set('azure_oauth_key',
-                              request.form.get('azure_oauth_key'))
-                Setting().set('azure_oauth_secret',
-                              request.form.get('azure_oauth_secret'))
-                Setting().set('azure_oauth_scope',
-                              request.form.get('azure_oauth_scope'))
-                Setting().set('azure_oauth_api_url',
-                              request.form.get('azure_oauth_api_url'))
-                Setting().set('azure_oauth_token_url',
-                              request.form.get('azure_oauth_token_url'))
-                Setting().set('azure_oauth_authorize_url',
-                              request.form.get('azure_oauth_authorize_url'))
-                Setting().set(
-                    'azure_sg_enabled', True
-                    if request.form.get('azure_sg_enabled') == 'ON' else False)
-                Setting().set('azure_admin_group',
-                              request.form.get('azure_admin_group'))
-                Setting().set('azure_operator_group',
-                              request.form.get('azure_operator_group'))
-                Setting().set('azure_user_group',
-                              request.form.get('azure_user_group'))
-                Setting().set(
-                    'azure_group_accounts_enabled', True
-                    if request.form.get('azure_group_accounts_enabled') == 'ON' else False)
-                Setting().set('azure_group_accounts_name',
-                              request.form.get('azure_group_accounts_name'))
-                Setting().set('azure_group_accounts_name_re',
-                              request.form.get('azure_group_accounts_name_re'))
-                Setting().set('azure_group_accounts_description',
-                              request.form.get('azure_group_accounts_description'))
-                Setting().set('azure_group_accounts_description_re',
-                              request.form.get('azure_group_accounts_description_re'))
-                result = {
-                    'status': True,
-                    'msg':
-                        'Saved successfully. Please reload PDA to take effect.'
-                }
-        elif conf_type == 'oidc':
-            oidc_oauth_enabled = True if request.form.get(
-                'oidc_oauth_enabled') else False
-            if not has_an_auth_method(oidc_oauth_enabled=oidc_oauth_enabled):
-                result = {
-                    'status':
-                        False,
-                    'msg':
-                        'Must have at least one authentication method enabled.'
-                }
-            else:
-                Setting().set(
-                    'oidc_oauth_enabled',
-                    True if request.form.get('oidc_oauth_enabled') else False)
-                Setting().set('oidc_oauth_key',
-                              request.form.get('oidc_oauth_key'))
-                Setting().set('oidc_oauth_secret',
-                              request.form.get('oidc_oauth_secret'))
-                Setting().set('oidc_oauth_scope',
-                              request.form.get('oidc_oauth_scope'))
-                Setting().set('oidc_oauth_api_url',
-                              request.form.get('oidc_oauth_api_url'))
-                Setting().set('oidc_oauth_token_url',
-                              request.form.get('oidc_oauth_token_url'))
-                Setting().set('oidc_oauth_authorize_url',
-                              request.form.get('oidc_oauth_authorize_url'))
-                Setting().set('oidc_oauth_metadata_url',
-                              request.form.get('oidc_oauth_metadata_url'))
-                Setting().set('oidc_oauth_logout_url',
-                              request.form.get('oidc_oauth_logout_url'))
-                Setting().set('oidc_oauth_username',
-                              request.form.get('oidc_oauth_username'))
-                Setting().set('oidc_oauth_firstname',
-                              request.form.get('oidc_oauth_firstname'))
-                Setting().set('oidc_oauth_last_name',
-                              request.form.get('oidc_oauth_last_name'))
-                Setting().set('oidc_oauth_email',
-                              request.form.get('oidc_oauth_email'))
-                Setting().set('oidc_oauth_account_name_property',
-                              request.form.get('oidc_oauth_account_name_property'))
-                Setting().set('oidc_oauth_account_description_property',
-                              request.form.get('oidc_oauth_account_description_property'))
-                result = {
-                    'status': True,
-                    'msg':
-                        'Saved successfully. Please reload PDA to take effect.'
-                }
-        else:
-            return abort(400)
-
-        return render_template('admin_setting_authentication.html',
-                               result=result)
+    return result
 
 
 @admin_bp.route('/templates', methods=['GET', 'POST'])
@@ -1815,7 +1608,7 @@ def create_template():
             t = DomainTemplate(name=name, description=description)
             result = t.create()
             if result['status'] == 'ok':
-                history = History(msg='Add domain template {0}'.format(name),
+                history = History(msg='Add zone template {0}'.format(name),
                                   detail=json.dumps({
                                       'name': name,
                                       'description': description
@@ -1828,7 +1621,7 @@ def create_template():
                 return redirect(url_for('admin.create_template'))
         except Exception as e:
             current_app.logger.error(
-                'Cannot create domain template. Error: {0}'.format(e))
+                'Cannot create zone template. Error: {0}'.format(e))
             current_app.logger.debug(traceback.format_exc())
             abort(500)
 
@@ -1862,7 +1655,7 @@ def create_template_from_zone():
         t = DomainTemplate(name=name, description=description)
         result = t.create()
         if result['status'] == 'ok':
-            history = History(msg='Add domain template {0}'.format(name),
+            history = History(msg='Add zone template {0}'.format(name),
                               detail=json.dumps({
                                   'name': name,
                                   'description': description
@@ -1870,7 +1663,7 @@ def create_template_from_zone():
                               created_by=current_user.username)
             history.add()
 
-            # After creating the domain in Domain Template in the,
+            # After creating the zone in Zone Template in the,
             # local DB. We add records into it Record Template.
             records = []
             domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -1899,7 +1692,7 @@ def create_template_from_zone():
                         'msg': result['msg']
                     }), 200)
             else:
-                # Revert the domain template (remove it)
+                # Revert the zone template (remove it)
                 # ff we cannot add records.
                 t.delete_template()
                 return make_response(
@@ -1956,7 +1749,7 @@ def edit_template(template):
                                    ttl_options=ttl_options)
     except Exception as e:
         current_app.logger.error(
-            'Cannot open domain template page. DETAIL: {0}'.format(e))
+            'Cannot open zone template page. DETAIL: {0}'.format(e))
         current_app.logger.debug(traceback.format_exc())
         abort(500)
     return redirect(url_for('admin.templates'))
@@ -1994,7 +1787,7 @@ def apply_records(template):
             jdata.pop('_csrf_token',
                       None)  # don't store csrf token in the history.
             history = History(
-                msg='Apply domain template record changes to domain template {0}'
+                msg='Apply zone template record changes to zone template {0}'
                 .format(template),
                 detail=json.dumps(jdata),
                 created_by=current_user.username)
@@ -2025,7 +1818,7 @@ def delete_template(template):
             result = t.delete_template()
             if result['status'] == 'ok':
                 history = History(
-                    msg='Deleted domain template {0}'.format(template),
+                    msg='Deleted zone template {0}'.format(template),
                     detail=json.dumps({'name': template}),
                     created_by=current_user.username)
                 history.add()
@@ -2055,16 +1848,16 @@ def global_search():
             results = server.global_search(object_type='all', query=query)
 
             # Filter results to domains to which the user has access permission
-            if current_user.role.name not in [ 'Administrator', 'Operator' ]:
+            if current_user.role.name not in ['Administrator', 'Operator']:
                 allowed_domains = db.session.query(Domain) \
                     .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
                     .outerjoin(Account, Domain.account_id == Account.id) \
                     .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
                     .filter(
-                        db.or_(
-                            DomainUser.user_id == current_user.id,
-                            AccountUser.user_id == current_user.id
-                        )) \
+                    db.or_(
+                        DomainUser.user_id == current_user.id,
+                        AccountUser.user_id == current_user.id
+                    )) \
                     .with_entities(Domain.name) \
                     .all()
                 allowed_domains = [value for value, in allowed_domains]
@@ -2129,3 +1922,10 @@ def validateURN(value):
         return False
 
     return True
+
+
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except (ValueError, TypeError):
+        return default

@@ -101,14 +101,22 @@
                             </a>
                         </li>
                     {% endif %}
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                        <li class="nav-header">Administration</li>
-                        <li class="{{ 'nav-item active' if active_page == 'admin_global_search' else 'nav-item' }}">
-                            <a href="{{ url_for('admin.global_search') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-search"></i>
-                                <p>Global Search</p>
+                    <li class="nav-header">Administration</li>
+                    <li class="{{ 'nav-item active' if active_page == 'admin_global_search' else 'nav-item' }}">
+                        <a href="{{ url_for('admin.global_search') }}" class="nav-link">
+                            <i class="nav-icon fa-solid fa-search"></i>
+                            <p>Global Search</p>
+                        </a>
+                    </li>
+                    {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
+                        <li class="{{ 'nav-item active' if active_page == 'admin_history' else 'nav-item' }}">
+                            <a href="{{ url_for('admin.history') }}" class="nav-link">
+                                <i class="nav-icon fa-solid fa-timeline"></i>
+                                <p>Activity</p>
                             </a>
                         </li>
+                    {% endif %}
+                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
                         <li class="{{ 'nav-item active' if active_page == 'server_statistics' else 'nav-item' }}">
                             <a href="{{ url_for('admin.server_statistics') }}" class="nav-link">
                                 <i class="nav-icon fa-solid fa-chart-simple"></i>
@@ -119,12 +127,6 @@
                             <a href="{{ url_for('admin.server_configuration') }}" class="nav-link">
                                 <i class="nav-icon fa-solid fa-cog"></i>
                                 <p>Server Configuration</p>
-                            </a>
-                        </li>
-                        <li class="{{ 'nav-item active' if active_page == 'admin_history' else 'nav-item' }}">
-                            <a href="{{ url_for('admin.history') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-timeline"></i>
-                                <p>Activity</p>
                             </a>
                         </li>
                         <li class="{{ 'nav-item active' if active_page == 'admin_domain_template' else 'nav-item' }}">
@@ -189,14 +191,6 @@
                                 {% endif %}
                             </ul>
                         </li>
-                    {% elif SETTING.get('allow_user_view_history') %}
-                        <li class="nav-header">Administration</li>
-                        <li class="{{ 'nav-item active' if active_page == 'admin_history' else 'nav-item' }}">
-                            <a href="{{ url_for('admin.history') }}" class="nav-link">
-                                <i class="nav-icon fa-solid fa-calendar-alt"></i>
-                                <p>History</p>
-                            </a>
-                        </li>
                     {% endif %}
                 </ul>
             {% endif %}
@@ -234,7 +228,7 @@
     <footer class="main-footer">
         <strong><a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></strong> - A PowerDNS web
         interface with advanced features.
-        <span class="float-right">Version 0.4.0</span>
+        <span class="float-right">Version 0.4.1</span>
     </footer>
 </div>
 <!-- ./wrapper -->

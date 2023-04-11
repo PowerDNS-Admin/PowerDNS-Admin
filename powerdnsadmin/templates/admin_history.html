@@ -39,8 +39,8 @@
                                 </div>
                             {% endif %}
                         </div>
-                        <div class="card-body clearfix">
-                            <form id="history-search-form" autocomplete="off">
+                        <form id="history-search-form" autocomplete="off">
+                            <div class="card-body clearfix">
                                 <ul class="nav nav-tabs" id="custom-content-below-tab" role="tablist">
                                     <li class="nav-item">
                                         <a class="nav-link active" href="#tabs-act" data-toggle="pill" role="tab">
@@ -49,7 +49,7 @@
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" href="#tabs-domain" data-toggle="pill" role="tab">
-                                            Search By Domain
+                                            Search By Zone
                                         </a>
                                     </li>
                                     <li class="nav-item">
@@ -71,13 +71,13 @@
                                     </div>
                                     <div class="tab-pane" id="tabs-domain">
                                         <td>
-                                            <label>Domain Name</label>
+                                            <label>Zone Name</label>
                                         </td>
                                         <td>
                                             <div class="autocomplete" style="width:250px;">
                                                 <input type="text" class="form-control" id="domain_name_filter"
                                                        name="domain_name_filter"
-                                                       placeholder="Enter * to search for any domain" value="">
+                                                       placeholder="Enter * to search for any zone" value="">
                                             </div>
                                         </td>
                                         <td>
@@ -144,65 +144,64 @@
                                     </td>
                                 </div>
                                 </td>
-                            </form>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <table id="Filters-Table">
-                            <thead>
-                            <th>Filters</th>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td><label>Changed by: &nbsp</label></td>
-                                <td>
-                                    <div class="autocomplete" style="width:250px;">
-                                        <input type="text" style=" border:1px solid #d2d6de; width:250px; height: 34px;"
-                                               id="user_name_filter" name="user_name_filter" value="">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="position: relative; top:10px;">
-                                    <label>Minimum date: &nbsp</label>
-                                </td>
-                                <td style="position: relative; top:10px;">
-                                    <input type="text" id="min" name="min" class="datepicker" autocomplete="off"
-                                           style=" border:1px solid #d2d6de; width:250px; height: 34px;">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="position: relative; top:20px;">
-                                    <label>Maximum date: &nbsp</label>
-                                </td>
-                                <td style="position: relative; top:20px;">
-                                    <input type="text" id="max" name="max" class="datepicker" autocomplete="off"
-                                           style=" border:1px solid #d2d6de; width:250px; height: 34px;">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>&nbsp</td>
-                            </tr>
-                            <tr>
-                                <td>&nbsp</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <button type="submit" id="search-submit" name="search-submit"
-                                            class="btn btn-primary button-filter"><i class="fa fa-search"></i>&nbsp;Search
-                                    </button>
-                                </td>
-                                <td>
-                                    <button id="clear-filters" name="clear-filters"
-                                            class="btn btn-warning button-clearf"><i class="fa fa-trash"></i>&nbsp;Clear
-                                        Filters
-                                    </button>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                        </form>
-                    </div>
+                        <div class="card-body">
+                            <table id="Filters-Table">
+                                <thead>
+                                <th>Filters</th>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><label>Changed by: &nbsp</label></td>
+                                    <td>
+                                        <div class="autocomplete" style="width:250px;">
+                                            <input type="text" style=" border:1px solid #d2d6de; width:250px; height: 34px;"
+                                                   id="user_name_filter" name="user_name_filter" value="">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="position: relative; top:10px;">
+                                        <label>Minimum date: &nbsp</label>
+                                    </td>
+                                    <td style="position: relative; top:10px;">
+                                        <input type="text" id="min" name="min" class="datepicker" autocomplete="off"
+                                               style=" border:1px solid #d2d6de; width:250px; height: 34px;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="position: relative; top:20px;">
+                                        <label>Maximum date: &nbsp</label>
+                                    </td>
+                                    <td style="position: relative; top:20px;">
+                                        <input type="text" id="max" name="max" class="datepicker" autocomplete="off"
+                                               style=" border:1px solid #d2d6de; width:250px; height: 34px;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>&nbsp</td>
+                                </tr>
+                                <tr>
+                                    <td>&nbsp</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button type="submit" id="search-submit" name="search-submit"
+                                                class="btn btn-primary button-filter"><i class="fa fa-search"></i>&nbsp;Search
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button id="clear-filters" name="clear-filters"
+                                                class="btn btn-warning button-clearf"><i class="fa fa-trash"></i>&nbsp;Clear
+                                            Filters
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
                     <div id="table_from_ajax"></div>
                 </div>
     </section>
@@ -447,7 +446,7 @@
             $('#auth_name_filter').val('');
             $('#user_name_filter').removeAttr('disabled');
             canSearch = false;
-            main_field = "Domain Name"
+            main_field = "Zone Name"
         });
 
         $('#account_tab').click(function () {

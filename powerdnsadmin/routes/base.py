@@ -60,14 +60,30 @@ def login_via_authorization_header_or_remote_user(request):
     # Try to login using Basic Authentication
     auth_header = request.headers.get('Authorization')
     if auth_header:
+
+        if auth_header[:6] != "Basic ":
+            return None
+
         auth_method = request.args.get('auth_method', 'LOCAL')
         auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
-        auth_header = auth_header.replace('Basic ', '', 1)
+
+        # Remove "Basic " from the header value
+        auth_header = auth_header[6:]
+
         try:
             auth_header = str(base64.b64decode(auth_header), 'utf-8')
-            username, password = auth_header.split(":")
-        except TypeError as e:
+        except (UnicodeDecodeError, TypeError) as e:
             return None
+
+        # NK: We use auth_components here as we don't know if we'll have a :, we split it maximum 1 times to grab the
+        #     username, the rest of the string would be the password.
+        auth_components = auth_header.split(':', maxsplit=1)
+
+        # If we don't have two auth components (username, password), we can return
+        if len(auth_components) != 2:
+            return None
+
+        (username, password) = auth_components
 
         user = User(username=username,
                     password=password,
