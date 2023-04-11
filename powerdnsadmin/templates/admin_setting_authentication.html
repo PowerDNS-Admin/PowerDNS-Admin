@@ -450,15 +450,15 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="ldap_sg_enabled"
-                                                                                   id="ldap_sg_off" value="0"
-                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: 0">
+                                                                                   id="ldap_sg_off" value="false"
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="ldap_sg_enabled"
-                                                                                   id="ldap_sg_on" value="1"
-                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: 1">
+                                                                                   id="ldap_sg_on" value="true"
+                                                                                   data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -497,15 +497,15 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="autoprovisioning"
-                                                                                   id="autoprovisioning_off" value="0"
-                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: 0">
+                                                                                   id="autoprovisioning_off" value="false"
+                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="autoprovisioning"
-                                                                                   id="autoprovisioning_on" value="1"
-                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: 1">
+                                                                                   id="autoprovisioning_on" value="true"
+                                                                                   data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -540,16 +540,16 @@
                                                                         <label>
                                                                             <input type="radio" name="purge"
                                                                                    id="purge_off"
-                                                                                   value="0"
-                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: 0">
+                                                                                   value="false"
+                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="purge"
                                                                                    id="purge_on"
-                                                                                   value="1"
-                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: 1">
+                                                                                   value="true"
+                                                                                   data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -1112,15 +1112,15 @@
                                                                     <div class="radio">
                                                                         <label>
                                                                             <input type="radio" name="azure_sg_enabled"
-                                                                                   id="azure_sg_off" value="0"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: 0">
+                                                                                   id="azure_sg_off" value="false"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
                                                                         <label>
                                                                             <input type="radio" name="azure_sg_enabled"
-                                                                                   id="azure_sg_on" value="1"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: 1">
+                                                                                   id="azure_sg_on" value="true"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>
@@ -1163,8 +1163,8 @@
                                                                             <input type="radio"
                                                                                    name="azure_group_accounts_enabled"
                                                                                    id="azure_group_accounts_off"
-                                                                                   value="0"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: 0">
+                                                                                   value="false"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: false">
                                                                             OFF
                                                                         </label>
                                                                         &nbsp;&nbsp;&nbsp;
@@ -1172,8 +1172,8 @@
                                                                             <input type="radio"
                                                                                    name="azure_group_accounts_enabled"
                                                                                    id="azure_group_accounts_on"
-                                                                                   value="1"
-                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: 1">
+                                                                                   value="true"
+                                                                                   data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: true">
                                                                             ON
                                                                         </label>
                                                                     </div>

@@ -13,7 +13,130 @@ class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, index=True)
     value = db.Column(db.Text())
-
+    
+    types = {
+        'maintenance': bool,
+        'fullscreen_layout': bool,
+        'record_helper': bool,
+        'login_ldap_first': bool,
+        'default_record_table_size': int,
+        'default_domain_table_size': int,
+        'auto_ptr': bool,
+        'record_quick_edit': bool,
+        'pretty_ipv6_ptr': bool,
+        'dnssec_admins_only': bool,
+        'allow_user_create_domain': bool,
+        'allow_user_remove_domain': bool,
+        'allow_user_view_history': bool,
+        'custom_history_header': str,
+        'delete_sso_accounts': bool,
+        'bg_domain_updates': bool,
+        'enable_api_rr_history': bool,
+        'preserve_history': bool,
+        'site_name': str,
+        'site_url': str,
+        'session_timeout': int,
+        'warn_session_timeout': bool,
+        'pdns_api_url': str,
+        'pdns_api_key': str,
+        'pdns_api_timeout': int,
+        'pdns_version': str,
+        'verify_ssl_connections': bool,
+        'verify_user_email': bool,
+        'enforce_api_ttl': bool,
+        'ttl_options': str,
+        'otp_field_enabled': bool,
+        'custom_css': str,
+        'otp_force': bool,
+        'max_history_records': int,
+        'deny_domain_override': bool,
+        'account_name_extra_chars': bool,
+        'gravatar_enabled': bool,
+        'forward_records_allow_edit': dict,
+        'reverse_records_allow_edit': dict,
+        'local_db_enabled': bool,
+        'signup_enabled': bool,
+        'pwd_enforce_characters': bool,
+        'pwd_min_len': int,
+        'pwd_min_lowercase': int,
+        'pwd_min_uppercase': int,
+        'pwd_min_digits': int,
+        'pwd_min_special': int,
+        'pwd_enforce_complexity': bool,
+        'pwd_min_complexity': int,
+        'ldap_enabled': bool,
+        'ldap_type': str,
+        'ldap_uri': str,
+        'ldap_base_dn': str,
+        'ldap_admin_username': str,
+        'ldap_admin_password': str,
+        'ldap_domain': str,
+        'ldap_filter_basic': str,
+        'ldap_filter_username': str,
+        'ldap_filter_group': str,
+        'ldap_filter_groupname': str,
+        'ldap_sg_enabled': bool,
+        'ldap_admin_group': str,
+        'ldap_operator_group': str,
+        'ldap_user_group': str,
+        'autoprovisioning': bool,
+        'autoprovisioning_attribute': str,
+        'urn_value': str,
+        'purge': bool,
+        'google_oauth_enabled': bool,
+        'google_oauth_client_id': str,
+        'google_oauth_client_secret': str,
+        'google_oauth_scope': str,
+        'google_base_url': str,
+        'google_oauth_auto_configure': bool,
+        'google_oauth_metadata_url': str,
+        'google_token_url': str,
+        'google_authorize_url': str,
+        'github_oauth_enabled': bool,
+        'github_oauth_key': str,
+        'github_oauth_secret': str,
+        'github_oauth_scope': str,
+        'github_oauth_api_url': str,
+        'github_oauth_auto_configure': bool,
+        'github_oauth_metadata_url': str,
+        'github_oauth_token_url': str,
+        'github_oauth_authorize_url': str,
+        'azure_oauth_enabled': bool,
+        'azure_oauth_key': str,
+        'azure_oauth_secret': str,
+        'azure_oauth_scope': str,
+        'azure_oauth_api_url': str,
+        'azure_oauth_auto_configure': bool,
+        'azure_oauth_metadata_url': str,
+        'azure_oauth_token_url': str,
+        'azure_oauth_authorize_url': str,
+        'azure_sg_enabled': bool,
+        'azure_admin_group': str,
+        'azure_operator_group': str,
+        'azure_user_group': str,
+        'azure_group_accounts_enabled': bool,
+        'azure_group_accounts_name': str,
+        'azure_group_accounts_name_re': str,
+        'azure_group_accounts_description': str,
+        'azure_group_accounts_description_re': str,
+        'oidc_oauth_enabled': bool,
+        'oidc_oauth_key': str,
+        'oidc_oauth_secret': str,
+        'oidc_oauth_scope': str,
+        'oidc_oauth_api_url': str,
+        'oidc_oauth_auto_configure': bool,
+        'oidc_oauth_metadata_url': str,
+        'oidc_oauth_token_url': str,
+        'oidc_oauth_authorize_url': str,
+        'oidc_oauth_logout_url': str,
+        'oidc_oauth_username': str,
+        'oidc_oauth_email': str,
+        'oidc_oauth_firstname': str,
+        'oidc_oauth_last_name': str,
+        'oidc_oauth_account_name_property': str,
+        'oidc_oauth_account_description_property': str,
+    }
+    
     defaults = {
         # General Settings
         'maintenance': False,
@@ -334,6 +457,34 @@ class Setting(db.Model):
         self.name = name
         self.value = value
 
+    def convert_type(self, name, value):
+        import json
+        if name in self.types:
+            var_type = self.types[name]
+
+            # Handle boolean values
+            if var_type == bool:
+                if value == 'True' or value == 'true' or value == '1' or value == True:
+                    return True
+                else:
+                    return False
+
+            # Handle float values
+            if var_type == float:
+                return float(value)
+
+            # Handle integer values
+            if var_type == int:
+                return int(value)
+
+            if var_type == dict or var_type == list:
+                return json.loads(value)
+
+            if var_type == str:
+                return str(value)
+
+        return value
+
     def set_maintenance(self, mode):
         maintenance = Setting.query.filter(
             Setting.name == 'maintenance').first()
@@ -386,7 +537,7 @@ class Setting(db.Model):
             current_setting = Setting(name=setting, value=None)
             db.session.add(current_setting)
 
-        value = str(value)
+        value = str(self.convert_type(setting, value))
 
         try:
             current_setting.value = value
@@ -410,16 +561,15 @@ class Setting(db.Model):
             if result is not None:
                 if hasattr(result, 'value'):
                     result = result.value
-                return strtobool(result) if result in [
-                    'True', 'False', 'true', 'false', '1', '0'
-                ] else result
+
+                return self.convert_type(setting, result)
             else:
                 return self.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
 
     def get_group(self, group):
-        if isinstance(group, str):
+        if not isinstance(group, list):
             group = self.groups[group]
 
         result = {}
@@ -427,16 +577,7 @@ class Setting(db.Model):
 
         for record in records:
             if record.name in group:
-                value = record.value
-
-                if value in ['True', 'False']:
-                    value = strtobool(value)
-                elif value.isdecimal() and '.' in value:
-                    value = float(value)
-                elif value.isnumeric():
-                    value = int(value)
-
-                result[record.name] = value
+                result[record.name] = self.convert_type(record.name, record.value)
 
         return result
 
