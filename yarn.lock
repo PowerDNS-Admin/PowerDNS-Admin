@@ -42,7 +42,7 @@
   resolved "https://registry.yarnpkg.com/@foliojs-fork/restructure/-/restructure-2.0.2.tgz#73759aba2aff1da87b7c4554e6839c70d43c92b4"
   integrity sha512-59SgoZ3EXbkfSX7b63tsou/SDGzwUEK6MuB5sKqgVK1/XE0fxmpsOb9DQI8LXW3KfGnAjImCGhhEb7uPPAUVNA==
 
-"@fortawesome/fontawesome-free@6.3.0":
+"@fortawesome/fontawesome-free@6.3.0", "@fortawesome/fontawesome-free@^5.15.4":
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-6.3.0.tgz#b5877182692a6f7a39d1108837bec24247ba4bd7"
   integrity sha512-qVtd5i1Cc7cdrqnTWqTObKQHjPWAiRwjUPaXObaeNPcy7+WKxJumGBx66rfSFgK6LNpIasVKkEgW8oyf0tmPLA==
@@ -1026,7 +1026,7 @@ jquery-ui-dist@^1.13.0, jquery-ui-dist@^1.13.2:
   dependencies:
     jquery ">=1.8.0 <4.0.0"
 
-jquery-validation@^1.19.3:
+jquery-validation@^1.19.3, jquery-validation@^1.19.5:
   version "1.19.5"
   resolved "https://registry.yarnpkg.com/jquery-validation/-/jquery-validation-1.19.5.tgz#557495b7cad79716897057c4447ad3cd76fda811"
   integrity sha512-X2SmnPq1mRiDecVYL8edWx+yTBZDyC8ohWXFhXdtqFHgU9Wd4KHkvcbCoIZ0JaSaumzS8s2gXSkP8F7ivg/8ZQ==
@@ -1080,6 +1080,11 @@ jtimeout@^3.2.0:
   integrity sha512-P/cEhmgr8P2Vd3V79uUk6pHAHpMSe+Px7B+mGEir4aZW3/J6C09uH97aAEXVpjqb9i9vHnUyIp7k0UoA+Hy0eg==
   dependencies:
     jquery ">=1.7.1 <4.0.0"
+
+knockout@^3.5.1:
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/knockout/-/knockout-3.5.1.tgz#62c81e81843bea2008fd23c575edd9ca978e75cf"
+  integrity sha512-wRJ9I4az0QcsH7A4v4l0enUpkS++MBx0BnL/68KaLzJg7x1qmbjSlwEoCNol7KTYZ+pmtI7Eh2J0Nu6/2Z5J/Q==
 
 levn@~0.3.0:
   version "0.3.0"
