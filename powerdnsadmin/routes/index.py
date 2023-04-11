@@ -553,6 +553,8 @@ def clear_session():
     session.pop('user_id', None)
     session.pop('github_token', None)
     session.pop('google_token', None)
+    session.pop('azure_token', None)
+    session.pop('oidc_token', None)
     session.pop('authentication_type', None)
     session.pop('remote_user', None)
     logout_user()
