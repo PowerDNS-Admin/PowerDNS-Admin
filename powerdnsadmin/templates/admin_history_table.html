@@ -10,26 +10,41 @@
   <table id="tbl_history" class="table table-bordered table-striped">
     <thead>
       <tr>
-        <th>Changed by</th>
-        <th>Content</th>
         <th>Time</th>
+        <th>Content</th>
+        <th>Changed by</th>
         <th>Detail</th>
       </tr>
     </thead>
     <tbody>
       {% for history in histories %}
         <tr class="odd gradeX">
-          <td>{{ history.history.created_by }}</td>
-          <td>{{ history.history.msg }}</td>
           <td>{{ history.history.created_on }}</td>
+          <td>{{ history.history.msg }}</td>
+          <td>{{ history.history.created_by }}</td>
           <td width="6%">
             <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
               {{ history.detailed_msg | safe }}
               {% if history.change_set %}
                 <div class="content">
-                  <div id="change_index_definition"></div>
-                  {% call applied_change_macro.applied_change_template(history.change_set) %}
-                  {% endcall %}
+                <table class="table table-bordered table-striped">
+                <thead><tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>TTL</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                </tr></thead>
+                <tbody>
+				{% for applied_change in history.change_set %}
+                <tr>
+                    {% call applied_change_macro.applied_change_template(applied_change) %}
+                    {% endcall %}
+                </tr>
+				{% endfor %}
+                </tbody>
+                </table>
                 </div>
               {% endif %}
             </div>
@@ -52,7 +67,7 @@
   $(document).ready(function () {
     table = $('#tbl_history').DataTable({
       "order": [
-        [2, "desc"]
+        [0, "desc"]
       ],
       "searching": true,
       "columnDefs": [{
@@ -60,7 +75,7 @@
         "render": function (data, type, row) {
           return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
         },
-        "targets": 2
+        "targets": 0
       }],
       "info": true,
       "autoWidth": false,
