@@ -459,12 +459,13 @@ class Setting(db.Model):
 
     def convert_type(self, name, value):
         import json
+        from json import JSONDecodeError
         if name in self.types:
             var_type = self.types[name]
 
             # Handle boolean values
             if var_type == bool:
-                if value == 'True' or value == 'true' or value == '1' or value == True:
+                if value == 'True' or value == 'true' or value == '1' or value is True:
                     return True
                 else:
                     return False
@@ -477,8 +478,11 @@ class Setting(db.Model):
             if var_type == int:
                 return int(value)
 
-            if var_type == dict or var_type == list:
-                return json.loads(value)
+            if (var_type == dict or var_type == list) and isinstance(value, str) and len(value) > 0:
+                try:
+                    return json.loads(value)
+                except JSONDecodeError as e:
+                    pass
 
             if var_type == str:
                 return str(value)
