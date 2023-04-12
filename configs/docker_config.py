@@ -1,3 +1,8 @@
+# import everything from environment variables
+import os
+import sys
+import json
+
 # Defaults for Docker image
 BIND_ADDRESS = '0.0.0.0'
 PORT = 80
@@ -23,6 +28,7 @@ legal_envvars = (
     'OIDC_OAUTH_EMAIL',
     'BIND_ADDRESS',
     'PORT',
+    'SERVER_EXTERNAL_SSL',
     'LOG_LEVEL',
     'SALT',
     'SQLALCHEMY_TRACK_MODIFICATIONS',
@@ -97,21 +103,18 @@ legal_envvars_bool = (
     'SESSION_COOKIE_SECURE',
     'CSRF_COOKIE_SECURE',
     'CAPTCHA_ENABLE',
+    'SERVER_EXTERNAL_SSL',
 )
 
 legal_envvars_dict = (
     'SQLALCHEMY_ENGINE_OPTIONS',
 )
 
-# import everything from environment variables
-import os
-import sys
-import json
-
 def str2bool(v):
     return v.lower() in ("true", "yes", "1")
 
-def dictfromstr(v,ret):
+
+def dictfromstr(v, ret):
     try:
         return json.loads(ret)
     except Exception as e:
@@ -119,10 +122,11 @@ def dictfromstr(v,ret):
         print(e)
         raise ValueError
 
+
 for v in legal_envvars:
 
     ret = None
-    # _FILE suffix will allow to read value from file, usefull for Docker's
+    # _FILE suffix will allow to read value from file, useful for Docker containers.
     # secrets feature
     if v + '_FILE' in os.environ:
         if v in os.environ:
