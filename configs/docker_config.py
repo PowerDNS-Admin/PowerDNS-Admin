@@ -6,7 +6,7 @@ import json
 # Defaults for Docker image
 BIND_ADDRESS = '0.0.0.0'
 PORT = 80
-SERVER_EXTERNAL_SSL = True
+SERVER_EXTERNAL_SSL = os.getenv('SERVER_EXTERNAL_SSL', True)
 SQLALCHEMY_DATABASE_URI = 'sqlite:////data/powerdns-admin.db'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
