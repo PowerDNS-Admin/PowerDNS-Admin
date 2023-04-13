@@ -133,7 +133,7 @@
                                                     </option>
                                                 {% endwith %}
                                             {% else %}
-                                                <option {% if account.id == domain.account_id %}selected{% endif %}
+                                                <option {% if account.id and account.id == domain.account_id %}selected{% endif %}
                                                         value="{{ domain.name }}">
                                                     {{ domain.name }}
                                                 </option>
