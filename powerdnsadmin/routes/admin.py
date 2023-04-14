@@ -1402,7 +1402,7 @@ def setting_basic_edit(setting):
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
 
-    if (result):
+    if result:
         return make_response(
             jsonify({
                 'status': 'ok',
@@ -1487,28 +1487,6 @@ def setting_records():
         Setting().set('reverse_records_allow_edit', json.dumps(rr))
 
         return redirect(url_for('admin.setting_records'))
-
-
-def has_an_auth_method(local_db_enabled=None,
-                       ldap_enabled=None,
-                       google_oauth_enabled=None,
-                       github_oauth_enabled=None,
-                       oidc_oauth_enabled=None,
-                       azure_oauth_enabled=None):
-    if local_db_enabled is None:
-        local_db_enabled = Setting().get('local_db_enabled')
-    if ldap_enabled is None:
-        ldap_enabled = Setting().get('ldap_enabled')
-    if google_oauth_enabled is None:
-        google_oauth_enabled = Setting().get('google_oauth_enabled')
-    if github_oauth_enabled is None:
-        github_oauth_enabled = Setting().get('github_oauth_enabled')
-    if oidc_oauth_enabled is None:
-        oidc_oauth_enabled = Setting().get('oidc_oauth_enabled')
-    if azure_oauth_enabled is None:
-        azure_oauth_enabled = Setting().get('azure_oauth_enabled')
-    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled \
-        or azure_oauth_enabled
 
 
 @admin_bp.route('/setting/authentication', methods=['GET', 'POST'])
