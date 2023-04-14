@@ -36,6 +36,7 @@ class AppSettings(object):
         'remote_user_enabled': False,
         'remote_user_cookies': [],
         'remote_user_logout_url': '',
+        'hsts_enabled': False,
         'server_external_ssl': True,
         'maintenance': False,
         'fullscreen_layout': True,
@@ -74,6 +75,7 @@ class AppSettings(object):
         'deny_domain_override': False,
         'account_name_extra_chars': False,
         'gravatar_enabled': False,
+        'pdns_admin_log_level': 'WARNING',
 
         # Local Authentication Settings
         'local_db_enabled': True,
@@ -306,6 +308,7 @@ class AppSettings(object):
         'mail_username': str,
         'mail_password': str,
         'mail_default_sender': str,
+        'hsts_enabled': bool,
         'remote_user_enabled': bool,
         'remote_user_cookies': list,
         'remote_user_logout_url': str,
@@ -346,6 +349,7 @@ class AppSettings(object):
         'deny_domain_override': bool,
         'account_name_extra_chars': bool,
         'gravatar_enabled': bool,
+        'pdns_admin_log_level': str,
         'forward_records_allow_edit': dict,
         'reverse_records_allow_edit': dict,
 

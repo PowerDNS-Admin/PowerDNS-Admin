@@ -87,7 +87,7 @@ def create_app(config=None):
     app.jinja_env.filters['format_datetime_local'] = utils.format_datetime
     app.jinja_env.filters['format_zone_type'] = utils.format_zone_type
 
-    # Register context proccessors
+    # Register context processors
     from .models.setting import Setting
 
     @app.context_processor
