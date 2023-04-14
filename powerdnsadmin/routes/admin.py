@@ -128,14 +128,17 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
 
         # filter only the records with the specific record_name, record_type
         if record_name != None and record_type != None:
-            details['add_rrsets'] = list(filter_rr_list_by_name_and_type(details['add_rrsets'], record_name, record_type))
-            details['del_rrsets'] = list(filter_rr_list_by_name_and_type(details['del_rrsets'], record_name, record_type))
+            details['add_rrsets'] = list(
+                filter_rr_list_by_name_and_type(details['add_rrsets'], record_name, record_type))
+            details['del_rrsets'] = list(
+                filter_rr_list_by_name_and_type(details['del_rrsets'], record_name, record_type))
 
             if not details['add_rrsets'] and not details['del_rrsets']:
                 continue
 
         # same record name and type RR are being deleted and created in same entry.
-        del_add_changes = set([(r['name'], r['type']) for r in details['add_rrsets']]).intersection([(r['name'], r['type']) for r in details['del_rrsets']])
+        del_add_changes = set([(r['name'], r['type']) for r in details['add_rrsets']]).intersection(
+            [(r['name'], r['type']) for r in details['del_rrsets']])
         for del_add_change in del_add_changes:
             changes.append(HistoryRecordEntry(
                 entry,
@@ -155,8 +158,8 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
         # sort changes by the record name
         if changes:
             changes.sort(key=lambda change:
-                    change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
-                    )
+            change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
+                         )
             out_changes.extend(changes)
     return out_changes
 
@@ -1149,10 +1152,10 @@ def history_table():  # ajax call data
                 .outerjoin(Account, Domain.account_id == Account.id) \
                 .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
                 .filter(db.or_(
-                    DomainUser.user_id == current_user.id,
-                    AccountUser.user_id == current_user.id
-                )) \
-            .subquery()
+                DomainUser.user_id == current_user.id,
+                AccountUser.user_id == current_user.id
+            )) \
+                .subquery()
             base_query = base_query.filter(History.domain_id.in_(allowed_domain_id_subquery))
 
         domain_name = request.args.get('domain_name_filter') if request.args.get('domain_name_filter') != None \
@@ -1271,7 +1274,8 @@ def history_table():  # ajax call data
                     )
                 ).order_by(History.created_on.desc()) \
                     .limit(lim).all()
-        elif user_name != None and current_user.role.name in ['Administrator', 'Operator']:  # only admins can see the user login-logouts
+        elif user_name != None and current_user.role.name in ['Administrator',
+                                                              'Operator']:  # only admins can see the user login-logouts
 
             histories = base_query.filter(
                 db.and_(
@@ -1296,7 +1300,8 @@ def history_table():  # ajax call data
                         temp.append(h)
                         break
             histories = temp
-        elif (changed_by != None or max_date != None) and current_user.role.name in ['Administrator', 'Operator']:  # select changed by and date filters only
+        elif (changed_by != None or max_date != None) and current_user.role.name in ['Administrator',
+                                                                                     'Operator']:  # select changed by and date filters only
             histories = base_query.filter(
                 db.and_(
                     History.created_on <= max_date if max_date != None else True,
@@ -1305,7 +1310,8 @@ def history_table():  # ajax call data
                 )
             ) \
                 .order_by(History.created_on.desc()).limit(lim).all()
-        elif (changed_by != None or max_date != None):  # special filtering for user because one user does not have access to log-ins logs
+        elif (
+                changed_by != None or max_date != None):  # special filtering for user because one user does not have access to log-ins logs
             histories = base_query.filter(
                 db.and_(
                     History.created_on <= max_date if max_date != None else True,
@@ -1396,7 +1402,7 @@ def setting_basic_edit(setting):
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
 
-    if (result):
+    if result:
         return make_response(
             jsonify({
                 'status': 'ok',
@@ -1460,50 +1466,27 @@ def setting_pdns():
 @login_required
 @operator_role_required
 def setting_records():
+    from powerdnsadmin.lib.settings import AppSettings
     if request.method == 'GET':
-        _fr = Setting().get('forward_records_allow_edit')
-        _rr = Setting().get('reverse_records_allow_edit')
-        f_records = literal_eval(_fr) if isinstance(_fr, str) else _fr
-        r_records = literal_eval(_rr) if isinstance(_rr, str) else _rr
-
+        forward_records = Setting().get('forward_records_allow_edit')
+        reverse_records = Setting().get('reverse_records_allow_edit')
         return render_template('admin_setting_records.html',
-                               f_records=f_records,
-                               r_records=r_records)
+                               f_records=forward_records,
+                               r_records=reverse_records)
     elif request.method == 'POST':
         fr = {}
         rr = {}
-        records = Setting().defaults['forward_records_allow_edit']
+        records = AppSettings.defaults['forward_records_allow_edit']
         for r in records:
             fr[r] = True if request.form.get('fr_{0}'.format(
                 r.lower())) else False
             rr[r] = True if request.form.get('rr_{0}'.format(
                 r.lower())) else False
 
-        Setting().set('forward_records_allow_edit', str(fr))
-        Setting().set('reverse_records_allow_edit', str(rr))
+        Setting().set('forward_records_allow_edit', json.dumps(fr))
+        Setting().set('reverse_records_allow_edit', json.dumps(rr))
+
         return redirect(url_for('admin.setting_records'))
-
-
-def has_an_auth_method(local_db_enabled=None,
-                       ldap_enabled=None,
-                       google_oauth_enabled=None,
-                       github_oauth_enabled=None,
-                       oidc_oauth_enabled=None,
-                       azure_oauth_enabled=None):
-    if local_db_enabled is None:
-        local_db_enabled = Setting().get('local_db_enabled')
-    if ldap_enabled is None:
-        ldap_enabled = Setting().get('ldap_enabled')
-    if google_oauth_enabled is None:
-        google_oauth_enabled = Setting().get('google_oauth_enabled')
-    if github_oauth_enabled is None:
-        github_oauth_enabled = Setting().get('github_oauth_enabled')
-    if oidc_oauth_enabled is None:
-        oidc_oauth_enabled = Setting().get('oidc_oauth_enabled')
-    if azure_oauth_enabled is None:
-        azure_oauth_enabled = Setting().get('azure_oauth_enabled')
-    return local_db_enabled or ldap_enabled or google_oauth_enabled or github_oauth_enabled or oidc_oauth_enabled \
-        or azure_oauth_enabled
 
 
 @admin_bp.route('/setting/authentication', methods=['GET', 'POST'])
@@ -1517,6 +1500,7 @@ def setting_authentication():
 @login_required
 @admin_role_required
 def setting_authentication_api():
+    from powerdnsadmin.lib.settings import AppSettings
     result = {'status': 1, 'messages': [], 'data': {}}
 
     if request.form.get('commit') == '1':
@@ -1524,7 +1508,7 @@ def setting_authentication_api():
         data = json.loads(request.form.get('data'))
 
         for key, value in data.items():
-            if key in model.groups['authentication']:
+            if key in AppSettings.groups['authentication']:
                 model.set(key, value)
 
     result['data'] = Setting().get_group('authentication')

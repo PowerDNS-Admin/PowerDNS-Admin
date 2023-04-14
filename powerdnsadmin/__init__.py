@@ -4,11 +4,11 @@ from flask import Flask
 from flask_mail import Mail
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_session import Session
-
 from .lib import utils
 
 
 def create_app(config=None):
+    from powerdnsadmin.lib.settings import AppSettings
     from . import models, routes, services
     from .assets import assets
     app = Flask(__name__)
@@ -50,6 +50,9 @@ def create_app(config=None):
         elif config.endswith('.py'):
             app.config.from_pyfile(config)
 
+    # Load any settings defined with environment variables
+    AppSettings.load_environment(app)
+
     # HSTS
     if app.config.get('HSTS_ENABLED'):
         from flask_sslify import SSLify
@@ -84,7 +87,7 @@ def create_app(config=None):
     app.jinja_env.filters['format_datetime_local'] = utils.format_datetime
     app.jinja_env.filters['format_zone_type'] = utils.format_zone_type
 
-    # Register context proccessors
+    # Register context processors
     from .models.setting import Setting
 
     @app.context_processor
