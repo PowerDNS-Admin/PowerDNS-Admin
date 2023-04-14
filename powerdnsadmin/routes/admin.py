@@ -1460,6 +1460,7 @@ def setting_pdns():
 @login_required
 @operator_role_required
 def setting_records():
+    from powerdnsadmin.lib.settings import AppSettings
     if request.method == 'GET':
         _fr = Setting().get('forward_records_allow_edit')
         _rr = Setting().get('reverse_records_allow_edit')
@@ -1472,7 +1473,7 @@ def setting_records():
     elif request.method == 'POST':
         fr = {}
         rr = {}
-        records = Setting().defaults['forward_records_allow_edit']
+        records = AppSettings.defaults['forward_records_allow_edit']
         for r in records:
             fr[r] = True if request.form.get('fr_{0}'.format(
                 r.lower())) else False
@@ -1517,6 +1518,7 @@ def setting_authentication():
 @login_required
 @admin_role_required
 def setting_authentication_api():
+    from powerdnsadmin.lib.settings import AppSettings
     result = {'status': 1, 'messages': [], 'data': {}}
 
     if request.form.get('commit') == '1':
@@ -1524,7 +1526,7 @@ def setting_authentication_api():
         data = json.loads(request.form.get('data'))
 
         for key, value in data.items():
-            if key in model.groups['authentication']:
+            if key in AppSettings.groups['authentication']:
                 model.set(key, value)
 
     result['data'] = Setting().get_group('authentication')

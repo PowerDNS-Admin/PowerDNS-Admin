@@ -72,9 +72,9 @@ def domain(domain_name):
     quick_edit = Setting().get('record_quick_edit')
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting(
-    ).get_forward_records_allow_to_edit()
+    ).get_supported_record_types(Setting().ZONE_TYPE_FORWARD)
     reverse_records_allow_to_edit = Setting(
-    ).get_reverse_records_allow_to_edit()
+    ).get_supported_record_types(Setting().ZONE_TYPE_REVERSE)
     ttl_options = Setting().get_ttl_options()
     records = []
 
