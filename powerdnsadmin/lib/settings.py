@@ -597,7 +597,12 @@ class AppSettings(object):
                 try:
                     return json.loads(value)
                 except JSONDecodeError as e:
-                    raise ValueError('Cannot parse json {} for variable {}'.format(value, name))
+                    # Provide backwards compatibility for legacy non-JSON format
+                    value = value.replace("'", '"').replace('True', 'true').replace('False', 'false')
+                    try:
+                        return json.loads(value)
+                    except JSONDecodeError as e:
+                        raise ValueError('Cannot parse json {} for variable {}'.format(value, name))
 
             if var_type == str:
                 return str(value)

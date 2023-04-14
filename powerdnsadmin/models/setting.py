@@ -72,13 +72,17 @@ class Setting(db.Model):
             return False
 
     def set(self, setting, value):
+        import json
         current_setting = Setting.query.filter(Setting.name == setting).first()
 
         if current_setting is None:
             current_setting = Setting(name=setting, value=None)
             db.session.add(current_setting)
 
-        value = str(AppSettings.convert_type(setting, value))
+        value = AppSettings.convert_type(setting, value)
+
+        if isinstance(value, dict) or isinstance(value, list):
+            value = json.dumps(value)
 
         try:
             current_setting.value = value
