@@ -13,6 +13,7 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
 
     self.tabs = ko.observableArray([
         ko.observable({id: 'authentication', name: 'Authentication', icon: 'fa fa-lock', parent: null}),
+        ko.observable({id: 'mail', name: 'Mail', icon: 'fa fa-envelope', parent: null}),
         ko.observable({id: 'powerdns', name: 'PowerDNS', icon: 'fa fa-server', parent: null}),
         ko.observable({id: 'security', name: 'Security', icon: 'fa fa-shield-alt', parent: null}),
         ko.observable({id: 'ui', name: 'UI', icon: 'fa fa-desktop', parent: null}),
