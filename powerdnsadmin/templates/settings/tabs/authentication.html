@@ -1,0 +1,27 @@
+<div class="tab-pane" data-tab="authentication"
+     data-bind="class: tab_active().startsWith('authentication') ? ' active' : ''">
+    <div class="card card-secondary shadow">
+        <div class="card-header">
+            <h3 class="card-title">Authentication Settings</h3>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body pl-1 pr-1">
+            <div class="nav-tabs-custom">
+                {% include 'settings/tabs/authentication/tabs.html' %}
+                <div class="tab-content pt-3 pl-2 pr-2">
+                    {% include 'settings/tabs/authentication/local.html' %}
+                    {% include 'settings/tabs/authentication/ldap.html' %}
+                    {% include 'settings/tabs/authentication/google.html' %}
+                    {% include 'settings/tabs/authentication/github.html' %}
+                    {% include 'settings/tabs/authentication/azure.html' %}
+                    {% include 'settings/tabs/authentication/oidc.html' %}
+                </div>
+                <!-- /.tab-content -->
+            </div>
+            <!-- /.nav-tabs-custom -->
+        </div>
+        <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+</div>
+<!-- /.tab-pane -->

@@ -1,0 +1,191 @@
+<div data-tab="local"
+     data-bind="class: 'tab-pane' + (tab_active().endsWith('/local') ? ' active' : '')">
+    <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Local Authentication Settings</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <input type="checkbox" id="local_db_enabled"
+                               name="local_db_enabled"
+                               class="checkbox"
+                               data-bind="checked: local_db_enabled">
+                        <label for="local_db_enabled">Local DB
+                            Authentication</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox" id="signup_enabled"
+                               name="signup_enabled"
+                               class="checkbox"
+                               data-bind="enable: local_db_enabled, checked: signup_enabled">
+                        <label for="signup_enabled">Allow users to sign
+                            up</label>
+                    </div>
+                    <fieldset>
+                        <legend>Password Requirements</legend>
+                        <div class="form-group">
+                            <input type="checkbox" id="pwd_enforce_characters"
+                                   name="pwd_enforce_characters"
+                                   class="checkbox"
+                                   data-bind="enable: local_db_enabled, checked: pwd_enforce_characters">
+                            <label for="pwd_enforce_characters">
+                                Enforce Character Requirements
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd_min_len">Minimum Password
+                                Length</label>
+                            <input type="text" class="form-control"
+                                   name="pwd_min_len" id="pwd_min_len"
+                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_len, valueUpdate: 'afterkeydown'">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd_min_lowercase">Minimum Lowercase
+                                Characters</label>
+                            <input type="text" class="form-control"
+                                   name="pwd_min_lowercase"
+                                   id="pwd_min_lowercase"
+                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_lowercase, valueUpdate: 'afterkeydown'">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd_min_uppercase">Minimum Uppercase
+                                Characters</label>
+                            <input type="text" class="form-control"
+                                   name="pwd_min_uppercase"
+                                   id="pwd_min_uppercase"
+                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_uppercase, valueUpdate: 'afterkeydown'">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd_min_digits">Minimum Digit
+                                Characters</label>
+                            <input type="text" class="form-control"
+                                   name="pwd_min_digits" id="pwd_min_digits"
+                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_digits, valueUpdate: 'afterkeydown'">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd_min_special">Minimum Special
+                                Characters</label>
+                            <input type="text" class="form-control"
+                                   name="pwd_min_special" id="pwd_min_special"
+                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="pwd_enforce_complexity"
+                                   name="pwd_enforce_complexity"
+                                   class="checkbox"
+                                   data-bind="enable: local_db_enabled, checked: pwd_enforce_complexity">
+                            <label for="pwd_enforce_complexity">
+                                Enforce Complexity Requirement
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd_min_complexity">Minimum Complexity
+                                (zxcvbn)</label>
+                            <input type="text" class="form-control"
+                                   name="pwd_min_complexity"
+                                   id="pwd_min_complexity"
+                                   data-bind="enable: local_db_enabled() && pwd_enforce_complexity(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
+                        </div>
+                    </fieldset>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+
+        <div class="col-12 col-sm-6 col-lg-8">
+            <div class="card card-outline card-warning shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Settings Help</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <dl class="dl-horizontal">
+                        <dt>Local DB Authentication</dt>
+                        <dd>Enable/disable local database authentication.</dd>
+                        <dt>Allow Users to Signup</dt>
+                        <dd>Allow users to signup. This requires local database
+                            authentication
+                            to be enabled.
+                        </dd>
+                        <h4>Password Requirements</h4>
+                        <dd>This section allows you to customize your local DB
+                            password
+                            requirements
+                            and ensure that when users change their password or
+                            signup
+                            they are
+                            picking strong passwords.
+                        </dd>
+                        <dd>Setting any entry field to a blank value will revert
+                            it
+                            back
+                            to default.
+                        </dd>
+                        <dt>Enforce Character Requirements</dt>
+                        <dd>This option will enforce the character type
+                            requirements
+                            for
+                            passwords.
+                            <ul>
+                                <li>Minimum Lowercase Characters - Minimum
+                                    number of
+                                    lowercase
+                                    characters required to appear in the
+                                    password.
+                                </li>
+                                <li>Minimum Uppercase Characters - Minimum
+                                    number of
+                                    uppercase
+                                    characters required to appear in the
+                                    password.
+                                </li>
+                                <li>Minimum Digit Characters - Minimum number of
+                                    digits
+                                    required to appear in the password. Digits
+                                    include
+                                    1234567890.
+                                </li>
+                                <li>Minimum Special Characters - Minimum number
+                                    of
+                                    special
+                                    characters required to appear in the
+                                    password.
+                                    Special
+                                    characters include
+                                    `!@#$%^&amp;*()_-=+[]\{}|;:",.&gt;&lt;/?.
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt>Enforce Complexity Requirement</dt>
+                        <dd>Enable the enforcement of complex passwords. We
+                            currently use
+                            <a href="https://github.com/dropbox/zxcvbn">zxcvbn</a>
+                            for
+                            determining this.
+                            <ul>
+                                <li>Minimum Complexity - The default value of
+                                    the
+                                    log factor
+                                    is 11 as it is considered secure. More
+                                    information about
+                                    this can be found at
+                                    <a href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>
+                                </li>
+                            </ul>
+                        </dd>
+                    </dl>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</div>
+<!-- /.tab-pane -->

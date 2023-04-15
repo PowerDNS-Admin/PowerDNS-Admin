@@ -1,0 +1,6 @@
+<ul class="nav nav-tabs" role="tablist" data-bind="foreach: tabs">
+    <li class="nav-item" data-bind="ifnot: parent">
+        <a data-bind="attr: {'data-tab': id}, text: name, click: $parent.onTabClick, class: $parent.tab_active().startsWith(id) ? ' active' : ''"
+           class="nav-link" href="#" data-toggle="pill" role="tab"></a>
+    </li>
+</ul>

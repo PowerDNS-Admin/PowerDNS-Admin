@@ -3,12 +3,13 @@ from .base import (
     handle_access_forbidden, handle_page_not_found, handle_internal_server_error
 )
 
-from .index import index_bp
-from .user import user_bp
-from .dashboard import dashboard_bp
-from .domain import domain_bp
 from .admin import admin_bp
 from .api import api_bp, apilist_bp
+from .index import index_bp
+from .dashboard import dashboard_bp
+from .domain import domain_bp
+from .settings import settings_bp
+from .user import user_bp
 
 
 def init_app(app):
@@ -16,13 +17,14 @@ def init_app(app):
     csrf.init_app(app)
     captcha.init_app(app)
 
-    app.register_blueprint(index_bp)
-    app.register_blueprint(user_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(domain_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(apilist_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(domain_bp)
+    app.register_blueprint(index_bp)
+    app.register_blueprint(settings_bp)
+    app.register_blueprint(user_bp)
 
     app.register_error_handler(400, handle_bad_request)
     app.register_error_handler(401, handle_unauthorized_access)

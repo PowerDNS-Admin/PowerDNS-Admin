@@ -1,0 +1,302 @@
+<div data-tab="azure"
+     data-bind="class: 'tab-pane' + (tab_active().endsWith('/azure') ? ' active' : '')">
+    <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Azure OAuth Settings</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <input type="checkbox" id="azure_oauth_enabled"
+                               name="azure_oauth_enabled" class="checkbox"
+                               data-bind="checked: azure_oauth_enabled">
+                        <label for="azure_oauth_enabled">Enable Microsoft
+                            Azure
+                            OAuth</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="azure_oauth_key">Client ID</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_key" id="azure_oauth_key"
+                               placeholder="Azure OAuth Client ID"
+                               data-bind="enable: azure_oauth_enabled, value: azure_oauth_key, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="azure_oauth_secret">Client
+                            Secret</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_secret"
+                               id="azure_oauth_secret"
+                               placeholder="Azure OAuth Client Secret"
+                               data-bind="enable: azure_oauth_enabled, value: azure_oauth_secret, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="azure_oauth_scope">Scope</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_scope"
+                               id="azure_oauth_scope"
+                               placeholder="e.g. email"
+                               data-bind="enable: azure_oauth_enabled, value: azure_oauth_scope, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="azure_oauth_api_url">API URL</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_api_url"
+                               id="azure_oauth_api_url"
+                               placeholder="e.g. https://graph.microsoft.com/v1.0/"
+                               data-bind="enable: azure_oauth_enabled, value: azure_oauth_api_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox"
+                               id="azure_oauth_auto_configure"
+                               name="azure_oauth_auto_configure"
+                               class="checkbox"
+                               data-bind="enable: azure_oauth_enabled, checked: azure_oauth_auto_configure">
+                        <label for="azure_oauth_auto_configure">Enable Azure
+                            OAuth Auto-Configuration</label>
+                    </div>
+                    <div class="form-group"
+                         data-bind="visible: azure_oauth_auto_configure">
+                        <label for="azure_oauth_metadata_url">Metadata
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_metadata_url"
+                               id="azure_oauth_metadata_url"
+                               placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/v2.0/.well-known/openid-configuration"
+                               data-bind="enable: azure_oauth_enabled() && azure_oauth_auto_configure(), value: azure_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group"
+                         data-bind="hidden: azure_oauth_auto_configure">
+                        <label for="azure_oauth_token_url">Token URL</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_token_url"
+                               id="azure_oauth_token_url"
+                               placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/oauth2/v2.0/token"
+                               data-bind="enable: azure_oauth_enabled() && !azure_oauth_auto_configure(), value: azure_oauth_token_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group"
+                         data-bind="hidden: azure_oauth_auto_configure">
+                        <label for="azure_oauth_authorize_url">Authorize
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="azure_oauth_authorize_url"
+                               id="azure_oauth_authorize_url"
+                               placeholder="e.g. https://login.microsoftonline.com/{TENANCY_ID}/oauth2/v2.0/authorize"
+                               data-bind="enable: azure_oauth_enabled() && !azure_oauth_auto_configure(), value: azure_oauth_authorize_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <fieldset>
+                        <legend>Group Security</legend>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="azure_sg_enabled"
+                                           id="azure_sg_off" value="false"
+                                           data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: false">
+                                    OFF
+                                </label>
+                                &nbsp;&nbsp;&nbsp;
+                                <label>
+                                    <input type="radio" name="azure_sg_enabled"
+                                           id="azure_sg_on" value="true"
+                                           data-bind="enable: azure_oauth_enabled, checked: azure_sg_enabled, checkedValue: true">
+                                    ON
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_admin_group">Admin group</label>
+                            <input type="text" class="form-control"
+                                   name="azure_admin_group"
+                                   id="azure_admin_group"
+                                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                                   data-bind="enable: azure_oauth_enabled() && azure_sg_enabled(), value: azure_admin_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_operator_group">Operator
+                                group</label>
+                            <input type="text" class="form-control"
+                                   name="azure_operator_group"
+                                   id="azure_operator_group"
+                                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                                   data-bind="enable: azure_oauth_enabled() && azure_sg_enabled(), value: azure_operator_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_user_group">User group</label>
+                            <input type="text" class="form-control"
+                                   name="azure_user_group" id="azure_user_group"
+                                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                                   data-bind="enable: azure_oauth_enabled() && azure_sg_enabled(), value: azure_user_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Azure Group Account Sync / Creation</legend>
+                        <div class="form-group">
+                            <label
+                                for="azure_group_accounts_enabled">Status</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio"
+                                           name="azure_group_accounts_enabled"
+                                           id="azure_group_accounts_off"
+                                           value="false"
+                                           data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: false">
+                                    OFF
+                                </label>
+                                &nbsp;&nbsp;&nbsp;
+                                <label>
+                                    <input type="radio"
+                                           name="azure_group_accounts_enabled"
+                                           id="azure_group_accounts_on"
+                                           value="true"
+                                           data-bind="enable: azure_oauth_enabled, checked: azure_group_accounts_enabled, checkedValue: true">
+                                    ON
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_group_accounts_name">Azure group
+                                name
+                                claim</label>
+                            <input type="text" class="form-control"
+                                   name="azure_group_accounts_name"
+                                   id="azure_group_accounts_name"
+                                   placeholder="e.g. displayName"
+                                   data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_name, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_group_accounts_name_re">Azure
+                                group name
+                                claim regex</label>
+                            <input type="text" class="form-control"
+                                   name="azure_group_accounts_name_re"
+                                   id="azure_group_accounts_name_re"
+                                   placeholder="e.g. (.*)"
+                                   data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_name_re, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_group_accounts_description">Azure
+                                group
+                                description claim</label>
+                            <input type="text" class="form-control"
+                                   name="azure_group_accounts_description"
+                                   id="azure_group_accounts_description"
+                                   placeholder="e.g. description. If empty uses whole string"
+                                   data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_description, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="azure_group_accounts_description_re">Azure
+                                group name
+                                description regex</label>
+                            <input type="text" class="form-control"
+                                   name="azure_group_accounts_description_re"
+                                   id="azure_group_accounts_description_re"
+                                   placeholder="e.g. (.*). If empty uses whole string"
+                                   data-bind="enable: azure_oauth_enabled() && azure_group_accounts_enabled(), value: azure_group_accounts_description_re, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+
+        <div class="col-12 col-sm-6 col-lg-8">
+            <div class="card card-outline card-warning shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Settings Help</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <p>Fill in all the fields in the left form.</p>
+                    <p>You first need to define an Application Registration in
+                        your
+                        Azure
+                        Active Directory, with the appropriate HTTPS URL for
+                        this
+                        endpoint,
+                        and with the appropriate rights, as explained in the
+                        documentation.</p>
+                    <p>
+                    <ul>
+                        <li>Under the Azure Active Directory, select App
+                            Registrations, and
+                            create a new one. Give it any name you want, and the
+                            Redirect
+                            URI shoule be type 'Web' and of the format <b>https://powerdnsadmin/azure/authorized</b>
+                            (replace the host name approriately).
+                        </li>
+                        <li>Select the newly-created registration</li>
+                        <li>On the Overview page, the Application ID is your new
+                            Client ID
+                            to use with PowerDNS-Admin
+                        </li>
+                        <li>On the Overview page, make a note of your
+                            Directory/Tenant ID -
+                            you need it for the API URLs later
+                        </li>
+                        <li>Ensure Access Tokens are enabled in the
+                            Authentication
+                            section
+                        </li>
+                        <li>Under Certificates and Secrets, create a new Client
+                            Secret. Note
+                            this secret as it is the new Client Secret to use
+                            with
+                            PowerDNS-Admin
+                        </li>
+                        <li>Under API Permissions, you need to add permissions.
+                            Add
+                            permissions for Graph API, Delegated. Add: email,
+                            openid,
+                            profile, GroupMember.Read, User.Read and possibly
+                            User.Read.All.
+                            You then need to grant admin approval for your
+                            organisation.
+                        </li>
+                        <li>For the Scope, use <b>User.Read openid mail
+                            profile</b>
+                        </li>
+                        <li>Replace the [tenantID] in the default URLs for
+                            authorize
+                            and
+                            token with your Tenant ID.
+                        </li>
+                    </ul>
+                    </p>
+                    <p>If <b>AZURE GROUP ACCOUNT SYNC/CREATION</b> is enabled,
+                        Accounts will
+                        be created automatically based on group membership. If
+                        an
+                        Account
+                        exists, an authenticated user with group membership is
+                        added
+                        to the
+                        Account</p>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</div>
+<!-- /.tab-pane -->

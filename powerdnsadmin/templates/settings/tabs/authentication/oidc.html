@@ -1,0 +1,189 @@
+<div data-tab="oidc"
+     data-bind="class: 'tab-pane' + (tab_active().endsWith('/oidc') ? ' active' : '')">
+    <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">OpenID Connect OAuth Settings</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <input type="checkbox" id="oidc_oauth_enabled"
+                               name="oidc_oauth_enabled" class="checkbox"
+                               data-bind="checked: oidc_oauth_enabled">
+                        <label for="oidc_oauth_enabled">Enable OpenID
+                            Connect
+                            OAuth</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="oidc_oauth_key">Client ID</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_key" id="oidc_oauth_key"
+                               placeholder="OIDC OAuth Client ID"
+                               data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_key, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="oidc_oauth_secret">Client Secret</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_secret"
+                               id="oidc_oauth_secret"
+                               placeholder="OIDC OAuth Client Secret"
+                               data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_secret, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="oidc_oauth_scope">Scope</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_scope" id="oidc_oauth_scope"
+                               placeholder="e.g. email"
+                               data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_scope, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="oidc_oauth_api_url">API URL</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_api_url"
+                               id="oidc_oauth_api_url"
+                               placeholder="e.g. https://api.oidc.com/user"
+                               data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_api_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox"
+                               id="oidc_oauth_auto_configure"
+                               name="oidc_oauth_auto_configure"
+                               class="checkbox"
+                               data-bind="enable: oidc_oauth_enabled, checked: oidc_oauth_auto_configure">
+                        <label for="oidc_oauth_auto_configure">Enable OIDC
+                            OAuth Auto-Configuration</label>
+                    </div>
+                    <div class="form-group"
+                         data-bind="visible: oidc_oauth_auto_configure">
+                        <label for="oidc_oauth_metadata_url">Metadata
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_metadata_url"
+                               id="oidc_oauth_metadata_url"
+                               placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/.well-known/openid-configuration"
+                               data-bind="enable: oidc_oauth_enabled() && oidc_oauth_auto_configure(), value: oidc_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group"
+                         data-bind="hidden: oidc_oauth_auto_configure">
+                        <label for="oidc_oauth_token_url">Token URL</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_token_url"
+                               id="oidc_oauth_token_url"
+                               placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/access_token"
+                               data-bind="enable: oidc_oauth_enabled() && !oidc_oauth_auto_configure(), value: oidc_oauth_token_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group"
+                         data-bind="hidden: oidc_oauth_auto_configure">
+                        <label for="oidc_oauth_authorize_url">Authorize
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_authorize_url"
+                               id="oidc_oauth_authorize_url"
+                               placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/authorize"
+                               data-bind="enable: oidc_oauth_enabled() && !oidc_oauth_auto_configure(), value: oidc_oauth_authorize_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="oidc_oauth_logout_url">Logout
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="oidc_oauth_logout_url"
+                               id="oidc_oauth_logout_url"
+                               placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/logout"
+                               data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_logout_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <fieldset>
+                        <legend>Claims</legend>
+                        <div class="form-group">
+                            <label for="oidc_oauth_username">Username</label>
+                            <input type="text" class="form-control"
+                                   name="oidc_oauth_username"
+                                   id="oidc_oauth_username"
+                                   placeholder="e.g. preferred_username"
+                                   data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_username, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_oauth_email">Email</label>
+                            <input type="text" class="form-control"
+                                   name="oidc_oauth_email" id="oidc_oauth_email"
+                                   placeholder="e.g. email"
+                                   data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_email, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_oauth_firstname">First Name</label>
+                            <input type="text" class="form-control"
+                                   name="oidc_oauth_firstname"
+                                   id="oidc_oauth_firstname"
+                                   placeholder="e.g. given_name"
+                                   data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_firstname, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="oidc_oauth_last_name">Last Name</label>
+                            <input type="text" class="form-control"
+                                   name="oidc_oauth_last_name"
+                                   id="oidc_oauth_last_name"
+                                   placeholder="e.g. family_name"
+                                   data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_last_name, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Advanced</legend>
+                        <div class="form-group">
+                            <label for="oidc_oauth_account_name_property">Autoprovision
+                                Account Name property</label>
+                            <input type="text" class="form-control"
+                                   name="oidc_oauth_account_name_property"
+                                   id="oidc_oauth_account_name_property"
+                                   placeholder="e.g. account_name"
+                                   data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_account_name_property, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label
+                                for="oidc_oauth_account_description_property">Autoprovision
+                                Account Description property</label>
+                            <input type="text" class="form-control"
+                                   name="oidc_oauth_account_description_property"
+                                   id="oidc_oauth_account_description_property"
+                                   placeholder="e.g. account_description"
+                                   data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_account_description_property, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+        <div class="col-12 col-sm-6 col-lg-8">
+            <div class="card card-outline card-warning shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Settings Help</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <p>Fill in all the fields in the left form.</p>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</div>
+<!-- /.tab-pane -->

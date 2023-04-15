@@ -112,6 +112,14 @@ class Setting(db.Model):
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
 
+    def get_all(self):
+        result = {}
+
+        for var_name, default_value in AppSettings.defaults.items():
+            result[var_name] = self.get(var_name)
+
+        return result
+
     def get_group(self, group):
         if not isinstance(group, list):
             group = AppSettings.groups[group]

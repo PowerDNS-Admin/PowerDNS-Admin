@@ -1,0 +1,465 @@
+<div data-tab="ldap"
+     data-bind="class: 'tab-pane' + (tab_active().endsWith('/ldap') ? ' active' : '')">
+    <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4">
+            {% if error %}
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert"
+                            aria-hidden="true">&times;
+                    </button>
+                    <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                    {{ error }}
+                </div>
+            {% endif %}
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">LDAP Authentication Settings</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <fieldset>
+                        <div class="form-group">
+                            <input type="checkbox" id="ldap_enabled"
+                                   name="ldap_enabled"
+                                   class="checkbox"
+                                   data-bind="checked: ldap_enabled">
+                            <label for="ldap_enabled">Enable LDAP
+                                Authentication</label>
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="ldap_type"
+                                           id="ldap_type_openldap"
+                                           value="ldap"
+                                           data-bind="enable: ldap_enabled, checked: ldap_type">
+                                    OpenLDAP
+                                </label>
+                                &nbsp;&nbsp;&nbsp;
+                                <label>
+                                    <input type="radio" name="ldap_type"
+                                           id="ldap_type_ad"
+                                           value="ad"
+                                           data-bind="enable: ldap_enabled, checked: ldap_type">
+                                    Active Directory
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Administrator Info</legend>
+                        <div class="form-group">
+                            <label for="ldap_uri">LDAP URI</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_uri"
+                                   id="ldap_uri"
+                                   placeholder="e.g. ldaps://your-ldap-server:636"
+                                   data-bind="enable: ldap_enabled, value: ldap_uri, valueUpdate: 'afterkeydown'">
+                        </div>
+                        <div class="form-group">
+                            <label for="ldap_base_dn">LDAP Base DN</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_base_dn"
+                                   id="ldap_base_dn"
+                                   placeholder="e.g. dc=mydomain,dc=com"
+                                   data-bind="enable: ldap_enabled, value: ldap_base_dn, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group"
+                             data-bind="visible: ldap_type() == 'ldap'">
+                            <label for="ldap_admin_username">LDAP admin
+                                username</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_admin_username"
+                                   id="ldap_admin_username"
+                                   placeholder="e.g. cn=admin,dc=mydomain,dc=com"
+                                   data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_admin_username, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group"
+                             data-bind="visible: ldap_type() == 'ldap'">
+                            <label for="ldap_admin_password">LDAP admin
+                                password</label>
+                            <input type="password" class="form-control"
+                                   name="ldap_admin_password"
+                                   id="ldap_admin_password"
+                                   placeholder="LDAP Admin password"
+                                   data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_admin_password, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group"
+                             data-bind="visible: ldap_type() == 'ad'">
+                            <label for="ldap_domain">Active Directory
+                                domain</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_domain" id="ldap_domain"
+                                   placeholder="Active Directory domain"
+                                   data-bind="enable: ldap_enabled() && ldap_type() == 'ad', value: ldap_domain, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Filters</legend>
+                        <div class="form-group">
+                            <label for="ldap_filter_basic">Basic filter</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_filter_basic"
+                                   id="ldap_filter_basic"
+                                   placeholder="e.g. (objectClass=inetorgperson)"
+                                   data-bind="enable: ldap_enabled, value: ldap_filter_basic, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="ldap_filter_username">Username
+                                field</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_filter_username"
+                                   id="ldap_filter_username"
+                                   placeholder="e.g. uid"
+                                   data-bind="enable: ldap_enabled, value: ldap_filter_username, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group"
+                             data-bind="visible: ldap_enabled() && ldap_type() == 'ldap'">
+                            <label for="ldap_filter_group">Group
+                                filter</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_filter_group"
+                                   id="ldap_filter_group"
+                                   placeholder="e.g. (objectclass=groupOfNames)"
+                                   data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_filter_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group"
+                             data-bind="visible: ldap_enabled() && ldap_type() == 'ldap'">
+                            <label for="ldap_filter_groupname">Group name
+                                field</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_filter_groupname"
+                                   id="ldap_filter_groupname"
+                                   placeholder="e.g. member"
+                                   data-bind="enable: ldap_enabled() && ldap_type() == 'ldap', value: ldap_filter_groupname, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Group Security</legend>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="ldap_sg_enabled"
+                                           id="ldap_sg_off" value="false"
+                                           data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: false">
+                                    OFF
+                                </label>
+                                &nbsp;&nbsp;&nbsp;
+                                <label>
+                                    <input type="radio" name="ldap_sg_enabled"
+                                           id="ldap_sg_on" value="true"
+                                           data-bind="enable: ldap_enabled, checked: ldap_sg_enabled, checkedValue: true">
+                                    ON
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ldap_admin_group">Admin group</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_admin_group" id="ldap_admin_group"
+                                   placeholder="e.g. cn=sysops,dc=mydomain,dc=com"
+                                   data-bind="enable: ldap_enabled() && ldap_sg_enabled(), value: ldap_admin_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="ldap_operator_group">Operator
+                                group</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_operator_group"
+                                   id="ldap_operator_group"
+                                   placeholder="e.g. cn=operators,dc=mydomain,dc=com"
+                                   data-bind="enable: ldap_enabled() && ldap_sg_enabled(), value: ldap_operator_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="ldap_user_group">User group</label>
+                            <input type="text" class="form-control"
+                                   name="ldap_user_group" id="ldap_user_group"
+                                   placeholder="e.g. cn=users,dc=mydomain,dc=com"
+                                   data-bind="enable: ldap_enabled() && ldap_sg_enabled(), value: ldap_user_group, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>ADVANCE</legend>
+                        <div class="form-group">
+                            <label>Roles Autoprovisioning</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="autoprovisioning"
+                                           id="autoprovisioning_off" value="false"
+                                           data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: false">
+                                    OFF
+                                </label>
+                                &nbsp;&nbsp;&nbsp;
+                                <label>
+                                    <input type="radio" name="autoprovisioning"
+                                           id="autoprovisioning_on" value="true"
+                                           data-bind="enable: ldap_enabled, checked: autoprovisioning, checkedValue: true">
+                                    ON
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="autoprovisioning_attribute">Roles
+                                provisioning
+                                field</label>
+                            <input type="text" class="form-control"
+                                   name="autoprovisioning_attribute"
+                                   id="autoprovisioning_attribute"
+                                   placeholder="e.g. eduPersonEntitlement"
+                                   data-bind="enable: ldap_enabled() && autoprovisioning(), value: autoprovisioning_attribute, valueUpdate: 'afterkeydown'">
+                            <span class="help-block with-errors"></span>
+                        </div>
+
+                        <div
+                            class="form-group {% if error %}has-error{% endif %}">
+                            <label for="urn_value">Urn prefix</label>
+                            <input type="text" class="form-control"
+                                   name="urn_value"
+                                   id="urn_value"
+                                   placeholder="e.g. urn:mace:<yourOrganization>"
+                                   data-bind="enable: ldap_enabled() && autoprovisioning(), value: urn_value, valueUpdate: 'afterkeydown'">
+                            {% if error %}
+                                <span
+                                    class="help-block with-errors">Please input the correct prefix for your urn value</span>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label>Purge Roles If Empty</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="purge"
+                                           id="purge_off"
+                                           value="false"
+                                           data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: false">
+                                    OFF
+                                </label>
+                                &nbsp;&nbsp;&nbsp;
+                                <label>
+                                    <input type="radio" name="purge"
+                                           id="purge_on"
+                                           value="true"
+                                           data-bind="enable: ldap_enabled() && autoprovisioning(), checked: purge, checkedValue: true">
+                                    ON
+                                </label>
+                            </div>
+                        </div>
+                        <div class="callout callout-warning"
+                             data-bind="visible: purge() === 1">
+                            <h5>Notice!</h5>
+                            <p>Users will lose their associated zones unless
+                                they already have their auto-provisioning field
+                                prepopulated.</p>
+                        </div>
+                    </fieldset>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+
+        <div class="col-12 col-sm-6 col-lg-8">
+            <div class="card card-outline card-warning shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Settings Help</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <dl class="dl-horizontal">
+                        <dt>Enable LDAP Authentication</dt>
+                        <dd>Turn on / off the LDAP authentication.</dd>
+                        <dt>Type</dt>
+                        <dd>Select your current directory service type.
+                            <ul>
+                                <li>
+                                    OpenLDAP - Open source implementation of the
+                                    Lightweight
+                                    Directory Access Protocol.
+                                </li>
+                                <li>
+                                    Active Directory - Active Directory is a
+                                    directory
+                                    service that Microsoft developed for the
+                                    Windows
+                                    domain
+                                    networks.
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt>ADMINISTRATOR INFO</dt>
+                        <dd>Your LDAP connection string and admin credential
+                            used by
+                            PDA to
+                            query user information.
+                            <ul>
+                                <li>
+                                    LDAP URI - The fully qualified domain names
+                                    of
+                                    your
+                                    directory servers. (e.g.
+                                    ldap://127.0.0.1:389)
+                                </li>
+                                <li>
+                                    LDAP Base DN - The point from where a PDA
+                                    will
+                                    search
+                                    for users.
+                                </li>
+                                <li>
+                                    LDAP admin username - Your LDAP
+                                    administrator
+                                    user which
+                                    has permission to query information in the
+                                    Base
+                                    DN
+                                    above. Not needed for Active Directory
+                                    authentication.
+                                </li>
+                                <li>
+                                    LDAP admin password - The password of LDAP
+                                    administrator
+                                    user. Not needed for Active Directory
+                                    authentication.
+                                </li>
+                                <li>
+                                    Active Directory domain - Active Directory
+                                    domain used.
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt>FILTERS</dt>
+                        <dd>Define how you want to filter your user in LDAP
+                            query.
+                            <ul>
+                                <li>
+                                    Basic filter - The filter that will be
+                                    applied
+                                    to all
+                                    LDAP query by PDA. (e.g.
+                                    <i>(objectClass=inetorgperson)</i> for
+                                    OpenLDAP
+                                    and
+                                    <i>(objectClass=organizationalPerson)</i>
+                                    for Active Directory)
+                                </li>
+                                <li>
+                                    Username field - The field PDA will look for
+                                    user's
+                                    username. (e.g. <i>uid</i> for OpenLDAP and
+                                    <i>sAMAccountName</i>
+                                    for Active Directory)
+                                </li>
+                                <li>
+                                    Group filter - The filter that will be
+                                    applied
+                                    to all
+                                    LDAP group queries by PDA. (e.g. <i>(objectClass=groupOfNames)</i>
+                                    for OpenLDAP)
+                                </li>
+                                <li>
+                                    Group name field - The field PDA will look
+                                    for
+                                    group
+                                    names. (e.g. <i>member</i> for OpenLDAP)
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt>GROUP SECURITY</dt>
+                        <dd>User can be assigned to PDA's User or Admin group by
+                            matching
+                            following LDAP Group.
+                            <ul>
+                                <li>
+                                    Status - Turn on / off group security
+                                    feature.
+                                </li>
+                                <li>
+                                    Admin group - Your LDAP admin group.
+                                </li>
+                                <li>
+                                    Operator group - Your LDAP operator group.
+                                </li>
+                                <li>
+                                    User group - Your LDAP user group.
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt>ADVANCE</dt>
+                        <dd> Provision PDA user privileges based on LDAP Object
+                            Attributes.
+                            Alternative to Group Security Role Management.
+                            <ul>
+                                <li>
+                                    Roles Auto-Provisioning - If toggled on, the
+                                    PDA
+                                    Role and
+                                    the associations of users found in the local
+                                    db,
+                                    will be
+                                    instantly updated from the LDAP server every
+                                    time they
+                                    log in.
+                                </li>
+                                <li>
+                                    Roles provisioning field - The attribute in
+                                    the
+                                    ldap
+                                    server populated by the urn values where PDA
+                                    will look
+                                    for a new Role and/or new associations to
+                                    domains/accounts.
+                                </li>
+                                <li>
+                                    Urn prefix - The prefix used before the
+                                    static
+                                    keyword
+                                    "powerdns-admin" for your entitlements in
+                                    the
+                                    ldap
+                                    server. Must comply with RFC no.8141.
+                                </li>
+                                <li>
+                                    Purge Roles If Empty - If toggled on, ldap
+                                    entries that
+                                    have no valid "powerdns-admin" records to
+                                    their
+                                    auto-provisioning field, will lose all their
+                                    associations
+                                    with any zone or account, also reverting to
+                                    a
+                                    User in
+                                    the process, despite their current role in
+                                    the
+                                    local db.<br>
+                                    If toggled off, in the same scenario they
+                                    get to
+                                    keep
+                                    their existing associations and their
+                                    current
+                                    Role.
+                                </li>
+                            </ul>
+                        </dd>
+                    </dl>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</div>
+<!-- /.tab-pane -->

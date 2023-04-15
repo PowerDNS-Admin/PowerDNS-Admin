@@ -153,6 +153,12 @@
                                 <p>API Keys</p>
                             </a>
                         </li>
+                        <li class="{{ 'nav-item active' if active_page == 'settings' else 'nav-item' }}">
+                            <a href="{{ url_for('settings.editor') }}" class="nav-link">
+                                <i class="nav-icon fa-solid fa-cog"></i>
+                                <p>Settings</p>
+                            </a>
+                        </li>
                         <li class="{{ 'nav-item active' if active_page == 'admin_settings' else 'nav-item' }}">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fa-solid fa-cog"></i>

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+{% block title %}<title>Settings Editor - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">Application Settings</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+                        <li class="breadcrumb-item active">Settings</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <form id="settings-editor">
+                        <div class="card card-primary shadow">
+                            <div class="card-header">
+                                <h3 class="card-title">Settings Editor</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <div class="card-body pl-2 pr-2">
+                                <div class="overlay-wrapper" data-bind="visible: loading() || saving()">
+                                    <div class="overlay">
+                                        <i class="fas fa-3x fa-spin" data-bind="class: loading() ? 'fa-sync-alt' : 'fa-save'"></i>
+                                        <div class="text-bold pt-2 pl-2"
+                                             data-bind="text: (loading() ? 'Loading' : 'Saving') + ' settings...'"></div>
+                                    </div>
+                                </div>
+                                <!-- /.overlay-wrapper -->
+                                <div class="alert alert-dismissible alert-success" style="display: none;"
+                                     data-bind="visible: saved">
+                                    <button type="button" class="close" aria-hidden="true"
+                                            data-bind="click: saved(false)">×
+                                    </button>
+                                    <h5><i class="icon fas fa-check"></i> Saved!</h5>
+                                    These settings have been saved to the database.
+                                </div>
+                                <div class="alert alert-dismissible alert-danger" style="display: none;"
+                                     data-bind="visible: save_failed">
+                                    <button type="button" class="close" aria-hidden="true"
+                                            data-bind="click: save_failed(false)">×
+                                    </button>
+                                    <h5><i class="icon fas fa-ban"></i> Error!</h5>
+                                    These settings could <strong>not</strong> be saved to the database!
+                                </div>
+                                <div class="alert alert-dismissible" style="display: none;"
+                                     data-bind="visible: messages().length, class: 'alert alert-dismissible alert-' + messages_class()">
+                                    <button type="button" class="close" aria-hidden="true"
+                                            data-bind="click: messages([])">×
+                                    </button>
+                                    <h5><i class="icon fas fa-info"></i> Additional Information</h5>
+                                    <ul data-bind="foreach: messages">
+                                        <li data-bind="text: $data"></li>
+                                    </ul>
+                                </div>
+                                <div class="nav-tabs-custom">
+                                    {% include 'settings/tabs.html' %}
+                                    <div class="tab-content pt-3">
+                                        {% include 'settings/tabs/powerdns.html' %}
+                                        {% include 'settings/tabs/ui.html' %}
+                                        {% include 'settings/tabs/security.html' %}
+                                        {% include 'settings/tabs/zone-editor.html' %}
+                                        {% include 'settings/tabs/authentication.html' %}
+                                    </div>
+                                    <!-- /.tab-content -->
+                                </div>
+                                <!-- /.nav-tabs-custom -->
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <div class="error"></div>
+                                <button type="button" class="btn btn-primary"
+                                        title="Save Settings" data-bind="click: onSaveClick">
+                                    <i class="fa-solid fa-save"></i>&nbsp;Save Settings
+                                </button>
+                            </div>
+                            <!-- /.card-footer -->
+                        </div>
+                        <!-- /.card -->
+                    </form>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+{% endblock %}
+
+{% block head_styles %}
+    <style>
+        .error { color: red !important; }
+    </style>
+{% endblock %}
+
+{% block extrascripts %}
+    <script src="{{ url_for('static', filename='custom/js/app-settings-editor.js') }}"></script>
+    <script>
+        $(function () {
+            let API_URL = '{{ url_for('settings.api') }}';
+            let CSRF_TOKEN = '{{ csrf_token() }}';
+            let model = new SettingsEditorModel({}, API_URL, CSRF_TOKEN, '#settings-editor');
+            model.init(true);
+        })
+    </script>
+{% endblock %}

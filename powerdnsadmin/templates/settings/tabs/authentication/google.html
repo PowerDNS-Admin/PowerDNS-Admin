@@ -1,0 +1,124 @@
+<div data-tab="google"
+     data-bind="class: 'tab-pane' + (tab_active().endsWith('/google') ? ' active' : '')">
+    <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Google OAuth Settings</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <div class="form-group">
+                        <input type="checkbox" id="google_oauth_enabled"
+                               name="google_oauth_enabled" class="checkbox"
+                               data-bind="checked: google_oauth_enabled">
+                        <label for="google_oauth_enabled">Enable Google
+                            OAuth</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="google_oauth_client_id">Client
+                            ID</label>
+                        <input type="text" class="form-control"
+                               name="google_oauth_client_id"
+                               id="google_oauth_client_id"
+                               placeholder="Google OAuth Client ID"
+                               data-bind="enable: google_oauth_enabled, value: google_oauth_client_id, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="google_oauth_client_secret">Client
+                            Secret</label>
+                        <input type="text" class="form-control"
+                               name="google_oauth_client_secret"
+                               id="google_oauth_client_secret"
+                               placeholder="Google OAuth Client Secret"
+                               data-bind="enable: google_oauth_enabled, value: google_oauth_client_secret, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="google_oauth_scope">Scope</label>
+                        <input type="text" class="form-control"
+                               name="google_oauth_scope"
+                               id="google_oauth_scope"
+                               placeholder="e.g. email profile"
+                               data-bind="enable: google_oauth_enabled, value: google_oauth_scope, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="google_base_url">API URL</label>
+                        <input type="text" class="form-control"
+                               name="google_base_url" id="google_base_url"
+                               placeholder="e.g. https://www.googleapis.com/oauth2/v3/"
+                               data-bind="enable: google_oauth_enabled, value: google_base_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox"
+                               id="google_oauth_auto_configure"
+                               name="google_oauth_auto_configure"
+                               class="checkbox"
+                               data-bind="enable: google_oauth_enabled, checked: google_oauth_auto_configure">
+                        <label for="google_oauth_auto_configure">Enable
+                            Google
+                            OAuth Auto-Configuration</label>
+                    </div>
+                    <div class="form-group"
+                         data-bind="visible: google_oauth_auto_configure">
+                        <label for="google_oauth_metadata_url">Metadata
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="google_oauth_metadata_url"
+                               id="google_oauth_metadata_url"
+                               placeholder="e.g. https://accounts.google.com/.well-known/openid-configuration"
+                               data-bind="enable: google_oauth_enabled() && google_oauth_auto_configure(), value: google_oauth_metadata_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group"
+                         data-bind="hidden: google_oauth_auto_configure">
+                        <label for="google_token_url">Token URL</label>
+                        <input type="text" class="form-control"
+                               name="google_token_url" id="google_token_url"
+                               placeholder="e.g. https://oauth2.googleapis.com/token"
+                               data-bind="enable: google_oauth_enabled() && !google_oauth_auto_configure(), value: google_token_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                    <div class="form-group"
+                         data-bind="hidden: google_oauth_auto_configure">
+                        <label for="google_authorize_url">Authorize
+                            URL</label>
+                        <input type="text" class="form-control"
+                               name="google_authorize_url"
+                               id="google_authorize_url"
+                               placeholder="e.g. https://accounts.google.com/o/oauth2/v2/auth"
+                               data-bind="enable: google_oauth_enabled() && !google_oauth_auto_configure(), value: google_authorize_url, valueUpdate: 'afterkeydown'">
+                        <span class="help-block with-errors"></span>
+                    </div>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+
+        <div class="col-12 col-sm-6 col-lg-8">
+            <div class="card card-outline card-warning shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Settings Help</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <p>Fill in all the fields in the left form.</p>
+                    <p>Make sure you add PDA redirection URI (e.g
+                        http://localhost:9191/google/authorized) to your Google
+                        App
+                        Credentials Restriction.</p>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</div>
+<!-- /.tab-pane -->
