@@ -1,28 +1,29 @@
 let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
     let self = this;
     let target = null;
-    self.loading = false;
-    self.saving = false;
-    self.saved = false;
-    self.save_failed = false;
-    self.messages = [];
-    self.messages_class = 'info';
-    self.tab_active = '';
-    self.tab_sub_active = '';
-    self.tab_default = 'authentication';
+
+    self.loading = ko.observable(false);
+    self.saving = ko.observable(false);
+    self.saved = ko.observable(false);
+    self.save_failed = ko.observable(false);
+    self.messages = ko.observableArray([]);
+    self.messages_class = ko.observable('info');
+    self.tab_active = ko.observable('');
+    self.tab_default = ko.observable('authentication');
 
     self.tabs = ko.observableArray([
         ko.observable({id: 'authentication', name: 'Authentication', icon: 'fa fa-lock', parent: null}),
-        ko.observable({id: 'powerdns', name: 'PowerDNS', icon: 'fa fa-database', parent: null}),
+        ko.observable({id: 'powerdns', name: 'PowerDNS', icon: 'fa fa-server', parent: null}),
         ko.observable({id: 'security', name: 'Security', icon: 'fa fa-shield-alt', parent: null}),
         ko.observable({id: 'ui', name: 'UI', icon: 'fa fa-desktop', parent: null}),
         ko.observable({id: 'zone-editor', name: 'Zone Editor', icon: 'fa fa-edit', parent: null}),
-        ko.observable({id: 'local', name: 'Local', icon: 'fa fa-cog', parent: 'authentication', def: true}),
-        ko.observable({id: 'ldap', name: 'LDAP', icon: 'fa fa-cog', parent: 'authentication'}),
-        ko.observable({id: 'google', name: 'Google OAuth', icon: 'fa fa-cog', parent: 'authentication'}),
-        ko.observable({id: 'github', name: 'GitHub OAuth', icon: 'fa fa-cog', parent: 'authentication'}),
-        ko.observable({id: 'azure', name: 'Azure OAuth', icon: 'fa fa-cog', parent: 'authentication'}),
-        ko.observable({id: 'oidc', name: 'OpenID Connect', icon: 'fa fa-cog', parent: 'authentication'}),
+        ko.observable({id: 'local', name: 'Local', icon: 'fa fa-user-lock', parent: 'authentication', def: true}),
+        ko.observable({id: 'ldap', name: 'LDAP', icon: 'fa fa-database', parent: 'authentication'}),
+        ko.observable({id: 'azure', name: 'Azure OAuth', icon: 'fa-brands fa-microsoft', parent: 'authentication'}),
+        ko.observable({id: 'github', name: 'GitHub OAuth', icon: 'fa-brands fa-github', parent: 'authentication'}),
+        ko.observable({id: 'google', name: 'Google OAuth', icon: 'fa-brands fa-google', parent: 'authentication'}),
+        ko.observable({id: 'oidc', name: 'OpenID Connect', icon: 'fa-brands fa-openid', parent: 'authentication'}),
+        ko.observable({id: 'saml', name: 'SAML', icon: 'fa fa-network-wired', parent: 'authentication'}),
     ]);
 
     let defaults = {
@@ -121,16 +122,6 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
     }
 
     self.init = function (autoload) {
-        self.loading = ko.observable(self.loading);
-        self.saving = ko.observable(self.saving);
-        self.saved = ko.observable(self.saved);
-        self.save_failed = ko.observable(self.save_failed);
-        self.messages = ko.observableArray(self.messages);
-        self.messages_class = ko.observable(self.messages_class);
-        self.tab_active = ko.observable(self.tab_active);
-        self.tab_sub_active = ko.observable(self.tab_sub_active);
-        self.tab_default = ko.observable(self.tab_default);
-        //self.tabs = ko.observableArray(self.tabs);
         self.update(user_data);
 
         let el = null;
@@ -825,8 +816,14 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
     }
 
     self.onTabClick = function (model, event) {
-        let tab = $(event.target).data('tab');
-        let parent = $(event.target).data('tab-parent');
+        let el = $(event.target);
+
+        if (!el.is('a')) {
+            el = el.closest('a');
+        }
+
+        let tab = el.data('tab');
+        let parent = el.data('tab-parent');
         let path = '';
 
         if (parent) {
