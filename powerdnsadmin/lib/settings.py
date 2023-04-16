@@ -1,9 +1,165 @@
 import os
+import typing
 from pathlib import Path
 
+_instance = None
 basedir = os.path.abspath(Path(os.path.dirname(__file__)).parent)
 
-class AppSettings(object):
+
+class SettingException(Exception):
+    pass
+
+
+class Setting(object):
+    _default = None
+    _description: str | None = None
+    _label: str | None = None
+    _name: str | None = None
+    _prompts: dict | None = None
+    _stype: type | None = None
+    _value: typing.Any = None
+
+    @property
+    def default(self):
+        return self._default
+
+    @default.setter
+    def default(self, value):
+        self._default = value
+
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        self._description = value
+
+    @property
+    def label(self):
+        return self._label
+
+    @label.setter
+    def label(self, value):
+        self._label = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def prompts(self):
+        return self._prompts
+
+    @prompts.setter
+    def prompts(self, value):
+        self._prompts = value
+
+    @property
+    def stype(self):
+        return self._stype
+
+    @stype.setter
+    def stype(self, value):
+        self._stype = value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        if type(value) != self._stype:
+            raise SettingException(f'Invalid value type for setting {self._name}({self._stype}): {type(value)}')
+        self._value = value
+
+    def __init__(self, name, stype, default=None, label=None, description=None, prompts=None):
+        self._name = name
+        self._stype = stype
+        self._default = default
+        self._label = label
+        self._description = description
+        self._prompts = prompts
+
+    def __repr__(self):
+        return f'<Setting {self._name}({self._stype})={self._value}>'
+
+    def __str__(self):
+        return str(self._value)
+
+    def __bool__(self):
+        if self.stype == bool:
+            return self._value
+        elif self.stype in (int, float):
+            return type(self._value) in (int, float) and self._value > 0
+        elif self.stype == dict:
+            return isinstance(self._value, dict) and len(self._value.keys()) > 0
+        elif self.stype == list:
+            return isinstance(self._value, list) and len(self._value) > 0
+        return str(self._value).lower() in ('true', 't', 'yes', 'y', '1')
+
+    def __int__(self):
+        return int(self._value)
+
+    def __float__(self):
+        return float(self._value)
+
+    def __complex__(self):
+        return complex(self._value)
+
+    def __bytes__(self):
+        return bytes(self._value)
+
+    def __hash__(self):
+        return hash(self._value)
+
+    def __len__(self):
+        if self.stype in (dict, list):
+            return len(self._value)
+        raise TypeError(f'The setting type {self.stype} has no len()')
+
+
+class Settings(object):
+    _cache = None
+    _instance = None
+    """ The Settings instance cache. """
+
+    def __init__(self):
+        """ Initializes the Settings instance cache. """
+        self._cache = {}
+
+    def all(self):
+        """ Returns the Settings instance cache. """
+        return self._cache
+
+    def get(self, name, cache=True, default=None):
+        """ Returns a Setting object from the Settings instance cache. """
+        return self._cache.get(name, default)
+
+    def has(self, name):
+        """ Returns True if the Setting object exists in the Settings instance cache. """
+        return name in self._cache
+
+    def set(self, name, value):
+        """ Adds a Setting object to the Settings instance cache. """
+        self._cache[name] = value
+
+    def value(self, name, default=None):
+        """ Returns the value of the Setting object from the Settings instance cache, or the default argument
+        value otherwise. """
+        if not self.has(name):
+            return default
+        return self.get(name, default).value
+
+    @staticmethod
+    def instance():
+        if Settings._instance is None:
+            Settings._instance = Settings()
+        return Settings._instance
 
     defaults = {
         # Flask Settings
@@ -579,8 +735,8 @@ class AppSettings(object):
     def convert_type(name, value):
         import json
         from json import JSONDecodeError
-        if name in AppSettings.types:
-            var_type = AppSettings.types[name]
+        if name in Settings.types:
+            var_type = Settings.types[name]
 
             # Handle boolean values
             if var_type == bool and isinstance(value, str):
@@ -618,7 +774,7 @@ class AppSettings(object):
         """ Load app settings from environment variables when defined. """
         import os
 
-        for var_name, default_value in AppSettings.defaults.items():
+        for var_name, default_value in Settings.defaults.items():
             env_name = var_name.upper()
             current_value = None
 
@@ -635,4 +791,4 @@ class AppSettings(object):
                 current_value = os.environ[env_name]
 
             if current_value is not None:
-                app.config[env_name] = AppSettings.convert_type(var_name, current_value)
+                app.config[env_name] = Settings.convert_type(var_name, current_value)

@@ -21,7 +21,7 @@ def editor():
 @login_required
 @admin_role_required
 def api():
-    from powerdnsadmin.lib.settings import AppSettings
+    from powerdnsadmin.lib.settings import Settings
     result = {'status': 1, 'messages': [], 'data': {}}
 
     if request.form.get('commit') == '1':
@@ -29,7 +29,7 @@ def api():
         data = json.loads(request.form.get('data'))
 
         for key, value in data.items():
-            if key in AppSettings.defaults:
+            if key in Settings.defaults:
                 model.set(key, value)
 
     result['data'] = Setting().get_all()

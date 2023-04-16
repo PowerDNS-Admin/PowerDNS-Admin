@@ -8,7 +8,7 @@ from .lib import utils
 
 
 def create_app(config=None):
-    from powerdnsadmin.lib.settings import AppSettings
+    from powerdnsadmin.lib.settings import Settings
     from . import models, routes, services
     from .assets import assets
     app = Flask(__name__)
@@ -51,7 +51,7 @@ def create_app(config=None):
             app.config.from_pyfile(config)
 
     # Load any settings defined with environment variables
-    AppSettings.load_environment(app)
+    Settings.load_environment(app)
 
     # HSTS
     if app.config.get('HSTS_ENABLED'):

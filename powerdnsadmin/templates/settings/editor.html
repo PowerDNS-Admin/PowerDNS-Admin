@@ -108,6 +108,7 @@
 {% endblock %}
 
 {% block extrascripts %}
+    <script src="{{ url_for('static', filename='custom/js/knockout-bootstrap-switch.js') }}"></script>
     <script src="{{ url_for('static', filename='custom/js/app-settings-editor.js') }}"></script>
     <script>
         $(function () {

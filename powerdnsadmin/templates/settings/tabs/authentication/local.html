@@ -1,191 +1,214 @@
 <div data-tab="local"
      data-bind="class: 'tab-pane' + (tab_active().endsWith('/local') ? ' active' : '')">
-    <div class="row">
-        <div class="col-12 col-sm-6 col-lg-4">
-            <div class="card card-outline card-primary shadow">
-                <div class="card-header">
-                    <h3 class="card-title">Local Authentication Settings</h3>
-                </div>
-                <!-- /.card-header -->
-                <div class="card-body">
-                    <div class="form-group">
-                        <input type="checkbox" id="local_db_enabled"
-                               name="local_db_enabled"
-                               class="checkbox"
-                               data-bind="checked: local_db_enabled">
-                        <label for="local_db_enabled">Local DB
-                            Authentication</label>
-                    </div>
-                    <div class="form-group">
-                        <input type="checkbox" id="signup_enabled"
-                               name="signup_enabled"
-                               class="checkbox"
-                               data-bind="enable: local_db_enabled, checked: signup_enabled">
-                        <label for="signup_enabled">Allow users to sign
-                            up</label>
-                    </div>
-                    <fieldset>
-                        <legend>Password Requirements</legend>
-                        <div class="form-group">
-                            <input type="checkbox" id="pwd_enforce_characters"
-                                   name="pwd_enforce_characters"
-                                   class="checkbox"
-                                   data-bind="enable: local_db_enabled, checked: pwd_enforce_characters">
-                            <label for="pwd_enforce_characters">
-                                Enforce Character Requirements
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd_min_len">Minimum Password
-                                Length</label>
-                            <input type="text" class="form-control"
-                                   name="pwd_min_len" id="pwd_min_len"
-                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_len, valueUpdate: 'afterkeydown'">
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd_min_lowercase">Minimum Lowercase
-                                Characters</label>
-                            <input type="text" class="form-control"
-                                   name="pwd_min_lowercase"
-                                   id="pwd_min_lowercase"
-                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_lowercase, valueUpdate: 'afterkeydown'">
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd_min_uppercase">Minimum Uppercase
-                                Characters</label>
-                            <input type="text" class="form-control"
-                                   name="pwd_min_uppercase"
-                                   id="pwd_min_uppercase"
-                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_uppercase, valueUpdate: 'afterkeydown'">
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd_min_digits">Minimum Digit
-                                Characters</label>
-                            <input type="text" class="form-control"
-                                   name="pwd_min_digits" id="pwd_min_digits"
-                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_digits, valueUpdate: 'afterkeydown'">
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd_min_special">Minimum Special
-                                Characters</label>
-                            <input type="text" class="form-control"
-                                   name="pwd_min_special" id="pwd_min_special"
-                                   data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" id="pwd_enforce_complexity"
-                                   name="pwd_enforce_complexity"
-                                   class="checkbox"
-                                   data-bind="enable: local_db_enabled, checked: pwd_enforce_complexity">
-                            <label for="pwd_enforce_complexity">
-                                Enforce Complexity Requirement
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd_min_complexity">Minimum Complexity
-                                (zxcvbn)</label>
-                            <input type="text" class="form-control"
-                                   name="pwd_min_complexity"
-                                   id="pwd_min_complexity"
-                                   data-bind="enable: local_db_enabled() && pwd_enforce_complexity(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
-                        </div>
-                    </fieldset>
-                </div>
-                <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
+    <div class="card card-outline card-primary shadow">
+        <div class="card-header">
+            <h3 class="card-title">Local Authentication Settings</h3>
         </div>
-        <!-- /.col -->
+        <!-- /.card-header -->
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12 col-sm-6">
+                    <div class="card shadow" data-bind="class: local_db_enabled() ? 'card-success' : 'card-danger'">
+                        <div class="card-header">
+                            <h3 class="card-title">Local User Login</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="form-group">
+                                <input type="checkbox" id="local_db_enabled" name="local_db_enabled"
+                                       data-profile="enabled-danger-off"
+                                       data-bind="checked: local_db_enabled, bootstrapSwitch: local_db_enabled">
 
-        <div class="col-12 col-sm-6 col-lg-8">
-            <div class="card card-outline card-warning shadow">
-                <div class="card-header">
-                    <h3 class="card-title">Settings Help</h3>
+                            </div>
+                            <div class="callout callout-secondary">
+                                <p>This determines whether users can authenticate with accounts in the local PDA
+                                    database.</p>
+                            </div>
+                            <div class="callout callout-danger" data-bind="visible: !local_db_enabled()">
+                                <p>You should ensure that you have appropriate admin rights assigned to at least one
+                                    external auth provider account!</p>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+
+                    <div class="card shadow" data-bind="class: signup_enabled() ? 'card-danger' : 'card-success'">
+                        <div class="card-header">
+                            <h3 class="card-title">Local User Open Registration</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="form-group">
+                                <input type="checkbox" id="signup_enabled" name="signup_enabled"
+                                       data-profile="enabled-danger-on"
+                                       data-bind="checked: signup_enabled, bootstrapSwitch: signup_enabled">
+
+                            </div>
+                            <div class="callout callout-secondary">
+                                <p>This determines whether users are given the option to self-register at the login
+                                    screen.</p>
+                            </div>
+                            <div class="callout callout-danger" data-bind="visible: signup_enabled">
+                                <p>It should be understood that access to this application should be properly restricted
+                                    to prevent wide open access to the Internet!</p>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+
+                    <div class="card shadow"
+                         data-bind="class: pwd_enforce_complexity() ? 'card-success' : 'card-danger'">
+                        <div class="card-header">
+                            <h3 class="card-title">Password Complexity Policy</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="form-group">
+                                <input type="checkbox" id="pwd_enforce_complexity" name="pwd_enforce_complexity"
+                                       data-profile="enabled-danger-off"
+                                       data-bind="checked: pwd_enforce_complexity, bootstrapSwitch: pwd_enforce_complexity">
+                            </div>
+                            <div class="callout callout-secondary">
+                                <p>This determines if the following password complexity restrictions should be applied
+                                    when creating, registering, or updating an account.</p>
+                                <p>Default: Disabled</p>
+                            </div>
+                            <div class="callout callout-danger" data-bind="visible: pwd_enforce_complexity">
+                                <p>You may experience an increase in the amount of user complaints received as some
+                                    people might find this annoying.</p>
+                            </div>
+                            <div class="callout callout-danger" data-bind="visible: !pwd_enforce_complexity()">
+                                <p>It is highly recommended that you enforce more secure password requirements on your users!</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="pwd_min_complexity">Minimum Complexity (zxcvbn)</label>
+                                <input type="number" class="form-control"
+                                       name="pwd_min_complexity"
+                                       id="pwd_min_complexity"
+                                       data-bind="enable: local_db_enabled() && pwd_enforce_complexity(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
+                            </div>
+                            <div class="callout callout-secondary">
+                                <p>This defines the minimum complexity score required for a user password. The
+                                    complexity
+                                    score is calculated using the zxcvbn library. The default value of the log factor is
+                                    11
+                                    as it is considered secure. More information about this can be found
+                                    <a target="_blank"
+                                       href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>.
+                                </p>
+                                <p>Default Value: 11</p>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
                 </div>
-                <!-- /.card-header -->
-                <div class="card-body">
-                    <dl class="dl-horizontal">
-                        <dt>Local DB Authentication</dt>
-                        <dd>Enable/disable local database authentication.</dd>
-                        <dt>Allow Users to Signup</dt>
-                        <dd>Allow users to signup. This requires local database
-                            authentication
-                            to be enabled.
-                        </dd>
-                        <h4>Password Requirements</h4>
-                        <dd>This section allows you to customize your local DB
-                            password
-                            requirements
-                            and ensure that when users change their password or
-                            signup
-                            they are
-                            picking strong passwords.
-                        </dd>
-                        <dd>Setting any entry field to a blank value will revert
-                            it
-                            back
-                            to default.
-                        </dd>
-                        <dt>Enforce Character Requirements</dt>
-                        <dd>This option will enforce the character type
-                            requirements
-                            for
-                            passwords.
-                            <ul>
-                                <li>Minimum Lowercase Characters - Minimum
-                                    number of
-                                    lowercase
-                                    characters required to appear in the
-                                    password.
-                                </li>
-                                <li>Minimum Uppercase Characters - Minimum
-                                    number of
-                                    uppercase
-                                    characters required to appear in the
-                                    password.
-                                </li>
-                                <li>Minimum Digit Characters - Minimum number of
-                                    digits
-                                    required to appear in the password. Digits
-                                    include
-                                    1234567890.
-                                </li>
-                                <li>Minimum Special Characters - Minimum number
-                                    of
-                                    special
-                                    characters required to appear in the
-                                    password.
-                                    Special
-                                    characters include
-                                    `!@#$%^&amp;*()_-=+[]\{}|;:",.&gt;&lt;/?.
-                                </li>
-                            </ul>
-                        </dd>
-                        <dt>Enforce Complexity Requirement</dt>
-                        <dd>Enable the enforcement of complex passwords. We
-                            currently use
-                            <a href="https://github.com/dropbox/zxcvbn">zxcvbn</a>
-                            for
-                            determining this.
-                            <ul>
-                                <li>Minimum Complexity - The default value of
-                                    the
-                                    log factor
-                                    is 11 as it is considered secure. More
-                                    information about
-                                    this can be found at
-                                    <a href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>
-                                </li>
-                            </ul>
-                        </dd>
-                    </dl>
+                <div class="col-12 col-sm-6">
+                    <div class="card shadow"
+                         data-bind="class: pwd_enforce_characters() ? 'card-success' : 'card-danger'">
+                        <div class="card-header">
+                            <h3 class="card-title">Password Character Policy</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="form-group">
+                                <input type="checkbox" id="pwd_enforce_characters" name="pwd_enforce_characters"
+                                       data-profile="enabled-danger-off"
+                                       data-bind="checked: pwd_enforce_characters, bootstrapSwitch: pwd_enforce_characters">
+                            </div>
+                            <div class="callout callout-secondary">
+                                <p>This determines whether the following password character restrictions should be
+                                    applied when creating, registering, or updating an account.</p>
+                                <p>Default: Disabled</p>
+                            </div>
+                            <div class="callout callout-danger" data-bind="visible: !pwd_enforce_characters()">
+                                <p>If this is not enabled, it may lead to users making really poor, and often uninformed
+                                    decisions about the quality of their chosen passwords.</p>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 col-sm-6 border-right">
+                                    <div class="form-group">
+                                        <label for="pwd_min_len">Minimum Password
+                                            Length</label>
+                                        <input type="number" class="form-control"
+                                               name="pwd_min_len" id="pwd_min_len"
+                                               data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_len, valueUpdate: 'afterkeydown'">
+                                    </div>
+                                    <div class="callout callout-secondary">
+                                        <p>This defines the minimum number of characters required for a user
+                                            password.</p>
+                                        <p>Default: 10</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="pwd_min_digits">Minimum Numeric
+                                            Characters</label>
+                                        <input type="number" class="form-control"
+                                               name="pwd_min_digits" id="pwd_min_digits"
+                                               data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_digits, valueUpdate: 'afterkeydown'">
+                                    </div>
+                                    <div class="callout callout-secondary">
+                                        <p>This defines the minimum number of numeric characters required for a user
+                                            password.</p>
+                                        <p>Default: 2</p>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label for="pwd_min_lowercase">Minimum Lowercase
+                                            Characters</label>
+                                        <input type="number" class="form-control"
+                                               name="pwd_min_lowercase"
+                                               id="pwd_min_lowercase"
+                                               data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_lowercase, valueUpdate: 'afterkeydown'">
+                                    </div>
+                                    <div class="callout callout-secondary">
+                                        <p>This defines the minimum number of lowercase characters required for a user
+                                            password.</p>
+                                        <p>Default: 3</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="pwd_min_uppercase">Minimum Uppercase
+                                            Characters</label>
+                                        <input type="number" class="form-control"
+                                               name="pwd_min_uppercase"
+                                               id="pwd_min_uppercase"
+                                               data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_uppercase, valueUpdate: 'afterkeydown'">
+                                    </div>
+                                    <div class="callout callout-secondary">
+                                        <p>This defines the minimum number of uppercase characters required for a user
+                                            password.</p>
+                                        <p>Default: 3</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 col-sm-6 border-right">
+                                    <div class="form-group">
+                                        <label for="pwd_min_special">Minimum Special
+                                            Characters</label>
+                                        <input type="number" class="form-control"
+                                               name="pwd_min_special" id="pwd_min_special"
+                                               data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
+                                    </div>
+                                    <div class="callout callout-secondary">
+                                        <p>This defines the minimum number of special characters required for a user
+                                            password.
+                                            Special characters include `!@#$%^&amp;*()_-=+[]\{}|;:",.&gt;&lt;/?.</p>
+                                        <p>Default: 1</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
         </div>
-        <!-- /.col -->
+        <!-- /.card-body -->
     </div>
-    <!-- /.row -->
+    <!-- /.card -->
 </div>
 <!-- /.tab-pane -->

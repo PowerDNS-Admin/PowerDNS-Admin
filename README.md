@@ -55,7 +55,7 @@ This creates a volume named `pda-data` to persist the default SQLite database wi
 1. Update the configuration   
    Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
    Other environment variables are mentioned in
-   the [AppSettings.defaults](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/powerdnsadmin/lib/settings.py) dictionary.
+   the [Settings.defaults](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/powerdnsadmin/lib/settings.py) dictionary.
    To use a Docker-style secrets convention, one may append `_FILE` to the environment variables with a path to a file
    containing the intended value of the variable (e.g. `SQLALCHEMY_DATABASE_URI_FILE=/run/secrets/db_uri`).   
    Make sure to set the environment variable `SECRET_KEY` to a long, random

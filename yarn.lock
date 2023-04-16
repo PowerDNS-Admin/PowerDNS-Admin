@@ -203,6 +203,11 @@ bootstrap-slider@^11.0.2:
   resolved "https://registry.yarnpkg.com/bootstrap-slider/-/bootstrap-slider-11.0.2.tgz#4b167c165f322339cc66f0c7166b5a39e289e251"
   integrity sha512-CdwS+Z6X79OkLes9RfDgPB9UIY/+81wTkm6ktdSB6hdyiRbjJLFQIjZdnEr55tDyXZfgC7U6yeSXkNN9ZdGqjA==
 
+bootstrap-switch@3.3.3:
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/bootstrap-switch/-/bootstrap-switch-3.3.3.tgz#1cd537a7199b766348e949fbace4ee749f5ecb6e"
+  integrity sha512-9pzrqTigViNZp01Py9ruP4P+rhf9Y1B4Tx0RTEduM/8hTR2MpexR4ypxxcw8Dztol3pz2Qg44iaXvTY6nSpR2Q==
+
 bootstrap-switch@3.3.4:
   version "3.3.4"
   resolved "https://registry.yarnpkg.com/bootstrap-switch/-/bootstrap-switch-3.3.4.tgz#70e0aeb2a877c0dc766991de108e2170fc29a2ff"

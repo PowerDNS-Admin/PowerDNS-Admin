@@ -2,7 +2,7 @@
     <li class="nav-item" data-bind="if: $parent.tab_active().startsWith(parent)">
         <a data-bind="attr: {'data-tab': id, 'data-tab-parent': parent}, click: $parent.onTabClick, class: $parent.tab_active().endsWith('/' + id) ? ' active' : ''"
            class="nav-link" href="#" data-toggle="pill" role="tab">
-            <i class="nav-icon fa-solid mr-1" data-bind="class: icon + ($parent.tab_active().endsWith('/' + id) ? ' fa-flip' : '')"></i>
+            <i class="nav-icon fa-solid mr-1" data-bind="class: icon"></i>
             <span data-bind="text: name"></span>
         </a>
     </li>

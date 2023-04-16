@@ -31,13 +31,13 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
         // Local Authentication Settings
         local_db_enabled: true,
         signup_enabled: true,
-        pwd_enforce_characters: 0,
+        pwd_enforce_characters: false,
         pwd_min_len: 10,
         pwd_min_lowercase: 3,
         pwd_min_uppercase: 2,
         pwd_min_digits: 2,
         pwd_min_special: 1,
-        pwd_enforce_complexity: 0,
+        pwd_enforce_complexity: false,
         pwd_min_complexity: 11,
 
         // LDAP Authentication Settings

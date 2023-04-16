@@ -4,7 +4,7 @@ import pytimeparse
 from ast import literal_eval
 from flask import current_app
 from .base import db
-from powerdnsadmin.lib.settings import AppSettings
+from powerdnsadmin.lib.settings import Settings
 
 
 class Setting(db.Model):
@@ -31,7 +31,7 @@ class Setting(db.Model):
             Setting.name == 'maintenance').first()
 
         if maintenance is None:
-            value = AppSettings.defaults['maintenance']
+            value = Settings.defaults['maintenance']
             maintenance = Setting(name='maintenance', value=str(value))
             db.session.add(maintenance)
 
@@ -53,7 +53,7 @@ class Setting(db.Model):
         current_setting = Setting.query.filter(Setting.name == setting).first()
 
         if current_setting is None:
-            value = AppSettings.defaults[setting]
+            value = Settings.defaults[setting]
             current_setting = Setting(name=setting, value=str(value))
             db.session.add(current_setting)
 
@@ -79,7 +79,7 @@ class Setting(db.Model):
             current_setting = Setting(name=setting, value=None)
             db.session.add(current_setting)
 
-        value = AppSettings.convert_type(setting, value)
+        value = Settings.convert_type(setting, value)
 
         if isinstance(value, dict) or isinstance(value, list):
             value = json.dumps(value)
@@ -95,7 +95,7 @@ class Setting(db.Model):
             return False
 
     def get(self, setting):
-        if setting in AppSettings.defaults:
+        if setting in Settings.defaults:
 
             if setting.upper() in current_app.config:
                 result = current_app.config[setting.upper()]
@@ -106,27 +106,27 @@ class Setting(db.Model):
                 if hasattr(result, 'value'):
                     result = result.value
 
-                return AppSettings.convert_type(setting, result)
+                return Settings.convert_type(setting, result)
             else:
-                return AppSettings.defaults[setting]
+                return Settings.defaults[setting]
         else:
             current_app.logger.error('Unknown setting queried: {0}'.format(setting))
 
     def get_all(self):
         result = {}
 
-        for var_name, default_value in AppSettings.defaults.items():
+        for var_name, default_value in Settings.defaults.items():
             result[var_name] = self.get(var_name)
 
         return result
 
     def get_group(self, group):
         if not isinstance(group, list):
-            group = AppSettings.groups[group]
+            group = Settings.groups[group]
 
         result = {}
 
-        for var_name, default_value in AppSettings.defaults.items():
+        for var_name, default_value in Settings.defaults.items():
             if var_name in group:
                 result[var_name] = self.get(var_name)
 
