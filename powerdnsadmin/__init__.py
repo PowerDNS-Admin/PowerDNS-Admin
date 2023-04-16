@@ -9,6 +9,7 @@ from .lib import utils
 
 def create_app(config=None):
     from powerdnsadmin.lib.settings import Settings
+    from powerdnsadmin.lib import settings_config
     from . import models, routes, services
     from .assets import assets
     app = Flask(__name__)
@@ -50,6 +51,10 @@ def create_app(config=None):
         elif config.endswith('.py'):
             app.config.from_pyfile(config)
 
+    # Initialize the application settings
+    if not settings_config.initialized:
+        settings_config.init()
+    
     # Load any settings defined with environment variables
     Settings.load_environment(app)
 

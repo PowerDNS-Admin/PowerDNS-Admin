@@ -778,7 +778,7 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
             return false;
         }
 
-        self.update(result.data);
+        self.update(result.payload.legacy);
         self.messages_class('info');
         self.messages(result.messages);
         self.loading(false);

@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, Response
 from flask_login import login_required
 from ..decorators import admin_role_required
 from ..models.setting import Setting
@@ -21,8 +21,9 @@ def editor():
 @login_required
 @admin_role_required
 def api():
+    import jsonpickle
     from powerdnsadmin.lib.settings import Settings
-    result = {'status': 1, 'messages': [], 'data': {}}
+    result = {'status': 1, 'messages': [], 'payload': {}}
 
     if request.form.get('commit') == '1':
         model = Setting()
@@ -32,6 +33,9 @@ def api():
             if key in Settings.defaults:
                 model.set(key, value)
 
-    result['data'] = Setting().get_all()
+    result['payload'] = {
+        'legacy': Setting().get_all(),
+        'settings': Settings.instance().all(),
+    }
 
-    return result
+    return Response(jsonpickle.encode(result), mimetype='application/json')

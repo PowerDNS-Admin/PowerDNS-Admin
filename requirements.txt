@@ -46,3 +46,4 @@ rcssmin==1.1.1
 zxcvbn==4.4.28
 psycopg2==2.9.5
 setuptools==65.5.1 # fixes CVE-2022-40897
+jsonpickle==3.0.1
