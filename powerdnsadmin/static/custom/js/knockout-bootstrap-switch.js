@@ -30,6 +30,24 @@ ko.bindingHandlers.bootstrapSwitch = {
                 state: ko.unwrap(valueAccessor()),
                 size: 'mini',
             },
+            'enabled-warning-off': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'warning',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'success',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
+            'enabled-warning-on': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'success',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'warning',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
         }
 
         let profile = el.data('profile');

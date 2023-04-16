@@ -1,6 +1,6 @@
 <div data-tab="local"
      data-bind="class: 'tab-pane' + (tab_active().endsWith('/local') ? ' active' : '')">
-    <div class="card card-outline card-primary shadow">
+    <div class="card card-secondary shadow">
         <div class="card-header">
             <h3 class="card-title">Local Authentication Settings</h3>
         </div>
@@ -33,7 +33,7 @@
                     </div>
                     <!-- /.card -->
 
-                    <div class="card shadow" data-bind="class: signup_enabled() ? 'card-danger' : 'card-success'">
+                    <div class="card shadow" data-bind="class: signup_enabled() ? 'card-warning' : 'card-success'">
                         <div class="card-header">
                             <h3 class="card-title">Local User Open Registration</h3>
                         </div>
@@ -41,7 +41,7 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <input type="checkbox" id="signup_enabled" name="signup_enabled"
-                                       data-profile="enabled-danger-on"
+                                       data-profile="enabled-warning-on"
                                        data-bind="checked: signup_enabled, bootstrapSwitch: signup_enabled">
 
                             </div>
@@ -49,7 +49,7 @@
                                 <p>This determines whether users are given the option to self-register at the login
                                     screen.</p>
                             </div>
-                            <div class="callout callout-danger" data-bind="visible: signup_enabled">
+                            <div class="callout callout-warning" data-bind="visible: signup_enabled">
                                 <p>It should be understood that access to this application should be properly restricted
                                     to prevent wide open access to the Internet!</p>
                             </div>
@@ -59,7 +59,7 @@
                     <!-- /.card -->
 
                     <div class="card shadow"
-                         data-bind="class: pwd_enforce_complexity() ? 'card-success' : 'card-danger'">
+                         data-bind="class: pwd_enforce_complexity() ? 'card-success' : 'card-warning'">
                         <div class="card-header">
                             <h3 class="card-title">Password Complexity Policy</h3>
                         </div>
@@ -67,7 +67,7 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <input type="checkbox" id="pwd_enforce_complexity" name="pwd_enforce_complexity"
-                                       data-profile="enabled-danger-off"
+                                       data-profile="enabled-warning-off"
                                        data-bind="checked: pwd_enforce_complexity, bootstrapSwitch: pwd_enforce_complexity">
                             </div>
                             <div class="callout callout-secondary">
@@ -75,11 +75,11 @@
                                     when creating, registering, or updating an account.</p>
                                 <p>Default: Disabled</p>
                             </div>
-                            <div class="callout callout-danger" data-bind="visible: pwd_enforce_complexity">
+                            <div class="callout callout-warning" data-bind="visible: pwd_enforce_complexity">
                                 <p>You may experience an increase in the amount of user complaints received as some
                                     people might find this annoying.</p>
                             </div>
-                            <div class="callout callout-danger" data-bind="visible: !pwd_enforce_complexity()">
+                            <div class="callout callout-warning" data-bind="visible: !pwd_enforce_complexity()">
                                 <p>It is highly recommended that you enforce more secure password requirements on your users!</p>
                             </div>
                             <div class="form-group">
