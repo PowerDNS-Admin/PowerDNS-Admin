@@ -380,7 +380,8 @@ def init():
 
     inst.set(SettingMap.AZURE_SG_ENABLED, Setting(**{
         'name': SettingMap.AZURE_SG_ENABLED,
-        'description': 'This determines if specifically defined Azure AD groups should be used to select PDA user roles.',
+        'description': 'This determines if specifically defined Azure AD groups should be used to select PDA user '
+                       'roles.',
         'label': 'Azure Group Security',
         'stype': bool,
         'default': False,
@@ -536,8 +537,8 @@ def init():
 
     inst.set(SettingMap.FORWARD_RECORDS_ALLOW_EDIT, Setting(**{
         'name': SettingMap.FORWARD_RECORDS_ALLOW_EDIT,
-        'description': 'This defines a map of forward zone record types with flags indicating if the record type should '
-                       'be selectable in the zone editor.',
+        'description': 'This defines a map of forward zone record types with flags indicating if the record type '
+                       'should be selectable in the zone editor.',
         'label': 'Forward Zone Record Types',
         'stype': dict,
         'default': {
@@ -606,8 +607,8 @@ def init():
 
     inst.set(SettingMap.GITHUB_OAUTH_AUTO_CONFIGURE, Setting(**{
         'name': SettingMap.GITHUB_OAUTH_AUTO_CONFIGURE,
-        'description': 'This determines if the GitHub OAuth provider should be automatically configured using a metadata '
-                       'URL.',
+        'description': 'This determines if the GitHub OAuth provider should be automatically configured using a '
+                       'metadata URL.',
         'label': 'GitHub OAuth Automatic Configuration',
         'stype': bool,
         'default': True,
@@ -679,8 +680,8 @@ def init():
 
     inst.set(SettingMap.GOOGLE_OAUTH_AUTO_CONFIGURE, Setting(**{
         'name': SettingMap.GOOGLE_OAUTH_AUTO_CONFIGURE,
-        'description': 'This determines if the Google OAuth provider should be automatically configured using a metadata '
-                       'URL.',
+        'description': 'This determines if the Google OAuth provider should be automatically configured using a '
+                       'metadata URL.',
         'label': 'Google OAuth Automatic Configuration',
         'stype': bool,
         'default': True,
@@ -1177,8 +1178,8 @@ def init():
 
     inst.set(SettingMap.PURGE, Setting(**{
         'name': SettingMap.PURGE,
-        'description': 'This determines whether PDA user roles should be purged when no roles were found using LDAP role '
-                       'auto-provisioning.',
+        'description': 'This determines whether PDA user roles should be purged when no roles were found using LDAP '
+                       'role auto-provisioning.',
         'label': 'LDAP Purge User Roles',
         'stype': bool,
         'default': False,
@@ -1203,8 +1204,8 @@ def init():
 
     inst.set(SettingMap.PWD_MIN_COMPLEXITY, Setting(**{
         'name': SettingMap.PWD_MIN_COMPLEXITY,
-        'description': 'This defines the minimum complexity score required for a user password. The complexity score is '
-                       'calculated using the zxcvbn library. The default value of the log factor is 11 as it is '
+        'description': 'This defines the minimum complexity score required for a user password. The complexity score '
+                       'is calculated using the zxcvbn library. The default value of the log factor is 11 as it is '
                        'considered secure.',
         'label': 'Minimum Password Complexity',
         'stype': int,
@@ -1269,7 +1270,8 @@ def init():
 
     inst.set(SettingMap.REMOTE_USER_COOKIES, Setting(**{
         'name': SettingMap.REMOTE_USER_COOKIES,
-        'description': 'This defines the name of the remote authentication cookies that should be destroyed during logout.',
+        'description': 'This defines the name of the remote authentication cookies that should be destroyed during '
+                       'logout.',
         'label': 'Remote Authentication Cookies',
         'stype': list,
         'default': [],
@@ -1293,8 +1295,8 @@ def init():
 
     inst.set(SettingMap.REVERSE_RECORDS_ALLOW_EDIT, Setting(**{
         'name': SettingMap.REVERSE_RECORDS_ALLOW_EDIT,
-        'description': 'This defines a map of reverse zone record types with flags indicating if the record type should '
-                       'be selectable in the zone editor.',
+        'description': 'This defines a map of reverse zone record types with flags indicating if the record type '
+                       'should be selectable in the zone editor.',
         'label': 'Reverse Zone Record Types',
         'stype': dict,
         'default': {
@@ -1395,8 +1397,8 @@ def init():
 
     inst.set(SettingMap.SAML_ATTRIBUTE_NAME, Setting(**{
         'name': SettingMap.SAML_ATTRIBUTE_NAME,
-        'description': 'This defines the SAML attribute that should be used to populate both the first / given and last / '
-                       'surname fields by splitting on the first space.',
+        'description': 'This defines the SAML attribute that should be used to populate both the first / given and '
+                       'last / surname fields by splitting on the first space.',
         'label': 'SAML Full Name Attribute',
         'stype': str,
         'default': None,
@@ -1533,8 +1535,8 @@ def init():
 
     inst.set(SettingMap.SAML_PATH, Setting(**{
         'name': SettingMap.SAML_PATH,
-        'description': 'This defines the SAML path in the file system with either an absolute path or a path relative to '
-                       'the application root.',
+        'description': 'This defines the SAML path in the file system with either an absolute path or a path relative '
+                       'to the application root.',
         'label': 'SAML File System Path',
         'stype': str,
         'default': './saml',
