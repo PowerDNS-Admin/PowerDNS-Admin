@@ -1,7 +1,79 @@
+
+ko.bindingHandlers.setting = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let profile = el.data('profile');
+        let containerType = el.data('container-type');
+
+        let profiles = {
+            'enabled': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'secondary',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'primary',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
+            'enabled-danger-off': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'danger',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'success',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
+            'enabled-danger-on': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'success',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'danger',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
+            'enabled-warning-off': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'warning',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'success',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
+            'enabled-warning-on': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'success',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'warning',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
+        }
+
+        if (typeof profile === 'string' && profile.length > 0 && !profiles[profile]) {
+            console.error('Unknown profile: ' + profile);
+            return;
+        }
+
+        el.bootstrapSwitch(profiles[profile] || profiles['enabled']);
+
+        el.on('switchChange.setting', function (event, state) {
+            valueAccessor()(state);
+        });
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        $(element).bootstrapSwitch('state', ko.unwrap(valueAccessor()));
+    }
+};
+
 let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
     let self = this;
     let target = null;
 
+    self.settings = ko.observable({});
     self.loading = ko.observable(false);
     self.saving = ko.observable(false);
     self.saved = ko.observable(false);
@@ -124,18 +196,7 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
 
     self.init = function (autoload) {
         self.update(user_data);
-
-        let el = null;
-        if (typeof selector !== 'undefined') {
-            el = $(selector)
-        }
-
-        if (el !== null && el.length > 0) {
-            target = el;
-            ko.applyBindings(self, el[0]);
-        } else {
-            ko.applyBindings(self);
-        }
+        self.setupKnockoutBindings();
 
         if (self.hasHash()) {
             self.activateTab(self.getHash());
@@ -183,6 +244,20 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
             } else {
                 self[key] = ko.observable(value);
             }
+        }
+    }
+
+    self.setupKnockoutBindings = function () {
+        let el = null;
+        if (typeof selector !== 'undefined') {
+            el = $(selector)
+        }
+
+        if (el !== null && el.length > 0) {
+            target = el;
+            ko.applyBindings(self, el[0]);
+        } else {
+            ko.applyBindings(self);
         }
     }
 
@@ -770,22 +845,55 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
         return window.location.hash.length > 1;
     }
 
+    self.observe = function (value) {
+        if (typeof value === 'undefined') {
+            return null;
+        }
+
+        if (value !== null && value.constructor === Array) {
+            for (const index in value) {
+                value[index] = self.observe(value[index]);
+            }
+        } else if (value !== null && value.constructor === Object) {
+            for (const key in value) {
+                if (value.hasOwnProperty(key)) {
+                    value[key] = self.observe(value[key]);
+                }
+            }
+        } else {
+            value = ko.observable(value);
+        }
+
+        return value;
+    }
+
     self.onDataLoaded = function (result) {
-        if (result.status == 0) {
+        if (result.status === 0) {
             self.messages_class('danger');
             self.messages(result.messages);
             self.loading(false);
             return false;
         }
 
+        let settings = self.observe(result.payload.settings);
+
+        for (const key in settings) {
+            if (settings.hasOwnProperty(key)) {
+                //self[key] = settings[key];
+            }
+        }
+
         self.update(result.payload.legacy);
+        self.settings(settings);
         self.messages_class('info');
         self.messages(result.messages);
         self.loading(false);
+
+        console.log(settings);
     }
 
     self.onDataSaved = function (result) {
-        if (result.status == 0) {
+        if (result.status === 0) {
             self.saved(false);
             self.save_failed(true);
             self.messages_class('danger');

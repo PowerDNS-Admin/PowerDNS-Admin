@@ -1,10 +1,10 @@
 import sys
-import traceback
 import pytimeparse
 from ast import literal_eval
 from flask import current_app
 from .base import db
 from powerdnsadmin.lib.settings import Settings
+from powerdnsadmin.lib.settings_config import SettingMap
 
 
 class Setting(db.Model):
@@ -27,109 +27,58 @@ class Setting(db.Model):
         self.value = value
 
     def set_maintenance(self, mode):
-        maintenance = Setting.query.filter(
-            Setting.name == 'maintenance').first()
-
-        if maintenance is None:
-            value = Settings.defaults['maintenance']
-            maintenance = Setting(name='maintenance', value=str(value))
-            db.session.add(maintenance)
-
+        setting = Settings.instance().get(SettingMap.MAINTENANCE)
         mode = str(mode)
 
-        try:
-            if maintenance.value != mode:
-                maintenance.value = mode
-                db.session.commit()
-            return True
-        except Exception as e:
-            current_app.logger.error('Cannot set maintenance to {0}. DETAIL: {1}'.format(
-                mode, e))
-            current_app.logger.debug(traceback.format_exec())
-            db.session.rollback()
+        if setting.value != mode:
+            setting.value = mode
+            return setting.save()
+
+        return True
+
+    def toggle(self, name):
+        setting = Settings.instance().get(name)
+
+        if not setting.stype == bool:
+            current_app.logger.error('Cannot toggle setting {0}. DETAIL: Setting is not of boolean type'.format(name))
             return False
 
-    def toggle(self, setting):
-        current_setting = Setting.query.filter(Setting.name == setting).first()
+        setting.value = not setting.value
+        return setting.save()
 
-        if current_setting is None:
-            value = Settings.defaults[setting]
-            current_setting = Setting(name=setting, value=str(value))
-            db.session.add(current_setting)
+    def set(self, name, value):
+        settings = Settings.instance()
 
-        try:
-            if current_setting.value == "True":
-                current_setting.value = "False"
-            else:
-                current_setting.value = "True"
-            db.session.commit()
-            return True
-        except Exception as e:
-            current_app.logger.error('Cannot toggle setting {0}. DETAIL: {1}'.format(
-                setting, e))
-            current_app.logger.debug(traceback.format_exec())
-            db.session.rollback()
+        if not settings.has(name):
+            current_app.logger.error('Unknown setting specified: {0}'.format(name))
             return False
 
-    def set(self, setting, value):
-        import json
-        current_setting = Setting.query.filter(Setting.name == setting).first()
+        setting = settings.get(name)
+        setting.value = settings.convert_type(name, value)
+        setting.loaded = True
 
-        if current_setting is None:
-            current_setting = Setting(name=setting, value=None)
-            db.session.add(current_setting)
+        return setting.save()
 
-        value = Settings.convert_type(setting, value)
+    def get(self, name):
+        """ Returns the value (or default) of the specified setting, otherwise None if the setting doesn't exist. """
+        settings = Settings.instance()
 
-        if isinstance(value, dict) or isinstance(value, list):
-            value = json.dumps(value)
+        if not settings.has(name):
+            current_app.logger.error('Unknown setting specified: {0}'.format(name))
+            return None
 
-        try:
-            current_setting.value = value
-            db.session.commit()
-            return True
-        except Exception as e:
-            current_app.logger.error('Cannot edit setting {0}. DETAIL: {1}'.format(setting, e))
-            current_app.logger.debug(traceback.format_exec())
-            db.session.rollback()
-            return False
+        setting = settings.get(name)
 
-    def get(self, setting):
-        if setting in Settings.defaults:
+        if not setting.loaded:
+            return setting.default
 
-            if setting.upper() in current_app.config:
-                result = current_app.config[setting.upper()]
-            else:
-                result = self.query.filter(Setting.name == setting).first()
-
-            if result is not None:
-                if hasattr(result, 'value'):
-                    result = result.value
-
-                return Settings.convert_type(setting, result)
-            else:
-                return Settings.defaults[setting]
-        else:
-            current_app.logger.error('Unknown setting queried: {0}'.format(setting))
+        return setting.value
 
     def get_all(self):
+        """ Returns all settings with their associated values as a simple dictionary. """
         result = {}
-
-        for var_name, default_value in Settings.defaults.items():
-            result[var_name] = self.get(var_name)
-
-        return result
-
-    def get_group(self, group):
-        if not isinstance(group, list):
-            group = Settings.groups[group]
-
-        result = {}
-
-        for var_name, default_value in Settings.defaults.items():
-            if var_name in group:
-                result[var_name] = self.get(var_name)
-
+        for name, setting in Settings.instance().all().items():
+            result[name] = setting.value if setting.loaded else setting.default
         return result
 
     def get_records_allow_to_edit(self):
@@ -141,9 +90,9 @@ class Setting(db.Model):
         setting_value = []
 
         if zone_type == self.ZONE_TYPE_FORWARD:
-            setting_value = self.get('forward_records_allow_edit')
+            setting_value = self.get(SettingMap.FORWARD_RECORDS_ALLOW_EDIT)
         elif zone_type == self.ZONE_TYPE_REVERSE:
-            setting_value = self.get('reverse_records_allow_edit')
+            setting_value = self.get(SettingMap.REVERSE_RECORDS_ALLOW_EDIT)
 
         records = literal_eval(setting_value) if isinstance(setting_value, str) else setting_value
         types = [r for r in records if records[r]]
@@ -156,4 +105,4 @@ class Setting(db.Model):
 
     def get_ttl_options(self):
         return [(pytimeparse.parse(ttl), ttl)
-                for ttl in self.get('ttl_options').split(',')]
+                for ttl in self.get(SettingMap.TTL_OPTIONS).split(',')]

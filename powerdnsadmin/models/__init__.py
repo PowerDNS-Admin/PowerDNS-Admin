@@ -20,5 +20,11 @@ from .record_entry import RecordEntry
 
 
 def init_app(app):
+    from powerdnsadmin.lib.settings import Settings
     db.init_app(app)
     _migrate = Migrate(app, db)  # lgtm [py/unused-local-variable]
+
+    # Load any database stored settings that haven't already been loaded elsewhere
+    with app.app_context():
+        Settings.instance().load_database()
+

@@ -2,7 +2,6 @@ import json
 from flask import Blueprint, render_template, request, Response
 from flask_login import login_required
 from ..decorators import admin_role_required
-from ..models.setting import Setting
 
 settings_bp = Blueprint('settings',
                         __name__,
@@ -26,15 +25,15 @@ def api():
     result = {'status': 1, 'messages': [], 'payload': {}}
 
     if request.form.get('commit') == '1':
-        model = Setting()
         data = json.loads(request.form.get('data'))
 
-        for key, value in data.items():
-            if key in Settings.defaults:
-                model.set(key, value)
+        for name, value in data.items():
+            setting = Settings.instance().get(name)
+            setting.value = value
+            setting.save()
 
     result['payload'] = {
-        'legacy': Setting().get_all(),
+        'legacy': Settings.instance().all(flatten=True),
         'settings': Settings.instance().all(),
     }
 

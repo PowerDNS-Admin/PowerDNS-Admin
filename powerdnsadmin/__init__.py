@@ -33,30 +33,11 @@ def create_app(config=None):
     # Proxy
     app.wsgi_app = ProxyFix(app.wsgi_app)
 
-    # Load config from env variables if using docker
-    if os.path.exists(os.path.join(app.root_path, 'docker_config.py')):
-        app.config.from_object('powerdnsadmin.docker_config')
-    else:
-        # Load default configuration
-        app.config.from_object('powerdnsadmin.default_config')
-
-    # Load config file from FLASK_CONF env variable
-    if 'FLASK_CONF' in os.environ:
-        app.config.from_envvar('FLASK_CONF')
-
-    # Load app specified configuration
-    if config is not None:
-        if isinstance(config, dict):
-            app.config.update(config)
-        elif config.endswith('.py'):
-            app.config.from_pyfile(config)
-
     # Initialize the application settings
-    if not settings_config.initialized:
-        settings_config.init()
-    
-    # Load any settings defined with environment variables
-    Settings.load_environment(app)
+    settings_config.init()
+
+    # Load all app settings defined in any supported location
+    Settings.instance().load_environment(app, config)
 
     # HSTS
     if app.config.get('HSTS_ENABLED'):

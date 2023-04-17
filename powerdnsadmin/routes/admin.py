@@ -1467,24 +1467,31 @@ def setting_pdns():
 @operator_role_required
 def setting_records():
     from powerdnsadmin.lib.settings import Settings
+    from powerdnsadmin.lib.settings_config import SettingMap
+
+    settings = Settings.instance()
+    forward_records = settings.get(SettingMap.FORWARD_RECORDS_ALLOW_EDIT)
+    reverse_records = settings.get(SettingMap.REVERSE_RECORDS_ALLOW_EDIT)
+
     if request.method == 'GET':
-        forward_records = Setting().get('forward_records_allow_edit')
-        reverse_records = Setting().get('reverse_records_allow_edit')
         return render_template('admin_setting_records.html',
-                               f_records=forward_records,
-                               r_records=reverse_records)
+                               f_records=forward_records.value,
+                               r_records=reverse_records.value)
+
     elif request.method == 'POST':
         fr = {}
         rr = {}
-        records = Settings.defaults['forward_records_allow_edit']
-        for r in records:
+        for r in forward_records.default.keys():
             fr[r] = True if request.form.get('fr_{0}'.format(
                 r.lower())) else False
             rr[r] = True if request.form.get('rr_{0}'.format(
                 r.lower())) else False
 
-        Setting().set('forward_records_allow_edit', json.dumps(fr))
-        Setting().set('reverse_records_allow_edit', json.dumps(rr))
+        forward_records.value = fr
+        reverse_records.value = rr
+
+        forward_records.save()
+        reverse_records.save()
 
         return redirect(url_for('admin.setting_records'))
 
@@ -1504,14 +1511,14 @@ def setting_authentication_api():
     result = {'status': 1, 'messages': [], 'data': {}}
 
     if request.form.get('commit') == '1':
-        model = Setting()
         data = json.loads(request.form.get('data'))
 
-        for key, value in data.items():
-            if key in Settings.groups['authentication']:
-                model.set(key, value)
+        for name, value in data.items():
+            setting = Settings.instance().get(name)
+            setting.value = value
+            setting.save()
 
-    result['data'] = Setting().get_group('authentication')
+    result['data'] = Settings.instance().all(flatten=True)
 
     return result
 

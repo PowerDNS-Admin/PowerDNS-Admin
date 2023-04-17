@@ -130,7 +130,7 @@ class SettingMap:
     PWD_ENFORCE_CHARACTERS = 'pwd_enforce_characters'
     PWD_ENFORCE_COMPLEXITY = 'pwd_enforce_complexity'
     PWD_MIN_COMPLEXITY = 'pwd_min_complexity'
-    PWD_MIN_LENGTH = 'pwd_min_length'
+    PWD_MIN_LEN = 'pwd_min_len'
     PWD_MIN_LOWERCASE = 'pwd_min_lowercase'
     PWD_MIN_UPPERCASE = 'pwd_min_uppercase'
     PWD_MIN_DIGITS = 'pwd_min_digits'
@@ -879,6 +879,15 @@ def init():
         'default': True,
     }))
 
+    inst.set(SettingMap.LOGIN_LDAP_FIRST, Setting(**{
+        'name': SettingMap.LOGIN_LDAP_FIRST,
+        'description': 'This determines if the LDAP authentication option should be selected by default on the login '
+                       'screen when LDAP is enabled.',
+        'label': 'Default To LDAP Authentication',
+        'stype': bool,
+        'default': False,
+    }))
+
     inst.set(SettingMap.LOG_LEVEL, Setting(**{
         'name': SettingMap.LOG_LEVEL,
         'description': 'This defines the logging level of the application.',
@@ -1212,8 +1221,8 @@ def init():
         'default': 11,
     }))
 
-    inst.set(SettingMap.PWD_MIN_LENGTH, Setting(**{
-        'name': SettingMap.PWD_MIN_LENGTH,
+    inst.set(SettingMap.PWD_MIN_LEN, Setting(**{
+        'name': SettingMap.PWD_MIN_LEN,
         'description': 'This defines the minimum length of a user password.',
         'label': 'Minimum Password Length',
         'stype': int,
