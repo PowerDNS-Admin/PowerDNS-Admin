@@ -69,6 +69,46 @@ class Setting(object):
             return len(self._value)
         raise TypeError(f'The setting type {self.stype} has no len()')
 
+    def set(self, value):
+        import json
+        from json import JSONDecodeError
+
+        # Handle boolean values
+        if self.stype == bool:
+            if isinstance(value, bool):
+                self.value = value
+            elif str(value).lower() in ['True', 'true', 't', '1']:
+                self.value = True
+            else:
+                self.value = False
+
+        # Handle float values
+        elif self.stype == float:
+            self.value = float(value)
+
+        # Handle integer values
+        elif self.stype == int:
+            self.value = int(value)
+
+        elif (self.stype == dict or self.stype == list) and isinstance(value, str) and len(value) > 0:
+            try:
+                self.value = json.loads(value)
+            except JSONDecodeError as e:
+                # Provide backwards compatibility for legacy non-JSON format
+                value = value.replace("'", '"').replace('True', 'true').replace('False', 'false')
+                try:
+                    self.value = json.loads(value)
+                except JSONDecodeError as e:
+                    raise ValueError('Cannot parse json {} for variable {}'.format(value, self.name))
+
+        elif self.stype == str:
+            self.value = str(value)
+
+        else:
+            self.value = value
+
+        self.loaded = True
+
     def save(self):
         import json
         import traceback
@@ -132,7 +172,7 @@ class Settings(object):
         if not cache:
             db = SettingModel.query.filter_by(name=name).first()
             if db is not None:
-                self._cache.get(name).value = self.convert_type(name, db.value)
+                self._cache.get(name).set(db.value)
 
         # Return the Setting object from the cache.
         return self._cache.get(name, default)
@@ -150,47 +190,8 @@ class Settings(object):
         value otherwise. """
         if not self.has(name):
             return default
-        return self.get(name, default).value
-
-    def convert_type(self, name, value):
-        import json
-        from json import JSONDecodeError
-
-        if not self.has(name):
-            raise ValueError('Setting does not exist: {}'.format(name))
-
-        setting = self.get(name)
-
-        # Handle boolean values
-        if setting.stype == bool and isinstance(value, str):
-            if value.lower() in ['True', 'true', '1'] or value is True:
-                return True
-            else:
-                return False
-
-        # Handle float values
-        if setting.stype == float:
-            return float(value)
-
-        # Handle integer values
-        if setting.stype == int:
-            return int(value)
-
-        if (setting.stype == dict or setting.stype == list) and isinstance(value, str) and len(value) > 0:
-            try:
-                return json.loads(value)
-            except JSONDecodeError as e:
-                # Provide backwards compatibility for legacy non-JSON format
-                value = value.replace("'", '"').replace('True', 'true').replace('False', 'false')
-                try:
-                    return json.loads(value)
-                except JSONDecodeError as e:
-                    raise ValueError('Cannot parse json {} for variable {}'.format(value, name))
-
-        if setting.stype == str:
-            return str(value)
-
-        return value
+        setting = self.get(name, default)
+        return setting.value if setting.loaded else setting.default
 
     def load_environment(self, app, config=None):
         """ Load app settings from environment variables when defined. """
@@ -237,14 +238,14 @@ class Settings(object):
                 current_value = os.environ[env_name]
 
             if current_value is not None:
-                current_value = self.convert_type(var_name, current_value)
                 setting = self.get(var_name)
-                setting.value = current_value
+                setting.set(current_value)
                 setting.environment = True
                 setting.loaded = True
                 app.config[env_name] = current_value
 
-    def load_database(self):
+    @staticmethod
+    def load_database():
         """ Load app settings from database when not already loaded elsewhere. """
         from powerdnsadmin.models.setting import Setting as SettingModel
 
@@ -254,8 +255,7 @@ class Settings(object):
         # Load settings from the database that haven't already been loaded from the environment
         for record in model.query.all():
             if settings.has(record.name) and not (setting := settings.get(record.name)).loaded:
-                setting.value = self.convert_type(record.name, record.value)
-                setting.loaded = True
+                setting.set(record.value)
 
     @staticmethod
     def instance():

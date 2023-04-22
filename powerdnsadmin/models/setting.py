@@ -54,7 +54,7 @@ class Setting(db.Model):
             return False
 
         setting = settings.get(name)
-        setting.value = settings.convert_type(name, value)
+        setting.set(value)
         setting.loaded = True
 
         return setting.save()
