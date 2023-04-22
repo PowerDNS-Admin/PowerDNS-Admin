@@ -1,3 +1,44 @@
+ko.bindingHandlers.classFlip = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let value = ko.unwrap(valueAccessor());
+        let classes = allBindings.get('classFlipClasses') || ['success', 'danger'];
+
+        if (!Array.isArray(classes) || classes.length !== 2) {
+            console.error('classFlipClasses option must be an array of two strings');
+            return;
+        }
+
+        if (value) {
+            el.addClass(classes[0]).removeClass(classes[1]);
+        } else {
+            el.addClass(classes[1]).removeClass(classes[0]);
+        }
+    }
+};
+
+ko.bindingHandlers.textFlip = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let value = ko.unwrap(valueAccessor());
+        let classes = allBindings.get('textFlipClasses') || ['Enabled', 'Disabled'];
+
+        if (!Array.isArray(classes) || classes.length !== 2) {
+            console.error('textFlipClasses option must be an array of two strings');
+            return;
+        }
+
+        if (value) {
+            el.text(classes[0]);
+        } else {
+            el.text(classes[1]);
+        }
+    }
+};
 
 ko.bindingHandlers.setting = {
     init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
@@ -69,12 +110,25 @@ ko.bindingHandlers.setting = {
     }
 };
 
-let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
+let SettingsEditorModel = function (user_data, user_options) {
     let self = this;
     let target = null;
+    let defaults = {
+        debug: false,
+        url: '/api/v1/settings',
+        token: null,
+        selector: null,
+    };
+    let options = $.extend({}, defaults, user_options);
+
+    if (typeof options.debug !== 'boolean') {
+        console.error('SettingsEditorModel "debug" option must be a boolean: ' + options.debug);
+        return;
+    }
 
     self.settings = ko.observable({});
-    self.loading = ko.observable(false);
+    self.templates = ko.observable({});
+    self.loading = ko.observable(true);
     self.saving = ko.observable(false);
     self.saved = ko.observable(false);
     self.save_failed = ko.observable(false);
@@ -99,113 +153,20 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
         ko.observable({id: 'saml', name: 'SAML', icon: 'fa fa-network-wired', parent: 'authentication'}),
     ]);
 
-    let defaults = {
-        // Local Authentication Settings
-        local_db_enabled: true,
-        signup_enabled: true,
-        pwd_enforce_characters: false,
-        pwd_min_len: 10,
-        pwd_min_lowercase: 3,
-        pwd_min_uppercase: 2,
-        pwd_min_digits: 2,
-        pwd_min_special: 1,
-        pwd_enforce_complexity: false,
-        pwd_min_complexity: 11,
-
-        // LDAP Authentication Settings
-        ldap_enabled: false,
-        ldap_type: 'ldap',
-        ldap_uri: '',
-        ldap_base_dn: '',
-        ldap_admin_username: '',
-        ldap_admin_password: '',
-        ldap_domain: '',
-        ldap_filter_basic: '',
-        ldap_filter_username: '',
-        ldap_filter_group: '',
-        ldap_filter_groupname: '',
-        ldap_sg_enabled: false,
-        ldap_admin_group: '',
-        ldap_operator_group: '',
-        ldap_user_group: '',
-        autoprovisioning: false,
-        autoprovisioning_attribute: '',
-        urn_value: '',
-        purge: 0,
-
-        // Google OAuth2 Settings
-        google_oauth_enabled: false,
-        google_oauth_client_id: '',
-        google_oauth_client_secret: '',
-        google_oauth_scope: '',
-        google_base_url: '',
-        google_oauth_auto_configure: true,
-        google_oauth_metadata_url: '',
-        google_token_url: '',
-        google_authorize_url: '',
-
-        // GitHub OAuth2 Settings
-        github_oauth_enabled: false,
-        github_oauth_key: '',
-        github_oauth_secret: '',
-        github_oauth_scope: '',
-        github_oauth_api_url: '',
-        github_oauth_auto_configure: false,
-        github_oauth_metadata_url: '',
-        github_oauth_token_url: '',
-        github_oauth_authorize_url: '',
-
-        // Azure AD OAuth2 Settings
-        azure_oauth_enabled: false,
-        azure_oauth_key: '',
-        azure_oauth_secret: '',
-        azure_oauth_scope: '',
-        azure_oauth_api_url: '',
-        azure_oauth_auto_configure: true,
-        azure_oauth_metadata_url: '',
-        azure_oauth_token_url: '',
-        azure_oauth_authorize_url: '',
-        azure_sg_enabled: false,
-        azure_admin_group: '',
-        azure_operator_group: '',
-        azure_user_group: '',
-        azure_group_accounts_enabled: false,
-        azure_group_accounts_name: '',
-        azure_group_accounts_name_re: '',
-        azure_group_accounts_description: '',
-        azure_group_accounts_description_re: '',
-
-        // OIDC OAuth2 Settings
-        oidc_oauth_enabled: false,
-        oidc_oauth_key: '',
-        oidc_oauth_secret: '',
-        oidc_oauth_scope: '',
-        oidc_oauth_api_url: '',
-        oidc_oauth_auto_configure: true,
-        oidc_oauth_metadata_url: '',
-        oidc_oauth_token_url: '',
-        oidc_oauth_authorize_url: '',
-        oidc_oauth_logout_url: '',
-        oidc_oauth_username: '',
-        oidc_oauth_email: '',
-        oidc_oauth_firstname: '',
-        oidc_oauth_last_name: '',
-        oidc_oauth_account_name_property: '',
-        oidc_oauth_account_description_property: '',
-    }
-
     self.init = function (autoload) {
-        self.update(user_data);
-        self.setupKnockoutBindings();
+        // This is because of Internet Explorer, as usual. I used to say nothing was impossible, but then there was IE.
+        document.createElement('setting-input');
+        document.createElement('setting-meta');
 
-        if (self.hasHash()) {
-            self.activateTab(self.getHash());
-        } else {
-            self.activateDefaultTab();
+        // Load editor templates
+        let templates = self.templates();
+        for (template_id in options.templates) {
+            if (!options.templates.hasOwnProperty(template_id)) {
+                continue;
+            }
+            templates[template_id] = $('#' + options.templates[template_id]).html();
         }
-
-        self.setupListeners();
-        self.setupValidation();
+        self.templates(templates);
 
         if (autoload) {
             self.load();
@@ -213,11 +174,10 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
     }
 
     self.load = function () {
-        self.loading(true);
         $.ajax({
-            url: api_url,
+            url: options.url,
             type: 'POST',
-            data: {_csrf_token: csrf_token},
+            data: {_csrf_token: options.token},
             dataType: 'json',
             success: self.onDataLoaded
         });
@@ -229,33 +189,59 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
         }
         self.saving(true);
         $.ajax({
-            url: api_url,
+            url: options.url,
             type: 'POST',
-            data: {_csrf_token: csrf_token, commit: 1, data: ko.toJSON(self)},
+            data: {_csrf_token: options.token, commit: 1, data: ko.toJSON(self)},
             dataType: 'json',
             success: self.onDataSaved
         });
     }
 
-    self.update = function (instance) {
-        for (const [key, value] of Object.entries($.extend(defaults, instance))) {
-            if (ko.isObservable(self[key])) {
-                self[key](value);
-            } else {
-                self[key] = ko.observable(value);
+    self.setupProperties = function (settings) {
+        for (const key in settings) {
+            if (!settings.hasOwnProperty(key)) {
+                continue;
             }
+            self[key] = self.observe(settings[key].value);
+            self[key + '_config'] = self.observe(settings[key]);
+            self[key + '_default'] = self.observe(settings[key].default);
+            self[key + '_description'] = self.observe(settings[key].description);
+            self[key + '_environment'] = self.observe(settings[key].environment);
+            self[key + '_label'] = self.observe(settings[key].label);
+            self[key + '_prompts'] = self.observe(settings[key].prompts);
+        }
+    }
+
+    self.updateProperties = function (settings) {
+        for (const key in settings) {
+            if (!settings.hasOwnProperty(key)) {
+                continue;
+            }
+
+            self[key](settings[key].value);
+            self[key + '_config'](settings[key]);
+            self[key + '_default'](settings[key].default);
+            self[key + '_description'](settings[key].description);
+            self[key + '_environment'](settings[key].environment);
+            self[key + '_label'](settings[key].label);
+            self[key + '_prompts'](settings[key].prompts);
         }
     }
 
     self.setupKnockoutBindings = function () {
         let el = null;
-        if (typeof selector !== 'undefined') {
-            el = $(selector)
+        if (typeof options.selector !== 'undefined' && options.selector !== null) {
+            el = $(options.selector)
         }
 
         if (el !== null && el.length > 0) {
             target = el;
-            ko.applyBindings(self, el[0]);
+
+            for (let i = 0; i < el.length; i++) {
+                ko.applyBindings(self, el[i]);
+            }
+
+            //ko.applyBindings(self, el[0]);
         } else {
             ko.applyBindings(self);
         }
@@ -850,46 +836,48 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
             return null;
         }
 
-        if (value !== null && value.constructor === Array) {
-            for (const index in value) {
-                value[index] = self.observe(value[index]);
-            }
-        } else if (value !== null && value.constructor === Object) {
-            for (const key in value) {
-                if (value.hasOwnProperty(key)) {
-                    value[key] = self.observe(value[key]);
-                }
-            }
-        } else {
-            value = ko.observable(value);
+        if (value === null) {
+            return null;
         }
 
-        return value;
+        let result = value;
+
+        if (value.constructor === Array) {
+            result = [];
+            for (const index in value) {
+                result[index] = self.observe(value[index]);
+            }
+        } else if (value.constructor === Object) {
+            result = {};
+            for (const key in value) {
+                if (value.hasOwnProperty(key))
+                    result[key] = self.observe(value[key]);
+            }
+        }
+
+        return ko.observable(result);
     }
 
     self.onDataLoaded = function (result) {
-        if (result.status === 0) {
-            self.messages_class('danger');
-            self.messages(result.messages);
-            self.loading(false);
-            return false;
+        let settings = result.payload;
+
+        self.setupProperties(settings);
+        self.setupKnockoutBindings();
+
+        if (self.hasHash()) {
+            self.activateTab(self.getHash());
+        } else {
+            self.activateDefaultTab();
         }
 
-        let settings = self.observe(result.payload.settings);
+        self.setupListeners();
+        self.setupValidation();
 
-        for (const key in settings) {
-            if (settings.hasOwnProperty(key)) {
-                //self[key] = settings[key];
-            }
-        }
-
-        self.update(result.payload.legacy);
-        self.settings(settings);
-        self.messages_class('info');
-        self.messages(result.messages);
+        self.messages(result.messages != null && result.messages.constructor === Array ? result.messages : []);
+        self.messages_class(result.status === 0 ? 'danger' : 'info');
         self.loading(false);
 
-        console.log(settings);
+        return true;
     }
 
     self.onDataSaved = function (result) {
@@ -902,7 +890,7 @@ let SettingsEditorModel = function (user_data, api_url, csrf_token, selector) {
             return false;
         }
 
-        self.update(result.data);
+        self.updateProperties(result.data);
         self.saved(true);
         self.save_failed(false);
         self.messages_class('info');

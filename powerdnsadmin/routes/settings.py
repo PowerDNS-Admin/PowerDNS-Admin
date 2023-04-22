@@ -40,9 +40,6 @@ def api():
                 result['status'] = 0
                 result['messages'].append('Failed to save setting "{0}" to the database.'.format(name))
 
-    result['payload'] = {
-        'legacy': Settings.instance().all(flatten=True),
-        'settings': Settings.instance().all(),
-    }
+    result['payload'] = Settings.instance().all()
 
     return Response(jsonpickle.encode(result), mimetype='application/json')

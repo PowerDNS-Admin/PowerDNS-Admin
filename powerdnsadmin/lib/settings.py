@@ -77,7 +77,7 @@ class Setting(object):
         if self.stype == bool:
             if isinstance(value, bool):
                 self.value = value
-            elif str(value).lower() in ['True', 'true', 't', '1']:
+            elif str(value).lower() in ['true', 't', '1']:
                 self.value = True
             else:
                 self.value = False

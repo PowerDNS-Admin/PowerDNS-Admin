@@ -3,21 +3,21 @@
     <div class="row">
         <div class="col-12 col-sm-6">
 
-            <div class="card shadow" data-bind="class: local_db_enabled() ? 'card-success' : 'card-danger'">
+            <div class="card shadow"
+                 data-bind="classFlip: local_db_enabled, classFlipClasses: ['card-success', 'card-danger']">
                 <div class="card-header">
-                    <h3 class="card-title">Local User Login</h3>
+                    <h3 class="card-title" data-bind="text: local_db_enabled_label"></h3>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <p>This determines whether users can authenticate with accounts in the local PDA
-                        database.</p>
+                    <p data-bind="text: local_db_enabled_description"></p>
+                    <p class="mt-3">Default Value: <span class="text-bold"
+                                                         data-bind="textFlip: local_db_enabled_default"></span>
+                    </p>
                     <input type="checkbox" id="local_db_enabled" name="local_db_enabled"
                            data-profile="enabled-danger-off"
                            data-bind="checked: local_db_enabled, bootstrapSwitch: local_db_enabled">
-                    <div class="callout callout-secondary mt-3">
-                        <p>Default Value: Enabled</p>
-                    </div>
-                    <div class="callout callout-danger mt-3" data-bind="visible: !local_db_enabled()">
+                    <div class="callout callout-danger mt-3" data-bind="hidden: local_db_enabled">
                         <p>You should ensure that you have appropriate admin rights assigned to at least one
                             external auth provider account!</p>
                     </div>
@@ -26,23 +26,24 @@
             </div>
             <!-- /.card -->
 
-            <div class="card shadow" data-bind="class: signup_enabled() ? 'card-warning' : 'card-success'">
+            <div class="card shadow"
+                 data-bind="classFlip: signup_enabled, classFlipClasses: ['card-warning', 'card-success']">
                 <div class="card-header">
-                    <h3 class="card-title">Local User Open Registration</h3>
+                    <h3 class="card-title" data-bind="text: signup_enabled_label"></h3>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <p>This determines whether users are given the option to self-register at the login
-                        screen.</p>
+                    <p data-bind="text: signup_enabled_description"></p>
+                    <p class="mt-3">Default Value: <span class="text-bold"
+                                                         data-bind="textFlip: signup_enabled_default"></span>
+                    </p>
                     <input type="checkbox" id="signup_enabled" name="signup_enabled"
                            data-profile="enabled-warning-on"
                            data-bind="checked: signup_enabled, bootstrapSwitch: signup_enabled">
-                    <div class="callout callout-secondary mt-3">
-                        <p>Default Value: Enabled</p>
-                    </div>
                     <div class="callout callout-warning mt-3" data-bind="visible: signup_enabled">
                         <p>It should be understood that access to this application should be properly restricted
-                            to prevent wide open access to the Internet!</p>
+                            to prevent open access from the Internet!</p>
+                        <p>Using access policies like <code>0.0.0.0/0</code> are highly unrecommended.</p>
                     </div>
                 </div>
                 <!-- /.card-body -->
@@ -50,47 +51,50 @@
             <!-- /.card -->
 
             <div class="card shadow"
-                 data-bind="class: pwd_enforce_complexity() ? 'card-success' : 'card-warning'">
+                 data-bind="classFlip: pwd_enforce_complexity, classFlipClasses: ['card-success', 'card-warning']">
                 <div class="card-header">
-                    <h3 class="card-title">Password Complexity Policy</h3>
+                    <h3 class="card-title" data-bind="text: pwd_enforce_complexity_label"></h3>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <p>This determines if the following password complexity restrictions should be applied
-                        when creating, registering, or updating an account.</p>
+                    <p data-bind="text: pwd_enforce_complexity_description"></p>
+                    <p class="mt-3">Default Value: <span class="text-bold"
+                                                         data-bind="textFlip: pwd_enforce_complexity_default"></span>
+                    </p>
                     <input type="checkbox" id="pwd_enforce_complexity" name="pwd_enforce_complexity"
                            data-profile="enabled-warning-off"
                            data-bind="checked: pwd_enforce_complexity, bootstrapSwitch: pwd_enforce_complexity">
-                    <div class="callout callout-secondary mt-3">
-                        <p>Default: Disabled</p>
-                    </div>
-                    <div class="callout callout-warning mt-3" data-bind="visible: pwd_enforce_complexity">
+                    <div class="callout callout-secondary mt-3" data-bind="visible: pwd_enforce_complexity">
                         <p>You may experience an increase in the amount of user complaints received as some
                             people might find this annoying.</p>
                     </div>
-                    <div class="callout callout-warning mt-3" data-bind="visible: !pwd_enforce_complexity()">
+                    <div class="callout callout-warning mt-3" data-bind="hidden: pwd_enforce_complexity">
                         <p>It is highly recommended that you enforce more secure password requirements on your
                             users!</p>
                     </div>
                     <hr/>
                     <div class="form-group">
-                        <label for="pwd_min_complexity">Minimum Complexity (zxcvbn)</label>
+                        <label for="pwd_min_complexity" data-bind="text: pwd_min_complexity_label"></label>
                         <input type="number" class="form-control"
                                name="pwd_min_complexity"
                                id="pwd_min_complexity"
-                               data-bind="enable: local_db_enabled() && pwd_enforce_complexity(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
+                               data-bind="enable: local_db_enabled() && pwd_enforce_complexity() && !pwd_min_complexity_environment(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
                     </div>
-                    <p>This defines the minimum complexity score required for a user password. The
-                        complexity
-                        score is calculated using the zxcvbn library. The default value of the log factor is
-                        11
-                        as it is considered secure. More information about this can be found
+                    <div class="callout callout-warning mt-3" data-bind="hidden: pwd_enforce_complexity">
+                        <p>This is disabled because the &quot;<span data-bind="text: pwd_enforce_complexity_label"></span>&quot; setting is
+                            disabled.</p>
+                    </div>
+                    <div class="callout callout-warning mt-3"
+                         data-bind="visible: pwd_enforce_complexity() && pwd_min_complexity_environment()">
+                        <p>This is disabled because this setting is currently defined in the app's environment.</p>
+                    </div>
+                    <p data-bind="text: pwd_min_complexity_description"></p>
+                    <p>More information about this can be found
                         <a target="_blank"
                            href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>.
                     </p>
-                    <div class="callout callout-secondary">
-                        <p>Default Value: 11</p>
-                    </div>
+                    <p class="mt-3">Default Value: <span class="text-bold"
+                                                         data-bind="text: pwd_min_complexity_default"></span></p>
                 </div>
                 <!-- /.card-body -->
             </div>
@@ -98,9 +102,9 @@
         </div>
         <div class="col-12 col-sm-6">
             <div class="card shadow"
-                 data-bind="class: pwd_enforce_characters() ? 'card-success' : 'card-danger'">
+                 data-bind="classFlip: pwd_enforce_characters, classFlipClasses: ['card-success', 'card-danger']">
                 <div class="card-header">
-                    <h3 class="card-title">Password Character Policy</h3>
+                    <h3 class="card-title" data-bind="text: pwd_enforce_characters_label"></h3>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
@@ -109,90 +113,83 @@
                                data-profile="enabled-danger-off"
                                data-bind="checked: pwd_enforce_characters, bootstrapSwitch: pwd_enforce_characters">
                     </div>
-                    <p>This determines whether the following password character restrictions should be
-                        applied when creating, registering, or updating an account.</p>
-                    <div class="callout callout-secondary mt-3">
-                        <p>Default: Disabled</p>
-                    </div>
-                    <div class="callout callout-danger mt-3" data-bind="visible: !pwd_enforce_characters()">
+                    <p data-bind="text: pwd_enforce_characters_description"></p>
+                    <p class="mt-3">Default Value: <span class="text-bold"
+                                                         data-bind="textFlip: pwd_enforce_characters_default"></span>
+                    </p>
+                    <div class="callout callout-danger mt-3" data-bind="hidden: pwd_enforce_characters">
                         <p>If this is not enabled, it may lead to users making really poor, and often uninformed
                             decisions about the quality of their chosen passwords.</p>
                     </div>
                     <hr/>
+                    <div class="callout callout-warning mt-3" data-bind="hidden: pwd_enforce_characters">
+                        <p>These settings are disabled because the &quot;<span data-bind="text: pwd_enforce_characters_label"></span>&quot; setting
+                            is disabled.</p>
+                    </div>
                     <div class="row">
-                        <div class="col-12 col-sm-6 border-right">
+                        <div class="col-12 col-sm-6 border-left border-right">
                             <div class="form-group">
-                                <label for="pwd_min_len">Minimum Password
-                                    Length</label>
+                                <label for="pwd_min_len" data-bind="text: pwd_min_len_label"></label>
                                 <input type="number" class="form-control"
                                        name="pwd_min_len" id="pwd_min_len"
                                        data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_len, valueUpdate: 'afterkeydown'">
                             </div>
-                            <p>This defines the minimum number of characters required for a user
-                                password.</p>
-                            <div class="callout callout-secondary mt-3">
-                                <p>Default: 10</p>
-                            </div>
+                            <p data-bind="text: pwd_min_len_description"></p>
+                            <p class="mt-3">Default Value: <span class="text-bold"
+                                                                 data-bind="text: pwd_min_len_default"></span>
+                            </p>
                             <hr/>
                             <div class="form-group">
-                                <label for="pwd_min_digits">Minimum Numeric
-                                    Characters</label>
+                                <label for="pwd_min_digits" data-bind="text: pwd_min_digits_label"></label>
                                 <input type="number" class="form-control"
                                        name="pwd_min_digits" id="pwd_min_digits"
                                        data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_digits, valueUpdate: 'afterkeydown'">
                             </div>
-                            <p>This defines the minimum number of numeric characters required for a user
-                                password.</p>
-                            <div class="callout callout-secondary">
-                                <p>Default: 2</p>
-                            </div>
+                            <p data-bind="text: pwd_min_digits_description"></p>
+                            <p class="mt-3">Default Value: <span class="text-bold"
+                                                                 data-bind="text: pwd_min_digits_default"></span>
+                            </p>
                             <hr/>
                         </div>
-                        <div class="col-12 col-sm-6">
+                        <div class="col-12 col-sm-6 border-right">
                             <div class="form-group">
-                                <label for="pwd_min_lowercase">Minimum Lowercase
-                                    Characters</label>
+                                <label for="pwd_min_lowercase" data-bind="text: pwd_min_lowercase_label"></label>
                                 <input type="number" class="form-control"
                                        name="pwd_min_lowercase"
                                        id="pwd_min_lowercase"
                                        data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_lowercase, valueUpdate: 'afterkeydown'">
                             </div>
-                            <p>This defines the minimum number of lowercase characters required for a user
-                                password.</p>
-                            <div class="callout callout-secondary">
-                                <p>Default: 3</p>
-                            </div>
+                            <p data-bind="text: pwd_min_lowercase_description"></p>
+                            <p class="mt-3">Default Value: <span class="text-bold"
+                                                                 data-bind="text: pwd_min_lowercase_default"></span>
+                            </p>
                             <hr/>
                             <div class="form-group">
-                                <label for="pwd_min_uppercase">Minimum Uppercase
-                                    Characters</label>
+                                <label for="pwd_min_uppercase" data-bind="text: pwd_min_uppercase_label"></label>
                                 <input type="number" class="form-control"
                                        name="pwd_min_uppercase"
                                        id="pwd_min_uppercase"
                                        data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_uppercase, valueUpdate: 'afterkeydown'">
                             </div>
-                            <p>This defines the minimum number of uppercase characters required for a user
-                                password.</p>
-                            <div class="callout callout-secondary">
-                                <p>Default: 3</p>
-                            </div>
+                            <p data-bind="text: pwd_min_uppercase_description"></p>
+                            <p class="mt-3">Default Value: <span class="text-bold"
+                                                                 data-bind="text: pwd_min_uppercase_default"></span>
+                            </p>
                             <hr/>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-12 col-sm-6 border-right">
+                        <div class="col-12 col-sm-6 border-left border-right">
                             <div class="form-group">
-                                <label for="pwd_min_special">Minimum Special
-                                    Characters</label>
+                                <label for="pwd_min_special" data-bind="text: pwd_min_special_label"></label>
                                 <input type="number" class="form-control"
                                        name="pwd_min_special" id="pwd_min_special"
                                        data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
                             </div>
-                            <p>This defines the minimum number of special characters required for a user
-                                password.</p>
-                            <div class="callout callout-secondary">
-                                <p>Default: 1</p>
-                            </div>
+                            <p data-bind="text: pwd_min_special_description"></p>
+                            <p class="mt-3">Default Value: <span class="text-bold"
+                                                                 data-bind="text: pwd_min_special_default"></span>
+                            </p>
                             <div class="callout callout-secondary">
                                 <p>Special characters include:</p>
                                 <p>`!@#$%^&amp;*()_-=+[]\{}|;:",.&gt;&lt;/?.</p>

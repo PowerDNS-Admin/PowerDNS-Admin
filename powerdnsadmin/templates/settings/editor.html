@@ -34,9 +34,12 @@
                             <div class="card-body pl-2 pr-2">
                                 <div class="overlay-wrapper" data-bind="visible: loading() || saving()">
                                     <div class="overlay">
-                                        <i class="fas fa-3x fa-spin" data-bind="class: loading() ? 'fa-sync-alt' : 'fa-save'"></i>
+                                        <i class="fas fa-3x fa-spin fa-sync-alt"
+                                           data-bind="class: loading() ? 'fa-sync-alt' : 'fa-save'"></i>
                                         <div class="text-bold pt-2 pl-2"
-                                             data-bind="text: (loading() ? 'Loading' : 'Saving') + ' settings...'"></div>
+                                             data-bind="text: (loading() ? 'Loading' : 'Saving') + ' settings...'">
+                                            Loading settings...
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- /.overlay-wrapper -->
@@ -84,7 +87,8 @@
                             <div class="card-footer">
                                 <div class="error"></div>
                                 <button type="button" class="btn btn-primary"
-                                        title="Save Settings" data-bind="click: onSaveClick">
+                                        data-bind="disabled: loading() || saving(), click: onSaveClick"
+                                        title="Save Settings">
                                     <i class="fa-solid fa-save"></i>&nbsp;Save Settings
                                 </button>
                             </div>
@@ -112,10 +116,39 @@
     <script src="{{ url_for('static', filename='custom/js/app-settings-editor.js') }}"></script>
     <script>
         $(function () {
-            let API_URL = '{{ url_for('settings.api') }}';
-            let CSRF_TOKEN = '{{ csrf_token() }}';
-            let model = new SettingsEditorModel({}, API_URL, CSRF_TOKEN, '#settings-editor');
+            let options = {
+                debug: true,
+                url: '{{ url_for('settings.api') }}',
+                token: '{{ csrf_token() }}',
+                selector: '#settings-editor',
+                templates: ['input_number', 'input_switch', 'setting_meta'],
+            };
+            let model = new SettingsEditorModel({}, options);
             model.init(true);
         })
+    </script>
+{% endblock %}
+
+{% block templates %}
+    <script type="text/html" id="input_number">
+        <div class="form-group">
+            <label for="{setting_name}" data-bind="text: {setting_name}_label"></label>
+            <input type="number" class="form-control"
+                   name="{setting_name}" id="{setting_name}"
+                   data-bind="enable: {bind_enable}, value: {setting_name}, valueUpdate: 'afterkeydown'">
+        </div>
+    </script>
+
+    <script type="text/html" id="input_switch">
+        <div class="form-group">
+            <input type="checkbox" id="{setting_name}" name="{setting_name}"
+                   data-profile="enabled-danger-off"
+                   data-bind="checked: {setting_name}, bootstrapSwitch: {setting_name}">
+        </div>
+    </script>
+
+    <script type="text/html" id="setting_meta">
+        <p data-bind="text: {setting_name}_description"></p>
+        <p class="mt-3">Default: <span class="text-bold" data-bind="textFlip: {setting_name}_default"></span></p>
     </script>
 {% endblock %}
