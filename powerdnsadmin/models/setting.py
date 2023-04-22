@@ -53,11 +53,7 @@ class Setting(db.Model):
             current_app.logger.error('Unknown setting specified: {0}'.format(name))
             return False
 
-        setting = settings.get(name)
-        setting.set(value)
-        setting.loaded = True
-
-        return setting.save()
+        return settings.get(name).set(value).save()
 
     def get(self, name):
         """ Returns the value (or default) of the specified setting, otherwise None if the setting doesn't exist. """

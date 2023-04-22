@@ -109,6 +109,8 @@ class Setting(object):
 
         self.loaded = True
 
+        return self
+
     def save(self):
         import json
         import traceback
@@ -129,7 +131,7 @@ class Setting(object):
             if isinstance(self.value, dict) or isinstance(self.value, list):
                 value = json.dumps(self.value)
 
-            current_app.logger.debug('Saving setting {0} to the database with value: '.format(self.name, value))
+            current_app.logger.debug('Saving setting {0} to the database with value: {1}'.format(self.name, value))
 
             try:
                 model.value = value
@@ -138,7 +140,7 @@ class Setting(object):
                 return True
             except Exception as e:
                 current_app.logger.error(
-                    'Failed to save setting {0} to the database. DETAIL: {1}'.format(self.name, e))
+                    'Failed to save setting {0} to the database: {1}'.format(self.name, e))
                 current_app.logger.debug(traceback.format_exec())
                 db.session.rollback()
 
@@ -160,13 +162,13 @@ class Settings(object):
             return {k: v.value for k, v in self._cache.items()}
         return self._cache
 
-    def get(self, name, cache=True, default=None):
+    def get(self, name, cache=True):
         """ Returns a Setting object from the Settings instance cache. """
         from powerdnsadmin.models.setting import Setting as SettingModel
 
         # Return the default value if the given setting isn't registered in the cache.
         if not self.has(name):
-            return default
+            raise KeyError('Setting "{0}" is not registered.'.format(name))
 
         # Attempt to extract the current value of the setting from the database, and update the cache if found.
         if not cache:
@@ -175,7 +177,7 @@ class Settings(object):
                 self._cache.get(name).set(db.value)
 
         # Return the Setting object from the cache.
-        return self._cache.get(name, default)
+        return self._cache.get(name)
 
     def has(self, name):
         """ Returns True if the Setting object exists in the Settings instance cache. """

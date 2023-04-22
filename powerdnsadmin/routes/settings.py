@@ -28,9 +28,17 @@ def api():
         data = json.loads(request.form.get('data'))
 
         for name, value in data.items():
+            if not Settings.instance().has(name):
+                continue
+
             setting = Settings.instance().get(name)
-            setting.value = value
-            setting.save()
+
+            if setting.environment:
+                continue
+
+            if not setting.set(value).save():
+                result['status'] = 0
+                result['messages'].append('Failed to save setting "{0}" to the database.'.format(name))
 
     result['payload'] = {
         'legacy': Settings.instance().all(flatten=True),
