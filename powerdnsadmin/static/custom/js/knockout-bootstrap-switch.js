@@ -1,6 +1,7 @@
 ko.bindingHandlers.bootstrapSwitch = {
     init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         let el = $(element);
+        let disabled = allBindings.get('inputDisabled') || false;
 
         let profiles = {
             'enabled': {
@@ -58,12 +59,16 @@ ko.bindingHandlers.bootstrapSwitch = {
         }
 
         el.bootstrapSwitch(profiles[profile] || profiles['enabled']);
+        el.bootstrapSwitch('disabled', disabled);
 
         el.on('switchChange.bootstrapSwitch', function (event, state) {
             valueAccessor()(state);
         });
     },
     update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        $(element).bootstrapSwitch('state', ko.unwrap(valueAccessor()));
+        let el = $(element);
+        let disabled = allBindings.get('inputDisabled') || false;
+        el.bootstrapSwitch('state', ko.unwrap(valueAccessor()));
+        el.bootstrapSwitch('disabled', disabled);
     }
 };

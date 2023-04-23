@@ -14,7 +14,13 @@
                                   data-bind-type="textFlip"></setting-meta>
 
                     <setting-input data-bind="switchInput: local_db_enabled_config"
+                                   data-disabled="local_db_enabled_environment()"
                                    data-profile="enabled-danger-off"></setting-input>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: local_db_enabled_config"
+                                     data-bindings="visible: local_db_enabled_environment">
+                        <p>This is not editable because this setting is currently defined in the app's environment.</p>
+                    </setting-callout>
 
                     <setting-callout data-type="danger" data-bind="settingCallout: local_db_enabled_config"
                                      data-bindings="hidden: local_db_enabled">
@@ -28,6 +34,7 @@
 
             <div class="card shadow"
                  data-bind="classFlip: pwd_enforce_complexity, classFlipClasses: ['card-success', 'card-warning']">
+
                 <div class="card-header">
                     <setting-title data-bind="settingTitle: pwd_enforce_complexity_config"></setting-title>
                 </div>
@@ -37,7 +44,19 @@
                                   data-bind-type="textFlip"></setting-meta>
 
                     <setting-input data-bind="switchInput: pwd_enforce_complexity_config"
+                                   data-disabled="!local_db_enabled() || pwd_enforce_complexity_environment()"
                                    data-profile="enabled-warning-off"></setting-input>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="hidden: local_db_enabled">
+                        <p>This is not editable because the &quot;<span
+                            data-bind="text: local_db_enabled_label"></span>&quot; setting is disabled.</p>
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="visible: local_db_enabled() && pwd_enforce_complexity_environment()">
+                        <p>This is not editable because this setting is currently defined in the app's environment.</p>
+                    </setting-callout>
 
                     <setting-callout data-type="secondary" data-bind="settingCallout: pwd_enforce_complexity_config"
                                      data-bindings="visible: pwd_enforce_complexity">
@@ -54,18 +73,25 @@
                     <hr/>
 
                     <setting-input data-bind="numberInput: pwd_min_complexity_config"
-                                   data-bind-enable="local_db_enabled() && pwd_enforce_complexity() && !pwd_min_complexity_environment()"></setting-input>
+                                   data-disabled="!local_db_enabled() || !pwd_enforce_complexity() || pwd_min_complexity_environment()"></setting-input>
 
                     <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
                                      data-bindings="hidden: pwd_enforce_complexity">
-                        <p>This is disabled because the &quot;<span
+                        <p>This is not editable because the &quot;<span
                             data-bind="text: pwd_enforce_complexity_label"></span>&quot; setting is
                             disabled.</p>
                     </setting-callout>
 
                     <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
-                                     data-bindings="visible: pwd_enforce_complexity() && pwd_min_complexity_environment()">
-                        <p>This is disabled because this setting is currently defined in the app's environment.</p>
+                                     data-bindings="hidden: local_db_enabled">
+                        <p>This is not editable because the &quot;<span
+                            data-bind="text: local_db_enabled_label"></span>&quot; setting is
+                            disabled.</p>
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="visible: local_db_enabled() && pwd_enforce_complexity() && pwd_min_complexity_environment()">
+                        <p>This is not editable because this setting is currently defined in the app's environment.</p>
                     </setting-callout>
 
                     <setting-meta data-bind="settingMeta: pwd_min_complexity_config"
@@ -81,6 +107,7 @@
             <!-- /.card -->
         </div>
         <div class="col-12 col-sm-6">
+
             <div class="card shadow"
                  data-bind="classFlip: pwd_enforce_characters, classFlipClasses: ['card-success', 'card-danger']">
                 <div class="card-header">
@@ -92,7 +119,19 @@
                                   data-bind-type="textFlip"></setting-meta>
 
                     <setting-input data-bind="switchInput: pwd_enforce_characters_config"
+                                   data-disabled="!local_db_enabled() || pwd_enforce_characters_environment()"
                                    data-profile="enabled-danger-off"></setting-input>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
+                                     data-bindings="hidden: local_db_enabled">
+                        <p>This is not editable because the &quot;<span
+                            data-bind="text: local_db_enabled_label"></span>&quot; setting is disabled.</p>
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
+                                     data-bindings="visible: local_db_enabled() && pwd_enforce_characters_environment()">
+                        <p>This is not editable because this setting is currently defined in the app's environment.</p>
+                    </setting-callout>
 
                     <setting-callout data-type="danger" data-bind="settingCallout: pwd_enforce_characters_config"
                                      data-bindings="hidden: pwd_enforce_characters">
@@ -100,10 +139,19 @@
                             decisions about the quality of their chosen passwords.</p>
                     </setting-callout>
 
+                    <hr/>
+
                     <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
-                                     data-bindings="hidden: pwd_enforce_characters">
+                                     data-bindings="visible: local_db_enabled() && !pwd_enforce_characters()">
                         <p>These settings are disabled because the &quot;<span
                             data-bind="text: pwd_enforce_characters_label"></span>&quot; setting
+                            is disabled.</p>
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
+                                     data-bindings="hidden: local_db_enabled">
+                        <p>These settings are disabled because the &quot;<span
+                            data-bind="text: local_db_enabled_label"></span>&quot; setting
                             is disabled.</p>
                     </setting-callout>
 

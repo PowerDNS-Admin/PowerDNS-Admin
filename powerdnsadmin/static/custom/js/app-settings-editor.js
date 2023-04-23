@@ -43,11 +43,20 @@ ko.bindingHandlers.textFlip = {
 ko.bindingHandlers.switchInput = {
     init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         let el = $(element);
+        let disabled = el.data('disabled') || false;
+        let bindings = el.data('bindings');
         let profile = el.data('profile');
         let tpl = bindingContext.$data.templates()['input_switch'];
+
+        // Replace the template variables
         tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
+        tpl = tpl.replace(/{disabled}/gm, disabled);
+        tpl = tpl.replace(/{bindings}/gm, bindings);
         tpl = tpl.replace(/{profile}/gm, profile);
+
+        // Replace the original element with the template
         el.html(tpl);
+
         return { 'controlsDescendantBindings': true };
     },
     update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
@@ -60,10 +69,14 @@ ko.bindingHandlers.numberInput = {
         let el = $(element);
         let bind_enable = el.data('bind-enable');
         let tpl = bindingContext.$data.templates()['input_number'];
+
+        // Replace the template variables
         tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
         tpl = tpl.replace(/{bind_enable}/gm, bind_enable);
 
+        // Replace the original element with the template
         el.html(tpl);
+
         return { 'controlsDescendantBindings': true };
     },
     update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
