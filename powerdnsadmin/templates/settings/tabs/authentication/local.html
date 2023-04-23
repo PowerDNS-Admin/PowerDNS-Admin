@@ -76,7 +76,7 @@
                                    data-disabled="!local_db_enabled() || !pwd_enforce_complexity() || pwd_min_complexity_environment()"></setting-input>
 
                     <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
-                                     data-bindings="hidden: pwd_enforce_complexity">
+                                     data-bindings="visible: local_db_enabled() && !pwd_enforce_complexity()">
                         <p>This is not editable because the &quot;<span
                             data-bind="text: pwd_enforce_complexity_label"></span>&quot; setting is
                             disabled.</p>
@@ -158,7 +158,14 @@
                     <div class="row">
                         <div class="col-12 col-sm-6 border-left border-right">
                             <setting-input data-bind="numberInput: pwd_min_len_config"
-                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+                                           data-disabled="!local_db_enabled() || !pwd_enforce_characters() || pwd_min_len_environment()"></setting-input>
+
+                            <setting-callout data-type="warning"
+                                             data-bind="settingCallout: pwd_min_len_config"
+                                             data-bindings="visible: local_db_enabled() && pwd_enforce_characters() && pwd_min_len_environment()">
+                                <p>This is not editable because this setting is currently defined in the app's
+                                    environment.</p>
+                            </setting-callout>
 
                             <setting-meta data-bind="settingMeta: pwd_min_len_config"
                                           data-bind-type="text"></setting-meta>
@@ -166,7 +173,14 @@
                             <hr/>
 
                             <setting-input data-bind="numberInput: pwd_min_digits_config"
-                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+                                           data-disabled="!local_db_enabled() || !pwd_enforce_characters() || pwd_min_digits_environment()"></setting-input>
+
+                            <setting-callout data-type="warning"
+                                             data-bind="settingCallout: pwd_min_digits_config"
+                                             data-bindings="visible: local_db_enabled() && pwd_enforce_characters() && pwd_min_digits_environment()">
+                                <p>This is not editable because this setting is currently defined in the app's
+                                    environment.</p>
+                            </setting-callout>
 
                             <setting-meta data-bind="settingMeta: pwd_min_digits_config"
                                           data-bind-type="text"></setting-meta>
@@ -175,7 +189,14 @@
                         </div>
                         <div class="col-12 col-sm-6 border-right">
                             <setting-input data-bind="numberInput: pwd_min_lowercase_config"
-                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+                                           data-disabled="!local_db_enabled() || !pwd_enforce_characters() || pwd_min_lowercase_environment()"></setting-input>
+
+                            <setting-callout data-type="warning"
+                                             data-bind="settingCallout: pwd_min_lowercase_config"
+                                             data-bindings="visible: local_db_enabled() && pwd_enforce_characters() && pwd_min_lowercase_environment()">
+                                <p>This is not editable because this setting is currently defined in the app's
+                                    environment.</p>
+                            </setting-callout>
 
                             <setting-meta data-bind="settingMeta: pwd_min_lowercase_config"
                                           data-bind-type="text"></setting-meta>
@@ -183,7 +204,14 @@
                             <hr/>
 
                             <setting-input data-bind="numberInput: pwd_min_uppercase_config"
-                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+                                           data-disabled="!local_db_enabled() || !pwd_enforce_characters() || pwd_min_uppercase_environment()"></setting-input>
+
+                            <setting-callout data-type="warning"
+                                             data-bind="settingCallout: pwd_min_uppercase_config"
+                                             data-bindings="visible: local_db_enabled() && pwd_enforce_characters() && pwd_min_uppercase_environment()">
+                                <p>This is not editable because this setting is currently defined in the app's
+                                    environment.</p>
+                            </setting-callout>
 
                             <setting-meta data-bind="settingMeta: pwd_min_uppercase_config"
                                           data-bind-type="text"></setting-meta>
@@ -194,7 +222,14 @@
                     <div class="row">
                         <div class="col-12 col-sm-6 border-left border-right">
                             <setting-input data-bind="numberInput: pwd_min_special_config"
-                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+                                           data-disabled="!local_db_enabled() || !pwd_enforce_characters() || pwd_min_special_environment()"></setting-input>
+
+                            <setting-callout data-type="warning"
+                                             data-bind="settingCallout: pwd_min_special_config"
+                                             data-bindings="visible: local_db_enabled() && pwd_enforce_characters() && pwd_min_special_environment()">
+                                <p>This is not editable because this setting is currently defined in the app's
+                                    environment.</p>
+                            </setting-callout>
 
                             <setting-meta data-bind="settingMeta: pwd_min_special_config"
                                           data-bind-type="text"></setting-meta>

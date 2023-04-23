@@ -67,12 +67,12 @@ ko.bindingHandlers.switchInput = {
 ko.bindingHandlers.numberInput = {
     init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         let el = $(element);
-        let bind_enable = el.data('bind-enable');
+        let disabled = el.data('disabled') || false;
         let tpl = bindingContext.$data.templates()['input_number'];
 
         // Replace the template variables
         tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
-        tpl = tpl.replace(/{bind_enable}/gm, bind_enable);
+        tpl = tpl.replace(/{disabled}/gm, disabled);
 
         // Replace the original element with the template
         el.html(tpl);
