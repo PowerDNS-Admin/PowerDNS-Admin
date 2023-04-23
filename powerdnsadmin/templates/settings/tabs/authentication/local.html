@@ -97,7 +97,7 @@
                     <setting-meta data-bind="settingMeta: pwd_min_complexity_config"
                                   data-bind-type="text"></setting-meta>
 
-                    <p>More information about this can be found
+                    <p class="mt-3">More information about this can be found
                         <a target="_blank"
                            href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>.
                     </p>
@@ -187,7 +187,7 @@
 
                             <hr/>
                         </div>
-                        <div class="col-12 col-lg-6 border-right">
+                        <div class="col-12 col-lg-6 border-left border-right">
                             <setting-input data-bind="numberInput: pwd_min_lowercase_config"
                                            data-disabled="!local_db_enabled() || !pwd_enforce_characters() || pwd_min_lowercase_environment()"></setting-input>
 

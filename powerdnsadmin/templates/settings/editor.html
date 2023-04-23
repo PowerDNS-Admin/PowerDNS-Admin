@@ -151,14 +151,14 @@
             </div>
             <div class="icheck-secondary d-inline">
                 <input type="radio" id="{setting_name}_opt1" name="{setting_name}" value="{opt1_value}"
-                data-bind="{binding}" {disabled}>
+                       data-bind="{binding}" {disabled}>
                 <label for="{setting_name}_opt1">{opt1_label}</label>
             </div>
         </div>
     </script>
 
     <script type="text/html" id="input_switch">
-        <div class="form-group">
+        <div class="form-group mt-3">
             <input type="checkbox" id="{setting_name}" name="{setting_name}"
                    data-profile="{profile}"
                    data-bind="checked: {setting_name}, bootstrapSwitch: {setting_name}, inputDisabled: {disabled}">
@@ -171,14 +171,16 @@
 
     <script type="text/html" id="setting_meta">
         <p data-bind="text: {setting_name}_description"></p>
-        <div class="row">
-            <div class="col-12 col-lg-6 mb-2" data-bind="visible: settings_show_defaults">
+        <div class="row" data-bind="visible: settings_show_defaults() || settings_show_types()">
+            <div class="col-12 col-lg-6 mb-1" data-bind="visible: settings_show_defaults">
                 Default: <span class="text-bold" data-bind="{bind_type}: {setting_name}_default"></span>
             </div>
-            <div class="col-12 col-lg-6 mb-2" data-bind="visible: settings_show_types">
+            <div class="col-12 col-lg-6 mb-1" data-bind="visible: settings_show_types">
                 Type: <span class="text-bold" data-bind="text: {setting_name}_type"></span>
             </div>
-            <div class="col-12 mb-2" data-bind="visible: settings_show_environment_variables">
+        </div>
+        <div class="row">
+            <div class="col-12 mb-0 pt-0" data-bind="visible: settings_show_environment_variables">
                 Environment: <span class="text-bold">{setting_name_upper}</span>
             </div>
         </div>
