@@ -13,6 +13,15 @@ ko.bindingHandlers.bootstrapSwitch = {
                 state: ko.unwrap(valueAccessor()),
                 size: 'mini',
             },
+            'enabled-success': {
+                handleWidth: el.data('handle-width') || 55,
+                offColor: el.data('off-color') || 'secondary',
+                offText: el.data('off-text') || 'Disabled',
+                onColor: el.data('on-color') || 'success',
+                onText: el.data('on-text') || 'Enabled',
+                state: ko.unwrap(valueAccessor()),
+                size: 'mini',
+            },
             'enabled-danger-off': {
                 handleWidth: el.data('handle-width') || 55,
                 offColor: el.data('off-color') || 'danger',

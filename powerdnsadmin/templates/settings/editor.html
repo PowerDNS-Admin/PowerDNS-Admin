@@ -121,7 +121,7 @@
                 url: '{{ url_for('settings.api') }}',
                 token: '{{ csrf_token() }}',
                 selector: '#settings-editor',
-                templates: ['input_number', 'input_switch', 'setting_callout', 'setting_meta', 'setting_title'],
+                templates: ['input_number', 'input_radio', 'input_switch', 'setting_callout', 'setting_meta', 'setting_title'],
             };
             let model = new SettingsEditorModel({}, options);
             model.init(true);
@@ -136,6 +136,24 @@
             <input type="number" class="form-control"
                    name="{setting_name}" id="{setting_name}"
                    data-bind="disable: {disabled}, value: {setting_name}, valueUpdate: 'afterkeydown'">
+        </div>
+    </script>
+
+    <script type="text/html" id="input_radio">
+        <div class="form-group clearfix">
+            <div>
+                <label data-bind="text: {setting_name}_label"></label>
+            </div>
+            <div class="icheck-secondary d-inline mr-3">
+                <input type="radio" id="{setting_name}_opt0" name="{setting_name}" value="{opt0_value}"
+                       data-bind="{binding}" {disabled}>
+                <label for="{setting_name}_opt0">{opt0_label}</label>
+            </div>
+            <div class="icheck-secondary d-inline">
+                <input type="radio" id="{setting_name}_opt1" name="{setting_name}" value="{opt1_value}"
+                data-bind="{binding}" {disabled}>
+                <label for="{setting_name}_opt1">{opt1_label}</label>
+            </div>
         </div>
     </script>
 

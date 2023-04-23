@@ -143,14 +143,14 @@
 
                     <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
                                      data-bindings="visible: local_db_enabled() && !pwd_enforce_characters()">
-                        <p>These settings are disabled because the &quot;<span
+                        <p>These settings are not editable because the &quot;<span
                             data-bind="text: pwd_enforce_characters_label"></span>&quot; setting
                             is disabled.</p>
                     </setting-callout>
 
                     <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
                                      data-bindings="hidden: local_db_enabled">
-                        <p>These settings are disabled because the &quot;<span
+                        <p>These settings are not editable because the &quot;<span
                             data-bind="text: local_db_enabled_label"></span>&quot; setting
                             is disabled.</p>
                     </setting-callout>

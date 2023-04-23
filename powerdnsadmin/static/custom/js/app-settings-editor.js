@@ -40,6 +40,67 @@ ko.bindingHandlers.textFlip = {
     }
 };
 
+ko.bindingHandlers.numberInput = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let disabled = el.data('disabled') || false;
+        let tpl = bindingContext.$data.templates()['input_number'];
+
+        // Replace the template variables
+        tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
+        tpl = tpl.replace(/{disabled}/gm, disabled);
+
+        // Replace the original element with the template
+        el.html(tpl);
+
+        return { 'controlsDescendantBindings': true };
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        ko.applyBindingsToDescendants(bindingContext, element);
+    }
+};
+
+ko.bindingHandlers.radioInput = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let data = el.data();
+        let binding = el.data('binding') || '';
+        let disabled = el.data('disabled') || false;
+        let tpl = bindingContext.$data.templates()['input_radio'];
+
+        // Replace the template variables
+        tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
+        tpl = tpl.replace(/{binding}/gm, binding);
+        tpl = tpl.replace(/{disabled}/gm, disabled ? 'disabled' : '');
+
+        console.log(data);
+
+        if (data.hasOwnProperty('opt0Label')) {
+            tpl = tpl.replace(/{opt0_label}/gm, data.opt0Label);
+        }
+
+        if (data.hasOwnProperty('opt1Label')) {
+            tpl = tpl.replace(/{opt1_label}/gm, data.opt1Label);
+        }
+
+        if (data.hasOwnProperty('opt0Value')) {
+            tpl = tpl.replace(/{opt0_value}/gm, data.opt0Value);
+        }
+
+        if (data.hasOwnProperty('opt1Value')) {
+            tpl = tpl.replace(/{opt1_value}/gm, data.opt1Value);
+        }
+
+        // Replace the original element with the template
+        el.html(tpl);
+
+        return { 'controlsDescendantBindings': true };
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        ko.applyBindingsToDescendants(bindingContext, element);
+    }
+};
+
 ko.bindingHandlers.switchInput = {
     init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         let el = $(element);
@@ -53,26 +114,6 @@ ko.bindingHandlers.switchInput = {
         tpl = tpl.replace(/{disabled}/gm, disabled);
         tpl = tpl.replace(/{bindings}/gm, bindings);
         tpl = tpl.replace(/{profile}/gm, profile);
-
-        // Replace the original element with the template
-        el.html(tpl);
-
-        return { 'controlsDescendantBindings': true };
-    },
-    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        ko.applyBindingsToDescendants(bindingContext, element);
-    }
-};
-
-ko.bindingHandlers.numberInput = {
-    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        let el = $(element);
-        let disabled = el.data('disabled') || false;
-        let tpl = bindingContext.$data.templates()['input_number'];
-
-        // Replace the template variables
-        tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
-        tpl = tpl.replace(/{disabled}/gm, disabled);
 
         // Replace the original element with the template
         el.html(tpl);
