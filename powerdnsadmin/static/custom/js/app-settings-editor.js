@@ -73,8 +73,6 @@ ko.bindingHandlers.radioInput = {
         tpl = tpl.replace(/{binding}/gm, binding);
         tpl = tpl.replace(/{disabled}/gm, disabled ? 'disabled' : '');
 
-        console.log(data);
-
         if (data.hasOwnProperty('opt0Label')) {
             tpl = tpl.replace(/{opt0_label}/gm, data.opt0Label);
         }
@@ -134,6 +132,7 @@ ko.bindingHandlers.settingMeta = {
 
         // Replace the template variables
         tpl = tpl.replace(/{setting_name}/gm, setting.name());
+        tpl = tpl.replace(/{setting_name_upper}/gm, setting.name().toUpperCase());
         tpl = tpl.replace(/{bind_type}/gm, bind_type);
 
         // Replace the original element with the template
@@ -288,6 +287,7 @@ let SettingsEditorModel = function (user_data, user_options) {
             self[key + '_description'] = self.observe(settings[key].description);
             self[key + '_environment'] = self.observe(settings[key].environment);
             self[key + '_label'] = self.observe(settings[key].label);
+            self[key + '_type'] = self.observe(settings[key].stype['py/type']);
             self[key + '_prompts'] = self.observe(settings[key].prompts);
         }
     }
@@ -304,6 +304,7 @@ let SettingsEditorModel = function (user_data, user_options) {
             self[key + '_description'](settings[key].description);
             self[key + '_environment'](settings[key].environment);
             self[key + '_label'](settings[key].label);
+            self[key + '_type'](settings[key].stype['py/type']);
             self[key + '_prompts'](settings[key].prompts);
         }
     }
@@ -320,8 +321,6 @@ let SettingsEditorModel = function (user_data, user_options) {
             for (let i = 0; i < el.length; i++) {
                 ko.applyBindings(self, el[i]);
             }
-
-            //ko.applyBindings(self, el[0]);
         } else {
             ko.applyBindings(self);
         }

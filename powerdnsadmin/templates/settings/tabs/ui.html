@@ -1,15 +1,60 @@
 <div class="tab-pane" data-tab="ui"
      data-bind="class: tab_active().startsWith('ui') ? ' active' : ''">
-    <div class="card card-secondary shadow">
-        <div class="card-header">
-            <h3 class="card-title">UI Settings</h3>
+    <div class="row">
+        <div class="col-12 col-sm-6">
+            <div class="card shadow"
+                 data-bind="classFlip: settings_show_defaults, classFlipClasses: ['card-success', 'card-secondary']">
+                <div class="card-header">
+                    <setting-title data-bind="settingTitle: settings_show_defaults_config"></setting-title>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <setting-meta data-bind="settingMeta: settings_show_defaults_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: settings_show_defaults_config"
+                                   data-profile="enabled-success"></setting-input>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+            
+            <div class="card shadow"
+                 data-bind="classFlip: settings_show_types, classFlipClasses: ['card-success', 'card-secondary']">
+                <div class="card-header">
+                    <setting-title data-bind="settingTitle: settings_show_types_config"></setting-title>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <setting-meta data-bind="settingMeta: settings_show_types_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: settings_show_types_config"
+                                   data-profile="enabled-success"></setting-input>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+            
+            <div class="card shadow"
+                 data-bind="classFlip: settings_show_environment_variables, classFlipClasses: ['card-success', 'card-secondary']">
+                <div class="card-header">
+                    <setting-title data-bind="settingTitle: settings_show_environment_variables_config"></setting-title>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <setting-meta data-bind="settingMeta: settings_show_environment_variables_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: settings_show_environment_variables_config"
+                                   data-profile="enabled-success"></setting-input>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
         </div>
-        <!-- /.card-header -->
-        <div class="card-body">
-            <p>ToDo</p>
-        </div>
-        <!-- /.card-body -->
+        <!-- /.col -->
     </div>
-    <!-- /.card -->
+    <!-- /.row -->
 </div>
 <!-- /.tab-pane -->

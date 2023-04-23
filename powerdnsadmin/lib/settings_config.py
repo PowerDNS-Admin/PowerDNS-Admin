@@ -176,6 +176,9 @@ class SettingMap:
     SESSION_COOKIE_SECURE = 'session_cookie_secure'
     SESSION_TIMEOUT = 'session_timeout'
     SESSION_TYPE = 'session_type'
+    SETTINGS_SHOW_DEFAULTS = 'settings_show_defaults'
+    SETTINGS_SHOW_ENVIRONMENT_VARIABLES = 'settings_show_environment_variables'
+    SETTINGS_SHOW_TYPES = 'settings_show_types'
     SIGNUP_ENABLED = 'signup_enabled'
     SITE_NAME = 'site_name'
     SITE_URL = 'site_url'
@@ -1629,6 +1632,31 @@ def init():
         'label': 'Session Storage Type',
         'stype': str,
         'default': 'sqlalchemy',
+    }))
+
+    inst.set(SettingMap.SETTINGS_SHOW_DEFAULTS, Setting(**{
+        'name': SettingMap.SETTINGS_SHOW_DEFAULTS,
+        'description': 'This determines whether a setting\'s default value should be shown in the settings editor.',
+        'label': 'Display Default Value for Settings',
+        'stype': bool,
+        'default': True,
+    }))
+
+    inst.set(SettingMap.SETTINGS_SHOW_ENVIRONMENT_VARIABLES, Setting(**{
+        'name': SettingMap.SETTINGS_SHOW_ENVIRONMENT_VARIABLES,
+        'description': 'This determines whether a setting\'s environment variable name should be shown in the '
+                       'settings editor.',
+        'label': 'Display Environment Variable Name for Settings',
+        'stype': bool,
+        'default': True,
+    }))
+
+    inst.set(SettingMap.SETTINGS_SHOW_TYPES, Setting(**{
+        'name': SettingMap.SETTINGS_SHOW_TYPES,
+        'description': 'This determines whether a setting\'s value type should be shown in the settings editor.',
+        'label': 'Display Value Type for Settings',
+        'stype': bool,
+        'default': True,
     }))
 
     inst.set(SettingMap.SIGNUP_ENABLED, Setting(**{
