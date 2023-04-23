@@ -1,15 +1,33 @@
 <div class="tab-pane" data-tab="security"
      data-bind="class: tab_active().startsWith('security') ? ' active' : ''">
-    <div class="card card-secondary shadow">
-        <div class="card-header">
-            <h3 class="card-title">Security Settings</h3>
+    <div class="row">
+        <div class="col-12 col-sm-6">
+            <div class="card shadow"
+                 data-bind="classFlip: signup_enabled, classFlipClasses: ['card-warning', 'card-success']">
+                <div class="card-header">
+                    <setting-title data-bind="settingTitle: signup_enabled_config"></setting-title>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <setting-meta data-bind="settingMeta: signup_enabled_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: signup_enabled_config"
+                                   data-profile="enabled-warning-on"></setting-input>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: signup_enabled_config"
+                                     data-bindings="visible: signup_enabled">
+                        <p>It should be understood that access to this application should be properly restricted
+                            to prevent open access from the Internet!</p>
+                        <p>Using access policies like <code>0.0.0.0/0</code> are highly unrecommended.</p>
+                    </setting-callout>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
         </div>
-        <!-- /.card-header -->
-        <div class="card-body">
-            <p>ToDo</p>
-        </div>
-        <!-- /.card-body -->
+        <!-- /.col -->
     </div>
-    <!-- /.card -->
+    <!-- /.row -->
 </div>
 <!-- /.tab-pane -->

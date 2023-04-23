@@ -40,73 +40,97 @@ ko.bindingHandlers.textFlip = {
     }
 };
 
-ko.bindingHandlers.setting = {
+ko.bindingHandlers.switchInput = {
     init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         let el = $(element);
         let profile = el.data('profile');
-        let containerType = el.data('container-type');
-
-        let profiles = {
-            'enabled': {
-                handleWidth: el.data('handle-width') || 55,
-                offColor: el.data('off-color') || 'secondary',
-                offText: el.data('off-text') || 'Disabled',
-                onColor: el.data('on-color') || 'primary',
-                onText: el.data('on-text') || 'Enabled',
-                state: ko.unwrap(valueAccessor()),
-                size: 'mini',
-            },
-            'enabled-danger-off': {
-                handleWidth: el.data('handle-width') || 55,
-                offColor: el.data('off-color') || 'danger',
-                offText: el.data('off-text') || 'Disabled',
-                onColor: el.data('on-color') || 'success',
-                onText: el.data('on-text') || 'Enabled',
-                state: ko.unwrap(valueAccessor()),
-                size: 'mini',
-            },
-            'enabled-danger-on': {
-                handleWidth: el.data('handle-width') || 55,
-                offColor: el.data('off-color') || 'success',
-                offText: el.data('off-text') || 'Disabled',
-                onColor: el.data('on-color') || 'danger',
-                onText: el.data('on-text') || 'Enabled',
-                state: ko.unwrap(valueAccessor()),
-                size: 'mini',
-            },
-            'enabled-warning-off': {
-                handleWidth: el.data('handle-width') || 55,
-                offColor: el.data('off-color') || 'warning',
-                offText: el.data('off-text') || 'Disabled',
-                onColor: el.data('on-color') || 'success',
-                onText: el.data('on-text') || 'Enabled',
-                state: ko.unwrap(valueAccessor()),
-                size: 'mini',
-            },
-            'enabled-warning-on': {
-                handleWidth: el.data('handle-width') || 55,
-                offColor: el.data('off-color') || 'success',
-                offText: el.data('off-text') || 'Disabled',
-                onColor: el.data('on-color') || 'warning',
-                onText: el.data('on-text') || 'Enabled',
-                state: ko.unwrap(valueAccessor()),
-                size: 'mini',
-            },
-        }
-
-        if (typeof profile === 'string' && profile.length > 0 && !profiles[profile]) {
-            console.error('Unknown profile: ' + profile);
-            return;
-        }
-
-        el.bootstrapSwitch(profiles[profile] || profiles['enabled']);
-
-        el.on('switchChange.setting', function (event, state) {
-            valueAccessor()(state);
-        });
+        let tpl = bindingContext.$data.templates()['input_switch'];
+        tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
+        tpl = tpl.replace(/{profile}/gm, profile);
+        el.html(tpl);
+        return { 'controlsDescendantBindings': true };
     },
     update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        $(element).bootstrapSwitch('state', ko.unwrap(valueAccessor()));
+        ko.applyBindingsToDescendants(bindingContext, element);
+    }
+};
+
+ko.bindingHandlers.numberInput = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let bind_enable = el.data('bind-enable');
+        let tpl = bindingContext.$data.templates()['input_number'];
+        tpl = tpl.replace(/{setting_name}/gm, valueAccessor()().name());
+        tpl = tpl.replace(/{bind_enable}/gm, bind_enable);
+
+        el.html(tpl);
+        return { 'controlsDescendantBindings': true };
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        ko.applyBindingsToDescendants(bindingContext, element);
+    }
+};
+
+ko.bindingHandlers.settingMeta = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let setting = valueAccessor()();
+        let bind_type = el.data('bind-type');
+        let tpl = bindingContext.$data.templates()['setting_meta'];
+
+        // Replace the template variables
+        tpl = tpl.replace(/{setting_name}/gm, setting.name());
+        tpl = tpl.replace(/{bind_type}/gm, bind_type);
+
+        // Replace the original element with the template
+        el.html(tpl);
+
+        return { 'controlsDescendantBindings': true };
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        ko.applyBindingsToDescendants(bindingContext, element);
+    }
+};
+
+ko.bindingHandlers.settingTitle = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let setting = valueAccessor()();
+        let tpl = bindingContext.$data.templates()['setting_title'];
+
+        // Replace the template variables
+        tpl = tpl.replace(/{setting_name}/gm, setting.name());
+
+        // Replace the original element with the template
+        el.html(tpl);
+
+        return { 'controlsDescendantBindings': true };
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        ko.applyBindingsToDescendants(bindingContext, element);
+    }
+};
+
+ko.bindingHandlers.settingCallout = {
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        let el = $(element);
+        let type = el.data('type');
+        let bindings = el.data('bindings');
+        let content = el.html();
+        let tpl = bindingContext.$data.templates()['setting_callout'];
+
+        // Replace the template variables
+        tpl = tpl.replace(/{callout_type}/gm, type);
+        tpl = tpl.replace(/{callout_bindings}/gm, bindings);
+        tpl = tpl.replace(/{callout_content}/gm, content);
+
+        // Replace the original element with the template
+        el.html(tpl);
+
+        return { 'controlsDescendantBindings': true };
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        ko.applyBindingsToDescendants(bindingContext, element);
     }
 };
 
@@ -155,17 +179,19 @@ let SettingsEditorModel = function (user_data, user_options) {
 
     self.init = function (autoload) {
         // This is because of Internet Explorer, as usual. I used to say nothing was impossible, but then there was IE.
+        document.createElement('setting-callout');
         document.createElement('setting-input');
         document.createElement('setting-meta');
+        document.createElement('setting-title');
 
         // Load editor templates
         let templates = self.templates();
-        for (template_id in options.templates) {
-            if (!options.templates.hasOwnProperty(template_id)) {
-                continue;
-            }
-            templates[template_id] = $('#' + options.templates[template_id]).html();
+
+        for (index in options.templates) {
+            let template_id = options.templates[index];
+            templates[template_id] = $('#' + template_id).html();
         }
+
         self.templates(templates);
 
         if (autoload) {
@@ -873,6 +899,7 @@ let SettingsEditorModel = function (user_data, user_options) {
         self.setupListeners();
         self.setupValidation();
 
+        self.settings(settings);
         self.messages(result.messages != null && result.messages.constructor === Array ? result.messages : []);
         self.messages_class(result.status === 0 ? 'danger' : 'info');
         self.loading(false);

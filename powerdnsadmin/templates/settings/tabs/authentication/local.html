@@ -6,45 +6,21 @@
             <div class="card shadow"
                  data-bind="classFlip: local_db_enabled, classFlipClasses: ['card-success', 'card-danger']">
                 <div class="card-header">
-                    <h3 class="card-title" data-bind="text: local_db_enabled_label"></h3>
+                    <setting-title data-bind="settingTitle: local_db_enabled_config"></setting-title>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <p data-bind="text: local_db_enabled_description"></p>
-                    <p class="mt-3">Default Value: <span class="text-bold"
-                                                         data-bind="textFlip: local_db_enabled_default"></span>
-                    </p>
-                    <input type="checkbox" id="local_db_enabled" name="local_db_enabled"
-                           data-profile="enabled-danger-off"
-                           data-bind="checked: local_db_enabled, bootstrapSwitch: local_db_enabled">
-                    <div class="callout callout-danger mt-3" data-bind="hidden: local_db_enabled">
+                    <setting-meta data-bind="settingMeta: local_db_enabled_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: local_db_enabled_config"
+                                   data-profile="enabled-danger-off"></setting-input>
+
+                    <setting-callout data-type="danger" data-bind="settingCallout: local_db_enabled_config"
+                                     data-bindings="hidden: local_db_enabled">
                         <p>You should ensure that you have appropriate admin rights assigned to at least one
                             external auth provider account!</p>
-                    </div>
-                </div>
-                <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
-
-            <div class="card shadow"
-                 data-bind="classFlip: signup_enabled, classFlipClasses: ['card-warning', 'card-success']">
-                <div class="card-header">
-                    <h3 class="card-title" data-bind="text: signup_enabled_label"></h3>
-                </div>
-                <!-- /.card-header -->
-                <div class="card-body">
-                    <p data-bind="text: signup_enabled_description"></p>
-                    <p class="mt-3">Default Value: <span class="text-bold"
-                                                         data-bind="textFlip: signup_enabled_default"></span>
-                    </p>
-                    <input type="checkbox" id="signup_enabled" name="signup_enabled"
-                           data-profile="enabled-warning-on"
-                           data-bind="checked: signup_enabled, bootstrapSwitch: signup_enabled">
-                    <div class="callout callout-warning mt-3" data-bind="visible: signup_enabled">
-                        <p>It should be understood that access to this application should be properly restricted
-                            to prevent open access from the Internet!</p>
-                        <p>Using access policies like <code>0.0.0.0/0</code> are highly unrecommended.</p>
-                    </div>
+                    </setting-callout>
                 </div>
                 <!-- /.card-body -->
             </div>
@@ -53,48 +29,52 @@
             <div class="card shadow"
                  data-bind="classFlip: pwd_enforce_complexity, classFlipClasses: ['card-success', 'card-warning']">
                 <div class="card-header">
-                    <h3 class="card-title" data-bind="text: pwd_enforce_complexity_label"></h3>
+                    <setting-title data-bind="settingTitle: pwd_enforce_complexity_config"></setting-title>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <p data-bind="text: pwd_enforce_complexity_description"></p>
-                    <p class="mt-3">Default Value: <span class="text-bold"
-                                                         data-bind="textFlip: pwd_enforce_complexity_default"></span>
-                    </p>
-                    <input type="checkbox" id="pwd_enforce_complexity" name="pwd_enforce_complexity"
-                           data-profile="enabled-warning-off"
-                           data-bind="checked: pwd_enforce_complexity, bootstrapSwitch: pwd_enforce_complexity">
-                    <div class="callout callout-secondary mt-3" data-bind="visible: pwd_enforce_complexity">
-                        <p>You may experience an increase in the amount of user complaints received as some
-                            people might find this annoying.</p>
-                    </div>
-                    <div class="callout callout-warning mt-3" data-bind="hidden: pwd_enforce_complexity">
+                    <setting-meta data-bind="settingMeta: pwd_enforce_complexity_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: pwd_enforce_complexity_config"
+                                   data-profile="enabled-warning-off"></setting-input>
+
+                    <setting-callout data-type="secondary" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="visible: pwd_enforce_complexity">
+                        <p>You may experience an increase in user complaints as some users might find this feature
+                            frustrating.</p>
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="hidden: pwd_enforce_complexity">
                         <p>It is highly recommended that you enforce more secure password requirements on your
                             users!</p>
-                    </div>
+                    </setting-callout>
+
                     <hr/>
-                    <div class="form-group">
-                        <label for="pwd_min_complexity" data-bind="text: pwd_min_complexity_label"></label>
-                        <input type="number" class="form-control"
-                               name="pwd_min_complexity"
-                               id="pwd_min_complexity"
-                               data-bind="enable: local_db_enabled() && pwd_enforce_complexity() && !pwd_min_complexity_environment(), value: pwd_min_complexity, valueUpdate: 'afterkeydown'">
-                    </div>
-                    <div class="callout callout-warning mt-3" data-bind="hidden: pwd_enforce_complexity">
-                        <p>This is disabled because the &quot;<span data-bind="text: pwd_enforce_complexity_label"></span>&quot; setting is
+
+                    <setting-input data-bind="numberInput: pwd_min_complexity_config"
+                                   data-bind-enable="local_db_enabled() && pwd_enforce_complexity() && !pwd_min_complexity_environment()"></setting-input>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="hidden: pwd_enforce_complexity">
+                        <p>This is disabled because the &quot;<span
+                            data-bind="text: pwd_enforce_complexity_label"></span>&quot; setting is
                             disabled.</p>
-                    </div>
-                    <div class="callout callout-warning mt-3"
-                         data-bind="visible: pwd_enforce_complexity() && pwd_min_complexity_environment()">
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_complexity_config"
+                                     data-bindings="visible: pwd_enforce_complexity() && pwd_min_complexity_environment()">
                         <p>This is disabled because this setting is currently defined in the app's environment.</p>
-                    </div>
-                    <p data-bind="text: pwd_min_complexity_description"></p>
+                    </setting-callout>
+
+                    <setting-meta data-bind="settingMeta: pwd_min_complexity_config"
+                                  data-bind-type="text"></setting-meta>
+
                     <p>More information about this can be found
                         <a target="_blank"
                            href="https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_wheeler.pdf">here</a>.
                     </p>
-                    <p class="mt-3">Default Value: <span class="text-bold"
-                                                         data-bind="text: pwd_min_complexity_default"></span></p>
                 </div>
                 <!-- /.card-body -->
             </div>
@@ -104,96 +84,77 @@
             <div class="card shadow"
                  data-bind="classFlip: pwd_enforce_characters, classFlipClasses: ['card-success', 'card-danger']">
                 <div class="card-header">
-                    <h3 class="card-title" data-bind="text: pwd_enforce_characters_label"></h3>
+                    <setting-title data-bind="settingTitle: pwd_enforce_characters_config"></setting-title>
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <div class="form-group">
-                        <input type="checkbox" id="pwd_enforce_characters" name="pwd_enforce_characters"
-                               data-profile="enabled-danger-off"
-                               data-bind="checked: pwd_enforce_characters, bootstrapSwitch: pwd_enforce_characters">
-                    </div>
-                    <p data-bind="text: pwd_enforce_characters_description"></p>
-                    <p class="mt-3">Default Value: <span class="text-bold"
-                                                         data-bind="textFlip: pwd_enforce_characters_default"></span>
-                    </p>
-                    <div class="callout callout-danger mt-3" data-bind="hidden: pwd_enforce_characters">
+                    <setting-meta data-bind="settingMeta: pwd_enforce_characters_config"
+                                  data-bind-type="textFlip"></setting-meta>
+
+                    <setting-input data-bind="switchInput: pwd_enforce_characters_config"
+                                   data-profile="enabled-danger-off"></setting-input>
+
+                    <setting-callout data-type="danger" data-bind="settingCallout: pwd_enforce_characters_config"
+                                     data-bindings="hidden: pwd_enforce_characters">
                         <p>If this is not enabled, it may lead to users making really poor, and often uninformed
                             decisions about the quality of their chosen passwords.</p>
-                    </div>
-                    <hr/>
-                    <div class="callout callout-warning mt-3" data-bind="hidden: pwd_enforce_characters">
-                        <p>These settings are disabled because the &quot;<span data-bind="text: pwd_enforce_characters_label"></span>&quot; setting
+                    </setting-callout>
+
+                    <setting-callout data-type="warning" data-bind="settingCallout: pwd_enforce_characters_config"
+                                     data-bindings="hidden: pwd_enforce_characters">
+                        <p>These settings are disabled because the &quot;<span
+                            data-bind="text: pwd_enforce_characters_label"></span>&quot; setting
                             is disabled.</p>
-                    </div>
+                    </setting-callout>
+
                     <div class="row">
                         <div class="col-12 col-sm-6 border-left border-right">
-                            <div class="form-group">
-                                <label for="pwd_min_len" data-bind="text: pwd_min_len_label"></label>
-                                <input type="number" class="form-control"
-                                       name="pwd_min_len" id="pwd_min_len"
-                                       data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_len, valueUpdate: 'afterkeydown'">
-                            </div>
-                            <p data-bind="text: pwd_min_len_description"></p>
-                            <p class="mt-3">Default Value: <span class="text-bold"
-                                                                 data-bind="text: pwd_min_len_default"></span>
-                            </p>
+                            <setting-input data-bind="numberInput: pwd_min_len_config"
+                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+
+                            <setting-meta data-bind="settingMeta: pwd_min_len_config"
+                                          data-bind-type="text"></setting-meta>
+
                             <hr/>
-                            <div class="form-group">
-                                <label for="pwd_min_digits" data-bind="text: pwd_min_digits_label"></label>
-                                <input type="number" class="form-control"
-                                       name="pwd_min_digits" id="pwd_min_digits"
-                                       data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_digits, valueUpdate: 'afterkeydown'">
-                            </div>
-                            <p data-bind="text: pwd_min_digits_description"></p>
-                            <p class="mt-3">Default Value: <span class="text-bold"
-                                                                 data-bind="text: pwd_min_digits_default"></span>
-                            </p>
+
+                            <setting-input data-bind="numberInput: pwd_min_digits_config"
+                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+
+                            <setting-meta data-bind="settingMeta: pwd_min_digits_config"
+                                          data-bind-type="text"></setting-meta>
+
                             <hr/>
                         </div>
                         <div class="col-12 col-sm-6 border-right">
-                            <div class="form-group">
-                                <label for="pwd_min_lowercase" data-bind="text: pwd_min_lowercase_label"></label>
-                                <input type="number" class="form-control"
-                                       name="pwd_min_lowercase"
-                                       id="pwd_min_lowercase"
-                                       data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_lowercase, valueUpdate: 'afterkeydown'">
-                            </div>
-                            <p data-bind="text: pwd_min_lowercase_description"></p>
-                            <p class="mt-3">Default Value: <span class="text-bold"
-                                                                 data-bind="text: pwd_min_lowercase_default"></span>
-                            </p>
+                            <setting-input data-bind="numberInput: pwd_min_lowercase_config"
+                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+
+                            <setting-meta data-bind="settingMeta: pwd_min_lowercase_config"
+                                          data-bind-type="text"></setting-meta>
+
                             <hr/>
-                            <div class="form-group">
-                                <label for="pwd_min_uppercase" data-bind="text: pwd_min_uppercase_label"></label>
-                                <input type="number" class="form-control"
-                                       name="pwd_min_uppercase"
-                                       id="pwd_min_uppercase"
-                                       data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_uppercase, valueUpdate: 'afterkeydown'">
-                            </div>
-                            <p data-bind="text: pwd_min_uppercase_description"></p>
-                            <p class="mt-3">Default Value: <span class="text-bold"
-                                                                 data-bind="text: pwd_min_uppercase_default"></span>
-                            </p>
+
+                            <setting-input data-bind="numberInput: pwd_min_uppercase_config"
+                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+
+                            <setting-meta data-bind="settingMeta: pwd_min_uppercase_config"
+                                          data-bind-type="text"></setting-meta>
+
                             <hr/>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-12 col-sm-6 border-left border-right">
-                            <div class="form-group">
-                                <label for="pwd_min_special" data-bind="text: pwd_min_special_label"></label>
-                                <input type="number" class="form-control"
-                                       name="pwd_min_special" id="pwd_min_special"
-                                       data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
-                            </div>
-                            <p data-bind="text: pwd_min_special_description"></p>
-                            <p class="mt-3">Default Value: <span class="text-bold"
-                                                                 data-bind="text: pwd_min_special_default"></span>
-                            </p>
-                            <div class="callout callout-secondary">
+                            <setting-input data-bind="numberInput: pwd_min_special_config"
+                                           data-bind-enable="local_db_enabled() && pwd_enforce_characters()"></setting-input>
+
+                            <setting-meta data-bind="settingMeta: pwd_min_special_config"
+                                          data-bind-type="text"></setting-meta>
+
+                            <setting-callout data-type="secondary" data-bind="settingCallout: pwd_min_special_config">
                                 <p>Special characters include:</p>
                                 <p>`!@#$%^&amp;*()_-=+[]\{}|;:",.&gt;&lt;/?.</p>
-                            </div>
+                            </setting-callout>
                         </div>
                     </div>
                 </div>

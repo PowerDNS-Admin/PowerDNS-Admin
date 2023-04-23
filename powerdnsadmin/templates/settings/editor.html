@@ -121,7 +121,7 @@
                 url: '{{ url_for('settings.api') }}',
                 token: '{{ csrf_token() }}',
                 selector: '#settings-editor',
-                templates: ['input_number', 'input_switch', 'setting_meta'],
+                templates: ['input_number', 'input_switch', 'setting_callout', 'setting_meta', 'setting_title'],
             };
             let model = new SettingsEditorModel({}, options);
             model.init(true);
@@ -142,13 +142,21 @@
     <script type="text/html" id="input_switch">
         <div class="form-group">
             <input type="checkbox" id="{setting_name}" name="{setting_name}"
-                   data-profile="enabled-danger-off"
+                   data-profile="{profile}"
                    data-bind="checked: {setting_name}, bootstrapSwitch: {setting_name}">
         </div>
     </script>
 
+    <script type="text/html" id="setting_callout">
+        <div class="callout callout-{callout_type} mt-3" data-bind="{callout_bindings}">{callout_content}</div>
+    </script>
+
     <script type="text/html" id="setting_meta">
         <p data-bind="text: {setting_name}_description"></p>
-        <p class="mt-3">Default: <span class="text-bold" data-bind="textFlip: {setting_name}_default"></span></p>
+        <p class="mt-3">Default: <span class="text-bold" data-bind="{bind_type}: {setting_name}_default"></span></p>
+    </script>
+
+    <script type="text/html" id="setting_title">
+        <h3 class="card-title" data-bind="text: {setting_name}_label"></h3>
     </script>
 {% endblock %}
