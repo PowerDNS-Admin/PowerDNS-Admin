@@ -40,6 +40,7 @@
                     <div class="form-group">
                         <input type="text" class="form-control" placeholder="Username" name="username"
                                data-error="Please input your username" required
+                               autofocus
                                {% if username %}value="{{ username }}" {% endif %}>
                         <span class="help-block with-errors"></span>
                     </div>
