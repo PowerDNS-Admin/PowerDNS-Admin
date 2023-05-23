@@ -25,7 +25,7 @@
 - [Getting started](configuration/Getting-started.md)
 - SystemD:
   - [Running PowerDNS-Admin as a service using Systemd](install/Running-PowerDNS-Admin-as-a-service-(Systemd).md)
-
+- [Authentication](authentication/README.md)
 ### Web Server configuration
 
 - [Supervisord](web-server/Supervisord-example.md)
