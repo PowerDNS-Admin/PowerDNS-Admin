@@ -37,7 +37,7 @@ python3-saml==1.15.0
 pytimeparse==1.1.8
 pytz==2022.7.1
 qrcode==7.3.1
-requests==2.28.2
+requests==2.31.0
 rjsmin==1.2.1
 webcolors==1.12
 werkzeug==2.1.2
