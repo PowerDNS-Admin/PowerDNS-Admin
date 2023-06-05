@@ -68,6 +68,19 @@ This creates a volume named `pda-data` to persist the default SQLite database wi
 
 You can then access PowerDNS-Admin by pointing your browser to http://localhost:9191.
 
+## Installation using Easypanel
+
+Easypanel is a modern server control panel. If you [run Easypanel](https://easypanel.io/docs) on your server, you can deploy PowerDNS-Admin with 1 click on it.
+
+[![Deploy to Easypanel](https://easypanel.io/img/deploy-on-easypanel-40.svg)](https://easypanel.io/docs/templates/powerdns-admin)
+
+### Instructions
+
+1. Create a VM that runs Ubuntu on your cloud provider.
+2. Install Easypanel using the instructions from the website.
+3. Create a new project.
+4. Install PowerDNS-Admin using the dedicated template.
+
 ## Screenshots
 
 ![dashboard](docs/screenshots/dashboard.png)
