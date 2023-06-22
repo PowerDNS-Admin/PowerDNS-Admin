@@ -393,12 +393,12 @@
                 unsavedChanges = true; //a record was either added or deleted.
             } else {
                 {% for record in records %}
-                var origrecordttl = '{{ record.ttl }}';
                 var origrecordname = '{{ (record.name,domain.name) | display_record_name }}';
-                var origrecorddata = '{{ record.data }}';
-                origrecorddata = origrecorddata.replace(/&#34;/g, '\"');
                 var origrecordtype = '{{ record.type }}';
                 var origrecordstatus = '{{ record.status }}';
+                var origrecordttl = '{{ record.ttl }}';
+                var origrecorddata = '{{ record.data }}';
+                origrecorddata = origrecorddata.replace(/&#34;/g, '\"');
                 var origrecordcomment = '{{ record.comment }}';
                 if (!table.row(index) || typeof table.row(index) == 'undefined') {
                     unsavedChanges = true; //sanity check otherwise below code throws error if row at that index doesn't exist.
@@ -409,7 +409,7 @@
                     var editrecordttl = table.row(index).data()[3];
                     var editrecorddata = table.row(index).data()[4];
                     var editrecordcomment = table.row(index).data()[5];
-                    if (origrecordttl != editrecordttl || origrecordname != editrecordname || origrecorddata != editrecorddata || origrecordtype != editrecordtype |>
+                    if (origrecordname != editrecordname || origrecordtype != editrecordtype || origrecordstatus != editrecordstatus || origrecordttl != editrecordttl ||  origrecorddata != editrecorddata ||  origrecordcomment != editrecordcomment) {
                         unsavedChanges = true;
                     }
                 }
