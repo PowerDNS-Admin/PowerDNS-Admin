@@ -119,6 +119,9 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
     for entry in histories:
         changes = []
 
+        if entry.detail is None:
+            continue
+        
         if "add_rrsets" in entry.detail:
             details = json.loads(entry.detail)
             if not details['add_rrsets'] and not details['del_rrsets']:
