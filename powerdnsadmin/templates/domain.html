@@ -22,6 +22,15 @@
 {% block content %}
     <section class="content">
         <div class="container-fluid">
+            <div class="card" id="unsaved-changes-card" style="display: none; position: sticky; top: 0; z-index: 999;">
+                <div class="card-header" style="background-color: yellow;">
+                    <h3 class="card-title" style="color: red;">
+                        Warning: Unsaved Changes
+                    </h3>
+                </div>
+                <div class="card-body" style="font-size: 1rem; color: black; background-color: yellow;">
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="card">
@@ -251,6 +260,7 @@
 
             $("#button_delete_confirm").unbind().one('click', function (e) {
                 table.row(nRow).remove().draw();
+                detectUnsavedChanges(table);
                 modal.modal('hide');
             });
 
@@ -355,6 +365,7 @@
             e.stopPropagation();
             var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
+            detectUnsavedChanges(table);
             nEditing = null;
             nNew = false;
         });
@@ -367,6 +378,94 @@
                 '_csrf_token': '{{ csrf_token() }}'
             }, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
         });
+
+        var unsavedChanges = false;
+
+        function detectUnsavedChanges(table) {
+            // Reset unsavedChanges to false at the start of the function
+            unsavedChanges = false;
+            var index = 0;
+            var origcount = {{ records|length }};
+            var count = table.page.info().recordsTotal;
+            var changes = {};  // Dictionary to store changes
+        
+            if (count != origcount) {
+                unsavedChanges = true; //a record was either added or deleted.
+            } else {
+                {% for record in records %}
+                var origrecordttl = '{{ record.ttl }}';
+                var origrecordname = '{{ (record.name,domain.name) | display_record_name }}';
+                var origrecorddata = '{{ record.data }}';
+                origrecorddata = origrecorddata.replace(/&#34;/g, '\"');
+                var origrecordtype = '{{ record.type }}';
+                var origrecordstatus = '{{ record.status }}';
+                var origrecordcomment = '{{ record.comment }}';
+                if (!table.row(index) || typeof table.row(index) == 'undefined') {
+                    unsavedChanges = true; //sanity check otherwise below code throws error if row at that index doesn't exist.
+                } else {
+                    var editrecordname = table.row(index).data()[0];
+                    var editrecordtype = table.row(index).data()[1];
+                    var editrecordstatus = table.row(index).data()[2];
+                    var editrecordttl = table.row(index).data()[3];
+                    var editrecorddata = table.row(index).data()[4];
+                    var editrecordcomment = table.row(index).data()[5];
+                    if (origrecordttl != editrecordttl || origrecordname != editrecordname || origrecorddata != editrecorddata || origrecordtype != editrecordtype |>
+                        unsavedChanges = true;
+                    }
+                }
+                index++;
+                {% endfor %}
+            }
+            unsavedChangesWarning(unsavedChanges);
+
+            // Get the modal and the navigation links
+            var modal = document.getElementById('WarnLeave');
+            var navLinks = document.querySelectorAll('.nav-link');
+
+            // Listen for clicks on navigation links
+            navLinks.forEach(function(link) {
+                if (!link.classList.contains('no-prompt')) {
+                    link.addEventListener('click', function(event) {
+                        if (unsavedChanges) {
+                            event.preventDefault();  // Prevent navigation
+                            modal.style.display = "block";  // Show the modal
+                            // Get the buttons
+                            var stayButton = document.getElementById('stay');
+                            var leaveButton = document.getElementById('leave');
+        
+                            // When the user clicks on "Stay", close the modal
+                            stayButton.onclick = function() {
+                                modal.style.display = "none";
+                            }
+        
+                            // When the user clicks on "Leave", navigate away
+                            leaveButton.onclick = function() {
+                                unsavedChanges = false;  // No unsaved changes anymore
+                                location.href = link.href;  // Navigate to the clicked link
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function unsavedChangesWarning(unsavedChanges) {
+            var card = document.getElementById("unsaved-changes-card");
+            var cardBody = card.querySelector(".card-body");
+        
+            if(unsavedChanges){
+                var message = 'There are unsaved changes for the zone. Please click Save Changes to save all of your changes.';
+                card.style.display = 'block';  // to show the card
+                cardBody.innerHTML = message;
+                return false;
+            } else {
+                card.style.display = 'none';  // to hide the card
+            }
+        }
+
+
+
+        
 
         {% if SETTING.get('record_helper') %}
             //handle wacky record types
@@ -676,5 +775,21 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="modal" tabindex="-1" id="WarnLeave">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Unsaved Changes</h5>
+          </div>
+          <div class="modal-body">
+            <p>You have unsaved changes. Are you sure you want to navigate away?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="stay">Stay</button>
+            <button type="button" class="btn btn-secondary" id="leave">Leave</button>
+          </div>
+        </div>
+      </div>
     </div>
 {% endblock %}
