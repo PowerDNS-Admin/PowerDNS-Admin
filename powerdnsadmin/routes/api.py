@@ -4,7 +4,8 @@ import string
 from base64 import b64encode
 from urllib.parse import urljoin
 
-from flask import (Blueprint, g, request, abort, current_app, make_response, jsonify)
+from flask import (Blueprint, g, request, abort,
+                   current_app, make_response, jsonify)
 from flask_login import current_user
 
 from .base import csrf
@@ -48,12 +49,14 @@ user_detailed_schema = UserDetailedSchema()
 account_schema = AccountSchema(many=True)
 account_single_schema = AccountSchema()
 
+
 def is_custom_header_api():
     custom_header_setting = Setting().get('custom_history_header')
-    if custom_header_setting != '' and custom_header_setting in request.headers: 
-        return request.headers[custom_header_setting] 
-    else: 
-        return g.apikey.description 
+    if custom_header_setting != '' and custom_header_setting in request.headers:
+        return request.headers[custom_header_setting]
+    else:
+        return g.apikey.description
+
 
 def get_user_domains():
     domains = db.session.query(Domain) \
@@ -230,7 +233,8 @@ def api_login_create_zone():
         history.add()
 
         if current_user.role.name not in ['Administrator', 'Operator']:
-            current_app.logger.debug("User is ordinary user, assigning created zone")
+            current_app.logger.debug(
+                "User is ordinary user, assigning created zone")
             domain = Domain(name=data['name'].rstrip('.'))
             domain.update()
             domain.grant_privileges([current_user.id])
@@ -328,14 +332,16 @@ def api_generate_apikey():
     elif not isinstance(data['domains'], (list,)):
         abort(400)
     else:
-        domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
+        domains = [d['name'] if isinstance(
+            d, dict) else d for d in data['domains']]
 
     if 'accounts' not in data:
         accounts = []
     elif not isinstance(data['accounts'], (list,)):
         abort(400)
     else:
-        accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
+        accounts = [a['name'] if isinstance(
+            a, dict) else a for a in data['accounts']]
 
     description = data['description'] if 'description' in data else None
 
@@ -347,7 +353,8 @@ def api_generate_apikey():
         abort(400)
 
     if role_name == 'User' and len(domains) == 0 and len(accounts) == 0:
-        current_app.logger.error("Apikey with User role must have zones or accounts")
+        current_app.logger.error(
+            "Apikey with User role must have zones or accounts")
         raise ApiKeyNotUsable()
 
     if role_name == 'User' and len(domains) > 0:
@@ -358,7 +365,8 @@ def api_generate_apikey():
             raise DomainNotExists(message=msg)
 
     if role_name == 'User' and len(accounts) > 0:
-        account_obj_list = Account.query.filter(Account.name.in_(accounts)).all()
+        account_obj_list = Account.query.filter(
+            Account.name.in_(accounts)).all()
         if len(account_obj_list) == 0:
             msg = "One of supplied accounts does not exist"
             current_app.logger.error(msg)
@@ -384,7 +392,8 @@ def api_generate_apikey():
         user_domain_list = [item.name for item in user_domain_obj_list]
 
         current_app.logger.debug("Input zone list: {0}".format(domain_list))
-        current_app.logger.debug("User zone list: {0}".format(user_domain_list))
+        current_app.logger.debug(
+            "User zone list: {0}".format(user_domain_list))
 
         inter = set(domain_list).intersection(set(user_domain_list))
 
@@ -404,7 +413,8 @@ def api_generate_apikey():
         current_app.logger.error('Error: {0}'.format(e))
         raise ApiKeyCreateFail(message='Api key create failed')
 
-    apikey.plain_key = b64encode(apikey.plain_key.encode('utf-8')).decode('utf-8')
+    apikey.plain_key = b64encode(
+        apikey.plain_key.encode('utf-8')).decode('utf-8')
     return jsonify(apikey_plain_schema.dump(apikey)), 201
 
 
@@ -540,14 +550,16 @@ def api_update_apikey(apikey_id):
     elif not isinstance(data['domains'], (list,)):
         abort(400)
     else:
-        domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
+        domains = [d['name'] if isinstance(
+            d, dict) else d for d in data['domains']]
 
     if 'accounts' not in data:
         accounts = None
     elif not isinstance(data['accounts'], (list,)):
         abort(400)
     else:
-        accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
+        accounts = [a['name'] if isinstance(
+            a, dict) else a for a in data['accounts']]
 
     current_app.logger.debug('Updating apikey with id {0}'.format(apikey_id))
 
@@ -556,7 +568,8 @@ def api_update_apikey(apikey_id):
         current_accounts = [item.name for item in apikey.accounts]
 
         if domains is not None:
-            domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
+            domain_obj_list = Domain.query.filter(
+                Domain.name.in_(domains)).all()
             if len(domain_obj_list) != len(domains):
                 msg = "One of supplied zones does not exist"
                 current_app.logger.error(msg)
@@ -567,7 +580,8 @@ def api_update_apikey(apikey_id):
             target_domains = current_domains
 
         if accounts is not None:
-            account_obj_list = Account.query.filter(Account.name.in_(accounts)).all()
+            account_obj_list = Account.query.filter(
+                Account.name.in_(accounts)).all()
             if len(account_obj_list) != len(accounts):
                 msg = "One of supplied accounts does not exist"
                 current_app.logger.error(msg)
@@ -578,7 +592,8 @@ def api_update_apikey(apikey_id):
             target_accounts = current_accounts
 
         if len(target_domains) == 0 and len(target_accounts) == 0:
-            current_app.logger.error("Apikey with User role must have zones or accounts")
+            current_app.logger.error(
+                "Apikey with User role must have zones or accounts")
             raise ApiKeyNotUsable()
 
         if domains is not None and set(domains) == set(current_domains):
@@ -966,7 +981,8 @@ def api_delete_account(account_id):
     # Remove account association from domains first
     if len(account.domains) > 0:
         for domain in account.domains:
-            current_app.logger.info(f"Disassociating zone {domain.name} with {account.name}")
+            current_app.logger.info(
+                f"Disassociating zone {domain.name} with {account.name}")
             Domain(name=domain.name).assoc_account(None, update=False)
         current_app.logger.info("Syncing all zones")
         Domain().update()
@@ -1110,15 +1126,16 @@ def api_zone_forward(server_id, zone_id):
         domain = Domain()
         domain.update()
     status = resp.status_code
-    created_by_value=is_custom_header_api()
+    created_by_value = is_custom_header_api()
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
         if Setting().get('enable_api_rr_history'):
             if request.method in ['POST', 'PATCH']:
                 data = request.get_json(force=True)
                 history = History(
-                    msg='Apply record changes to zone {0}'.format(zone_id.rstrip('.')),
-                    detail = json.dumps({
+                    msg='Apply record changes to zone {0}'.format(
+                        zone_id.rstrip('.')),
+                    detail=json.dumps({
                         'domain': zone_id.rstrip('.'),
                         'add_rrsets': list(filter(lambda r: r['changetype'] == "REPLACE", data['rrsets'])),
                         'del_rrsets': list(filter(lambda r: r['changetype'] == "DELETE", data['rrsets']))
@@ -1159,7 +1176,7 @@ def api_create_zone(server_id):
 
     if resp.status_code == 201:
         current_app.logger.debug("Request to powerdns API successful")
-        created_by_value=is_custom_header_api()
+        created_by_value = is_custom_header_api()
         data = request.get_json(force=True)
 
         if g.apikey.role.name not in ['Administrator', 'Operator']:
@@ -1196,9 +1213,11 @@ def api_get_zones(server_id):
             domain_list = [d['name']
                            for d in domain_schema.dump(g.apikey.domains)]
 
-            accounts_domains = [d.name for a in g.apikey.accounts for d in a.domains]
+            accounts_domains = [
+                d.name for a in g.apikey.accounts for d in a.domains]
             allowed_domains = set(domain_list + accounts_domains)
-            current_app.logger.debug("Account zones: {}".format('/'.join(accounts_domains)))
+            current_app.logger.debug(
+                "Account zones: {}".format('/'.join(accounts_domains)))
             content = json.dumps([i for i in json.loads(resp.content)
                                   if i['name'].rstrip('.') in allowed_domains])
             return content, resp.status_code, resp.headers.items()

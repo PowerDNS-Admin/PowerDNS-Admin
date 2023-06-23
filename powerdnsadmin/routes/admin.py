@@ -7,6 +7,7 @@ from ast import literal_eval
 from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, \
     redirect, jsonify, abort, flash, session
 from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from ..decorators import operator_role_required, admin_role_required, history_access_required
 from ..models.user import User
@@ -23,6 +24,7 @@ from ..models.domain_template import DomainTemplate
 from ..models.domain_template_record import DomainTemplateRecord
 from ..models.api_key import ApiKey
 from ..models.base import db
+from .base import csrf
 
 from ..lib.errors import ApiKeyCreateFail
 from ..lib.schema import ApiPlainKeySchema
@@ -86,10 +88,12 @@ def get_record_changes(del_rrset, add_rrset):
                 # either edited or unchanged
                 if record_is_unchanged(del_record, add_record):
                     # unchanged
-                    changeset.append((to_state(del_record), to_state(add_record), "unchanged"))
+                    changeset.append(
+                        (to_state(del_record), to_state(add_record), "unchanged"))
                 else:
                     # edited
-                    changeset.append((to_state(del_record), to_state(add_record), "edit"))
+                    changeset.append(
+                        (to_state(del_record), to_state(add_record), "edit"))
                 del_records.remove(del_record)
                 break
         else:  # not mis-indented, else block for the del_records for loop
@@ -102,7 +106,8 @@ def get_record_changes(del_rrset, add_rrset):
         changeset.append((to_state(del_record), None, "deletion"))
 
     # Sort them by the old content. For Additions the new state will be used.
-    changeset.sort(key=lambda change: change[0]['content'] if change[0] else change[1]['content'])
+    changeset.sort(
+        key=lambda change: change[0]['content'] if change[0] else change[1]['content'])
 
     return changeset
 
@@ -118,6 +123,9 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
 
     for entry in histories:
         changes = []
+
+        if entry.detail is None:
+            continue
 
         if "add_rrsets" in entry.detail:
             details = json.loads(entry.detail)
@@ -142,8 +150,10 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
         for del_add_change in del_add_changes:
             changes.append(HistoryRecordEntry(
                 entry,
-                filter_rr_list_by_name_and_type(details['del_rrsets'], del_add_change[0], del_add_change[1]).pop(0),
-                filter_rr_list_by_name_and_type(details['add_rrsets'], del_add_change[0], del_add_change[1]).pop(0),
+                filter_rr_list_by_name_and_type(
+                    details['del_rrsets'], del_add_change[0], del_add_change[1]).pop(0),
+                filter_rr_list_by_name_and_type(
+                    details['add_rrsets'], del_add_change[0], del_add_change[1]).pop(0),
                 "*")
             )
 
@@ -158,7 +168,7 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
         # sort changes by the record name
         if changes:
             changes.sort(key=lambda change:
-            change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
+                         change.del_rrset['name'] if change.del_rrset else change.add_rrset['name']
                          )
             out_changes.extend(changes)
     return out_changes
@@ -175,7 +185,8 @@ class HistoryRecordEntry:
         self.history_entry = history_entry
         self.add_rrset = add_rrset
         self.del_rrset = del_rrset
-        self.change_type = change_type  # "*": edit or unchanged, "+" new tuple(name,type), "-" deleted (name,type) tuple
+        # "*": edit or unchanged, "+" new tuple(name,type), "-" deleted (name,type) tuple
+        self.change_type = change_type
         self.changed_fields = []  # contains a subset of : [ttl, name, type]
         self.changeSet = []  # all changes for the records of this add_rrset-del_rrset pair
 
@@ -367,8 +378,10 @@ def edit_key(key_id=None):
         # Create new apikey
         if create:
             if role == "User":
-                domain_obj_list = Domain.query.filter(Domain.name.in_(domain_list)).all()
-                account_obj_list = Account.query.filter(Account.name.in_(account_list)).all()
+                domain_obj_list = Domain.query.filter(
+                    Domain.name.in_(domain_list)).all()
+                account_obj_list = Account.query.filter(
+                    Account.name.in_(account_list)).all()
             else:
                 account_obj_list, domain_obj_list = [], []
 
@@ -439,7 +452,8 @@ def manage_keys():
                 history_apikey_id = apikey.id
                 history_apikey_role = apikey.role.name
                 history_apikey_description = apikey.description
-                history_apikey_domains = [domain.name for domain in apikey.domains]
+                history_apikey_domains = [
+                    domain.name for domain in apikey.domains]
 
                 apikey.delete()
             except Exception as e:
@@ -722,7 +736,8 @@ def edit_account(account_name=None):
         if result['status']:
             account = Account.query.filter(
                 Account.name == account_name).first()
-            old_domains = Domain.query.filter(Domain.account_id == account.id).all()
+            old_domains = Domain.query.filter(
+                Domain.account_id == account.id).all()
 
             for domain_name in new_domain_list:
                 domain = Domain.query.filter(
@@ -838,7 +853,7 @@ class DetailedHistory():
                                                        domaintype=detail_dict['domain_type'],
                                                        account=Account.get_name_by_id(self=None, account_id=detail_dict[
                                                            'account_id']) if detail_dict[
-                                                                                 'account_id'] != "0" else "None")
+                                                           'account_id'] != "0" else "None")
 
         elif 'authenticator' in detail_dict:  # this is a user authentication
             self.detailed_msg = render_template_string("""
@@ -864,10 +879,10 @@ class DetailedHistory():
                 </table>
                 """,
                                                        background_rgba="68,157,68" if detail_dict[
-                                                                                          'success'] == 1 else "201,48,44",
+                                                           'success'] == 1 else "201,48,44",
                                                        username=detail_dict['username'],
                                                        auth_result="success" if detail_dict[
-                                                                                    'success'] == 1 else "failure",
+                                                           'success'] == 1 else "failure",
                                                        authenticator=detail_dict['authenticator'],
                                                        ip_address=detail_dict['ip_address'])
 
@@ -881,13 +896,15 @@ class DetailedHistory():
                     <tr><td>Description:</td><td>{{ description }}</td></tr>
                 </table>
                 """,
-                                                       template_name=DetailedHistory.get_key_val(detail_dict, "name"),
+                                                       template_name=DetailedHistory.get_key_val(
+                                                           detail_dict, "name"),
                                                        description=DetailedHistory.get_key_val(detail_dict,
                                                                                                "description"))
 
         elif any(msg in history.msg for msg in ['Change zone',
                                                 'Change domain']) and 'access control' in history.msg:  # added or removed a user from a zone
-            users_with_access = DetailedHistory.get_key_val(detail_dict, "user_has_access")
+            users_with_access = DetailedHistory.get_key_val(
+                detail_dict, "user_has_access")
             self.detailed_msg = render_template_string("""
                 <table class="table table-bordered table-striped">
                     <tr><td>Users with access to this zone</td><td>{{ users_with_access }}</td></tr>
@@ -906,8 +923,10 @@ class DetailedHistory():
                     <tr><td>Accessible accounts with this API key:</td><td>{{ linked_accounts }}</td></tr>
                 </table>
                 """,
-                                                       keyname=DetailedHistory.get_key_val(detail_dict, "key"),
-                                                       rolename=DetailedHistory.get_key_val(detail_dict, "role"),
+                                                       keyname=DetailedHistory.get_key_val(
+                                                           detail_dict, "key"),
+                                                       rolename=DetailedHistory.get_key_val(
+                                                           detail_dict, "role"),
                                                        description=DetailedHistory.get_key_val(detail_dict,
                                                                                                "description"),
                                                        linked_domains=DetailedHistory.get_key_val(detail_dict,
@@ -924,8 +943,10 @@ class DetailedHistory():
                     <tr><td>Accessible zones with this API key:</td><td>{{ linked_domains }}</td></tr>
                 </table>
                 """,
-                                                       keyname=DetailedHistory.get_key_val(detail_dict, "key"),
-                                                       rolename=DetailedHistory.get_key_val(detail_dict, "role"),
+                                                       keyname=DetailedHistory.get_key_val(
+                                                           detail_dict, "key"),
+                                                       rolename=DetailedHistory.get_key_val(
+                                                           detail_dict, "role"),
                                                        description=DetailedHistory.get_key_val(detail_dict,
                                                                                                "description"),
                                                        linked_domains=DetailedHistory.get_key_val(detail_dict,
@@ -939,8 +960,10 @@ class DetailedHistory():
                     <tr><td>Masters:</td><td>{{ masters }}</td></tr>
                 </table>
                 """,
-                                                       domain=DetailedHistory.get_key_val(detail_dict, "domain"),
-                                                       domain_type=DetailedHistory.get_key_val(detail_dict, "type"),
+                                                       domain=DetailedHistory.get_key_val(
+                                                           detail_dict, "domain"),
+                                                       domain_type=DetailedHistory.get_key_val(
+                                                           detail_dict, "type"),
                                                        masters=DetailedHistory.get_key_val(detail_dict, "masters"))
 
         elif 'reverse' in history.msg:
@@ -990,7 +1013,8 @@ def convert_histories(histories):
     detailedHistories = []
     for history in histories:
         if history.detail and ('add_rrsets' in history.detail or 'del_rrsets' in history.detail):
-            detailedHistories.append(DetailedHistory(history, extract_changelogs_from_history([history])))
+            detailedHistories.append(DetailedHistory(
+                history, extract_changelogs_from_history([history])))
         else:
             detailedHistories.append(DetailedHistory(history, None))
     return detailedHistories
@@ -1152,40 +1176,43 @@ def history_table():  # ajax call data
                 .outerjoin(Account, Domain.account_id == Account.id) \
                 .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
                 .filter(db.or_(
-                DomainUser.user_id == current_user.id,
-                AccountUser.user_id == current_user.id
-            )) \
+                    DomainUser.user_id == current_user.id,
+                    AccountUser.user_id == current_user.id
+                )) \
                 .subquery()
-            base_query = base_query.filter(History.domain_id.in_(allowed_domain_id_subquery))
+            base_query = base_query.filter(
+                History.domain_id.in_(allowed_domain_id_subquery))
 
         domain_name = request.args.get('domain_name_filter') if request.args.get('domain_name_filter') != None \
-                                                                and len(
+            and len(
             request.args.get('domain_name_filter')) != 0 else None
         account_name = request.args.get('account_name_filter') if request.args.get('account_name_filter') != None \
-                                                                  and len(
+            and len(
             request.args.get('account_name_filter')) != 0 else None
         user_name = request.args.get('auth_name_filter') if request.args.get('auth_name_filter') != None \
-                                                            and len(request.args.get('auth_name_filter')) != 0 else None
+            and len(request.args.get('auth_name_filter')) != 0 else None
 
         min_date = request.args.get('min') if request.args.get('min') != None and len(
             request.args.get('min')) != 0 else None
         if min_date != None:  # get 1 day earlier, to check for timezone errors
-            min_date = str(datetime.datetime.strptime(min_date, '%Y-%m-%d') - datetime.timedelta(days=1))
+            min_date = str(datetime.datetime.strptime(
+                min_date, '%Y-%m-%d') - datetime.timedelta(days=1))
         max_date = request.args.get('max') if request.args.get('max') != None and len(
             request.args.get('max')) != 0 else None
         if max_date != None:  # get 1 day later, to check for timezone errors
-            max_date = str(datetime.datetime.strptime(max_date, '%Y-%m-%d') + datetime.timedelta(days=1))
+            max_date = str(datetime.datetime.strptime(
+                max_date, '%Y-%m-%d') + datetime.timedelta(days=1))
         tzoffset = request.args.get('tzoffset') if request.args.get('tzoffset') != None and len(
             request.args.get('tzoffset')) != 0 else None
         changed_by = request.args.get('user_name_filter') if request.args.get('user_name_filter') != None \
-                                                             and len(
+            and len(
             request.args.get('user_name_filter')) != 0 else None
         """
             Auth methods: LOCAL, Github OAuth, Azure OAuth, SAML, OIDC OAuth, Google OAuth
         """
         auth_methods = []
-        if (request.args.get('auth_local_only_checkbox') is None \
-                and request.args.get('auth_oauth_only_checkbox') is None \
+        if (request.args.get('auth_local_only_checkbox') is None
+                and request.args.get('auth_oauth_only_checkbox') is None
                 and request.args.get('auth_saml_only_checkbox') is None and request.args.get(
                     'auth_all_checkbox') is None):
             auth_methods = []
@@ -1199,7 +1226,8 @@ def history_table():  # ajax call data
             auth_methods.append("SAML")
 
         if request.args.get('domain_changelog_only_checkbox') != None:
-            changelog_only = True if request.args.get('domain_changelog_only_checkbox') == "on" else False
+            changelog_only = True if request.args.get(
+                'domain_changelog_only_checkbox') == "on" else False
         else:
             changelog_only = False
 
@@ -1211,41 +1239,41 @@ def history_table():  # ajax call data
             if not changelog_only:
                 histories = base_query \
                     .filter(
-                    db.and_(
-                        db.or_(
-                            History.msg.like("%domain " + domain_name) if domain_name != "*" else History.msg.like(
-                                "%domain%"),
-                            History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like(
-                                "%zone%"),
-                            History.msg.like(
-                                "%domain " + domain_name + " access control") if domain_name != "*" else History.msg.like(
-                                "%domain%access control"),
-                            History.msg.like(
-                                "%zone " + domain_name + " access control") if domain_name != "*" else History.msg.like(
-                                "%zone%access control")
-                        ),
-                        History.created_on <= max_date if max_date != None else True,
-                        History.created_on >= min_date if min_date != None else True,
-                        History.created_by == changed_by if changed_by != None else True
-                    )
-                ).order_by(History.created_on.desc()).limit(lim).all()
+                        db.and_(
+                            db.or_(
+                                History.msg.like("%domain " + domain_name) if domain_name != "*" else History.msg.like(
+                                    "%domain%"),
+                                History.msg.like("%zone " + domain_name) if domain_name != "*" else History.msg.like(
+                                    "%zone%"),
+                                History.msg.like(
+                                    "%domain " + domain_name + " access control") if domain_name != "*" else History.msg.like(
+                                    "%domain%access control"),
+                                History.msg.like(
+                                    "%zone " + domain_name + " access control") if domain_name != "*" else History.msg.like(
+                                    "%zone%access control")
+                            ),
+                            History.created_on <= max_date if max_date != None else True,
+                            History.created_on >= min_date if min_date != None else True,
+                            History.created_by == changed_by if changed_by != None else True
+                        )
+                    ).order_by(History.created_on.desc()).limit(lim).all()
             else:
                 # search for records changes only
                 histories = base_query \
                     .filter(
-                    db.and_(
-                        db.or_(
-                            History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*" \
+                        db.and_(
+                            db.or_(
+                                History.msg.like("Apply record changes to domain " + domain_name) if domain_name != "*"
                                 else History.msg.like("Apply record changes to domain%"),
-                            History.msg.like("Apply record changes to zone " + domain_name) if domain_name != "*" \
+                                History.msg.like("Apply record changes to zone " + domain_name) if domain_name != "*"
                                 else History.msg.like("Apply record changes to zone%"),
-                        ),
-                        History.created_on <= max_date if max_date != None else True,
-                        History.created_on >= min_date if min_date != None else True,
-                        History.created_by == changed_by if changed_by != None else True
+                            ),
+                            History.created_on <= max_date if max_date != None else True,
+                            History.created_on >= min_date if min_date != None else True,
+                            History.created_by == changed_by if changed_by != None else True
 
-                    )
-                ).order_by(History.created_on.desc()) \
+                        )
+                    ).order_by(History.created_on.desc()) \
                     .limit(lim).all()
         elif account_name != None:
             if current_user.role.name in ['Administrator', 'Operator']:
@@ -1253,26 +1281,26 @@ def history_table():  # ajax call data
                     .join(Domain, History.domain_id == Domain.id) \
                     .outerjoin(Account, Domain.account_id == Account.id) \
                     .filter(
-                    db.and_(
-                        Account.id == Domain.account_id,
-                        account_name == Account.name if account_name != "*" else True,
-                        History.created_on <= max_date if max_date != None else True,
-                        History.created_on >= min_date if min_date != None else True,
-                        History.created_by == changed_by if changed_by != None else True
-                    )
-                ).order_by(History.created_on.desc()) \
+                        db.and_(
+                            Account.id == Domain.account_id,
+                            account_name == Account.name if account_name != "*" else True,
+                            History.created_on <= max_date if max_date != None else True,
+                            History.created_on >= min_date if min_date != None else True,
+                            History.created_by == changed_by if changed_by != None else True
+                        )
+                    ).order_by(History.created_on.desc()) \
                     .limit(lim).all()
             else:
                 histories = base_query \
                     .filter(
-                    db.and_(
-                        Account.id == Domain.account_id,
-                        account_name == Account.name if account_name != "*" else True,
-                        History.created_on <= max_date if max_date != None else True,
-                        History.created_on >= min_date if min_date != None else True,
-                        History.created_by == changed_by if changed_by != None else True
-                    )
-                ).order_by(History.created_on.desc()) \
+                        db.and_(
+                            Account.id == Domain.account_id,
+                            account_name == Account.name if account_name != "*" else True,
+                            History.created_on <= max_date if max_date != None else True,
+                            History.created_on >= min_date if min_date != None else True,
+                            History.created_by == changed_by if changed_by != None else True
+                        )
+                    ).order_by(History.created_on.desc()) \
                     .limit(lim).all()
         elif user_name != None and current_user.role.name in ['Administrator',
                                                               'Operator']:  # only admins can see the user login-logouts
@@ -1281,10 +1309,10 @@ def history_table():  # ajax call data
                 db.and_(
                     db.or_(
                         History.msg.like(
-                            "User " + user_name + " authentication%") if user_name != "*" and user_name != None else History.msg.like(
+                            "User " + user_name + " authentication%") if user_name != "*" and user_name is not None else History.msg.like(
                             "%authentication%"),
                         History.msg.like(
-                            "User " + user_name + " was not authorized%") if user_name != "*" and user_name != None else History.msg.like(
+                            "User " + user_name + " was not authorized%") if user_name != "*" and user_name is not None else History.msg.like(
                             "User%was not authorized%")
                     ),
                     History.created_on <= max_date if max_date != None else True,
@@ -1328,7 +1356,8 @@ def history_table():  # ajax call data
                 )
             ).order_by(History.created_on.desc()).limit(lim).all()
         else:  # default view
-            histories = base_query.order_by(History.created_on.desc()).limit(lim).all()
+            histories = base_query.order_by(
+                History.created_on.desc()).limit(lim).all()
 
         detailedHistories = convert_histories(histories)
 
@@ -1339,7 +1368,8 @@ def history_table():  # ajax call data
             if max_date != None:
                 max_date_split = max_date.split()[0]
             for i, history_rec in enumerate(detailedHistories):
-                local_date = str(from_utc_to_local(int(tzoffset), history_rec.history.created_on).date())
+                local_date = str(from_utc_to_local(
+                    int(tzoffset), history_rec.history.created_on).date())
                 if (min_date != None and local_date == min_date_split) or (
                         max_date != None and local_date == max_date_split):
                     detailedHistories[i] = None
@@ -1399,6 +1429,7 @@ def setting_basic():
 @operator_role_required
 def setting_basic_edit(setting):
     jdata = request.json
+    csrf_token = jdata.get('_csrf_token', None)
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
 
@@ -1420,7 +1451,9 @@ def setting_basic_edit(setting):
 @login_required
 @operator_role_required
 def setting_basic_toggle(setting):
+    jdata = request.json
     result = Setting().toggle(setting)
+    csrf_token = jdata.get('_csrf_token', None)
     if (result):
         return make_response(
             jsonify({
@@ -1598,7 +1631,8 @@ def create_template_from_zone():
                     'status':
                         'error',
                     'msg':
-                        'A template with the name {0} already exists!'.format(name)
+                        'A template with the name {0} already exists!'.format(
+                            name)
                 }), 409)
 
         t = DomainTemplate(name=name, description=description)
@@ -1810,7 +1844,8 @@ def global_search():
                     .with_entities(Domain.name) \
                     .all()
                 allowed_domains = [value for value, in allowed_domains]
-                results = list(filter(lambda r: r['zone_id'][:-1] in allowed_domains, results))
+                results = list(
+                    filter(lambda r: r['zone_id'][:-1] in allowed_domains, results))
 
             # Format the search result
             for result in results:
@@ -1825,7 +1860,8 @@ def global_search():
                     records.append(result)
                 elif result['object_type'] == 'comment':
                     # Get the actual record name, exclude the domain part
-                    result['name'] = result['name'].replace(result['zone_id'], '')
+                    result['name'] = result['name'].replace(
+                        result['zone_id'], '')
                     if result['name']:
                         result['name'] = result['name'][:-1]
                     else:
@@ -1849,7 +1885,8 @@ def global_search():
 def validateURN(value):
     NID_PATTERN = re.compile(r'^[0-9a-z][0-9a-z-]{1,31}$', flags=re.IGNORECASE)
     NSS_PCHAR = '[a-z0-9-._~]|%[a-f0-9]{2}|[!$&\'()*+,;=]|:|@'
-    NSS_PATTERN = re.compile(fr'^({NSS_PCHAR})({NSS_PCHAR}|/|\?)*$', re.IGNORECASE)
+    NSS_PATTERN = re.compile(
+        fr'^({NSS_PCHAR})({NSS_PCHAR}|/|\?)*$', re.IGNORECASE)
 
     prefix = value.split(':')
     if (len(prefix) < 3):
