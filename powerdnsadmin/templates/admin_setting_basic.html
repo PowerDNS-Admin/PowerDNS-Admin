@@ -93,7 +93,7 @@
         var csrf_token = "{{ csrf_token() }}";
 
         // set up settings table
-        $("#tbl_settings").DataTable({
+        var table = $("#tbl_settings").DataTable({
             "paging": false,
             "lengthChange": false,
             "searching": true,
@@ -101,6 +101,9 @@
             "info": true,
             "autoWidth": false
         });
+
+        // add id to search input
+        $('input[type="search"]', table.table().container()).attr('id', id + '_search');
 
         $(document.body).on('click', '.setting-toggle-button', function () {
             var setting = $(this).prop('id');
