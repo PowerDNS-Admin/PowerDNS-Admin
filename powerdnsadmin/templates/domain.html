@@ -169,6 +169,9 @@
         window.nEditing = null;
         window.nNew = false;
 
+        var csrf_token = "{{ csrf_token() }}";
+        var unsavedChanges = false;
+
         // set up user data table
         $("#tbl_records").DataTable({
             "paging": true,
@@ -313,15 +316,14 @@
             var serial = $(".button_apply_changes").val();
             var info = "Are you sure you want to apply your changes?";
             modal.find('.modal-body p').text(info);
-
+            
             // following unbind("click") is to avoid multiple times execution
             modal.find('#button_apply_confirm').unbind("click").click(function () {
-                var data = {'serial': serial, 'record': getTableData(table), '_csrf_token': '{{ csrf_token() }}'};
-                applyRecordChanges(data, domain);
+                var data = {'serial': serial, 'record': getTableData(table)};
+                applyRecordChanges(data, domain, csrf_token);
                 modal.modal('hide');
-            })
+            });
             modal.modal('show');
-
         });
 
         // handle add record button
@@ -378,8 +380,6 @@
                 '_csrf_token': '{{ csrf_token() }}'
             }, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
         });
-
-        var unsavedChanges = false;
 
         function detectUnsavedChanges(table) {
             // Reset unsavedChanges to false at the start of the function
@@ -462,10 +462,6 @@
                 card.style.display = 'none';  // to hide the card
             }
         }
-
-
-
-        
 
         {% if SETTING.get('record_helper') %}
             //handle wacky record types
@@ -697,6 +693,7 @@
         {% endif %}
 
     </script>
+
 {% endblock %}
 
 {% block modals %}
@@ -772,20 +769,21 @@
             </div>
         </div>
     </div>
+
     <div class="modal" tabindex="-1" id="WarnLeave">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Unsaved Changes</h5>
-          </div>
-          <div class="modal-body">
-            <p>You have unsaved changes. Are you sure you want to navigate away?</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="stay">Stay</button>
-            <button type="button" class="btn btn-secondary" id="leave">Leave</button>
-          </div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Unsaved Changes</h5>
+                </div>
+                <div class="modal-body">
+                    <p>You have unsaved changes. Are you sure you want to navigate away?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="stay">Stay</button>
+                    <button type="button" class="btn btn-secondary" id="leave">Leave</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 {% endblock %}

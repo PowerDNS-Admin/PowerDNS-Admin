@@ -85,6 +85,9 @@
 
 {% block extrascripts %}
     <script>
+
+        var csrf_token = "{{ csrf_token() }}";
+
         // set up settings table
         $("#tbl_settings").DataTable({
             "paging": false,
@@ -94,22 +97,23 @@
             "info": true,
             "autoWidth": false
         });
+
         $(document.body).on('click', '.setting-toggle-button', function () {
             var setting = $(this).prop('id');
-            applyChanges({
-                '_csrf_token': '{{ csrf_token() }}'
-            }, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
+            var data = {'value': setting, '_csrf_token': csrf_token};
+            applyChanges(data, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true, csrf_token);
         });
 
         $(document.body).on('click', '.setting-save-button', function () {
             var setting = $(this).prop('id');
             var target = $(this).data('target');
             var value = $('#' + target).val();
-            var postdata = {
+            var data = {
                 'value': value,
-                '_csrf_token': '{{ csrf_token() }}'
+                '_csrf_token': csrf_token
             };
-            applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
+            applyChanges(data, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true, csrf_token)
         });
+
     </script>
 {% endblock %}

@@ -4,9 +4,12 @@ import datetime
 import traceback
 import dns.name
 import dns.reversename
+from .base import csrf
 from distutils.version import StrictVersion
-from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session, jsonify
 from flask_login import login_required, current_user, login_manager
+from flask_wtf.csrf import CSRFProtect, CSRFError
+#from index import csrf
 
 from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
@@ -58,6 +61,7 @@ def before_request():
 def domain(domain_name):
     # Validate the domain existing in the local DB
     domain = Domain.query.filter(Domain.name == domain_name).first()
+    current_app.logger.error(domain)
     if not domain:
         abort(404)
 
@@ -66,7 +70,7 @@ def domain(domain_name):
     current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
-    if not rrsets and domain.type != 'slave':
+    if not rrsets and domain.type != 'secondary':
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
@@ -120,6 +124,7 @@ def domain(domain_name):
                     records.append(record_entry)
     else:
         # Unsupported version
+        current_app.logger.error("unsupported")
         abort(500)
 
     if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
@@ -326,6 +331,7 @@ def add():
                     msg="Please enter a valid zone name"), 400
 
             if domain_type == 'slave':
+                current_app.logger.error("slave-yes")
                 if request.form.getlist('domain_master_address'):
                     domain_master_string = request.form.getlist(
                         'domain_master_address')[0]
@@ -628,8 +634,13 @@ def change_account(domain_name):
 @login_required
 @can_access_domain
 def record_apply(domain_name):
+    print(request.json)
     try:
+        # Begin changes here
         jdata = request.json
+        csrf_token = jdata.get('_csrf_token', None)
+        current_app.logger.error(csrf_token)
+        # End changes here
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']
         domain = Domain.query.filter(Domain.name == domain_name).first()
@@ -680,15 +691,14 @@ def record_apply(domain_name):
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 400)
+    except CSRFError:
+        return make_response(jsonify({'status': 'error', 'msg': 'Invalid CSRF token'}), 403)
     except Exception as e:
-        current_app.logger.error(
-            'Cannot apply record changes. Error: {0}'.format(e))
+        print("Error: ", str(e))
+        traceback.print_exc()  # make sure to import traceback at the top of your file
+        current_app.logger.error('Cannot apply record changes. Error: {0}'.format(e))
         current_app.logger.debug(traceback.format_exc())
-        return make_response(
-            jsonify({
-                'status': 'error',
-                'msg': 'Error when applying new changes'
-            }), 500)
+        return make_response(jsonify({'status': 'error', 'msg': 'Error when applying new changes'}), 500)
 
 
 @domain_bp.route('/<path:domain_name>/update',

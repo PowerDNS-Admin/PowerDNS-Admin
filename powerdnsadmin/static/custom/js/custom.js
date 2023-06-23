@@ -1,13 +1,23 @@
 var dnssecKeyList = []
 
-function applyChanges(data, url, showResult, refreshPage) {
+var csrf_token = "{{ csrf_token() }}";
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrf_token);
+        }
+    }
+});
+
+function applyChanges(data, url, showResult, refreshPage, csrf_token) {
     $.ajax({
         type : "POST",
         url : url,
-        data : JSON.stringify(data),// now data come in this function
+        data : JSON.stringify(data), // now data come in this function
         contentType : "application/json; charset=utf-8",
-        crossDomain : true,
         dataType : "json",
+        headers: { 'X-CSRFToken': csrf_token }, // Add the CSRF token to the request header
         success : function(data, status, jqXHR) {
             console.log("Applied changes successfully.");
             console.log(data);
@@ -21,38 +31,39 @@ function applyChanges(data, url, showResult, refreshPage) {
 
         error : function(jqXHR, status) {
             console.log(jqXHR);
-            var responseJson = jQuery.parseJSON(jqXHR.responseText);
+            var responseJson = JSON.parse(jqXHR.responseText);
             showErrorModal(responseJson['msg']);
         }
     });
 }
 
-function applyRecordChanges(data, domain) {
+function applyRecordChanges(data, domain, csrf_token) {
     $.ajax({
-        type : "POST",
-        url : $SCRIPT_ROOT + '/domain/' + domain + '/apply',
-        data : JSON.stringify(data),// now data come in this function
-        contentType : "application/json; charset=utf-8",
-        crossDomain : true,
-        dataType : "json",
-        success : function(data, status, jqXHR) {
+        type: "POST",
+        url: $SCRIPT_ROOT + '/domain/' + domain + '/apply',
+        data: JSON.stringify(data), // now data come in this function
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        headers: { 'X-CSRFToken': csrf_token }, // Add the CSRF token to the request header
+        success: function (data, status, jqXHR) {
             // update Apply button value
-            $.getJSON($SCRIPT_ROOT + '/domain/' + domain + '/info', function(data) {
+            $.getJSON($SCRIPT_ROOT + '/domain/' + domain + '/info', function (data) {
                 $(".button_apply_changes").val(data['serial']);
             });
 
             console.log("Applied changes successfully.")
-            showSuccessModal("Applied changes successfully");
-            setTimeout(() => {window.location.reload()}, 2000);
+            showSuccessModal("Applied changes successfully. Window will automatically reload in 2 seconds.");
+            setTimeout(() => { window.location.reload() }, 2000);
         },
 
-        error : function(jqXHR, status) {
+        error: function (jqXHR, status) {
             console.log(jqXHR);
-            var responseJson = jQuery.parseJSON(jqXHR.responseText);
+            var responseJson = JSON.parse(jqXHR.responseText);
             showErrorModal(responseJson['msg']);
         }
     });
 }
+
 
 function getTableData(table) {
     // reformat - pretty format

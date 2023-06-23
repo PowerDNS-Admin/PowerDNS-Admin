@@ -9,8 +9,9 @@ import string
 from zxcvbn import zxcvbn
 from distutils.util import strtobool
 from yaml import Loader, load
-from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
+from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import generate_csrf
 
 from .base import captcha, csrf, login_manager
 from ..lib import utils
@@ -220,7 +221,8 @@ def login():
         return authenticate_user(user, 'Github OAuth')
 
     if 'azure_token' in session:
-        azure_info = azure.get('me?$select=displayName,givenName,id,mail,surname,userPrincipalName').text
+        azure_info = azure.get(
+            'me?$select=displayName,givenName,id,mail,surname,userPrincipalName').text
         current_app.logger.info('Azure login returned: ' + azure_info)
         user_data = json.loads(azure_info)
 
@@ -258,7 +260,8 @@ def login():
 
             result = user.create_local_user()
             if not result['status']:
-                current_app.logger.warning('Unable to create ' + azure_username)
+                current_app.logger.warning(
+                    'Unable to create ' + azure_username)
                 session.pop('azure_token', None)
                 # note: a redirect to login results in an endless loop, so render the login page instead
                 return render_template('login.html',
@@ -350,7 +353,8 @@ def login():
 
                     account = Account()
                     sanitized_group_name = Account.sanitize_name(group_name)
-                    account_id = account.get_id_by_name(account_name=sanitized_group_name)
+                    account_id = account.get_id_by_name(
+                        account_name=sanitized_group_name)
 
                     if account_id:
                         account = Account.query.get(account_id)
@@ -387,7 +391,8 @@ def login():
                         history = History(msg='Update account {0}'.format(account.name),
                                           created_by='System')
                         history.add()
-                    current_app.logger.warning('group info: {} '.format(account_id))
+                    current_app.logger.warning(
+                        'group info: {} '.format(account_id))
 
         return authenticate_user(user, 'Azure OAuth')
 
@@ -429,15 +434,18 @@ def login():
             # If the name_property and desc_property exist in me (A variable that contains all the userinfo from the
             # IdP).
             if name_prop in user_data and desc_prop in user_data:
-                accounts_name_prop = [user_data[name_prop]] if type(user_data[name_prop]) is not list else user_data[name_prop]
-                accounts_desc_prop = [user_data[desc_prop]] if type(user_data[desc_prop]) is not list else user_data[desc_prop]
+                accounts_name_prop = [user_data[name_prop]] if type(
+                    user_data[name_prop]) is not list else user_data[name_prop]
+                accounts_desc_prop = [user_data[desc_prop]] if type(
+                    user_data[desc_prop]) is not list else user_data[desc_prop]
 
                 # Run on all groups the user is in by the index num.
                 for i in range(len(accounts_name_prop)):
                     description = ''
                     if i < len(accounts_desc_prop):
                         description = accounts_desc_prop[i]
-                    account = handle_account(accounts_name_prop[i], description)
+                    account = handle_account(
+                        accounts_name_prop[i], description)
 
                     account_to_add.append(account)
                 user_accounts = user.get_accounts()
@@ -517,7 +525,8 @@ def login():
 
         if Setting().get('autoprovisioning') and auth_method != 'LOCAL':
             urn_value = Setting().get('urn_value')
-            Entitlements = user.read_entitlements(Setting().get('autoprovisioning_attribute'))
+            Entitlements = user.read_entitlements(
+                Setting().get('autoprovisioning_attribute'))
             if len(Entitlements) == 0 and Setting().get('purge'):
                 user.set_role("User")
                 user.revoke_privilege(True)
@@ -531,7 +540,8 @@ def login():
                     if Setting().get('purge'):
                         user.set_role("User")
                         user.revoke_privilege(True)
-                        current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.')
+                        current_app.logger.warning(
+                            'Procceding to revoke every privilige from ' + user.username + '.')
 
         return authenticate_user(user, auth_method, remember_me)
 
@@ -638,15 +648,13 @@ def logout():
         if current_app.config.get('SAML_LOGOUT_URL'):
             return redirect(
                 auth.logout(
-                    name_id_format=
-                    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+                    name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
                     return_to=current_app.config.get('SAML_LOGOUT_URL'),
                     session_index=session['samlSessionIndex'],
                     name_id=session['samlNameId']))
         return redirect(
             auth.logout(
-                name_id_format=
-                "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+                name_id_format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
                 session_index=session['samlSessionIndex'],
                 name_id=session['samlNameId']))
 
@@ -702,22 +710,26 @@ def password_policy_check(user, password):
         # Cannot contain username
         if user.username in password:
             policy_fails["username"] = True
-        policy.append(f"{matches_policy('username', policy_fails)}cannot contain username")
+        policy.append(
+            f"{matches_policy('username', policy_fails)}cannot contain username")
 
         # Cannot contain password
         if user.firstname in password:
             policy_fails["firstname"] = True
-        policy.append(f"{matches_policy('firstname', policy_fails)}cannot contain firstname")
+        policy.append(
+            f"{matches_policy('firstname', policy_fails)}cannot contain firstname")
 
         # Cannot contain lastname
         if user.lastname in password:
             policy_fails["lastname"] = True
-        policy.append(f"{matches_policy('lastname', policy_fails)}cannot contain lastname")
+        policy.append(
+            f"{matches_policy('lastname', policy_fails)}cannot contain lastname")
 
         # Cannot contain email
         if user.email in password:
             policy_fails["email"] = True
-        policy.append(f"{matches_policy('email', policy_fails)}cannot contain email")
+        policy.append(
+            f"{matches_policy('email', policy_fails)}cannot contain email")
 
     # Check if we're enforcing character requirements
     if Setting().get('pwd_enforce_characters'):
@@ -726,29 +738,36 @@ def password_policy_check(user, password):
         pwd_len = len(password)
         if pwd_len < pwd_min_len_setting:
             policy_fails["length"] = True
-        policy.append(f"{matches_policy('length', policy_fails)}length={pwd_len}/{pwd_min_len_setting}")
+        policy.append(
+            f"{matches_policy('length', policy_fails)}length={pwd_len}/{pwd_min_len_setting}")
         # Digits
-        (pwd_min_digits_setting, pwd_digits) = check_policy(string.digits, password, 'pwd_min_digits')
+        (pwd_min_digits_setting, pwd_digits) = check_policy(
+            string.digits, password, 'pwd_min_digits')
         if pwd_digits < pwd_min_digits_setting:
             policy_fails["digits"] = True
-        policy.append(f"{matches_policy('digits', policy_fails)}digits={pwd_digits}/{pwd_min_digits_setting}")
+        policy.append(
+            f"{matches_policy('digits', policy_fails)}digits={pwd_digits}/{pwd_min_digits_setting}")
         # Lowercase
-        (pwd_min_lowercase_setting, pwd_lowercase) = check_policy(string.digits, password, 'pwd_min_lowercase')
+        (pwd_min_lowercase_setting, pwd_lowercase) = check_policy(
+            string.digits, password, 'pwd_min_lowercase')
         if pwd_lowercase < pwd_min_lowercase_setting:
             policy_fails["lowercase"] = True
         policy.append(
             f"{matches_policy('lowercase', policy_fails)}lowercase={pwd_lowercase}/{pwd_min_lowercase_setting}")
         # Uppercase
-        (pwd_min_uppercase_setting, pwd_uppercase) = check_policy(string.digits, password, 'pwd_min_uppercase')
+        (pwd_min_uppercase_setting, pwd_uppercase) = check_policy(
+            string.digits, password, 'pwd_min_uppercase')
         if pwd_uppercase < pwd_min_uppercase_setting:
             policy_fails["uppercase"] = True
         policy.append(
             f"{matches_policy('uppercase', policy_fails)}uppercase={pwd_uppercase}/{pwd_min_uppercase_setting}")
         # Special
-        (pwd_min_special_setting, pwd_special) = check_policy(string.digits, password, 'pwd_min_special')
+        (pwd_min_special_setting, pwd_special) = check_policy(
+            string.digits, password, 'pwd_min_special')
         if pwd_special < pwd_min_special_setting:
             policy_fails["special"] = True
-        policy.append(f"{matches_policy('special', policy_fails)}special={pwd_special}/{pwd_min_special_setting}")
+        policy.append(
+            f"{matches_policy('special', policy_fails)}special={pwd_special}/{pwd_min_special_setting}")
 
     if Setting().get('pwd_enforce_complexity'):
         # Complexity checking
@@ -765,7 +784,8 @@ def password_policy_check(user, password):
         policy.append(
             f"{matches_policy('complexity', policy_fails)}complexity={pwd_complexity:.0f}/{pwd_min_complexity_setting}")
 
-    policy_str = {"password": f"Fails policy: {', '.join(policy)}. Items prefixed with '*' failed."}
+    policy_str = {
+        "password": f"Fails policy: {', '.join(policy)}. Items prefixed with '*' failed."}
 
     # NK: the first item in the tuple indicates a PASS, so, we check for any True's and negate that
     return (not any(policy_fails.values()), policy_str)
@@ -787,7 +807,8 @@ def register():
             email = request.form.get('email', '').strip()
             rpassword = request.form.get('rpassword', '')
 
-            is_valid_email = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+            is_valid_email = re.compile(
+                r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
             error_messages = {}
             if not firstname:
@@ -823,7 +844,8 @@ def register():
                         email=email
                         )
 
-            (password_policy_pass, password_policy) = password_policy_check(user, password)
+            (password_policy_pass, password_policy) = password_policy_check(
+                user, password)
             if not password_policy_pass:
                 return render_template('register.html', error_messages=password_policy, captcha_enable=CAPTCHA_ENABLE)
 
@@ -980,8 +1002,7 @@ def dyndns_update():
 
     if not domain:
         history = History(
-            msg=
-            "DynDNS update: attempted update of {0} but it does not exist for this user"
+            msg="DynDNS update: attempted update of {0} but it does not exist for this user"
             .format(hostname),
             created_by=current_user.username)
         history.add()
@@ -1009,8 +1030,7 @@ def dyndns_update():
             if r.data == str(ip):
                 # Record content did not change, return 'nochg'
                 history = History(
-                    msg=
-                    "DynDNS update: attempted update of {0} but record already up-to-date"
+                    msg="DynDNS update: attempted update of {0} but record already up-to-date"
                     .format(hostname),
                     created_by=current_user.username,
                     domain_id=domain.id)
@@ -1020,7 +1040,8 @@ def dyndns_update():
                 result = r.update(domain.name, str(ip))
                 if result['status'] == 'ok':
                     history = History(
-                        msg='DynDNS update: updated {} successfully'.format(hostname),
+                        msg='DynDNS update: updated {} successfully'.format(
+                            hostname),
                         detail=json.dumps({
                             'domain': domain.name,
                             'record': hostname,
@@ -1060,8 +1081,7 @@ def dyndns_update():
                 result = Record().add(domain.name, rrset)
                 if result['status'] == 'ok':
                     history = History(
-                        msg=
-                        'DynDNS update: created record {0} in zone {1} successfully'
+                        msg='DynDNS update: created record {0} in zone {1} successfully'
                         .format(hostname, domain.name, str(ip)),
                         detail=json.dumps({
                             'domain': domain.name,
@@ -1074,8 +1094,7 @@ def dyndns_update():
                     response = 'good'
         else:
             history = History(
-                msg=
-                'DynDNS update: attempted update of {0} but it does not exist for this user'
+                msg='DynDNS update: attempted update of {0} but it does not exist for this user'
                 .format(hostname),
                 created_by=current_user.username)
             history.add()
@@ -1136,7 +1155,7 @@ def saml_authorized():
         self_url = OneLogin_Saml2_Utils.get_self_url(req)
         self_url = self_url + req['script_name']
         if 'RelayState' in request.form and self_url != request.form[
-            'RelayState']:
+                'RelayState']:
             return redirect(auth.redirect_to(request.form['RelayState']))
         if current_app.config.get('SAML_ATTRIBUTE_USERNAME', False):
             username = session['samlUserdata'][
@@ -1323,3 +1342,10 @@ def swagger_spec():
     resp.headers['Content-Type'] = 'application/json'
 
     return resp
+
+
+@index_bp.route('/get-csrf-token/', methods=['GET'])
+def get_csrf_token():
+    token = generate_csrf()
+    session['csrf_token'] = token
+    return jsonify({'csrf_token': token}), 200
