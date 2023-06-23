@@ -1428,11 +1428,8 @@ def setting_basic():
 @login_required
 @operator_role_required
 def setting_basic_edit(setting):
-    current_app.logger.error(0)
     jdata = request.json
-    current_app.logger.error(1)
     csrf_token = jdata.get('_csrf_token', None)
-    current_app.logger.error(2)
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
 
@@ -1454,9 +1451,7 @@ def setting_basic_edit(setting):
 @login_required
 @operator_role_required
 def setting_basic_toggle(setting):
-    current_app.logger.error(0)
     jdata = request.json
-    current_app.logger.error(1)
     result = Setting().toggle(setting)
     csrf_token = jdata.get('_csrf_token', None)
     if (result):
