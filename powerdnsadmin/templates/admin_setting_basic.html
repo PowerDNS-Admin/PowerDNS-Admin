@@ -38,10 +38,14 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for setting in settings %}
+                            {% for setting in settings %}
                             <tr class="odd">
                                 <td>
-                                    <label for="value{{ loop.index }}">{{ setting }}</label>
+                                    {% if SETTING.get(setting) in [False, True] %}
+                                        {{ setting }}
+                                    {% else %}
+                                        <label for="value{{ loop.index }}">{{ setting }}</label>
+                                    {% endif %}
                                 </td>
                                 {% if SETTING.get(setting) in [False] %}
                                     <td><i class="fas fa-toggle-off"></i>&nbsp;Off</td>
