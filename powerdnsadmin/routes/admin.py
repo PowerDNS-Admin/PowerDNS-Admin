@@ -36,7 +36,6 @@ admin_bp = Blueprint('admin',
                      template_folder='templates',
                      url_prefix='/admin')
 
-
 def get_record_changes(del_rrset, add_rrset):
     """Use the given deleted and added RRset to build a list of record changes.
 
@@ -226,6 +225,10 @@ def before_request():
         minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
+@admin_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    current_app.logger.error('CSRF error: {0}'.format(e))
+    return render_template('errors/500.html'), 500
 
 @admin_bp.route('/server/statistics', methods=['GET'])
 @login_required
