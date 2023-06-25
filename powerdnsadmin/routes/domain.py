@@ -9,7 +9,6 @@ from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session, jsonify
 from flask_login import login_required, current_user, login_manager
 from flask_wtf.csrf import CSRFProtect, CSRFError
-#from index import csrf
 
 from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
@@ -41,7 +40,7 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
-    # Check site is in maintenance mode
+    # Check if site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
             'Administrator', 'Operator'
@@ -54,92 +53,97 @@ def before_request():
         minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
+def is_supported_pdns_version():
+    return StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0')
+
+def get_formatted_name(r, domain_name):
+    r_name = r['name'].rstrip('.')
+    if r_name.endswith(domain_name):
+        r_name = r_name[:-len("." + domain_name)]
+    if r_name == '':
+        r_name = '@'
+    pretty_v6 = Setting().get('pretty_ipv6_ptr')
+
+    if pretty_v6 and r['type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+        return dns.reversename.to_address(dns.name.from_text(r_name))
+    
+    return r_name
+
+def create_record_entries(rrsets, records_allow_to_edit, domain_name):
+    records = []
+    for r in rrsets:
+        if r['type'] in records_allow_to_edit:
+            r_name = get_formatted_name(r, domain_name)
+            for index, record in enumerate(r['records']):
+                comment = r['comments'][index]['content'] if len(r['comments']) > index else ''
+                record_entry = {
+                    'name': r_name,
+                    'type': r['type'],
+                    'status': 'Disabled' if record['disabled'] else 'Active',
+                    'ttl': r['ttl'],
+                    'data': record['content'],
+                    'comment': comment,
+                    'is_allowed_edit': True,
+                    'is_allowed_delete': False if r['type'] == "SOA" else True,
+                }
+                records.append(record_entry)
+    return records
+
+
+def fetch_domain(domain_name):
+    return Domain.query.filter(Domain.name == domain_name).first()
+
+def get_rrsets(domain_name):
+    return Record().get_rrsets(domain_name)
+    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
+
+def get_editable_records(domain_name):
+    forward_records_allow_to_edit = Setting().get_supported_record_types(Setting().ZONE_TYPE_FORWARD)
+    reverse_records_allow_to_edit = Setting().get_supported_record_types(Setting().ZONE_TYPE_REVERSE)
+    
+    return forward_records_allow_to_edit if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name) else reverse_records_allow_to_edit
+
+def domain_to_dict(domain):
+    return {
+        "name": domain.name,
+        "type": domain.type,
+        "serial": domain.serial
+    }
+
+def user_to_dict(user):
+    return {
+        "username": user.username,
+        "role": user.role.name
+    }
 
 @domain_bp.route('/<path:domain_name>', methods=['GET'])
 @login_required
 @can_access_domain
 def domain(domain_name):
-    # Validate the domain existing in the local DB
-    domain = Domain.query.filter(Domain.name == domain_name).first()
-    current_app.logger.error(domain)
-    if not domain:
-        abort(404)
-
-    # Query domain's rrsets from PowerDNS API
-    rrsets = Record().get_rrsets(domain.name)
-    current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
-
-    # API server might be down, misconfigured
-    if not rrsets and domain.type != 'secondary':
-        abort(500)
-
-    quick_edit = Setting().get('record_quick_edit')
-    records_allow_to_edit = Setting().get_records_allow_to_edit()
-    forward_records_allow_to_edit = Setting(
-    ).get_supported_record_types(Setting().ZONE_TYPE_FORWARD)
-    reverse_records_allow_to_edit = Setting(
-    ).get_supported_record_types(Setting().ZONE_TYPE_REVERSE)
-    ttl_options = Setting().get_ttl_options()
-    records = []
-
-    # Render the "records" to display in HTML datatable
-    #
-    # BUG: If we have multiple records with the same name
-    # and each record has its own comment, the display of
-    # [record-comment] may not consistent because PDNS API
-    # returns the rrsets (records, comments) has different
-    # order than its database records.
-    # TODO:
-    #   - Find a way to make it consistent, or
-    #   - Only allow one comment for that case
-    if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
-        pretty_v6 = Setting().get('pretty_ipv6_ptr')
-        for r in rrsets:
-            if r['type'] in records_allow_to_edit:
-                r_name = r['name'].rstrip('.')
-
-                # If it is reverse zone and pretty_ipv6_ptr setting
-                # is enabled, we reformat the name for ipv6 records.
-                if pretty_v6 and r['type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
-                    r_name = dns.reversename.to_address(
-                        dns.name.from_text(r_name))
-
-                # Create the list of records in format that
-                # PDA jinja2 template can understand.
-                index = 0
-                for record in r['records']:
-                    if (len(r['comments'])>index):
-                        c=r['comments'][index]['content']
-                    else:
-                        c=''
-                    record_entry = RecordEntry(
-                        name=r_name,
-                        type=r['type'],
-                        status='Disabled' if record['disabled'] else 'Active',
-                        ttl=r['ttl'],
-                        data=record['content'],
-                        comment=c,
-                        is_allowed_edit=True)
-                    index += 1
-                    records.append(record_entry)
-    else:
-        # Unsupported version
-        current_app.logger.error("unsupported")
-        abort(500)
-
-    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
-        editable_records = forward_records_allow_to_edit
-    else:
-        editable_records = reverse_records_allow_to_edit
-
+    # Only rendering the template without data
     return render_template('domain.html',
-                           domain=domain,
-                           records=records,
-                           editable_records=editable_records,
-                           quick_edit=quick_edit,
-                           ttl_options=ttl_options,
+                           domain=Domain.query.filter(Domain.name == domain_name).first(),
+                           quick_edit=Setting().get('record_quick_edit'),
                            current_user=current_user,
                            allow_user_view_history=Setting().get('allow_user_view_history'))
+
+@domain_bp.route('/<path:domain_name>/data', methods=['GET'])
+@login_required
+@can_access_domain
+def domain_data(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    current_app.logger.debug(domain.name)
+    current_app.logger.debug(domain.serial)
+    rrsets = get_rrsets(domain.name)
+    records_allow_to_edit = Setting().get_records_allow_to_edit()
+    records = create_record_entries(rrsets, records_allow_to_edit, domain_name)
+    editable_records = get_editable_records(domain_name)
+    return jsonify(domain=domain_to_dict(domain),
+                   records=records,
+                   editable_records=editable_records,
+                   ttl_options=Setting().get_ttl_options(),
+                   allow_user_view_history=Setting().get('allow_user_view_history'),
+                   current_user=user_to_dict(current_user))
 
 
 @domain_bp.route('/remove', methods=['GET', 'POST'])
@@ -296,7 +300,7 @@ def add():
             domain_type = request.form.getlist('radio_type')[0]
             domain_template = request.form.getlist('domain_template')[0]
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
-            account_id = request.form.getlist('accountid')[0]
+            account_id = request.form.getlist('selAccount')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
                 return render_template(
@@ -331,7 +335,6 @@ def add():
                     msg="Please enter a valid zone name"), 400
 
             if domain_type == 'slave':
-                current_app.logger.error("slave-yes")
                 if request.form.getlist('domain_master_address'):
                     domain_master_string = request.form.getlist(
                         'domain_master_address')[0]
