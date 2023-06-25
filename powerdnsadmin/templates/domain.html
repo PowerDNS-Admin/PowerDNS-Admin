@@ -11,7 +11,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" id="domain-name"></li>
+                        <li class="breadcrumb-item active" id="breadcrumb-active"></li>
                     </ol>
                 </div>
             </div>
@@ -34,9 +34,9 @@
 
             <div class="card" id="spinner-card">
                 <div class="card-header">
-                    <h3 class="card-title">Loading Zone Records</h3>
+                    <h3 class="card-title">Loading Zone Records...</h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <div class="spinner-border text-primary" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
@@ -46,8 +46,8 @@
 
             <div class="row">
                 <div class="col-12">
-                    <div class="card" id="zone-card" style="display: none;">
-                        <div class="card-header">
+                    <div class="card" id="card-zone" style="display: none;">
+                        <div class="card-header" id="card-zone-header" style="display: none;">
                             <h3 class="card-title">Zone Editor</h3>
                             <div class="card-tools">
                                 {% if current_user.role.name in ['Administrator', 'Operator'] %}
@@ -81,7 +81,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="card-body table-responsive">
+                        <div class="card-body table-responsive" id="card-zone-body" style="display: none;">
                             <table id="tbl_records" class="table table-bordered table-striped table-hover table-sm">
                                 <thead>
                                 <tr>
@@ -138,6 +138,7 @@
 
                 // Update the domain data
                 $('#page-title').text("Zone Records - " + data.domain.name +  '- {{ SITE_NAME }}');
+                $('#breadcrumb-active').text("Zone Records - " + data.domain.name);
                 $('#button-zone-settings').click(function() {
                     window.location.href = $SCRIPT_ROOT + '/domain/setting/' + data.domain.name + '/manage';
                 });
@@ -152,6 +153,11 @@
                 } else {
                     $('#button-update-from-primary').show();
                 }
+
+                $('#spinner-card').hide();
+                $('#card-zone').show();
+                $('#card-zone-header').show();
+                $('#card-zone-body').show();
 
                 var currentUserRole = data.current_user.role;
                 var allowUserViewHistory = data.allow_user_view_history;
@@ -282,14 +288,23 @@
                     nNew = true;
                 });
             });
-            $('#spinner-card').hide();
-            $('#zone-card').show();
+
         });
 
         function show_record_changelog(record_name, record_type, e) {
             e.stopPropagation();
-            window.location.href = '/domain/' + "{{ domain.name }}" + '/changelog/' + record_name + "." + "{{ domain.name }}" + "./" + record_type;
+            var domainName = "{{ domain.name }}";
+            var url;
+
+            if(record_name === "@") {
+                recordChangelogUrl = '/domain/' + domainName + '/changelog/' + domainName + './' + record_type;
+            } else {
+                recordChangelogUrl = '/domain/' + domainName + '/changelog/' + record_name + "." + domainName + './' + record_type;
+            }
+
+            window.location.href = recordChangelogUrl;
         }
+
 
         // handle changelog button
         $(document.body).on("click", ".button_changelog", function (e) {
@@ -359,14 +374,51 @@
             var table = $("#tbl_records").DataTable();
             var domain = $(this).data('domain-name');
             var serial = $(this).data('domain-serial');
-            var info = "Are you sure you want to apply your changes?";
-            modal.find('.modal-body p').text(info);
+            var info = '<p id="info-text">Are you sure you want to apply your changes?</p>';
+            var spinner = '<div class="spinner-border text-primary" role="status" id="spinner" style="display:none;"><span class="sr-only">Loading...</span></div>';
+            modal.find('.modal-body').html(info + spinner);
             
+            // Hide OK button initially
+            modal.find("#button_ok").hide();
+
             // following unbind("click") is to avoid multiple times execution
             modal.find('#button_apply_confirm').unbind("click").click(function () {
                 var data = {'serial': serial, 'record': getTableData(table)};
-                applyRecordChanges(data, domain, csrf_token);
-                modal.modal('hide');
+
+                // Hide info text and show spinner
+                $("#info-text").hide();
+                $("#spinner").show();
+                // Change the modal header title
+                modal.find('.modal-title').text('Applying changes');
+                // Hide Apply and Close buttons
+                modal.find('#button_apply_confirm, #button_close').hide();
+
+                // Make AJAX call
+                applyRecordChanges(data, domain, csrf_token).done(function() {
+                    // Hide spinner and show success info
+                    $("#spinner").hide();
+                    modal.find('.modal-title').text('Success');
+                    modal.find('.modal-body').html("<p>Applied changes successfully.</p>");
+                    // Show OK button
+                    modal.find("#button_ok").show();
+
+                    // Bind click event to "OK" button to reload the page
+                    modal.find("#button_ok").unbind("click").click(function(e) {
+                        e.stopPropagation();  // prevent bootstrap's event listeners from closing the modal
+                        modal.find("#button_ok").hide();
+                        modal.find('.modal-title').text('Reloading');
+                        var info = '<p id="info-text">The page will refresh momentarily...</p>';
+                        modal.find('.modal-body').html(info);
+                        location.reload(); // Reload the page
+                    });
+                }).fail(function(jqXHR, status) {
+                    console.log(jqXHR);
+                    var responseJson = JSON.parse(jqXHR.responseText);
+                    modal.find('.modal-title').text('Error');
+                    modal.find('.modal-body').html("<p>" + responseJson['msg'] + "</p>");
+                    // Show OK button
+                    modal.find("#button_ok").show();
+                });
             });
             modal.modal('show');
         });
@@ -401,7 +453,7 @@
             applyChanges({
                 'domain': domain,
                 '_csrf_token': '{{ csrf_token() }}'
-            }, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
+            }, $SCRIPT_ROOT + '/domain/' + '123' + '/update', true);
         });
 
         function detectUnsavedChanges(table) {
@@ -750,19 +802,22 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body d-flex justify-content-center">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="button_close">
                         <i class="fa-solid fa-window-close"></i>&nbsp;Close
                     </button>
                     <button type="button" class="btn btn-success" id="button_apply_confirm">
                         <i class="fa-solid fa-save"></i>&nbsp;Apply Changes
+                    </button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="button_ok" style="display: none;">
+                        <i class="fa-solid fa-check-circle"></i>&nbsp;OK
                     </button>
                 </div>
             </div>

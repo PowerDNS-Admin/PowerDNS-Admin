@@ -14,7 +14,7 @@ function applyChanges(data, url, showResult, refreshPage, csrf_token) {
     $.ajax({
         type : "POST",
         url : url,
-        data : JSON.stringify(data), // now data come in this function
+        data : JSON.stringify(data),
         contentType : "application/json; charset=utf-8",
         dataType : "json",
         headers: { 'X-CSRFToken': csrf_token }, // Add the CSRF token to the request header
@@ -38,10 +38,10 @@ function applyChanges(data, url, showResult, refreshPage, csrf_token) {
 }
 
 function applyRecordChanges(data, domain, csrf_token) {
-    $.ajax({
+    return $.ajax({
         type: "POST",
         url: $SCRIPT_ROOT + '/domain/' + domain + '/apply',
-        data: JSON.stringify(data), // now data come in this function
+        data: JSON.stringify(data),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         headers: { 'X-CSRFToken': csrf_token }, // Add the CSRF token to the request header
@@ -52,14 +52,11 @@ function applyRecordChanges(data, domain, csrf_token) {
             });
 
             console.log("Applied changes successfully.")
-            showSuccessModal("Applied changes successfully. Window will automatically reload in 2 seconds.");
-            setTimeout(() => { window.location.reload() }, 2000);
         },
 
         error: function (jqXHR, status) {
             console.log(jqXHR);
             var responseJson = JSON.parse(jqXHR.responseText);
-            showErrorModal(responseJson['msg']);
         }
     });
 }
