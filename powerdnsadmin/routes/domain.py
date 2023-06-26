@@ -134,8 +134,6 @@ def domain(domain_name):
 @can_access_domain
 def domain_data(domain_name):
     domain = Domain.query.filter(Domain.name == domain_name).first()
-    current_app.logger.debug(domain.name)
-    current_app.logger.debug(domain.serial)
     rrsets = get_rrsets(domain.name)
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     records = create_record_entries(rrsets, records_allow_to_edit, domain_name)
@@ -639,12 +637,10 @@ def change_account(domain_name):
 @login_required
 @can_access_domain
 def record_apply(domain_name):
-    print(request.json)
     try:
         # Begin changes here
         jdata = request.json
         csrf_token = jdata.get('_csrf_token', None)
-        current_app.logger.error(csrf_token)
         # End changes here
         submitted_serial = jdata['serial']
         submitted_record = jdata['record']

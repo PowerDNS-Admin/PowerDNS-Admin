@@ -46,19 +46,11 @@ function applyRecordChanges(data, domain, csrf_token) {
         dataType: "json",
         headers: { 'X-CSRFToken': csrf_token }, // Add the CSRF token to the request header
         success: function (data, status, jqXHR) {
-            // update Apply button value
-            $.getJSON($SCRIPT_ROOT + '/domain/' + domain + '/info', function (data) {
-                $(".button_apply_changes").val(data['serial']);
-            });
-
-            console.log("Applied changes successfully.")
-//            showSuccessModal("Applied changes successfully. Window will automatically reload in 2 seconds.");
+            console.log("Applied changes successfully.")    
         },
-
         error: function (jqXHR, status) {
             console.log(jqXHR);
             var responseJson = JSON.parse(jqXHR.responseText);
-//            showErrorModal(responseJson['msg']);
         }
     });
 }
