@@ -15,15 +15,16 @@ from .domain import Domain
 from .domain_setting import DomainSetting
 
 
-def by_record_content_pair(e):
-    return e[0]['content']
-
-
 class Record(object):
     """
     This is not a model, it's just an object
     which be assigned data from PowerDNS API
     """
+
+    @staticmethod
+    def by_record_content_pair(e):
+        return e[0]['content']
+
     def __init__(self,
                  name=None,
                  type=None,
@@ -48,32 +49,35 @@ class Record(object):
         """
         Query zone's rrsets via PDNS API
         """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
-            jdata = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
-                                     timeout=int(
-                                         Setting().get('pdns_api_timeout')),
-                                     headers=headers,
-                                     verify=Setting().get('verify_ssl_connections'))
+            jdata = self.fetch_rrsets_from_api(domain)
         except Exception as e:
-            current_app.logger.error(
-                "Cannot fetch zone's record data from remote powerdns api. DETAIL: {0}"
-                .format(e))
+            current_app.logger.error(f"Cannot fetch zone's record data from remote powerdns api. DETAIL: {e}")
             return []
 
-        rrsets=[]
+        return self.prepare_rrsets(jdata)
+
+    def fetch_rrsets_from_api(self, domain):
+        headers = {'X-API-Key': self.PDNS_API_KEY}
+        url = f"{self.PDNS_STATS_URL}{self.API_EXTENDED_URL}/servers/localhost/zones/{domain}"
+        return utils.fetch_json(url,
+                                timeout=int(Setting().get('pdns_api_timeout')),
+                                headers=headers,
+                                verify=Setting().get('verify_ssl_connections'))
+
+    def prepare_rrsets(self, jdata):
+        rrsets = []
         for r in jdata['rrsets']:
-            if len(r['records']) == 0:
-                continue
-
-            while len(r['comments'])<len(r['records']):
-                r['comments'].append({"content": "", "account": ""})
-            r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'], r['comments']), key=by_record_content_pair)))
-            rrsets.append(r)
-
+            if r['records']:
+                r = self.align_comments_with_records(r)
+                rrsets.append(r)
         return rrsets
+
+    def align_comments_with_records(self, r):
+        while len(r['comments']) < len(r['records']):
+            r['comments'].append({"content": "", "account": ""})
+        r['records'], r['comments'] = (list(t) for t in zip(*sorted(zip(r['records'], r['comments']), key=self.by_record_content_pair)))
+        return r
 
     def add(self, domain_name, rrset):
         """
@@ -146,79 +150,35 @@ class Record(object):
             while len(rrset['comments']) < len(rrset['records']):
                 rrset['comments'].append({"content": "", "account": ""})
             zipped_list = zip(rrset['records'], rrset['comments'])
-            tuples = zip(*sorted(zipped_list, key=by_record_content_pair))
+            tuples = zip(*sorted(zipped_list, key=self.by_record_content_pair))
             rrset['records'], rrset['comments'] = [list(t) for t in tuples]
             return rrset
 
     def build_rrsets(self, domain_name, submitted_records):
-        """
-        Build rrsets from the datatable's records
-
-        Args:
-            domain_name(str): The zone name
-            submitted_records(list): List of records submitted from PDA datatable
-
-        Returns:
-            transformed_rrsets(list): List of rrsets converted from PDA datatable
-        """
         rrsets = []
         for record in submitted_records:
-            # Format the record name
-            #
-            # Translate template placeholders into proper record data
             record['record_data'] = record['record_data'].replace('[ZONE]', domain_name)
-            # Translate record name into punycode (IDN) as that's the only way
-            # to convey non-ascii records to the dns server
             record['record_name'] = utils.to_idna(record["record_name"], "encode")
-            #TODO: error handling
-            # If the record is an alias (CNAME), we will also make sure that
-            # the target zone is properly converted to punycode (IDN)
-            if record['record_type'] == 'CNAME' or record['record_type'] == 'SOA':
-                record['record_data'] = utils.to_idna(record['record_data'], 'encode')
-                #TODO: error handling
-            # If it is ipv6 reverse zone and PRETTY_IPV6_PTR is enabled,
-            # We convert ipv6 address back to reverse record format
-            # before submitting to PDNS API.
-            if self.PRETTY_IPV6_PTR and re.search(
-                    r'ip6\.arpa', domain_name
-            ) and record['record_type'] == 'PTR' and ':' in record[
-                    'record_name']:
-                record_name = dns.reversename.from_address(
-                    record['record_name']).to_text()
-            # Else, it is forward zone, then record name should be
-            # in format "<name>.<domain>.". If it is root
-            # domain name (name == '@' or ''), the name should
-            # be in format "<domain>."
-            else:
-                record_name = "{}.{}.".format(
-                    record["record_name"],
-                    domain_name) if record["record_name"] not in [
-                        '@', ''
-                    ] else domain_name + '.'
 
-            # Format the record content, it musts end
-            # with a dot character if in following types
-            if record["record_type"] in [
-                    'MX', 'CNAME', 'SRV', 'NS', 'PTR'
-            ] and record["record_data"].strip()[-1:] != '.':
+            if record['record_type'] in ['CNAME', 'SOA']:
+                record['record_data'] = utils.to_idna(record['record_data'], 'encode')
+
+            if (self.PRETTY_IPV6_PTR and 'ip6.arpa' in domain_name and record['record_type'] == 'PTR' 
+                and ':' in record['record_name']):
+                record_name = dns.reversename.from_address(record['record_name']).to_text()
+            else:
+                record_name = f"{record['record_name']}.{domain_name}." if record["record_name"] not in ['@', ''] else f"{domain_name}."
+
+            if record["record_type"] in ['MX', 'CNAME', 'SRV', 'NS', 'PTR'] and record["record_data"].strip()[-1:] != '.':
                 record["record_data"] += '.'
 
             record_content = {
                 "content": record["record_data"],
-                "disabled":
-                False if record['record_status'] == 'Active' else True
+                "disabled": record['record_status'] != 'Active'
             }
 
-            # Format the comment
-            record_comments = [{
-                "content": record["record_comment"],
-                "account": ""
-            }] if record.get("record_comment") else [{
-                "content": "",
-                "account": ""
-            }]
+            record_comments = [{"content": record.get("record_comment", ""), "account": ""}]
 
-            # Add the formatted record to rrsets list
             rrsets.append({
                 "name": record_name,
                 "type": record["record_type"],
@@ -227,73 +187,39 @@ class Record(object):
                 "comments": record_comments
             })
 
-        # Group the records which has the same name and type.
-        # The rrset then has multiple records inside.
-        transformed_rrsets = []
-
-        # Sort the list before using groupby
-        rrsets = sorted(rrsets, key=lambda r: (r['name'], r['type']))
-        groups = groupby(rrsets, key=lambda r: (r['name'], r['type']))
-        for _k, v in groups:
-            group = list(v)
-            transformed_rrsets.append(self.merge_rrsets(group))
+        rrsets.sort(key=lambda r: (r['name'], r['type']))
+        transformed_rrsets = [self.merge_rrsets(list(v)) for _k, v in groupby(rrsets, key=lambda r: (r['name'], r['type']))]
 
         return transformed_rrsets
 
+
     def compare(self, domain_name, submitted_records):
-        """
-        Compare the submitted records with PDNS's actual data
-
-        Args:
-            domain_name(str): The zone name
-            submitted_records(list): List of records submitted from PDA datatable
-
-        Returns:
-            new_rrsets(list): List of rrsets to be added
-            del_rrsets(list): List of rrsets to be deleted
-            zone_has_comments(bool): True if the zone currently contains persistent comments
-        """
-        # Create submitted rrsets from submitted records
         submitted_rrsets = self.build_rrsets(domain_name, submitted_records)
-        current_app.logger.debug(
-            "submitted_rrsets_data: \n{}".format(utils.pretty_json(submitted_rrsets)))
 
-        # Current domain's rrsets in PDNS
         current_rrsets = self.get_rrsets(domain_name)
-        current_app.logger.debug("current_rrsets_data: \n{}".format(
-            utils.pretty_json(current_rrsets)))
 
-        # Remove comment's 'modified_at' key
-        # PDNS API always return the comments with modified_at
-        # info, we have to remove it to be able to do the dict
-        # comparison between current and submitted rrsets
-        zone_has_comments = False
-        for r in current_rrsets:
-            for comment in r['comments']:
-                if 'modified_at' in comment:
-                    zone_has_comments = True
-                    del comment['modified_at']
+        zone_has_comments = any('modified_at' in comment for r in current_rrsets for comment in r['comments'])
+        if zone_has_comments:
+            for r in current_rrsets:
+                for comment in r['comments']:
+                    comment.pop('modified_at', None)
 
-        # List of rrsets to be added
-        new_rrsets = {"rrsets": []}
-        for r in submitted_rrsets:
-            if r not in current_rrsets and r['type'] in Setting(
-            ).get_records_allow_to_edit():
-                r['changetype'] = 'REPLACE'
-                new_rrsets["rrsets"].append(r)
+        new_rrsets = {
+            "rrsets": [
+                {**r, 'changetype': 'REPLACE'} for r in submitted_rrsets if r not in current_rrsets 
+                and r['type'] in Setting().get_records_allow_to_edit()
+            ]
+        }
 
-        # List of rrsets to be removed
-        del_rrsets = {"rrsets": []}
-        for r in current_rrsets:
-            if r not in submitted_rrsets and r['type'] in Setting(
-            ).get_records_allow_to_edit() and r['type'] != 'SOA':
-                r['changetype'] = 'DELETE'
-                del_rrsets["rrsets"].append(r)
-
-        current_app.logger.debug("new_rrsets: \n{}".format(utils.pretty_json(new_rrsets)))
-        current_app.logger.debug("del_rrsets: \n{}".format(utils.pretty_json(del_rrsets)))
+        del_rrsets = {
+            "rrsets": [
+                {**r, 'changetype': 'DELETE'} for r in current_rrsets if r not in submitted_rrsets 
+                and r['type'] in Setting().get_records_allow_to_edit() and r['type'] != 'SOA'
+            ]
+        }
 
         return new_rrsets, del_rrsets, zone_has_comments
+
 
     def apply_rrsets(self, domain_name, rrsets):
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
@@ -354,8 +280,7 @@ class Record(object):
         will make 1 call to the PDNS API to DELETE and
         REPLACE records (rrsets)
         """
-        current_app.logger.debug(
-            "submitted_records: {}".format(submitted_records))
+        current_app.logger.debug(f"Submitted records used for Apply: \n{utils.pretty_json(submitted_records)}")
 
         # Get the list of rrsets to be added and deleted
         new_rrsets, del_rrsets, zone_has_comments = self.compare(domain_name, submitted_records)
@@ -363,35 +288,26 @@ class Record(object):
         # The history logic still needs *all* the deletes with full data to display a useful diff.
         # So create a "minified" copy for the api call, and return the original data back up
         api_payload = self.to_api_payload(new_rrsets['rrsets'], del_rrsets['rrsets'], zone_has_comments)
-        current_app.logger.debug(f"api payload: \n{utils.pretty_json(api_payload)}")
+        current_app.logger.debug(f"Changes: \n{utils.pretty_json(api_payload)}")
 
         # Submit the changes to PDNS API
         try:
             if api_payload["rrsets"]:
                 result = self.apply_rrsets(domain_name, api_payload)
-                if 'error' in result.keys():
-                    current_app.logger.error(
-                        'Cannot apply record changes. PDNS error: {}'
-                        .format(result['error']))
-                    return {
-                        'status': 'error',
-                        'msg': result['error'].replace("'", "")
-                    }
+                if 'error' in result:
+                    error_msg = result['error'].replace("'", "")
+                    current_app.logger.error(f'Cannot apply record changes. PDNS error: {error_msg}')
+                    return {'status': 'error', 'msg': error_msg}
 
             self.auto_ptr(domain_name, new_rrsets, del_rrsets)
             self.update_db_serial(domain_name)
             current_app.logger.info('Record was applied successfully.')
             return {'status': 'ok', 'msg': 'Record was applied successfully', 'data': (new_rrsets, del_rrsets)}
         except Exception as e:
-            current_app.logger.error(
-                "Cannot apply record changes to zone {0}. Error: {1}".format(
-                    domain_name, e))
+            current_app.logger.error(f"Cannot apply record changes to zone {domain_name}. Error: {e}")
             current_app.logger.debug(traceback.format_exc())
-            return {
-                'status': 'error',
-                'msg':
-                'There was something wrong, please contact administrator'
-            }
+            return {'status': 'error', 'msg': 'There was something wrong, please contact administrator'}
+
 
     def auto_ptr(self, domain_name, new_rrsets, del_rrsets):
         """
@@ -520,7 +436,7 @@ class Record(object):
                                      method='PATCH',
                                      verify=Setting().get('verify_ssl_connections'),
                                      data=data)
-            current_app.logger.debug(jdata)
+#            current_app.logger.debug(jdata)
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
         except Exception as e:
             current_app.logger.error(

@@ -10,7 +10,7 @@ $.ajaxSetup({
     }
 });
 
-function applyChanges(data, url, showResult, refreshPage, csrf_token) {
+function applyChanges(data, url, csrf_token, showResult, refreshPage) {
     $.ajax({
         type : "POST",
         url : url,
@@ -52,11 +52,13 @@ function applyRecordChanges(data, domain, csrf_token) {
             });
 
             console.log("Applied changes successfully.")
+//            showSuccessModal("Applied changes successfully. Window will automatically reload in 2 seconds.");
         },
 
         error: function (jqXHR, status) {
             console.log(jqXHR);
             var responseJson = JSON.parse(jqXHR.responseText);
+//            showErrorModal(responseJson['msg']);
         }
     });
 }

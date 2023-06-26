@@ -109,6 +109,8 @@
         window.nEditing = null;
         window.nNew = false;
 
+        var csrf_token = "{{ csrf_token() }}";
+
         // Initialize DataTables
         $("#tbl_records").DataTable({
             "paging": true,
@@ -214,11 +216,8 @@
 
             // following unbind("click") is to avoid multiple times execution
             modal.find('#button_apply_confirm').unbind("click").click(function () {
-                var data = getTableData(table);
-                applyChanges({
-                    '_csrf_token': '{{ csrf_token() }}',
-                    'records': data
-                }, $SCRIPT_ROOT + '/admin/template/' + template + '/apply', true);
+                var data = {'records': getTableData(table)};
+                applyChanges(data, $SCRIPT_ROOT + '/admin/template/' + template + '/apply', csrf_token, true);
                 modal.modal('hide');
             })
             modal.modal('show');
