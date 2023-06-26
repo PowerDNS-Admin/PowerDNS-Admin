@@ -100,6 +100,8 @@ def get_rrsets(domain_name):
 def get_editable_records(domain_name):
     forward_records_allow_to_edit = Setting().get_supported_record_types(Setting().ZONE_TYPE_FORWARD)
     reverse_records_allow_to_edit = Setting().get_supported_record_types(Setting().ZONE_TYPE_REVERSE)
+    forward_records_allow_to_edit = sorted(forward_records_allow_to_edit)
+    reverse_records_allow_to_edit = sorted(reverse_records_allow_to_edit)
     
     return forward_records_allow_to_edit if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name) else reverse_records_allow_to_edit
 

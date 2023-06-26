@@ -1705,6 +1705,7 @@ def edit_template(template):
         t = DomainTemplate.query.filter(
             DomainTemplate.name == template).first()
         records_allow_to_edit = Setting().get_records_allow_to_edit()
+        records_allow_to_edit = sorted(records_allow_to_edit)
         quick_edit = Setting().get('record_quick_edit')
         ttl_options = Setting().get_ttl_options()
         if t is not None:
@@ -1732,7 +1733,6 @@ def edit_template(template):
         current_app.logger.debug(traceback.format_exc())
         abort(500)
     return redirect(url_for('admin.templates'))
-
 
 @admin_bp.route('/template/<path:template>/apply',
                 methods=['POST'],
@@ -1784,7 +1784,6 @@ def apply_records(template):
                 'status': 'error',
                 'msg': 'Error when applying new changes'
             }), 500)
-
 
 @admin_bp.route('/template/<path:template>/delete', methods=['POST'])
 @login_required
