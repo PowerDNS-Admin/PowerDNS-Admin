@@ -1,0 +1,23 @@
+---
+version: 2
+updates:
+  - package-ecosystem: npm
+    target-branch: dev
+    directory: /
+    schedule:
+      interval: daily
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
+    labels:
+      - 'feature / dependency'
+  - package-ecosystem: pip
+    target-branch: dev
+    directory: /
+    schedule:
+      interval: daily
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
+    labels:
+      - 'feature / dependency'

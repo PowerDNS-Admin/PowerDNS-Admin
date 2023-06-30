@@ -1,190 +1,266 @@
 {% extends "base.html" %}
 {% set active_page = "admin_global_search" %}
-{% block title %}
-<title>Global Search - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Global Search <small>Search for domains, records and comments directly from PDNS API</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Global Search</li>
-    </ol>
-</section>
-{% endblock %} {% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box-body">
-                <!-- search form -->
-                <form action="" method="get">
-                    <div class="input-group">
-                        <input type="text" name="q" class="form-control" placeholder="Your keyword...">
-                        <div class="input-group-btn">
-                            <button type="submit" class="btn btn-success"><i class="fa fa-search"></i></button>
-                        </div>
-                    </div>
-                </form>
-                <div>
-                    <p><b>Hints:</b> The * character can be used in your keyword as a wildcard character and the ? character can be used as
-                        a wildcard for a
-                        single character.</p>
-                </div>
-                <!-- /.search form -->
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Domains ({{ domains|length }})</h3>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_domain" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Domain</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for domain in domains %}
-                            <tr class="odd gradeX">
-                                <td>
-                                    <a href="{{ url_for('domain.domain', domain_name=domain['name']) }}">{{ domain['name'] }}</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <!-- /.box-body -->
-            </div>
-            <!-- /.box -->
-        </div>
-        <!-- /.col -->
-    </div>
+{% block title %}<title>Global Search - {{ SITE_NAME }}</title>{% endblock %}
 
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Records ({{ records|length }})</h3>
+{% block dashboard_stat %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0 text-dark">Global Search</h1>
                 </div>
-                <div class="box-body">
-                    <table id="tbl_record" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>TTL</th>
-                                <th>Data</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in records %}
-                            <tr class="odd gradeX">
-                                <td>
-                                    <a href="{{ url_for('domain.domain', domain_name=record['zone_id']) }}">{{ record['name'] }}</a>
-                                </td>
-                                <td>{{ record['type'] }}</td>
-                                <td>{{ 'Disabled' if record['disabled'] else 'Active' }}</td>
-                                <td>{{ record['ttl'] }}</td>
-                                <td>{{ record['content'] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <!-- /.col -->
+                <div class="col-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Global Search</li>
+                    </ol>
                 </div>
-                <!-- /.box-body -->
+                <!-- /.col -->
             </div>
-            <!-- /.box -->
+            <!-- /.row -->
         </div>
-        <!-- /.col -->
+        <!-- /.container-fluid -->
     </div>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Comments ({{ comments|length }})</h3>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_comment" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Comment</th>
-                                <th>Record</th>
-                                <th>Domain</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for comment in comments %}
-                            <tr class="odd gradeX">
-                                <td>{{ comment['content'] }}</td>
-                                <td>{{ comment['name'] }}</td>
-                                <td>
-                                    <a href="{{ url_for('domain.domain', domain_name=comment['zone_id']) }}">{{ comment['zone_id'] }}</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <!-- /.box-body -->
-            </div>
-            <!-- /.box -->
-        </div>
-        <!-- /.col -->
-    </div>
-</section>
+    <!-- /.content-header -->
 {% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <form action="" method="get">
+                        <div class="card card-outline card-primary shadow">
+                            <div class="card-header">
+                                <h3 class="card-title">Search Form</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <div class="card-body">
+                                <div class="callout callout-info">
+                                    <p>This tool can be used to search for zones, records, and comments via the PDNS
+                                        API.</p>
+                                </div>
+                                <!-- /.callout -->
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <label id="txtQuery" class="input-group-text">
+                                                Search Query
+                                            </label>
+                                        </div>
+                                            <input type="text" id="txtQuery" name="q" class="form-control"
+                                                   value="{{ query }}"
+                                                    placeholder="Enter search query...">
+                                            <div class="input-group-append">
+                                            <button type="submit" class="btn btn-success" title="Execute Query">
+                                                <i class="fa-solid fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.form-group -->
+                                <div class="callout callout-warning">
+                                    <p>The * character can be used in your keyword as a wildcard character and the ?
+                                        character can be used as a wildcard for a single character.</p>
+                                </div>
+                                <!-- /.callout -->
+                            </div>
+                            <!-- /.card-body -->
+                        </div>
+                        <!-- /.card -->
+                    </form>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Zones ({{ domains|length }})</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="tbl_domain" class="table table-bordered table-striped table-hover table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Zone Name</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for domain in domains %}
+                                    <tr class="odd gradeX">
+                                        <td>
+                                            <a href="{{ url_for('domain.domain', domain_name=domain['name']) }}">{{ domain['name'] }}</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Zone Records ({{ records|length }})</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="tbl_record" class="table table-bordered table-striped table-hover table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>TTL</th>
+                                    <th>Data</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for record in records %}
+                                    <tr class="odd gradeX">
+                                        <td>
+                                            <a href="{{ url_for('domain.domain', domain_name=record['zone_id']) }}">{{ record['name'] }}</a>
+                                        </td>
+                                        <td>{{ record['type'] }}</td>
+                                        <td>{{ 'Disabled' if record['disabled'] else 'Active' }}</td>
+                                        <td>{{ record['ttl'] }}</td>
+                                        <td>{{ record['content'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Comments ({{ comments|length }})</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="tbl_comment" class="table table-bordered table-striped table-hover table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Comment</th>
+                                    <th>Record</th>
+                                    <th>Zone</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for comment in comments %}
+                                    <tr class="odd gradeX">
+                                        <td>{{ comment['content'] }}</td>
+                                        <td>{{ comment['name'] }}</td>
+                                        <td>
+                                            <a href="{{ url_for('domain.domain', domain_name=comment['zone_id']) }}">{{ comment['zone_id'] }}</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+{% endblock %}
+
+{% block head_styles %}
+    <style>
+        table#tbl_record { table-layout: fixed; }
+        table#tbl_record thead th:nth-child(0n+1) { width: 20%;}
+        table#tbl_record thead th:nth-child(0n+2),
+        table#tbl_record thead th:nth-child(0n+3),
+        table#tbl_record thead th:nth-child(0n+4) { width: 5%; }
+        table#tbl_record thead th:nth-child(0n+2),
+        table#tbl_record thead th:nth-child(0n+3),
+        table#tbl_record thead th:nth-child(0n+4),
+        table#tbl_record tbody td:nth-child(0n+2),
+        table#tbl_record tbody td:nth-child(0n+3),
+        table#tbl_record tbody td:nth-child(0n+4) { text-align: center; }
+        table#tbl_record tbody td:first-of-type,
+        table#tbl_record tbody td:last-of-type { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media only screen and (max-device-width: 480px) {
+            table#tbl_record thead th:nth-child(0n+1) { width: 10%;}
+            table#tbl_record thead th:nth-child(0n+2),
+            table#tbl_record thead th:nth-child(0n+3),
+            table#tbl_record thead th:nth-child(0n+4) { width: 15%; }
+        }
+        @media only screen and (max-device-width: 992px) {
+            table#tbl_record { table-layout: auto; }
+        }
+        @media only screen and (min-device-width: 481px) and (max-device-width: 992px) {
+            table#tbl_record thead th:nth-child(0n+2),
+            table#tbl_record thead th:nth-child(0n+3),
+            table#tbl_record thead th:nth-child(0n+4) { width: 10%; }
+        }
+    </style>
+{% endblock %}
+
 {% block extrascripts %}
-<script>
-    // set up domain result data table
-    $("#tbl_domain").DataTable({
-        "paging": false,
-        "lengthChange": false,
-        "searching": false,
-        "ordering": true,
-        "info": false,
-        "autoWidth": false,
-        "order": [
-            [0, "asc"]
-        ]
-    });
-</script>
+    <script>
+        // Initialize DataTables for zones
+        $("#tbl_domain").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "order": [
+                [0, "asc"]
+            ]
+        });
 
-<script>
-    // set up domain result data table
-    $("#tbl_record").DataTable({
-        "paging": false,
-        "lengthChange": false,
-        "searching": false,
-        "ordering": true,
-        "info": false,
-        "autoWidth": false,
-        "order": [
-            [0, "asc"]
-        ]
-    });
-</script>
+        // Initialize DataTables for zone records
+        $("#tbl_record").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "order": [
+                [0, "asc"]
+            ]
+        });
 
-<script>
-    // set up domain result data table
-    $("#tbl_comment").DataTable({
-        "paging": false,
-        "lengthChange": false,
-        "searching": false,
-        "ordering": true,
-        "info": false,
-        "autoWidth": false,
-        "order": [
-            [0, "asc"]
-        ]
-    });
-</script>
+        // Initialize DataTables for comments
+        $("#tbl_comment").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "order": [
+                [0, "asc"]
+            ]
+        });
+    </script>
 {% endblock %}

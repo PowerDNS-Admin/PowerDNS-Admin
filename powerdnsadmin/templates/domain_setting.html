@@ -1,374 +1,457 @@
 {% extends "base.html" %}
-{% block title %}<title>Domain Management - {{ SITE_NAME }}</title>{% endblock %}
+{% block title %}<title>Edit Zone - {{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-{% if status %}
-{% if status.get('status') == 'ok' %}
-<div class="alert alert-success">
-    <strong>Success!</strong> {{ status.get('msg') }}
-</div>
-{% elif status.get('status') == 'error' %}
-<div class="alert alert-danger">
-    {% if status.get('msg') != None %}
-    <strong>Error!</strong> {{ status.get('msg') }}
-    {% else %}
-    <strong>Error!</strong> An undefined error occurred.
+    {% if status %}
+        {% if status.get('status') == 'ok' %}
+            <div class="alert alert-success">
+                <strong>Success!</strong> {{ status.get('msg') }}
+            </div>
+        {% elif status.get('status') == 'error' %}
+            <div class="alert alert-danger">
+                {% if status.get('msg') != None %}
+                    <strong>Error!</strong>
+                    {{ status.get('msg') }}
+                {% else %}
+                    <strong>Error!</strong>
+                    An undefined error occurred.
+                {% endif %}
+            </div>
+        {% endif %}
     {% endif %}
-</div>
-{% endif %}
-{% endif %}
-<section class="content-header">
-    <h1>
-        Manage domain <small>{{ domain.name | pretty_domain_name }}</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Domain Management</li>
-    </ol>
-</section>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">
+                        Edit Zone - {{ domain.name | pretty_domain_name }}
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Edit Zone - {{ domain.name | pretty_domain_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <form method="post" action="{{ url_for('domain.setting', domain_name=domain.name) }}">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <div class="box-header">
-                        <h3 class="box-title">Domain Access Control</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-xs-2">
-                                <p>Users on the right have access to manage the records in
-                                    the {{ domain.name | pretty_domain_name }} domain.</p>
-                                <p>Click on users to move from between columns.</p>
-                                <p>
-                                    Users in <font style="color: red;">red</font> are Administrators
-                                    and already have access to <b>ALL</b> domains.
-                                </p>
+    <section class="content">
+        <div class="container-fluid">
+
+            <div class="row">
+
+                <div class="col-12 col-sm-4">
+                    <form method="post"
+                          action="{{ url_for('domain.change_account', domain_name=domain.name) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <div class="card card-outline card-secondary shadow">
+                            <div class="card-header">
+                                <h3 class="card-title">Change Zone Account</h3>
                             </div>
-                            <div class="form-group col-xs-2">
-                                <select multiple="multiple" class="form-control" id="domain_multi_user"
-                                    name="domain_multi_user[]">
-                                    {% for user in users %}
-                                    <option {% if user.id in
-                                    domain_user_ids %}selected{% endif %} value="{{ user.username }}"
-                                        {% if user.role.name== 'Administrator' %}style="color: red" {% endif %}>{{
-                                    user.username}}</option> {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="box-body">
-                            <div class="col-xs-offset-2">
+                            <!-- /.card-header -->
+                            <div class="card-body">
                                 <div class="form-group">
-                                    <button type="submit" class="btn btn-flat btn-primary"><i class="fa fa-check"></i>
-                                        Save</button>
+                                    <label for="selAccountId">Account</label>
+                                    <select id="selAccountId" name="accountid" class="form-control" style="width:15em;">
+                                        <option value="0">- No Account -</option>
+                                        {% for account in accounts %}
+                                            <option value="{{ account.id }}"
+                                                    {% if domain_account.id == account.id %}selected{% endif %}>{{ account.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
+                                <!-- /.form-group -->
                             </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <button type="submit" title="Update Account" class="btn btn-primary"
+                                        id="change_soa_edit_api">
+                                    <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Account
+                                </button>
+                            </div>
+                            <!-- /.card-footer -->
                         </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Account</h3>
+                        <!-- /.card -->
+                    </form>
                 </div>
-                <div class="box-body">
-                    <div class="col-xs-12">
-                        <div class="form-group">
-                            <form method="post"
-                                action="{{ url_for('domain.change_account', domain_name=domain.name) }}">
+                <!-- /.col -->
+
+                <div class="col-12 col-sm-4">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Auto PTR creation</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="form-group">
+                                <input type="checkbox" id="chkAutoPtr" class="auto_ptr_toggle"
+                                       data-zone="{{ domain.name }}"
+                                       {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked
+                                       {% endif %}{% endfor %}
+                                       {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
+                                &nbsp;
+                                <label for="chkAutoPtr">Allow automatic reverse pointer creation on record
+                                    updates?</label>
+                                {% if SETTING.get('auto_ptr') %}
+                                    <p><code>Auto-ptr is enabled globally on the PDA system!</code></p>
+                                {% endif %}
+                            </div>
+                            <!-- /.form-group -->
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+
+                <div class="col-12 col-sm-4">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">DynDNS 2 Settings</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div class="form-group">
+                                <input type="checkbox" id="chkDynDns" class="dyndns_on_demand_toggle"
+                                       data-zone="{{ domain.name }}"
+                                       {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked
+                                       {% endif %}{% endfor %}>
+                                &nbsp;
+                                <label for="chkDynDns">Allow on-demand creation of records via DynDNS updates?</label>
+                            </div>
+                            <!-- /.form-group -->
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+
+            </div>
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12 col-sm-4">
+                    <form method="post" action="{{ url_for('domain.setting', domain_name=domain.name) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <div class="card card-outline card-secondary shadow">
+                            <div class="card-header">
+                                <h3 class="card-title">Zone Access Control</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <p>Users on the right have access to manage the records in
+                                            the {{ domain.name | pretty_domain_name }} zone.</p>
+                                        <p>Click on users to move from between columns.</p>
+                                        <p>
+                                            Users in <font style="color: red;">red</font> are Administrators
+                                            and already have access to <b>ALL</b> zones.
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- /.row -->
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <select multiple="multiple" class="form-control" id="domain_multi_user"
+                                                    name="domain_multi_user[]">
+                                                {% for user in users %}
+                                                    <option {% if user.id in
+                                    domain_user_ids %}selected{% endif %} value="{{ user.username }}"
+                                                            {% if user.role.name== 'Administrator' %}style="color: red" {% endif %}>{{ user.username }}</option> {% endfor %}
+                                            </select>
+                                        </div>
+                                        <!-- /.form-group -->
+                                    </div>
+                                </div>
+                                <!-- /.row -->
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <button type="submit" title="Save Changes" class="btn btn-primary">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                            <!-- /.card-footer -->
+                        </div>
+                        <!-- /.card -->
+                    </form>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Change Zone Type</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <p>The type decides how the zone will be replicated across multiple DNS servers.</p>
+                            <ul>
+                                <li>
+                                    Native - PowerDNS will not perform any replication. Use this if you only have one
+                                    PowerDNS server or you handle replication via your backend.
+                                </li>
+                                <li>
+                                    Primary - This PowerDNS server will serve as the primary and will send zone
+                                    transfers
+                                    (AXFRs) to other servers configured as secondaries.
+                                </li>
+                                <li>
+                                    Secondary - This PowerDNS server will serve as the secondaries and will request and
+                                    receive
+                                    zone transfers (AXFRs) from other servers configured as primaries.
+                                </li>
+                            </ul>
+                            <b>New Zone Type Setting:</b>
+                            <form method="post" action="{{ url_for('domain.change_type', domain_name=domain.name) }}">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                <select name="accountid" class="form-control" style="width:15em;">
-                                    <option value="0">- No Account -</option>
-                                    {% for account in accounts %}
-                                    <option value="{{ account.id }}"
-                                        {% if domain_account.id == account.id %}selected{% endif %}>{{ account.name }}
-                                    </option>
+                                <select name="domain_type" class="form-control" style="width:15em;">
+                                    <option value="0">- Unchanged -</option>
+                                    {% for type in ["native", "master", "slave"] %}
+                                        <option {% if zone_type == type %}selected{% endif %} value="{{ type }}">{{ type | format_zone_type }}</option>
                                     {% endfor %}
-                                </select><br />
-                                <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                                    <i class="fa fa-check"></i>&nbsp;Change account for {{ domain.name | pretty_domain_name }}
+                                </select><br/>
+                                <div class="form-group" style="{% if zone_type != 'slave' %}display: none;{% endif %}" id="domain_master_address_div">
+                                    <input type="text" class="form-control" name="domain_master_address"
+                                           id="domain_master_address"
+                                           placeholder="Enter valid Primary Server IP addresses (separated by commas)"
+                                           value="{{ masters }}">
+                                </div>
+                                <button type="submit" title="Update Zone Type" class="btn btn-primary" id="change_type">
+                                    <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Zone Type
                                 </button>
                             </form>
                         </div>
+                        <!-- /.card-body -->
                     </div>
+                    <!-- /.card -->
                 </div>
+                <!-- /.col -->
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Auto PTR creation</h3>
-                </div>
-                <div class="box-body">
-                    <p><input type="checkbox" id="{{ domain.name }}" class="auto_ptr_toggle"
-                            {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked{% endif %}{% endfor %}
-                            {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
-                        &nbsp;Allow automatic reverse pointer creation on record updates?
-                         {% if SETTING.get('auto_ptr') %}
-                             <br/><code>Auto-ptr is enabled globally on the PDA system!</code>
-                         {% endif %}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">DynDNS 2 Settings</h3>
-                </div>
-                <div class="box-body">
-                    <p><input type="checkbox" id="{{ domain.name }}" class="dyndns_on_demand_toggle"
-                            {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked{% endif %}{% endfor %}>
-                        &nbsp;Allow on-demand creation of records via DynDNS updates?</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Change Type</h3>
-                </div>
-                <div class="box-body">
-                    <p>The type decides how the domain will be replicated across multiple DNS servers.</p>
-                    <ul>
-                        <li>
-                            Native - PowerDNS will not perform any replication. Use this if you only have one
-                            PowerDNS server or you handle replication via your backend.
-                        </li>
-                        <li>
-                            Master - This PowerDNS server will serve as the master and will send zone transfers
-                            (AXFRs) to other servers configured as slaves.
-                        </li>
-                        <li>
-                            Slave - This PowerDNS server will serve as the slave and will request and receive
-                            zone transfers (AXFRs) from other servers configured as masters.
-                        </li>
-                    </ul>
-                    <b>New Domain Type Setting:</b>
-                    <form method="post" action="{{ url_for('domain.change_type', domain_name=domain.name) }}">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                        <select name="domain_type" class="form-control" style="width:15em;">
-                            <option selected value="0">- Unchanged -</option>
-                            <option value="native">Native</option>
-                            <option value="master">Master</option>
-                            <option value="slave">Slave</option>
-                        </select><br />
-                        <div class="form-group" style="display: none;" id="domain_master_address_div">
-                            <input type="text" class="form-control" name="domain_master_address"
-                                id="domain_master_address"
-                                placeholder="Enter valid master ip addresses (separated by commas)">
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Change SOA-EDIT-API</h3>
                         </div>
-                        <button type="submit" class="btn btn-flat btn-primary" id="change_type">
-                            <i class="fa fa-check"></i>&nbsp;Change type for {{ domain.name | pretty_domain_name }}
-                        </button>
-                    </form>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <p>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change
+                                is made
+                                to the zone.</p>
+                            <ul>
+                                <li>
+                                    DEFAULT - Generate a soa serial of YYYYMMDD01. If the current serial is lower than
+                                    the
+                                    generated serial, use the generated serial. If the current serial is higher or equal
+                                    to the
+                                    generated serial, increase the current serial by 1.
+                                </li>
+                                <li>
+                                    INCREASE - Increase the current serial by 1.
+                                </li>
+                                <li>
+                                    EPOCH - Change the serial to the number of seconds since the EPOCH, aka unixtime.
+                                </li>
+                                <li>
+                                    OFF - Disable automatic updates of the SOA serial.
+                                </li>
+                            </ul>
+                            <b>New SOA-EDIT-API Setting:</b>
+                            <form method="post"
+                                  action="{{ url_for('domain.change_soa_edit_api', domain_name=domain.name) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <select name="soa_edit_api" class="form-control" style="width:15em;">
+                                    <option selected value="0">- Unchanged -</option>
+                                    {% for edit_type in ["DEFAULT", "INCREASE", "EPOCH", "OFF"] %}
+                                        <option {% if soa_edit_api == edit_type %}selected{% endif %}>{{ edit_type }}</option>
+                                    {% endfor %}
+                                </select><br/>
+                                <button type="submit" title="Update SOA-EDIT-API" class="btn btn-primary"
+                                        id="change_soa_edit_api">
+                                    <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update SOA-EDIT-API
+                                </button>
+                            </form>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
                 </div>
+                <!-- /.col -->
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Change SOA-EDIT-API</h3>
+            <!-- /.row -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-danger shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Remove Zone</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <p>This function is used to remove a zone from PowerDNS-Admin <b>AND</b> PowerDNS. All
+                                records and
+                                user privileges associated with this zone will also be removed. This change cannot be
+                                reverted.</p>
+                            <button type="button" title="Delete Zone" class="btn btn-danger float-left delete_domain"
+                                    id="{{ domain.name }}">
+                                <i class="fa-solid fa-trash"></i>&nbsp;Delete Zone
+                            </button>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
                 </div>
-                <div class="box-body">
-                    <p>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change is made
-                        to the domain.</p>
-                    <ul>
-                        <li>
-                            DEFAULT - Generate a soa serial of YYYYMMDD01. If the current serial is lower than the
-                            generated serial, use the generated serial. If the current serial is higher or equal to the
-                            generated serial, increase the current serial by 1.
-                        </li>
-                        <li>
-                            INCREASE - Increase the current serial by 1.
-                        </li>
-                        <li>
-                            EPOCH - Change the serial to the number of seconds since the EPOCH, aka unixtime.
-                        </li>
-                        <li>
-                            OFF - Disable automatic updates of the SOA serial.
-                        </li>
-                    </ul>
-                    <b>New SOA-EDIT-API Setting:</b>
-                    <form method="post" action="{{ url_for('domain.change_soa_edit_api', domain_name=domain.name) }}">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                        <select name="soa_edit_api" class="form-control" style="width:15em;">
-                            <option selected value="0">- Unchanged -</option>
-                            <option>DEFAULT</option>
-                            <option>INCREASE</option>
-                            <option>EPOCH</option>
-                            <option>OFF</option>
-                        </select><br />
-                        <button type="submit" class="btn btn-flat btn-primary" id="change_soa_edit_api">
-                            <i class="fa fa-check"></i>&nbsp;Change SOA-EDIT-API setting for {{ domain.name | pretty_domain_name }}
-                        </button>
-                    </form>
-                </div>
+                <!-- /.col -->
             </div>
+            <!-- /.row -->
         </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Domain Deletion</h3>
+        <!-- /.container-fluid -->
+        </div>
+        <!-- /.content -->
+    </section>
+{% endblock %}
+
+{% block extrascripts %}
+    <script>
+        //initialize pretty checkboxes
+        $('.dyndns_on_demand_toggle').iCheck({
+            checkboxClass: 'icheckbox_square-blue',
+            increaseArea: '20%' // optional
+        });
+        $('.auto_ptr_toggle').iCheck({
+            checkboxClass: 'icheckbox_square-blue',
+            increaseArea: '20%' // optional
+        });
+
+        $("#domain_multi_user").multiSelect({
+            selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
+            selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
+            afterInit: function (ms) {
+                var that = this,
+                    $selectableSearch = that.$selectableUl.prev(),
+                    $selectionSearch = that.$selectionUl.prev(),
+                    selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
+                    selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
+
+                that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
+                    .on('keydown', function (e) {
+                        if (e.which === 40) {
+                            that.$selectableUl.focus();
+                            return false;
+                        }
+                    });
+
+                that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
+                    .on('keydown', function (e) {
+                        if (e.which == 40) {
+                            that.$selectionUl.focus();
+                            return false;
+                        }
+                    });
+            },
+            afterSelect: function () {
+                this.qs1.cache();
+                this.qs2.cache();
+            },
+            afterDeselect: function () {
+                this.qs1.cache();
+                this.qs2.cache();
+            }
+        });
+
+        //handle checkbox toggling
+        $('.dyndns_on_demand_toggle').on('ifToggled', function (event) {
+            var is_checked = $(this).prop('checked');
+            var domain = $(this).data('zone')
+            postdata = {
+                'action': 'set_setting',
+                'data': {
+                    'setting': 'create_via_dyndns',
+                    'value': is_checked
+                },
+                '_csrf_token': '{{ csrf_token() }}'
+            };
+            applyChanges(postdata, $SCRIPT_ROOT + '/domain/' + domain + '/manage-setting', true);
+        });
+        $('.auto_ptr_toggle').on('ifToggled', function (event) {
+            var is_checked = $(this).prop('checked');
+            var domain = $(this).data('zone')
+            postdata = {
+                'action': 'set_setting',
+                'data': {
+                    'setting': 'auto_ptr',
+                    'value': is_checked
+                },
+                '_csrf_token': '{{ csrf_token() }}'
+            };
+            applyChanges(postdata, $SCRIPT_ROOT + '/domain/' + domain + '/manage-setting', true);
+        });
+
+        // handle deletion of zone
+        $(document.body).on('click', '.delete_domain', function () {
+            var modal = $("#modal_delete_domain");
+            var domain = $(this).prop('id');
+            var info = "Are you sure you want to delete " + domain + "?";
+            modal.find('.modal-body p').text(info);
+            modal.find('#button_delete_confirm').click(function () {
+                $.post($SCRIPT_ROOT + '/domain/setting/' + domain + '/delete', {
+                    '_csrf_token': '{{ csrf_token() }}'
+                }, function () {
+                    window.location.href = '{{ url_for('dashboard.dashboard') }}';
+                });
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        });
+
+        // zone primary address input handeling
+        $("select[name=domain_type]").change(function () {
+            var type = $(this).val();
+            if (type == "slave") {
+                $("#domain_master_address_div").show();
+            } else {
+                $("#domain_master_address_div").hide();
+            }
+        });
+
+    </script>
+{% endblock %}
+
+{% block modals %}
+    <div class="modal fade" id="modal_delete_domain">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div class="box-body">
-                    <p>This function is used to remove a domain from PowerDNS-Admin <b>AND</b> PowerDNS. All records and
-                        user privileges associated with this domain will also be removed. This change cannot be
-                        reverted.</p>
-                    <button type="button" class="btn btn-flat btn-danger pull-left delete_domain"
-                        id="{{ domain.name }}">
-                        <i class="fa fa-trash"></i>&nbsp;DELETE DOMAIN {{ domain.name | pretty_domain_name }}
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="button_delete_confirm">
+                        Delete
                     </button>
                 </div>
             </div>
         </div>
     </div>
-</section>
-{% endblock %}
-{% block extrascripts %}
-<script>
-    //initialize pretty checkboxes
-    $('.dyndns_on_demand_toggle').iCheck({
-        checkboxClass: 'icheckbox_square-blue',
-        increaseArea: '20%' // optional
-    });
-    $('.auto_ptr_toggle').iCheck({
-        checkboxClass: 'icheckbox_square-blue',
-        increaseArea: '20%' // optional
-    });
-
-    $("#domain_multi_user").multiSelect({
-        selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
-        selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
-        afterInit: function (ms) {
-            var that = this,
-                $selectableSearch = that.$selectableUl.prev(),
-                $selectionSearch = that.$selectionUl.prev(),
-                selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
-                selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
-
-            that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-                .on('keydown', function (e) {
-                    if (e.which === 40) {
-                        that.$selectableUl.focus();
-                        return false;
-                    }
-                });
-
-            that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-                .on('keydown', function (e) {
-                    if (e.which == 40) {
-                        that.$selectionUl.focus();
-                        return false;
-                    }
-                });
-        },
-        afterSelect: function () {
-            this.qs1.cache();
-            this.qs2.cache();
-        },
-        afterDeselect: function () {
-            this.qs1.cache();
-            this.qs2.cache();
-        }
-    });
-
-    //handle checkbox toggling
-    $('.dyndns_on_demand_toggle').on('ifToggled', function (event) {
-        var is_checked = $(this).prop('checked');
-        var domain = $(this).prop('id');
-        postdata = {
-            'action': 'set_setting',
-            'data': {
-                'setting': 'create_via_dyndns',
-                'value': is_checked
-            },
-            '_csrf_token': '{{ csrf_token() }}'
-        };
-        applyChanges(postdata, $SCRIPT_ROOT + '/domain/' + domain + '/manage-setting', true);
-    });
-    $('.auto_ptr_toggle').on('ifToggled', function (event) {
-        var is_checked = $(this).prop('checked');
-        var domain = $(this).prop('id');
-        postdata = {
-            'action': 'set_setting',
-            'data': {
-                'setting': 'auto_ptr',
-                'value': is_checked
-            },
-            '_csrf_token': '{{ csrf_token() }}'
-        };
-        applyChanges(postdata, $SCRIPT_ROOT + '/domain/' + domain + '/manage-setting', true);
-    });
-
-    // handle deletion of domain
-    $(document.body).on('click', '.delete_domain', function () {
-        var modal = $("#modal_delete_domain");
-        var domain = $(this).prop('id');
-        var info = "Are you sure you want to delete " + domain + "?";
-        modal.find('.modal-body p').text(info);
-        modal.find('#button_delete_confirm').click(function () {
-            $.post($SCRIPT_ROOT + '/domain/setting/' + domain + '/delete', {
-                '_csrf_token': '{{ csrf_token() }}'
-            }, function () {
-                window.location.href = '{{ url_for('dashboard.dashboard') }}';
-            });
-            modal.modal('hide');
-        })
-        modal.modal('show');
-    });
-
-    // domain master address input handeling
-    $("select[name=domain_type]").change(function () {
-        var type = $(this).val();
-        if (type == "slave") {
-            $("#domain_master_address_div").show();
-        } else {
-            $("#domain_master_address_div").hide();
-        }
-    });
-
-</script>
-{% endblock %}
-{% block modals %}
-<div class="modal fade modal-warning" id="modal_delete_domain">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">
-                    Delete</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
 {% endblock %}

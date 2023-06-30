@@ -1,9 +1,5 @@
-
 import json
-from tests.fixtures import (    # noqa: F401
-    client, initial_data, basic_auth_admin_headers,
-    test_admin_user, test_user, account_data, user1_data,
-)
+
 from . import IntegrationApiManagement
 
 
@@ -89,8 +85,9 @@ class TestIntegrationApiManagementAdminUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 200
-        assert len(data) == 1
-        data = data[0]
+        assert isinstance(data, dict)
+        assert len(data) == 7
+        assert data.get('id', None)
         account_id = data["id"]
         for key, value in account_data.items():
             assert data[key] == value
@@ -142,10 +139,12 @@ class TestIntegrationApiManagementAdminUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 201
-        assert len(data) == 1
+        assert isinstance(data, dict)
+        assert len(data) == 6
+        assert data.get('id', None)
 
         # Check user
-        user1 = self.check_user(user1_data, data[0])
+        user1 = self.check_user(user1_data, data)
         user1_id = user1["id"]
 
         updated = user1_data.copy()
@@ -240,10 +239,12 @@ class TestIntegrationApiManagementAdminUser(IntegrationApiManagement):
         )
         data = res.get_json(force=True)
         assert res.status_code == 201
-        assert len(data) == 1
+        assert isinstance(data, dict)
+        assert len(data) == 6
+        assert data.get('id', None)
 
         # Check user
-        user1 = self.check_user(user1_data, data[0])
+        user1 = self.check_user(user1_data, data)
         user1_id = user1["id"]
 
         # Assert test account has no users

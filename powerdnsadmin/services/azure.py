@@ -15,28 +15,40 @@ def azure_oauth():
         session['azure_token'] = token
         return token
 
+    authlib_params = {
+        'client_id': Setting().get('azure_oauth_key'),
+        'client_secret': Setting().get('azure_oauth_secret'),
+        'api_base_url': Setting().get('azure_oauth_api_url'),
+        'request_token_url': None,
+        'client_kwargs': {'scope': Setting().get('azure_oauth_scope')},
+        'fetch_token': fetch_azure_token,
+    }
+
+    server_metadata_url = Setting().get('azure_oauth_metadata_url')
+
+    if isinstance(server_metadata_url, str) and len(server_metadata_url.strip()) > 0:
+        authlib_params['server_metadata_url'] = server_metadata_url
+    else:
+        authlib_params['access_token_url'] = Setting().get('azure_oauth_token_url')
+        authlib_params['authorize_url'] = Setting().get('azure_oauth_authorize_url')
+
     azure = authlib_oauth_client.register(
         'azure',
-        client_id=Setting().get('azure_oauth_key'),
-        client_secret=Setting().get('azure_oauth_secret'),
-        api_base_url=Setting().get('azure_oauth_api_url'),
-        request_token_url=None,
-        access_token_url=Setting().get('azure_oauth_token_url'),
-        authorize_url=Setting().get('azure_oauth_authorize_url'),
-        client_kwargs={'scope': Setting().get('azure_oauth_scope')},
-        fetch_token=fetch_azure_token,
+        **authlib_params
     )
 
     @current_app.route('/azure/authorized')
     def azure_authorized():
-        session['azure_oauthredir'] = url_for('.azure_authorized',
-                                              _external=True,
-                                              _scheme='https')
+        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+        params = {'_external': True}
+        if isinstance(use_ssl, bool):
+            params['_scheme'] = 'https' if use_ssl else 'http'
+        session['azure_oauthredir'] = url_for('.azure_authorized', **params)
         token = azure.authorize_access_token()
         if token is None:
             return 'Access denied: reason=%s error=%s' % (
                 request.args['error'], request.args['error_description'])
         session['azure_token'] = (token)
-        return redirect(url_for('index.login', _external=True, _scheme='https'))
+        return redirect(url_for('index.login', **params))
 
     return azure

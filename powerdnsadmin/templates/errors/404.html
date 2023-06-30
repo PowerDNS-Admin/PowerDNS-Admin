@@ -1,37 +1,38 @@
 {% extends "base.html" %}
-{% block title %}<title>PowerDNS-Admin - 404 Error</title>{% endblock %}
+{% block title %}<title>HTTP 404 Error - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      <h1>
-        404
-        <small>Error</small>
-      </h1>
-      <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
-        <li>404</li>
-      </ol>
-    </section>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">HTTP 404 Error</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">HTTP 404 Error</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block content %}
-<!-- Main content -->
-<section class="content">
-    <div class="error-page">
-        <h2 class="headline text-yellow">404</h2>
-        <div class="error-content">
-            <h3>
-                <i class="fa fa-warning text-yellow"></i> Oops! You're lost
-            </h3>
-            <p>
-                The page you requested could not be found.
-                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
-            </p>
+    <section class="content">
+        <div class="error-page">
+            <h2 class="headline text-yellow">HTTP 404 Error</h2>
+            <div class="error-content">
+                <h3>
+                    <i class="fa-solid fa-exclamation-triangle text-yellow"></i>
+                    Oops! Page not found.
+                </h3>
+                <p>
+                    The page you requested could not be found.
+                    You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
+                </p>
+            </div>
         </div>
-        <!-- /.error-content -->
-    </div>
-    <!-- /.error-page -->
-</section>
-<!-- /.content -->
+    </section>
 {% endblock %}

@@ -1,133 +1,121 @@
-{% macro applied_change_template(change_set) -%}
+{% macro applied_change_template(hist_rec_entry) -%}
 {{ caller() }}
-{% for hist_rec_entry in change_set %}
-<table id="tbl_records" class="table table-bordered">
-    <thead>
-        <tr>
-            <th colspan="3">
-                {% if hist_rec_entry.change_type == "+" %}
-                <span
-                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrset['name']}}
-                    {{hist_rec_entry.add_rrset['type']}}</span>
-                {% elif hist_rec_entry.change_type == "-" %}
-                <s
-                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
-                    {{hist_rec_entry.del_rrset['name']}}
-                    {{hist_rec_entry.del_rrset['type']}}
-                </s>
-                {% else %}
-                {{hist_rec_entry.add_rrset['name']}}
-                {{hist_rec_entry.add_rrset['type']}}
-                {% endif %}
 
-                , TTL:
-                {% if "ttl" in hist_rec_entry.changed_fields %}
-                <s
-                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
-                    {{hist_rec_entry.del_rrset['ttl']}}</s>
-                <span
-                    style="background-color:  lightgreen">{{hist_rec_entry.add_rrset['ttl']}}</span>
-                {% else %}
-                {{hist_rec_entry.add_rrset['ttl']}}
-                {% endif %}
+<td>
+{% if hist_rec_entry.change_type == '-' %}
+    <div class="diff diff-deletion">{{
+        hist_rec_entry.del_rrset['name']
+    }}
+{% elif hist_rec_entry.change_type == '+' %}
+    <div class="diff diff-addition">{{
+        hist_rec_entry.add_rrset['name']
+    }}
+{% else %}
+    <div class="diff diff-unchanged">{{
+        hist_rec_entry.add_rrset['name']
+    }}
+{% endif %}
+    </div>
+</td>
 
-            </th>
-        </tr>
-        <tr>
+<td>
+{% if hist_rec_entry.change_type == '-' %}
+    <div class="diff diff-deletion">{{
+        hist_rec_entry.del_rrset['type']
+    }}
+{% elif hist_rec_entry.change_type == '+' %}
+    <div class="diff diff-addition">{{
+        hist_rec_entry.add_rrset['type']
+    }}
+{% else %}
+    <div class="diff diff-unchanged">{{
+        hist_rec_entry.add_rrset['type']
+    }}
+{% endif %}
+    </div>
+</td>
 
-            <th style="width: 150px;">Status</th>
-            <th style="width: 400px;">Data</th>
-            <th style="width: 400px;">Comment</th>
+<td>
+{% if not 'ttl' in hist_rec_entry.changed_fields %}
+    <div class="diff diff-unchanged">{{
+        hist_rec_entry.add_rrset['ttl']
+    }}</div>
+{% else %}
+    {% if hist_rec_entry.change_type in ['+', '*'] %}
+        <div class="diff diff-addition">{{
+            hist_rec_entry.add_rrset['ttl']
+        }}</div>
+    {% endif %}
+    {% if hist_rec_entry.change_type in ['-', '*'] %}
+        <div class="diff diff-deletion">{{
+            hist_rec_entry.del_rrset['ttl']
+        }}</div>
+    {% endif %}
+{% endif %}
+</td>
 
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-                <table>
-                    <tbody>
-                        {% for changes in hist_rec_entry.changeSet %}
-                        <tr>
-                            {% if changes[2] == "unchanged" %}
-                            <td>{{ "Activated" if changes[0]['disabled'] ==
-                                False else
-                                "Disabled"}} </td>
-                            {% elif changes[2] == "addition" %}
-                            <td>
-                                <span style="background-color:  lightgreen">
-                                    {{ "Activated" if changes[1]['disabled'] ==
-                                    False else
-                                    "Disabled"}}
-                                </span>
-                            </td>
-                            {% elif changes[2] == "status" %}
-                            <td>
-                                <s
-                                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
-                                    {{ "Activated" if changes[0]['disabled'] ==
-                                    False else
-                                    "Disabled"}}</s>
-                                <span style="background-color:  lightgreen">{{
-                                    "Activated" if changes[1]['disabled'] ==
-                                    False else
-                                    "Disabled"}}</span>
-                            </td>
-                            {% elif changes[2] == "deletion" %}
-                            <td>
-                                <s
-                                    style="text-decoration-color: rgba(194, 10,10, 0.6); text-decoration-thickness: 2px;">
-                                    {{ "Activated" if changes[0]['disabled'] ==
-                                    False else
-                                    "Disabled"}}</s>
-                            </td>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </td>
-            <td>
-                <table>
-                    <tbody>
-                        {% for changes in hist_rec_entry.changeSet %}
-                        <tr>
-                            {% if changes[2] == "unchanged" %}
-                            <td>
-                                {{changes[0]['content']}}
-                            </td>
-                            {% elif changes[2] == "addition" %}
-                            <td>
-                                <span style="background-color:  lightgreen">
-                                    {{changes[1]['content']}}
-                                </span>
-                            </td>
-                            {% elif changes[2] == "deletion" %}
-                            <td>
-                                <s
-                                    style="text-decoration-color: rgba(194, 10, 10, 0.6); text-decoration-thickness: 2px;">
-                                    {{changes[0]['content']}}
-                                </s>
-                            </td>
-                            {% elif changes[2] == "status" %}
-                            <td>
-                                {{changes[0]['content']}}
-                            </td>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-
-                </table>
-            </td>
-            <td>
-                {% for comments in hist_rec_entry.add_rrset['comments'] %}
-                {{comments['content'] }}
-                <br/>
-                {% endfor %}
-            </td>
-        </tr>
-
-    </tbody>
-</table>
+<td style="word-break: break-all">
+{% for changes in hist_rec_entry.changeSet %}
+    {% if changes[2] == "unchanged" or (changes[2] == "edit" and changes[0]['content'] == changes[1]['content']) %}
+        <div class="diff diff-unchanged">{{
+            changes[1]['content']
+        }}</div>
+    {% else %}
+        {% if changes[2] in ["deletion", "edit"] %}
+            <div class="diff diff-deletion">{{
+                changes[0]['content']
+            }}</div>
+        {% endif %}
+        {% if changes[2] in ["addition", "edit"] %}
+            <div class="diff diff-addition">{{
+                changes[1]['content']
+            }}</div>
+        {% endif %}
+    {% endif %}
 {% endfor %}
+</td>
+
+<td>
+{% for changes in hist_rec_entry.changeSet %}
+    {% if changes[2] == "unchanged" or
+        (changes[2] == "edit" and changes[0]['disabled'] == changes[1]['disabled']) %}
+        <div class="diff diff-unchanged">{{
+            "Disabled" if changes[1]['disabled'] else "Activated"
+        }}</div>
+    {% else %}
+        {% if changes[2] in ["deletion", "edit"] %}
+            <div class="diff diff-deletion">{{
+                "Disabled" if changes[0]['disabled'] else "Activated"
+            }}</div>
+        {% endif %}
+        {% if changes[2] in ["addition", "edit"] %}
+            <div class="diff diff-addition">{{
+                "Disabled" if changes[1]['disabled'] else "Activated"
+            }}</div>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+</td>
+
+<td style="word-break: break-all">
+{% for changes in hist_rec_entry.changeSet %}
+    {% if changes[2] == "unchanged" or
+            (changes[2] == "edit" and changes[0]['comment'] == changes[1]['comment']) %}
+        <div class="diff diff-unchanged">{{
+            changes[1]['comment']
+        }}</div>
+    {% else %}
+        {% if changes[2] in ["deletion", "edit"] and changes[0]['comment'] %}
+            <div class="diff diff-deletion">{{
+                changes[0]['comment']
+            }}</div>
+        {% endif %}
+        {% if changes[2] in ["addition", "edit"] and changes[1]['comment'] %}
+            <div class="diff diff-addition">{{
+                changes[1]['comment']
+            }}</div>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+</td>
 {%- endmacro %}

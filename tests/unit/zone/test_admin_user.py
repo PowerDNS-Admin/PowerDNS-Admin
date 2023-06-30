@@ -5,37 +5,33 @@ from collections import namedtuple
 
 import powerdnsadmin
 from powerdnsadmin.models.user import User
-from powerdnsadmin.models.role import Role
 from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.lib.validators import validate_zone
 from powerdnsadmin.lib.schema import DomainSchema
-from tests.fixtures import client, basic_auth_admin_headers
-from tests.fixtures import zone_data, created_zone_data, load_data
+from tests.conftest import load_data
 
 
 class TestUnitApiZoneAdminUser(object):
     @pytest.fixture
-    def common_data_mock(self):
+    def common_data_mock(self, app, initial_data):
+
         self.google_setting_patcher = patch(
             'powerdnsadmin.services.google.Setting',
             spec=powerdnsadmin.models.setting.Setting)
         self.github_setting_patcher = patch(
             'powerdnsadmin.services.github.Setting',
             spec=powerdnsadmin.models.setting.Setting)
+        self.azure_setting_patcher = patch(
+            'powerdnsadmin.services.azure.Setting',
+            spec=powerdnsadmin.models.setting.Setting)
         self.oidc_setting_patcher = patch(
             'powerdnsadmin.services.oidc.Setting',
             spec=powerdnsadmin.models.setting.Setting)
-        self.api_setting_patcher = patch(
-            'powerdnsadmin.routes.api.Setting',
-            spec=powerdnsadmin.models.setting.Setting)
-        self.base_route_user_patcher = patch(
-            'powerdnsadmin.routes.base.User',
-            spec=powerdnsadmin.models.user.User)
         self.helpers_setting_patcher = patch(
             'powerdnsadmin.lib.helper.Setting',
             spec=powerdnsadmin.models.setting.Setting)
         self.models_setting_patcher = patch(
-            'powerdnsadmin.models.Setting',
+            'powerdnsadmin.models.setting.Setting',
             spec=powerdnsadmin.models.setting.Setting)
         self.domain_model_setting_patcher = patch(
             'powerdnsadmin.models.domain.Setting',
@@ -46,50 +42,81 @@ class TestUnitApiZoneAdminUser(object):
         self.server_model_setting_patcher = patch(
             'powerdnsadmin.models.server.Setting',
             spec=powerdnsadmin.models.setting.Setting)
-        self.decorators_setting_patcher = patch(
-            'powerdnsadmin.decorators.Setting',
-            spec=powerdnsadmin.models.setting.Setting)
-        self.mock_user_patcher = patch('powerdnsadmin.decorators.User',
-                                       spec=powerdnsadmin.models.user.User)
+        self.mock_user_patcher = patch(
+            'powerdnsadmin.decorators.User',
+            spec=powerdnsadmin.models.user.User)
         self.mock_hist_patcher = patch(
             'powerdnsadmin.routes.api.History',
             spec=powerdnsadmin.models.history.History)
+        self.mock_setting_patcher = patch(
+            'powerdnsadmin.routes.api.Setting',
+            spec=powerdnsadmin.models.setting.Setting)
+        self.mock_decorators_setting_patcher = patch(
+            'powerdnsadmin.decorators.Setting',
+            spec=powerdnsadmin.models.setting.Setting)
+        self.base_route_user_patcher = patch(
+            'powerdnsadmin.routes.base.User',
+            spec=powerdnsadmin.models.user.User)
 
-        self.mock_google_setting = self.google_setting_patcher.start()
-        self.mock_github_setting = self.github_setting_patcher.start()
-        self.mock_oidc_setting = self.oidc_setting_patcher.start()
-        self.mock_base_route_user = self.base_route_user_patcher.start()
-        self.mock_helpers_setting = self.helpers_setting_patcher.start()
-        self.mock_models_setting = self.models_setting_patcher.start()
-        self.mock_domain_model_setting = self.domain_model_setting_patcher.start(
-        )
-        self.mock_record_model_setting = self.record_model_setting_patcher.start(
-        )
-        self.mock_server_model_setting = self.server_model_setting_patcher.start(
-        )
-        self.decorators_setting = self.decorators_setting_patcher.start()
-        self.api_setting = self.api_setting_patcher.start()
-        self.mock_user = self.mock_user_patcher.start()
-        self.mock_hist = self.mock_hist_patcher.start()
+        with app.app_context():
+            self.mock_google_setting = self.google_setting_patcher.start()
+            self.mock_github_setting = self.github_setting_patcher.start()
+            self.mock_azure_setting = self.azure_setting_patcher.start()
+            self.mock_oidc_setting = self.oidc_setting_patcher.start()
+            self.mock_base_route_user = self.base_route_user_patcher.start()
+            self.mock_helpers_setting = self.helpers_setting_patcher.start()
+            self.mock_models_setting = self.models_setting_patcher.start()
+            self.mock_domain_model_setting = self.domain_model_setting_patcher.start(
+            )
+            self.mock_record_model_setting = self.record_model_setting_patcher.start(
+            )
+            self.mock_server_model_setting = self.server_model_setting_patcher.start(
+            )
+            self.mock_user = self.mock_user_patcher.start()
+            self.mock_hist = self.mock_hist_patcher.start()
+            self.mock_setting = self.mock_setting_patcher.start()
+            self.mock_decorators_setting = self.mock_decorators_setting_patcher.start()
 
-        self.mock_google_setting.return_value.get.side_effect = load_data
-        self.mock_github_setting.return_value.get.side_effect = load_data
-        self.mock_oidc_setting.return_value.get.side_effect = load_data
-        self.mock_helpers_setting.return_value.get.side_effect = load_data
-        self.mock_models_setting.return_value.get.side_effect = load_data
-        self.mock_domain_model_setting.return_value.get.side_effect = load_data
-        self.mock_record_model_setting.return_value.get.side_effect = load_data
-        self.mock_server_model_setting.return_value.get.side_effect = load_data
-        self.decorators_setting.return_value.get.side_effect = load_data
-        self.api_setting.return_value.get.side_effect = load_data
+            self.mock_google_setting.return_value.get.side_effect = load_data
+            self.mock_github_setting.return_value.get.side_effect = load_data
+            self.mock_azure_setting.return_value.get.side_effect = load_data
+            self.mock_oidc_setting.return_value.get.side_effect = load_data
+            self.mock_helpers_setting.return_value.get.side_effect = load_data
+            self.mock_models_setting.return_value.get.side_effect = load_data
+            self.mock_domain_model_setting.return_value.get.side_effect = load_data
+            self.mock_record_model_setting.return_value.get.side_effect = load_data
+            self.mock_server_model_setting.return_value.get.side_effect = load_data
+            self.mock_decorators_setting.return_value.get.side_effect = load_data
+            self.mock_setting.return_value.get.side_effect = load_data
 
-        self.mockk = MagicMock()
-        self.mockk.role.name = "Administrator"
+            self.mockk = MagicMock()
+            self.mockk.role.name = "Administrator"
 
-        self.mock_user.query.filter.return_value.first.return_value = self.mockk
-        self.mock_user.return_value.is_validate.return_value = True
-        self.mock_base_route_user.query.filter.return_value.first.return_value = self.mockk
-        self.mock_base_route_user.return_value.is_validate.return_value = True
+            self.mock_user.query.filter.return_value.first.return_value = self.mockk
+            self.mock_user.return_value.is_validate.return_value = True
+            self.mock_base_route_user.query.filter.return_value.first.return_value = self.mockk
+            self.mock_base_route_user.return_value.is_validate.return_value = True
+
+        yield
+
+        for patcher in [
+            self.google_setting_patcher,
+            self.github_setting_patcher,
+            self.azure_setting_patcher,
+            self.oidc_setting_patcher,
+            self.base_route_user_patcher,
+            self.helpers_setting_patcher,
+            self.models_setting_patcher,
+            self.domain_model_setting_patcher,
+            self.record_model_setting_patcher,
+            self.server_model_setting_patcher,
+            self.mock_user_patcher,
+            self.mock_hist_patcher,
+            self.mock_setting_patcher,
+            self.mock_decorators_setting_patcher,
+        ]:
+            patcher.stop()
+
 
     def test_empty_get(self, client, common_data_mock,
                        basic_auth_admin_headers):
@@ -135,8 +162,7 @@ class TestUnitApiZoneAdminUser(object):
                              headers=basic_auth_admin_headers)
             data = res.get_json(force=True)
 
-            fake_domain = namedtuple("Domain",
-                                     data[0].keys())(*data[0].values())
+            fake_domain = namedtuple("Domain", data[0].keys())(*data[0].values())
             domain_schema = DomainSchema(many=True)
 
             json.dumps(domain_schema.dump([fake_domain]))

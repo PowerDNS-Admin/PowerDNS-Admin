@@ -1,50 +1,51 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Email confirmation - {{ SITE_NAME }}</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  {% assets "css_login" -%}
-  <link rel="stylesheet" href="{{ ASSET_URL }}">
-  {%- endassets %}
-  <![endif]-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Email Confirmation - {{ SITE_NAME }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {% assets "css_login" -%}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
+    <![endif]-->
 </head>
-
 <body class="hold-transition register-page">
-    <section class="content">
-        <div class="error-page">
-            <div class="error-content">
-                {% if status == 1 %}
+<section class="content">
+    <div class="error-page">
+        <div class="error-content">
+            {% if status == 1 %}
                 <h3>
                     <i class="fa fa-thumbs-o-up text-success"></i> Email verification successful!
                 </h3>
                 <p>
-                  You have confirmed your account. <a href="{{ url_for('index.login') }}">Click here</a> to login.
+                    You have confirmed your account. <a href="{{ url_for('index.login') }}">Click here</a> to login.
                 </p>
-                {% elif status == 2 %}
+            {% elif status == 2 %}
                 <h3>
-                  <i class="fa fa-hand-stop-o text-info"></i> Already verified!
+                    <i class="fa fa-hand-stop-o text-info"></i> Already verified!
                 </h3>
                 <p>
-                  You have confirmed your account already. <a href="{{ url_for('index.login') }}">Click here</a> to login.
+                    You have confirmed your account already. <a href="{{ url_for('index.login') }}">Click here</a> to
+                    login.
                 </p>
-                {% else %}
+            {% else %}
                 <h3>
-                  <i class="fa fa-warning text-yellow"></i> Email verification failed!
+                    <i class="fa fa-warning text-yellow"></i> Email verification failed!
                 </h3>
                 <p>
-                  The confirmation link is invalid or has expired. <a href="{{ url_for('index.resend_confirmation_email') }}">Click here</a> if you want to resend a new link.
+                    The confirmation link is invalid or has expired. <a
+                    href="{{ url_for('index.resend_confirmation_email') }}">Click here</a> if you want to resend a new
+                    link.
                 </p>
-                {% endif %}
-            </div>
-            <!-- /.error-content -->
+            {% endif %}
         </div>
-        <!-- /.error-page -->
-    </section>
+        <!-- /.error-content -->
+    </div>
+    <!-- /.error-page -->
+</section>
 </body>
 
 </html>

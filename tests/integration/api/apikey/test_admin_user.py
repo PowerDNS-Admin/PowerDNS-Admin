@@ -4,12 +4,11 @@ from collections import namedtuple
 
 from powerdnsadmin.lib.validators import validate_apikey
 from powerdnsadmin.lib.schema import ApiKeySchema
-from tests.fixtures import client, initial_data, basic_auth_admin_headers
-from tests.fixtures import user_apikey_data, admin_apikey_data, zone_data
+from tests.conftest import user_apikey_data, admin_apikey_data
 
 
 class TestIntegrationApiApiKeyAdminUser(object):
-    def test_empty_get(self, client, initial_data, basic_auth_admin_headers):
+    def test_empty_get(self, initial_data, client, basic_auth_admin_headers):
         res = client.get("/api/v1/pdnsadmin/apikeys",
                          headers=basic_auth_admin_headers)
         data = res.get_json(force=True)
@@ -19,7 +18,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
     @pytest.mark.parametrize(
         "apikey_data",
         [user_apikey_data(), admin_apikey_data()])
-    def test_create_apikey(self, client, initial_data, apikey_data, zone_data,
+    def test_create_apikey(self, initial_data, client, apikey_data, zone_data,
                            basic_auth_admin_headers):
         res = client.post("/api/v1/pdnsadmin/zones",
                           headers=basic_auth_admin_headers,
@@ -39,7 +38,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
         assert res.status_code == 201
 
         apikey_url_format = "/api/v1/pdnsadmin/apikeys/{0}"
-        apikey_url = apikey_url_format.format(data[0]['id'])
+        apikey_url = apikey_url_format.format(data['id'])
 
         res = client.delete(apikey_url, headers=basic_auth_admin_headers)
 
@@ -54,7 +53,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
     @pytest.mark.parametrize(
         "apikey_data",
         [user_apikey_data(), admin_apikey_data()])
-    def test_get_multiple_apikey(self, client, initial_data, apikey_data,
+    def test_get_multiple_apikey(self, initial_data, client, apikey_data,
                                  zone_data, basic_auth_admin_headers):
         res = client.post("/api/v1/pdnsadmin/zones",
                           headers=basic_auth_admin_headers,
@@ -103,7 +102,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
     @pytest.mark.parametrize(
         "apikey_data",
         [user_apikey_data(), admin_apikey_data()])
-    def test_delete_apikey(self, client, initial_data, apikey_data, zone_data,
+    def test_delete_apikey(self, initial_data, client, apikey_data, zone_data,
                            basic_auth_admin_headers):
         res = client.post("/api/v1/pdnsadmin/zones",
                           headers=basic_auth_admin_headers,
@@ -123,7 +122,7 @@ class TestIntegrationApiApiKeyAdminUser(object):
         assert res.status_code == 201
 
         apikey_url_format = "/api/v1/pdnsadmin/apikeys/{0}"
-        apikey_url = apikey_url_format.format(data[0]['id'])
+        apikey_url = apikey_url_format.format(data['id'])
         res = client.delete(apikey_url, headers=basic_auth_admin_headers)
 
         assert res.status_code == 204

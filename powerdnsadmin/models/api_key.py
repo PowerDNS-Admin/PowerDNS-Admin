@@ -60,31 +60,31 @@ class ApiKey(db.Model):
 
     def update(self, role_name=None, description=None, domains=None, accounts=None):
         try:
-            if role_name:
-                role = Role.query.filter(Role.name == role_name).first()
-                self.role_id = role.id
+          if role_name:
+              role = Role.query.filter(Role.name == role_name).first()
+              self.role_id = role.id
 
-            if description:
-                self.description = description
+          if description:
+              self.description = description
 
-            if domains is not None:
-                domain_object_list = Domain.query \
-                                           .filter(Domain.name.in_(domains)) \
-                                           .all()
-                self.domains[:] = domain_object_list
+          if domains is not None:
+              domain_object_list = Domain.query \
+                                       .filter(Domain.name.in_(domains)) \
+                                       .all()
+              self.domains[:] = domain_object_list
 
-            if accounts is not None:
-                account_object_list = Account.query \
-                                           .filter(Account.name.in_(accounts)) \
-                                           .all()
-                self.accounts[:] = account_object_list
+          if accounts is not None:
+              account_object_list = Account.query \
+                                       .filter(Account.name.in_(accounts)) \
+                                       .all()
+              self.accounts[:] = account_object_list
 
-            db.session.commit()
+          db.session.commit()
         except Exception as e:
-            msg_str = 'Update of apikey failed. Error: {0}'
-            current_app.logger.error(msg_str.format(e))
-            db.session.rollback
-            raise e
+          msg_str = 'Update of apikey failed. Error: {0}'
+          current_app.logger.error(msg_str.format(e))
+          db.session.rollback()  # fixed line
+          raise e
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time

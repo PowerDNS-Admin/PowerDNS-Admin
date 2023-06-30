@@ -1,97 +1,115 @@
 {% extends "base.html" %}
 {% set active_page = "admin_settings" %}
-{% block title %}
-<title>Basic Settings - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Settings <small>PowerDNS-Admin settings</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li><a href="#">Setting</a></li>
-        <li class="active">Basic</li>
-    </ol>
-</section>
-{% endblock %} {% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Basic Settings</h3>
+{% block title %}<title>Basic Settings - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">Basic Settings</h1>
                 </div>
-                <div class="box-body">
-                    <table id="tbl_settings" class="table table-bordered table-striped">
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Basic Settings</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header with-border">
+                    <h3 class="card-title">Settings Editor</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body table-responsive">
+                    <table id="tbl_settings" class="table table-bordered table-striped table-hover table-sm">
                         <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Value</th>
-                                <th>Change</th>
-                            </tr>
+                        <tr>
+                            <th>Setting Name</th>
+                            <th>Current Value</th>
+                            <th>Action</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for setting in settings %}
-                            <tr class="odd ">
-                                <td>{{ setting }}</td>
-                                {% if SETTING.get(setting) in [True, False] %}
-                                <td>{{ SETTING.get(setting)|display_setting_state }}</td>
-                                <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-warning setting-toggle-button"
-                                        id="{{ setting }}">
-                                        Toggle&nbsp;<i class="fa fa-info"></i>
-                                    </button>
+                        {% for setting in settings %}
+                            <tr class="odd">
+                                <td>
+                                    <label for="value{{ loop.index }}">{{ setting }}</label>
                                 </td>
+                                {% if SETTING.get(setting) in [False] %}
+                                    <td><i class="fas fa-toggle-off"></i>&nbsp;Off</td>
+                                    <td>
+                                        <button type="button" class="btn btn-success setting-toggle-button"
+                                                id="{{ setting }}">
+                                            <i class="fa-solid fa-toggle-on"></i>&nbsp;Turn On
+                                        </button>
+                                    </td>
+                                {% elif SETTING.get(setting) in [True] %}
+                                    <td><i class="fas fa-toggle-on"></i>&nbsp;On</td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger setting-toggle-button"
+                                                id="{{ setting }}">
+                                            <i class="fa-solid fa-toggle-off"></i>&nbsp;Turn Off
+                                        </button>
+                                    </td>
                                 {% else %}
-                                <td><input name="value" id="value" value="{{ SETTING.get(setting) }}"></td>
-                                <td width="6%">
-                                    <button type="button" class="btn btn-flat btn-warning setting-save-button"
-                                        id="{{ setting }}">
-                                        Save&nbsp;<i class="fa fa-info"></i>
-                                    </button>
-                                </td>
+                                    <td>
+                                        <input name="value" id="value{{ loop.index }}" value="{{ SETTING.get(setting) }}">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary setting-save-button"
+                                                id="{{ setting }}" data-target="value{{ loop.index }}">
+                                            <i class="fa-solid fa-save"></i>&nbsp;Save
+                                        </button>
+                                    </td>
                                 {% endif %}
                             </tr>
-                            {% endfor %}
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <!-- /.box-body -->
+                <!-- /.card-body -->
             </div>
-            <!-- /.box -->
+            <!-- /.card -->
         </div>
-        <!-- /.col -->
-    </div>
-    <!-- /.row -->
-</section>
+        <!-- /.container-fluid -->
+    </section>
 {% endblock %}
-{% block extrascripts %}
-<script>
-    // set up history data table
-    $("#tbl_settings").DataTable({
-        "paging": false,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false
-    });
-    $(document.body).on('click', '.setting-toggle-button', function () {
-        var setting = $(this).prop('id');
-        applyChanges({
-            '_csrf_token': '{{ csrf_token() }}'
-        }, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
-    });
 
-    $(document.body).on('click', '.setting-save-button', function () {
-        var setting = $(this).prop('id');
-        var value = $(this).parents('tr').find('#value')[0].value;
-        var postdata = {
-            'value': value,
-            '_csrf_token': '{{ csrf_token() }}'
-        };
-        applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
-    });
-</script>
+{% block extrascripts %}
+    <script>
+        // set up settings table
+        $("#tbl_settings").DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false
+        });
+        $(document.body).on('click', '.setting-toggle-button', function () {
+            var setting = $(this).prop('id');
+            applyChanges({
+                '_csrf_token': '{{ csrf_token() }}'
+            }, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/toggle', false, true)
+        });
+
+        $(document.body).on('click', '.setting-save-button', function () {
+            var setting = $(this).prop('id');
+            var target = $(this).data('target');
+            var value = $('#' + target).val();
+            var postdata = {
+                'value': value,
+                '_csrf_token': '{{ csrf_token() }}'
+            };
+            applyChanges(postdata, $SCRIPT_ROOT + '/admin/setting/basic/' + setting + '/edit', false, true)
+        });
+    </script>
 {% endblock %}

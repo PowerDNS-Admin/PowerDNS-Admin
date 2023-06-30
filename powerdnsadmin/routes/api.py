@@ -1,22 +1,21 @@
 import json
-from urllib.parse import urljoin
+import secrets
+import string
 from base64 import b64encode
-from flask import (
-    Blueprint, g, request, abort, current_app, make_response, jsonify,
-)
+from urllib.parse import urljoin
+
+from flask import (Blueprint, g, request, abort, current_app, make_response, jsonify)
 from flask_login import current_user
 
 from .base import csrf
-from ..models.base import db
-from ..models import (
-    User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
-    Role,
+from ..decorators import (
+    api_basic_auth, api_can_create_domain, is_json, apikey_auth,
+    apikey_can_create_domain, apikey_can_remove_domain,
+    apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
+    api_role_can, apikey_or_basic_auth,
+    callback_if_request_body_contains_key, allowed_record_types, allowed_record_ttl
 )
 from ..lib import utils, helper
-from ..lib.schema import (
-    ApiKeySchema, DomainSchema, ApiPlainKeySchema, UserSchema, AccountSchema,
-    UserDetailedSchema,
-)
 from ..lib.errors import (
     StructuredException,
     DomainNotExists, DomainAlreadyExists, DomainAccessForbidden,
@@ -26,15 +25,15 @@ from ..lib.errors import (
     UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
     UserUpdateFailEmail, InvalidAccountNameException
 )
-from ..decorators import (
-    api_basic_auth, api_can_create_domain, is_json, apikey_auth,
-    apikey_can_create_domain, apikey_can_remove_domain,
-    apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
-    api_role_can, apikey_or_basic_auth,
-    callback_if_request_body_contains_key, allowed_record_types, allowed_record_ttl
+from ..lib.schema import (
+    ApiKeySchema, DomainSchema, ApiPlainKeySchema, UserSchema, AccountSchema,
+    UserDetailedSchema,
 )
-import secrets
-import string
+from ..models import (
+    User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
+    Role,
+)
+from ..models.base import db
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 apilist_bp = Blueprint('apilist', __name__, url_prefix='/')
@@ -49,6 +48,12 @@ user_detailed_schema = UserDetailedSchema()
 account_schema = AccountSchema(many=True)
 account_single_schema = AccountSchema()
 
+def is_custom_header_api():
+    custom_header_setting = Setting().get('custom_history_header')
+    if custom_header_setting != '' and custom_header_setting in request.headers: 
+        return request.headers[custom_header_setting] 
+    else: 
+        return g.apikey.description 
 
 def get_user_domains():
     domains = db.session.query(Domain) \
@@ -56,10 +61,10 @@ def get_user_domains():
         .outerjoin(Account, Domain.account_id == Account.id) \
         .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
         .filter(
-            db.or_(
-                DomainUser.user_id == current_user.id,
-                AccountUser.user_id == current_user.id
-            )).all()
+        db.or_(
+            DomainUser.user_id == current_user.id,
+            AccountUser.user_id == current_user.id
+        )).all()
     return domains
 
 
@@ -71,10 +76,10 @@ def get_user_apikeys(domain_name=None):
         .outerjoin(Account, Domain.account_id == Account.id) \
         .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
         .filter(
-            db.or_(
-                DomainUser.user_id == User.id,
-                AccountUser.user_id == User.id
-            )
+        db.or_(
+            DomainUser.user_id == User.id,
+            AccountUser.user_id == User.id
+        )
     ) \
         .filter(User.id == current_user.id)
 
@@ -167,12 +172,7 @@ def handle_request_is_not_json(err):
 def before_request():
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
-    if (
-        maintenance and current_user.is_authenticated and
-        current_user.role.name not in [
-            'Administrator', 'Operator'
-        ]
-    ):
+    if (maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']):
         return make_response(
             jsonify({
                 "status": False,
@@ -211,7 +211,7 @@ def api_login_create_zone():
                                   accept='application/json; q=1',
                                   verify=Setting().get('verify_ssl_connections'))
     except Exception as e:
-        current_app.logger.error("Cannot create domain. Error: {}".format(e))
+        current_app.logger.error("Cannot create zone. Error: {}".format(e))
         abort(500)
 
     if resp.status_code == 201:
@@ -222,16 +222,15 @@ def api_login_create_zone():
         domain.update()
         domain_id = domain.get_id_by_name(data['name'].rstrip('.'))
 
-        history = History(msg='Add domain {0}'.format(
+        history = History(msg='Add zone {0}'.format(
             data['name'].rstrip('.')),
-                          detail=json.dumps(data),
-                          created_by=current_user.username,
-                          domain_id=domain_id)
+            detail=json.dumps(data),
+            created_by=current_user.username,
+            domain_id=domain_id)
         history.add()
 
         if current_user.role.name not in ['Administrator', 'Operator']:
-            current_app.logger.debug(
-                "User is ordinary user, assigning created domain")
+            current_app.logger.debug("User is ordinary user, assigning created zone")
             domain = Domain(name=data['name'].rstrip('.'))
             domain.update()
             domain.grant_privileges([current_user.id])
@@ -297,11 +296,11 @@ def api_login_delete_zone(domain_name):
             domain_id = domain.get_id_by_name(domain_name)
             domain.update()
 
-            history = History(msg='Delete domain {0}'.format(
+            history = History(msg='Delete zone {0}'.format(
                 utils.pretty_domain_name(domain_name)),
-                              detail='',
-                              created_by=current_user.username,
-                              domain_id=domain_id)
+                detail='',
+                created_by=current_user.username,
+                domain_id=domain_id)
             history.add()
 
     except Exception as e:
@@ -326,14 +325,14 @@ def api_generate_apikey():
 
     if 'domains' not in data:
         domains = []
-    elif not isinstance(data['domains'], (list, )):
+    elif not isinstance(data['domains'], (list,)):
         abort(400)
     else:
         domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
 
     if 'accounts' not in data:
         accounts = []
-    elif not isinstance(data['accounts'], (list, )):
+    elif not isinstance(data['accounts'], (list,)):
         abort(400)
     else:
         accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
@@ -348,13 +347,13 @@ def api_generate_apikey():
         abort(400)
 
     if role_name == 'User' and len(domains) == 0 and len(accounts) == 0:
-        current_app.logger.error("Apikey with User role must have domains or accounts")
+        current_app.logger.error("Apikey with User role must have zones or accounts")
         raise ApiKeyNotUsable()
 
     if role_name == 'User' and len(domains) > 0:
         domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
         if len(domain_obj_list) == 0:
-            msg = "One of supplied domains does not exist"
+            msg = "One of supplied zones does not exist"
             current_app.logger.error(msg)
             raise DomainNotExists(message=msg)
 
@@ -384,14 +383,13 @@ def api_generate_apikey():
         domain_list = [item.name for item in domain_obj_list]
         user_domain_list = [item.name for item in user_domain_obj_list]
 
-        current_app.logger.debug("Input domain list: {0}".format(domain_list))
-        current_app.logger.debug(
-            "User domain list: {0}".format(user_domain_list))
+        current_app.logger.debug("Input zone list: {0}".format(domain_list))
+        current_app.logger.debug("User zone list: {0}".format(user_domain_list))
 
         inter = set(domain_list).intersection(set(user_domain_list))
 
         if not (len(inter) == len(domain_list)):
-            msg = "You don't have access to one of domains"
+            msg = "You don't have access to one of zones"
             current_app.logger.error(msg)
             raise DomainAccessForbidden(message=msg)
 
@@ -419,7 +417,7 @@ def api_get_apikeys(domain_name):
 
     if current_user.role.name not in ['Administrator', 'Operator']:
         if domain_name:
-            msg = "Check if domain {0} exists and is allowed for user.".format(
+            msg = "Check if zone {0} exists and is allowed for user.".format(
                 domain_name)
             current_app.logger.debug(msg)
             apikeys = get_user_apikeys(domain_name)
@@ -429,7 +427,7 @@ def api_get_apikeys(domain_name):
 
             current_app.logger.debug(apikey_schema.dump(apikeys))
         else:
-            msg_str = "Getting all allowed domains for user {0}"
+            msg_str = "Getting all allowed zones for user {0}"
             msg = msg_str.format(current_user.username)
             current_app.logger.debug(msg)
 
@@ -440,7 +438,7 @@ def api_get_apikeys(domain_name):
                 current_app.logger.error('Error: {0}'.format(e))
                 abort(500)
     else:
-        current_app.logger.debug("Getting all domains for administrative user")
+        current_app.logger.debug("Getting all zones for administrative user")
         try:
             apikeys = ApiKey.query.all()
             current_app.logger.debug(apikey_schema.dump(apikeys))
@@ -490,7 +488,7 @@ def api_delete_apikey(apikey_id):
         inter = set(apikey_domains_list).intersection(set(user_domains_list))
 
         if not (len(inter) == len(apikey_domains_list)):
-            msg = "You don't have access to some domains apikey belongs to"
+            msg = "You don't have access to some zones apikey belongs to"
             current_app.logger.error(msg)
             raise DomainAccessForbidden(message=msg)
 
@@ -539,14 +537,14 @@ def api_update_apikey(apikey_id):
 
     if 'domains' not in data:
         domains = None
-    elif not isinstance(data['domains'], (list, )):
+    elif not isinstance(data['domains'], (list,)):
         abort(400)
     else:
         domains = [d['name'] if isinstance(d, dict) else d for d in data['domains']]
 
     if 'accounts' not in data:
         accounts = None
-    elif not isinstance(data['accounts'], (list, )):
+    elif not isinstance(data['accounts'], (list,)):
         abort(400)
     else:
         accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
@@ -560,7 +558,7 @@ def api_update_apikey(apikey_id):
         if domains is not None:
             domain_obj_list = Domain.query.filter(Domain.name.in_(domains)).all()
             if len(domain_obj_list) != len(domains):
-                msg = "One of supplied domains does not exist"
+                msg = "One of supplied zones does not exist"
                 current_app.logger.error(msg)
                 raise DomainNotExists(message=msg)
 
@@ -580,12 +578,12 @@ def api_update_apikey(apikey_id):
             target_accounts = current_accounts
 
         if len(target_domains) == 0 and len(target_accounts) == 0:
-            current_app.logger.error("Apikey with User role must have domains or accounts")
+            current_app.logger.error("Apikey with User role must have zones or accounts")
             raise ApiKeyNotUsable()
 
         if domains is not None and set(domains) == set(current_domains):
             current_app.logger.debug(
-                "Domains are the same, apikey domains won't be updated")
+                "Zones are the same, apikey zones won't be updated")
             domains = None
 
         if accounts is not None and set(accounts) == set(current_accounts):
@@ -612,19 +610,19 @@ def api_update_apikey(apikey_id):
         domain_list = [item.name for item in domain_obj_list]
         user_domain_list = [item.name for item in user_domain_obj_list]
 
-        current_app.logger.debug("Input domain list: {0}".format(domain_list))
+        current_app.logger.debug("Input zone list: {0}".format(domain_list))
         current_app.logger.debug(
-            "User domain list: {0}".format(user_domain_list))
+            "User zone list: {0}".format(user_domain_list))
 
         inter = set(domain_list).intersection(set(user_domain_list))
 
         if not (len(inter) == len(domain_list)):
-            msg = "You don't have access to one of domains"
+            msg = "You don't have access to one of zones"
             current_app.logger.error(msg)
             raise DomainAccessForbidden(message=msg)
 
         if apikey_id not in apikeys_ids:
-            msg = 'Apikey does not belong to domain to which user has access'
+            msg = 'Apikey does not belong to zone to which user has access'
             current_app.logger.error(msg)
             raise DomainAccessForbidden()
 
@@ -963,16 +961,14 @@ def api_delete_account(account_id):
         account = account_list[0]
     else:
         abort(404)
-    current_app.logger.debug(
-            f'Deleting Account {account.name}'
-        )
+    current_app.logger.debug(f'Deleting Account {account.name}')
 
     # Remove account association from domains first
     if len(account.domains) > 0:
         for domain in account.domains:
-            current_app.logger.info(f"Disassociating domain {domain.name} with {account.name}")
+            current_app.logger.info(f"Disassociating zone {domain.name} with {account.name}")
             Domain(name=domain.name).assoc_account(None, update=False)
-        current_app.logger.info("Syncing all domains")
+        current_app.logger.info("Syncing all zones")
         Domain().update()
 
     current_app.logger.debug(
@@ -1047,7 +1043,7 @@ def api_remove_account_user(account_id, user_id):
     user_list = User.query.join(AccountUser).filter(
         AccountUser.account_id == account_id,
         AccountUser.user_id == user_id,
-        ).all()
+    ).all()
     if not user_list:
         abort(404)
     if not account.remove_user(user):
@@ -1114,29 +1110,32 @@ def api_zone_forward(server_id, zone_id):
         domain = Domain()
         domain.update()
     status = resp.status_code
+    created_by_value=is_custom_header_api()
     if 200 <= status < 300:
         current_app.logger.debug("Request to powerdns API successful")
         if Setting().get('enable_api_rr_history'):
             if request.method in ['POST', 'PATCH']:
                 data = request.get_json(force=True)
-                for rrset_data in data['rrsets']:
-                    history = History(msg='{0} zone {1} record of {2}'.format(
-                        rrset_data['changetype'].lower(), rrset_data['type'],
-                        rrset_data['name'].rstrip('.')),
-                                    detail=json.dumps(data),
-                                    created_by=g.apikey.description,
-                                    domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
-                    history.add()
+                history = History(
+                    msg='Apply record changes to zone {0}'.format(zone_id.rstrip('.')),
+                    detail = json.dumps({
+                        'domain': zone_id.rstrip('.'),
+                        'add_rrsets': list(filter(lambda r: r['changetype'] == "REPLACE", data['rrsets'])),
+                        'del_rrsets': list(filter(lambda r: r['changetype'] == "DELETE", data['rrsets']))
+                    }),
+                    created_by=created_by_value,
+                    domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
+                history.add()
             elif request.method == 'DELETE':
                 history = History(msg='Deleted zone {0}'.format(zone_id.rstrip('.')),
                                   detail='',
-                                  created_by=g.apikey.description,
+                                  created_by=created_by_value,
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
             elif request.method != 'GET':
                 history = History(msg='Updated zone {0}'.format(zone_id.rstrip('.')),
                                   detail='',
-                                  created_by=g.apikey.description,
+                                  created_by=created_by_value,
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
     return resp.content, resp.status_code, resp.headers.items()
@@ -1160,21 +1159,22 @@ def api_create_zone(server_id):
 
     if resp.status_code == 201:
         current_app.logger.debug("Request to powerdns API successful")
+        created_by_value=is_custom_header_api()
         data = request.get_json(force=True)
 
         if g.apikey.role.name not in ['Administrator', 'Operator']:
             current_app.logger.debug(
-                "Apikey is user key, assigning created domain")
+                "Apikey is user key, assigning created zone")
             domain = Domain(name=data['name'].rstrip('.'))
             g.apikey.domains.append(domain)
 
         domain = Domain()
         domain.update()
 
-        history = History(msg='Add domain {0}'.format(
+        history = History(msg='Add zone {0}'.format(
             data['name'].rstrip('.')),
             detail=json.dumps(data),
-            created_by=g.apikey.description,
+            created_by=created_by_value,
             domain_id=domain.get_id_by_name(data['name'].rstrip('.')))
         history.add()
 
@@ -1192,17 +1192,13 @@ def api_get_zones(server_id):
         return jsonify(domain_schema.dump(domain_obj_list)), 200
     else:
         resp = helper.forward_request()
-        if (
-            g.apikey.role.name not in ['Administrator', 'Operator']
-            and resp.status_code == 200
-        ):
+        if (g.apikey.role.name not in ['Administrator', 'Operator'] and resp.status_code == 200):
             domain_list = [d['name']
                            for d in domain_schema.dump(g.apikey.domains)]
 
             accounts_domains = [d.name for a in g.apikey.accounts for d in a.domains]
             allowed_domains = set(domain_list + accounts_domains)
-            current_app.logger.debug("Account domains: {}".format(
-                                     '/'.join(accounts_domains)))
+            current_app.logger.debug("Account zones: {}".format('/'.join(accounts_domains)))
             content = json.dumps([i for i in json.loads(resp.content)
                                   if i['name'].rstrip('.') in allowed_domains])
             return content, resp.status_code, resp.headers.items()
@@ -1223,6 +1219,7 @@ def api_server_config_forward(server_id):
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
+
 # The endpoint to synchronize Domains in background
 @api_bp.route('/sync_domains', methods=['GET'])
 @apikey_or_basic_auth
@@ -1231,6 +1228,7 @@ def sync_domains():
     domain.update()
     return 'Finished synchronization in background', 200
 
+
 @api_bp.route('/health', methods=['GET'])
 @apikey_auth
 def health():
@@ -1238,13 +1236,14 @@ def health():
     domain_to_query = domain.query.first()
 
     if not domain_to_query:
-        current_app.logger.error("No domain found to query a health check")
+        current_app.logger.error("No zone found to query a health check")
         return make_response("Unknown", 503)
 
     try:
         domain.get_domain_info(domain_to_query.name)
     except Exception as e:
-        current_app.logger.error("Health Check - Failed to query authoritative server for domain {}".format(domain_to_query.name))
+        current_app.logger.error(
+            "Health Check - Failed to query authoritative server for zone {}".format(domain_to_query.name))
         return make_response("Down", 503)
 
     return make_response("Up", 200)

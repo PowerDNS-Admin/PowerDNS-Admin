@@ -1,221 +1,276 @@
 {% extends "base.html" %}
 {% set active_page = "new_domain" %}
-{% block title %}<title>Add Domain - {{ SITE_NAME }}</title>{% endblock %}
+{% block title %}<title>Create Zone - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>
-        Domain
-        <small>Create new</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i>Home</a></li>
-        <li><a href="{{ url_for('dashboard.dashboard') }}">Domain</a></li>
-        <li class="active">Add Domain</li>
-    </ol>
-</section>
-{% endblock %}
-
-{% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Create new domain</h3>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">
+                        Create Zone
+                    </h1>
                 </div>
-                <!-- /.box-header -->
-                <!-- form start -->
-                <form role="form" method="post" action="{{ url_for('domain.add') }}">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <div class="box-body">
-                        <div class="form-group">
-                            <input type="text" class="form-control" name="domain_name" id="domain_name"
-                                placeholder="Enter a valid domain name (required)">
-                        </div>
-                        {% if domain_override_toggle == True %}
-                        <div class="form-group">
-                            <label>Domain Override Record</label>
-                            <input type="checkbox" id="domain_override" name="domain_override"
-                                class="checkbox">
-                        </div>
-                        {% endif %}
-                        <select name="accountid" class="form-control" style="width:15em;">
-                            <option value="0">- No Account -</option>
-                            {% for account in accounts %}
-                            <option value="{{ account.id }}">{{ account.name }}</option>
-                            {% endfor %}
-                        </select><br />
-                        <div class="form-group">
-                            <label>Type</label>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="radio_type" id="radio_type_native" value="native" checked>
-                                    Native
-                                </label>
-                                &nbsp;&nbsp;&nbsp;
-                                <label>
-                                    <input type="radio" name="radio_type" id="radio_type_master" value="master"> Master
-                                </label>
-                                &nbsp;&nbsp;&nbsp;
-                                <label>
-                                    <input type="radio" name="radio_type" id="radio_type_slave" value="slave">Slave
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Select a template</label>
-                            <select class="form-control" id="domain_template" name="domain_template">
-                                <option value="0">No template</option>
-                                {% for template in templates %}
-                                <option value="{{ template.id }}">{{ template.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group" style="display: none;" id="domain_master_address_div">
-                            <input type="text" class="form-control" name="domain_master_address"
-                                id="domain_master_address"
-                                placeholder="Enter valid master ip addresses (separated by commas)">
-                        </div>
-                        <div class="form-group">
-                            <label>SOA-EDIT-API</label>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="radio_type_soa_edit_api" id="radio_default"
-                                        value="DEFAULT" checked> DEFAULT
-                                </label>
-                            </div>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="radio_type_soa_edit_api" id="radio_increase"
-                                        value="INCREASE"> INCREASE
-                                </label>
-                            </div>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="radio_type_soa_edit_api" id="radio_epoch" value="EPOCH">
-                                    EPOCH
-                                </label>
-                            </div>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="radio_type_soa_edit_api" id="radio_off" value="OFF"> OFF
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /.box-body -->
-
-                    <div class="box-footer">
-                        <button type="submit" class="btn btn-flat btn-primary">Submit</button>
-                        <button type="button" class="btn btn-flat btn-default"
-                            onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">Cancel</button>
-                    </div>
-                </form>
-            </div>
-            <!-- /.box -->
-        </div>
-        <div class="col-md-8">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Help with creating a new domain</h3>
-                </div>
-                <div class="box-body">
-                    <dl class="dl-horizontal">
-                        <dt>Domain name</dt>
-                        <dd>Enter your domain name in the format of name.tld (eg. powerdns-admin.com). You can also
-                            enter sub-domains to create a sub-root zone (eg. sub.powerdns-admin.com) in case you want to
-                            delegate sub-domain management to specific users.</dd>
-                        <dt>Type</dt>
-                        <dd>The type decides how the domain will be replicated across multiple DNS servers.
-                            <ul>
-                                <li>
-                                    Native - PowerDNS will not perform any replication. Use this if you only have one
-                                    PowerDNS server or you handle replication via your backend.
-                                </li>
-                                <li>
-                                    Master - This PowerDNS server will serve as the master and will send zone transfers
-                                    (AXFRs) to other servers configured as slaves.
-                                </li>
-                                <li>
-                                    Slave - This PowerDNS server will serve as the slave and will request and receive
-                                    zone transfers (AXFRs) from other servers configured as masters.
-                                </li>
-                            </ul>
-                        </dd>
-                        <dt>SOA-EDIT-API</dt>
-                        <dd>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a change is
-                            made to the domain.
-                            <ul>
-                                <li>
-                                    DEFAULT - Generate a soa serial of YYYYMMDD01. If the current serial is lower than
-                                    the generated serial, use the generated serial. If the current serial is higher or
-                                    equal to the generated serial, increase the current serial by 1.
-                                </li>
-                                <li>
-                                    INCREASE - Increase the current serial by 1.
-                                </li>
-                                <li>
-                                    EPOCH - Change the serial to the number of seconds since the EPOCH, aka unixtime.
-                                </li>
-                                <li>
-                                    OFF - Disable automatic updates of the SOA serial.
-                                </li>
-                            </ul>
-                        </dd>
-                    </dl>
-                    <p>Find more details at <a href="https://docs.powerdns.com/md/">https://docs.powerdns.com/md/</a>
-                    </p>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">New Zone</li>
+                    </ol>
                 </div>
             </div>
         </div>
     </div>
-</section>
 {% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <form role="form" method="post" action="{{ url_for('domain.add') }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <div class="card card-outline card-primary shadow">
+                            <div class="card-header">
+                                <h3 class="card-title">Zone Editor</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="domain_name">Zone Name</label>
+                                    <input type="text" class="form-control" name="domain_name" id="domain_name"
+                                           placeholder="Enter a valid zone name (required)">
+                                </div>
+                                {% if domain_override_toggle == True %}
+                                    <div class="form-group">
+                                        <input type="checkbox" id="domain_override" name="domain_override"
+                                               class="checkbox">
+                                        &nbsp;
+                                        <label for="domain_override">Zone Override Record</label>
+                                    </div>
+                                {% endif %}
+                                <div class="form-group">
+                                    <label for="selAccount">Account</label>
+                                    <select name="accountid" id="selAccount" class="form-control">
+                                        <option value="0">- No Account -</option>
+                                        {% for account in accounts %}
+                                            <option value="{{ account.id }}">{{ account.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Zone Type</label>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type" id="radio_type_native" value="native"
+                                                   checked>
+                                            Native
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type" id="radio_type_primary"
+                                                   value="primary">
+                                            Primary
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type" id="radio_type_secondary"
+                                                   value="slave">
+                                            Secondary
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="display: none;" id="domain_master_address_div">
+                                    <input type="text" class="form-control" name="domain_master_address"
+                                           id="domain_master_address"
+                                           placeholder="Enter valid Primary Server IP addresses (separated by commas)">
+                                </div>
+                                <div class="form-group">
+                                    <label for="domain_template">Zone Template</label>
+                                    <select class="form-control" id="domain_template" name="domain_template">
+                                        <option value="0">No template</option>
+                                        {% for template in templates %}
+                                            <option value="{{ template.id }}">{{ template.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>SOA-EDIT-API</label>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_default"
+                                                   value="DEFAULT" checked>
+                                            DEFAULT
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_increase"
+                                                   value="INCREASE">
+                                            INCREASE
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_epoch"
+                                                   value="EPOCH">
+                                            EPOCH
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_off"
+                                                   value="OFF"> OFF
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <button type="button" title="Cancel" class="btn btn-secondary"
+                                        onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
+                                    <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
+                                </button>
+                                <button type="submit" title="Create Zone" class="btn btn-primary float-right">
+                                    <i class="fa-solid fa-save"></i>&nbsp;Create Zone
+                                </button>
+                            </div>
+                            <!-- /.card-footer -->
+                        </div>
+                        <!-- /.card -->
+                    </form>
+                </div>
+                <!-- /.col -->
+                <div class="col-12 col-sm-6 col-lg-8">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Zone Editor Help</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <dl class="dl-horizontal">
+                                <dt>Zone Name</dt>
+                                <dd>Enter your zone name in the format of name.tld (eg. powerdns-admin.com). You can
+                                    also enter sublevel zones to create delegate zones (eg. sub.powerdns-admin.com)
+                                    which can be useful for delegating control to other users.
+                                </dd>
+                                <dt>Zone Override Record</dt>
+                                <dd>When enabled, this will allow the user to by-pass validation errors if the user
+                                    doesn't have administration rights to a parent zone.
+                                </dd>
+                                <dt>Account</dt>
+                                <dd>Specifies the PowerDNS account value to use for the zone.</dd>
+                                <dt>Zone Type</dt>
+                                <dd>The type decides how the zone will be replicated across multiple DNS servers.
+                                    <ul>
+                                        <li>
+                                            <strong>Native</strong> - The server will not perform any Primary or Secondary
+                                            zone functions.
+                                        </li>
+                                        <li>
+                                            <strong>Primary</strong> - The server will serve as the Primary and will send
+                                            zone transfers (AXFRs) to other servers configured as secondaries.
+                                        </li>
+                                        <li>
+                                            <strong>Secondary</strong> - The server will serve as the Secondary and will
+                                            request and receive zone transfers (AXFRs) from other servers configured as
+                                            Primaries.
+                                        </li>
+                                    </ul>
+                                </dd>
+                                <dt>Zone Template</dt>
+                                <dd>Specifies the existing zone template which this zone should initially be replicated
+                                    from.
+                                </dd>
+                                <dt>SOA-EDIT-API</dt>
+                                <dd>The SOA-EDIT-API setting defines how the SOA serial number will be updated after a
+                                    change is
+                                    made to the zone.
+                                    <ul>
+                                        <li>
+                                            <strong>DEFAULT</strong> - Generate a soa serial of YYYYMMDD01. If the current serial
+                                            is lower than
+                                            the generated serial, use the generated serial. If the current serial is
+                                            higher or
+                                            equal to the generated serial, increase the current serial by 1.
+                                        </li>
+                                        <li>
+                                            <strong>INCREASE</strong> - Increase the current serial by 1.
+                                        </li>
+                                        <li>
+                                            <strong>EPOCH</strong> - Change the serial to the number of seconds since the EPOCH,
+                                            AKA UNIX timestamps
+                                        </li>
+                                        <li>
+                                            <strong>OFF</strong> - Disable automatic updates of the SOA serial.
+                                        </li>
+                                    </ul>
+                                </dd>
+                            </dl>
+                            <p>
+                                Find more details at <a href="https://docs.powerdns.com/md/" target="_blank">https://docs.powerdns.com/md/</a>
+                            </p>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+{% endblock %}
+
 {% block extrascripts %}
-<script>
-    $("input[name=radio_type]").change(function () {
-        var type = $(this).val();
-        if (type == "slave") {
-            $("#domain_master_address_div").show();
-        } else {
-            $("#domain_master_address_div").hide();
-        }
-    });
-</script>
+    <script>
+        $("input[name=radio_type]").change(function () {
+            var type = $(this).val();
+            if (type == "slave") {
+                $("#domain_master_address_div").show();
+            } else {
+                $("#domain_master_address_div").hide();
+            }
+        });
+    </script>
 {% endblock %}
+
 {% block modals %}
-<script>
-{% if domain_override_message %}
-    $(document.body).ready(function () {
-        var modal = $("#modal_warning");
-        var info = "{{ domain_override_message }}";
-        modal.find('.modal-body p').text(info);
-        modal.modal('show');
-    });
-{% endif %}
-</script>
-</div>
-<div class="modal fade" id="modal_warning">
-  <div class="modal-dialog">
-      <div class="modal-content modal-sm">
-          <div class="modal-header alert-danger">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_warn_modal">
-                  <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 class="modal-title">WARNING</h4>
-          </div>
-          <div class="modal-body">
-              <p></p>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-flat btn-primary center-block" data-dismiss="modal" id="button_confirm_warn_modal">
-                  CLOSE</button>
-          </div>
-      </div>
-      <!-- /.modal-content -->
-  </div>
-  <!-- /.modal-dialog -->
-</div>
+    <script>
+        {% if domain_override_message %}
+            $(document.body).ready(function () {
+                var modal = $("#modal_warning");
+                var info = "{{ domain_override_message }}";
+                modal.find('.modal-body p').text(info);
+                modal.modal('show');
+            });
+        {% endif %}
+    </script>
+
+    <div class="modal fade" id="modal_warning">
+        <div class="modal-dialog">
+            <div class="modal-content modal-sm">
+                <div class="modal-header alert-danger">
+                    <h4 class="modal-title">
+                        WARNING
+                    </h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                            id="button_close_warn_modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary center-block" data-dismiss="modal"
+                            id="button_confirm_warn_modal">
+                        CLOSE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

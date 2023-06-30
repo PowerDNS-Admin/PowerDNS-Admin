@@ -1,13 +1,14 @@
-FROM alpine:3.13 AS builder
-LABEL maintainer="k@ndk.name"
+FROM alpine:3.17 AS builder
 
 ARG BUILD_DEPENDENCIES="build-base \
     libffi-dev \
+    libpq-dev \
     libxml2-dev \
     mariadb-connector-c-dev \
     openldap-dev \
     python3-dev \
     xmlsec-dev \
+    npm \
     yarn \
     cargo"
 
@@ -30,7 +31,7 @@ COPY ./requirements.txt /build/requirements.txt
 
 # Get application dependencies
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install --use-pep517 -r requirements.txt
 
 # Add sources
 COPY . /build
@@ -38,7 +39,7 @@ COPY . /build
 # Prepare assets
 RUN yarn install --pure-lockfile --production && \
     yarn cache clean && \
-    sed -i -r -e "s|'cssmin',\s?'cssrewrite'|'cssmin'|g" /build/powerdnsadmin/assets.py && \
+    sed -i -r -e "s|'rcssmin',\s?'cssrewrite'|'rcssmin'|g" /build/powerdnsadmin/assets.py && \
     flask assets build
 
 RUN mv /build/powerdnsadmin/static /tmp/static && \
@@ -46,6 +47,7 @@ RUN mv /build/powerdnsadmin/static /tmp/static && \
     cp -r /tmp/static/generated /build/powerdnsadmin/static && \
     cp -r /tmp/static/assets /build/powerdnsadmin/static && \
     cp -r /tmp/static/img /build/powerdnsadmin/static && \
+    find /tmp/static/node_modules -name 'webfonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
     find /tmp/static/node_modules -name 'fonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
     find /tmp/static/node_modules/icheck/skins/square -name '*.png' -exec cp {} /build/powerdnsadmin/static/generated \;
 
@@ -66,12 +68,12 @@ RUN mkdir -p /app && \
     cp -r /build/configs/docker_config.py /app/configs
 
 # Build image
-FROM alpine:3.13
+FROM alpine:3.17
 
 ENV FLASK_APP=/app/powerdnsadmin/__init__.py \
     USER=pda
 
-RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-psycopg2 xmlsec tzdata libcap && \
+RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-pyldap py3-flask py3-psycopg2 xmlsec tzdata libcap && \
     addgroup -S ${USER} && \
     adduser -S -D -G ${USER} ${USER} && \
     mkdir /data && \
@@ -80,7 +82,7 @@ RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-ps
     apk del libcap
 
 COPY --from=builder /usr/bin/flask /usr/bin/
-COPY --from=builder /usr/lib/python3.8/site-packages /usr/lib/python3.8/site-packages/
+COPY --from=builder /usr/lib/python3.10/site-packages /usr/lib/python3.10/site-packages/
 COPY --from=builder --chown=root:${USER} /app /app/
 COPY ./docker/entrypoint.sh /usr/bin/
 

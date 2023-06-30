@@ -1,133 +1,156 @@
 {% extends "base.html" %}
 {% set active_page = "admin_keys" %}
-{% block title %}
-<title>Key Management - {{ SITE_NAME }}</title>
-{% endblock %} {% block dashboard_stat %}
-<section class="content-header">
-    <h1>
-        Key <small>Manage API keys</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Key</li>
-    </ol>
-</section>
-{% endblock %} {% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Key Management</h3>
+{% block title %}<title>API Keys - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">API Keys</h1>
                 </div>
-                <div class="box-body">
-                    <a href="{{ url_for('admin.edit_key') }}">
-                        <button type="button" class="btn btn-flat btn-primary pull-left button_add_key">
-                            Add Key&nbsp;<i class="fa fa-plus"></i>
-                        </button>
-                    </a>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">API Keys</li>
+                    </ol>
                 </div>
-                <div class="box-body">
-                    <table id="tbl_keys" class="table table-bordered table-striped">
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header with-border">
+                    <h3 class="card-title">API Keys</h3>
+                    <div class="card-tools">
+                        <a href="{{ url_for('admin.edit_key') }}">
+                            <button type="button" class="btn btn-primary float-right button_add_key" title="Create Key">
+                                <i class="fa-solid fa-plus"></i>&nbsp;Create Key
+                            </button>
+                        </a>
+                    </div>
+                    <!-- /.card-tools -->
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body table-responsive">
+                    <table id="tbl_keys" class="table table-bordered table-striped table-hover table-sm records">
                         <thead>
-                            <tr>
-                                <th>Id</th>
-                                <th>Role</th>
-                                <th>Description</th>
-                                <th>Domains</th>
-                                <th>Accounts</th>
-                                <th>Action</th>
-                            </tr>
+                        <tr>
+                            <th>Id</th>
+                            <th>Role</th>
+                            <th>Description</th>
+                            <th>Zones</th>
+                            <th>Accounts</th>
+                            <th>Actions</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for key in keys %}
+                        {% for key in keys %}
                             <tr class="odd gradeX">
                                 <td>{{ key.id }}</td>
                                 <td>{{ key.role.name }}</td>
                                 <td>{{ key.description }}</td>
-                                <td>{% for domain in key.domains %}{{ domain.name }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-                                <td>{% for account in key.accounts %}{{ account.name }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-                                <td width="15%">
-                                    <button type="button" class="btn btn-flat btn-success button_edit"
-                                        onclick="window.location.href='{{ url_for('admin.edit_key', key_id=key.id) }}'">
-                                        Edit&nbsp;<i class="fa fa-lock"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-flat btn-danger button_delete"
-                                        id="{{ key.id }}">
-                                        Delete&nbsp;<i class="fa fa-trash"></i>
-                                    </button>
+                                <td>{% for domain in key.domains %}{{ domain.name }}{% if not loop.last %},
+                                {% endif %}{% endfor %}</td>
+                                <td>{% for account in key.accounts %}{{ account.name }}{% if not loop.last %},
+                                {% endif %}{% endfor %}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa-solid fa-bars"></i>
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                            <button type="button" class="dropdown-item btn-warning"
+                                                    onclick="window.location.href='{{ url_for('admin.edit_key', key_id=key.id) }}'">
+                                                <i class="fa-solid fa-edit"></i>&nbsp;Edit API Key
+                                            </button>
+                                            <div class="dropdown-divider"></div>
+                                            <button type="button" class="dropdown-item btn-secondary button_delete"
+                                                    id="{{ key.id }}">
+                                                <font color="red">
+                                                    <i class="fa-solid fa-trash"></i>&nbsp;Delete API Key
+                                                </font>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
-                            {% endfor %}
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <!-- /.box-body -->
+                <!-- /.card-body -->
             </div>
-            <!-- /.box -->
+            <!-- /.card -->
         </div>
-        <!-- /.col -->
-    </div>
-    <!-- /.row -->
-</section>
+        <!-- /.container-fluid -->
+    </section>
 {% endblock %}
+
 {% block extrascripts %}
-<script>
-    // set up key data table
-    $("#tbl_keys").DataTable({
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": true,
-        "info": false,
-        "autoWidth": false,
-        "lengthMenu": [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
-        ],
-        "pageLength": 10
-    });
+    <script>
+        // set up key data table
+        $("#tbl_keys").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "lengthMenu": [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            "pageLength": 10
+        });
 
-    // handle deletion of keys
-    $(document.body).on('click', '.button_delete', function () {
-        var modal = $("#modal_delete");
-        var key_id = $(this).prop('id');
-        var info = "Are you sure you want to delete key #" + key_id + "?";
-        modal.find('.modal-body p').text(info);
-        modal.find('#button_delete_confirm').click(function () {
-            var postdata = {
-                'action': 'delete_key',
-                'data': key_id,
-                '_csrf_token': '{{ csrf_token() }}'
-            }
-            applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-keys', false, true);
-            modal.modal('hide');
-        })
-        modal.modal('show');
-
-    });
-</script>
+        // handle deletion of keys
+        $(document.body).on('click', '.button_delete', function () {
+            var modal = $("#modal_delete");
+            var key_id = $(this).prop('id');
+            var info = "Are you sure you want to delete key #" + key_id + "?";
+            modal.find('.modal-body p').text(info);
+            modal.find('#button_delete_confirm').click(function () {
+                var postdata = {
+                    'action': 'delete_key',
+                    'data': key_id,
+                    '_csrf_token': '{{ csrf_token() }}'
+                }
+                applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-keys', false, true);
+                modal.modal('hide');
+            })
+            modal.modal('show');
+        });
+    </script>
 {% endblock %}
+
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
+    <div class="modal fade modal-warning" id="modal_delete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-danger" id="button_delete_confirm">
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
-</div>
 {% endblock %}

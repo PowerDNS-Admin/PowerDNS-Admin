@@ -1,109 +1,209 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Register - {{ SITE_NAME }}</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  {% assets "css_login" -%}
-  <link rel="stylesheet" href="{{ ASSET_URL }}">
-  {%- endassets %}
-
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-  <!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-  <![endif]-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Register - {{ SITE_NAME }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+    {% assets "css_login" -%}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
 </head>
 
 <body class="hold-transition register-page">
-  <div class="register-box">
-    <div class="register-logo">
-      <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
-    </div>
-    <div class="register-box-body">
-      {% if error %}
-      <div class="alert alert-danger alert-dismissible">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        {{ error }}
-      </div>
-      {% endif %}
-      <p class="login-box-msg">Enter your personal details below</p>
-      <form action="{{ url_for('index.register') }}" method="post" data-toggle="validator">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="First Name" name="firstname"
-            data-error="Please input your first name" required>
-          <span class="glyphicon glyphicon-user form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
+<div class="register-box">
+    <div class="card card-outline card-primary shadow">
+        <div class="card-header text-center">
+            <a href="{{ url_for('index.index') }}" class="h3">
+                {% if SETTING.get('site_name') %}
+                    {{ SITE_NAME }}
+                {% else %}
+                    <b>PowerDNS</b>-Admin
+                {% endif %}
+            </a>
         </div>
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="Last name" name="lastname"
-            data-error="Please input your last name" required>
-          <span class="glyphicon glyphicon-user form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="email" class="form-control" placeholder="Email" name="email"
-            data-error="Please input your valid email address" required>
-          <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <p class="login-box-msg">Enter your account details below</p>
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" placeholder="Username" name="username"
-            data-error="Please input your username" required>
-          <span class="glyphicon glyphicon-user form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="password" class="form-control" placeholder="Password" id="password" name="password"
-            data-error="Please input your password" required>
-          <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="password" class="form-control" placeholder="Retype password" name="rpassword"
-            data-match="#password" data-match-error="Password confirmation does not match" required>
-          <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
-          <span class="help-block with-errors"></span>
-        </div>
-        <div class="row">
-          <div class="col-xs-4 pull-left">
-            <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
-          </div>
-          <div class="col-xs-4 pull-right">
-            <button type="submit" class="btn btn-flat btn-primary btn-block">Register</button>
-          </div>
-          <!-- /.col -->
-        </div>
-      </form>
-    </div>
-    <!-- /.form-box -->
-    <div class="login-box-footer">
-      <center>
-        <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
-      </center>
-    </div>
-  </div>
-  <!-- /.login-box -->
+        <div class="card-body">
+            {% if error %}
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    {{ error }}
+                </div>
+            {% endif %}
+            <p class="login-box-msg">Enter your personal details below</p>
+            <form action="{{ url_for('index.register') }}" method="post" validator>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-  {% assets "js_login" -%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {%- endassets %}
-  {% assets "js_validation" -%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {%- endassets %}
-  <script>
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                  </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'firstname' in error_messages else '' }}"
+                               placeholder="First Name" name="firstname" id="firstname"
+                               value="{{ request.form.firstname }}" required>
+                        {% if 'firstname' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['firstname'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                  </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'lastname' in error_messages else '' }}"
+                               placeholder="Last name" name="lastname" id="lastname" value="{{ request.form.lastname }}"
+                               required>
+                        {% if 'lastname' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['lastname'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-envelope"></i>
+                  </span>
+                        </div>
+                        <input type="email" class="form-control {{ 'is-invalid' if 'email' in error_messages else '' }}"
+                               placeholder="Email" name="email" id="email" value="{{ request.form.email }}" required>
+                        {% if 'email' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['email'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <p class="login-box-msg">Enter your account details below</p>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-user"></i>
+                  </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'username' in error_messages else '' }}"
+                               placeholder="Username" name="username" id="username" value="{{ request.form.username }}"
+                               required>
+                        {% if 'username' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['username'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-lock"></i>
+                  </span>
+                        </div>
+                        <input type="password"
+                               class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}"
+                               placeholder="Password" id="password" name="password" required>
+                        {% if 'password' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['password'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-lock"></i>
+                  </span>
+                        </div>
+                        <input type="password"
+                               class="form-control {{ 'is-invalid' if 'rpassword' in error_messages else '' }}"
+                               placeholder="Retype password" id="rpassword" name="rpassword" required>
+                        {% if 'rpassword' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['rpassword'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if captcha_enable %}
+                    <p class="login-box-msg">Please complete the CAPTCHA below</p>
+                    <div class="form-group">
+                    {{ captcha() }}
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                  <span class="input-group-text">
+                    <i class="fas fa-shield-alt"></i>
+                  </span>
+                        </div>
+                        <input type="text"
+                               class="form-control {{ 'is-invalid' if 'captcha_result' in error_messages else '' }}"
+                               placeholder="CAPTCHA" id="captcha" name="captcha" required>
+                        {% if 'captcha_result' in error_messages %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ error_messages['captcha_result'] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="d-flex justify-content-between mx-auto mt-3">
+                        <button type="button" class="btn btn-secondary" id="button_back">Back</button>
+                        <button type="submit" class="btn btn-primary btn-block mx-3">Register</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+</div>
+<!-- /.register-box -->
+<div class="text-center pt-3">
+    <p>Powered by <a href="https://powerdnsadmin.org" target="_blank">PowerDNS-Admin</a></p>
+</div>
+{% assets "js_login" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+{% assets "js_validation" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+<script>
     $(function () {
-      $('#button_back').click(function () {
-        window.location.href = '{{ url_for('index.login') }}';
-      })
+        $('#button_back').click(function () {
+            window.location.href = '{{ url_for('index.login') }}';
+        })
     });
-  </script>
+</script>
 </body>
-
 </html>

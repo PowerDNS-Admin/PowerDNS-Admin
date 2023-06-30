@@ -1,3 +1,4 @@
+---
 # For most projects, this workflow file will not need changing; you simply need
 # to commit it to your repository.
 #
@@ -12,11 +13,72 @@
 name: "CodeQL"
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ master ]
+    branches:
+      - 'dev'
+      - 'main'
+      - 'master'
+      - 'dependabot/**'
+      - 'feature/**'
+      - 'issue/**'
+    paths-ignore:
+      - .github/**
+      - deploy/**
+      - docker/**
+      - docker-test/**
+      - docs/**
+      - powerdnsadmin/static/assets/**
+      - powerdnsadmin/static/custom/css/**
+      - powerdnsadmin/static/img/**
+      - powerdnsadmin/swagger-spec.yaml
+      - .dockerignore
+      - .gitattributes
+      - .gitignore
+      - .lgtm.yml
+      - .whitesource
+      - .yarnrc
+      - docker-compose.yml
+      - docker-compose-test.yml
+      - LICENSE
+      - package.json
+      - README.md
+      - requirements.txt
+      - SECURITY.md
+      - yarn.lock
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ master ]
+    branches:
+      - 'dev'
+      - 'main'
+      - 'master'
+      - 'dependabot/**'
+      - 'feature/**'
+      - 'issue/**'
+    paths-ignore:
+      - .github/**
+      - deploy/**
+      - docker/**
+      - docker-test/**
+      - docs/**
+      - powerdnsadmin/static/assets/**
+      - powerdnsadmin/static/custom/css/**
+      - powerdnsadmin/static/img/**
+      - powerdnsadmin/swagger-spec.yaml
+      - .dockerignore
+      - .gitattributes
+      - .gitignore
+      - .lgtm.yml
+      - .whitesource
+      - .yarnrc
+      - docker-compose.yml
+      - docker-compose-test.yml
+      - LICENSE
+      - package.json
+      - README.md
+      - requirements.txt
+      - SECURITY.md
+      - yarn.lock
   schedule:
     - cron: '45 2 * * 2'
 

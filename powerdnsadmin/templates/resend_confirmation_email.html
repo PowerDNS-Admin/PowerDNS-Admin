@@ -1,86 +1,82 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Resend a confirmation email - {{ SITE_NAME }}</title>
-  <link rel="icon" href="/static/img/favicon.png">
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  {% assets "css_login" -%}
-  <link rel="stylesheet" href="{{ ASSET_URL }}">
-  {%- endassets %}
-  <![endif]-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Resend Confirmation Email - {{ SITE_NAME }}</title>
+    <link rel="icon" href="/static/img/favicon.png">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {% assets "css_login" -%}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
+    <![endif]-->
 </head>
-
 <body class="hold-transition register-page">
-  <div class="register-box">
+<div class="register-box">
     <div class="register-logo">
-      <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
+        <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
     </div>
     <div class="register-box-body">
-      {% if error %}
-      <div class="alert alert-danger alert-dismissible">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        {{ error }}
-      </div>
-      {% endif %}
-          <p>
+        {% if error %}
+            <div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                {{ error }}
+            </div>
+        {% endif %}
+        <p>
             Enter your email address to get account confirmation link.
-          </p>
-      <form method="post" data-toggle="validator">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group has-feedback">
+        </p>
+        <form method="post" data-toggle="validator">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            <input type="email" name="email" class="form-control" placeholder="Email address" data-error="Please input your email" required>
-            <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-            <span class="help-block with-errors"></span>
-        </div>
-        <div class="row">
-          <div class="col-xs-4 pull-left">
-            <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
-          </div>
-          <div class="col-xs-4 pull-right">
-            <button type="submit" class="btn btn-flat btn-primary btn-block">Resend</button>
-          </div>
-          <!-- /.col -->
-        </div>
-        <div class="form-group">
-            <p>
-              {% if status == 0 %}
-                <font color="red">Email not found!</font>
-              {% elif status == 1 %}
-                <font color="red">Email already confirmed!</font>
-              {% elif status == 2 %}
-                <font color="green">Confirmation email sent!</font>
-              {% endif %}
-            </p>
-        </div>
-      </form>
+            <div class="form-group has-feedback">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="email" name="email" class="form-control" placeholder="Email address"
+                       data-error="Please input your email" required>
+                <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                <span class="help-block with-errors"></span>
+            </div>
+            <div class="row">
+                <div class="col-xs-4 pull-left">
+                    <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
+                </div>
+                <div class="col-xs-4 pull-right">
+                    <button type="submit" class="btn btn-flat btn-primary btn-block">Resend</button>
+                </div>
+                <!-- /.col -->
+            </div>
+            <div class="form-group">
+                <p>
+                    {% if status == 0 %}
+                        <font color="red">Email not found!</font>
+                    {% elif status == 1 %}
+                        <font color="red">Email already confirmed!</font>
+                    {% elif status == 2 %}
+                        <font color="green">Confirmation email sent!</font>
+                    {% endif %}
+                </p>
+            </div>
+        </form>
     </div>
-    <!-- /.form-box -->
-    <div class="login-box-footer">
-      <center>
-        <p>Powered by <a href="https://github.com/PowerDNS-Admin/PowerDNS-Admin">PowerDNS-Admin</a></p>
-      </center>
-    </div>
-  </div>
-  <!-- /.login-box -->
+    <!-- /.register-box-body -->
+</div>
+<!-- /.register-box -->
+<div class="text-center pt-3">
+    <p>Powered by <a href="https://powerdnsadmin.org" target="_blank">PowerDNS-Admin</a></p>
+</div>
 
-  {% assets "js_login" -%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {%- endassets %}
-  {% assets "js_validation" -%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {%- endassets %}
-  <script>
+{% assets "js_login" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+{% assets "js_validation" -%}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+<script>
     $(function () {
-      $('#button_back').click(function () {
-        window.location.href = '{{ url_for('index.login') }}';
-      })
+        $('#button_back').click(function () {
+            window.location.href = '{{ url_for('index.login') }}';
+        })
     });
-  </script>
+</script>
 </body>
-
 </html>

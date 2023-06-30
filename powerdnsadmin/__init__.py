@@ -56,10 +56,15 @@ def create_app(config=None):
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
 
     # Load Flask-Session
-    if app.config.get('FILESYSTEM_SESSIONS_ENABLED'):
-        app.config['SESSION_TYPE'] = 'filesystem'
-        sess = Session()
-        sess.init_app(app)
+    app.config['SESSION_TYPE'] = app.config.get('SESSION_TYPE')
+    if 'SESSION_TYPE' in os.environ:
+        app.config['SESSION_TYPE'] = os.environ.get('SESSION_TYPE')
+
+    sess = Session(app)
+
+    # create sessions table if using sqlalchemy backend
+    if os.environ.get('SESSION_TYPE') == 'sqlalchemy':
+        sess.app.session_interface.db.create_all()
 
     # SMTP
     app.mail = Mail(app)
@@ -74,11 +79,10 @@ def create_app(config=None):
     app.jinja_env.filters['display_record_name'] = utils.display_record_name
     app.jinja_env.filters['display_master_name'] = utils.display_master_name
     app.jinja_env.filters['display_second_to_time'] = utils.display_time
-    app.jinja_env.filters[
-        'email_to_gravatar_url'] = utils.email_to_gravatar_url
-    app.jinja_env.filters[
-        'display_setting_state'] = utils.display_setting_state
+    app.jinja_env.filters['display_setting_state'] = utils.display_setting_state
     app.jinja_env.filters['pretty_domain_name'] = utils.pretty_domain_name
+    app.jinja_env.filters['format_datetime_local'] = utils.format_datetime
+    app.jinja_env.filters['format_zone_type'] = utils.format_zone_type
 
     # Register context proccessors
     from .models.setting import Setting
@@ -92,10 +96,5 @@ def create_app(config=None):
     def inject_setting():
         setting = Setting()
         return dict(SETTING=setting)
-
-    @app.context_processor
-    def inject_mode():
-        setting = app.config.get('OFFLINE_MODE', False)
-        return dict(OFFLINE_MODE=setting)
 
     return app

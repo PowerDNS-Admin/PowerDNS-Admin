@@ -1,49 +1,64 @@
 # PowerDNS-Admin
+
 A PowerDNS web interface with advanced features.
 
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/PowerDNS-Admin/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PowerDNS-Admin/PowerDNS-Admin/context:python)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/PowerDNS-Admin/PowerDNS-Admin.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PowerDNS-Admin/PowerDNS-Admin/context:javascript)
+[![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
+[![Docker Image](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
 
 #### Features:
-- Multiple domain management
-- Domain template
-- User management
-- User access management based on domain
-- User activity logging
-- Support Local DB / SAML / LDAP / Active Directory user authentication
-- Support Google / Github / Azure / OpenID OAuth
-- Support Two-factor authentication (TOTP)
-- Dashboard and pdns service statistics
+
+- Provides forward and reverse zone management
+- Provides zone templating features
+- Provides user management with role based access control
+- Provides zone specific access control
+- Provides activity logging
+- Authentication:
+  - Local User Support
+  - SAML Support
+  - LDAP Support: OpenLDAP / Active Directory
+  - OAuth Support: Google / GitHub / Azure / OpenID
+- Two-factor authentication support (TOTP)
+- PDNS Service Configuration & Statistics Monitoring
 - DynDNS 2 protocol support
-- Edit IPv6 PTRs using IPv6 addresses directly (no more editing of literal addresses!)
-- Limited API for manipulating zones and records
-- Full IDN/Punycode support
+- Easy IPv6 PTR record editing
+- Provides an API for zone and record management among other features
+- Provides full IDN/Punycode support
 
 ## Running PowerDNS-Admin
-There are several ways to run PowerDNS-Admin. The easiest way is to use Docker.
-If you are looking to install and run PowerDNS-Admin directly onto your system check out the [Wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki#installation-guides) for ways to do that.
+
+There are several ways to run PowerDNS-Admin. The quickest way is to use Docker.
+If you are looking to install and run PowerDNS-Admin directly onto your system, check out
+the [wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/wiki/) for ways to do that.
 
 ### Docker
-These are two options to run PowerDNS-Admin using Docker.
-To get started as quickly as possible try option 1. If you want to make modifications to the configuration option 2 may be cleaner.
+Here are two options to run PowerDNS-Admin using Docker.
+To get started as quickly as possible, try option 1. If you want to make modifications to the configuration option 2 may
+be cleaner.
 
 #### Option 1: From Docker Hub
-The easiest is to just run the latest Docker image from Docker Hub:
+
+To run the application using the latest stable release on Docker Hub, run the following command:
+
 ```
 $ docker run -d \
     -e SECRET_KEY='a-very-secret-key' \
     -v pda-data:/data \
     -p 9191:80 \
-    ngoduykhanh/powerdns-admin:latest
+    powerdnsadmin/pda-legacy:latest
 ```
-This creates a volume called `pda-data` to persist the SQLite database with the configuration.
+
+This creates a volume named `pda-data` to persist the default SQLite database with app configuration.
 
 #### Option 2: Using docker-compose
+
 1. Update the configuration   
    Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
-   Other environment variables are mentioned in the [legal_envvars](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/configs/docker_config.py#L5-L46).
-   To use the Docker secrets feature it is possible to append `_FILE` to the environment variables and point to a file with the values stored in it.   
-   Make sure to set the environment variable `SECRET_KEY` to a long random string (https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY)
+   Other environment variables are mentioned in
+   the [legal_envvars](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/configs/docker_config.py#L5-L46).
+   To use the Docker secrets feature it is possible to append `_FILE` to the environment variables and point to a file
+   with the values stored in it.   
+   Make sure to set the environment variable `SECRET_KEY` to a long random
+   string (https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY)
 
 2. Start docker container
    ```
@@ -72,8 +87,36 @@ There are three options to run PowerDNS-Admin in a kubernetes cluster. This curr
 The notes output from the install will explain how to access PowerDNS-Admin. If you enable ingress and/or cert-manager it can be something like http://powerdns-admin.mydomain.com or https://powerdns-admin.mydomain.com, whatever hostname you set in `myvalues.yaml`.
 
 ## Screenshots
-![dashboard](https://user-images.githubusercontent.com/6447444/44068603-0d2d81f6-9fa5-11e8-83af-14e2ad79e370.png)
 
-## LICENSE
-MIT. See [LICENSE](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/LICENSE)
+![dashboard](docs/screenshots/dashboard.png)
 
+## Support
+
+**Looking for help?** Try taking a look at the project's
+[Support Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/.github/SUPPORT.md) or joining
+our [Discord Server](https://discord.powerdnsadmin.org).
+
+## Security Policy
+
+Please see our [Security Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/SECURITY.md).
+
+## Contributing
+
+Please see our [Contribution Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CONTRIBUTING.md).
+
+## Code of Conduct
+
+Please see our [Code of Conduct Policy](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CODE_OF_CONDUCT.md).
+
+## License
+
+This project is released under the MIT license. For additional
+information, [see the full license](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/LICENSE).
+
+## [Donate](https://www.buymeacoffee.com/AzorianMatt)
+
+Like my work?
+
+<a href="https://www.buymeacoffee.com/AzorianMatt" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+**Want to sponsor me?** Please visit my organization's [sponsorship page](https://github.com/sponsors/AzorianSolutions).

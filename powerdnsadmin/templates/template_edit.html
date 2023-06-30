@@ -1,219 +1,232 @@
 {% extends "base.html" %}
 {% set active_page = "admin_domain_template" %}
-{% block title %}<title>Edit Template - {{ SITE_NAME }}</title>{% endblock %}
+{% block title %}<title>Edit Zone Template - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-<section class="content-header">
-    <h1>
-        Edit template <small>{{ template }}</small>
-    </h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i
-                class="fa fa-dashboard"></i> Home</a></li>
-        <li>Templates</li>
-        <li class="active">{{ template }}</li>
-    </ol>
-</section>
-{% endblock %}
-
-{% block content %}
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Manage Template Records for {{ template }}</h3>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">Edit Zone Template</h1>
                 </div>
-                <div class="box-body">
-                    <button type="button" class="btn btn-flat btn-primary pull-left button_add_record" id="{{ template }}">
-                        Add Record&nbsp;<i class="fa fa-plus"></i>
-                    </button>
-                    <button type="button" class="btn btn-flat btn-primary pull-right button_apply_changes" id="{{ template }}">
-                        Apply Changes&nbsp;<i class="fa fa-floppy-o"></i>
-                    </button>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_records" class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>TTL</th>
-                                <th>Data</th>
-                                <th>Comment</th>
-                                <th>Edit</th>
-                                <th>Delete</th>
-                                <th>ID</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                                {% for record in records %}
-                                <tr class="odd row_record">
-                                    <td>
-                                        {{ record.name }}
-                                    </td>
-                                    <td>
-                                        {{ record.type }}
-                                    </td>
-                                    <td>
-                                         {{ record.status }}
-                                    </td>
-                                    <td>
-                                         {{ record.ttl }}
-                                    </td>
-                                    <td>
-                                         {{ record.data }}
-                                    </td>
-                                    <td>
-                                        {{ record.comment }}
-                                    </td>
-                                    <td width="6%">
-                                         <button type="button" class="btn btn-flat btn-warning button_edit">
-                                            Edit&nbsp;<i class="fa fa-edit"></i>
-                                        </button>
-                                    </td>
-                                    <td width="6%">
-                                        <button type="button" class="btn btn-flat btn-danger button_delete">
-                                            Delete&nbsp;<i class="fa fa-trash"></i>
-                                        </button>
-                                    </td>
-                                    <td>
-                                    	{{ record.id }}
-                                    </td>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.templates') }}">Templates</a></li>
+                        <li class="breadcrumb-item active">Edit Zone Template</li>
+                    </ol>
                 </div>
             </div>
         </div>
     </div>
-</section>
 {% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Zone Template Editor</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-primary float-left button_add_record"
+                                        title="Add Record" id="{{ template }}">
+                                    <i class="fa-solid fa-plus"></i>&nbsp;Add Record
+                                </button>
+                                <button type="button" class="btn btn-primary float-right button_apply_changes ml-2"
+                                        title="Save Template" id="{{ template }}">
+                                    <i class="fa-solid fa-save"></i>&nbsp;Save Template
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table id="tbl_records"
+                                   class="table table-bordered table-striped table-hover table-sm records">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>TTL</th>
+                                    <th>Data</th>
+                                    <th>Comment</th>
+                                    <th>Edit</th>
+                                    <th>Delete</th>
+                                    <th>ID</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for record in records %}
+                                    <tr class="odd row_record">
+                                        <td>
+                                            {{ record.name }}
+                                        </td>
+                                        <td>
+                                            {{ record.type }}
+                                        </td>
+                                        <td>
+                                            {{ record.status }}
+                                        </td>
+                                        <td>
+                                            {{ record.ttl }}
+                                        </td>
+                                        <td>
+                                            {{ record.data }}
+                                        </td>
+                                        <td>
+                                            {{ record.comment }}
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-warning button_edit"
+                                                    title="Edit Record">
+                                                <i class="fa-solid fa-edit"></i>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-danger button_delete"
+                                                    title="Delete Record">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        <td>{{ id }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
 {% block extrascripts %}
-<script>
-    // superglobals
-    window.records_allow_edit = {{ editable_records|tojson }};
-    window.ttl_options = {{ ttl_options|tojson }};
-    window.nEditing = null;
-    window.nNew = false;
+    <script>
+        // superglobals
+        window.records_allow_edit = {{ editable_records | tojson }};
+        window.ttl_options = {{ ttl_options | tojson }};
+        window.nEditing = null;
+        window.nNew = false;
 
-    // set up user data table
-    $("#tbl_records").DataTable({
-        "paging" : true,
-        "lengthChange" : true,
-        "searching" : true,
-        "ordering" : true,
-        "info" : true,
-        "autoWidth" : false,
-        {% if SETTING.get('default_record_table_size')|string in ['5','15','20'] %}
-        "lengthMenu": [ [5, 15, 20, -1],
-                        [5, 15, 20, "All"]],
-        {% else %}
-        "lengthMenu": [ [5, 15, 20, {{ SETTING.get('default_record_table_size') }}, -1],
-                        [5, 15, 20, {{ SETTING.get('default_record_table_size') }}, "All"]],
-        {% endif %}
-        "pageLength": {{ SETTING.get('default_record_table_size') }},
-        "language": {
-            "lengthMenu": " _MENU_ records"
-        },
-        "retrieve" : true,
-        "columnDefs": [
-            {
-                type: 'natural',
-                targets: [0, 4]
+        // Initialize DataTables
+        $("#tbl_records").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            {% if SETTING.get('default_record_table_size')|string in ['5','15','20'] %}
+                "lengthMenu": [[5, 15, 20, -1],
+                    [5, 15, 20, "All"]],
+            {% else %}
+                "lengthMenu": [[5, 15, 20, {{ SETTING.get('default_record_table_size') }}, -1],
+                    [5, 15, 20, {{ SETTING.get('default_record_table_size') }}, "All"]],
+            {% endif %}
+            "pageLength": {{ SETTING.get('default_record_table_size') }},
+            "language": {
+                "lengthMenu": " _MENU_ records"
             },
-            {
-                // hidden column so that we can add new records on top
-                // regardless of whatever sorting is done. See orderFixed
-                visible: false,
-                targets: [ 8 ]
-            },
-            {
-                className: "length-break",
-                targets: [ 4, 5 ]
-            }
-        ],
-        "orderFixed": [[8, 'asc']]
-    });
-
-    // handle delete button
-    $(document.body).on("click", ".button_delete", function(e) {
-        e.stopPropagation();
-        var modal = $("#modal_delete");
-        var table = $("#tbl_records").DataTable();
-        var record = $(this).prop('id');
-        var nRow = $(this).parents('tr')[0];
-        var info = "Are you sure you want to delete " + record + "?";
-        modal.find('.modal-body p').text(info);
-        modal.modal('show');
-
-        $("#button_delete_confirm").unbind().one('click', function(e) {
-            table.row(nRow).remove().draw();
-            modal.modal('hide');
+            "retrieve": true,
+            "columnDefs": [
+                {
+                    type: 'natural',
+                    targets: [0, 4]
+                },
+                {
+                    // hidden column so that we can add new records on top
+                    // regardless of whatever sorting is done. See orderFixed
+                    visible: false,
+                    targets: [8]
+                },
+                {
+                    className: "length-break",
+                    targets: [4, 5]
+                }
+            ],
+            "orderFixed": [[8, 'asc']]
         });
 
-        $("#button_delete_cancel").unbind().one('click', function(e) {
-            modal.modal('hide');
-        });
-    });
-    // handle edit button and record click
-    $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function(e) {
-         e.stopPropagation();
-         if ($(this).is('tr')) {
-            var nRow = $(this)[0];
-         } else {
+        // handle delete button
+        $(document.body).on("click", ".button_delete", function (e) {
+            e.stopPropagation();
+            var modal = $("#modal_delete");
+            var table = $("#tbl_records").DataTable();
+            var record = $(this).prop('id');
             var nRow = $(this).parents('tr')[0];
-         }
-         var table = $("#tbl_records").DataTable();
+            var info = "Are you sure you want to delete " + record + "?";
+            modal.find('.modal-body p').text(info);
+            modal.modal('show');
 
-        if (nEditing == nRow) {
-            /* click on row already being edited, do nothing */
-        } else if (nEditing !== null && nEditing != nRow && nNew == false) {
-             /* Currently editing - but not this row - restore the old before continuing to edit mode */
-             restoreRow(table, nEditing);
-             editRow(table, nRow);
-             nEditing = nRow;
-         } else if (nNew == true) {
-             /* adding a new row, delete it and start editing */
-             table.row(nEditing).remove().draw();
-             nNew = false;
-             editRow(table, nRow);
-             nEditing = nRow;
-         } else {
-             /* No edit in progress - let's start one */
-             editRow(table, nRow);
-             nEditing = nRow;
-         }
-    });
+            $("#button_delete_confirm").unbind().one('click', function (e) {
+                table.row(nRow).remove().draw();
+                modal.modal('hide');
+            });
 
-    // handle apply changes button
-    $(document.body).on("click",".button_apply_changes", function() {
-        if (nNew || nEditing) {
-            showErrorModal("Previous record not saved. Please save it before applying the changes.");
-            return;
-        }
+            $("#button_delete_cancel").unbind().one('click', function (e) {
+                modal.modal('hide');
+            });
+        });
 
-        var modal = $("#modal_apply_changes");
-        var table = $("#tbl_records").DataTable();
-        var template = $(this).prop('id');
-        var info = "Are you sure you want to apply your changes?";
-        modal.find('.modal-body p').text(info);
+        // handle edit button and record click
+        $(document.body).on("click", ".button_edit{% if quick_edit %}, .row_record{% endif %}", function (e) {
+            e.stopPropagation();
+            if ($(this).is('tr')) {
+                var nRow = $(this)[0];
+            } else {
+                var nRow = $(this).parents('tr')[0];
+            }
+            var table = $("#tbl_records").DataTable();
 
-        // following unbind("click") is to avoid multiple times execution
-        modal.find('#button_apply_confirm').unbind("click").click(function() {
-            var data = getTableData(table);
-            applyChanges( {'_csrf_token': '{{ csrf_token() }}', 'records': data}, $SCRIPT_ROOT + '/admin/template/' + template + '/apply', true);
-            modal.modal('hide');
-        })
-        modal.modal('show');
+            if (nEditing == nRow) {
+                /* click on row already being edited, do nothing */
+            } else if (nEditing !== null && nEditing != nRow && nNew == false) {
+                /* Currently editing - but not this row - restore the old before continuing to edit mode */
+                restoreRow(table, nEditing);
+                editRow(table, nRow);
+                nEditing = nRow;
+            } else if (nNew == true) {
+                /* adding a new row, delete it and start editing */
+                table.row(nEditing).remove().draw();
+                nNew = false;
+                editRow(table, nRow);
+                nEditing = nRow;
+            } else {
+                /* No edit in progress - let's start one */
+                editRow(table, nRow);
+                nEditing = nRow;
+            }
+        });
 
-    });
+        // handle apply changes button
+        $(document.body).on("click", ".button_apply_changes", function () {
+            if (nNew || nEditing) {
+                showErrorModal("Previous record not saved. Please save it before applying the changes.");
+                return;
+            }
 
-    // handle add record button
-    $(document.body).on("click", ".button_add_record", function (e) {
+            var modal = $("#modal_apply_changes");
+            var table = $("#tbl_records").DataTable();
+            var template = $(this).prop('id');
+            var info = "Are you sure you want to apply your changes?";
+            modal.find('.modal-body p').text(info);
+
+            // following unbind("click") is to avoid multiple times execution
+            modal.find('#button_apply_confirm').unbind("click").click(function () {
+                var data = getTableData(table);
+                applyChanges({
+                    '_csrf_token': '{{ csrf_token() }}',
+                    'records': data
+                }, $SCRIPT_ROOT + '/admin/template/' + template + '/apply', true);
+                modal.modal('hide');
+            })
+            modal.modal('show');
+
+        });
+
+        // handle add record button
+        $(document.body).on("click", ".button_add_record", function (e) {
             if (nNew || nEditing) {
                 showErrorModal("Previous record not saved. Please save it before adding more record.");
                 return;
@@ -223,15 +236,15 @@
 
             // add new row
             var default_type = records_allow_edit[0]
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', 3600, '', '', '', '', '0']);
+            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
             editRow($("#tbl_records").DataTable(), nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
             nNew = true;
         });
 
-    //handle cancel button
-    $(document.body).on("click", ".button_cancel", function (e) {
+        //handle cancel button
+        $(document.body).on("click", ".button_cancel", function (e) {
             e.stopPropagation();
             var oTable = $("#tbl_records").DataTable();
             if (nNew) {
@@ -244,8 +257,8 @@
             }
         });
 
-    //handle save button
-    $(document.body).on("click", ".button_save", function (e) {
+        //handle save button
+        $(document.body).on("click", ".button_save", function (e) {
             e.stopPropagation();
             var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
@@ -253,73 +266,73 @@
             nNew = false;
         });
 
-    {% if SETTING.get('record_helper') %}
-    //handle wacky record types
-    $(document.body).on("focus", "#current_edit_record_data", function (e) {
-        var record_type = $(this).parents("tr").find('#record_type').val();
-        var record_data = $(this);
-        if (record_type == "CAA") {
-            var modal = $("#modal_custom_record");
-            if (record_data.val() == "") {
-                var form = "    <label for=\"caa_flag\">CAA Flag</label> \
+        {% if SETTING.get('record_helper') %}
+            //handle wacky record types
+            $(document.body).on("focus", "#current_edit_record_data", function (e) {
+                var record_type = $(this).parents("tr").find('#record_type').val();
+                var record_data = $(this);
+                if (record_type == "CAA") {
+                    var modal = $("#modal_custom_record");
+                    if (record_data.val() == "") {
+                        var form = "    <label for=\"caa_flag\">CAA Flag</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"caa_flag\" id=\"caa_flag\" placeholder=\"0\"> \
                                 <label for=\"caa_tag\">CAA Tag</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"caa_tag\" id=\"caa_tag\" placeholder=\"issue\"> \
                                 <label for=\"caa_value\">CAA Value</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"caa_value\" id=\"caa_value\" placeholder=\"eg. letsencrypt.org\"> \
                             ";
-            } else {
-                var parts = record_data.val().split(" ");
-                var form = "    <label for=\"caa_flag\">CAA Flag</label> \
+                    } else {
+                        var parts = record_data.val().split(" ");
+                        var form = "    <label for=\"caa_flag\">CAA Flag</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"caa_flag\" id=\"caa_flag\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
                                 <label for=\"caa_tag\">CAA Tag</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"caa_tag\" id=\"caa_tag\" placeholder=\"issue\" value=\"" + parts[1] + "\"> \
                                 <label for=\"caa_value\">CAA Value</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"caa_value\" id=\"caa_value\" placeholder=\"eg. letsencrypt.org\" value=\"" + parts[2] + "\"> \
                             ";
-            }
-            modal.find('.modal-body p').html(form);
-            modal.find('#button_save').click(function() {
-                caa_flag = modal.find('#caa_flag').val();
-                caa_tag = modal.find('#caa_tag').val();
-                caa_value = modal.find('#caa_value').val();
-                data = caa_flag + " " + caa_tag + " " + '"' + caa_value + '"';
-                record_data.val(data);
-                modal.modal('hide');
-            })
-            modal.modal('show');
-        } else if (record_type == "MX") {
-            var modal = $("#modal_custom_record");
-            if (record_data.val() == "") {
-                var form = "    <label for=\"mx_priority\">MX Priority</label> \
+                    }
+                    modal.find('.modal-body p').html(form);
+                    modal.find('#button_save').click(function () {
+                        caa_flag = modal.find('#caa_flag').val();
+                        caa_tag = modal.find('#caa_tag').val();
+                        caa_value = modal.find('#caa_value').val();
+                        data = caa_flag + " " + caa_tag + " " + '"' + caa_value + '"';
+                        record_data.val(data);
+                        modal.modal('hide');
+                    })
+                    modal.modal('show');
+                } else if (record_type == "MX") {
+                    var modal = $("#modal_custom_record");
+                    if (record_data.val() == "") {
+                        var form = "    <label for=\"mx_priority\">MX Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\"> \
                                 <label for=\"mx_server\">MX Server</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\"> \
                             ";
-            } else {
-                var parts = record_data.val().split(" ");
-                var form = "    <label for=\"mx_priority\">MX Priority</label> \
+                    } else {
+                        var parts = record_data.val().split(" ");
+                        var form = "    <label for=\"mx_priority\">MX Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_priority\" id=\"mx_priority\" placeholder=\"eg. 10\" value=\"" + parts[0] + "\"> \
                                 <label for=\"mx_server\">MX Server</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"mx_server\" id=\"mx_server\" placeholder=\"eg. postfix.example.com\" value=\"" + parts[1] + "\"> \
                             ";
-            }
-            modal.find('.modal-body p').html(form);
-            modal.find('#button_save').click(function() {
-                mx_server = modal.find('#mx_server').val();
-                mx_priority = modal.find('#mx_priority').val();
-                data = mx_priority + " " + mx_server;
-                if (data && !data.endsWith('.')) {
-                    data = data + '.'
-                }
-                record_data.val(data);
-                modal.modal('hide');
-            })
-            modal.modal('show');
-        } else if (record_type == "SRV") {
-            var modal = $("#modal_custom_record");
-            if (record_data.val() == "") {
-                var form = "    <label for=\"srv_priority\">SRV Priority</label> \
+                    }
+                    modal.find('.modal-body p').html(form);
+                    modal.find('#button_save').click(function () {
+                        mx_server = modal.find('#mx_server').val();
+                        mx_priority = modal.find('#mx_priority').val();
+                        data = mx_priority + " " + mx_server;
+                        if (data && !data.endsWith('.')) {
+                            data = data + '.'
+                        }
+                        record_data.val(data);
+                        modal.modal('hide');
+                    })
+                    modal.modal('show');
+                } else if (record_type == "SRV") {
+                    var modal = $("#modal_custom_record");
+                    if (record_data.val() == "") {
+                        var form = "    <label for=\"srv_priority\">SRV Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\"> \
                                 <label for=\"srv_weight\">SRV Weight</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_weight\" id=\"srv_weight\" placeholder=\"10\"> \
@@ -328,9 +341,9 @@
                                 <label for=\"srv_target\">SRV Target</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\"> \
                             ";
-            } else {
-                var parts = record_data.val().split(" ");
-                var form = "    <label for=\"srv_priority\">SRV Priority</label> \
+                    } else {
+                        var parts = record_data.val().split(" ");
+                        var form = "    <label for=\"srv_priority\">SRV Priority</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_priority\" id=\"srv_priority\" placeholder=\"0\" value=\"" + parts[0] + "\"> \
                                 <label for=\"srv_weight\">SRV Weight</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_weight\" id=\"srv_weight\" placeholder=\"10\" value=\"" + parts[1] + "\"> \
@@ -339,25 +352,25 @@
                                 <label for=\"srv_target\">SRV Target</label> \
                                 <input type=\"text\" class=\"form-control\" name=\"srv_target\" id=\"srv_target\" placeholder=\"sip.example.com\" value=\"" + parts[3] + "\"> \
                 ";
-            }
-            modal.find('.modal-body p').html(form);
-            modal.find('#button_save').click(function() {
-                srv_priority = modal.find('#srv_priority').val();
-                srv_weight = modal.find('#srv_weight').val();
-                srv_port = modal.find('#srv_port').val();
-                srv_target = modal.find('#srv_target').val();
-                data = srv_priority + " " + srv_weight + " " + srv_port + " " + srv_target;
-                if (data && !data.endsWith('.')) {
-                    data = data + '.'
-                }
-                record_data.val(data);
-                modal.modal('hide');
-            })
-            modal.modal('show');
-            } else if (record_type == "SOA") {
-                var modal = $("#modal_custom_record");
-                if (record_data.val() == "") {
-                    var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
+                    }
+                    modal.find('.modal-body p').html(form);
+                    modal.find('#button_save').click(function () {
+                        srv_priority = modal.find('#srv_priority').val();
+                        srv_weight = modal.find('#srv_weight').val();
+                        srv_port = modal.find('#srv_port').val();
+                        srv_target = modal.find('#srv_target').val();
+                        data = srv_priority + " " + srv_weight + " " + srv_port + " " + srv_target;
+                        if (data && !data.endsWith('.')) {
+                            data = data + '.'
+                        }
+                        record_data.val(data);
+                        modal.modal('hide');
+                    })
+                    modal.modal('show');
+                } else if (record_type == "SOA") {
+                    var modal = $("#modal_custom_record");
+                    if (record_data.val() == "") {
+                        var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" placeholder=\"ns1.example.com\"> \
                                     <label for=\"soa_adminemail\">Primary Contact</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" placeholder=\"admin.example.com\"> \
@@ -372,9 +385,9 @@
                                     <label for=\"soa_minimumttl\">Minimum TTL</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" placeholder=\"300\"> \
                                 ";
-                } else {
-                    var parts = record_data.val().split(" ");
-                    var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
+                    } else {
+                        var parts = record_data.val().split(" ");
+                        var form = "    <label for=\"soa_primaryns\">Primary Name Server</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_primaryns\" id=\"soa_primaryns\" value=\"" + parts[0] + "\"> \
                                     <label for=\"soa_adminemail\">Primary Contact</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_adminemail\" id=\"soa_adminemail\" value=\"" + parts[1] + "\"> \
@@ -389,93 +402,95 @@
                                     <label for=\"soa_minimumttl\">Minimum TTL</label> \
                                     <input type=\"text\" class=\"form-control\" name=\"soa_minimumttl\" id=\"soa_minimumttl\" value=\"" + parts[6] + "\"> \
                     ";
-                }
-                modal.find('.modal-body p').html(form);
-                modal.find('#button_save').click(function() {
-                    soa_primaryns = modal.find('#soa_primaryns').val();
-                    soa_adminemail = modal.find('#soa_adminemail').val();
-                    soa_serial = modal.find('#soa_serial').val();
-                    soa_zonerefresh = modal.find('#soa_zonerefresh').val();
-                    soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
-                    soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
-                    soa_minimumttl = modal.find('#soa_minimumttl').val();
+                    }
+                    modal.find('.modal-body p').html(form);
+                    modal.find('#button_save').click(function () {
+                        soa_primaryns = modal.find('#soa_primaryns').val();
+                        soa_adminemail = modal.find('#soa_adminemail').val();
+                        soa_serial = modal.find('#soa_serial').val();
+                        soa_zonerefresh = modal.find('#soa_zonerefresh').val();
+                        soa_failedzonerefresh = modal.find('#soa_failedzonerefresh').val();
+                        soa_zoneexpiry = modal.find('#soa_zoneexpiry').val();
+                        soa_minimumttl = modal.find('#soa_minimumttl').val();
 
-                    data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
-                    record_data.val(data);
-                    modal.modal('hide');
-                })
-            modal.modal('show');
-        }
-    });
-    {% endif %}
-</script>
+                        data = soa_primaryns + " " + soa_adminemail + " " + soa_serial + " " + soa_zonerefresh + " " + soa_failedzonerefresh + " " + soa_zoneexpiry + " " + soa_minimumttl;
+                        record_data.val(data);
+                        modal.modal('hide');
+                    })
+                    modal.modal('show');
+                }
+            });
+        {% endif %}
+    </script>
 {% endblock %}
+
 {% block modals %}
-<div class="modal fade modal-warning" id="modal_delete">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left" id="button_delete_cancel"
-                    data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-danger" id="button_delete_confirm">Delete</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-<div class="modal fade modal-primary" id="modal_apply_changes">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Confirmation</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left"
-                    data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-primary" id="button_apply_confirm">Apply</button>
+    <div class="modal fade modal-warning" id="modal_delete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-left" id="button_delete_cancel"
+                            data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-danger" id="button_delete_confirm">
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
-</div>
-<div class="modal fade modal-primary" id="modal_custom_record">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Custom Record</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+    <div class="modal fade modal-primary" id="modal_apply_changes">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-left" data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="button_apply_confirm">
+                        Apply
+                    </button>
+                </div>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
-</div>
+    <div class="modal fade modal-primary" id="modal_custom_record">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Custom Record</h4>
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="button_save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

@@ -3,9 +3,6 @@ from collections import namedtuple
 
 from powerdnsadmin.lib.validators import validate_zone
 from powerdnsadmin.lib.schema import DomainSchema
-from tests.fixtures import client
-from tests.fixtures import zone_data, initial_apikey_data
-from tests.fixtures import admin_apikey_integration
 
 
 class TestIntegrationApiZoneAdminApiKey(object):

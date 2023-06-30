@@ -2,397 +2,289 @@
 {% set active_page = "dashboard" %}
 {% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
-
 {% block dashboard_stat %}
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      <h1>
-        Dashboard
-        <small>Info</small>
-      </h1>
-      <ol class="breadcrumb">
-        <li><a href="{{ url_for('dashboard.dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Dashboard</li>
-      </ol>
-    </section>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0 text-dark">
+                        Dashboard
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
-
-{% import 'applied_change_macro.html' as applied_change_macro %}
 
 {% block content %}
- <!-- Main content -->
     <section class="content">
-      {% if current_user.role.name in ['Administrator', 'Operator'] or SETTING.get('allow_user_view_history') %}
-      <div class="row">
-        <div class="col-xs-3">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Statistics</h3>
-                </div>
-                <div class="box-body">
-                  <div class="row">
-                  <div class="col-lg-6">
-                      <!-- small box -->
-                      <div class="small-box bg-aqua">
-                        <div class="inner">
-                          <h3>{{ domain_count }}</h3>
-                          <p>{% if domain_count > 1 %}Domains{% else %}Domain{% endif %}</p>
-                        </div>
-                        <div class="icon">
-                          <i class="fa fa-book"></i>
-                        </div>
-                      </div>
-                    </div>
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <div class="col-lg-6">
-                      <a href="{{ url_for('admin.manage_user') }}">
-                      <div class="small-box bg-green">
-                        <div class="inner">
-                          <h3>{{ user_num }}</h3>
-                          <p>{% if user_num > 1 %}Users{% else %}User{% endif %}</p>
-                        </div>
-                        <div class="icon">
-                          <i class="fa fa-users"></i>
-                        </div>
-                      </div>
-                      </a>
-                    </div>
-                    {% endif %}
-                    </div>
-                    <div class="row">
-                    <div class="col-lg-6">
-                      <a href="{{ url_for('admin.history') }}">
-                      <div class="small-box bg-green">
-                        <div class="inner">
-                          <h3>{{ history_number }}</h3>
-                          <p>{% if history_number > 1 %}Histories{% else %}History{% endif %}</p>
-                        </div>
-                        <div class="icon">
-                          <i class="fa fa-calendar"></i>
-                        </div>
-                      </div>
-                      </a>
-                    </div>
-                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
-                    <div class="col-lg-6">
-                      <a href="{{ url_for('admin.pdns_stats') }}">
-                      <div class="small-box bg-green">
-                        <div class="inner">
-                          <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
-                          <p>Uptime</p>
-                        </div>
-                        <div class="icon">
-                          <i class="fa fa-clock-o"></i>
-                        </div>
-                      </div>
-                      </a>
-                    </div>
-                    {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xs-9">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Recent History</h3>
-                </div>
-                <div class="box-body">
-                    <table id="tbl_history" class="table table-bordered table-striped">
-                    <thead>
-                    <tr>
-                      <th>Changed By</th>
-                      <th>Content</th>
-                      <th>Time</th>
-                      <th>Detail</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for history in histories %}
-                      <tr class="odd">
-                          <td>{{ history.history.created_by }}</td>
-                          <td>{{ history.history.msg }}</td>
-                          <td>{{ history.history.created_on }}</td>
-                          <td width="6%">
-                            <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
-                                {{ history.detailed_msg | safe }}
-                                {% if history.change_set %}
-                                <div class="content">
-                                    <div id="change_index_definition"></div>
-                                    {% call applied_change_macro.applied_change_template(history.change_set) %}
-                                    {% endcall %}
-                                </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title mb-2">
+                                Zones
+                                {% if show_bg_domain_button %}
+                                    <button type="button" title="Synchronize Zones"
+                                            class="btn btn-tool refresh-bg-button">
+                                        <i class="fa-solid fa-sync"></i>
+                                    </button>
                                 {% endif %}
+                            </h3>
+                            <div class="card-tools">
+                                <div class="nav-tabs-custom">
+                                    <ul class="nav nav-tabs card-header-tabs" id="custom-content-below-tab"
+                                        role="tablist">
+                                        {% for tab_id in zone_tabs.order %}
+                                            <li class="nav-item">
+                                                <a class="nav-link {% if loop.first %}active{% endif %}"
+                                                   href="#tab_{{ tab_id }}" data-toggle="pill" role="tab">
+                                                    Zones <b>{{ zone_tabs.tabs[tab_id].display_name }}</b>
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-flat btn-primary history-info-button"
-                                {% if history.detailed_msg == "" and history.change_set is none %}
-                                style="visibility: hidden;"
-                                {% endif %} value="{{ loop.index0 }}">Info&nbsp;<i class="fa fa-info"></i>
-                            </button>
-                          </td>
-                      </tr>
-                    {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-            </div>
-        </div>
-      </div>
-      {% endif %}
-
-<!--SYBPATCH START-->
-        <div class="nav-tabs-custom">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="#tab_{{custom_boxes.order[0]}}" data-toggle="tab">Hosted Domains <b>{{custom_boxes.boxes[custom_boxes.order[0]][0]}}</b></a></li>
-            {% for boxId in custom_boxes.order[1:] %}
-                <li><a href="#tab_{{boxId}}" data-toggle="tab">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></a></li>
-            {% endfor %}
-            </ul>
-            <div class="tab-content">
-            {% for boxId in custom_boxes.order %}
-              <div class="tab-pane" id='tab_{{boxId}}'>
-                  <div class="row">
-                    <div class="col-xs-12">
-                      <div class="box">
-                        <div class="box-header">
-                            <h3 class="box-title">Hosted Domains  <b>{{custom_boxes.boxes[boxId][0]}}</b></h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
                         </div>
-                        <div class="box-body">
-                          <table id='tbl_domain_list_{{boxId}}' class="table table-bordered table-striped">
-                            <thead>
-                            <tr>
-                              <th>Name</th>
-                              <th>DNSSEC</th>
-                              <th>Type</th>
-                              <th>Serial</th>
-                              <th>Master</th>
-                              <th>Account</th>
-                              <th {% if current_user.role.name not in ['Administrator','Operator'] %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                          </table>
+                        <!-- /.card-header -->
+                        <div class="card-body p-0">
+                            <div class="tab-content">
+                                {% for tab_id in zone_tabs.order %}
+                                    <div id='tab_{{ tab_id }}'
+                                         class="tab-pane show {% if loop.first %}active{% endif %}">
+                                        <div class="card-body table-responsive records p-0 pt-2">
+                                            <table id='tbl_domain_list_{{ tab_id }}'
+                                                   class="table table-striped table-hover table-sm records">
+                                                <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>DNSSEC</th>
+                                                    <th>Type</th>
+                                                    <th>Serial</th>
+                                                    <th>Primary</th>
+                                                    <th>Account</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- /.card-body -->
+                                    </div>
+                                    <!-- /.tab-pane -->
+                                {% endfor %}
+                            </div>
+                            <!-- /.tab-content -->
                         </div>
-                      </div>
+                        <!-- /.card-body -->
                     </div>
-                  </div>
-              </div>
-            {% endfor %}
-            </div><!-- /.tab-content -->
-        </div><!-- custom tabs -->
-<!--SYBPATCH END-->
-
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
 {% endblock %}
+
+{% block head_styles %}
+    <style>
+        /* Page Specific Overrides */
+        table.records tbody td:first-of-type { text-align: left; }
+    </style>
+{% endblock %}
+
 {% block extrascripts %}
-<script>
-//SYBPATCH START//
-    function setUpDomainList(id ,url){
-        $(id).DataTable({
-            "paging" : true,
-            "lengthChange" : true,
-            language: {
-                searchPlaceholder: "Use ^ and $ for start and end",
-            },
-            "searching" : true,
-            "ordering" : true,
-            "columnDefs": [
-                { "orderable": false, "targets": [-1] }
-                {% if current_user.role.name not in ['Administrator', 'Operator'] %},{ "visible": false, "targets": [-2] }{% endif %}
-            ],
-            "processing" : true,
-            "serverSide" : true,
-            "ajax" : url,
-            "info" : false,
-            "autoWidth" : false,
-          {% if SETTING.get('default_domain_table_size')|string in ['10','25','50','100'] %}
-          "lengthMenu": [ [10, 25, 50, 100, -1],
-                          [10, 25, 50, 100, "All"]],
-          {% else %}
-          "lengthMenu": [ [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
-                          [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
-          {% endif %}
-          "pageLength": {{ SETTING.get('default_domain_table_size') }}
-        });
-    }
-    $('#tab_{{custom_boxes.order[0]}}').addClass( "active" );
-    {% for boxId in custom_boxes.order %}
-    setUpDomainList("#tbl_domain_list_{{boxId}}", "{{url_for('dashboard.domains_custom',boxId=boxId)}}");
-    {% endfor %}
-//SYBPATCH END//
-
-    // set up history data table
-    $("#tbl_history").DataTable({
-        "paging" : false,
-        "lengthChange" : false,
-        "searching" : false,
-        "ordering" : false,
-        "info" : false,
-        "autoWidth" : false,
-        "columnDefs": [
-            {
-                "render": function ( data, type, row ) {
-                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+    <script>
+        //SYBPATCH START//
+        function setUpDomainList(id, url) {
+            $(id).DataTable({
+                "paging": true,
+                "lengthChange": true,
+                language: {
+                    searchPlaceholder: "Use ^ and $ for start and end",
                 },
-                "targets": 2
-            }
-        ]
-    });
+                "searching": true,
+                "ordering": true,
+                "columnDefs": [
+                    {"orderable": false, "targets": [-1]}
+                ],
+                "processing": true,
+                "serverSide": true,
+                "ajax": url,
+                "info": false,
+                "autoWidth": false,
+                {% if SETTING.get('default_domain_table_size')|string in ['10','25','50','100'] %}
+                    "lengthMenu": [[10, 25, 50, 100, -1],
+                        [10, 25, 50, 100, "All"]],
+                {% else %}
+                    "lengthMenu": [[10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                        [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
+                {% endif %}
+                "pageLength": {{ SETTING.get('default_domain_table_size') }}
+            });
+        }
 
-    $(document.body).on('click', '.history-info-button', function () {
-        var modal = $("#modal_history_info");
-        var history_id = $(this).val();
-        var info = $("#history-info-div-" + history_id).html();
-        $('#modal-info-content').html(info);
-        modal.modal('show');
-    });
+        {% for tab_id in zone_tabs.order %}
+            setUpDomainList("#tbl_domain_list_{{tab_id}}", "{{url_for('dashboard.domains_custom',tab_id=tab_id)}}");
+        {% endfor %}
+        //SYBPATCH END//
 
-    $(document.body).on('click', '.refresh-bg-button', function() {
-        var modal = $("#modal_bg_reload");
-        modal.modal('show');
-        reload_domains($SCRIPT_ROOT + '/dashboard/domains-updater');
-    });
+        $(document.body).on('click', '.history-info-button', function () {
+            var modal = $("#modal_history_info");
+            var history_id = $(this).val();
+            var info = $("#history-info-div-" + history_id).html();
+            $('#modal-info-content').html(info);
+            modal.modal('show');
+        });
 
-    $(document.body).on("click", ".button_template", function (e) {
-        var modal = $("#modal_template");
-        var domain = $(this).prop('id');
-        var form = "    <label for=\"template_name\">Template name</label> \
+        $(document.body).on('click', '.refresh-bg-button', function () {
+            var modal = $("#modal_bg_reload");
+            modal.modal('show');
+            reload_domains($SCRIPT_ROOT + '/dashboard/domains-updater');
+        });
+
+        $(document.body).on("click", ".button_template", function (e) {
+            var modal = $("#modal_template");
+            var domain = $(this).prop('id');
+            var form = "    <label for=\"template_name\">Template name</label> \
                         <input type=\"text\" class=\"form-control\" name=\"template_name\" id=\"template_name\" placeholder=\"Enter a valid template name (required)\"> \
                         <label for=\"template_description\">Template description</label> \
                         <input type=\"text\" class=\"form-control\" name=\"template_description\" id=\"template_description\" placeholder=\"Enter a template description (optional)\"> \
-                        <input id=\"domain\" name=\"domain\" type=\"hidden\" value=\""+domain+"\"> \
+                        <input id=\"domain\" name=\"domain\" type=\"hidden\" value=\"" + domain + "\"> \
                     ";
-        modal.find('.modal-body p').html(form);
-        modal.find('#button_save').click(function() {
-            var data = {'_csrf_token': '{{ csrf_token() }}'};
-            data['name'] = modal.find('#template_name').val();
-            data['description'] = modal.find('#template_description').val();
-            data['domain'] = modal.find('#domain').val();
-            applyChanges(data, "{{ url_for('admin.create_template_from_zone') }}", true);
-            modal.modal('hide');
-        })
-        modal.find('#button_close').click(function() {
-            modal.modal('hide');
-        })
+            modal.find('.modal-body p').html(form);
+            modal.find('#button_save').click(function () {
+                var data = {'_csrf_token': '{{ csrf_token() }}'};
+                data['name'] = modal.find('#template_name').val();
+                data['description'] = modal.find('#template_description').val();
+                data['domain'] = modal.find('#domain').val();
+                applyChanges(data, "{{ url_for('admin.create_template_from_zone') }}", true);
+                modal.modal('hide');
+            })
+            modal.find('#button_close').click(function () {
+                modal.modal('hide');
+            })
 
-        modal.modal('show');
-    });
+            modal.modal('show');
+        });
 
-    {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
-    $(document.body).on("click", ".button_dnssec", function() {
-        var domain = $(this).prop('id');
-        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
-    });
+        {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
+            $(document.body).on("click", ".button_dnssec", function () {
+                var domain = $(this).prop('id');
+                getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
+            });
 
-    $(document.body).on("click", ".button_dnssec_enable", function() {
-        var domain = $(this).prop('id');
-        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable', '{{ csrf_token() }}');
+            $(document.body).on("click", ".button_dnssec_enable", function () {
+                var domain = $(this).prop('id');
+                enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable', '{{ csrf_token() }}');
+            });
 
-    });
-
-    $(document.body).on("click", ".button_dnssec_disable", function() {
-        var domain = $(this).prop('id');
-        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable', '{{ csrf_token() }}');
-
-    });
-    {% endif %}
-</script>
+            $(document.body).on("click", ".button_dnssec_disable", function () {
+                var domain = $(this).prop('id');
+                enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable', '{{ csrf_token() }}');
+            });
+        {% endif %}
+    </script>
 {% endblock %}
-{% block modals %}
-<div class="modal fade" id="modal_history_info">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">History Details</h4>
-            </div>
-            <div class="modal-body">
-              <div id="modal-info-content"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-right"
-                    data-dismiss="modal">Close</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-<div class="modal fade modal-primary" id="modal_template">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Clone to template</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-left"
-                    id="button_close" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
-<div class="modal fade" id="modal_dnssec_info">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">DNSSEC</h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-right"
-                    data-dismiss="modal">Close</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
-<div class="modal fade" id="modal_bg_reload">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                    aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Sync domains from nameserver</h4>
-            </div>
-            <div class="modal-body">
 
-                <div class="overlay">
-                  <div id="modal_bg_reload_content"><i class="fa fa-refresh fa-spin"></i> Update in progress ..</div>
+{% block modals %}
+    <div class="modal fade" id="modal_history_info">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">History Details</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-info-content">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                        Close
+                    </button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-flat btn-default pull-right"
-                    data-dismiss="modal">Close</button>
+        </div>
+    </div>
+
+    <div class="modal fade modal-primary" id="modal_template">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Clone to template</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-right" id="button_close" data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary float-right" id="button_save">
+                        Save
+                    </button>
+                </div>
             </div>
         </div>
-        <!-- /.modal-content -->
     </div>
-    <!-- /.modal-dialog -->
-</div>
+
+    <div class="modal fade" id="modal_dnssec_info">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">DNSSEC</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal_bg_reload">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Sync Zones from backend</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="modal_bg_reload_content">
+                        <i class="fa fa-refresh fa-spin"></i> Update in progress ..
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

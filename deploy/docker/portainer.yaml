@@ -1,0 +1,15 @@
+version: '3.3'
+services:
+
+  core:
+    image: powerdnsadmin/pda-legacy:latest
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=INSECURE-CHANGE-ME-9I0DAtfkfj5JmBkPSaHah3ECAa8Df5KK
+    ports:
+      - "12000:9191"
+    volumes:
+      - "core_data:/data"
+
+volumes:
+  core_data:

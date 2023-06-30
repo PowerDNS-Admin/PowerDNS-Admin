@@ -11,6 +11,8 @@
 
 #### Accessing the API
 
+PDA has its own API, that should not be confused with the PowerDNS API. Keep in mind that you have to enable PowerDNS API with a key that will be used by PDA to manage it. Therefore, you should use PDA created keys to browse PDA's API, on PDA's adress and port. They don't grant access to PowerDNS' API.
+
 The PDA API consists of two distinct parts:
 
 - The /powerdnsadmin endpoints manages PDA content (accounts, users, apikeys) and also allow domain creation/deletion

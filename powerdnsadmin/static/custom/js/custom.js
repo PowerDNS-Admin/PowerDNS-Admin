@@ -93,8 +93,8 @@ function saveRow(oTable, nRow) {
     oTable.cell(nRow,5).data(jqInputs[2].value);
 
     var record = jqInputs[0].value;
-    var button_edit = "<button type=\"button\" class=\"btn btn-flat btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
-    var button_delete = "<button type=\"button\" class=\"btn btn-flat btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
+    var button_edit = "<button type=\"button\" class=\"btn btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
+    var button_delete = "<button type=\"button\" class=\"btn btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
 
     oTable.cell(nRow,6).data(button_edit);
     oTable.cell(nRow,7).data(button_delete);
@@ -142,8 +142,8 @@ function editRow(oTable, nRow) {
     jqTds[3].innerHTML = '<select class="form-control" id="record_ttl" name="record_ttl" value="' + aData[3]  + '">' + ttl_opts + '</select>';
     jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].replace(/\"/g,"&quot;") + '">';
     jqTds[5].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="record_comment" name="record_comment" class="form-control input-small advance-data" value="' + aData[5].replace(/\"/g, "&quot;") + '">';
-    jqTds[6].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_save">Save</button>';
-    jqTds[7].innerHTML = '<button type="button" class="btn btn-flat btn-primary button_cancel">Cancel</button>';
+    jqTds[6].innerHTML = '<button type="button" class="btn btn-primary button_save">Save</button>';
+    jqTds[7].innerHTML = '<button type="button" class="btn btn-primary button_cancel">Cancel</button>';
 
     // set current value of dropdown column
     if (aData[2] == 'Active'){
@@ -192,12 +192,12 @@ function getdnssec(url, domain){
             if (dnssec.length == 0 && parseFloat(PDNS_VERSION) >= 4.1) {
               dnssec_msg = '<h3>DNSSEC is disabled. Click on Enable to activate it.';
               modal.find('.modal-body p').html(dnssec_msg);
-              dnssec_footer = '<button type="button" class="btn btn-flat btn-success button_dnssec_enable pull-left" id="'+domain+'">Enable</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Cancel</button>';
+              dnssec_footer = '<button type="button" class="btn btn-success button_dnssec_enable pull-left" id="'+domain+'">Enable</button><button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cancel</button>';
               modal.find('.modal-footer ').html(dnssec_footer);
             }
             else {
                 if (parseFloat(PDNS_VERSION) >= 4.1) {
-                  dnssec_footer = '<button type="button" class="btn btn-flat btn-danger button_dnssec_disable pull-left" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-flat btn-default pull-right" data-dismiss="modal">Close</button>';
+                  dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable pull-left" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>';
                   modal.find('.modal-footer ').html(dnssec_footer);
                 }
                 for (var i = 0; i < dnssec.length; i++) {
@@ -288,3 +288,16 @@ function copy_otp_secret_to_clipboard() {
     $("#copy_tooltip").css("visibility", "visible");
     setTimeout(function(){ $("#copy_tooltip").css("visibility", "collapse"); }, 2000);
   }
+
+// Side menu nav bar active selection
+/** add active class and stay opened when selected */
+
+// for sidebar menu entirely but not cover treeview
+$('ul.nav-sidebar a').filter(function() {
+    return this.href == window.location.href.split('?')[0];
+}).addClass('active');
+
+// for treeview
+$('ul.nav-treeview a').filter(function() {
+    return this.href == window.location.href.split('?')[0];
+}).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');

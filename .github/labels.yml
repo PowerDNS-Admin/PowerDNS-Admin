@@ -1,0 +1,98 @@
+---
+labels:
+  - name: bug / broken-feature
+    description: Existing feature malfunctioning or broken
+    color: 'd73a4a'
+  - name: bug / security-vulnerability
+    description: Security vulnerability identified with the application
+    color: 'd73a4a'
+  - name: docs / discussion
+    description: Documentation change proposals
+    color: '0075ca'
+  - name: docs / request
+    description: Documentation change request
+    color: '0075ca'
+  - name: feature / dependency
+    description: Existing feature dependency
+    color: '008672'
+  - name: feature / discussion
+    description: New or existing feature discussion
+    color: '008672'
+  - name: feature / request
+    description: New feature or enhancement request
+    color: '008672'
+  - name: feature / update
+    description: Existing feature modification
+    color: '008672'
+  - name: help / deployment
+    description: Questions regarding application deployment
+    color: 'd876e3'
+  - name: help / features
+    description: Questions regarding the use of application features
+    color: 'd876e3'
+  - name: help / other
+    description: General questions not specific to application deployment or features
+    color: 'd876e3'
+  - name: mod / accepted
+    description: This request has been accepted
+    color: 'e5ef23'
+  - name: mod / announcement
+    description: This is an admin announcement
+    color: 'e5ef23'
+  - name: mod / change-request
+    description: Used by internal developers to indicate a change-request.
+    color: 'e5ef23'
+  - name: mod / changes-requested
+    description: Changes have been requested before proceeding
+    color: 'e5ef23'
+  - name: mod / duplicate
+    description: This issue or pull request already exists
+    color: 'e5ef23'
+  - name: mod / good-first-issue
+    description: Good for newcomers
+    color: 'e5ef23'
+  - name: mod / help-wanted
+    description: Extra attention is needed
+    color: 'e5ef23'
+  - name: mod / invalid
+    description: This doesn't seem right
+    color: 'e5ef23'
+  - name: mod / rejected
+    description: This request has been rejected
+    color: 'e5ef23'
+  - name: mod / reviewed
+    description: This request has been reviewed
+    color: 'e5ef23'
+  - name: mod / reviewing
+    description: This request is being reviewed
+    color: 'e5ef23'
+  - name: mod / stale
+    description: This request has gone stale
+    color: 'e5ef23'
+  - name: mod / tested
+    description: This has been tested
+    color: 'e5ef23'
+  - name: mod / testing
+    description: This is being tested
+    color: 'e5ef23'
+  - name: mod / wont-fix
+    description: This will not be worked on
+    color: 'e5ef23'
+  - name: skill / database
+    description: Requires a database skill-set
+    color: '5319E7'
+  - name: skill / docker
+    description: Requires a Docker skill-set
+    color: '5319E7'
+  - name: skill / documentation
+    description: Requires a documentation skill-set
+    color: '5319E7'
+  - name: skill / html
+    description: Requires a HTML skill-set
+    color: '5319E7'
+  - name: skill / javascript
+    description: Requires a JavaScript skill-set
+    color: '5319E7'
+  - name: skill / python
+    description: Requires a Python skill-set
+    color: '5319E7'

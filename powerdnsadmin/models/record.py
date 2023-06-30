@@ -46,7 +46,7 @@ class Record(object):
 
     def get_rrsets(self, domain):
         """
-        Query domain's rrsets via PDNS API
+        Query zone's rrsets via PDNS API
         """
         headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
@@ -59,7 +59,7 @@ class Record(object):
                                      verify=Setting().get('verify_ssl_connections'))
         except Exception as e:
             current_app.logger.error(
-                "Cannot fetch domain's record data from remote powerdns api. DETAIL: {0}"
+                "Cannot fetch zone's record data from remote powerdns api. DETAIL: {0}"
                 .format(e))
             return []
 
@@ -77,7 +77,7 @@ class Record(object):
 
     def add(self, domain_name, rrset):
         """
-        Add a record to a domain (Used by auto_ptr and DynDNS)
+        Add a record to a zone (Used by auto_ptr and DynDNS)
 
         Args:
             domain_name(str): The zone name
@@ -115,7 +115,7 @@ class Record(object):
             return {'status': 'ok', 'msg': 'Record was added successfully'}
         except Exception as e:
             current_app.logger.error(
-                "Cannot add record to domain {}. Error: {}".format(
+                "Cannot add record to zone {}. Error: {}".format(
                     domain_name, e))
             current_app.logger.debug("Submitted record rrset: \n{}".format(
                 utils.pretty_json(rrset)))
@@ -172,7 +172,7 @@ class Record(object):
             record['record_name'] = utils.to_idna(record["record_name"], "encode")
             #TODO: error handling
             # If the record is an alias (CNAME), we will also make sure that
-            # the target domain is properly converted to punycode (IDN)
+            # the target zone is properly converted to punycode (IDN)
             if record['record_type'] == 'CNAME' or record['record_type'] == 'SOA':
                 record['record_data'] = utils.to_idna(record['record_data'], 'encode')
                 #TODO: error handling
@@ -337,12 +337,13 @@ class Record(object):
         replaces = [replace_for_api(r) for r in new_rrsets]
         deletes = [delete_for_api(r) for r in del_rrsets if not rrset_in(r, replaces)]
         return {
-            'rrsets': replaces + deletes
+            # order matters: first deletions, then additions+changes
+            'rrsets': deletes + replaces
         }
 
     def apply(self, domain_name, submitted_records):
         """
-        Apply record changes to a domain. This function
+        Apply record changes to a zone. This function
         will make 1 call to the PDNS API to DELETE and
         REPLACE records (rrsets)
         """
@@ -376,7 +377,7 @@ class Record(object):
             return {'status': 'ok', 'msg': 'Record was applied successfully', 'data': (new_rrsets, del_rrsets)}
         except Exception as e:
             current_app.logger.error(
-                "Cannot apply record changes to domain {0}. Error: {1}".format(
+                "Cannot apply record changes to zone {0}. Error: {1}".format(
                     domain_name, e))
             current_app.logger.debug(traceback.format_exc())
             return {
@@ -421,6 +422,25 @@ class Record(object):
                 ]
 
                 d = Domain()
+                for r in del_rrsets:
+                    for record in r['records']:
+                        # Format the reverse record name
+                        # It is the reverse of forward record's content.
+                        reverse_host_address = dns.reversename.from_address(
+                            record['content']).to_text()
+
+                        # Create the reverse domain name in PDNS
+                        domain_reverse_name = d.get_reverse_domain_name(
+                            reverse_host_address)
+                        d.create_reverse_domain(domain_name,
+                                                domain_reverse_name)
+
+                        # Delete the reverse zone
+                        self.name = reverse_host_address
+                        self.type = 'PTR'
+                        self.data = record['content']
+                        self.delete(domain_reverse_name)
+                
                 for r in new_rrsets:
                     for record in r['records']:
                         # Format the reverse record name
@@ -454,32 +474,13 @@ class Record(object):
                         # Format the rrset
                         rrset = {"rrsets": rrset_data}
                         self.add(domain_reverse_name, rrset)
-
-                for r in del_rrsets:
-                    for record in r['records']:
-                        # Format the reverse record name
-                        # It is the reverse of forward record's content.
-                        reverse_host_address = dns.reversename.from_address(
-                            record['content']).to_text()
-
-                        # Create the reverse domain name in PDNS
-                        domain_reverse_name = d.get_reverse_domain_name(
-                            reverse_host_address)
-                        d.create_reverse_domain(domain_name,
-                                                domain_reverse_name)
-
-                        # Delete the reverse zone
-                        self.name = reverse_host_address
-                        self.type = 'PTR'
-                        self.data = record['content']
-                        self.delete(domain_reverse_name)
                 return {
                     'status': 'ok',
                     'msg': 'Auto-PTR record was updated successfully'
                 }
             except Exception as e:
                 current_app.logger.error(
-                    "Cannot update auto-ptr record changes to domain {0}. Error: {1}"
+                    "Cannot update auto-ptr record changes to zone {0}. Error: {1}"
                     .format(domain_name, e))
                 current_app.logger.debug(traceback.format_exc())
                 return {
@@ -491,7 +492,7 @@ class Record(object):
 
     def delete(self, domain):
         """
-        Delete a record from domain
+        Delete a record from zone
         """
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         data = {
@@ -516,7 +517,7 @@ class Record(object):
             return {'status': 'ok', 'msg': 'Record was removed successfully'}
         except Exception as e:
             current_app.logger.error(
-                "Cannot remove record {0}/{1}/{2} from domain {3}. DETAIL: {4}"
+                "Cannot remove record {0}/{1}/{2} from zone {3}. DETAIL: {4}"
                 .format(self.name, self.type, self.data, domain, e))
             return {
                 'status': 'error',
@@ -539,7 +540,7 @@ class Record(object):
 
     def exists(self, domain):
         """
-        Check if record is present within domain records, and if it's present set self to found record
+        Check if record is present within zone records, and if it's present set self to found record
         """
         rrsets = self.get_rrsets(domain)
         for r in rrsets:
@@ -587,7 +588,7 @@ class Record(object):
             return {'status': 'ok', 'msg': 'Record was updated successfully'}
         except Exception as e:
             current_app.logger.error(
-                "Cannot add record {0}/{1}/{2} to domain {3}. DETAIL: {4}".
+                "Cannot add record {0}/{1}/{2} to zone {3}. DETAIL: {4}".
                 format(self.name, self.type, self.data, domain, e))
             return {
                 'status': 'error',
@@ -613,11 +614,11 @@ class Record(object):
             db.session.commit()
             return {
                 'status': True,
-                'msg': 'Synced local serial for domain name {0}'.format(domain)
+                'msg': 'Synced local serial for zone name {0}'.format(domain)
             }
         else:
             return {
                 'status': False,
                 'msg':
-                'Could not find domain name {0} in local db'.format(domain)
+                'Could not find zone name {0} in local db'.format(domain)
             }

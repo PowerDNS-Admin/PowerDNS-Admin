@@ -1,10 +1,10 @@
 import datetime
-from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect, g, session
+from collections import namedtuple
+from flask import Blueprint, render_template, url_for, current_app, request, jsonify, redirect, g, session, abort
 from flask_login import login_required, current_user, login_manager
 from sqlalchemy import not_
 
 from ..decorators import operator_role_required
-from ..lib.utils import customBoxes
 from ..models.user import User, Anonymous
 from ..models.account import Account
 from ..models.account_user import AccountUser
@@ -21,6 +21,31 @@ dashboard_bp = Blueprint('dashboard',
                          url_prefix='/dashboard')
 
 
+class ZoneTabs:
+    """Config data for the zone tabs on the dashboard."""
+
+    TabInfo = namedtuple('TabInfo', ['display_name', 'filter_pattern'])
+    """Info about a single tab.
+
+    `display_name` is the name on the tab.
+    `filter_pattern` is a SQL LIKE pattern , which is case-insensitively matched against the zone
+    name (without the final root-dot).
+
+    If a filter is present, the tab will show zones that match the filter.
+    If no filter is present, the tab will show zones that are not matched by any other tab filter.
+    """
+
+    tabs = {
+        'forward': TabInfo("", None),
+        'reverse_ipv4': TabInfo("in-addr.arpa", '%.in-addr.arpa'),
+        'reverse_ipv6': TabInfo("ip6.arpa", '%.ip6.arpa'),
+    }
+    """Dict of unique tab id to a TabInfo."""
+
+    order = ['forward', 'reverse_ipv4', 'reverse_ipv6']
+    """List of tab ids in the order they will appear."""
+
+
 @dashboard_bp.before_request
 def before_request():
     # Check if user is anonymous
@@ -30,7 +55,7 @@ def before_request():
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
-            'Administrator', 'Operator'
+        'Administrator', 'Operator'
     ]:
         return render_template('maintenance.html')
 
@@ -41,9 +66,12 @@ def before_request():
     session.modified = True
 
 
-@dashboard_bp.route('/domains-custom/<path:boxId>', methods=['GET'])
+@dashboard_bp.route('/domains-custom/<path:tab_id>', methods=['GET'])
 @login_required
-def domains_custom(boxId):
+def domains_custom(tab_id):
+    if tab_id not in ZoneTabs.tabs:
+        abort(404)
+
     if current_user.role.name in ['Administrator', 'Operator']:
         domains = Domain.query
     else:
@@ -55,13 +83,14 @@ def domains_custom(boxId):
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
             .filter(
-                db.or_(
-                    DomainUser.user_id == current_user.id,
-                    AccountUser.user_id == current_user.id
-                ))
+            db.or_(
+                DomainUser.user_id == current_user.id,
+                AccountUser.user_id == current_user.id
+            ))
 
     template = current_app.jinja_env.get_template("dashboard_domain.html")
-    render = template.make_module(vars={"current_user": current_user, "allow_user_view_history": Setting().get('allow_user_view_history')})
+    render = template.make_module(
+        vars={"current_user": current_user, "allow_user_view_history": Setting().get('allow_user_view_history')})
 
     columns = [
         Domain.name, Domain.dnssec, Domain.type, Domain.serial, Domain.master,
@@ -83,14 +112,15 @@ def domains_custom(boxId):
     if order_by:
         domains = domains.order_by(*order_by)
 
-    if boxId == "reverse":
-        for boxId in customBoxes.order:
-            if boxId == "reverse": continue
-            domains = domains.filter(
-                not_(Domain.name.ilike(customBoxes.boxes[boxId][1])))
+    if ZoneTabs.tabs[tab_id].filter_pattern:
+        # If the tab has a filter, use only that
+        domains = domains.filter(Domain.name.ilike(ZoneTabs.tabs[tab_id].filter_pattern))
     else:
-        domains = domains.filter(Domain.name.ilike(
-            customBoxes.boxes[boxId][1]))
+        # If the tab has no filter, use all the other filters in negated form
+        for tab_info in ZoneTabs.tabs.values():
+            if not tab_info.filter_pattern:
+                continue
+            domains = domains.filter(not_(Domain.name.ilike(tab_info.filter_pattern)))
 
     total_count = domains.count()
 
@@ -111,7 +141,7 @@ def domains_custom(boxId):
     filtered_count = domains.count()
 
     start = int(request.args.get("start", 0))
-    length = min(int(request.args.get("length", 0)), 100)
+    length = min(int(request.args.get("length", 0)), max(100, int(Setting().get('default_domain_table_size'))))
 
     if length != -1:
         domains = domains[start:start + length]
@@ -146,68 +176,18 @@ def dashboard():
 
     BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
     if not BG_DOMAIN_UPDATE:
-        current_app.logger.info('Updating domains in foreground...')
+        current_app.logger.info('Updating zones in foreground...')
         Domain().update()
     else:
-        current_app.logger.info('Updating domains in background...')
+        current_app.logger.info('Updating zones in background...')
 
     show_bg_domain_button = BG_DOMAIN_UPDATE
     if BG_DOMAIN_UPDATE and current_user.role.name not in ['Administrator', 'Operator']:
         show_bg_domain_button = False
 
-    # Stats for dashboard
-    domain_count = 0
-    history_number = 0
-    history = []
-    user_num = User.query.count()
-    if current_user.role.name in ['Administrator', 'Operator']:
-        domain_count = Domain.query.count()
-        history_number = History.query.count()
-        history = History.query.order_by(History.created_on.desc()).limit(4).all()
-    elif Setting().get('allow_user_view_history'):
-        history = db.session.query(History) \
-            .join(Domain, History.domain_id == Domain.id) \
-            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-            .outerjoin(Account, Domain.account_id == Account.id) \
-            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-            .order_by(History.created_on.desc()) \
-            .filter(
-            db.or_(
-                DomainUser.user_id == current_user.id,
-                AccountUser.user_id == current_user.id
-            )).all()
-        history_number = len(history)  # history.count()
-        history = history[:4]
-        domain_count = db.session.query(Domain) \
-            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
-            .outerjoin(Account, Domain.account_id == Account.id) \
-            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
-            .filter(
-                db.or_(
-                    DomainUser.user_id == current_user.id,
-                    AccountUser.user_id == current_user.id
-                )).count()
-
-    from .admin import convert_histories, DetailedHistory
-    detailedHistories = convert_histories(history)
-    
-    server = Server(server_id='localhost')
-    statistics = server.get_statistic()
-    if statistics:
-        uptime = list([
-            uptime for uptime in statistics if uptime['name'] == 'uptime'
-        ])[0]['value']
-    else:
-        uptime = 0
-
     # Add custom boxes to render_template
     return render_template('dashboard.html',
-                           custom_boxes=customBoxes,
-                           domain_count=domain_count,
-                           user_num=user_num,
-                           history_number=history_number,
-                           uptime=uptime,
-                           histories=detailedHistories,
+                           zone_tabs=ZoneTabs,
                            show_bg_domain_button=show_bg_domain_button,
                            pdns_version=Setting().get('pdns_version'))
 
@@ -216,7 +196,7 @@ def dashboard():
 @login_required
 @operator_role_required
 def domains_updater():
-    current_app.logger.debug('Update domains in background')
+    current_app.logger.debug('Update zones in background')
     d = Domain().update()
 
     response_data = {

@@ -2,14 +2,12 @@ import logging
 import re
 import json
 import requests
-import hashlib
 import ipaddress
 import idna
 
 from collections.abc import Iterable
 from distutils.version import StrictVersion
 from urllib.parse import urlparse
-from datetime import datetime, timedelta
 
 
 def auth_from_url(url):
@@ -134,6 +132,16 @@ def display_master_name(data):
     return ", ".join(matches)
 
 
+def format_zone_type(data):
+    """Formats the given zone type for modern social standards."""
+    data = str(data).lower()
+    if data == 'master':
+        data = 'primary'
+    elif data == 'slave':
+        data = 'secondary'
+    return data.title()
+
+
 def display_time(amount, units='s', remove_seconds=True):
     """
     Convert timestamp to normal time format
@@ -186,17 +194,6 @@ def pdns_api_extended_uri(version):
         return ""
 
 
-def email_to_gravatar_url(email="", size=100):
-    """
-    AD doesn't necessarily have email
-    """
-    if email is None:
-        email = ""
-
-    hash_string = hashlib.md5(email.encode('utf-8')).hexdigest()
-    return "https://s.gravatar.com/avatar/{0}?s={1}".format(hash_string, size)
-
-
 def display_setting_state(value):
     if value == 1:
         return "ON"
@@ -230,46 +227,49 @@ def ensure_list(l):
     yield from l
 
 
-class customBoxes:
-    boxes = {
-        "reverse": (" ", " "),
-        "ip6arpa": ("ip6", "%.ip6.arpa"),
-        "inaddrarpa": ("in-addr", "%.in-addr.arpa")
-    }
-    order = ["reverse", "ip6arpa", "inaddrarpa"]
+def pretty_domain_name(domain_name):
+    # Add a debugging statement to print out the domain name
+    print("Received zone name:", domain_name)
 
-def pretty_domain_name(value):
-    """
-    Display domain name in original format.
-    If it is IDN domain (Punycode starts with xn--), do the
-    idna decoding.
-    Note that any part of the domain name can be individually punycoded
-    """
-    if isinstance(value, str):
-        if value.startswith('xn--') \
-        or value.find('.xn--') != -1:
-            try:
-                return to_idna(value, 'decode')
-            except:
-                raise Exception('Cannot decode IDN domain')
-        else:
-            return value
-    else:
-        raise Exception('Require the Punycode in string format')
+    # Check if the domain name is encoded using Punycode
+    if domain_name.endswith('.xn--'):
+        try:
+            # Decode the domain name using the idna library
+            domain_name = idna.decode(domain_name)
+        except Exception as e:
+            # If the decoding fails, raise an exception with more information
+            raise Exception('Cannot decode IDN zone: {}'.format(e))
+
+    # Return the "pretty" version of the zone name
+    return domain_name
+
 
 def to_idna(value, action):
-    splits = value.split()
+    splits = value.split('.')
     result = []
     if action == 'encode':
         for split in splits:
             try:
                 # Try encoding to idna
-                result.append(idna.encode(split).decode())
+                if not split.startswith('_') and not split.startswith('-'):
+                    result.append(idna.encode(split).decode())
+                else:
+                    result.append(split)
             except idna.IDNAError:
                 result.append(split)
     elif action == 'decode':
         for split in splits:
-            result.append(idna.decode(split))   
+            if not split.startswith('_') and not split.startswith('--'):
+                result.append(idna.decode(split))
+            else:
+                result.append(split)
     else:
         raise Exception('No valid action received')
-    return ' '.join(result)
+    return '.'.join(result)
+
+
+def format_datetime(value, format_str="%Y-%m-%d %I:%M %p"):
+    """Format a date time to (Default): YYYY-MM-DD HH:MM P"""
+    if value is None:
+        return ""
+    return value.strftime(format_str)

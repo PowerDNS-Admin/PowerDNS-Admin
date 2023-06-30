@@ -42,15 +42,41 @@ table td {
     background-position: center;
 }
 
-.navbar-nav>.user-menu>.dropdown-menu>li.user-header>img.img-circle.offline {
-    filter: brightness(0);
-    border-color: black;
-}
-
-.navbar-nav>.user-menu .user-image.offline {
-    filter: brightness(0);
-}
-
 .search-input {
     width: 100%;
+}
+
+.sidebar .image { padding-top: 0.7em; }
+.sidebar .info { color: #fff; }
+.sidebar .info p { margin: 0; }
+.sidebar .info a { font-size: 0.8em; }
+
+/* Global Styles */
+table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
+table.records thead th:last-of-type { width: 50px; }
+div.records > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
+div.records > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
+div.records > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
+
+.diff {
+    font-family: monospace;
+    padding: 0 0.2em;
+}
+.diff::before {
+    content: "\00a0";
+    padding-right: 0.1em;
+}
+
+.diff-deletion {
+    background-color: lightcoral;
+}
+.diff-deletion::before {
+    content: "-";
+}
+
+.diff-addition {
+    background-color: lightgreen;
+}
+.diff-addition::before {
+    content: "+";
 }

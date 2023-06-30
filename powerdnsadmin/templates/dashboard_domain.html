@@ -1,17 +1,23 @@
 {% macro name(domain) %}
-  <a href="{{ url_for('domain.domain', domain_name=domain.name) }}"><strong>{{ domain.name | pretty_domain_name }}</strong></a>
+    <a href="{{ url_for('domain.domain', domain_name=domain.name) }}"><strong>{{ domain.name | pretty_domain_name }}</strong></a>
 {% endmacro %}
 
 {% macro dnssec(domain) %}
-  {% if domain.dnssec %}
-  <td><span style="cursor:pointer" class="label label-success button_dnssec" id="{{ domain.name }}"><i class="fa fa-lock"></i>&nbsp;Enabled</span></td>
-  {% else %}
-  <td><span style="cursor:pointer" class="label label-primary button_dnssec" id="{{ domain.name }}"><i class="fa fa-unlock-alt"></i>&nbsp;Disabled</span></td>
-  {% endif %}
+    {% if domain.dnssec %}
+        <td>
+            <button class="btn badge btn-success button_dnssec" title="Edit DNSSEC" id="{{ domain.name }}"><i
+                    class="fa-solid fa-lock"></i></button>
+        </td>
+    {% else %}
+        <td>
+            <button class="btn badge btn-danger button_dnssec" title="Enable DNSSEC" id="{{ domain.name }}"><i
+                    class="fa-solid fa-lock-open"></i></button>
+        </td>
+    {% endif %}
 {% endmacro %}
 
 {% macro type(domain) %}
-  {{ domain.type }}
+    {{ domain.type | format_zone_type }}
 {% endmacro %}
 
 {% macro serial(domain) %}
@@ -19,41 +25,55 @@
 {% endmacro %}
 
 {% macro master(domain) %}
-    {% if domain.master == '[]'%}-{% else %}{{ domain.master | display_master_name }}{% endif %}
+    {% if domain.master == '[]' %}N/A{% else %}{{ domain.master | display_master_name }}{% endif %}
 {% endmacro %}
 
 {% macro account(domain) %}
     {% if current_user.role.name in ['Administrator', 'Operator'] %}
-      {{ domain.account.name if domain.account else '-' }}
+        {{ domain.account.name if domain.account else 'None' }}
+    {% else %}
+        None
     {% endif %}
 {% endmacro %}
 
 {% macro actions(domain) %}
-  {% if current_user.role.name in ['Administrator', 'Operator'] %}
-    <td width="25%">
-      <button type="button" class="btn btn-flat btn-success button_template" id="{{ domain.name }}">
-        Template&nbsp;<i class="fa fa-clone"></i>
-      </button>
-      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
-        Manage&nbsp;<i class="fa fa-cog"></i>
-      </button>
-      <button type="button" class="btn btn-flat btn-danger" onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
-        Admin&nbsp;<i class="fa fa-cog"></i>
-      </button>
-      <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
-        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-      </button>
+    <td>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                <button class="dropdown-item btn-success" type="button"
+                        onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
+                    <i class="fa-solid fa-pencil"></i>&nbsp;Edit Records
+                </button>
+
+                {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                    <button class="dropdown-item btn-danger" type="button"
+                            onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+                        <i class="fa-solid fa-cog"></i>&nbsp;Zone Settings
+                    </button>
+                    <button class="dropdown-item btn-success button_template" id="{{ domain.name }}" type="button">
+                        <i class="fa-solid fa-clone"></i>&nbsp;Create Template
+                    </button>
+                {% endif %}
+
+                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
+                    <button class="dropdown-item btn-primary" type="button"
+                            onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
+                        <i class="fa-solid fa-history" aria-hidden="true"></i>&nbsp;Zone Changelog
+                    </button>
+                {% endif %}
+
+                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_remove_domain %}
+                    <div class="dropdown-divider"></div>
+                    <button type="button" class="dropdown-item btn-secondary button_delete"
+                            onclick="window.location.href='{{ url_for('domain.remove') }}'">
+                        <span style="color: red;"><i class="fa-solid fa-trash"></i>&nbsp;Remove Zone</span>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
     </td>
-    {% else %}
-    <td width="6%">
-      <button type="button" class="btn btn-flat btn-success" onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
-        Manage&nbsp;<i class="fa fa-cog"></i>
-      </button>
-      {% if allow_user_view_history %}
-      <button type="button" class="btn btn-flat btn-primary" onclick="window.location.href='{{ url_for('domain.changelog', domain_name=domain.name) }}'">
-        Changelog&nbsp;<i class="fa fa-history" aria-hidden="true"></i>
-      </button>
-      {% endif %}
-    </td>
-  {% endif %}  
 {% endmacro %}
