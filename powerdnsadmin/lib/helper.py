@@ -8,6 +8,7 @@ from ..models import Setting
 def forward_request():
     pdns_api_url = Setting().get('pdns_api_url')
     pdns_api_key = Setting().get('pdns_api_key')
+    verify = Setting().get('verify_ssl_connections')
     headers = {}
     data = None
 
@@ -17,8 +18,6 @@ def forward_request():
         msg = msg_str.format(request.get_json(force=True, silent=True))
         current_app.logger.debug(msg)
         data = request.get_json(force=True, silent=True)
-
-    verify = False
 
     headers = {
         'user-agent': 'powerdns-admin/api',
