@@ -17,7 +17,7 @@ entries:
     - https://github.com/PowerDNS-Admin/PowerDNS-Admin
     type: application
     urls:
-    - https://github.com/johnwc/PowerDNS-Admin/releases/download/untagged-99e4479aade545c6efc7/powerdns-admin-0.1.24.tgz
+    - https://github.com/johnwc/PowerDNS-Admin/releases/download/v0.1.24-chart/powerdns-admin-0.1.24.tgz
     version: 0.1.24
   - annotations:
       catalog.cattle.io/display-name: PowerDNS-Admin
@@ -35,6 +35,6 @@ entries:
     - https://github.com/PowerDNS-Admin/PowerDNS-Admin
     type: application
     urls:
-    - https://github.com/johnwc/PowerDNS-Admin/releases/download/untagged-6ead56e2606d9c180622/powerdns-admin-0.1.23.tgz
+    - https://github.com/johnwc/PowerDNS-Admin/releases/download/v0.1.23-chart/powerdns-admin-0.1.23.tgz
     version: 0.1.23
 generated: "2022-07-05T16:22:02.8996666-05:00"
