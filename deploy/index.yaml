@@ -6,6 +6,24 @@ entries:
       catalog.cattle.io/os: linux
       category: Infrastructure
     apiVersion: v2
+    appVersion: 0.4.1
+    created: "2023-07-24T12:07:02.911562-05:00"
+    description: A PowerDNS web interface with advanced features.
+    digest: fdb6f78cf437000314694b76c87e26f0aed00b50237dfadf4ef444f4edcd4510
+    home: https://github.com/PowerDNS-Admin
+    icon: https://avatars.githubusercontent.com/u/1282630?s=200&v=4
+    name: powerdns-admin
+    sources:
+    - https://github.com/PowerDNS-Admin/PowerDNS-Admin
+    type: application
+    urls:
+    - https://github.com/johnwc/PowerDNS-Admin/releases/download/v0.1.25-chart/powerdns-admin-0.1.25.tgz
+    version: 0.1.25
+  - annotations:
+      catalog.cattle.io/display-name: PowerDNS-Admin
+      catalog.cattle.io/os: linux
+      category: Infrastructure
+    apiVersion: v2
     appVersion: 0.3.0
     created: "2022-07-05T16:22:02.911562-05:00"
     description: A PowerDNS web interface with advanced features.
