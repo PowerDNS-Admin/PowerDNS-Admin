@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: ngoduykhanh/powerdns-admin
+  repository: powerdnsadmin/pda-legacy
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
