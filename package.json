@@ -5,7 +5,7 @@
     "bootstrap": "4.6.2",
     "bootstrap-datepicker": "^1.9.0",
     "bootstrap-validator": "^0.11.9",
-    "datatables.net-plugins": "^1.13.1",
+    "datatables.net-plugins": "^1.13.6",
     "icheck": "^1.0.2",
     "jquery-slimscroll": "^1.3.8",
     "jquery-sparkline": "^2.4.0",
