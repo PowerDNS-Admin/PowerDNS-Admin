@@ -31,6 +31,8 @@ COPY ./requirements.txt /build/requirements.txt
 
 # Get application dependencies
 RUN pip install --upgrade pip && \
+    pip install wheel && \
+    pip install --no-build-isolation PyYAML==5.4 && \
     pip install --use-pep517 -r requirements.txt
 
 # Add sources
