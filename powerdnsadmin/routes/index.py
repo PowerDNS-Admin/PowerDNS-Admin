@@ -652,7 +652,7 @@ def logout():
 
     redirect_uri = url_for('index.login')
     oidc_logout = Setting().get('oidc_oauth_logout_url')
-    id_token_hint = session.get('oidc_token').get('id_token', None)
+    id_token_hint = session.get('oidc_token').get('id_token')
 
     if id_token_hint and oidc_logout:
         redirect_uri = "{}?post_logout_redirect_uri={}&id_token_hint={}".format(
