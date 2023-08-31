@@ -258,7 +258,7 @@ def login():
 
             result = user.create_local_user()
             if not result['status']:
-                current_app.logger.warning('Unable to create ' + azure_username)
+                current_app.logger.warning('Unable to create ' + azure_username + ' Reasoning: ' + result['msg'])
                 session.pop('azure_token', None)
                 # note: a redirect to login results in an endless loop, so render the login page instead
                 return render_template('login.html',
