@@ -413,7 +413,7 @@ class User(db.Model):
             return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
-        user = User.query.filter(User.email == self.email).first()
+        user = User.query.filter(User.email.lower() == self.email.lower()).first()
         if user:
             return {'status': False, 'msg': 'Email address is already in use'}
 
