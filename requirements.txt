@@ -17,7 +17,7 @@ bravado-core==5.17.1
 certifi==2022.12.7
 cffi==1.15.1
 configobj==5.0.8
-cryptography==39.0.2 # fixes CVE-2023-0286, CVE-2023-23931
+cryptography==41.0.4 # fixes CVE-2023-0286, CVE-2023-23931
 cssmin==0.2.0
 dnspython>=2.3.0
 flask_session_captcha==1.3.0
