@@ -11,7 +11,7 @@
     "jquery-sparkline": "^2.4.0",
     "jquery-ui-dist": "^1.13.2",
     "jquery.quicksearch": "^2.4.0",
-    "jquery-validation": "^1.19.5",
+    "jquery-validation": "^1.20.0",
     "jtimeout": "^3.2.0",
     "knockout": "^3.5.1",
     "multiselect": "^0.9.12"
