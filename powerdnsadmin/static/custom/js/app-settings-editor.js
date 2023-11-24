@@ -894,7 +894,6 @@ let SettingsEditorModel = function (user_data, user_options) {
 
     self.activateSubTab = function (tab) {
         $('[role="tablist"] a.nav-link').blur();
-        self.tab_sub_active(tab);
         window.location.hash = self.tab_active() + '/' + tab;
     }
 
