@@ -408,12 +408,12 @@ class User(db.Model):
         Create local user witch stores username / password in the DB
         """
         # check if username existed
-        user = User.query.filter(User.username.lower() == self.username.lower()).first()
+        user = User.query.filter(str(User.username).lower() == self.username.lower()).first()
         if user:
             return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
-        user = User.query.filter(User.email.lower() == self.email.lower()).first()
+        user = User.query.filter(str(User.email).lower() == self.email.lower()).first()
         if user:
             return {'status': False, 'msg': 'Email address is already in use'}
 
