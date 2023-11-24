@@ -643,6 +643,8 @@ class Domain(db.Model):
         """
         Update records from Master DNS server
         """
+        import urllib.parse
+
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY}
@@ -650,7 +652,7 @@ class Domain(db.Model):
                 r = utils.fetch_json(urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                          '/servers/localhost/zones/{0}/axfr-retrieve'.format(
-                                             domain.name)),
+                                             urllib.parse.quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(
                         Setting().get('pdns_api_timeout')),
@@ -673,6 +675,8 @@ class Domain(db.Model):
         """
         Get zone DNSSEC information
         """
+        import urllib.parse
+
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY}
@@ -681,7 +685,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 domain.name)),
+                                                 urllib.parse.quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='GET',
@@ -709,6 +713,8 @@ class Domain(db.Model):
         """
         Enable zone DNSSEC
         """
+        import urllib.parse
+
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
@@ -718,7 +724,9 @@ class Domain(db.Model):
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}'.format(domain.name)),
+                                             '/servers/localhost/zones/{0}'.format(
+                                                 urllib.parse.quote_plus(domain.name)
+                                             )),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PUT',
@@ -738,7 +746,8 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 domain.name)),
+                                                 urllib.parse.quote_plus(domain.name)
+                                             )),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='POST',
@@ -775,6 +784,8 @@ class Domain(db.Model):
         """
         Remove keys DNSSEC
         """
+        import urllib.parse
+
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
@@ -784,7 +795,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                                                 domain.name, key_id)),
+                                                 urllib.parse.quote_plus(domain.name), key_id)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='DELETE',
