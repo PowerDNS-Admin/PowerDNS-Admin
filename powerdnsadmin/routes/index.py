@@ -46,7 +46,7 @@ index_bp = Blueprint('index',
                      url_prefix='/')
 
 
-@index_bp.before_app_first_request
+@index_bp.record_once
 def register_modules():
     global google
     global github
