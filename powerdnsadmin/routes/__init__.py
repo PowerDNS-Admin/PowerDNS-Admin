@@ -11,7 +11,7 @@ from .domain import domain_bp
 from .settings import settings_bp
 from .user import user_bp
 
-
+## Bring in the blueprints
 def init_app(app):
     login_manager.init_app(app)
     csrf.init_app(app)
