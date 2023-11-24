@@ -37,6 +37,11 @@ def before_request():
         minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
+    # Clean up expired sessions in the database
+    if Setting().get('session_type') == 'sqlalchemy':
+        from ..models.sessions import Sessions
+        Sessions().clean_up_expired_sessions()
+
 
 @user_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
