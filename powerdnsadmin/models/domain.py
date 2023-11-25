@@ -27,6 +27,7 @@ class Domain(db.Model):
     last_check = db.Column(db.Integer)
     dnssec = db.Column(db.Integer)
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'))
+    catalog = db.Column(db.String(255), index=True, unique=False)
     account = db.relationship("Account", back_populates="domains")
     settings = db.relationship('DomainSetting', back_populates='domain')
     apikeys = db.relationship("ApiKey",
@@ -232,7 +233,8 @@ class Domain(db.Model):
             soa_edit_api,
             domain_ns=[],
             domain_master_ips=[],
-            account_name=None):
+            account_name=None,
+            catalog_name=None):
         """
         Add a zone to power dns
         """
@@ -254,7 +256,8 @@ class Domain(db.Model):
             "masters": domain_master_ips,
             "nameservers": domain_ns,
             "soa_edit_api": soa_edit_api,
-            "account": account_name
+            "account": account_name,
+            "catalog": catalog_name
         }
 
         try:
@@ -320,6 +323,8 @@ class Domain(db.Model):
         d.last_check = domain['last_check']
         d.dnssec = 1 if domain['dnssec'] else 0
         d.account_id = account_id
+        if 'catalog' in domain:
+            d.catalog = domain['catalog'].rstrip('.')
         db.session.add(d)
         try:
             if do_commit:
@@ -425,6 +430,56 @@ class Domain(db.Model):
                 'status': 'error',
                 'msg': 'Cannot update kind for this zone.'
             }
+
+
+    def update_catalog(self, domain_name, catalog_name):
+        """
+        Update domain catalog zone
+        """
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'Znoe does not exist.'}
+
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
+
+        post_data = {"catalog": catalog_name}
+
+        try:
+            jdata = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                headers=headers,
+                timeout=int(
+                    Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data=post_data)
+            if 'error' in jdata.keys():
+                current_app.logger.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+            else:
+                domain.catalog = catalog_name
+                db.session.commit()
+
+                current_app.logger.info(
+                    'Update zone catalog for {0} successfully'.format(
+                        domain_name))
+                return {
+                    'status': 'ok',
+                    'msg': 'Zone catalog changed successfully'
+                }
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(
+                'Cannot update catalog for zone {0}. Error: {1}'.format(
+                    domain_name, e))
+            current_app.logger.debug(traceback.format_exc())
+
+            return {
+                'status': 'error',
+                'msg': 'Cannot update catalog for this zone.'
+            }
+
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
