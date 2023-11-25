@@ -56,6 +56,8 @@ def before_request():
 @login_required
 @can_access_domain
 def domain(domain_name):
+    import urllib.parse
+
     # Validate the domain existing in the local DB
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
@@ -140,6 +142,7 @@ def domain(domain_name):
                            ttl_options=ttl_options,
                            current_user=current_user,
                            catalog_members=catalog_members,
+                           domain_name_safe=urllib.parse.quote_plus(domain_name),
                            allow_user_view_history=Setting().get('allow_user_view_history'))
 
 

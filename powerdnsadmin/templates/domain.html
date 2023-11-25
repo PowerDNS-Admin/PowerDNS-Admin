@@ -40,7 +40,7 @@
                                 {% if current_user.role.name in ['Administrator', 'Operator'] %}
                                     <button type="button" title="Zone Settings"
                                             class="btn btn-primary btn-danger mt-2 mb-2"
-                                            onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+                                            onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain_name_safe) }}'">
                                         <i class="fa-solid fa-toolbox"></i>
                                         &nbsp;Zone Settings
                                     </button>
@@ -290,13 +290,13 @@
 
         function show_record_changelog(record_name, record_type, e) {
             e.stopPropagation();
-            window.location.href = "/domain/{{domain.name}}/changelog/" + record_name + "./" + record_type;
+            window.location.href = "/domain/{{domain_name_safe}}/changelog/" + record_name + "./" + record_type;
         }
 
         // handle changelog button
         $(document.body).on("click", ".button_changelog", function (e) {
             e.stopPropagation();
-            window.location.href = "/domain/{{domain.name}}/changelog";
+            window.location.href = "/domain/{{domain_name_safe}}/changelog";
         });
 
         // handle delete button
@@ -772,7 +772,10 @@
         {% endif %}
 
         window.onload = function () {
-            document.getElementById("loading-spinner").style.display = "none";
+            let el = document.getElementById("loading-spinner");
+            if (el) {
+                el.style.display = "none";
+            }
         }
 
     </script>
