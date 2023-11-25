@@ -4,3 +4,4 @@ blank_issues_enabled: false
 contact_links:
   - name: 📖 Project Update - PLEASE READ!
     url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1708
+    about: "Important information about the future of this project"
