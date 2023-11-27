@@ -29,7 +29,7 @@ lima==0.5
 mysqlclient==2.0.1
 passlib==1.7.4
 #pyOpenSSL==22.1.0
-pyasn1==0.4.8
+pyasn1==0.5.1
 pyotp==2.8.0
 pytest==7.2.1
 python-ldap==3.4.3
