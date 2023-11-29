@@ -24,6 +24,8 @@ A PowerDNS web interface with advanced features.
 - Provides an API for zone and record management among other features
 - Provides full IDN/Punycode support
 
+## [Project Update - PLEASE READ!!!](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1708)
+
 ## Running PowerDNS-Admin
 
 There are several ways to run PowerDNS-Admin. The quickest way is to use Docker.
