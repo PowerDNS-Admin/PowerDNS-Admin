@@ -146,8 +146,6 @@ class User(db.Model):
     def ldap_search(self, searchFilter, baseDN, retrieveAttributes=None):
         searchScope = ldap.SCOPE_SUBTREE
 
-        searchFilter = self.escape_filter_chars(searchFilter)
-
         try:
             conn = self.ldap_init_conn()
             if Setting().get('ldap_type') == 'ad':
@@ -292,7 +290,7 @@ class User(db.Model):
                                     Operator=LDAP_OPERATOR_GROUP,
                                     User=LDAP_USER_GROUP,
                                 )
-                                user_dn = ldap_result[0][0][0]
+                                user_dn = self.escape_filter_chars(ldap_result[0][0][0])
                                 sf_groups = ""
 
                                 for group in ldap_group_security_roles.values():
