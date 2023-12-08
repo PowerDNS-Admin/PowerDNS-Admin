@@ -133,8 +133,20 @@ class User(db.Model):
         conn.protocol_version = ldap.VERSION3
         return conn
 
+    def escape_filter_chars(self, filter_str):
+        """
+        Escape chars for ldap search
+        """
+        escape_chars = ['\\', '*', '(', ')', '\x00']
+        replace_chars = ['\\5c', '\\2a', '\\28', '\\29', '\\00']
+        for escape_char in escape_chars:
+            filter_str = filter_str.replace(escape_char, replace_chars[escape_chars.index(escape_char)])
+        return filter_str
+
     def ldap_search(self, searchFilter, baseDN, retrieveAttributes=None):
         searchScope = ldap.SCOPE_SUBTREE
+
+        searchFilter = self.escape_filter_chars(searchFilter)
 
         try:
             conn = self.ldap_init_conn()
