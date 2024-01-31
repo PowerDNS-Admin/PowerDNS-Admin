@@ -133,6 +133,16 @@ class User(db.Model):
         conn.protocol_version = ldap.VERSION3
         return conn
 
+    def escape_filter_chars(self, filter_str):
+        """
+        Escape chars for ldap search
+        """
+        escape_chars = ['\\', '*', '(', ')', '\x00']
+        replace_chars = ['\\5c', '\\2a', '\\28', '\\29', '\\00']
+        for escape_char in escape_chars:
+            filter_str = filter_str.replace(escape_char, replace_chars[escape_chars.index(escape_char)])
+        return filter_str
+
     def ldap_search(self, searchFilter, baseDN, retrieveAttributes=None):
         searchScope = ldap.SCOPE_SUBTREE
 
@@ -280,7 +290,7 @@ class User(db.Model):
                                     Operator=LDAP_OPERATOR_GROUP,
                                     User=LDAP_USER_GROUP,
                                 )
-                                user_dn = ldap_result[0][0][0]
+                                user_dn = self.escape_filter_chars(ldap_result[0][0][0])
                                 sf_groups = ""
 
                                 for group in ldap_group_security_roles.values():
@@ -408,12 +418,12 @@ class User(db.Model):
         Create local user witch stores username / password in the DB
         """
         # check if username existed
-        user = User.query.filter(User.username == self.username).first()
+        user = User.query.filter(str(User.username).lower() == self.username.lower()).first()
         if user:
             return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
-        user = User.query.filter(User.email == self.email).first()
+        user = User.query.filter(str(User.email).lower() == self.email.lower()).first()
         if user:
             return {'status': False, 'msg': 'Email address is already in use'}
 

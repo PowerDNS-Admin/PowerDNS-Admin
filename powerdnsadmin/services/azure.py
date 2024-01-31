@@ -24,9 +24,10 @@ def azure_oauth():
         'fetch_token': fetch_azure_token,
     }
 
+    auto_configure = Setting().get('azure_oauth_auto_configure')
     server_metadata_url = Setting().get('azure_oauth_metadata_url')
 
-    if isinstance(server_metadata_url, str) and len(server_metadata_url.strip()) > 0:
+    if auto_configure and isinstance(server_metadata_url, str) and len(server_metadata_url.strip()) > 0:
         authlib_params['server_metadata_url'] = server_metadata_url
     else:
         authlib_params['access_token_url'] = Setting().get('azure_oauth_token_url')

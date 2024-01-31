@@ -66,15 +66,15 @@ def domain(domain_name):
     current_app.logger.debug("Fetched rrsets: \n{}".format(pretty_json(rrsets)))
 
     # API server might be down, misconfigured
-    if not rrsets and domain.type != 'slave':
+    if not rrsets and str(domain.type).lower() != 'slave':
         abort(500)
 
     quick_edit = Setting().get('record_quick_edit')
     records_allow_to_edit = Setting().get_records_allow_to_edit()
     forward_records_allow_to_edit = Setting(
-    ).get_forward_records_allow_to_edit()
+    ).get_supported_record_types(Setting().ZONE_TYPE_FORWARD)
     reverse_records_allow_to_edit = Setting(
-    ).get_reverse_records_allow_to_edit()
+    ).get_supported_record_types(Setting().ZONE_TYPE_REVERSE)
     ttl_options = Setting().get_ttl_options()
     records = []
 

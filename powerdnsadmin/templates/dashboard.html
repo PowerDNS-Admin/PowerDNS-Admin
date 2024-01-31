@@ -181,17 +181,17 @@
         {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
             $(document.body).on("click", ".button_dnssec", function () {
                 var domain = $(this).prop('id');
-                getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
+                getdnssec($SCRIPT_ROOT + '/domain/' + encodeURIComponent(domain) + '/dnssec', domain);
             });
 
             $(document.body).on("click", ".button_dnssec_enable", function () {
                 var domain = $(this).prop('id');
-                enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable', '{{ csrf_token() }}');
+                enable_dns_sec($SCRIPT_ROOT + '/domain/' + encodeURIComponent(domain) + '/dnssec/enable', '{{ csrf_token() }}');
             });
 
             $(document.body).on("click", ".button_dnssec_disable", function () {
                 var domain = $(this).prop('id');
-                enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable', '{{ csrf_token() }}');
+                enable_dns_sec($SCRIPT_ROOT + '/domain/' + encodeURIComponent(domain) + '/dnssec/disable', '{{ csrf_token() }}');
             });
         {% endif %}
     </script>

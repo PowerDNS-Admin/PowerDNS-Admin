@@ -40,7 +40,6 @@
 
 - Setting up a zone
 - Adding a record
-- <whatever else>
 
 ## Feature usage
 

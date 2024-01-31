@@ -251,6 +251,7 @@ class Record(object):
         Returns:
             new_rrsets(list): List of rrsets to be added
             del_rrsets(list): List of rrsets to be deleted
+            zone_has_comments(bool): True if the zone currently contains persistent comments
         """
         # Create submitted rrsets from submitted records
         submitted_rrsets = self.build_rrsets(domain_name, submitted_records)
@@ -266,9 +267,11 @@ class Record(object):
         # PDNS API always return the comments with modified_at
         # info, we have to remove it to be able to do the dict
         # comparison between current and submitted rrsets
+        zone_has_comments = False
         for r in current_rrsets:
             for comment in r['comments']:
                 if 'modified_at' in comment:
+                    zone_has_comments = True
                     del comment['modified_at']
 
         # List of rrsets to be added
@@ -290,7 +293,7 @@ class Record(object):
         current_app.logger.debug("new_rrsets: \n{}".format(utils.pretty_json(new_rrsets)))
         current_app.logger.debug("del_rrsets: \n{}".format(utils.pretty_json(del_rrsets)))
 
-        return new_rrsets, del_rrsets
+        return new_rrsets, del_rrsets, zone_has_comments
 
     def apply_rrsets(self, domain_name, rrsets):
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
@@ -304,7 +307,7 @@ class Record(object):
         return jdata
 
     @staticmethod
-    def to_api_payload(new_rrsets, del_rrsets):
+    def to_api_payload(new_rrsets, del_rrsets, comments_supported):
         """Turn the given changes into a single api payload."""
 
         def replace_for_api(rrset):
@@ -312,9 +315,13 @@ class Record(object):
             if not rrset or rrset.get('changetype', None) != 'REPLACE':
                 return rrset
             replace_copy = dict(rrset)
-            # For compatibility with some backends: Remove comments from rrset if all are blank
-            if not any((bool(c.get('content', None)) for c in replace_copy.get('comments', []))):
-                replace_copy.pop('comments', None)
+            has_nonempty_comments = any(bool(c.get('content', None)) for c in replace_copy.get('comments', []))
+            if not has_nonempty_comments:
+                if comments_supported:
+                    replace_copy['comments'] = []
+                else:
+                    # For backends that don't support comments: Remove the attribute altogether
+                    replace_copy.pop('comments', None)
             return replace_copy
 
         def rrset_in(needle, haystack):
@@ -351,11 +358,11 @@ class Record(object):
             "submitted_records: {}".format(submitted_records))
 
         # Get the list of rrsets to be added and deleted
-        new_rrsets, del_rrsets = self.compare(domain_name, submitted_records)
+        new_rrsets, del_rrsets, zone_has_comments = self.compare(domain_name, submitted_records)
 
         # The history logic still needs *all* the deletes with full data to display a useful diff.
         # So create a "minified" copy for the api call, and return the original data back up
-        api_payload = self.to_api_payload(new_rrsets['rrsets'], del_rrsets['rrsets'])
+        api_payload = self.to_api_payload(new_rrsets['rrsets'], del_rrsets['rrsets'], zone_has_comments)
         current_app.logger.debug(f"api payload: \n{utils.pretty_json(api_payload)}")
 
         # Submit the changes to PDNS API

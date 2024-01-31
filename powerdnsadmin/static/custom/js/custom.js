@@ -30,14 +30,14 @@ function applyChanges(data, url, showResult, refreshPage) {
 function applyRecordChanges(data, domain) {
     $.ajax({
         type : "POST",
-        url : $SCRIPT_ROOT + '/domain/' + domain + '/apply',
+        url : $SCRIPT_ROOT + '/domain/' + encodeURIComponent(domain) + '/apply',
         data : JSON.stringify(data),// now data come in this function
         contentType : "application/json; charset=utf-8",
         crossDomain : true,
         dataType : "json",
         success : function(data, status, jqXHR) {
             // update Apply button value
-            $.getJSON($SCRIPT_ROOT + '/domain/' + domain + '/info', function(data) {
+            $.getJSON($SCRIPT_ROOT + '/domain/' + encodeURIComponent(domain) + '/info', function(data) {
                 $(".button_apply_changes").val(data['serial']);
             });
 

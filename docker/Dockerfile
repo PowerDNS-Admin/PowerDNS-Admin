@@ -92,6 +92,6 @@ RUN chown ${USER}:${USER} ./configs /app && \
 
 EXPOSE 80/tcp
 USER ${USER}
-HEALTHCHECK CMD ["wget","--output-document=-","--quiet","--tries=1","http://127.0.0.1/"]
+HEALTHCHECK --interval=5s --timeout=5s --start-period=20s --retries=5 CMD wget --output-document=- --quiet --tries=1 http://127.0.0.1${SCRIPT_NAME:-/}
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["gunicorn","powerdnsadmin:create_app()"]
