@@ -24,13 +24,15 @@ Some general tips for engaging here on GitHub:
 * To help mitigate notification spam, please avoid "bumping" issues with no activity. (To vote an issue up or down, use a :thumbsup: or :thumbsdown: reaction.)
 * Please avoid pinging members with `@` unless they've previously expressed interest or involvement with that particular issue.
 
+## [Project Update - PLEASE READ!!!](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1708)
+
 ## :bug: Reporting Bugs
 
 * First, ensure that you're running the [latest stable version](https://github.com/PowerDNS-Admin/PowerDNS-Admin/releases) of PDA. If you're running an older version, there's a chance that the bug has already been fixed.
 
 * Next, search our [issues list](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues?q=is%3Aissue) to see if the bug you've found has already been reported. If you come across a bug report that seems to match, please click "add a reaction" in the top right corner of the issue and add a thumbs up (:thumbsup:). This will help draw more attention to it. Any comments you can add to provide additional information or context would also be much appreciated.
 
-* If you can't find any existing issues (open or closed) that seem to match yours, you're welcome to [submit a new bug report](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/new?label=type%3A+bug&template=bug_report.yaml). Be sure to complete the entire report template, including detailed steps that someone triaging your issue can follow to confirm the reported behavior. (If we're not able to replicate the bug based on the information provided, we'll ask for additional detail.)
+* If you can't find any existing issues (open or closed) that seem to match yours, you're welcome to [submit a new bug report](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/new/choose). Be sure to complete the entire report template, including detailed steps that someone triaging your issue can follow to confirm the reported behavior. (If we're not able to replicate the bug based on the information provided, we'll ask for additional detail.)
 
 * Some other tips to keep in mind:
   * Error messages and screenshots are especially helpful.
@@ -44,7 +46,7 @@ Some general tips for engaging here on GitHub:
 
 * If you have a rough idea that's not quite ready for formal submission yet, start a [GitHub discussion](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions) instead. This is a great way to test the viability and narrow down the scope of a new feature prior to submitting a formal proposal, and can serve to generate interest in your idea from other community members.
 
-* Once you're ready, submit a feature request [using this template](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/new?label=type%3A+feature&template=feature_request.yaml). Be sure to provide sufficient context and detail to convey exactly what you're proposing and why. The stronger your use case, the better chance your proposal has of being accepted.
+* Once you're ready, submit a feature request [using this template](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/choose). Be sure to provide sufficient context and detail to convey exactly what you're proposing and why. The stronger your use case, the better chance your proposal has of being accepted.
 
 * Some other tips to keep in mind:
   * Don't prepend your issue title with a label like `[Feature]`; the proper label will be assigned automatically.

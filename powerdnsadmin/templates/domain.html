@@ -86,11 +86,7 @@
                                     <th>Data</th>
                                     {% if domain.type != 'Slave' %}
                                         <th>Comment</th>
-                                        <th>Edit</th>
-                                        <th>Delete</th>
-                                        {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
-                                            <th>Changelog</th>
-                                        {% endif %}
+                                        <th>Actions</th>
                                     {% else %}
                                         <th>Invisible Sorting Column</th>
                                     {% endif %}
@@ -108,7 +104,7 @@
                                             <td>{{ record.comment }}</td>
                                             <td>
                                                 {% if record.is_allowed_edit() %}
-                                                    <button type="button" class="btn btn-sm btn-warning button_edit">
+                                                    <button type="button" title="Edit" class="btn btn-sm btn-warning button_edit">
                                                         <i class="fa-solid fa-edit"></i>
                                                     </button>
                                                 {% else %}
@@ -116,23 +112,19 @@
                                                         <i class="fa-solid fa-exclamation-circle"></i>
                                                     </button>
                                                 {% endif %}
-                                            </td>
-                                            <td>
                                                 {% if record.is_allowed_delete() %}
-                                                    <button type="button" class="btn btn-sm btn-danger button_delete">
+                                                    <button type="button" title="Delete" class="btn btn-sm btn-danger button_delete">
                                                         <i class="fa-solid fa-trash"></i>
                                                     </button>
                                                 {% endif %}
-                                            </td>
-                                            {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
-                                                <td>
-                                                    <button type="button"
+                                                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
+                                                    <button type="button" title="Changelog"
                                                             onclick="show_record_changelog('{{ record.name }}','{{ record.type }}',event)"
-                                                            class="btn btn-primary">
+                                                            class="btn btn-primary btn-sm">
                                                         <i class="fa-solid fa-history" aria-hidden="true"></i>
                                                     </button>
-                                                </td>
-                                            {% endif %}
+                                                {% endif %}
+                                            </td>
                                         {% endif %}
                                         <!-- hidden column that we can sort on -->
                                         <td>1</td>
@@ -207,6 +199,7 @@
         table#tbl_records thead th:nth-child(2),
         table#tbl_records thead th:nth-child(3),
         table#tbl_records thead th:nth-child(4) { width: 100px; }
+        table#tbl_records thead th:nth-child(7) { width: 80px; }
         table#tbl_records tbody td { text-align: center; }
         table#tbl_records tbody td:nth-child(0n+5),
         table#tbl_records tbody td:nth-child(0n+6) { text-align: left; word-break: break-all; }
@@ -255,11 +248,7 @@
                     // regardless of whatever sorting is done. See orderFixed
                     visible: false,
                     {% if domain.type != 'Slave' %}
-                        {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
-                            targets: [9]
-                        {% else %}
-                            targets: [8]
-                        {% endif %}
+                        targets: [7]
                     {% else %}
                         targets: [5]
                     {% endif %}
@@ -277,11 +266,7 @@
                 }
             ],
             {% if domain.type != 'Slave' %}
-                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
-                    "orderFixed": [[9, 'asc']]
-                {% else %}
-                    "orderFixed": [[8, 'asc']]
-                {% endif %}
+                "orderFixed": [[7, 'asc']]
             {% else %}
                 "orderFixed": [[5, 'asc']]
             {% endif %}
