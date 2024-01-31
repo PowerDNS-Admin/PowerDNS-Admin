@@ -6,15 +6,16 @@ name: MegaLinter
 on:
   workflow_dispatch:
   push:
-    branches-ignore:
-      - "*"
-      - "dev"
-      - "main"
-      - "master"
-      - "dependabot/**"
-      - "feature/**"
-      - "issues/**"
-      - "release/**"
+    branches:
+      - '-dev'
+      - '-main'
+      - '-master'
+      - '-dependabot/**'
+      - '-feature/**'
+      - '-issues/**'
+      - '-release/**'
+    tags:
+      - '-v*.*.*'
 
 env: # Comment env block if you do not want to apply fixes
   # Apply linter fixes configuration
