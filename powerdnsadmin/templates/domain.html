@@ -40,7 +40,7 @@
                                 {% if current_user.role.name in ['Administrator', 'Operator'] %}
                                     <button type="button" title="Zone Settings"
                                             class="btn btn-primary btn-danger mt-2 mb-2"
-                                            onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain.name) }}'">
+                                            onclick="window.location.href='{{ url_for('domain.setting', domain_name=domain_name_safe) }}'">
                                         <i class="fa-solid fa-toolbox"></i>
                                         &nbsp;Zone Settings
                                     </button>
@@ -134,6 +134,58 @@
                             </table>
                         </div>
                     </div>
+                    {% if catalog_members %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Member Zones</h3>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table id="tbl_catalog_members" class="table table-bordered table-striped table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in catalog_members %}
+                                    <tr>
+                                        <td><a href="{{ url_for('domain.domain', domain_name=member.name) }}"><strong>{{ member.name | pretty_domain_name }}</strong></a></td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown"
+                                                        aria-haspopup="true" aria-expanded="false">
+                                                    <i class="fa-solid fa-bars"></i>
+                                                </button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                                    <button class="dropdown-item btn-success" type="button"
+                                                            onclick="window.location.href='{{ url_for('domain.domain', domain_name=member.name) }}'">
+                                                        <i class="fa-solid fa-pencil"></i>&nbsp;Edit Records
+                                                    </button>
+
+                                                    {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                                                        <button class="dropdown-item btn-danger" type="button"
+                                                                onclick="window.location.href='{{ url_for('domain.setting', domain_name=member.name) }}'">
+                                                            <i class="fa-solid fa-cog"></i>&nbsp;Zone Settings
+                                                        </button>
+                                                    {% endif %}
+
+                                                    {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
+                                                        <button class="dropdown-item btn-primary" type="button"
+                                                                onclick="window.location.href='{{ url_for('domain.changelog', domain_name=member.name) }}'">
+                                                            <i class="fa-solid fa-history" aria-hidden="true"></i>&nbsp;Zone Changelog
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -223,13 +275,13 @@
 
         function show_record_changelog(record_name, record_type, e) {
             e.stopPropagation();
-            window.location.href = "/domain/{{domain.name}}/changelog/" + record_name + "./" + record_type;
+            window.location.href = "/domain/{{domain_name_safe}}/changelog/" + record_name + "./" + record_type;
         }
 
         // handle changelog button
         $(document.body).on("click", ".button_changelog", function (e) {
             e.stopPropagation();
-            window.location.href = "/domain/{{domain.name}}/changelog";
+            window.location.href = "/domain/{{domain_name_safe}}/changelog";
         });
 
         // handle delete button
@@ -680,6 +732,36 @@
                 }
             });
         {% endif %}
+
+        {% if catalog_members %}
+        $("#tbl_catalog_members").DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "columnDefs": [
+                {"orderable": false, "targets": [-1]}
+            ],
+            "processing": true,
+            "info": false,
+            "autoWidth": false,
+            {% if SETTING.get('default_domain_table_size')|string in ['10','25','50','100'] %}
+                "lengthMenu": [[10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]],
+            {% else %}
+                "lengthMenu": [[10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                    [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
+            {% endif %}
+            "pageLength": {{ SETTING.get('default_domain_table_size') }}
+        });
+        {% endif %}
+
+        window.onload = function () {
+            let el = document.getElementById("loading-spinner");
+            if (el) {
+                el.style.display = "none";
+            }
+        }
 
     </script>
 {% endblock %}
