@@ -26,12 +26,19 @@ class Sessions(db.Model):
     def clean_up_expired_sessions():
         """Clean up expired sessions in the database"""
         from datetime import datetime
-        from sqlalchemy import or_
         from sqlalchemy.exc import SQLAlchemyError
 
         try:
-            db.session.query(Sessions).filter(or_(Sessions.expiry < datetime.now(), Sessions.expiry is None)).delete()
-            db.session.commit()
+            sessions = db.session.query(Sessions)
+            updated = False
+
+            for sess in sessions:
+                if sess.expiry is None or sess.expiry < datetime.now():
+                    db.session.delete(sess)
+                    updated = True
+
+            if updated:
+                db.session.commit()
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(e)
