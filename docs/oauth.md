@@ -13,7 +13,7 @@ To link to Azure for authentication, you need to register PowerDNS-Admin in Azur
 * Under API Permissions, you need to add permissions.  Add permissions for Graph API, Delegated.  Add email, openid, profile, User.Read and possibly User.Read.All.  You then need to grant admin approval for your organisation.
 
 Now you can enable the OAuth in PowerDNS-Admin.
-* For the Scope, use 'User.Read openid mail profile'
+* For the Scope, use 'User.Read openid email profile'
 * Replace the [tenantID] in the default URLs for authorize and token with your Tenant ID.
 * Restart PowerDNS-Admin
 
