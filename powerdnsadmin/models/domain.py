@@ -72,6 +72,20 @@ class Domain(db.Model):
                     setting, self.name, e))
             return False
 
+    def get_tsig_keys(self, domain_name):
+        """
+        Get master tsig key id for domain_name in PowerDns
+        """
+        headers = {'X-API-Key': self.PDNS_API_KEY}
+        jdata = utils.fetch_json(urljoin(
+            self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                                 '/servers/localhost/tsigkeys'),
+            headers=headers,
+            timeout=int(
+                Setting().get('pdns_api_timeout')),
+            verify=Setting().get('verify_ssl_connections'))
+        return jdata
+
     def get_domain_info(self, domain_name):
         """
         Get all zones which has in PowerDNS
@@ -248,14 +262,33 @@ class Domain(db.Model):
         elif soa_edit_api == 'OFF':
             soa_edit_api = ''
 
-        post_data = {
-            "name": domain_name,
-            "kind": domain_type,
-            "masters": domain_master_ips,
-            "nameservers": domain_ns,
-            "soa_edit_api": soa_edit_api,
-            "account": account_name
-        }
+        # Load existing tsig_keys from pdns
+        # we use the first tsig_key defined in pdns as master_tsig_key
+        # for new domain only if one key is defined
+        tsig_keys_list = self.get_tsig_keys(domain_name)
+        if isinstance(tsig_keys_list, list) and len(tsig_keys_list) == 1:
+
+            current_app.logger.info('Use tsig_keys_id: {0}'.format(
+                tsig_keys_list[0]['id']))
+
+            post_data = {
+                "name": domain_name,
+                "kind": domain_type,
+                "masters": domain_master_ips,
+                "nameservers": domain_ns,
+                "soa_edit_api": soa_edit_api,
+                "account": account_name,
+                "master_tsig_key_ids": [tsig_keys_list[0]['id']],
+            }
+        else:
+            post_data = {
+                "name": domain_name,
+                "kind": domain_type,
+                "masters": domain_master_ips,
+                "nameservers": domain_ns,
+                "soa_edit_api": soa_edit_api,
+                "account": account_name,
+            }
 
         try:
             jdata = utils.fetch_json(
