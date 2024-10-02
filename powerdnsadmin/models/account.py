@@ -244,10 +244,11 @@ class Account(db.Model):
         current_app.logger.info("Found {} accounts in PowerDNS-Admin".format(
             len(list_db_accounts)))
         headers = {'X-API-Key': self.PDNS_API_KEY}
+        # FIX for ?dnssec=false to improve performance            
         try:
             jdata = utils.fetch_json(
                 urljoin(self.PDNS_STATS_URL,
-                        self.API_EXTENDED_URL + '/servers/localhost/zones'),
+                        self.API_EXTENDED_URL + '/servers/localhost/zones?dnssec=false'),
                 headers=headers,
                 timeout=int(Setting().get('pdns_api_timeout')),
                 verify=Setting().get('verify_ssl_connections'))

@@ -1,5 +1,11 @@
 # PowerDNS-Admin
 
+Forked from original repo (v0.4.2) in order to handle PDNS API > 4.1 call to /servers/localhost/zones with `dnssec=false` parameter in order to improve performance of the Admin console.
+
+----
+
+
+
 A PowerDNS web interface with advanced features.
 
 [![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)

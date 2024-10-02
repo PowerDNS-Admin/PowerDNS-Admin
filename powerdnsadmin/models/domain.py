@@ -91,9 +91,10 @@ class Domain(db.Model):
         Get all zones which has in PowerDNS
         """
         headers = {'X-API-Key': self.PDNS_API_KEY}
+        # FIX for ?dnssec=false to improve performance            
         jdata = utils.fetch_json(
             urljoin(self.PDNS_STATS_URL,
-                    self.API_EXTENDED_URL + '/servers/localhost/zones'),
+                    self.API_EXTENDED_URL + '/servers/localhost/zones?dnssec=false'),
             headers=headers,
             timeout=int(Setting().get('pdns_api_timeout')),
             verify=Setting().get('verify_ssl_connections'))
@@ -138,9 +139,10 @@ class Domain(db.Model):
             len(list_db_domain)))
         headers = {'X-API-Key': self.PDNS_API_KEY}
         try:
+            # FIX for ?dnssec=false to improve performance
             jdata = utils.fetch_json(
                 urljoin(self.PDNS_STATS_URL,
-                        self.API_EXTENDED_URL + '/servers/localhost/zones'),
+                        self.API_EXTENDED_URL + '/servers/localhost/zones?dnssec=false'),
                 headers=headers,
                 timeout=int(Setting().get('pdns_api_timeout')),
                 verify=Setting().get('verify_ssl_connections'))
@@ -196,6 +198,7 @@ class Domain(db.Model):
             db.session.rollback()
             current_app.logger.error(
                 'Cannot update zone table. Error: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())            
             return {'status': 'error', 'msg': 'Cannot update zone table'}
 
     def update_pdns_admin_domain(self, domain, account_id, data, do_commit=True):
@@ -205,7 +208,7 @@ class Domain(db.Model):
                 or domain.serial != data['serial']
                 or domain.notified_serial != data['notified_serial']
                 or domain.last_check != (1 if data['last_check'] else 0)
-                or domain.dnssec != data['dnssec']
+                or domain.dnssec != (1 if data.get('dnssec', False) else 0)
                 or domain.account_id != account_id):
 
             domain.master = str(data['masters'])
@@ -213,7 +216,8 @@ class Domain(db.Model):
             domain.serial = data['serial']
             domain.notified_serial = data['notified_serial']
             domain.last_check = 1 if data['last_check'] else 0
-            domain.dnssec = 1 if data['dnssec'] else 0
+            # FIX for ?dnssec=false to improve performance            
+            domain.dnssec = 1 if data.get('dnssec', False) else 0
             domain.account_id = account_id
             try:
                 if do_commit:
