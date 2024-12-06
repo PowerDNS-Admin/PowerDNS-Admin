@@ -67,7 +67,7 @@ jobs:
           context: ./
           file: ./docker/Dockerfile
           push: true
-          tags: powerdnsadmin/pda-legacy:${{ github.ref_name }}
+          tags: john0222/pda-legacy:${{ github.ref_name }}
 
       - name: Docker Image Release Tagging
         uses: docker/build-push-action@v4
