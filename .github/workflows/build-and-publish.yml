@@ -40,7 +40,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            powerdnsadmin/pda-legacy
+            john0222/pda-legacy
           tags: |
             type=ref,event=tag
             type=semver,pattern={{version}}
