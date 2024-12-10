@@ -1,9 +1,13 @@
 import os
 import logging
+import sentry_sdk
 from flask import Flask
 from flask_mail import Mail
-from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_session import Session
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from werkzeug.middleware.proxy_fix import ProxyFix
 from .lib import utils
 
 
@@ -72,6 +76,32 @@ def create_app(config=None):
     # SMTP
     app.mail = Mail(app)
 
+    # Retrieve configuration from environment variables or app config
+    sentry_dsn = os.environ.get("SENTRY_DSN", app.config.get("SENTRY_DSN"))
+    sentry_enabled = str(os.environ.get("SENTRY_ENABLED", app.config.get("SENTRY_ENABLED", "false"))).strip().lower() == "true"
+
+    if sentry_enabled and sentry_dsn:
+        sentry_sdk.init(
+            #TODO: Make this release dynamic
+            #release="powerdns-admin@0.4.2",
+            dsn=sentry_dsn,
+            integrations = [
+                FlaskIntegration(
+                    #transaction_style="url",
+                    http_methods_to_capture=("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",),
+                ),
+                LoggingIntegration(),
+                SqlalchemyIntegration(),
+            ],
+            debug=False,
+            # Set traces_sample_rate to 1.0 to capture 100%
+            # of transactions for tracing.
+            traces_sample_rate=1.0,
+        )
+        app.logger.info("Sentry initialized successfully.")
+    else:
+        app.logger.info("Sentry not enabled or DSN missing.")
+    
     # Load app's components
     assets.init_app(app)
     models.init_app(app)
