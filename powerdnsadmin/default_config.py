@@ -30,3 +30,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = True
 #     SQLA_DB_HOST,
 #     SQLA_DB_NAME
 # )
+
+SENTRY_ENABLED = False
+SENTRY_DSN = 'https://3e67f935299567545bbe1659a7839f4c@sentry.powerdnsadmin.net/41'
