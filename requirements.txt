@@ -28,6 +28,7 @@ lima==0.5
 --use-feature=no-binary-enable-wheel-cache lxml==4.9.0
 mysqlclient==2.2.1
 passlib==1.7.4
+psycopg2==2.9.5
 #pyOpenSSL==22.1.0
 pyasn1==0.4.8
 pyotp==2.8.0
@@ -37,12 +38,12 @@ python3-saml==1.15.0
 pytimeparse==1.1.8
 pytz==2022.7.1
 qrcode==7.3.1
+rcssmin==1.1.1
 requests==2.31.0
 rjsmin==1.2.1
+sentry-sdk[flask]
+setuptools==65.5.1 # fixes CVE-2022-40897
 webcolors==1.12
 werkzeug==2.3.8
 zipp==3.11.0
-rcssmin==1.1.1
 zxcvbn==4.4.28
-psycopg2==2.9.5
-setuptools==65.5.1 # fixes CVE-2022-40897
