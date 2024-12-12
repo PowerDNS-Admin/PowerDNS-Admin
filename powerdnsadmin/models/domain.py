@@ -3,7 +3,7 @@ import re
 import traceback
 from flask import current_app
 from flask_login import current_user
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote_plus
 from distutils.util import strtobool
 
 from ..lib import utils
@@ -79,7 +79,7 @@ class Domain(db.Model):
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(domain_name)),
+                                 '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
             headers=headers,
             timeout=int(
                 Setting().get('pdns_api_timeout')),
@@ -294,7 +294,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}'.format(
-                                                 domain_dict['name'])),
+                                                 quote_plus(domain_dict['name']))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     verify=Setting().get('verify_ssl_connections'))
@@ -353,7 +353,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -397,7 +397,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -525,7 +525,7 @@ class Domain(db.Model):
 
         utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(domain_name)),
+                                 '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
             headers=headers,
             timeout=int(Setting().get('pdns_api_timeout')),
             method='DELETE',
@@ -652,7 +652,7 @@ class Domain(db.Model):
                 r = utils.fetch_json(urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                          '/servers/localhost/zones/{0}/axfr-retrieve'.format(
-                                             urllib.parse.quote_plus(domain.name))),
+                                             quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(
                         Setting().get('pdns_api_timeout')),
@@ -685,7 +685,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 urllib.parse.quote_plus(domain.name))),
+                                                 quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='GET',
@@ -725,7 +725,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}'.format(
-                                                 urllib.parse.quote_plus(domain.name)
+                                                 quote_plus(domain.name)
                                              )),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
@@ -746,7 +746,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 urllib.parse.quote_plus(domain.name)
+                                                 quote_plus(domain.name)
                                              )),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
@@ -795,7 +795,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                                                 urllib.parse.quote_plus(domain.name), key_id)),
+                                                 quote_plus(domain.name), key_id)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='DELETE',
@@ -816,7 +816,7 @@ class Domain(db.Model):
                 jdata = utils.fetch_json(
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}'.format(domain.name)),
+                                             '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='PUT',
@@ -872,7 +872,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(domain_name)),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
