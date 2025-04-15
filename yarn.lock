@@ -1026,10 +1026,10 @@ jquery-ui-dist@^1.13.0, jquery-ui-dist@^1.13.2:
   dependencies:
     jquery ">=1.8.0 <4.0.0"
 
-jquery-validation@^1.19.3, jquery-validation@^1.19.5:
-  version "1.19.5"
-  resolved "https://registry.yarnpkg.com/jquery-validation/-/jquery-validation-1.19.5.tgz#557495b7cad79716897057c4447ad3cd76fda811"
-  integrity sha512-X2SmnPq1mRiDecVYL8edWx+yTBZDyC8ohWXFhXdtqFHgU9Wd4KHkvcbCoIZ0JaSaumzS8s2gXSkP8F7ivg/8ZQ==
+jquery-validation@^1.19.3, jquery-validation@^1.20.0:
+  version "1.20.0"
+  resolved "https://registry.yarnpkg.com/jquery-validation/-/jquery-validation-1.20.0.tgz#dbff6d8fe61b07d4b6f844bf2f5405146556b991"
+  integrity sha512-c8tg4ltIIP6L7l0bZ79sRzOJYquyjS48kQZ6iv8MJ2r0OYztxtkWYKTReZyU2/zVFYiINB29i0Z/IRNNuJQN1g==
 
 jquery.quicksearch@^2.4.0:
   version "2.4.0"
