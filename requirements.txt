@@ -43,6 +43,6 @@ webcolors==1.12
 werkzeug==2.3.8
 zipp==3.11.0
 rcssmin==1.1.1
-zxcvbn==4.4.28
+zxcvbn==4.5.0
 psycopg2==2.9.5
 setuptools==65.5.1 # fixes CVE-2022-40897
