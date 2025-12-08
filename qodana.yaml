@@ -11,3 +11,16 @@ include:
   - name: CheckModuleLicenses
   - name: CheckThirdPartySoftwareList
   - name: JsCoverageInspection
+  - name: PyUnresolvedReferencesInspection
+  - name: PyUnnecessaryCastInspection
+  - name: PyArgumentEqualDefaultInspection
+  - name: PyMandatoryEncodingInspection
+  - name: PyMissingTypeHintsInspection
+  - name: PyMissingOrEmptyDocstringInspection
+  - name: PyDataclassInspection
+  - name: PyTypeCheckerInspection
+  - name: PyArgumentListInspection
+  - name: PyCompatibilityInspection
+  - name: PyAugmentAssignmentInspection
+  - name: PyInterpreterInspection
+  - name: HttpUrlsUsage
