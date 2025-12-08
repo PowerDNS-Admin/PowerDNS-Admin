@@ -5,7 +5,9 @@ version: "1.0"
 linter: jetbrains/qodana-python:2025.2
 profile:
   name: qodana.recommended
-bootstrap: pip install -r requirements.txt
+bootstrap: |
+  apt-get install -y python3-dev default-libmysqlclient-dev build-essential pkg-config
+  pip install -r requirements.txt
 include:
   - name: CheckDependencyLicenses
   - name: OutdatedRequirementInspection
