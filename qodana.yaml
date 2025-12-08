@@ -5,6 +5,7 @@ version: "1.0"
 linter: jetbrains/qodana-python:2025.2
 profile:
   name: qodana.recommended
+bootstrap: pip install -r requirements.txt
 include:
   - name: CheckDependencyLicenses
   - name: OutdatedRequirementInspection
