@@ -27,7 +27,7 @@ jsonschema[format]>=2.5.1,<4.0.0 # until https://github.com/Yelp/bravado-core/pu
 lima==0.5
 --use-feature=no-binary-enable-wheel-cache lxml==4.9.0
 #mysqlclient==2.2.7
-PyMySQL
+PyMySQL==1.1.2
 passlib==1.7.4
 #pyOpenSSL==22.1.0
 pyasn1==0.4.8
@@ -45,5 +45,6 @@ werkzeug==2.3.8
 zipp==3.11.0
 rcssmin==1.1.1
 zxcvbn==4.4.28
-psycopg2==2.9.5
+##psycopg2==2.9.5
+psycopg2-binary==2.9.11
 setuptools==65.5.1 # fixes CVE-2022-40897
