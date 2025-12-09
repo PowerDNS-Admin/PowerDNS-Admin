@@ -14,8 +14,8 @@ SQLAlchemy==1.4.51
 #alembic==1.9.0
 bcrypt==4.1.2
 bravado-core==5.17.1
-certifi==2023.11.17
-cffi==1.15.1
+certifi==2025.11.12
+cffi==1.16.0
 configobj==5.0.8
 cryptography==42.0.2
 cssmin==0.2.0
