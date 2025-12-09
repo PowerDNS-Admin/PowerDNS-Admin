@@ -45,6 +45,6 @@ werkzeug==2.3.8
 zipp==3.11.0
 rcssmin==1.1.1
 zxcvbn==4.4.28
-##psycopg2==2.9.5
+##psycopg2==2.9.11
 psycopg2-binary==2.9.11
-setuptools==65.5.1 # fixes CVE-2022-40897
+setuptools==67.8.0
