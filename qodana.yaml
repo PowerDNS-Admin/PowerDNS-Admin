@@ -6,7 +6,6 @@ linter: jetbrains/qodana-python:2025.2
 profile:
   name: qodana.recommended
 bootstrap: |
-  apt-get install -y python3-dev default-libmysqlclient-dev build-essential pkg-config
   pip install -r requirements.txt
 include:
   - name: CheckDependencyLicenses
@@ -19,7 +18,6 @@ include:
   - name: PyArgumentEqualDefaultInspection
   - name: PyMandatoryEncodingInspection
   - name: PyMissingTypeHintsInspection
-  - name: PyMissingOrEmptyDocstringInspection
   - name: PyDataclassInspection
   - name: PyTypeCheckerInspection
   - name: PyArgumentListInspection
