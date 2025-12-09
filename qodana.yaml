@@ -21,7 +21,6 @@ include:
   - name: PyDataclassInspection
   - name: PyTypeCheckerInspection
   - name: PyArgumentListInspection
-  - name: PyCompatibilityInspection
   - name: PyAugmentAssignmentInspection
   - name: PyInterpreterInspection
   - name: HttpUrlsUsage
