@@ -2,16 +2,39 @@ version: "3"
 
 services:
   app:
+    # 既然你 fork 了，建议使用构建模式，或者保持 image 模式
     image: powerdnsadmin/pda-legacy:latest
     container_name: powerdns_admin
+    # 在 Coolify 中，内部端口映射通常只需写 80
     ports:
-      - "9191:80"
-    logging:
-      driver: json-file
-      options:
-        max-size: 50m
+      - "80" 
     environment:
-      - SQLALCHEMY_DATABASE_URI=mysql://pda:changeme@host.docker.internal/pda
+      # 1. 数据库连接优化（见下方说明）
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI:-mysql://pda:changeme@db/pda}
       - GUNICORN_TIMEOUT=60
       - GUNICORN_WORKERS=2
-      - GUNICORN_LOGLEVEL=DEBUG
+      - GUNICORN_LOGLEVEL=info
+      # 2. 必须添加 SECRET_KEY 否则某些版本无法启动
+      - SECRET_KEY=${SECRET_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+
+  # 3. 强烈建议在同一个 Compose 中定义数据库，方便一键部署
+  db:
+    image: mariadb:10.11
+    container_name: pda_db
+    environment:
+      - MYSQL_DATABASE=pda
+      - MYSQL_USER=pda
+      - MYSQL_PASSWORD=changeme
+      - MYSQL_ROOT_PASSWORD=changeme_root
+    volumes:
+      - pda-db-data:/var/lib/mysql
+    restart: always
+
+volumes:
+  pda-db-data:
