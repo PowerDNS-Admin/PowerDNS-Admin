@@ -96,11 +96,3 @@ Please see our [Code of Conduct Policy](https://github.com/PowerDNS-Admin/PowerD
 
 This project is released under the MIT license. For additional
 information, [see the full license](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/LICENSE).
-
-## [Donate](https://www.buymeacoffee.com/AzorianMatt)
-
-Like my work?
-
-<a href="https://www.buymeacoffee.com/AzorianMatt" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-
-**Want to sponsor me?** Please visit my organization's [sponsorship page](https://github.com/sponsors/AzorianSolutions).
