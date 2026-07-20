@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:trixie-slim
 LABEL maintainer="k@ndk.name"
 
 ENV LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
@@ -24,13 +24,13 @@ RUN apt-get update -y \
         python3-dev \
         python3-pip \
         python3-setuptools \
-    && curl -sL https://deb.nodesource.com/setup_lts.x | bash - \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
-    && apt-get update -y \
+    #&& curl -sL https://deb.nodesource.com/setup_lts.x | bash - \
+    #&& curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    #&& echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
+    #&& apt-get update -y \
     && apt-get install -y --no-install-recommends \
         nodejs \
-        yarn \
+        yarnpkg \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,7 +38,7 @@ RUN apt-get update -y \
 COPY ./requirements.txt /app/requirements.txt
 
 WORKDIR /app
-RUN pip3 install --upgrade pip
+#RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 
 COPY . /app
