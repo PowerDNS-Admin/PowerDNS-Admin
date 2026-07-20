@@ -38,6 +38,17 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
+
+    # Clean up expired sessions in the database
+    if Setting().get('session_type') == 'sqlalchemy':
+        from ..models.sessions import Sessions
+        Sessions().clean_up_expired_sessions()
+
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
@@ -45,17 +56,13 @@ def before_request():
     ]:
         return render_template('maintenance.html')
 
-    # Manage session timeout
-    session.permanent = True
-    current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
-    session.modified = True
-
 
 @domain_bp.route('/<path:domain_name>', methods=['GET'])
 @login_required
 @can_access_domain
 def domain(domain_name):
+    import urllib.parse
+
     # Validate the domain existing in the local DB
     domain = Domain.query.filter(Domain.name == domain_name).first()
     if not domain:
@@ -127,6 +134,11 @@ def domain(domain_name):
     else:
         editable_records = reverse_records_allow_to_edit
 
+    # catalog zone
+    catalog_members = None
+    if domain.type == 'Producer':
+        catalog_members = Domain.query.filter(Domain.catalog == domain.name).all()
+
     return render_template('domain.html',
                            domain=domain,
                            records=records,
@@ -134,6 +146,8 @@ def domain(domain_name):
                            quick_edit=quick_edit,
                            ttl_options=ttl_options,
                            current_user=current_user,
+                           catalog_members=catalog_members,
+                           domain_name_safe=urllib.parse.quote_plus(domain_name),
                            allow_user_view_history=Setting().get('allow_user_view_history'))
 
 
@@ -292,6 +306,7 @@ def add():
             domain_template = request.form.getlist('domain_template')[0]
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
             account_id = request.form.getlist('accountid')[0]
+            catalog_name = request.form.getlist('catalog_name')[0]
 
             if ' ' in domain_name or not domain_name or not domain_type:
                 return render_template(
@@ -374,7 +389,8 @@ def add():
                            domain_type=domain_type,
                            soa_edit_api=soa_edit_api,
                            domain_master_ips=domain_master_ips,
-                           account_name=account_name)
+                           account_name=account_name,
+                           catalog_name=catalog_name)
             if result['status'] == 'ok':
                 domain_id = Domain().get_id_by_name(domain_name)
                 history = History(msg='Add zone {0}'.format(
@@ -451,12 +467,14 @@ def add():
         # Admins and Operators can set to any account
         if current_user.role.name in ['Administrator', 'Operator']:
             accounts = Account.query.order_by(Account.name).all()
+            catalog_zones = Domain.query.filter(Domain.type == 'Producer').all()
             domain_override_toggle = True
         else:
             accounts = current_user.get_accounts()
         return render_template('domain_add.html',
                                templates=templates,
                                accounts=accounts,
+                               catalog_zones=catalog_zones,
                                domain_override_toggle=domain_override_toggle)
 
 
@@ -489,6 +507,7 @@ def setting(domain_name):
             abort(404)
         users = User.query.all()
         accounts = Account.query.order_by(Account.name).all()
+        catalog_zones = Domain.query.filter(Domain.type == 'Producer').all()
 
         # get list of user ids to initialize selection data
         d = Domain(name=domain_name)
@@ -501,6 +520,8 @@ def setting(domain_name):
                                users=users,
                                domain_user_ids=domain_user_ids,
                                accounts=accounts,
+                               catalog_zones=catalog_zones,
+                               zone_catalog=domain_info["catalog"],
                                domain_account=account,
                                zone_type=domain_info["kind"].lower(),
                                masters=','.join(domain_info["masters"]),
@@ -563,6 +584,38 @@ def change_type(domain_name):
                               "domain": domain_name,
                               "type": domain_type,
                               "masters": domain_master_ips
+                          }),
+                          created_by=current_user.username,
+                          domain_id=Domain().get_id_by_name(domain_name))
+        history.add()
+        return redirect(url_for('domain.setting', domain_name = domain_name))
+    else:
+        abort(500)
+
+
+@domain_bp.route('/setting/<path:domain_name>/change_catalog',
+                 methods=['POST'])
+@login_required
+@operator_role_required
+def change_catalog(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+    domain_catalog = request.form.get('domain_catalog')
+    if domain_catalog is None:
+        abort(500)
+    if domain_catalog == '0':
+        domain_catalog = ''
+
+    d = Domain()
+    status = d.update_catalog(domain_name=domain_name,
+                           catalog_name=domain_catalog)
+    if status['status'] == 'ok':
+        history = History(msg='Update catalog for zone {0}'.format(
+                pretty_domain_name(domain_name)),
+                          detail=json.dumps({
+                              "domain": domain_name,
+                              "catalog": domain_catalog
                           }),
                           created_by=current_user.username,
                           domain_id=Domain().get_id_by_name(domain_name))

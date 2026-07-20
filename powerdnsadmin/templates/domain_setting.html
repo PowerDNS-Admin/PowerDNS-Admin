@@ -136,7 +136,7 @@
             <!-- /.row -->
 
             <div class="row">
-                <div class="col-12 col-sm-4">
+                <div class="col-12 col-sm-6">
                     <form method="post" action="{{ url_for('domain.setting', domain_name=domain.name) }}">
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <div class="card card-outline card-secondary shadow">
@@ -241,6 +241,43 @@
                 <!-- /.col -->
             </div>
             <!-- /.row -->
+
+            {% if catalog_zones %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-secondary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">Change Domain Catalog Zone</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <p>Manage your domain's association with a Catalog Zone. Here, you can modify which Catalog
+                                Zone your domain is a member of or choose to dissociate it from any Catalog Zone.
+                                Adjusting this setting will determine how your domain is provisioned across secondary
+                                servers. Ensure you select the right Catalog Zone or opt for 'None' if you wish to
+                                remove the domain from any existing Catalog Zone.</p>
+                            <b>New Domain Catalog Zone:</b>
+                            <form method="post" action="{{ url_for('domain.change_catalog', domain_name=domain.name) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <select name="domain_catalog" class="form-control" style="width:15em;">
+                                    <option value="0">- None -</option>
+                                    {% for catalog in catalog_zones %}
+                                        <option {% if zone_catalog == catalog.name ~ "." %}selected{% endif %} value="{{ catalog.name }}">{{ catalog.name }}</option>
+                                    {% endfor %}
+                                </select><br/>
+                                <button type="submit" title="Update Catalog Zone" class="btn btn-primary" id="change_catalog">
+                                    <i class="fa-solid fa-floppy-disk"></i>&nbsp;Update Catalog Zone
+                                </button>
+                            </form>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+            {% endif %}
 
             <div class="row">
                 <div class="col-12">

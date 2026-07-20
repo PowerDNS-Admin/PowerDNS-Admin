@@ -57,6 +57,17 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                {% if catalog_zones %}
+                                <div class="form-group">
+                                    <label for="selCatalog">Catalog Zone</label>
+                                    <select name="catalog_name" id="selCatalog" class="form-control">
+                                        <option value="">- No Catalog -</option>
+                                        {% for catalog in catalog_zones %}
+                                            <option value="{{ catalog.name }}">{{ catalog.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
                                 <div class="form-group">
                                     <label>Zone Type</label>
                                     <div class="radio">
@@ -78,6 +89,13 @@
                                             <input type="radio" name="radio_type" id="radio_type_secondary"
                                                    value="slave">
                                             Secondary
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="radio_type" id="radio_type_producer"
+                                                   value="producer">
+                                            Producer
                                         </label>
                                     </div>
                                 </div>
@@ -161,6 +179,14 @@
                                 </dd>
                                 <dt>Account</dt>
                                 <dd>Specifies the PowerDNS account value to use for the zone.</dd>
+                                {% if catalog_zones %}
+                                <dt>Catalog Zone</dt>
+                                <dd>Select a Catalog Zone from the dropdown to associate your domain with it. By adding
+                                    your domain to a specific Catalog Zone, you streamline its provisioning process
+                                    across secondary servers. Ensure you choose the appropriate Catalog Zone for your
+                                    domain's requirements.
+                                </dd>
+                                {% endif %}
                                 <dt>Zone Type</dt>
                                 <dd>The type decides how the zone will be replicated across multiple DNS servers.
                                     <ul>
@@ -176,6 +202,13 @@
                                             <strong>Secondary</strong> - The server will serve as the Secondary and will
                                             request and receive zone transfers (AXFRs) from other servers configured as
                                             Primaries.
+                                        </li>
+                                        <li>
+                                            <strong>Producer</strong> - This refers to a Catalog Zone, designed for
+                                            automated provisioning of zones to secondary servers. It contains a list of
+                                            "member zones" with their configurations. When updated or transferred,
+                                            secondary servers automatically adjust these member zones, streamlining
+                                            real-time updates through standard DNS transfer methods.
                                         </li>
                                     </ul>
                                 </dd>

@@ -170,6 +170,11 @@ def handle_request_is_not_json(err):
 @api_bp.before_request
 @is_json
 def before_request():
+    # Clean up expired sessions in the database
+    if Setting().get('session_type') == 'sqlalchemy':
+        from ..models.sessions import Sessions
+        Sessions().clean_up_expired_sessions()
+
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if (maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']):

@@ -52,18 +52,23 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
+
+    # Clean up expired sessions in the database
+    if Setting().get('session_type') == 'sqlalchemy':
+        from ..models.sessions import Sessions
+        Sessions().clean_up_expired_sessions()
+
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
         'Administrator', 'Operator'
     ]:
         return render_template('maintenance.html')
-
-    # Manage session timeout
-    session.permanent = True
-    current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
-    session.modified = True
 
 
 @dashboard_bp.route('/domains-custom/<path:tab_id>', methods=['GET'])

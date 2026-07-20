@@ -24,13 +24,6 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
-    # Check site is in maintenance mode
-    maintenance = Setting().get('maintenance')
-    if maintenance and current_user.is_authenticated and current_user.role.name not in [
-            'Administrator', 'Operator'
-    ]:
-        return render_template('maintenance.html')
-
     # Manage session timeout
     session.permanent = True
     current_app.permanent_session_lifetime = datetime.timedelta(
@@ -41,6 +34,13 @@ def before_request():
     if Setting().get('session_type') == 'sqlalchemy':
         from ..models.sessions import Sessions
         Sessions().clean_up_expired_sessions()
+
+    # Check site is in maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and current_user.is_authenticated and current_user.role.name not in [
+            'Administrator', 'Operator'
+    ]:
+        return render_template('maintenance.html')
 
 
 @user_bp.route('/profile', methods=['GET', 'POST'])
