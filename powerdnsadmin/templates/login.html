@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Log In - {{ SITE_NAME }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
     <!-- Tell the browser to be responsive to screen width -->
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <META HTTP-EQUIV="REFRESH" CONTENT="{{ 60 * SETTING.get('session_timeout') }}">
     {% assets "css_login" -%}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
     {% endif %}
 </head>
-<body class="hold-transition login-page">
+<body class="login-page bg-body-secondary">
 <div class="login-box">
     <div class="card card-outline card-primary shadow">
         <div class="card-header text-center">
@@ -29,36 +29,36 @@
         </div>
         <div class="card-body login-card-body">
             {% if error %}
-                <div class="alert alert-danger alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endif %}
             {% if SETTING.get('ldap_enabled') or SETTING.get('local_db_enabled') %}
                 <form action="" method="post" data-toggle="validator">
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <div class="form-group">
+                    <div class="mb-3">
                         <input type="text" class="form-control" placeholder="Username" name="username"
                                data-error="Please input your username" required
                                autofocus
                                {% if username %}value="{{ username }}" {% endif %}>
                         <span class="help-block with-errors"></span>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <input type="password" class="form-control" placeholder="Password" name="password"
                                data-error="Please input your password" required
                                {% if password %}value="{{ password }}" {% endif %}>
                         <span class="help-block with-errors"></span>
                     </div>
                     {% if SETTING.get('otp_field_enabled') %}
-                        <div class="form-group">
+                        <div class="mb-3">
                             <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken"
                                    autocomplete="off">
                         </div>
                     {% endif %}
                     {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
-                        <div class="form-group">
-                            <select class="form-control" name="auth_method">
+                        <div class="mb-3">
+                            <select class="form-select" name="auth_method">
                                 <option value="LOCAL">
                                     LOCAL Authentication
                                 </option>
@@ -74,29 +74,29 @@
                             </select>
                         </div>
                     {% elif SETTING.get('ldap_enabled') and not SETTING.get('local_db_enabled') %}
-                        <div class="form-group">
+                        <div>
                             <input type="hidden" name="auth_method" value="LDAP">
                         </div>
                     {% elif SETTING.get('local_db_enabled') and not SETTING.get('ldap_enabled') %}
-                        <div class="form-group">
+                        <div>
                             <input type="hidden" name="auth_method" value="LOCAL">
                         </div>
                     {% else %}
-                        <div class="form-group">
+                        <div>
                             <input type="hidden" name="auth_method" value="LOCAL">
                         </div>
                     {% endif %}
                     <div class="row">
                         <div class="col-8">
-                            <div class="icheck-primary">
-                                <input type="checkbox" name="remember" id="remember">
-                                <label for="remember">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                <label class="form-check-label" for="remember">
                                     Remember Me
                                 </label>
                             </div>
                         </div>
                         <div class="col-4">
-                            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                            <button type="submit" class="btn btn-primary w-100">Sign In</button>
                         </div>
                     </div>
                 </form>
@@ -108,28 +108,28 @@
                     {% endif %}
                     {% if SETTING.get('oidc_oauth_enabled') %}
                         <a href="{{ url_for('index.oidc_login') }}"
-                           class="btn btn-block btn-social btn-openid btn-flat">
+                           class="btn btn-warning w-100 mb-2">
                             <i class="fa-brands fa-openid"></i>
                             Sign in using OpenID Connect
                         </a>
                     {% endif %}
                     {% if SETTING.get('github_oauth_enabled') %}
                         <a href="{{ url_for('index.github_login') }}"
-                           class="btn btn-block btn-social btn-github btn-flat">
+                           class="btn btn-dark w-100 mb-2">
                             <i class="fa-brands fa-github"></i>
                             Sign in using Github
                         </a>
                     {% endif %}
                     {% if SETTING.get('google_oauth_enabled') %}
                         <a href="{{ url_for('index.google_login') }}"
-                           class="btn btn-block btn-social btn-google btn-flat">
+                           class="btn btn-danger w-100 mb-2">
                             <i class="fa-brands fa-google"></i>
                             Sign in using Google
                         </a>
                     {% endif %}
                     {% if SETTING.get('azure_oauth_enabled') %}
                         <a href="{{ url_for('index.azure_login') }}"
-                           class="btn btn-block btn-social btn-microsoft btn-flat">
+                           class="btn btn-primary w-100 mb-2">
                             <i class="fa-brands fa-windows"></i>
                             Sign in using Microsoft Azure
                         </a>
@@ -168,14 +168,5 @@
 {% assets "js_validation" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
-<script>
-    $(function () {
-        $('input').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            radioClass: 'iradio_square-blue',
-            increaseArea: '20%' // optional
-        });
-    });
-</script>
 </body>
 </html>

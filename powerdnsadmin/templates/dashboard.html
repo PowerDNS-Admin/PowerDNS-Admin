@@ -3,16 +3,16 @@
 {% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
 {% block dashboard_stat %}
-    <div class="content-header">
+    <div class="app-content-header">
         <div class="container-fluid">
-            <div class="row mb-2">
+            <div class="row align-items-center">
                 <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
+                    <h1 class="mb-0">
                         Dashboard
                     </h1>
                 </div>
                 <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
+                    <ol class="breadcrumb justify-content-sm-end mb-0">
                         <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
                     </ol>
                 </div>
@@ -44,7 +44,7 @@
                                         {% for tab_id in zone_tabs.order %}
                                             <li class="nav-item">
                                                 <a class="nav-link {% if loop.first %}active{% endif %}"
-                                                   href="#tab_{{ tab_id }}" data-toggle="pill" role="tab">
+                                                   href="#tab_{{ tab_id }}" data-bs-toggle="pill" role="tab">
                                                     Zones <b>{{ zone_tabs.tabs[tab_id].display_name }}</b>
                                                 </a>
                                             </li>
@@ -144,12 +144,12 @@
             var history_id = $(this).val();
             var info = $("#history-info-div-" + history_id).html();
             $('#modal-info-content').html(info);
-            modal.modal('show');
+            showModal(modal);
         });
 
         $(document.body).on('click', '.refresh-bg-button', function () {
             var modal = $("#modal_bg_reload");
-            modal.modal('show');
+            showModal(modal);
             reload_domains($SCRIPT_ROOT + '/dashboard/domains-updater');
         });
 
@@ -169,13 +169,13 @@
                 data['description'] = modal.find('#template_description').val();
                 data['domain'] = modal.find('#domain').val();
                 applyChanges(data, "{{ url_for('admin.create_template_from_zone') }}", true);
-                modal.modal('hide');
+                hideModal(modal);
             })
             modal.find('#button_close').click(function () {
-                modal.modal('hide');
+                hideModal(modal);
             })
 
-            modal.modal('show');
+            showModal(modal);
         });
 
         {% if current_user.role.name in ['Administrator', 'Operator'] or not SETTING.get('dnssec_admins_only') %}
@@ -198,21 +198,20 @@
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade" id="modal_history_info">
+    <div class="modal fade" id="modal_history_info" tabindex="-1" aria-labelledby="modal_history_info_label"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">History Details</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_history_info_label">History Details</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div id="modal-info-content">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
                 </div>
@@ -220,23 +219,22 @@
         </div>
     </div>
 
-    <div class="modal fade modal-primary" id="modal_template">
+    <div class="modal fade" id="modal_template" tabindex="-1" aria-labelledby="modal_template_label"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Clone to template</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_template_label">Clone to template</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-right" id="button_close" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" id="button_close" data-bs-dismiss="modal">
                         Close
                     </button>
-                    <button type="button" class="btn btn-primary float-right" id="button_save">
+                    <button type="button" class="btn btn-primary" id="button_save">
                         Save
                     </button>
                 </div>
@@ -244,20 +242,19 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal_dnssec_info">
+    <div class="modal fade" id="modal_dnssec_info" tabindex="-1" aria-labelledby="modal_dnssec_info_label"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">DNSSEC</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_dnssec_info_label">DNSSEC</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
                 </div>
@@ -265,14 +262,13 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal_bg_reload">
+    <div class="modal fade" id="modal_bg_reload" tabindex="-1" aria-labelledby="modal_bg_reload_label"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Sync Zones from backend</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_bg_reload_label">Sync Zones from backend</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div id="modal_bg_reload_content">
@@ -280,7 +276,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
                 </div>

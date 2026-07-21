@@ -166,8 +166,8 @@
                                         <label>Minimum date: &nbsp</label>
                                     </td>
                                     <td style="position: relative; top:10px;">
-                                        <input type="text" id="min" name="min" class="datepicker" autocomplete="off"
-                                               style=" border:1px solid #d2d6de; width:250px; height: 34px;">
+                                        <input type="date" id="min" name="min" class="form-control"
+                                               autocomplete="off" style="width:250px;">
                                     </td>
                                 </tr>
                                 <tr>
@@ -175,8 +175,8 @@
                                         <label>Maximum date: &nbsp</label>
                                     </td>
                                     <td style="position: relative; top:20px;">
-                                        <input type="text" id="max" name="max" class="datepicker" autocomplete="off"
-                                               style=" border:1px solid #d2d6de; width:250px; height: 34px;">
+                                        <input type="date" id="max" name="max" class="form-control"
+                                               autocomplete="off" style="width:250px;">
                                     </td>
                                 </tr>
                                 <tr>
@@ -228,6 +228,11 @@
 
             var minDate = $('#min');
             var maxDate = $('#max');
+            var today = new Date();
+            var localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+                .toISOString().slice(0, 10);
+            minDate.attr('max', localToday);
+            maxDate.attr('max', localToday);
             domain_changelog = $('domain_changelog_only_checkbox');
 
             // Show/hide filters
@@ -240,25 +245,16 @@
 
             // Handle giving later mindate than current max
             $('#min').on('change', function () {
-                if (minDate.val() > maxDate.val())
-                    $('#max').datepicker('setDate', minDate.val());
+                if (maxDate.val() && minDate.val() > maxDate.val()) {
+                    maxDate.val(minDate.val());
+                }
             });
 
             // Handle giving earlier maxdate than current min
             $('#max').on('keyup change', function () {
-                if (maxDate.val() < minDate.val())
-                    $('#min').datepicker('setDate', maxDate.val());
-            });
-
-            $(function () {
-                $(".datepicker").datepicker({
-                    changeMonth: true,
-                    changeYear: true,
-                    format: "yyyy-mm-dd",
-                    endDate: '+0'
-                });
-                // $(".datepicker").datepicker("option", "format", "yy-mm-dd")
-
+                if (minDate.val() && maxDate.val() < minDate.val()) {
+                    minDate.val(maxDate.val());
+                }
             });
         });
 
@@ -479,8 +475,11 @@
         // if search submit is pressed, and max date not initialized
         // then initialize it
         $('#search-submit').on('click', function () {
-            if ($('#max').val() === "" || $('#max').val() === undefined)
-                $('#max').datepicker('setDate', 'now');
+            if ($('#max').val() === "" || $('#max').val() === undefined) {
+                var today = new Date();
+                $('#max').val(new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+                    .toISOString().slice(0, 10));
+            }
         });
 
         $("#history-search-form").submit(function (e) { // ajax call to load results on submition
