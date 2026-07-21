@@ -437,7 +437,7 @@ def manage_keys():
         jdata = request.json
         if jdata['action'] == 'delete_key':
 
-            apikey = ApiKey.query.get(jdata['data'])
+            apikey = db.session.get(ApiKey, jdata['data'])
             try:
                 history_apikey_id = apikey.id
                 history_apikey_role = apikey.role.name

@@ -24,12 +24,14 @@ RUN apt-get update -y \
         python3-dev \
         python3-pip \
         python3-setuptools \
+        python3-venv \
     #&& curl -sL https://deb.nodesource.com/setup_lts.x | bash - \
     #&& curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     #&& echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
     #&& apt-get update -y \
     && apt-get install -y --no-install-recommends \
         nodejs \
+        npm \
         yarnpkg \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
@@ -38,16 +40,22 @@ RUN apt-get update -y \
 COPY ./requirements.txt /app/requirements.txt
 
 WORKDIR /app
-#RUN pip3 install --upgrade pip
-RUN pip3 install -r requirements.txt
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+#RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
 COPY . /app
+RUN mkdir -p /data
 
 ENV FLASK_APP=powerdnsadmin/__init__.py
-RUN yarn install --pure-lockfile --production \
-    && yarn cache clean \
+ENV POWERDNS_ADMIN_MODE=dev
+ENV YARN_NODE_LINKER=node-modules
+RUN yarnpkg install --inline-builds \
+    && yarnpkg cache clean \
+    && ln -s ../../node_modules powerdnsadmin/static/node_modules \
     && flask assets build
 
-COPY ./docker-test/wait-for-pdns.sh /opt
-RUN chmod u+x /opt/wait-for-pdns.sh
-CMD ["/opt/wait-for-pdns.sh", "/usr/local/bin/pytest", "-W", "ignore::DeprecationWarning", "--capture=no", "-vv"]
+COPY ./docker-test/docker-entrypoint.sh ./docker-test/wait-for-pdns.sh /opt/
+RUN chmod u+x /opt/docker-entrypoint.sh /opt/wait-for-pdns.sh
+ENTRYPOINT ["/opt/docker-entrypoint.sh"]
