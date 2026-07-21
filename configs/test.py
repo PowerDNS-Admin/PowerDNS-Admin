@@ -12,6 +12,7 @@ HSTS_ENABLED = False
 TEST_DB_LOCATION = '/tmp/testing.sqlite'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(TEST_DB_LOCATION)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+SESSION_TYPE = 'filesystem'
 
 # SAML Authnetication
 SAML_ENABLED = False

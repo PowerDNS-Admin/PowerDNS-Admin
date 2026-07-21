@@ -58,23 +58,25 @@ def create_app(config=None):
         from flask_sslify import SSLify
         _sslify = SSLify(app)  # lgtm [py/unused-local-variable]
 
+    # Flask-SQLAlchemy 3 requires the application database to be initialized
+    # before extensions such as Flask-Session access it.
+    models.init_app(app)
+
     # Load Flask-Session
     app.config['SESSION_TYPE'] = app.config.get('SESSION_TYPE')
     if 'SESSION_TYPE' in os.environ:
         app.config['SESSION_TYPE'] = os.environ.get('SESSION_TYPE')
 
-    sess = Session(app)
+    if app.config.get('SESSION_TYPE') == 'sqlalchemy':
+        app.config['SESSION_SQLALCHEMY'] = models.db
 
-    # create sessions table if using sqlalchemy backend
-    if os.environ.get('SESSION_TYPE') == 'sqlalchemy':
-        sess.app.session_interface.db.create_all()
+    Session(app)
 
     # SMTP
     app.mail = Mail(app)
 
     # Load app's components
     assets.init_app(app)
-    models.init_app(app)
     routes.init_app(app)
     services.init_app(app)
 

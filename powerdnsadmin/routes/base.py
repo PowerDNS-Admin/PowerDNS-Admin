@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_seasurf import SeaSurf
 from flask_session_captcha import FlaskSessionCaptcha
 
+from ..models.base import db
 from ..models.user import User
 
 
@@ -52,7 +53,7 @@ def load_user(id):
     """
     This will be current_user
     """
-    return User.query.get(int(id))
+    return db.session.get(User, int(id))
 
 
 @login_manager.request_loader

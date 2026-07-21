@@ -457,7 +457,7 @@ def api_get_apikeys(domain_name):
 @api_bp.route('/pdnsadmin/apikeys/<int:apikey_id>', methods=['GET'])
 @api_basic_auth
 def api_get_apikey(apikey_id):
-    apikey = ApiKey.query.get(apikey_id)
+    apikey = db.session.get(ApiKey, apikey_id)
 
     if not apikey:
         abort(404)
@@ -475,7 +475,7 @@ def api_get_apikey(apikey_id):
 @api_basic_auth
 @csrf.exempt
 def api_delete_apikey(apikey_id):
-    apikey = ApiKey.query.get(apikey_id)
+    apikey = db.session.get(ApiKey, apikey_id)
 
     if not apikey:
         abort(404)
@@ -519,7 +519,7 @@ def api_update_apikey(apikey_id):
     domain_obj_list = None
     account_obj_list = None
 
-    apikey = ApiKey.query.get(apikey_id)
+    apikey = db.session.get(ApiKey, apikey_id)
 
     if not apikey:
         abort(404)
@@ -768,7 +768,7 @@ def api_update_user(user_id):
     role_name = data['role_name'] if 'role_name' in data else None
     role_id = data['role_id'] if 'role_id' in data else None
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         current_app.logger.debug("User not found for id {}".format(user_id))
         abort(404)
@@ -822,7 +822,7 @@ def api_update_user(user_id):
 @api_role_can('delete users')
 @csrf.exempt
 def api_delete_user(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         current_app.logger.debug("User not found for id {}".format(user_id))
         abort(404)
@@ -925,7 +925,7 @@ def api_update_account(account_id):
     contact = data['contact'] if 'contact' in data else None
     mail = data['mail'] if 'mail' in data else None
 
-    account = Account.query.get(account_id)
+    account = db.session.get(Account, account_id)
 
     if not account:
         abort(404)
@@ -993,7 +993,7 @@ def api_delete_account(account_id):
 @api_basic_auth
 @api_role_can('list account users')
 def api_list_account_users(account_id):
-    account = Account.query.get(account_id)
+    account = db.session.get(Account, account_id)
     if not account:
         abort(404)
     user_list = User.query.join(AccountUser).filter(
@@ -1011,10 +1011,10 @@ def api_list_account_users(account_id):
 @api_role_can('add user to account')
 @csrf.exempt
 def api_add_account_user(account_id, user_id):
-    account = Account.query.get(account_id)
+    account = db.session.get(Account, account_id)
     if not account:
         abort(404)
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         abort(404)
     if not account.add_user(user):
@@ -1039,10 +1039,10 @@ def api_add_account_user(account_id, user_id):
 @api_role_can('remove user from account')
 @csrf.exempt
 def api_remove_account_user(account_id, user_id):
-    account = Account.query.get(account_id)
+    account = db.session.get(Account, account_id)
     if not account:
         abort(404)
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         abort(404)
     user_list = User.query.join(AccountUser).filter(

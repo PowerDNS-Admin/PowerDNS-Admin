@@ -11,6 +11,16 @@ from powerdnsadmin.models.setting import Setting
 from powerdnsadmin.models.user import User
 
 
+def remove_test_database(app):
+    """Close SQLAlchemy's pooled SQLite handles before removing the file."""
+    with app.app_context():
+        db.session.remove()
+        db.engine.dispose()
+
+    if os.path.exists(app.config['TEST_DB_LOCATION']):
+        os.unlink(app.config['TEST_DB_LOCATION'])
+
+
 @pytest.fixture(scope="session")
 def app():
     app = create_app('../configs/test.py')
@@ -121,7 +131,7 @@ def initial_data(app):
             raise e
 
     yield
-    os.unlink(app.config['TEST_DB_LOCATION'])
+    remove_test_database(app)
 
 
 @pytest.fixture(scope="module")
@@ -170,7 +180,7 @@ def initial_apikey_data(app):
             raise e
 
     yield
-    os.unlink(app.config['TEST_DB_LOCATION'])
+    remove_test_database(app)
 
 
 @pytest.fixture

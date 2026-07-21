@@ -116,7 +116,7 @@ class User(db.Model):
         return False
 
     def get_user_info_by_id(self):
-        user_info = User.query.get(int(self.id))
+        user_info = db.session.get(User, int(self.id))
         return user_info
 
     def get_user_info_by_username(self):

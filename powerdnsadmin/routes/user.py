@@ -1,7 +1,5 @@
 import datetime
 import hashlib
-import imghdr
-import mimetypes
 
 from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, g, session, \
     current_app, after_this_request, abort
@@ -24,17 +22,6 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
-    # Manage session timeout
-    session.permanent = True
-    current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
-    session.modified = True
-
-    # Clean up expired sessions in the database
-    if Setting().get('session_type') == 'sqlalchemy':
-        from ..models.sessions import Sessions
-        Sessions().clean_up_expired_sessions()
-
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
@@ -42,6 +29,11 @@ def before_request():
     ]:
         return render_template('maintenance.html')
 
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
 
 @user_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -138,9 +130,20 @@ def image():
     def return_image(content, content_type=None):
         """Return the given binary image content. Guess the type if not given."""
         if not content_type:
-            guess = mimetypes.guess_type('example.' + imghdr.what(None, h=content))
-            if guess and guess[0]:
-                content_type = guess[0]
+            signatures = (
+                (b'\xff\xd8\xff', 'image/jpeg'),
+                (b'\x89PNG\r\n\x1a\n', 'image/png'),
+                (b'GIF87a', 'image/gif'),
+                (b'GIF89a', 'image/gif'),
+                (b'BM', 'image/bmp'),
+            )
+            content_type = next(
+                (mime_type for signature, mime_type in signatures
+                 if content.startswith(signature)),
+                'application/octet-stream')
+            if (content.startswith(b'RIFF') and len(content) >= 12
+                    and content[8:12] == b'WEBP'):
+                content_type = 'image/webp'
 
         return content, 200, {'Content-Type': content_type}
 
