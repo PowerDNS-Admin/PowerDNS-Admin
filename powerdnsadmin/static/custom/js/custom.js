@@ -1,5 +1,54 @@
 var dnssecKeyList = []
 
+function getModalElement(target) {
+    if (typeof target === 'string') {
+        return document.querySelector(target);
+    }
+    if (target && target.jquery) {
+        return target.get(0);
+    }
+    return target;
+}
+
+function getModal(target) {
+    var element = getModalElement(target);
+    return element ? bootstrap.Modal.getOrCreateInstance(element) : null;
+}
+
+function showModal(target) {
+    var modal = getModal(target);
+    if (modal) {
+        modal.show();
+    }
+}
+
+function hideModal(target) {
+    var modal = getModal(target);
+    if (modal) {
+        modal.hide();
+    }
+}
+
+function showMessageModal(target, message) {
+    var element = getModalElement(target);
+    if (!element) {
+        return;
+    }
+    var messageElement = element.querySelector('.modal-body p');
+    if (messageElement) {
+        messageElement.textContent = message;
+    }
+    showModal(element);
+}
+
+function showErrorModal(message) {
+    showMessageModal('#modal_error', message);
+}
+
+function showSuccessModal(message) {
+    showMessageModal('#modal_success', message);
+}
+
 function applyChanges(data, url, showResult, refreshPage) {
     $.ajax({
         type : "POST",
@@ -169,7 +218,7 @@ function enable_dns_sec(url, csrf_token) {
           modal.find('.modal-body p').text(data['msg']);
       }
       else {
-        modal.modal('hide');
+        hideModal(modal);
         //location.reload();
         window.location.reload(true);
       }
@@ -192,12 +241,12 @@ function getdnssec(url, domain){
             if (dnssec.length == 0 && parseFloat(PDNS_VERSION) >= 4.1) {
               dnssec_msg = '<h3>DNSSEC is disabled. Click on Enable to activate it.';
               modal.find('.modal-body p').html(dnssec_msg);
-              dnssec_footer = '<button type="button" class="btn btn-success button_dnssec_enable pull-left" id="'+domain+'">Enable</button><button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cancel</button>';
+              dnssec_footer = '<button type="button" class="btn btn-success button_dnssec_enable float-start" id="'+domain+'">Enable</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Cancel</button>';
               modal.find('.modal-footer ').html(dnssec_footer);
             }
             else {
                 if (parseFloat(PDNS_VERSION) >= 4.1) {
-                  dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable pull-left" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>';
+                  dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable float-start" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Close</button>';
                   modal.find('.modal-footer ').html(dnssec_footer);
                 }
                 for (var i = 0; i < dnssec.length; i++) {
@@ -221,7 +270,7 @@ function getdnssec(url, domain){
             }
             modal.find('.modal-body p').html(dnssec_msg);
         }
-        modal.modal('show');
+        showModal(modal);
     });
 }
 
@@ -286,18 +335,18 @@ function copy_otp_secret_to_clipboard() {
     copyBox.setSelectionRange(0, 99999); /* For mobile devices */
     navigator.clipboard.writeText(copyBox.value);
     $("#copy_tooltip").css("visibility", "visible");
-    setTimeout(function(){ $("#copy_tooltip").css("visibility", "collapse"); }, 2000);
+    setTimeout(function(){ $("#copy_tooltip").css("visibility", "hidden"); }, 2000);
   }
 
 // Side menu nav bar active selection
 /** add active class and stay opened when selected */
 
 // for sidebar menu entirely but not cover treeview
-$('ul.nav-sidebar a').filter(function() {
+$('ul.sidebar-menu a').filter(function() {
     return this.href == window.location.href.split('?')[0];
 }).addClass('active');
 
 // for treeview
 $('ul.nav-treeview a').filter(function() {
     return this.href == window.location.href.split('?')[0];
-}).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
+}).parentsUntil(".sidebar-menu > .nav-treeview").addClass('menu-open').prev('a').addClass('active');

@@ -858,6 +858,9 @@ def register():
                     return render_template('register.html',
                                            error=result['msg'], captcha_enable=CAPTCHA_ENABLE)
             except Exception as e:
+                db.session.rollback()
+                current_app.logger.exception(
+                    'Unable to register local user %r', username)
                 return render_template('register.html', error=e, captcha_enable=CAPTCHA_ENABLE)
         else:
             return render_template('errors/404.html'), 404

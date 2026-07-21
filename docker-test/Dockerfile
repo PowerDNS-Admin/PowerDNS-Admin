@@ -51,8 +51,9 @@ RUN mkdir -p /data
 ENV FLASK_APP=powerdnsadmin/__init__.py
 ENV POWERDNS_ADMIN_MODE=dev
 ENV YARN_NODE_LINKER=node-modules
-RUN yarnpkg install --inline-builds \
+RUN yarnpkg install --immutable --inline-builds \
     && yarnpkg cache clean \
+    && rm -rf /app/powerdnsadmin/static/node_modules \
     && ln -s ../../node_modules powerdnsadmin/static/node_modules \
     && flask assets build
 
