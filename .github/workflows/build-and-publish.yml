@@ -29,7 +29,7 @@ on:
 jobs:
   build-and-push-docker-image:
     name: Build Docker Image
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Repository Checkout
