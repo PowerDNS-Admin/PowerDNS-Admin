@@ -623,6 +623,14 @@ def get_azure_groups(uri):
 # but user isn't using it yet, enable OTP, get QR code and display it, logging the user out.
 def authenticate_user(user, authenticator, remember=False):
     login_user(user, remember=remember)
+    # Do not keep using the anonymous/pre-authentication server-side session
+    # after the user's identity has changed. Besides preventing session
+    # fixation, this gives the authenticated session its own fresh expiry
+    # instead of inheriting the lifetime of a login page that may have been
+    # open for a long time.
+    current_app.session_interface.regenerate(session)
+    session.permanent = True
+    session.modified = True
     signin_history(user.username, authenticator, True)
     if Setting().get('otp_force') and Setting().get('otp_field_enabled') and not user.otp_secret \
             and session['authentication_type'] not in ['OAuth']:
