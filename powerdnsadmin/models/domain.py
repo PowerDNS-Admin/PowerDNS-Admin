@@ -258,9 +258,10 @@ class Domain(db.Model):
             "masters": domain_master_ips,
             "nameservers": domain_ns,
             "soa_edit_api": soa_edit_api,
-            "account": account_name,
-            "catalog": catalog_name
+            "account": account_name
         }
+        if catalog_name:
+            post_data["catalog"] = catalog_name
 
         try:
             jdata = utils.fetch_json(
@@ -327,7 +328,7 @@ class Domain(db.Model):
         d.last_check = domain['last_check']
         d.dnssec = 1 if domain['dnssec'] else 0
         d.account_id = account_id
-        if 'catalog' in domain:
+        if domain.get('catalog'):
             d.catalog = domain['catalog'].rstrip('.')
         db.session.add(d)
         try:

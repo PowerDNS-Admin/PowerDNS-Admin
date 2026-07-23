@@ -44,11 +44,6 @@ def before_request():
         minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
-    # Clean up expired sessions in the database
-    if Setting().get('session_type') == 'sqlalchemy':
-        from ..models.sessions import Sessions
-        Sessions().clean_up_expired_sessions()
-
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
@@ -306,7 +301,7 @@ def add():
             domain_template = request.form.getlist('domain_template')[0]
             soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
             account_id = request.form.getlist('accountid')[0]
-            catalog_name = request.form.getlist('catalog_name')[0]
+            catalog_name = request.form.get('catalog_name') or None
 
             if ' ' in domain_name or not domain_name or not domain_type:
                 return render_template(
@@ -464,6 +459,7 @@ def add():
     # Get
     else:
         domain_override_toggle = False
+        catalog_zones = []
         # Admins and Operators can set to any account
         if current_user.role.name in ['Administrator', 'Operator']:
             accounts = Account.query.order_by(Account.name).all()
@@ -521,7 +517,7 @@ def setting(domain_name):
                                domain_user_ids=domain_user_ids,
                                accounts=accounts,
                                catalog_zones=catalog_zones,
-                               zone_catalog=domain_info["catalog"],
+                               zone_catalog=domain_info.get("catalog"),
                                domain_account=account,
                                zone_type=domain_info["kind"].lower(),
                                masters=','.join(domain_info["masters"]),

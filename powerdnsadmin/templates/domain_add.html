@@ -39,6 +39,17 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                {% if catalog_zones %}
+                                    <div class="mb-3">
+                                        <label for="selCatalog">Catalog Zone</label>
+                                        <select name="catalog_name" id="selCatalog" class="form-select">
+                                            <option value="">- No Catalog -</option>
+                                            {% for catalog in catalog_zones %}
+                                                <option value="{{ catalog.name }}">{{ catalog.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                {% endif %}
                                 <fieldset class="mb-3">
                                     <legend class="col-form-label pt-0">Zone Type</legend>
                                     <div class="form-check">
@@ -55,6 +66,11 @@
                                         <input class="form-check-input" type="radio" name="radio_type" id="radio_type_secondary"
                                                value="slave">
                                         <label class="form-check-label" for="radio_type_secondary">Secondary</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type"
+                                               id="radio_type_producer" value="producer">
+                                        <label class="form-check-label" for="radio_type_producer">Producer</label>
                                     </div>
                                 </fieldset>
                                 <div class="mb-3" style="display: none;" id="domain_master_address_div">
@@ -131,6 +147,12 @@
                                 </dd>
                                 <dt>Account</dt>
                                 <dd>Specifies the PowerDNS account value to use for the zone.</dd>
+                                {% if catalog_zones %}
+                                    <dt>Catalog Zone</dt>
+                                    <dd>
+                                        Optionally associates this zone with an existing producer catalog.
+                                    </dd>
+                                {% endif %}
                                 <dt>Zone Type</dt>
                                 <dd>The type decides how the zone will be replicated across multiple DNS servers.
                                     <ul>
@@ -146,6 +168,10 @@
                                             <strong>Secondary</strong> - The server will serve as the Secondary and will
                                             request and receive zone transfers (AXFRs) from other servers configured as
                                             Primaries.
+                                        </li>
+                                        <li>
+                                            <strong>Producer</strong> - A catalog zone that publishes a list of member
+                                            zones so supporting secondary servers can provision them automatically.
                                         </li>
                                     </ul>
                                 </dd>

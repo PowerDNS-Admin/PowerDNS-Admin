@@ -1,7 +1,7 @@
 """Add DNSSEC rollover state
 
 Revision ID: 9f2a6c7d8e10
-Revises: b24bf17725d2
+Revises: 123649227370
 Create Date: 2026-07-21 00:00:00.000000
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '9f2a6c7d8e10'
-down_revision = 'b24bf17725d2'
+down_revision = '123649227370'
 branch_labels = None
 depends_on = None
 
