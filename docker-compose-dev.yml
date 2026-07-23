@@ -16,9 +16,12 @@ services:
       - ./docker-dev/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
+      PDNS_HOST: pdns-server
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
-    volumes:
-      - powerdns-admin-dev-data:/data
+    #volumes:
+    #  - powerdns-admin-dev-data:/data
+    tmpfs:
+      - /data
     depends_on:
       - pdns-server
 

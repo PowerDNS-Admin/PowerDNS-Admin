@@ -27,7 +27,6 @@ class ApiKeySchema(Schema):
     domains = fields.Embed(schema=DomainSchema, many=True)
     accounts = fields.Embed(schema=AccountSummarySchema, many=True)
     description = fields.String()
-    key = fields.String()
 
 
 class ApiPlainKeySchema(Schema):

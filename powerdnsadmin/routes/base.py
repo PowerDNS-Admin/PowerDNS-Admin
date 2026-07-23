@@ -1,7 +1,7 @@
 import base64
 
 from flask import render_template, url_for, redirect, session, request, current_app
-from flask_login import LoginManager
+from flask_login import LoginManager, logout_user
 from flask_seasurf import SeaSurf
 from flask_session_captcha import FlaskSessionCaptcha
 
@@ -24,6 +24,41 @@ def handle_unauthorized_access(e):
 
 
 def handle_access_forbidden(e):
+    expired_form = {
+        'index.login': (
+            'login.html',
+            'Your login form expired. Please try again.',
+            {
+                'saml_enabled': current_app.config.get(
+                    'SAML_ENABLED', False),
+                'username': request.form.get('username', ''),
+            },
+        ),
+        'index.register': (
+            'register.html',
+            'Your registration form expired. Please try again.',
+            {
+                'captcha_enable': current_app.config.get(
+                    'CAPTCHA_ENABLE', False),
+            },
+        ),
+    }.get(request.endpoint)
+
+    if expired_form is not None and request.method == 'POST':
+        # CSRF validation runs before either form's view. If a form is stale,
+        # make sure an existing Flask-Login or SSO session cannot make the
+        # rejected submission appear authenticated on the next request.
+        logout_user()
+        session.clear()
+        session['_remember'] = 'clear'
+
+        template, error, context = expired_form
+        return render_template(
+            template,
+            error=error,
+            **context,
+        ), 403
+
     return render_template('errors/403.html', code=403, message=e), 403
 
 

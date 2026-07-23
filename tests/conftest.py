@@ -97,6 +97,7 @@ def initial_data(app):
     api_url_setting = Setting('pdns_api_url', pdns_api_url)
     api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
     allow_create_domain_setting = Setting('allow_user_create_domain', True)
+    allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
 
     with app.app_context():
         try:
@@ -104,6 +105,7 @@ def initial_data(app):
             db.session.add(api_url_setting)
             db.session.add(api_key_setting)
             db.session.add(allow_create_domain_setting)
+            db.session.add(allow_remove_domain_setting)
 
             test_user = app.config.get('TEST_USER')
             test_user_pass = app.config.get('TEST_USER_PASSWORD')
