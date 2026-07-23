@@ -44,13 +44,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bootstrap-validator@npm:^0.11.9":
-  version: 0.11.9
-  resolution: "bootstrap-validator@npm:0.11.9"
-  checksum: 10c0/51d46c5309a350c0d1943beb3632c0dbad5cec860132c8409673d2bf86e861f137ee9c786a29bb9bfcba7a16b5311d8fac2e3fdcc1da4c768aa73dbd831cb02d
-  languageName: node
-  linkType: hard
-
 "bootstrap@npm:5.3.8":
   version: 5.3.8
   resolution: "bootstrap@npm:5.3.8"
@@ -89,45 +82,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastclick@npm:1.0.6":
-  version: 1.0.6
-  resolution: "fastclick@npm:1.0.6"
-  checksum: 10c0/f9958adcfe6b091adc2a21ed900ac838439d433b5f39e773e6bbbce34cd2195b22c01ed7f919b6f0442a45300ffa8b9099ae5a59a16bb63702fba89ab6d70b50
-  languageName: node
-  linkType: hard
-
-"icheck@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "icheck@npm:1.0.2"
-  checksum: 10c0/37cfe3f1ec8d494a5c327a2ba52f068df35564da7f974121d517d2b677a538ccb5110da9bfa15d8fcaa1c9f412b6b7a0bf93258b1017d8e1d28fffdd338d270d
-  languageName: node
-  linkType: hard
-
-"jquery-slimscroll@npm:^1.3.8":
-  version: 1.3.8
-  resolution: "jquery-slimscroll@npm:1.3.8"
-  dependencies:
-    jquery: "npm:>= 1.7"
-  checksum: 10c0/d826561dc12a69079f206c7c98f322c42ba5231a0b54633bddbafc7006157b0183369c84d55a46884f7bed5e4fc5d761e19701510f007512869bc61b0e82cf6d
-  languageName: node
-  linkType: hard
-
-"jquery-sparkline@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "jquery-sparkline@npm:2.4.0"
-  checksum: 10c0/033a1c01b8978341f47695802217b077ebce247134644a40d09443b62e39250779e8eebdeab70039fd7027ffca36017955ed36341e97d909ee409d3d9e91e857
-  languageName: node
-  linkType: hard
-
-"jquery-ui-dist@npm:^1.13.2":
-  version: 1.13.3
-  resolution: "jquery-ui-dist@npm:1.13.3"
-  dependencies:
-    jquery: "npm:>=1.8.0 <4.0.0"
-  checksum: 10c0/d282511e137c6aaf9aac8a33bd06eec5b2e9882c3ceac8b8b59608f808880720238471311cdd34ceaf1557ba2cd7ce31cb4461e56099b54eb07551a53b4ac913
-  languageName: node
-  linkType: hard
-
 "jquery-validation@npm:^1.19.5":
   version: 1.22.1
   resolution: "jquery-validation@npm:1.22.1"
@@ -137,23 +91,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jquery.quicksearch@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "jquery.quicksearch@npm:2.4.0"
-  dependencies:
-    jquery: "npm:>=1.8"
-  checksum: 10c0/2c9daab88e4a78e4a2f66f68d066afaa3bbb62f83d61a4e7692d112e419997351d067f6e9fb49fdf0e7d8d23a5c8371ea4333e71725568eeb7a482af747427c2
-  languageName: node
-  linkType: hard
-
-"jquery@npm:1.8 - 4, jquery@npm:>= 1.7, jquery@npm:>= 1.7.1, jquery@npm:>=1.8":
+"jquery@npm:1.8 - 4":
   version: 4.0.0
   resolution: "jquery@npm:4.0.0"
   checksum: 10c0/06d8d0f51121af5a691f8b59c74823157bb5b60eea915b30eaa920d6c0ffd91e60ba81e9b97bd8203f331f9dd8d0ec9a4b010935ea314bdd2f15453c29bc780b
   languageName: node
   linkType: hard
 
-"jquery@npm:>=1.7.1 <4.0.0, jquery@npm:>=1.8.0 <4.0.0, jquery@npm:^3.6.0":
+"jquery@npm:>=1.7.1 <4.0.0, jquery@npm:^3.6.0":
   version: 3.7.1
   resolution: "jquery@npm:3.7.1"
   checksum: 10c0/808cfbfb758438560224bf26e17fcd5afc7419170230c810dd11f5c1792e2263e2970cca8d659eb84fcd9acc301edb6d310096e450277d54be4f57071b0c82d9
@@ -176,22 +121,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"moment@npm:2.30.1":
-  version: 2.30.1
-  resolution: "moment@npm:2.30.1"
-  checksum: 10c0/865e4279418c6de666fca7786607705fd0189d8a7b7624e2e56be99290ac846f90878a6f602e34b4e0455c549b85385b1baf9966845962b313699e7cb847543a
-  languageName: node
-  linkType: hard
-
-"multiselect@npm:^0.9.12":
-  version: 0.9.12
-  resolution: "multiselect@npm:0.9.12"
-  dependencies:
-    jquery: "npm:>= 1.7.1"
-  checksum: 10c0/2cbf948398f4a1f92d41f7fa9574e72c3e2cde3ebb23ae6723b96e39802d3f1204b734da5b37811a3998c89f8bad50a6c21020794c0c110ee42abcf2b30934de
-  languageName: node
-  linkType: hard
-
 "root-workspace-0b6124@workspace:.":
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
@@ -200,21 +129,12 @@ __metadata:
     "@popperjs/core": "npm:2.11.8"
     admin-lte: "npm:4.1.0"
     bootstrap: "npm:5.3.8"
-    bootstrap-validator: "npm:^0.11.9"
     datatables.net: "npm:1.13.11"
     datatables.net-bs5: "npm:1.13.11"
     datatables.net-plugins: "npm:^1.13.1"
-    fastclick: "npm:1.0.6"
-    icheck: "npm:^1.0.2"
     jquery: "npm:^3.6.0"
-    jquery-slimscroll: "npm:^1.3.8"
-    jquery-sparkline: "npm:^2.4.0"
-    jquery-ui-dist: "npm:^1.13.2"
     jquery-validation: "npm:^1.19.5"
-    jquery.quicksearch: "npm:^2.4.0"
     jtimeout: "npm:^3.2.0"
     knockout: "npm:^3.5.1"
-    moment: "npm:2.30.1"
-    multiselect: "npm:^0.9.12"
   languageName: unknown
   linkType: soft

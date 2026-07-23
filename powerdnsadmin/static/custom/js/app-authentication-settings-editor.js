@@ -731,7 +731,7 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
     }
 
     self.activateTab = function (tab) {
-        $('[role="tablist"] a.nav-link').blur();
+        $('[role="tablist"] .nav-link').blur();
         self.tab_active(tab);
         window.location.hash = tab;
     }

@@ -9,26 +9,10 @@
 {% endif %}
 {% if (key is not none and key.role.name != "User") %}{% set hide_opts = True %}{% else %}
     {% set hide_opts = False %}{% endif %}
+{% set page_title = action_label ~ ' API Key' %}
+{% set breadcrumb_items = [{'label': 'API Keys', 'url': url_for('admin.manage_keys')}] %}
 {% block title %}<title>{{ action_label }} API Key - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">{{ action_label }} API Key</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_keys') }}">API Keys</a></li>
-                        <li class="breadcrumb-item active">{{ action_label }} API Key</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -44,9 +28,9 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="role">Role</label>
-                                    <select class="key_role form-control" id="key_role" name="key_role">
+                                <div class="mb-3">
+                                    <label class="form-label" for="key_role">Role</label>
+                                    <select class="key_role form-select" id="key_role" name="key_role">
                                         {% for role in roles %}
                                             <option value="{{ role.name }}"
                                                     {% if (key is not none) and (role.id==key.role.id) %}selected{% endif %}
@@ -57,11 +41,11 @@
                                     </select>
                                 </div>
                                 <!-- /.form-group -->
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="description">Description</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="description">Description</label>
                                     <input type="text" class="form-control" placeholder="Description" name="description"
+                                           id="description"
                                         {% if key is not none %} value="{{ key.description }}" {% endif %}>
-                                    <span class="glyphicon glyphicon-pencil form-control-feedback"></span>
                                 </div>
                                 <!-- /.form-group -->
                             </div>
@@ -74,8 +58,9 @@
                                 <p>This key will be linked to the accounts on the right,</p>
                                 <p>thus granting access to zones owned by the selected accounts.</p>
                                 <p>Click on accounts to move between the columns.</p>
-                                <div class="form-group col-2">
-                                    <select multiple="multiple" class="form-control" id="key_multi_account"
+                                <div class="mb-3">
+                                    <label class="form-label" for="key_multi_account">API key accounts</label>
+                                    <select multiple="multiple" class="form-select" id="key_multi_account"
                                             name="key_multi_account">
                                         {% for account in accounts %}
                                             <option {% if key and account in key.accounts %}selected{% endif %}
@@ -93,8 +78,9 @@
                             <div class="card-body key-opts"{% if hide_opts %} style="display: none;"{% endif %}>
                                 <p>This key will have access to the zones on the right.</p>
                                 <p>Click on zones to move between the columns.</p>
-                                <div class="form-group col-2">
-                                    <select multiple="multiple" class="form-control" id="key_multi_domain"
+                                <div class="mb-3">
+                                    <label class="form-label" for="key_multi_domain">API key zones</label>
+                                    <select multiple="multiple" class="form-select" id="key_multi_domain"
                                             name="key_multi_domain">
                                         {% for domain in domains %}
                                             <option {% if key and domain in key.domains %}selected{% endif %}
@@ -105,11 +91,11 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
-                                <button type="button" class="btn btn-secondary float-left" title="Cancel"
+                                <button type="button" class="btn btn-secondary float-start" title="Cancel"
                                         onclick="window.location.href='{{ url_for('admin.manage_keys') }}'">
                                     <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
                                 </button>
-                                <button type="submit" class="btn btn-primary float-right"
+                                <button type="submit" class="btn btn-primary float-end"
                                         title="{{ action_label }} API Key" id="key_submit">
                                     <i class="fa-solid fa-save"></i>&nbsp;{{ action_label }} API Key
                                 </button>
@@ -156,13 +142,13 @@
             if (selectedRole != "User" && selectedDomains > 0 && selectedAccounts > 0) {
                 var warning = "Administrator and Operators have access to all zones. Your zone an account selection won't be saved.";
                 e.preventDefault(e);
-                warn_modal.modal('show');
+                showModal(warn_modal);
             }
 
             if (selectedRole == "User" && selectedDomains == 0 && selectedAccounts == 0) {
                 var warning = "User role must have at least one account or one zone bound. None selected.";
                 e.preventDefault(e);
-                warn_modal.modal('show');
+                showModal(warn_modal);
             }
 
             warn_modal.find('.modal-body p').text(warning);
@@ -170,108 +156,20 @@
         });
 
         function clearModal() {
-            $("#modal_warning").modal('hide');
+            hideModal('#modal_warning');
         }
 
         $('#key_role').on('change', function (e) {
-            var optionSelected = $("option:selected", this);
             if (this.value != "User") {
-                // Clear the visible list
-                $('#ms-key_multi_domain .ms-selection li').each(function () {
-                    $(this).css('display', 'none');
-                })
-                $('#ms-key_multi_domain .ms-selectable li').each(function () {
-                    $(this).css('display', '');
-                })
-                $('#ms-key_multi_account .ms-selection li').each(function () {
-                    $(this).css('display', 'none');
-                })
-                $('#ms-key_multi_account .ms-selectable li').each(function () {
-                    $(this).css('display', '');
-                })
-                // Deselect invisible selectbox
-                $('#key_multi_domain option:selected').each(function () {
-                    $(this).prop('selected', false);
-                })
-                $('#key_multi_account option:selected').each(function () {
-                    $(this).prop('selected', false);
-                })
-                // Hide the lists
+                clearDualListSelection('#key_multi_domain');
+                clearDualListSelection('#key_multi_account');
                 $(".key-opts").hide();
             } else {
                 $(".key-opts").show();
             }
         });
-        $("#key_multi_domain").multiSelect({
-            selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Zone Name'>",
-            selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Zone Name'>",
-            afterInit: function (ms) {
-                var that = this,
-                    $selectableSearch = that.$selectableUl.prev(),
-                    $selectionSearch = that.$selectionUl.prev(),
-                    selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
-                    selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
-
-                that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which === 40) {
-                            that.$selectableUl.focus();
-                            return false;
-                        }
-                    });
-
-                that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which == 40) {
-                            that.$selectionUl.focus();
-                            return false;
-                        }
-                    });
-            },
-            afterSelect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            },
-            afterDeselect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            }
-        });
-        $("#key_multi_account").multiSelect({
-            selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Account Name'>",
-            selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Account Name'>",
-            afterInit: function (ms) {
-                var that = this,
-                    $selectableSearch = that.$selectableUl.prev(),
-                    $selectionSearch = that.$selectionUl.prev(),
-                    selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
-                    selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
-
-                that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which === 40) {
-                            that.$selectableUl.focus();
-                            return false;
-                        }
-                    });
-
-                that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which == 40) {
-                            that.$selectionUl.focus();
-                            return false;
-                        }
-                    });
-            },
-            afterSelect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            },
-            afterDeselect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            }
-        });
+        initializeDualList('#key_multi_domain', {itemName: 'zones'});
+        initializeDualList('#key_multi_account', {itemName: 'accounts'});
         {% if plain_key %}
             $(document.body).ready(function () {
                 var modal = $("#modal_show_key");
@@ -279,26 +177,26 @@
                 modal.find('.modal-body p').text(info);
                 modal.find('#button_key_confirm').click(redirect_modal);
                 modal.find('#button_close_modal').click(redirect_modal);
-                modal.modal('show');
+                showModal(modal);
             });
 
             function redirect_modal() {
                 window.location.href = '{{ url_for('admin.manage_keys') }}';
-                modal.modal('hide');
+                hideModal('#modal_show_key');
             }
         {% endif %}
     </script>
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade" id="modal_show_key">
+    <div class="modal fade" id="modal_show_key" tabindex="-1"
+         aria-labelledby="modal_show_key_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">New API Key</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="button_close_modal">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h5 class="modal-title" id="modal_show_key_label">New API Key</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            id="button_close_modal"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
@@ -311,21 +209,20 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modal_warning">
+    <div class="modal fade" id="modal_warning" tabindex="-1"
+         aria-labelledby="modal_warning_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">WARNING</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
-                            id="button_close_warn_modal">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h5 class="modal-title" id="modal_warning_label">WARNING</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            id="button_close_warn_modal"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary close" data-dismiss="modal" id="button_close_modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
                     <button type="button" class="btn btn-primary" id="button_key_confirm_warn">

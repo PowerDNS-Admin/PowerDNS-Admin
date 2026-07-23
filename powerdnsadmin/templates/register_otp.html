@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Welcome - {{ SITE_NAME }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -59,11 +60,13 @@
         </div>
         <br>
         Please input your OTP token to continue, to ensure the seed has been scanned correctly.
-        <form action="" method="post" data-toggle="validator">
+        <form action="" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="OTP Token" name="otptoken"
-                       data-error="Please input your OTP token" required>
+                <label class="visually-hidden" for="otptoken">OTP Token</label>
+                <input type="text" class="form-control" placeholder="OTP Token" name="otptoken" id="otptoken"
+                       required>
+                <div class="invalid-feedback">Please input your OTP token.</div>
             </div>
             <button type="submit" class="btn btn-primary w-100">Continue</button>
         </form>
@@ -75,9 +78,6 @@
 </div>
 <!-- /.register-box -->
 {% assets "js_login" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
-{% assets "js_validation" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
 </body>

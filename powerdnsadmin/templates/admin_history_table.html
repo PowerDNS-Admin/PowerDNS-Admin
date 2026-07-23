@@ -73,7 +73,7 @@
       "columnDefs": [{
         "type": "time",
         "render": function (data, type, row) {
-          return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+          return formatUtcDateTimeLocal(data);
         },
         "targets": 0
       }],
@@ -87,7 +87,7 @@
       var history_id = $(this).val();
       var info = $("#history-info-div-" + history_id).html();
       $('#modal-info-content').html(info);
-      modal.modal('show');
+      showModal(modal);
     });
     $(document.body).on("click", ".button-filter", function (e) {
       e.stopPropagation();

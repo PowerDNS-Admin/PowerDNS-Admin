@@ -33,49 +33,45 @@ jobs:
 
     steps:
       - name: Repository Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Docker Image Metadata
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v6
         with:
-          images: |
-            powerdnsadmin/pda-legacy
+          images: powerdnsadmin/pda-legacy
           tags: |
+            type=ref,event=branch
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=raw,value=${{ github.ref_name }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
       - name: QEMU Setup
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v4
 
       - name: Docker Buildx Setup
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker Hub Authentication
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME_V2 }}
           password: ${{ secrets.DOCKERHUB_TOKEN_V2 }}
 
-      - name: Docker Image Build
-        uses: docker/build-push-action@v4
+      - name: Docker Image Build and Push
+        uses: docker/build-push-action@v7
         with:
           platforms: linux/amd64,linux/arm64
           context: ./
-          file: ./docker/Dockerfile
-          push: true
-          tags: powerdnsadmin/pda-legacy:${{ github.ref_name }}
-
-      - name: Docker Image Release Tagging
-        uses: docker/build-push-action@v4
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        with:
-          platforms: linux/amd64,linux/arm64
-          context: ./
-          file: ./docker/Dockerfile
+          file: ./docker-common/Dockerfile.app
+          build-args: |
+            DOCKER_SCENARIO=production
+            INSTALL_TEST_DEPENDENCIES=0
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

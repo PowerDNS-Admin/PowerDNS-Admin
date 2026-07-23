@@ -1,26 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "server_configuration" %}
+{% set page_title = 'Server Configuration' %}
 {% block title %}<title>Server Configuration - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        Server Configuration
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Server Configuration</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">

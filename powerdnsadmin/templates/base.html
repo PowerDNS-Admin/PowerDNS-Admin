@@ -3,6 +3,7 @@
 <head>
     {% block head %}
         <meta charset="utf-8">
+        {% include 'includes/theme_bootstrap.html' %}
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
         {% block title %}<title>{{ SITE_NAME }}</title>{% endblock %}
@@ -213,26 +214,9 @@
     </aside>
 
     <main class="app-main">
-        {% block dashboard_stat %}
-            <div class="app-content-header">
-                <div class="container-fluid">
-                    <div class="row align-items-center">
-                        <div class="col-sm-6">
-                            <h1 class="mb-0">
-                                Dashboard
-                                <small>Control panel</small>
-                            </h1>
-                        </div>
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb justify-content-sm-end mb-0">
-                                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-                                <li class="breadcrumb-item active">Dashboard</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endblock %}
+        {% block page_header_before %}{% endblock %}
+        {% include 'includes/page_header.html' %}
+        {% block page_header_after %}{% endblock %}
         <div class="app-content">
             {% block content %}
             {% endblock %}
@@ -279,19 +263,20 @@
                     window.location.replace("{{ url_for('index.logout') }}");
                 });
 
-                var sessionWarningElement = document.getElementById('modal_session_warning');
-                var sessionWarningTimer;
-                sessionWarningElement.addEventListener('show.bs.modal', function () {
-                    var secondsLeft = jTimeout.getSecondsTillExpiration();
-                    sessionWarningTimer = timer($('#modal-time'), secondsLeft);
-                });
-                sessionWarningElement.addEventListener('hidden.bs.modal', function () {
-                    clearInterval(sessionWarningTimer);
-                    $('#modal-time').text("");
-                });
-
                 // jTimeout definition
                 $(function () {
+                    var sessionWarningElement = document.getElementById('modal_session_warning');
+                    var sessionWarningTimer;
+
+                    sessionWarningElement.addEventListener('show.bs.modal', function () {
+                        var secondsLeft = jTimeout.getSecondsTillExpiration();
+                        sessionWarningTimer = timer($('#modal-time'), secondsLeft);
+                    });
+                    sessionWarningElement.addEventListener('hidden.bs.modal', function () {
+                        clearInterval(sessionWarningTimer);
+                        $('#modal-time').text("");
+                    });
+
                     $.jTimeout({
                         flashTitle: true,
                         flashTitleSpeed: 500,

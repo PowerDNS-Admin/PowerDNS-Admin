@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class>
 <head>
+    {% include 'includes/theme_bootstrap.html' %}
     <title>Site Maintenance</title>
     <style>
         body {
@@ -14,7 +15,13 @@
 
         body {
             font: 20px Helvetica, sans-serif;
-            color: #333;
+            color: #212529;
+            background-color: #fff;
+        }
+
+        [data-bs-theme="dark"] body {
+            color: #dee2e6;
+            background-color: #212529;
         }
 
         article {
@@ -32,6 +39,10 @@
         a:hover {
             color: #333;
             text-decoration: none;
+        }
+
+        [data-bs-theme="dark"] a:hover {
+            color: #f8f9fa;
         }
     </style>
 </head>

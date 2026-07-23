@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+{% if record_name and record_type %}
+  {% set page_title = 'Record changelog: ' ~ record_name ~ ' ' ~ record_type %}
+{% else %}
+  {% set page_title = 'Zone changelog: ' ~ (domain.name | pretty_domain_name) %}
+{% endif %}
+{% set breadcrumb_items = [{
+  'label': 'Zone Records - ' ~ (domain.name | pretty_domain_name),
+  'url': url_for('domain.domain', domain_name=domain.name)
+}] %}
 
 {% block title %}
   <title>
@@ -6,29 +15,6 @@
   </title>
 {% endblock %}
 
-{% block dashboard_stat %}
-<div class="content-header">
-  <div class="container-fluid">
-    <div class="row mb-2">
-      <div class="col-sm-6">
-        <h1 class="m-0 text-dark">
-          {% if record_name and record_type %}
-          Record changelog: <b>{{ record_name}} &nbsp {{ record_type }}</b>
-          {% else %}
-          Zone changelog: <b>{{ domain.name | pretty_domain_name }}</b>
-          {% endif %}
-        </h1>
-      </div>
-      <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-right">
-          <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-          <li class="breadcrumb-item active">Changelog: {{ domain.name | pretty_domain_name }}</li>
-        </ol>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
 
 {% import 'applied_change_macro.html' as applied_change_macro %}
 
@@ -39,7 +25,7 @@
       <div class="col-12">
         <div class="card">
           <div class="card-body">
-            <button type="button" class="btn btn-primary float-left button_show_records" id="{{ domain.name }}">
+            <button type="button" class="btn btn-primary float-start button_show_records" id="{{ domain.name }}">
               <i class="fa-solid fa-arrow-left"></i>          
               &nbsp;Manage Zone {{ domain.name }}
             </button>
@@ -106,8 +92,7 @@
 
     var els = document.getElementsByClassName("changed_on");
     for (var i = 0; i < els.length; i++) {
-        // els[i].innerHTML = moment.utc(els[i].innerHTML).local().format('YYYY-MM-DD HH:mm:ss');
-        els[i].innerHTML = moment.utc(els[i].innerHTML,'YYYY-MM-DD HH:mm:ss').local().format('YYYY-MM-DD HH:mm:ss');
+        els[i].innerHTML = formatUtcDateTimeLocal(els[i].innerHTML);
     }
 
 </script>

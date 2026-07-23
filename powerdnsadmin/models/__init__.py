@@ -11,6 +11,7 @@ from .api_key import ApiKey
 from .api_key_account import ApiKeyAccount
 from .setting import Setting
 from .domain import Domain
+from .dnssec_rollover import DnssecRollover, DnssecRolloverKey
 from .domain_setting import DomainSetting
 from .domain_user import DomainUser
 from .domain_template import DomainTemplate

@@ -7,33 +7,17 @@
     {% set action_label = 'Edit' %}
     {% set form_action = url_for('admin.edit_account', account_name=account.name) %}
 {% endif %}
+{% set page_title = action_label ~ ' Account' %}
+{% set breadcrumb_items = [{'label': 'Accounts', 'url': url_for('admin.manage_account')}] %}
 {% block title %}<title>{{ action_label }} Account - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">{{ action_label }} Account</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_account') }}">Accounts</a></li>
-                        <li class="breadcrumb-item active">{{ action_label }} Account</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12 col-sm-6 col-lg-4">
-                    <form role="form" method="post" action="{{ form_action }}">
+                    <form role="form" method="post" action="{{ form_action }}" class="needs-validation" novalidate>
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="create" value="{{ create }}">
                         <div class="card card-outline card-primary shadow">
@@ -44,50 +28,43 @@
                             <div class="card-body">
                                 {% if error %}
                                     <div class="alert alert-danger alert-dismissible">
-                                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
-                                            &times;
-                                        </button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
                                         <h4><i class="fa-solid fa-ban"></i> Error!</h4>
                                         {{ error }}
                                     </div>
-                                    <span class="help-block">{{ error }}</span>
                                 {% endif %}
-                                <div
-                                    class="form-group has-feedback {% if invalid_accountname or duplicate_accountname %}has-error{% endif %}">
-                                    <label class="control-label" for="accountname">Name</label>
-                                    <input type="text" class="form-control" placeholder="Account Name (required)"
+                                <div class="mb-3">
+                                    <label class="form-label" for="accountname">Name</label>
+                                    <input type="text" class="form-control {% if invalid_accountname or duplicate_accountname %}is-invalid{% endif %}" placeholder="Account Name (required)"
                                            name="accountname" id="accountname"
                                            {% if account %}value="{{ account.name }}" {% endif %}
                                            {% if not create %}disabled{% endif %} required>
-                                    <span class="form-control-feedback"></span>
                                     {% if invalid_accountname %}
-                                        <span class="help-block text-danger">Cannot be blank and must only contain alphanumeric
+                                        <div class="invalid-feedback">Cannot be blank and must only contain alphanumeric
                     characters{% if SETTING.get('account_name_extra_chars') %}, dots, hyphens or underscores{% endif %}.
-                  </span>
+                                        </div>
                                     {% elif duplicate_accountname %}
-                                        <span class="help-block text-danger">Account name already in use.</span>
+                                        <div class="invalid-feedback">Account name already in use.</div>
                                     {% endif %}
                                 </div>
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="accountdescription">Description</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="accountdescription">Description</label>
                                     <input type="text" class="form-control" placeholder="Account Description (optional)"
                                            name="accountdescription" id="accountdescription"
                                            {% if account %}value="{{ account.description }}" {% endif %}>
-                                    <span class="orm-control-feedback"></span>
                                 </div>
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="accountcontact">Contact Person</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="accountcontact">Contact Person</label>
                                     <input type="text" class="form-control" placeholder="Contact Person (optional)"
                                            name="accountcontact" id="accountcontact"
                                            {% if account %}value="{{ account.contact }}" {% endif %}>
-                                    <span class="form-control-feedback"></span>
                                 </div>
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="accountmail">Mail Address</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="accountmail">Mail Address</label>
                                     <input type="email" class="form-control" placeholder="Mail Address (optional)"
                                            name="accountmail" id="accountmail"
                                            {% if account %}value="{{ account.mail }}" {% endif %}>
-                                    <span class="form-control-feedback"></span>
                                 </div>
                             </div>
                             <!-- /.card-body -->
@@ -100,8 +77,9 @@
                                     associated with the account.
                                 </p>
                                 <p>Click on users to move between columns.</p>
-                                <div class="form-group col-2">
-                                    <select multiple="multiple" class="form-control" id="account_multi_user"
+                                <div class="mb-3">
+                                    <label class="form-label" for="account_multi_user">Account users</label>
+                                    <select multiple="multiple" class="form-select" id="account_multi_user"
                                             name="account_multi_user">
                                         {% for user in users %}
                                             <option {% if user.id in account_user_ids|default([]) %}selected{% endif %}
@@ -120,13 +98,14 @@
                                 </p>
                                 <p>Hover over the red zone names to show the associated account. Click on zones to
                                     move between columns.</p>
-                                <div class="form-group col-2">
-                                    <select multiple="multiple" class="form-control" id="account_domains"
+                                <div class="mb-3">
+                                    <label class="form-label" for="account_domains">Account zones</label>
+                                    <select multiple="multiple" class="form-select" id="account_domains"
                                             name="account_domains">
                                         {% for domain in domains %}
                                             {% if account != None and domain.account_id != None and account.id != domain.account_id %}
                                                 {% with account_id=domain.account_id %}
-                                                    <option style="color: red" data-toggle="tooltip"
+                                                    <option style="color: red" data-bs-toggle="tooltip"
                                                             title="Associated with: {{ accounts[account_id].name }}"
                                                             value="{{ domain.name }}">
                                                         {{ domain.name }}
@@ -144,11 +123,11 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
-                                <button type="button" class="btn btn-secondary float-left" title="Cancel"
+                                <button type="button" class="btn btn-secondary float-start" title="Cancel"
                                         onclick="window.location.href='{{ url_for('admin.manage_account') }}'">
                                     Cancel
                                 </button>
-                                <button type="submit" class="btn btn-primary float-right"
+                                <button type="submit" class="btn btn-primary float-end"
                                         title="{{ action_label }} Account">
                                     {{ action_label }} Account
                                 </button>
@@ -203,45 +182,7 @@
 
 {% block extrascripts %}
     <script>
-        function addMultiSelect(id, placeholder) {
-            $(id).multiSelect({
-                selectableHeader: `<input type='text' class='search-input' autocomplete='off' placeholder='${placeholder}'>`,
-                selectionHeader: `<input type='text' class='search-input' autocomplete='off' placeholder='${placeholder}'>`,
-                afterInit: function (ms) {
-                    var that = this,
-                        $selectableSearch = that.$selectableUl.prev(),
-                        $selectionSearch = that.$selectionUl.prev(),
-                        selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
-                        selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
-
-                    that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-                        .on('keydown', function (e) {
-                            if (e.which === 40) {
-                                that.$selectableUl.focus();
-                                return false;
-                            }
-                        });
-
-                    that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-                        .on('keydown', function (e) {
-                            if (e.which == 40) {
-                                that.$selectionUl.focus();
-                                return false;
-                            }
-                        });
-                },
-                afterSelect: function () {
-                    this.qs1.cache();
-                    this.qs2.cache();
-                },
-                afterDeselect: function () {
-                    this.qs1.cache();
-                    this.qs2.cache();
-                }
-            });
-        }
-
-        addMultiSelect("#account_multi_user", "Username")
-        addMultiSelect("#account_domains", "Zone")
+        initializeDualList('#account_multi_user', {itemName: 'users'});
+        initializeDualList('#account_domains', {itemName: 'zones'});
     </script>
 {% endblock %}

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Resend Confirmation Email - {{ SITE_NAME }}</title>
     <link rel="icon" href="/static/img/favicon.png">
@@ -27,11 +28,13 @@
         <p>
             Enter your email address to get account confirmation link.
         </p>
-        <form method="post" data-toggle="validator">
+        <form method="post" class="needs-validation" novalidate>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
-                <input type="email" name="email" class="form-control" placeholder="Email address"
-                       data-error="Please input your email" required>
+                <label class="visually-hidden" for="email">Email address</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="Email address"
+                       required>
+                <div class="invalid-feedback">Please input a valid email address.</div>
             </div>
             <div class="row g-2">
                 <div class="col-6">
@@ -63,9 +66,6 @@
 </div>
 
 {% assets "js_login" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
-{% assets "js_validation" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
 <script>

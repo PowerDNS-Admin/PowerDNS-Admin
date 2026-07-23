@@ -76,6 +76,10 @@ def create_app(config=None):
     app.mail = Mail(app)
 
     # Load app's components
+    if os.environ.get('POWERDNSADMIN_ASSETS_PREBUILT') == '1':
+        # Docker images contain generated bundles but intentionally omit the
+        # Node/Yarn toolchain and source dependency tree.
+        app.config['ASSETS_AUTO_BUILD'] = False
     assets.init_app(app)
     routes.init_app(app)
     services.init_app(app)

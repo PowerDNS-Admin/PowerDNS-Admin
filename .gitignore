@@ -42,5 +42,7 @@ powerdnsadmin/static/generated
 .venv*
 venv*
 .pytest_cache
+playwright-report
+test-results/browser
 .DS_Store
 yarn-error.log

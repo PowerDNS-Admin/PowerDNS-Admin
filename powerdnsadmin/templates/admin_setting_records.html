@@ -1,24 +1,9 @@
 {% extends "base.html" %}
 {% set active_page = "admin_settings" %}
+{% set page_title = 'Zone Record Settings' %}
+{% set breadcrumb_items = [{'label': 'Settings'}] %}
 {% block title %}<title>Zone Record Settings - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Zone Record Settings</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Zone Record Settings</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -48,12 +33,12 @@
                                             <td>
                                                 <input type="checkbox" id="fr_{{ record|lower }}"
                                                        name="fr_{{ record|lower }}"
-                                                       class="checkbox" {% if f_records[record] %}checked{% endif %}>
+                                                       class="form-check-input" {% if f_records[record] %}checked{% endif %}>
                                             </td>
                                             <td>
                                                 <input type="checkbox" id="rr_{{ record|lower }}"
                                                        name="rr_{{ record|lower }}"
-                                                       class="checkbox" {% if r_records[record] %}checked{% endif %}>
+                                                       class="form-check-input" {% if r_records[record] %}checked{% endif %}>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -61,7 +46,7 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
-                                <button type="submit" class="btn btn-primary float-right" title="Save Settings">
+                                <button type="submit" class="btn btn-primary float-end" title="Save Settings">
                                     <i class="fa-solid fa-save"></i>&nbsp;Save Settings
                                 </button>
                             </div>
@@ -97,13 +82,4 @@
         </div>
         <!-- /.container-fluid -->
     </section>
-{% endblock %}
-
-{% block extrascripts %}
-    <script>
-        $('.checkbox').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        })
-    </script>
 {% endblock %}

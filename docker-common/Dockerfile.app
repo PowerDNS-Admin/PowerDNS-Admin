@@ -2,6 +2,7 @@ FROM debian:trixie-slim AS builder
 LABEL maintainer="k@ndk.name"
 
 ARG DOCKER_SCENARIO
+ARG INSTALL_TEST_DEPENDENCIES=0
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
@@ -40,7 +41,7 @@ WORKDIR /app
 COPY ./requirements.txt ./requirements-dev.txt /app/
 RUN python3 -m venv /opt/venv \
     && pip install --no-cache-dir -r requirements.txt \
-    && if [ "${DOCKER_SCENARIO}" != "docker-dev" ]; then \
+    && if [ "${INSTALL_TEST_DEPENDENCIES}" = "1" ]; then \
         pip install --no-cache-dir -r requirements-dev.txt; \
     fi
 
@@ -102,3 +103,4 @@ RUN mkdir -p /data \
     && chmod u+x /opt/wait-for-pdns.sh /opt/scenario/*.sh
 
 ENTRYPOINT ["/opt/scenario/entrypoint.sh"]
+CMD ["gunicorn", "powerdnsadmin:create_app()"]

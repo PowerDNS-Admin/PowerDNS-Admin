@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Log In - {{ SITE_NAME }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -35,30 +36,34 @@
                 </div>
             {% endif %}
             {% if SETTING.get('ldap_enabled') or SETTING.get('local_db_enabled') %}
-                <form action="" method="post" data-toggle="validator">
+                <form action="" method="post" class="needs-validation" novalidate>
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <input type="text" class="form-control" placeholder="Username" name="username"
-                               data-error="Please input your username" required
+                        <label class="visually-hidden" for="username">Username</label>
+                        <input type="text" class="form-control" placeholder="Username" name="username" id="username"
+                               required
                                autofocus
                                {% if username %}value="{{ username }}" {% endif %}>
-                        <span class="help-block with-errors"></span>
+                        <div class="invalid-feedback">Please input your username.</div>
                     </div>
                     <div class="mb-3">
-                        <input type="password" class="form-control" placeholder="Password" name="password"
-                               data-error="Please input your password" required
+                        <label class="visually-hidden" for="password">Password</label>
+                        <input type="password" class="form-control" placeholder="Password" name="password" id="password"
+                               required
                                {% if password %}value="{{ password }}" {% endif %}>
-                        <span class="help-block with-errors"></span>
+                        <div class="invalid-feedback">Please input your password.</div>
                     </div>
                     {% if SETTING.get('otp_field_enabled') %}
                         <div class="mb-3">
-                            <input type="otptoken" class="form-control" placeholder="OTP Token" name="otptoken"
+                            <label class="visually-hidden" for="otptoken">OTP Token</label>
+                            <input type="text" class="form-control" placeholder="OTP Token" name="otptoken" id="otptoken"
                                    autocomplete="off">
                         </div>
                     {% endif %}
                     {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
                         <div class="mb-3">
-                            <select class="form-select" name="auth_method">
+                            <label class="visually-hidden" for="auth_method">Authentication method</label>
+                            <select class="form-select" name="auth_method" id="auth_method">
                                 <option value="LOCAL">
                                     LOCAL Authentication
                                 </option>
@@ -163,9 +168,6 @@
     <p>Powered by <a href="https://powerdnsadmin.org" target="_blank">PowerDNS-Admin</a></p>
 </div>
 {% assets "js_login" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
-{% assets "js_validation" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
 </body>
