@@ -215,12 +215,6 @@ def before_request():
     current_app.permanent_session_lifetime = datetime.timedelta(minutes=int(Setting().get('session_timeout')))
     session.modified = True
 
-    # Clean up expired sessions in the database
-    if Setting().get('session_type') == 'sqlalchemy':
-        from ..models.sessions import Sessions
-        Sessions().clean_up_expired_sessions()
-
-
 @admin_bp.route('/server/statistics', methods=['GET'])
 @login_required
 @operator_role_required

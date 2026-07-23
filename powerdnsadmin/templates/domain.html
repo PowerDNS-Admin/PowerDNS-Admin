@@ -26,6 +26,77 @@
                             </button>
                         </div>
                     </div>
+                    {% if catalog_members is not none %}
+                        <div class="card card-outline card-info shadow" id="catalog-members-card">
+                            <div class="card-header">
+                                <h3 class="card-title">Catalog Member Zones</h3>
+                                <div class="card-tools">
+                                    <span class="badge text-bg-info">
+                                        {{ catalog_members | length }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body table-responsive">
+                                <table id="tbl_catalog_members"
+                                       class="table table-bordered table-striped table-hover table-sm align-middle">
+                                    <thead>
+                                    <tr>
+                                        <th>Zone</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for member in catalog_members %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ url_for('domain.domain', domain_name=member.name) }}">
+                                                    <strong>{{ member.name | pretty_domain_name }}</strong>
+                                                </a>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-primary dropdown-toggle"
+                                                            type="button"
+                                                            id="catalog-member-actions-{{ loop.index }}"
+                                                            data-bs-toggle="dropdown"
+                                                            aria-expanded="false">
+                                                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                                                        <span class="visually-hidden">
+                                                            Actions for {{ member.name | pretty_domain_name }}
+                                                        </span>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-end"
+                                                         aria-labelledby="catalog-member-actions-{{ loop.index }}">
+                                                        <a class="dropdown-item"
+                                                           href="{{ url_for('domain.domain', domain_name=member.name) }}">
+                                                            <i class="fa-solid fa-pencil me-2" aria-hidden="true"></i>
+                                                            Edit Records
+                                                        </a>
+                                                        {% if current_user.role.name in ['Administrator', 'Operator'] %}
+                                                            <a class="dropdown-item"
+                                                               href="{{ url_for('domain.setting', domain_name=member.name) }}">
+                                                                <i class="fa-solid fa-gear me-2" aria-hidden="true"></i>
+                                                                Zone Settings
+                                                            </a>
+                                                        {% endif %}
+                                                        {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
+                                                            <a class="dropdown-item"
+                                                               href="{{ url_for('domain.changelog', domain_name=member.name) }}">
+                                                                <i class="fa-solid fa-clock-rotate-left me-2"
+                                                                   aria-hidden="true"></i>
+                                                                Zone Changelog
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -224,6 +295,35 @@
             {% endif %}
         });
 
+        {% if catalog_members is not none %}
+            $("#tbl_catalog_members").DataTable({
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                {% if SETTING.get('default_domain_table_size') | string in ['10','25','50','100'] %}
+                    "lengthMenu": [[10, 25, 50, 100, -1],
+                        [10, 25, 50, 100, "All"]],
+                {% else %}
+                    "lengthMenu": [[10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, -1],
+                        [10, 25, 50, 100, {{ SETTING.get('default_domain_table_size') }}, "All"]],
+                {% endif %}
+                "pageLength": {{ SETTING.get('default_domain_table_size') }},
+                "language": {
+                    "emptyTable": "This producer catalog has no member zones.",
+                    "lengthMenu": " _MENU_ member zones"
+                },
+                "columnDefs": [
+                    {
+                        "orderable": false,
+                        "searchable": false,
+                        "targets": [1]
+                    }
+                ]
+            });
+        {% endif %}
 
         function show_record_changelog(record_name, record_type, e) {
             e.stopPropagation();
