@@ -1,0 +1,47 @@
+name: powerdns-admin-dev
+
+services:
+  powerdns-admin:
+    image: powerdns-admin-dev
+    build:
+      context: .
+      dockerfile: docker-common/Dockerfile.app
+      args:
+        DOCKER_SCENARIO: docker-dev
+    ports:
+      - "9191:80"
+    networks:
+      - dev
+    env_file:
+      - ./docker-dev/env
+    environment:
+      FLASK_CONF: /app/configs/docker_config.py
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+    volumes:
+      - powerdns-admin-dev-data:/data
+    depends_on:
+      - pdns-server
+
+  pdns-server:
+    image: powerdns-admin-dev-pdns
+    build:
+      context: .
+      dockerfile: docker-common/Dockerfile.pdns
+    ports:
+      - "5053:53"
+      - "5053:53/udp"
+      - "8081:8081"
+    networks:
+      - dev
+    env_file:
+      - ./docker-dev/env
+    environment:
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+
+networks:
+  dev:
+
+volumes:
+  powerdns-admin-dev-data:
+    # Preserve the database created by the former combined Compose project.
+    name: powerdns-admin_powerdns-admin-data

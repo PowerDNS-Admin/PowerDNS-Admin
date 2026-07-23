@@ -1,0 +1,70 @@
+name: powerdns-admin-browser-test
+
+services:
+  powerdns-admin:
+    image: powerdns-admin-browser-test-app
+    build:
+      context: .
+      dockerfile: docker-common/Dockerfile.app
+      args:
+        DOCKER_SCENARIO: docker-browser-test
+    networks:
+      - browser-test
+    env_file:
+      - ./docker-browser-test/env
+    environment:
+      FLASK_CONF: /app/configs/docker_config.py
+      PDNS_HOST: pdns-server
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      BROWSER_TEST_USERNAME: ${BROWSER_TEST_USERNAME:-browser-admin}
+      BROWSER_TEST_PASSWORD: ${BROWSER_TEST_PASSWORD:-BrowserTest123!}
+    tmpfs:
+      - /data
+    depends_on:
+      - pdns-server
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/browser-test-ready && curl --fail --silent http://localhost/login"]
+      interval: 2s
+      timeout: 2s
+      retries: 90
+
+  pdns-server:
+    image: powerdns-admin-browser-test-pdns
+    build:
+      context: .
+      dockerfile: docker-common/Dockerfile.pdns
+    networks:
+      - browser-test
+    env_file:
+      - ./docker-browser-test/env
+    environment:
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      PDNS_RESET_DATABASE: "1"
+
+  browser-tests:
+    image: powerdns-admin-browser-tests
+    # Chrome and Edge stable Linux packages are x86_64-only.
+    platform: linux/amd64
+    build:
+      context: ./docker-browser-test/browser
+      dockerfile: Dockerfile
+    init: true
+    ipc: host
+    networks:
+      - browser-test
+    environment:
+      BASE_URL: http://powerdns-admin
+      PDNS_API_URL: http://pdns-server:8081
+      EXPECTED_PDNS_API_URL: http://pdns-server:8081
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      BROWSER_TEST_USERNAME: ${BROWSER_TEST_USERNAME:-browser-admin}
+      BROWSER_TEST_PASSWORD: ${BROWSER_TEST_PASSWORD:-BrowserTest123!}
+    volumes:
+      - ./test-results/browser:/tests/test-results
+      - ./playwright-report:/tests/playwright-report
+    depends_on:
+      powerdns-admin:
+        condition: service_healthy
+
+networks:
+  browser-test:

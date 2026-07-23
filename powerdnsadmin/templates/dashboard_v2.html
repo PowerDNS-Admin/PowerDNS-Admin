@@ -1,0 +1,401 @@
+{% extends "dashboard.html" %}
+{% set active_page = "dashboard" %}
+{% set page_title = 'Dashboard v2' %}
+{% block title %}<title>Dashboard v2 - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block content %}
+    <section id="dashboard-v2" class="content"
+             data-csrf-token="{{ csrf_token() }}"
+             data-create-template-url="{{ url_for('admin.create_template_from_zone') }}"
+             data-domains-updater-url="{{ url_for('dashboard.domains_updater') }}">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-outline card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title mb-2">
+                                Zones
+                                <span class="badge text-bg-info ms-1">v2 preview</span>
+                                {% if show_bg_domain_button %}
+                                    <button type="button" title="Synchronize Zones"
+                                            class="btn btn-tool refresh-bg-button">
+                                        <i class="fa-solid fa-sync"></i>
+                                    </button>
+                                {% endif %}
+                            </h3>
+                            <div class="card-tools d-flex align-items-center gap-2">
+                                <a class="btn btn-sm btn-outline-secondary no-prompt"
+                                   href="{{ url_for('dashboard.dashboard') }}">
+                                    Classic dashboard
+                                </a>
+                                <div class="nav-tabs-custom">
+                                    <ul class="nav nav-tabs card-header-tabs" id="dashboard-v2-tabs"
+                                        role="tablist">
+                                        {% for tab_id in zone_tabs.order %}
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link {% if loop.first %}active{% endif %}"
+                                                        id="tab-control-{{ tab_id }}"
+                                                        data-bs-toggle="pill"
+                                                        data-bs-target="#tab_{{ tab_id }}_v2"
+                                                        type="button" role="tab"
+                                                        aria-controls="tab_{{ tab_id }}_v2"
+                                                        aria-selected="{{ 'true' if loop.first else 'false' }}">
+                                                    Zones <b>{{ zone_tabs.tabs[tab_id].display_name }}</b>
+                                                </button>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="tab-content">
+                                {% for tab_id in zone_tabs.order %}
+                                    <div id="tab_{{ tab_id }}_v2"
+                                         class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                                         role="tabpanel" aria-labelledby="tab-control-{{ tab_id }}">
+                                        <div class="card-body table-responsive records p-0 pt-2">
+                                            <div class="dashboard-table-state px-3 py-5 text-center"
+                                                 id="tbl_domain_list_{{ tab_id }}_v2_state"
+                                                 role="status" aria-live="polite">
+                                                <div class="dashboard-table-loading">
+                                                    <div class="spinner-border text-primary mb-3" role="presentation"></div>
+                                                    <p class="mb-0">Please wait while we load the zone data…</p>
+                                                </div>
+                                                <div class="dashboard-table-error alert alert-danger mb-0 d-none"
+                                                     role="alert">
+                                                    <p class="dashboard-table-error-message mb-2">
+                                                        The zone data could not be loaded.
+                                                    </p>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-danger dashboard-table-retry">
+                                                        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                                                        Retry
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <table id="tbl_domain_list_{{ tab_id }}_v2"
+                                                   class="table table-striped table-hover table-sm records d-none"
+                                                   data-dashboard-v2-table
+                                                   data-source="{{ url_for('dashboard.domains_v2', tab_id=tab_id) }}"
+                                                   data-page-length="{{ default_page_length }}"
+                                                   data-refresh-on-load="{{ 'true' if loop.first and refresh_on_first_load else 'false' }}"
+                                                   data-state-id="tbl_domain_list_{{ tab_id }}_v2_state"
+                                                   aria-busy="true">
+                                                <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>DNSSEC</th>
+                                                    <th>Type</th>
+                                                    <th>Serial</th>
+                                                    <th>Primary</th>
+                                                    <th>Account</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block head_styles %}
+    <style>
+        table.records tbody td:first-of-type { text-align: left; }
+        .dashboard-table-state { min-height: 13rem; }
+        .dashboard-table-state .spinner-border { width: 2.5rem; height: 2.5rem; }
+    </style>
+{% endblock %}
+
+{% block extrascripts %}
+    <script src="{{ url_for('static', filename='custom/js/dashboard-v2.js', v='dnssec-rollover-1') }}"></script>
+{% endblock %}
+
+{% block modals %}
+    {{ super() }}
+    <div class="modal fade" id="modal_dnssec_enable_v2" tabindex="-1"
+         aria-labelledby="modal_dnssec_enable_v2_label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_dnssec_enable_v2_label">
+                        Enable DNSSEC
+                    </h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Generate and activate a DNSSEC key for
+                        <strong id="dnssec-enable-v2-domain"></strong>.
+                    </p>
+                    <div id="dnssec-enable-v2-error" class="alert alert-danger d-none"
+                         role="alert"></div>
+                    <form id="dnssec-enable-v2-form">
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-enable-v2-keytype">Key role</label>
+                            <select class="form-select" id="dnssec-enable-v2-keytype" required>
+                                {% for key_type in dnssec_key_types %}
+                                    <option value="{{ key_type.value }}"
+                                            {% if key_type.value == 'csk' %}selected{% endif %}>
+                                        {{ key_type.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                A CSK uses one key for both zone and key signing. Select KSK or ZSK
+                                only when operating a deliberate split-key policy.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-enable-v2-algorithm">Algorithm</label>
+                            <select class="form-select" id="dnssec-enable-v2-algorithm" required>
+                                {% for algorithm in dnssec_algorithms %}
+                                    <option value="{{ algorithm.value }}"
+                                            data-bits="{{ algorithm.bits|list|tojson }}"
+                                            data-default-bits="{{ algorithm.default_bits }}"
+                                            {% if algorithm.value == 'ecdsa256' %}selected{% endif %}>
+                                        {{ algorithm.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Algorithm availability depends on how the connected PowerDNS server
+                                was compiled. ECDSA P-256 is the recommended PowerDNS profile.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-enable-v2-bits">Key size</label>
+                            <select class="form-select" id="dnssec-enable-v2-bits" required></select>
+                            <div class="form-text">
+                                Elliptic-curve algorithms have a fixed key size. RSA algorithms allow
+                                an explicit size selection.
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mb-0" role="note">
+                            After enablement, publish the generated DS record with the parent zone or
+                            registrar. Publishing an incorrect DS record can make the zone unreachable.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success"
+                            id="dnssec-enable-v2-submit" form="dnssec-enable-v2-form">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        Generate key and enable DNSSEC
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal_dnssec_status_v2" tabindex="-1"
+         aria-labelledby="modal_dnssec_status_v2_label" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h4 class="modal-title" id="modal_dnssec_status_v2_label">
+                            DNSSEC delegation status
+                        </h4>
+                        <div class="text-body-secondary">
+                            <span id="dnssec-status-v2-domain"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dnssec-status-v2-loading" class="py-5 text-center" role="status">
+                        <div class="spinner-border text-primary mb-3" aria-hidden="true"></div>
+                        <p class="mb-0">Checking PowerDNS keys and parent nameservers…</p>
+                    </div>
+                    <div id="dnssec-status-v2-error" class="alert alert-danger d-none"
+                         role="alert"></div>
+                    <div id="dnssec-status-v2-content" class="d-none">
+                        <div id="dnssec-status-v2-summary" class="alert" role="status"></div>
+                        <p class="small text-body-secondary">
+                            Last checked: <span id="dnssec-status-v2-checked-at">Not yet checked</span>.
+                            Results are fetched directly from each authoritative parent nameserver;
+                            recursive resolver caches are not used for the DS comparison.
+                        </p>
+
+                        <div id="dnssec-status-v2-rollover" class="card card-outline card-info mb-4 d-none">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Active rollover</h5>
+                            </div>
+                            <div class="card-body py-3">
+                                <dl class="row mb-2">
+                                    <dt class="col-sm-3">Type</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-type"></dd>
+                                    <dt class="col-sm-3">State</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-state"></dd>
+                                    <dt class="col-sm-3">Existing keys</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-old-keys"></dd>
+                                    <dt class="col-sm-3">Replacement keys</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-new-keys"></dd>
+                                </dl>
+                                <div id="dnssec-status-v2-rollover-reconciliation"
+                                     class="alert mb-2" role="status"></div>
+                                <div id="dnssec-status-v2-rollover-guidance"
+                                     class="alert alert-info mb-0"></div>
+                            </div>
+                        </div>
+
+                        <h5>Keys in PowerDNS</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-sm table-striped align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Role</th>
+                                    <th>Algorithm</th>
+                                    <th>Size</th>
+                                    <th>Active</th>
+                                    <th>Published</th>
+                                    <th>DS records</th>
+                                </tr>
+                                </thead>
+                                <tbody id="dnssec-status-v2-keys"></tbody>
+                            </table>
+                        </div>
+
+                        <h5>DS records for the registrar</h5>
+                        <div id="dnssec-status-v2-expected" class="mb-4"></div>
+
+                        <div class="d-flex align-items-baseline justify-content-between gap-2">
+                            <h5>Parent nameserver propagation</h5>
+                            <span id="dnssec-status-v2-parent" class="small text-body-secondary"></span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Nameserver</th>
+                                    <th>Queried address</th>
+                                    <th>Status</th>
+                                    <th>Observed DS or error</th>
+                                </tr>
+                                </thead>
+                                <tbody id="dnssec-status-v2-nameservers"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span class="small text-body-secondary me-auto">
+                        Pending checks refresh automatically every 15 seconds.
+                    </span>
+                    <button type="button" class="btn btn-outline-primary"
+                            id="dnssec-status-v2-refresh">
+                        <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                        Check now
+                    </button>
+                    <button type="button" class="btn btn-outline-danger d-none"
+                            id="dnssec-status-v2-cancel-rollover">
+                        Cancel staged rollover
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                            id="dnssec-status-v2-start-rollover">
+                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                        Start rollover
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal_dnssec_rollover_v2" tabindex="-1"
+         aria-labelledby="modal_dnssec_rollover_v2_label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_dnssec_rollover_v2_label">
+                        Start DNSSEC rollover
+                    </h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Stage a replacement key for
+                        <strong id="dnssec-rollover-v2-domain"></strong>.
+                        Existing keys will not be changed.
+                    </p>
+                    <div id="dnssec-rollover-v2-error" class="alert alert-danger d-none"
+                         role="alert"></div>
+                    <form id="dnssec-rollover-v2-form">
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-rollover-v2-type">
+                                Rollover type
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-type" required>
+                                {% for rollover_type in dnssec_rollover_types %}
+                                    <option value="{{ rollover_type.value }}">
+                                        {{ rollover_type.label }} — {{ rollover_type.description }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="dnssec-rollover-v2-keytype-group">
+                            <label class="form-label" for="dnssec-rollover-v2-keytype">
+                                Key role being replaced
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-keytype" required>
+                                {% for key_type in dnssec_key_types %}
+                                    <option value="{{ key_type.value }}">{{ key_type.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-rollover-v2-algorithm">
+                                Algorithm
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-algorithm" required>
+                                {% for algorithm in dnssec_algorithms %}
+                                    <option value="{{ algorithm.value }}"
+                                            data-bits="{{ algorithm.bits|list|tojson }}"
+                                            data-default-bits="{{ algorithm.default_bits }}">
+                                        {{ algorithm.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-rollover-v2-bits">
+                                Key size
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-bits" required></select>
+                        </div>
+                        <div class="alert alert-warning mb-0" role="note">
+                            Starting a rollover only stages the replacement key. Retirement of the
+                            old key remains blocked until the required propagation and TTL checks pass.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                            id="dnssec-rollover-v2-submit" form="dnssec-rollover-v2-form">
+                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                        Stage replacement key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
