@@ -1,0 +1,39 @@
+{% set resolved_page_title = page_title | default('Dashboard') %}
+{% set resolved_breadcrumb_items = breadcrumb_items | default([]) %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-sm-6">
+                <h1 class="mb-0">{{ resolved_page_title }}</h1>
+                {% if page_subtitle is defined and page_subtitle %}
+                    <p class="text-body-secondary mb-0">{{ page_subtitle }}</p>
+                {% endif %}
+            </div>
+            <div class="col-sm-6">
+                <nav aria-label="Breadcrumb">
+                    <ol class="breadcrumb justify-content-sm-end mb-0">
+                        {% if resolved_page_title == 'Dashboard' and not resolved_breadcrumb_items %}
+                            <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                        {% else %}
+                            <li class="breadcrumb-item">
+                                <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+                            </li>
+                            {% for item in resolved_breadcrumb_items %}
+                                <li class="breadcrumb-item">
+                                    {% if item.url is defined and item.url %}
+                                        <a href="{{ item.url }}">{{ item.label }}</a>
+                                    {% else %}
+                                        {{ item.label }}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                            <li class="breadcrumb-item active" aria-current="page">
+                                {{ resolved_page_title }}
+                            </li>
+                        {% endif %}
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
