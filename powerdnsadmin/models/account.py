@@ -264,7 +264,7 @@ class Account(db.Model):
                     if not account_id:
                         continue
                     current_app.logger.info("Deleting account for {0}".format(account_name))
-                    account = Account.query.get(account_id)
+                    account = db.session.get(Account, account_id)
                     account.delete_account(commit=False)
             except Exception as e:
                 current_app.logger.error(

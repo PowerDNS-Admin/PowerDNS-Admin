@@ -8,7 +8,8 @@ import ldap.filter
 from collections import OrderedDict
 from flask import current_app
 from flask_login import AnonymousUserMixin
-from sqlalchemy import orm
+from sqlalchemy import func, orm
+from sqlalchemy.exc import IntegrityError
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
 from io import BytesIO
@@ -116,7 +117,7 @@ class User(db.Model):
         return False
 
     def get_user_info_by_id(self):
-        user_info = User.query.get(int(self.id))
+        user_info = db.session.get(User, int(self.id))
         return user_info
 
     def get_user_info_by_username(self):
@@ -418,14 +419,17 @@ class User(db.Model):
         Create local user witch stores username / password in the DB
         """
         # check if username existed
-        user = User.query.filter(str(User.username).lower() == self.username.lower()).first()
+        user = User.query.filter(
+            func.lower(User.username) == self.username.lower()).first()
         if user:
             return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
-        user = User.query.filter(str(User.email).lower() == self.email.lower()).first()
-        if user:
-            return {'status': False, 'msg': 'Email address is already in use'}
+        if self.email:
+            user = User.query.filter(
+                func.lower(User.email) == self.email.lower()).first()
+            if user:
+                return {'status': False, 'msg': 'Email address is already in use'}
 
         # first register user will be in Administrator role
         if self.role_id is None:
@@ -444,8 +448,22 @@ class User(db.Model):
         if self.password and self.password != '*':
             self.password = self.password.decode("utf-8")
 
-        db.session.add(self)
-        db.session.commit()
+        try:
+            db.session.add(self)
+            db.session.commit()
+        except IntegrityError:
+            # A concurrent request can pass the checks above before this one
+            # commits. Always make the scoped session reusable after a failed
+            # flush and return the same result as the pre-insert checks.
+            db.session.rollback()
+            return {
+                'status': False,
+                'msg': 'Username or email address is already in use'
+            }
+        except Exception:
+            db.session.rollback()
+            raise
+
         return {'status': True, 'msg': 'Created user successfully'}
 
     def update_local_user(self):

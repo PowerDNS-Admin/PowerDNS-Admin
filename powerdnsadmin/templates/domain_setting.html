@@ -1,42 +1,28 @@
 {% extends "base.html" %}
+{% set page_title = 'Edit Zone - ' ~ (domain.name | pretty_domain_name) %}
+{% set breadcrumb_items = [{
+    'label': 'Zone Records - ' ~ (domain.name | pretty_domain_name),
+    'url': url_for('domain.domain', domain_name=domain.name)
+}] %}
 {% block title %}<title>Edit Zone - {{ domain.name | pretty_domain_name }} - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
+{% block page_header_before %}
     {% if status %}
-        {% if status.get('status') == 'ok' %}
-            <div class="alert alert-success">
-                <strong>Success!</strong> {{ status.get('msg') }}
-            </div>
-        {% elif status.get('status') == 'error' %}
-            <div class="alert alert-danger">
-                {% if status.get('msg') != None %}
-                    <strong>Error!</strong>
-                    {{ status.get('msg') }}
-                {% else %}
-                    <strong>Error!</strong>
-                    An undefined error occurred.
-                {% endif %}
-            </div>
-        {% endif %}
-    {% endif %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        Edit Zone - {{ domain.name | pretty_domain_name }}
-                    </h1>
+        <div class="container-fluid pt-3">
+            {% if status.get('status') == 'ok' %}
+                <div class="alert alert-success mb-0" role="alert">
+                    <strong>Success!</strong> {{ status.get('msg') }}
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Edit Zone - {{ domain.name | pretty_domain_name }}</li>
-                    </ol>
+            {% elif status.get('status') == 'error' %}
+                <div class="alert alert-danger mb-0" role="alert">
+                    <strong>Error!</strong>
+                    {{ status.get('msg') or 'An undefined error occurred.' }}
                 </div>
-            </div>
+            {% endif %}
         </div>
-    </div>
+    {% endif %}
 {% endblock %}
+
 
 {% block content %}
     <section class="content">
@@ -54,9 +40,9 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="selAccountId">Account</label>
-                                    <select id="selAccountId" name="accountid" class="form-control" style="width:15em;">
+                                    <select id="selAccountId" name="accountid" class="form-select" style="width:15em;">
                                         <option value="0">- No Account -</option>
                                         {% for account in accounts %}
                                             <option value="{{ account.id }}"
@@ -88,14 +74,13 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <div class="form-group">
-                                <input type="checkbox" id="chkAutoPtr" class="auto_ptr_toggle"
+                            <div class="form-check">
+                                <input type="checkbox" id="chkAutoPtr" class="form-check-input auto_ptr_toggle"
                                        data-zone="{{ domain.name }}"
                                        {% for setting in domain.settings %}{% if setting.setting=='auto_ptr' and setting.value=='True' %}checked
                                        {% endif %}{% endfor %}
                                        {% if SETTING.get('auto_ptr') %}disabled="True" {% endif %}>
-                                &nbsp;
-                                <label for="chkAutoPtr">Allow automatic reverse pointer creation on record
+                                <label class="form-check-label" for="chkAutoPtr">Allow automatic reverse pointer creation on record
                                     updates?</label>
                                 {% if SETTING.get('auto_ptr') %}
                                     <p><code>Auto-ptr is enabled globally on the PDA system!</code></p>
@@ -116,13 +101,12 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <div class="form-group">
-                                <input type="checkbox" id="chkDynDns" class="dyndns_on_demand_toggle"
+                            <div class="form-check">
+                                <input type="checkbox" id="chkDynDns" class="form-check-input dyndns_on_demand_toggle"
                                        data-zone="{{ domain.name }}"
                                        {% for setting in domain.settings %}{% if setting.setting=='create_via_dyndns' and setting.value=='True' %}checked
                                        {% endif %}{% endfor %}>
-                                &nbsp;
-                                <label for="chkDynDns">Allow on-demand creation of records via DynDNS updates?</label>
+                                <label class="form-check-label" for="chkDynDns">Allow on-demand creation of records via DynDNS updates?</label>
                             </div>
                             <!-- /.form-group -->
                         </div>
@@ -159,8 +143,9 @@
                                 <!-- /.row -->
                                 <div class="row">
                                     <div class="col-12">
-                                        <div class="form-group">
-                                            <select multiple="multiple" class="form-control" id="domain_multi_user"
+                                        <div class="mb-3">
+                                            <label class="form-label" for="domain_multi_user">Zone users</label>
+                                            <select multiple="multiple" class="form-select" id="domain_multi_user"
                                                     name="domain_multi_user[]">
                                                 {% for user in users %}
                                                     <option {% if user.id in
@@ -217,13 +202,15 @@
                             <b>New Zone Type Setting:</b>
                             <form method="post" action="{{ url_for('domain.change_type', domain_name=domain.name) }}">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                <select name="domain_type" class="form-control" style="width:15em;">
+                                <label class="form-label" for="domain_type">Zone Type</label>
+                                <select name="domain_type" id="domain_type" class="form-select" style="width:15em;">
                                     <option value="0">- Unchanged -</option>
                                     {% for type in ["native", "master", "slave"] %}
                                         <option {% if zone_type == type %}selected{% endif %} value="{{ type }}">{{ type | format_zone_type }}</option>
                                     {% endfor %}
                                 </select><br/>
-                                <div class="form-group" style="{% if zone_type != 'slave' %}display: none;{% endif %}" id="domain_master_address_div">
+                                <div class="mb-3" style="{% if zone_type != 'slave' %}display: none;{% endif %}" id="domain_master_address_div">
+                                    <label class="form-label" for="domain_master_address">Primary Server Addresses</label>
                                     <input type="text" class="form-control" name="domain_master_address"
                                            id="domain_master_address"
                                            placeholder="Enter valid Primary Server IP addresses (separated by commas)"
@@ -312,7 +299,8 @@
                             <form method="post"
                                   action="{{ url_for('domain.change_soa_edit_api', domain_name=domain.name) }}">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                <select name="soa_edit_api" class="form-control" style="width:15em;">
+                                <label class="form-label" for="soa_edit_api">SOA-EDIT-API</label>
+                                <select name="soa_edit_api" id="soa_edit_api" class="form-select" style="width:15em;">
                                     <option selected value="0">- Unchanged -</option>
                                     {% for edit_type in ["DEFAULT", "INCREASE", "EPOCH", "OFF"] %}
                                         <option {% if soa_edit_api == edit_type %}selected{% endif %}>{{ edit_type }}</option>
@@ -344,7 +332,7 @@
                                 records and
                                 user privileges associated with this zone will also be removed. This change cannot be
                                 reverted.</p>
-                            <button type="button" title="Delete Zone" class="btn btn-danger float-left delete_domain"
+                            <button type="button" title="Delete Zone" class="btn btn-danger float-start delete_domain"
                                     id="{{ domain.name }}">
                                 <i class="fa-solid fa-trash"></i>&nbsp;Delete Zone
                             </button>
@@ -365,54 +353,10 @@
 
 {% block extrascripts %}
     <script>
-        //initialize pretty checkboxes
-        $('.dyndns_on_demand_toggle').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%' // optional
-        });
-        $('.auto_ptr_toggle').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%' // optional
-        });
-
-        $("#domain_multi_user").multiSelect({
-            selectableHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
-            selectionHeader: "<input type='text' class='search-input' autocomplete='off' placeholder='Username'>",
-            afterInit: function (ms) {
-                var that = this,
-                    $selectableSearch = that.$selectableUl.prev(),
-                    $selectionSearch = that.$selectionUl.prev(),
-                    selectableSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selectable:not(.ms-selected)',
-                    selectionSearchString = '#' + that.$container.attr('id') + ' .ms-elem-selection.ms-selected';
-
-                that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which === 40) {
-                            that.$selectableUl.focus();
-                            return false;
-                        }
-                    });
-
-                that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-                    .on('keydown', function (e) {
-                        if (e.which == 40) {
-                            that.$selectionUl.focus();
-                            return false;
-                        }
-                    });
-            },
-            afterSelect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            },
-            afterDeselect: function () {
-                this.qs1.cache();
-                this.qs2.cache();
-            }
-        });
+        initializeDualList('#domain_multi_user', {itemName: 'users'});
 
         //handle checkbox toggling
-        $('.dyndns_on_demand_toggle').on('ifToggled', function (event) {
+        $('.dyndns_on_demand_toggle').on('change', function () {
             var is_checked = $(this).prop('checked');
             var domain = $(this).data('zone')
             postdata = {
@@ -425,7 +369,7 @@
             };
             applyChanges(postdata, $SCRIPT_ROOT + '/domain/' + domain + '/manage-setting', true);
         });
-        $('.auto_ptr_toggle').on('ifToggled', function (event) {
+        $('.auto_ptr_toggle').on('change', function () {
             var is_checked = $(this).prop('checked');
             var domain = $(this).data('zone')
             postdata = {
@@ -451,9 +395,9 @@
                 }, function () {
                     window.location.href = '{{ url_for('dashboard.dashboard') }}';
                 });
-                modal.modal('hide');
+                hideModal(modal);
             })
-            modal.modal('show');
+            showModal(modal);
         });
 
         // zone primary address input handeling
@@ -470,20 +414,19 @@
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade" id="modal_delete_domain">
+    <div class="modal fade" id="modal_delete_domain" tabindex="-1"
+         aria-labelledby="modal_delete_domain_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_delete_domain_label">Confirmation</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-danger" id="button_delete_confirm">
                         Delete
                     </button>

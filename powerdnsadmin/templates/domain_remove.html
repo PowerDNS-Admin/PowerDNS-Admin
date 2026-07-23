@@ -1,26 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "remove_domain" %}
+{% set page_title = 'Remove Zone' %}
 {% block title %}<title>Remove Zone - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        Remove Zone
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Remove Zone</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -34,9 +16,9 @@
                         <form role="form" method="post" action="{{ url_for('domain.remove') }}">
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                             <div class="card-body">
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="domainid">Zone</label>
-                                    <select id=domainid class="form-control" style="width:15em;">
+                                    <select id="domainid" class="form-select" style="width:15em;">
                                         <option value="0">- Select Zone -</option>
                                         {% for domain in domainss %}
                                             <option value="{{ domain.id }}">{{ domain.name }}</option>
@@ -50,7 +32,7 @@
                                     <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
                                 </button>
                                 <button type="button" title="Remove Zone"
-                                        class="btn btn-danger button_delete float-right">
+                                        class="btn btn-danger button_delete float-end">
                                     <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove Zone
                                 </button>
                             </div>
@@ -98,35 +80,34 @@
                 }, function () {
                     window.location.href = '{{ url_for('dashboard.dashboard') }}';
                 });
-                modal.modal('hide');
+                hideModal(modal);
             })
-            modal.modal('show');
+            showModal(modal);
             $("#button_delete_cancel").unbind().one('click', function (e) {
-                modal.modal('hide');
+                hideModal(modal);
             });
         });
     </script>
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade modal-warning" id="modal_delete">
+    <div class="modal fade" id="modal_delete" tabindex="-1"
+         aria-labelledby="modal_delete_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Zone Removal Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_delete_label">Zone Removal Confirmation</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" title="Cancel" class="btn btn-secondary" id="button_delete_cancel"
-                            data-dismiss="modal">
+                            data-bs-dismiss="modal">
                         <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
                     </button>
-                    <button type="button" title="Remove Zone" class="btn btn-danger float-right"
+                    <button type="button" title="Remove Zone" class="btn btn-danger float-end"
                             id="button_delete_confirm">
                         <i class="fa-solid fa-trash-alt"></i>&nbsp;Remove Zone
                     </button>

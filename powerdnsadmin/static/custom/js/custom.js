@@ -1,5 +1,263 @@
 var dnssecKeyList = []
 
+function formatUtcDateTimeLocal(value) {
+    if (!value) {
+        return value;
+    }
+
+    var normalized = String(value).trim().replace(' ', 'T');
+    if (!/(Z|[+-]\d{2}:?\d{2})$/i.test(normalized)) {
+        normalized += 'Z';
+    }
+
+    var date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    var pad = function (part) {
+        return String(part).padStart(2, '0');
+    };
+
+    return date.getFullYear() + '-' +
+        pad(date.getMonth() + 1) + '-' +
+        pad(date.getDate()) + ' ' +
+        pad(date.getHours()) + ':' +
+        pad(date.getMinutes()) + ':' +
+        pad(date.getSeconds());
+}
+
+function initializeNativeValidation() {
+    document.querySelectorAll('form.needs-validation').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initializeNativeValidation);
+
+function getModalElement(target) {
+    if (typeof target === 'string') {
+        return document.querySelector(target);
+    }
+    if (target && target.jquery) {
+        return target.get(0);
+    }
+    return target;
+}
+
+function getModal(target) {
+    var element = getModalElement(target);
+    return element ? bootstrap.Modal.getOrCreateInstance(element) : null;
+}
+
+function showModal(target) {
+    var modal = getModal(target);
+    if (modal) {
+        modal.show();
+    }
+}
+
+function hideModal(target) {
+    var modal = getModal(target);
+    if (modal) {
+        modal.hide();
+    }
+}
+
+function showMessageModal(target, message) {
+    var element = getModalElement(target);
+    if (!element) {
+        return;
+    }
+    var messageElement = element.querySelector('.modal-body p');
+    if (messageElement) {
+        messageElement.textContent = message;
+    }
+    showModal(element);
+}
+
+function showErrorModal(message) {
+    showMessageModal('#modal_error', message);
+}
+
+function showSuccessModal(message) {
+    showMessageModal('#modal_success', message);
+}
+
+function getFormControlElement(target) {
+    return typeof target === 'string' ? document.querySelector(target) : target;
+}
+
+function initializeDualList(target, options) {
+    var source = getFormControlElement(target);
+    if (!source || source.dataset.pdaDualListInitialized === 'true') {
+        return;
+    }
+
+    options = options || {};
+    var itemName = options.itemName || 'items';
+    var wrapper = document.createElement('div');
+    var availableList = document.createElement('select');
+    var selectedList = document.createElement('select');
+    var availableSearch = document.createElement('input');
+    var selectedSearch = document.createElement('input');
+
+    wrapper.className = 'pda-dual-list row g-2 align-items-center';
+    availableList.className = 'form-select pda-dual-list-options';
+    selectedList.className = 'form-select pda-dual-list-options';
+    availableList.multiple = true;
+    selectedList.multiple = true;
+    availableList.setAttribute('aria-label', 'Available ' + itemName);
+    selectedList.setAttribute('aria-label', 'Selected ' + itemName);
+
+    [availableSearch, selectedSearch].forEach(function (input) {
+        input.type = 'search';
+        input.className = 'form-control form-control-sm mb-2';
+        input.autocomplete = 'off';
+    });
+    availableSearch.placeholder = 'Filter available ' + itemName;
+    selectedSearch.placeholder = 'Filter selected ' + itemName;
+
+    function createColumn(title, search, list) {
+        var column = document.createElement('div');
+        var label = document.createElement('label');
+        column.className = 'col-12 col-md-5';
+        label.className = 'form-label fw-semibold';
+        label.textContent = title;
+        column.appendChild(label);
+        column.appendChild(search);
+        column.appendChild(list);
+        return column;
+    }
+
+    function createButton(label, title, handler) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-outline-secondary btn-sm';
+        button.textContent = label;
+        button.title = title;
+        button.setAttribute('aria-label', title);
+        button.addEventListener('click', handler);
+        return button;
+    }
+
+    function visibleSourceOptions(selected, query) {
+        var normalizedQuery = query.trim().toLocaleLowerCase();
+        return Array.from(source.options).filter(function (option) {
+            return option.selected === selected &&
+                (!normalizedQuery || option.text.toLocaleLowerCase().includes(normalizedQuery));
+        });
+    }
+
+    function copyOption(option) {
+        var copy = new Option(option.text, option.value);
+        copy.disabled = option.disabled;
+        copy.style.cssText = option.style.cssText;
+        copy.title = option.title;
+        return copy;
+    }
+
+    function replaceListOptions(list, optionsToRender) {
+        list.replaceChildren();
+        optionsToRender.forEach(function (option) {
+            list.appendChild(copyOption(option));
+        });
+    }
+
+    function render() {
+        replaceListOptions(
+            availableList,
+            visibleSourceOptions(false, availableSearch.value)
+        );
+        replaceListOptions(
+            selectedList,
+            visibleSourceOptions(true, selectedSearch.value)
+        );
+    }
+
+    function notifyChange() {
+        source.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+
+    function setSelection(list, selected) {
+        var values = new Set(Array.from(list.selectedOptions).map(function (option) {
+            return option.value;
+        }));
+        Array.from(source.options).forEach(function (option) {
+            if (values.has(option.value) && !option.disabled) {
+                option.selected = selected;
+            }
+        });
+        notifyChange();
+        render();
+    }
+
+    function setVisibleSelection(selected) {
+        var search = selected ? selectedSearch.value : availableSearch.value;
+        visibleSourceOptions(selected, search).forEach(function (option) {
+            if (!option.disabled) {
+                option.selected = !selected;
+            }
+        });
+        notifyChange();
+        render();
+    }
+
+    var controls = document.createElement('div');
+    controls.className = 'col-12 col-md-2 d-grid gap-2 pda-dual-list-controls';
+    controls.appendChild(createButton('›', 'Add selected ' + itemName, function () {
+        setSelection(availableList, true);
+    }));
+    controls.appendChild(createButton('»', 'Add all visible ' + itemName, function () {
+        setVisibleSelection(false);
+    }));
+    controls.appendChild(createButton('‹', 'Remove selected ' + itemName, function () {
+        setSelection(selectedList, false);
+    }));
+    controls.appendChild(createButton('«', 'Remove all visible ' + itemName, function () {
+        setVisibleSelection(true);
+    }));
+
+    wrapper.appendChild(createColumn('Available', availableSearch, availableList));
+    wrapper.appendChild(controls);
+    wrapper.appendChild(createColumn('Selected', selectedSearch, selectedList));
+
+    availableSearch.addEventListener('input', render);
+    selectedSearch.addEventListener('input', render);
+    availableList.addEventListener('dblclick', function () {
+        setSelection(availableList, true);
+    });
+    selectedList.addEventListener('dblclick', function () {
+        setSelection(selectedList, false);
+    });
+
+    source.classList.add('d-none');
+    source.dataset.pdaDualListInitialized = 'true';
+    source.insertAdjacentElement('afterend', wrapper);
+    source.pdaDualList = {render: render};
+    render();
+}
+
+function clearDualListSelection(target) {
+    var source = getFormControlElement(target);
+    if (!source) {
+        return;
+    }
+    Array.from(source.options).forEach(function (option) {
+        option.selected = false;
+    });
+    source.dispatchEvent(new Event('change', {bubbles: true}));
+    if (source.pdaDualList) {
+        source.pdaDualList.render();
+    }
+}
+
 function applyChanges(data, url, showResult, refreshPage) {
     $.ajax({
         type : "POST",
@@ -169,7 +427,7 @@ function enable_dns_sec(url, csrf_token) {
           modal.find('.modal-body p').text(data['msg']);
       }
       else {
-        modal.modal('hide');
+        hideModal(modal);
         //location.reload();
         window.location.reload(true);
       }
@@ -192,12 +450,12 @@ function getdnssec(url, domain){
             if (dnssec.length == 0 && parseFloat(PDNS_VERSION) >= 4.1) {
               dnssec_msg = '<h3>DNSSEC is disabled. Click on Enable to activate it.';
               modal.find('.modal-body p').html(dnssec_msg);
-              dnssec_footer = '<button type="button" class="btn btn-success button_dnssec_enable pull-left" id="'+domain+'">Enable</button><button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cancel</button>';
+              dnssec_footer = '<button type="button" class="btn btn-success button_dnssec_enable float-start" id="'+domain+'">Enable</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Cancel</button>';
               modal.find('.modal-footer ').html(dnssec_footer);
             }
             else {
                 if (parseFloat(PDNS_VERSION) >= 4.1) {
-                  dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable pull-left" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>';
+                  dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable float-start" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Close</button>';
                   modal.find('.modal-footer ').html(dnssec_footer);
                 }
                 for (var i = 0; i < dnssec.length; i++) {
@@ -221,7 +479,7 @@ function getdnssec(url, domain){
             }
             modal.find('.modal-body p').html(dnssec_msg);
         }
-        modal.modal('show');
+        showModal(modal);
     });
 }
 
@@ -286,18 +544,18 @@ function copy_otp_secret_to_clipboard() {
     copyBox.setSelectionRange(0, 99999); /* For mobile devices */
     navigator.clipboard.writeText(copyBox.value);
     $("#copy_tooltip").css("visibility", "visible");
-    setTimeout(function(){ $("#copy_tooltip").css("visibility", "collapse"); }, 2000);
+    setTimeout(function(){ $("#copy_tooltip").css("visibility", "hidden"); }, 2000);
   }
 
 // Side menu nav bar active selection
 /** add active class and stay opened when selected */
 
 // for sidebar menu entirely but not cover treeview
-$('ul.nav-sidebar a').filter(function() {
+$('ul.sidebar-menu a').filter(function() {
     return this.href == window.location.href.split('?')[0];
 }).addClass('active');
 
 // for treeview
 $('ul.nav-treeview a').filter(function() {
     return this.href == window.location.href.split('?')[0];
-}).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
+}).parentsUntil(".sidebar-menu > .nav-treeview").addClass('menu-open').prev('a').addClass('active');

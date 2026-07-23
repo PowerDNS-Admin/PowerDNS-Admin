@@ -1,34 +1,38 @@
-version: "3.8"
+name: powerdns-admin-test
 
 services:
-  powerdns-admin:
-    image: powerdns-admin-test
+  python-tests:
+    image: powerdns-admin-python-tests
     build:
       context: .
-      dockerfile: docker-test/Dockerfile
-    container_name: powerdns-admin-test
-    ports:
-      - "9191:80"
+      dockerfile: docker-common/Dockerfile.app
+      args:
+        DOCKER_SCENARIO: docker-test
+        INSTALL_TEST_DEPENDENCIES: "1"
     networks:
-      - default
+      - test
     env_file:
       - ./docker-test/env
+    environment:
+      FLASK_CONF: /app/configs/docker_config.py
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+    tmpfs:
+      - /data
     depends_on:
       - pdns-server
 
   pdns-server:
-    image: pdns-server-test
+    image: powerdns-admin-python-tests-pdns
     build:
       context: .
-      dockerfile: docker-test/Dockerfile.pdns
-    ports:
-      - "5053:53"
-      - "5053:53/udp"
-      - "8081:8081"
+      dockerfile: docker-common/Dockerfile.pdns
     networks:
-      - default
+      - test
     env_file:
       - ./docker-test/env
+    environment:
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      PDNS_RESET_DATABASE: "1"
 
 networks:
-  default:
+  test:

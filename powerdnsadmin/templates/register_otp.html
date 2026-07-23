@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Welcome - {{ SITE_NAME }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
     <!-- Tell the browser to be responsive to screen width -->
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% assets "css_login" -%}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {%- endassets %}
@@ -14,16 +15,17 @@
         <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
     {% endif %}
 </head>
-<body class="hold-transition register-page">
+<body class="register-page bg-body-secondary">
 <div class="register-box">
-    <div class="register-logo">
-        <a><b>PowerDNS</b>-Admin</a>
-    </div>
-    <div class="register-box-body">
+    <div class="card card-outline card-primary shadow">
+        <div class="card-header text-center">
+            <a href="{{ url_for('index.index') }}" class="h3"><b>PowerDNS</b>-Admin</a>
+        </div>
+        <div class="card-body">
         {% if error %}
-            <div class="alert alert-danger alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endif %}
         Welcome, {{ user.firstname }}! <br/>
@@ -35,15 +37,13 @@
             {% else %}
                 <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{ qrcode_image }}"></p>
             {% endif %}
-            <p>
-                Your secret key is: <br/>
-            <form>
-                <input type=text id="otp_secret" value={{ user.otp_secret }} readonly>
-                <button type=button style="position:relative; right:28px" onclick="copy_otp_secret_to_clipboard()"><i
-                    class="fa fa-clipboard"></i></button>
-                <br/><font color="red" id="copy_tooltip" style="visibility:collapse">Copied.</font>
-            </form>
-            </p>
+            <p>Your secret key is:</p>
+            <div class="input-group mb-2">
+                <input type="text" class="form-control" id="otp_secret" value="{{ user.otp_secret }}" readonly>
+                <button type="button" class="btn btn-outline-secondary" onclick="copy_otp_secret_to_clipboard()"
+                        aria-label="Copy OTP secret"><i class="fa-solid fa-clipboard"></i></button>
+            </div>
+            <p class="text-success" id="copy_tooltip" style="visibility:hidden">Copied.</p>
             You can use Google Authenticator (<a target="_blank"
                                                  href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android</a>
             - <a target="_blank"
@@ -55,35 +55,30 @@
                  href="https://itunes.apple.com/en/app/freeotp-authenticator/id872559395?mt=8">iOS</a>)
             on your smartphone <br/> to scan the QR code or type the secret key.
             <br/> <br/>
-            <font color="red"><strong><i>Make sure only you can see this QR Code <br/>
-                and secret key, and nobody can capture them.</i></strong></font>
+            <p class="text-danger fw-bold fst-italic">Make sure only you can see this QR code and secret key,
+                and that nobody can capture them.</p>
         </div>
-        </br>
+        <br>
         Please input your OTP token to continue, to ensure the seed has been scanned correctly.
-        <form action="" method="post" data-toggle="validator">
+        <form action="" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group">
-                <input type="text" class="form-control" placeholder="OTP Token" name="otptoken"
-                       data-error="Please input your OTP token" required>
+            <div class="mb-3">
+                <label class="visually-hidden" for="otptoken">OTP Token</label>
+                <input type="text" class="form-control" placeholder="OTP Token" name="otptoken" id="otptoken"
+                       required>
+                <div class="invalid-feedback">Please input your OTP token.</div>
             </div>
-            <div class="row">
-                <div class="col-xs-4">
-                    <button type="submit" class="btn btn-primary btn-block">Continue</button>
-                </div>
-            </div>
+            <button type="submit" class="btn btn-primary w-100">Continue</button>
         </form>
+        </div>
     </div>
-    <!-- /.register-box-body -->
     <div class="text-center">
         <p>Powered by <a href="https://powerdnsadmin.org" target="_blank">PowerDNS-Admin</a></p>
     </div>
 </div>
 <!-- /.register-box -->
-</body>
 {% assets "js_login" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
-{% assets "js_validation" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
+</body>
 </html>

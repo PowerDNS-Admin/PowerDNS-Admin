@@ -7,8 +7,8 @@ table td {
     font-family:'Roboto Mono' !important;
 }
 
-/*Fit default macbook screen*/
-.small-box .icon {
+/* Fit the default laptop viewport. */
+.small-box .small-box-icon {
     font-size: 70px !important;
 }
 
@@ -33,23 +33,96 @@ table td {
    color: olive;
 }
 
-.user-footer {
-    background-color: #222d32 !important;
+@media (min-width: 1200px) {
+    body.pda-layout-boxed .app-wrapper {
+        max-width: 1250px;
+        margin-inline: auto;
+        box-shadow: var(--bs-box-shadow);
+    }
 }
 
-.ms-container {
-    background-size: 20px 20px;
-    background-position: center;
+.pda-dual-list-options {
+    min-height: 14rem;
 }
 
-.search-input {
-    width: 100%;
+@media (max-width: 767.98px) {
+    .pda-dual-list-controls {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
 }
 
-.sidebar .image { padding-top: 0.7em; }
-.sidebar .info { color: #fff; }
-.sidebar .info p { margin: 0; }
-.sidebar .info a { font-size: 0.8em; }
+.pda-user-panel {
+    padding-inline: 0.75rem;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.pda-user-image img {
+    width: 2.1rem;
+    height: 2.1rem;
+    object-fit: cover;
+}
+
+.pda-user-info {
+    min-width: 0;
+    padding-inline-start: 0.75rem;
+    color: var(--bs-body-color);
+}
+
+.pda-user-info p {
+    margin: 0;
+}
+
+.pda-user-info a {
+    font-size: 0.8em;
+}
+
+.pda-unsaved-banner {
+    z-index: 1025;
+    display: grid;
+    grid-template-rows: 0fr;
+    padding-inline: 0.5rem;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.75rem);
+    transition: grid-template-rows 180ms ease,
+                opacity 180ms ease,
+                transform 180ms ease,
+                visibility 0s linear 180ms;
+}
+
+.pda-unsaved-banner.is-floating {
+    position: fixed;
+    top: var(--pda-banner-top);
+    left: var(--pda-banner-left);
+    width: var(--pda-banner-width);
+}
+
+.pda-unsaved-banner.is-visible {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
+}
+
+.pda-unsaved-banner-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.pda-unsaved-banner .alert {
+    margin-block: 0.75rem;
+    border-color: var(--bs-warning-border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pda-unsaved-banner {
+        transition: none;
+    }
+}
 
 /* Global Styles */
 table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }

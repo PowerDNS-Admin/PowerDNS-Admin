@@ -46,18 +46,21 @@ index_bp = Blueprint('index',
                      url_prefix='/')
 
 
-@index_bp.before_app_first_request
+@index_bp.before_app_request
 def register_modules():
     global google
     global github
     global azure
     global oidc
     global saml
+    if current_app.extensions.get('pda_auth_modules_registered'):
+        return
     google = google_oauth()
     github = github_oauth()
     azure = azure_oauth()
     oidc = oidc_oauth()
     saml = SAML()
+    current_app.extensions['pda_auth_modules_registered'] = True
 
 
 @index_bp.before_request
@@ -366,7 +369,7 @@ def login():
                     account_id = account.get_id_by_name(account_name=sanitized_group_name)
 
                     if account_id:
-                        account = Account.query.get(account_id)
+                        account = db.session.get(Account, account_id)
                         # check if user has permissions
                         account_users = account.get_user()
                         current_app.logger.info('Group: {} Users: {}'.format(
@@ -855,6 +858,9 @@ def register():
                     return render_template('register.html',
                                            error=result['msg'], captcha_enable=CAPTCHA_ENABLE)
             except Exception as e:
+                db.session.rollback()
+                current_app.logger.exception(
+                    'Unable to register local user %r', username)
                 return render_template('register.html', error=e, captcha_enable=CAPTCHA_ENABLE)
         else:
             return render_template('errors/404.html'), 404

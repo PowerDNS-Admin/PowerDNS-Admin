@@ -1,0 +1,28 @@
+<meta name="color-scheme" content="light dark">
+<script>
+    (function () {
+        var selectedTheme = 'auto';
+
+        try {
+            var storedTheme = window.localStorage.getItem('lte-theme');
+            if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'auto') {
+                selectedTheme = storedTheme;
+            }
+        } catch (error) {
+            // Local storage can be unavailable in privacy-restricted browser contexts.
+        }
+
+        var resolvedTheme = selectedTheme === 'auto'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : selectedTheme;
+        var root = document.documentElement;
+
+        root.setAttribute('data-bs-theme', resolvedTheme);
+        root.style.colorScheme = resolvedTheme;
+        root.style.backgroundColor = resolvedTheme === 'dark' ? '#212529' : '#ffffff';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            root.style.removeProperty('background-color');
+        }, { once: true });
+    }());
+</script>
