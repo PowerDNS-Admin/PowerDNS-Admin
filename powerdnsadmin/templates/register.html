@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Register - {{ SITE_NAME }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -32,7 +33,7 @@
                 </div>
             {% endif %}
             <p class="login-box-msg">Enter your personal details below</p>
-            <form action="{{ url_for('index.register') }}" method="post" validator>
+            <form action="{{ url_for('index.register') }}" method="post" class="needs-validation" novalidate>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
                 <div class="mb-3">
@@ -165,9 +166,6 @@
     <p>Powered by <a href="https://powerdnsadmin.org" target="_blank">PowerDNS-Admin</a></p>
 </div>
 {% assets "js_login" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
-{% assets "js_validation" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
 <script>

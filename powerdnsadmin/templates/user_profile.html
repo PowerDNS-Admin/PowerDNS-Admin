@@ -1,24 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "user_profile" %}
+{% set page_title = 'Edit Profile' %}
 {% block title %}<title>Edit Profile - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Edit Profile</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Edit Profile</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -34,20 +18,20 @@
                             <div class="nav-tabs-custom mb-2">
                                 <ul class="nav nav-tabs" role="tablist">
                                     <li class="nav-item">
-                                        <a class="nav-link {{ 'active' if not error_messages else '' }}" href="#tabs-personal" data-toggle="tab">
+                                        <a class="nav-link {{ 'active' if not error_messages else '' }}" href="#tabs-personal" data-bs-toggle="tab">
                                             Personal Info
                                         </a>
                                     </li>
                                     {% if session['authentication_type'] == 'LOCAL' %}
                                         <li class="nav-item">
-                                            <a class="nav-link {{ 'active' if 'password' in error_messages else '' }}" href="#tabs-password" data-toggle="tab">
+                                            <a class="nav-link {{ 'active' if 'password' in error_messages else '' }}" href="#tabs-password" data-bs-toggle="tab">
                                                 Change Password
                                             </a>
                                         </li>
                                     {% endif %}
                                     {% if session['authentication_type'] in ['LOCAL', 'LDAP'] %}
                                         <li class="nav-item">
-                                            <a class="nav-link" href="#tabs-authentication" data-toggle="tab">
+                                            <a class="nav-link" href="#tabs-authentication" data-bs-toggle="tab">
                                                 Authentication
                                             </a>
                                         </li>
@@ -61,19 +45,19 @@
                                         id="tabs-personal">
                                     <form role="form" method="post" action="{{ user_profile }}">
                                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                        <div class="form-group">
+                                        <div class="mb-3">
                                             <label for="firstname">First Name</label>
                                             <input type="text" class="form-control" name="firstname"
                                                    id="firstname" placeholder="{{ current_user.firstname }}"
                                                    {% if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                         </div>
-                                        <div class="form-group">
+                                        <div class="mb-3">
                                             <label for="lastname">Last Name</label>
                                             <input type="text" class="form-control" name="lastname"
                                                    id="lastname" placeholder="{{ current_user.lastname }}"
                                                    {% if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                         </div>
-                                        <div class="form-group">
+                                        <div class="mb-3">
                                             <label for="email">E-Mail</label> <input type="email"
                                                                                      class="form-control"
                                                                                      name="email" id="email"
@@ -81,7 +65,7 @@
                                                                                      {% if session['authentication_type'] != 'LOCAL' %}disabled{% endif %}>
                                         </div>
                                         {% if session['authentication_type'] == 'LOCAL' %}
-                                            <div class="form-group">
+                                            <div class="mb-3">
                                                 <button type="submit" class="btn btn-primary" title="Save Profile">
                                                     <i class="fa-solid fa-floppy-disk"></i>&nbsp;Save Profile
                                                 </button>
@@ -101,8 +85,8 @@
                                             <form action="{{ user_profile }}" method="post">
                                                 <input type="hidden" name="_csrf_token"
                                                        value="{{ csrf_token() }}">
-                                                <div class="form-group">
-                                                    <label for="password">New Password</label>
+                                                <div class="mb-3">
+                                                    <label for="newpassword">New Password</label>
                                                     <input type="password" class="form-control {{ 'is-invalid' if 'password' in error_messages else '' }}"
                                                            name="password"
                                                            id="newpassword">
@@ -113,12 +97,12 @@
                                                     </div>
                                                     {% endif %}
                                                 </div>
-                                                <div class="form-group">
+                                                <div class="mb-3">
                                                     <label for="rpassword">Re-type New Password</label>
                                                     <input type="password" class="form-control" name="rpassword"
                                                            id="rpassword">
                                                 </div>
-                                                <div class="form-group">
+                                                <div class="mb-3">
                                                     <button type="submit" class="btn btn-primary" title="Save Password">
                                                         <i class="fa-solid fa-floppy-disk"></i>&nbsp;Save Password
                                                     </button>
@@ -132,10 +116,10 @@
                                 <div class="tab-pane fade" id="tabs-authentication">
                                     <form action="{{ user_profile }}" method="post">
                                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                                        <div class="form-group">
-                                            <input type="checkbox" id="otp_toggle" class="otp_toggle"
+                                        <div class="form-check">
+                                            <input type="checkbox" id="otp_toggle" class="form-check-input otp_toggle"
                                                    {% if current_user.otp_secret %}checked{% endif %}>
-                                            <label for="otp_toggle">Enable Two Factor Authentication</label>
+                                            <label class="form-check-label" for="otp_toggle">Enable Two Factor Authentication</label>
                                             {% if current_user.otp_secret %}
                                                 <div id="token_information">
                                                     <p>
@@ -203,14 +187,17 @@
 {% block extrascripts %}
     <script>
 
-        // initialize pretty checkboxes
-        $('.otp_toggle').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            increaseArea: '20%'
-        });
+        var savedProfileTab = sessionStorage.getItem('powerdnsAdminProfileTab');
+        if (savedProfileTab) {
+            sessionStorage.removeItem('powerdnsAdminProfileTab');
+            var savedProfileTabTrigger = document.querySelector('[data-bs-toggle="tab"][href="' + savedProfileTab + '"]');
+            if (savedProfileTabTrigger) {
+                bootstrap.Tab.getOrCreateInstance(savedProfileTabTrigger).show();
+            }
+        }
 
         // handle checkbox toggling
-        $('.otp_toggle').on('ifToggled', function (event) {
+        $('.otp_toggle').on('change', function () {
             var enable_otp = $(this).prop('checked');
             var postdata = {
                 'action': 'enable_otp',
@@ -220,8 +207,8 @@
                 '_csrf_token': '{{ csrf_token() }}'
             };
             applyChanges(postdata, $SCRIPT_ROOT + '/user/profile', false, true, function () {
+                sessionStorage.setItem('powerdnsAdminProfileTab', '#tabs-authentication');
                 window.location.reload();
-                $('#tabs li:eq(2) a').tab('show');
             });
         });
     </script>

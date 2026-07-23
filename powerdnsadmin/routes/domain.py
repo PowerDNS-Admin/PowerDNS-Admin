@@ -771,9 +771,18 @@ def dnssec_disable(domain_name):
     domain = Domain()
     dnssec = domain.get_domain_dnssec(domain_name)
 
+    if dnssec.get('status') != 'ok':
+        return make_response(jsonify(dnssec), 502)
+
     for key in dnssec['dnssec']:
-        domain.delete_dnssec_key(domain_name, key['id'])
+        result = domain.delete_dnssec_key(domain_name, key['id'])
+        if result.get('status') != 'ok':
+            return make_response(jsonify(result), 502)
+    rectify = domain.set_domain_api_rectify(domain_name, False)
+    if rectify.get('status') != 'ok':
+        return make_response(jsonify(rectify), 502)
     domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    domain_object.dnssec = 0
     history = History(
         msg='DNSSEC was disabled for zone ' + domain_name ,
         created_by=current_user.username,

@@ -8,6 +8,7 @@ services:
       dockerfile: docker-common/Dockerfile.app
       args:
         DOCKER_SCENARIO: docker-browser-test
+        INSTALL_TEST_DEPENDENCIES: "1"
     networks:
       - browser-test
     env_file:

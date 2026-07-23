@@ -1,33 +1,15 @@
 {% extends "base.html" %}
 {% set active_page = "new_domain" %}
+{% set page_title = 'Create Zone' %}
 {% block title %}<title>Create Zone - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        Create Zone
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">New Zone</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12 col-sm-6 col-lg-4">
-                    <form role="form" method="post" action="{{ url_for('domain.add') }}">
+                    <form role="form" method="post" action="{{ url_for('domain.add') }}" class="needs-validation" novalidate>
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <div class="card card-outline card-primary shadow">
                             <div class="card-header">
@@ -35,96 +17,84 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="domain_name">Zone Name</label>
                                     <input type="text" class="form-control" name="domain_name" id="domain_name"
-                                           placeholder="Enter a valid zone name (required)">
+                                           placeholder="Enter a valid zone name (required)" required>
+                                    <div class="invalid-feedback">Please enter a valid zone name.</div>
                                 </div>
                                 {% if domain_override_toggle == True %}
-                                    <div class="form-group">
+                                    <div class="form-check mb-3">
                                         <input type="checkbox" id="domain_override" name="domain_override"
-                                               class="checkbox">
-                                        &nbsp;
-                                        <label for="domain_override">Zone Override Record</label>
+                                               class="form-check-input">
+                                        <label class="form-check-label" for="domain_override">Zone Override Record</label>
                                     </div>
                                 {% endif %}
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="selAccount">Account</label>
-                                    <select name="accountid" id="selAccount" class="form-control">
+                                    <select name="accountid" id="selAccount" class="form-select">
                                         <option value="0">- No Account -</option>
                                         {% for account in accounts %}
                                             <option value="{{ account.id }}">{{ account.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label>Zone Type</label>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type" id="radio_type_native" value="native"
-                                                   checked>
-                                            Native
-                                        </label>
+                                <fieldset class="mb-3">
+                                    <legend class="col-form-label pt-0">Zone Type</legend>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type" id="radio_type_native" value="native"
+                                               checked>
+                                        <label class="form-check-label" for="radio_type_native">Native</label>
                                     </div>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type" id="radio_type_primary"
-                                                   value="primary">
-                                            Primary
-                                        </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type" id="radio_type_primary"
+                                               value="primary">
+                                        <label class="form-check-label" for="radio_type_primary">Primary</label>
                                     </div>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type" id="radio_type_secondary"
-                                                   value="slave">
-                                            Secondary
-                                        </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type" id="radio_type_secondary"
+                                               value="slave">
+                                        <label class="form-check-label" for="radio_type_secondary">Secondary</label>
                                     </div>
-                                </div>
-                                <div class="form-group" style="display: none;" id="domain_master_address_div">
+                                </fieldset>
+                                <div class="mb-3" style="display: none;" id="domain_master_address_div">
+                                    <label class="form-label" for="domain_master_address">Primary Server Addresses</label>
                                     <input type="text" class="form-control" name="domain_master_address"
                                            id="domain_master_address"
                                            placeholder="Enter valid Primary Server IP addresses (separated by commas)">
                                 </div>
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="domain_template">Zone Template</label>
-                                    <select class="form-control" id="domain_template" name="domain_template">
+                                    <select class="form-select" id="domain_template" name="domain_template">
                                         <option value="0">No template</option>
                                         {% for template in templates %}
                                             <option value="{{ template.id }}">{{ template.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label>SOA-EDIT-API</label>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_default"
-                                                   value="DEFAULT" checked>
-                                            DEFAULT
-                                        </label>
+                                <fieldset class="mb-3">
+                                    <legend class="col-form-label pt-0">SOA-EDIT-API</legend>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type_soa_edit_api" id="radio_default"
+                                               value="DEFAULT" checked>
+                                        <label class="form-check-label" for="radio_default">DEFAULT</label>
                                     </div>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_increase"
-                                                   value="INCREASE">
-                                            INCREASE
-                                        </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type_soa_edit_api" id="radio_increase"
+                                               value="INCREASE">
+                                        <label class="form-check-label" for="radio_increase">INCREASE</label>
                                     </div>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_epoch"
-                                                   value="EPOCH">
-                                            EPOCH
-                                        </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type_soa_edit_api" id="radio_epoch"
+                                               value="EPOCH">
+                                        <label class="form-check-label" for="radio_epoch">EPOCH</label>
                                     </div>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="radio_type_soa_edit_api" id="radio_off"
-                                                   value="OFF"> OFF
-                                        </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="radio_type_soa_edit_api" id="radio_off"
+                                               value="OFF">
+                                        <label class="form-check-label" for="radio_off">OFF</label>
                                     </div>
-                                </div>
+                                </fieldset>
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
@@ -132,7 +102,7 @@
                                         onclick="window.location.href='{{ url_for('dashboard.dashboard') }}'">
                                     <i class="fa-solid fa-window-close"></i>&nbsp;Cancel
                                 </button>
-                                <button type="submit" title="Create Zone" class="btn btn-primary float-right">
+                                <button type="submit" title="Create Zone" class="btn btn-primary float-end">
                                     <i class="fa-solid fa-save"></i>&nbsp;Create Zone
                                 </button>
                             </div>
@@ -244,28 +214,27 @@
                 var modal = $("#modal_warning");
                 var info = "{{ domain_override_message }}";
                 modal.find('.modal-body p').text(info);
-                modal.modal('show');
+                showModal(modal);
             });
         {% endif %}
     </script>
 
-    <div class="modal fade" id="modal_warning">
+    <div class="modal fade" id="modal_warning" tabindex="-1"
+         aria-labelledby="modal_warning_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content modal-sm">
                 <div class="modal-header alert-danger">
-                    <h4 class="modal-title">
+                    <h4 class="modal-title" id="modal_warning_label">
                         WARNING
                     </h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
-                            id="button_close_warn_modal">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            id="button_close_warn_modal"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary center-block" data-dismiss="modal"
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
                             id="button_confirm_warn_modal">
                         CLOSE
                     </button>

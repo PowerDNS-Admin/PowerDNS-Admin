@@ -7,26 +7,10 @@
     {% set action_label = 'Edit' %}
     {% set form_action = url_for('admin.edit_user', user_username=user.username) %}
 {% endif %}
+{% set page_title = action_label ~ ' User' %}
+{% set breadcrumb_items = [{'label': 'Users', 'url': url_for('admin.manage_user')}] %}
 {% block title %}<title>{{ action_label }} User - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">{{ action_label }} User</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_user') }}">Users</a></li>
-                        <li class="breadcrumb-item active">{{ action_label }} User</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -44,50 +28,43 @@
                             <div class="card-body">
                                 {% if error %}
                                     <div class="alert alert-danger alert-dismissible">
-                                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
-                                            &times;
-                                        </button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
                                         <h4><i class="fa-solid fa-ban"></i> Error!</h4>
                                         {{ error }}
                                     </div>
-                                    <span class="help-block">{{ error }}</span>
                                 {% endif %}
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="firstname">First Name</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="firstname">First Name</label>
                                     <input type="text" class="form-control" placeholder="First Name" name="firstname"
                                            id="firstname"
                                            {% if user %}value="{{ user.firstname }}" {% endif %}>
-                                    <span class="form-control-feedback"></span>
                                 </div>
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="lastname">Last Name</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="lastname">Last Name</label>
                                     <input type="text" class="form-control" placeholder="Last name" name="lastname"
                                            id="lastname"
                                            {% if user %}value="{{ user.lastname }}" {% endif %}>
-                                    <span class="form-control-feedback"></span>
                                 </div>
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="email">E-mail address</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="email">E-mail address</label>
                                     <input type="email" class="form-control" placeholder="Email" name="email" id="email"
                                            {% if user %}value="{{ user.email }}" {% endif %}>
-                                    <span class="form-control-feedback"></span>
                                 </div>
-                                <div class="form-group has-feedback">
-                                    <label class="control-label" for="username">Username</label>
+                                <div class="mb-3">
+                                    <label class="form-label" for="username">Username</label>
                                     <input type="text" class="form-control" placeholder="Username" name="username"
                                            id="username"
                                            {% if user %}value="{{ user.username }}" {% endif %}
                                            {% if not create %}disabled{% endif %}>
-                                    <span class="form-control-feedback"></span>
                                 </div>
-                                <div class="form-group has-feedback {% if blank_password %}has-error{% endif %}">
-                                    <label class="control-label" for="password">Password</label>
-                                    <input type="password" class="form-control"
+                                <div class="mb-3">
+                                    <label class="form-label" for="password">Password</label>
+                                    <input type="password" class="form-control {% if blank_password %}is-invalid{% endif %}"
                                            placeholder="Password {% if create %}(Required){% else %}(Leave blank to keep unchanged){% endif %}"
                                            name="password" id="password">
-                                    <span class="form-control-feedback"></span>
                                     {% if blank_password %}
-                                        <span class="help-block">The password cannot be blank.</span>
+                                        <div class="invalid-feedback">The password cannot be blank.</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -173,29 +150,28 @@
                 }
                 applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', false, true);
             })
-            modal.modal('show');
+            showModal(modal);
         });
     </script>
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade modal-warning" id="modal_otp_disable">
+    <div class="modal fade" id="modal_otp_disable" tabindex="-1"
+         aria-labelledby="modal_otp_disable_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_otp_disable_label">Confirmation</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
-                    <button type="button" class="btn btn-danger float-right" id="button_otp_disable_confirm">
+                    <button type="button" class="btn btn-danger float-end" id="button_otp_disable_confirm">
                         Disable Two Factor Authentication
                     </button>
                 </div>

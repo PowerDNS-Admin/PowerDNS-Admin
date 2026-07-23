@@ -1,25 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "dashboard" %}
+{% set page_title = 'Dashboard' %}
 {% block title %}<title>Dashboard - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="app-content-header">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-sm-6">
-                    <h1 class="mb-0">
-                        Dashboard
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb justify-content-sm-end mb-0">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -37,7 +20,11 @@
                                     </button>
                                 {% endif %}
                             </h3>
-                            <div class="card-tools">
+                            <div class="card-tools d-flex align-items-center gap-2">
+                                <a class="btn btn-sm btn-outline-primary no-prompt"
+                                   href="{{ url_for('dashboard.dashboard_v2') }}">
+                                    Preview dashboard v2
+                                </a>
                                 <div class="nav-tabs-custom">
                                     <ul class="nav nav-tabs card-header-tabs" id="custom-content-below-tab"
                                         role="tablist">

@@ -1,29 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "admin_global_search" %}
+{% set page_title = 'Global Search' %}
 {% block title %}<title>Global Search - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-6">
-                    <h1 class="m-0 text-dark">Global Search</h1>
-                </div>
-                <!-- /.col -->
-                <div class="col-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Global Search</li>
-                    </ol>
-                </div>
-                <!-- /.col -->
-            </div>
-            <!-- /.row -->
-        </div>
-        <!-- /.container-fluid -->
-    </div>
-    <!-- /.content-header -->
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -42,21 +21,15 @@
                                         API.</p>
                                 </div>
                                 <!-- /.callout -->
-                                <div class="form-group">
+                                <div class="mb-3">
+                                    <label class="visually-hidden" for="txtQuery">Search Query</label>
                                     <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <label id="txtQuery" class="input-group-text">
-                                                Search Query
-                                            </label>
-                                        </div>
-                                            <input type="text" id="txtQuery" name="q" class="form-control"
-                                                   value="{{ query }}"
-                                                    placeholder="Enter search query...">
-                                            <div class="input-group-append">
-                                            <button type="submit" class="btn btn-success" title="Execute Query">
-                                                <i class="fa-solid fa-search"></i>
-                                            </button>
-                                        </div>
+                                        <span class="input-group-text">Search Query</span>
+                                        <input type="text" id="txtQuery" name="q" class="form-control"
+                                               value="{{ query }}" placeholder="Enter search query...">
+                                        <button type="submit" class="btn btn-success" title="Execute Query">
+                                            <i class="fa-solid fa-search"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <!-- /.form-group -->

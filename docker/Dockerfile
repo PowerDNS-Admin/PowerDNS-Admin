@@ -48,14 +48,12 @@ RUN mv /build/powerdnsadmin/static /tmp/static && \
     cp -r /tmp/static/assets /build/powerdnsadmin/static && \
     cp -r /tmp/static/img /build/powerdnsadmin/static && \
     find /tmp/static/node_modules -name 'webfonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
-    find /tmp/static/node_modules -name 'fonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
-    find /tmp/static/node_modules/icheck/skins/square -name '*.png' -exec cp {} /build/powerdnsadmin/static/generated \;
+    find /tmp/static/node_modules -name 'fonts' -exec cp -r {} /build/powerdnsadmin/static \;
 
 RUN { \
       echo "from flask_assets import Environment"; \
       echo "assets = Environment()"; \
       echo "assets.register('js_login', 'generated/login.js')"; \
-      echo "assets.register('js_validation', 'generated/validation.js')"; \
       echo "assets.register('css_login', 'generated/login.css')"; \
       echo "assets.register('js_main', 'generated/main.js')"; \
       echo "assets.register('css_main', 'generated/main.css')"; \

@@ -41,13 +41,14 @@ table td {
     }
 }
 
-.ms-container {
-    background-size: 20px 20px;
-    background-position: center;
+.pda-dual-list-options {
+    min-height: 14rem;
 }
 
-.search-input {
-    width: 100%;
+@media (max-width: 767.98px) {
+    .pda-dual-list-controls {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
 }
 
 .pda-user-panel {
@@ -73,6 +74,54 @@ table td {
 
 .pda-user-info a {
     font-size: 0.8em;
+}
+
+.pda-unsaved-banner {
+    z-index: 1025;
+    display: grid;
+    grid-template-rows: 0fr;
+    padding-inline: 0.5rem;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.75rem);
+    transition: grid-template-rows 180ms ease,
+                opacity 180ms ease,
+                transform 180ms ease,
+                visibility 0s linear 180ms;
+}
+
+.pda-unsaved-banner.is-floating {
+    position: fixed;
+    top: var(--pda-banner-top);
+    left: var(--pda-banner-left);
+    width: var(--pda-banner-width);
+}
+
+.pda-unsaved-banner.is-visible {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
+}
+
+.pda-unsaved-banner-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.pda-unsaved-banner .alert {
+    margin-block: 0.75rem;
+    border-color: var(--bs-warning-border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pda-unsaved-banner {
+        transition: none;
+    }
 }
 
 /* Global Styles */
