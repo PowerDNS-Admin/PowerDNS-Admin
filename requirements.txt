@@ -1,4 +1,4 @@
-Authlib==1.6.12
+Authlib==1.7.2
 Flask-Assets==2.1.0
 Flask-Login==0.6.3
 Flask-Mail==0.10.0
