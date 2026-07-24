@@ -44,5 +44,9 @@ venv*
 .pytest_cache
 playwright-report
 test-results/browser
+test-results/megalinter
+.megalinter-compiled
+megalinter-reports
+mega-linter.log
 .DS_Store
 yarn-error.log

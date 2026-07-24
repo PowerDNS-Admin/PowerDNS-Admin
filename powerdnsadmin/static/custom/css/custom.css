@@ -4,7 +4,8 @@
 }
 
 table td {
-    font-family:'Roboto Mono' !important;
+    font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono",
+                 "Liberation Mono", Menlo, Consolas, monospace !important;
 }
 
 /* Fit the default laptop viewport. */

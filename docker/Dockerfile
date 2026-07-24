@@ -1,4 +1,10 @@
-FROM alpine:3.17 AS builder
+ARG PYTHON_FULL_VERSION=3.14.5
+ARG PYTHON_PATCH_LEVEL=5
+
+FROM alpine:3.24 AS builder
+
+ARG PYTHON_FULL_VERSION
+ARG PYTHON_PATCH_LEVEL
 
 ARG BUILD_DEPENDENCIES="build-base \
     libffi-dev \
@@ -9,20 +15,21 @@ ARG BUILD_DEPENDENCIES="build-base \
     python3-dev \
     xmlsec-dev \
     npm \
-    yarn \
     cargo"
 
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
-    FLASK_APP=/build/powerdnsadmin/__init__.py
+    FLASK_APP=/build/powerdnsadmin/__init__.py \
+    PATH=/opt/venv/bin:${PATH}
 
-# Get dependencies
-# py3-pip should not belong to BUILD_DEPENDENCIES. Otherwise, when we remove
-# them with "apk del" at the end of build stage, the python requests module
-# will be removed as well - (Tested with alpine:3.12 and python 3.8.5).
 RUN apk add --no-cache ${BUILD_DEPENDENCIES} && \
-    apk add --no-cache py3-pip
+    apk add --no-cache py3-pip && \
+    npm install --global corepack@0.35.0 && \
+    corepack enable && \
+    python3 -m venv /opt/venv && \
+    test "$(python3 -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" && \
+    test "$(python3 -c 'import sys; print(sys.version_info.micro)')" = "${PYTHON_PATCH_LEVEL}"
 
 WORKDIR /build
 
@@ -37,18 +44,20 @@ RUN pip install --upgrade pip && \
 COPY . /build
 
 # Prepare assets
-RUN yarn install --pure-lockfile --production && \
-    yarn cache clean && \
-    sed -i -r -e "s|'rcssmin',\s?'cssrewrite'|'rcssmin'|g" /build/powerdnsadmin/assets.py && \
-    flask assets build
+RUN YARN_NODE_LINKER=node-modules yarn install --immutable --inline-builds && \
+    rm -rf /build/powerdnsadmin/static/node_modules && \
+    ln -s ../../node_modules /build/powerdnsadmin/static/node_modules && \
+    flask assets build && \
+    rm /build/powerdnsadmin/static/node_modules
 
 RUN mv /build/powerdnsadmin/static /tmp/static && \
     mkdir /build/powerdnsadmin/static && \
     cp -r /tmp/static/generated /build/powerdnsadmin/static && \
     cp -r /tmp/static/assets /build/powerdnsadmin/static && \
     cp -r /tmp/static/img /build/powerdnsadmin/static && \
-    find /tmp/static/node_modules -name 'webfonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
-    find /tmp/static/node_modules -name 'fonts' -exec cp -r {} /build/powerdnsadmin/static \;
+    mkdir -p /build/powerdnsadmin/static/node_modules/@fortawesome/fontawesome-free && \
+    cp -a /build/node_modules/@fortawesome/fontawesome-free/webfonts \
+        /build/powerdnsadmin/static/node_modules/@fortawesome/fontawesome-free/
 
 RUN { \
       echo "from flask_assets import Environment"; \
@@ -66,9 +75,16 @@ RUN mkdir -p /app && \
     cp -r /build/configs/docker_config.py /app/configs
 
 # Build image
-FROM alpine:3.17
+FROM alpine:3.24
+
+ARG PYTHON_FULL_VERSION
+ARG PYTHON_PATCH_LEVEL
+
+LABEL org.powerdnsadmin.image.python.version="${PYTHON_FULL_VERSION}" \
+      org.powerdnsadmin.image.python.patch-level="${PYTHON_PATCH_LEVEL}"
 
 ENV FLASK_APP=/app/powerdnsadmin/__init__.py \
+    PATH=/opt/venv/bin:${PATH} \
     USER=pda
 
 RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-pyldap py3-flask py3-psycopg2 xmlsec tzdata libcap && \
@@ -77,10 +93,11 @@ RUN apk add --no-cache mariadb-connector-c postgresql-client py3-gunicorn py3-py
     mkdir /data && \
     chown ${USER}:${USER} /data && \
     setcap cap_net_bind_service=+ep $(readlink -f /usr/bin/python3) && \
-    apk del libcap
+    apk del libcap && \
+    test "$(python3 -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" && \
+    test "$(python3 -c 'import sys; print(sys.version_info.micro)')" = "${PYTHON_PATCH_LEVEL}"
 
-COPY --from=builder /usr/bin/flask /usr/bin/
-COPY --from=builder /usr/lib/python3.10/site-packages /usr/lib/python3.10/site-packages/
+COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder --chown=root:${USER} /app /app/
 COPY ./docker/entrypoint.sh /usr/bin/
 

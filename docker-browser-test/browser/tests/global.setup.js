@@ -1,4 +1,4 @@
-const { test: setup, expect } = require('@playwright/test');
+const { test: setup, expect } = require('../console-audit');
 
 const authFile = './test-results/auth.json';
 const adminUsername = process.env.BROWSER_TEST_USERNAME || 'browser-admin';
@@ -69,7 +69,7 @@ setup('verify configured deployment and create the browser-test zone', async ({ 
   await page.getByRole('textbox', { name: 'Username' }).fill(adminUsername);
   await page.locator('input[name="password"]').fill(adminPassword);
   await Promise.all([
-    page.waitForURL(/\/dashboard\//),
+    page.waitForURL(/\/dashboard\//, { waitUntil: 'networkidle' }),
     page.getByRole('button', { name: 'Sign In' }).click(),
   ]);
 
@@ -78,7 +78,7 @@ setup('verify configured deployment and create the browser-test zone', async ({ 
     await page.goto('/domain/add');
     await page.locator('#domain_name').fill('browser-test.example');
     await Promise.all([
-      page.waitForURL(/\/dashboard\//),
+      page.waitForURL(/\/dashboard\//, { waitUntil: 'networkidle' }),
       page.getByRole('button', { name: 'Create Zone' }).click(),
     ]);
   }
