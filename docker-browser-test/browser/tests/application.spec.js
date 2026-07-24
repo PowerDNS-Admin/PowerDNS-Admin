@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../console-audit');
 
 const PDNS_API_URL = process.env.PDNS_API_URL || 'http://pdns-server:8081';
 const PDNS_API_KEY = process.env.PDNS_API_KEY || 'changeme';
@@ -35,12 +35,6 @@ function basicAuthHeaders(username, password) {
 function collectBrowserFailures(page) {
   const failures = [];
 
-  page.on('pageerror', (error) => failures.push(`pageerror: ${error.message}`));
-  page.on('console', (message) => {
-    if (message.type() === 'error') {
-      failures.push(`console: ${message.text()}`);
-    }
-  });
   page.on('requestfailed', (request) => {
     const type = request.resourceType();
     if (['document', 'stylesheet', 'script', 'xhr', 'fetch'].includes(type)) {
@@ -140,6 +134,66 @@ async function assertApiRole(request, username, roleName, headers) {
   const user = await getApiUser(request, username, headers);
   expect(user.role.name).toBe(roleName);
 }
+
+test('generated CSS avoids browser parser diagnostics', async ({ page }, testInfo) => {
+  await page.goto('/dashboard/', { waitUntil: 'networkidle' });
+  const stylesheetUrl = await page.locator(
+    'link[rel="stylesheet"][href*="/generated/main.css"]',
+  ).getAttribute('href');
+  expect(stylesheetUrl).not.toBeNull();
+
+  const response = await page.request.get(stylesheetUrl);
+  expect(response.ok()).toBeTruthy();
+  const css = await response.text();
+  const diagnostics = [];
+
+  const charsetOffsets = [...css.matchAll(/@charset\b/gi)]
+    .map((match) => match.index)
+    .filter((offset) => offset !== 0);
+  if (charsetOffsets.length > 0) {
+    diagnostics.push(
+      `ruleset ignored: ${charsetOffsets.length} @charset rule(s) occur after the start of main.css`,
+    );
+  }
+
+  if (testInfo.project.name.startsWith('firefox-')) {
+    const firefoxChecks = [
+      {
+        pattern: /-webkit-text-size-adjust\s*:/g,
+        message: 'invalid -webkit-text-size-adjust declaration',
+      },
+      {
+        pattern: /::?-moz-focus-inner\b/g,
+        message: 'unsupported -moz-focus-inner selector',
+      },
+      {
+        pattern: /::?-moz-focus-outer\b/g,
+        message: 'unsupported -moz-focus-outer selector',
+      },
+      {
+        pattern: /prefers-contrast\s*:\s*high/g,
+        message: 'invalid prefers-contrast media feature value "high"',
+      },
+      {
+        pattern: /::-webkit-slider-thumb:active\b/g,
+        message: 'unsupported -webkit-slider-thumb:active selector',
+      },
+    ];
+
+    for (const check of firefoxChecks) {
+      const count = [...css.matchAll(check.pattern)].length;
+      if (count > 0) {
+        diagnostics.push(`${check.message} (${count} occurrence(s))`);
+      }
+    }
+  }
+
+  await page.evaluate((messages) => {
+    for (const message of messages) {
+      console.warn(`stylesheet parser audit: ${message}`);
+    }
+  }, diagnostics);
+});
 
 test('authenticated pages render without browser or layout failures', async ({ page }, testInfo) => {
   const failures = collectBrowserFailures(page);
@@ -270,6 +324,7 @@ test('creates and submits project-specific core DNS records', async ({ page, req
 
 test('operator cannot promote users or operators to Administrator', async ({
   browser,
+  consoleAudit,
   playwright,
 }, testInfo) => {
   test.setTimeout(90_000);
@@ -283,6 +338,11 @@ test('operator cannot promote users or operators to Administrator', async ({
   });
   await operatorContext.clearCookies();
   const page = await operatorContext.newPage();
+  consoleAudit.monitorPage(page);
+  consoleAudit.expectMessage(
+    'Failed to load resource: the server responded with a status of 400 (BAD REQUEST)',
+    { type: 'error' },
+  );
   const failures = collectBrowserFailures(page);
   const operator = ROLE_SECURITY_USERS.operator;
   const operatorHeaders = basicAuthHeaders(operator.username, operator.password);
@@ -326,7 +386,7 @@ test('operator cannot promote users or operators to Administrator', async ({
   await page.getByRole('textbox', { name: 'Username' }).fill(operator.username);
   await page.locator('input[name="password"]').fill(operator.password);
   await Promise.all([
-    page.waitForURL(/\/dashboard\//),
+    page.waitForURL(/\/dashboard\//, { waitUntil: 'networkidle' }),
     page.getByRole('button', { name: 'Sign In' }).click(),
   ]);
 
@@ -380,12 +440,5 @@ test('operator cannot promote users or operators to Administrator', async ({
 
   await operatorApi.dispose();
   await operatorContext.close();
-  const expectedBadRequests = failures.filter(
-    (failure) => failure
-      === 'console: Failed to load resource: the server responded with a status of 400 (BAD REQUEST)',
-  );
-  const unexpectedFailures = failures.filter(
-    (failure) => !expectedBadRequests.includes(failure),
-  );
-  expect(unexpectedFailures, unexpectedFailures.join('\n')).toEqual([]);
+  expect(failures, failures.join('\n')).toEqual([]);
 });

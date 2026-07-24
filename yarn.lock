@@ -5,10 +5,10 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@fortawesome/fontawesome-free@npm:6.3.0":
-  version: 6.3.0
-  resolution: "@fortawesome/fontawesome-free@npm:6.3.0"
-  checksum: 10c0/d8931f05bc94077b0248078564a6994f6705b7cafb958cf815202c41d459d5008f5556a3a339b6a443a506051ae27c3e383fb774e92b8bf54f918569210bb277
+"@fortawesome/fontawesome-free@npm:7.3.1":
+  version: 7.3.1
+  resolution: "@fortawesome/fontawesome-free@npm:7.3.1"
+  checksum: 10c0/85b70ea64e69b9635ff0b949871acaaf0e6c6fd41860b8a78a5067123a42dd71144f7f7feea7aee013a485166ee8bf8ee3aafb15146dc0f55512d07015adddee
   languageName: node
   linkType: hard
 
@@ -125,7 +125,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@fortawesome/fontawesome-free": "npm:6.3.0"
+    "@fortawesome/fontawesome-free": "npm:7.3.1"
     "@popperjs/core": "npm:2.11.8"
     admin-lte: "npm:4.1.0"
     bootstrap: "npm:5.3.8"

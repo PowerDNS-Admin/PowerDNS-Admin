@@ -47,8 +47,8 @@ services:
     # Chrome and Edge stable Linux packages are x86_64-only.
     platform: linux/amd64
     build:
-      context: ./docker-browser-test/browser
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker-browser-test/browser/Dockerfile
     init: true
     ipc: host
     networks:

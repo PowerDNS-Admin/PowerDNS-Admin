@@ -1,8 +1,14 @@
-FROM debian:trixie-slim AS builder
+ARG DEBIAN_VERSION=13.6
+ARG PYTHON_FULL_VERSION=3.13.5
+ARG PYTHON_PATCH_LEVEL=5
+
+FROM debian:${DEBIAN_VERSION}-slim AS builder
 LABEL maintainer="k@ndk.name"
 
 ARG DOCKER_SCENARIO
 ARG INSTALL_TEST_DEPENDENCIES=0
+ARG PYTHON_FULL_VERSION
+ARG PYTHON_PATCH_LEVEL
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
@@ -40,6 +46,8 @@ WORKDIR /app
 
 COPY ./requirements.txt ./requirements-dev.txt /app/
 RUN python3 -m venv /opt/venv \
+    && test "$(python3 -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" \
+    && test "$(python3 -c 'import sys; print(sys.version_info.micro)')" = "${PYTHON_PATCH_LEVEL}" \
     && pip install --no-cache-dir -r requirements.txt \
     && if [ "${INSTALL_TEST_DEPENDENCIES}" = "1" ]; then \
         pip install --no-cache-dir -r requirements-dev.txt; \
@@ -59,10 +67,17 @@ RUN yarnpkg install --immutable --inline-builds \
     && rm -rf /app/node_modules /app/.yarn/install-state.gz /root/.cache /root/.yarn
 
 
-FROM debian:trixie-slim AS runtime
+FROM debian:${DEBIAN_VERSION}-slim AS runtime
 LABEL maintainer="k@ndk.name"
 
+ARG DEBIAN_VERSION
 ARG DOCKER_SCENARIO
+ARG PYTHON_FULL_VERSION
+ARG PYTHON_PATCH_LEVEL
+
+LABEL org.powerdnsadmin.image.debian.version="${DEBIAN_VERSION}" \
+      org.powerdnsadmin.image.python.version="${PYTHON_FULL_VERSION}" \
+      org.powerdnsadmin.image.python.patch-level="${PYTHON_PATCH_LEVEL}"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
@@ -100,6 +115,8 @@ COPY ./docker-common/wait-for-pdns.sh /opt/wait-for-pdns.sh
 COPY ./${DOCKER_SCENARIO}/ /opt/scenario/
 
 RUN mkdir -p /data \
+    && test "$(python -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" \
+    && test "$(python -c 'import sys; print(sys.version_info.micro)')" = "${PYTHON_PATCH_LEVEL}" \
     && chmod u+x /opt/wait-for-pdns.sh /opt/scenario/*.sh
 
 ENTRYPOINT ["/opt/scenario/entrypoint.sh"]

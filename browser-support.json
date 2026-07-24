@@ -1,0 +1,30 @@
+{
+  "policy_version": 1,
+  "browsers": {
+    "chrome": {
+      "minimum_version": "150",
+      "test_channel": "stable",
+      "playwright_projects": [
+        "chrome-light",
+        "chrome-dark"
+      ]
+    },
+    "edge": {
+      "minimum_version": "150",
+      "test_channel": "stable",
+      "playwright_projects": [
+        "edge-light",
+        "edge-dark"
+      ]
+    },
+    "firefox": {
+      "minimum_version": "151",
+      "test_channel": "playwright",
+      "playwright_projects": [
+        "firefox-light",
+        "firefox-dark"
+      ]
+    }
+  },
+  "policy": "A browser is supported from the listed major version onward. Each listed browser is exercised in light and dark color schemes. Browser console warnings and errors are recorded for every Playwright test and fail the test unless explicitly documented as expected by the test harness or the test."
+}

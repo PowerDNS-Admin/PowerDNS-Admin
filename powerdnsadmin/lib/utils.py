@@ -189,7 +189,7 @@ def pdns_api_extended_uri(version):
     Check the pdns version
     """
     if StrictVersion(version) >= StrictVersion('4.0.0'):
-        return "/api/v1"
+        return "api/v1"
     else:
         return ""
 

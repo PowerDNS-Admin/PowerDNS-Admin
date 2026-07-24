@@ -30,6 +30,9 @@ module.exports = defineConfig({
   reporter: [
     ['line'],
     ['html', { outputFolder: './playwright-report', open: 'never' }],
+    ['./console-reporter.js', {
+      outputFile: './test-results/browser-console-diagnostics.json',
+    }],
   ],
   use: {
     baseURL,

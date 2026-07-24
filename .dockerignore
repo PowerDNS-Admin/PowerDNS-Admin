@@ -75,6 +75,9 @@ coverage.xml
 .hypothesis/
 playwright-report/
 test-results/
+.megalinter-compiled/
+megalinter-reports/
+mega-linter.log
 
 # Translations
 *.mo
