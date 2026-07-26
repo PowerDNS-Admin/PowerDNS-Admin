@@ -222,8 +222,23 @@
         table#tbl_records thead th:nth-child(2),
         table#tbl_records thead th:nth-child(3),
         table#tbl_records thead th:nth-child(4) { width: 100px; }
-        table#tbl_records thead th:nth-child(7) { width: 80px; }
+        table#tbl_records thead th:nth-child(7),
+        table#tbl_records tbody td:nth-child(7) {
+            width: 110px;
+            min-width: 110px;
+            max-width: 110px;
+        }
+        table#tbl_records thead th:nth-child(7) {
+            text-align: center;
+        }
         table#tbl_records tbody td { text-align: center; }
+        table#tbl_records tbody td:nth-child(7) {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.25rem;
+            white-space: nowrap;
+        }
         table#tbl_records tbody td:nth-child(0n+5),
         table#tbl_records tbody td:nth-child(0n+6) { text-align: left; word-break: break-all; }
     </style>

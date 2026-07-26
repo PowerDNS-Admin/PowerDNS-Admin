@@ -231,6 +231,40 @@ test('authenticated pages render without browser or layout failures', async ({ p
   expect(failures, failures.join('\n')).toEqual([]);
 });
 
+test('theme toggle switches between auto, light, and dark modes', async ({ page }) => {
+  await page.goto('/dashboard/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => window.localStorage.removeItem('lte-theme'));
+  await page.reload({ waitUntil: 'networkidle' });
+
+  const toggleButton = page.locator('[data-theme-toggle]');
+  const getExpectedTheme = async (theme) => {
+    if (theme === 'auto') {
+      return page.evaluate(() => (
+        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      ));
+    }
+    return theme;
+  };
+
+  for (const theme of ['auto', 'light', 'dark']) {
+    await toggleButton.click();
+    const option = page.locator(`[data-theme-option="${theme}"]`);
+    await expect(option).toBeVisible();
+    await option.click();
+
+    const expectedTheme = await getExpectedTheme(theme);
+    await expect(page.locator('html')).toHaveAttribute('data-bs-theme', expectedTheme);
+    await expect(option).toHaveAttribute('aria-pressed', 'true');
+
+    for (const optionTheme of ['auto', 'light', 'dark']) {
+      const state = await page.locator(`[data-theme-option="${optionTheme}"]`).getAttribute('aria-pressed');
+      expect(state).toBe(optionTheme === theme ? 'true' : 'false');
+    }
+
+    await expect.poll(async () => page.evaluate(() => window.localStorage.getItem('lte-theme'))).toBe(theme);
+  }
+});
+
 test('creates and submits project-specific core DNS records', async ({ page, request }, testInfo) => {
   test.setTimeout(90_000);
   const failures = collectBrowserFailures(page);
