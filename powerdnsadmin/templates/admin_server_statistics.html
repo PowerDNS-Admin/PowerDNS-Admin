@@ -52,13 +52,6 @@
 {% block extrascripts %}
     <script>
         // Initialize DataTables
-        $("#tbl_statistics").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false
-        });
+        initDataTable("#tbl_statistics");
     </script>
 {% endblock %}

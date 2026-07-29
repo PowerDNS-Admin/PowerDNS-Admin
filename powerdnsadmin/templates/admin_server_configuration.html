@@ -54,13 +54,6 @@
 {% block extrascripts %}
     <script>
         // Initialize DataTables
-        $("#tbl_configuration").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false
-        });
+        initDataTable("#tbl_configuration");
     </script>
 {% endblock %}

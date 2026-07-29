@@ -33,9 +33,11 @@
         Your QR code is:
         <div id="token_information">
             {% if qrcode_image == None %}
-                <p><img id="qrcode" src="{{ url_for('user.qrcode') }}"></p>
+                <p><img id="qrcode" src="{{ url_for('user.qrcode') }}"
+                        alt="QR code for two factor authentication setup"></p>
             {% else %}
-                <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{ qrcode_image }}"></p>
+                <p><img id="qrcode" src="data:image/svg+xml;utf8;base64, {{ qrcode_image }}"
+                        alt="QR code for two factor authentication setup"></p>
             {% endif %}
             <p>Your secret key is:</p>
             <div class="input-group mb-2">

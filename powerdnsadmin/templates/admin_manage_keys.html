@@ -79,13 +79,8 @@
 {% block extrascripts %}
     <script>
         // set up key data table
-        $("#tbl_keys").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
+        initDataTable("#tbl_keys", {
             "info": false,
-            "autoWidth": false,
             "lengthMenu": [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]

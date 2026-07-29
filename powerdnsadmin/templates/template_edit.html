@@ -95,13 +95,7 @@
         window.nNew = false;
 
         // Initialize DataTables
-        $("#tbl_records").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
+        initDataTable("#tbl_records", {
             {% if SETTING.get('default_record_table_size')|string in ['5','15','20'] %}
                 "lengthMenu": [[5, 15, 20, -1],
                     [5, 15, 20, "All"]],
