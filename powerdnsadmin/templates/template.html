@@ -116,13 +116,8 @@
 {% block extrascripts %}
     <script>
         // Initialize DataTables
-        $("#tbl_template_list").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": false,
-            "autoWidth": false
+        initDataTable("#tbl_template_list", {
+            "info": false
         });
 
         // handle delete button
