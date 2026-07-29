@@ -27,6 +27,21 @@ function formatUtcDateTimeLocal(value) {
         pad(date.getSeconds());
 }
 
+// Baseline options shared by every DataTable on the site. Page-specific
+// options (columnDefs, lengthMenu, ajax, etc.) are merged on top per table.
+var DATATABLE_DEFAULTS = {
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+    "info": true,
+    "autoWidth": false
+};
+
+function initDataTable(selector, options) {
+    return $(selector).DataTable($.extend(true, {}, DATATABLE_DEFAULTS, options || {}));
+}
+
 function initializeNativeValidation() {
     document.querySelectorAll('form.needs-validation').forEach(function (form) {
         form.addEventListener('submit', function (event) {

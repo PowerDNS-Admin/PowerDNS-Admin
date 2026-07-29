@@ -65,11 +65,10 @@
 <script>
   var table;
   $(document).ready(function () {
-    table = $('#tbl_history').DataTable({
+    table = initDataTable('#tbl_history', {
       "order": [
         [0, "desc"]
       ],
-      "searching": true,
       "columnDefs": [{
         "type": "time",
         "render": function (data, type, row) {
@@ -77,8 +76,6 @@
         },
         "targets": 0
       }],
-      "info": true,
-      "autoWidth": false,
       orderCellsTop: true,
       fixedHeader: true
     });

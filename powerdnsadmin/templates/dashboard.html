@@ -94,14 +94,10 @@
     <script>
         //SYBPATCH START//
         function setUpDomainList(id, url) {
-            $(id).DataTable({
-                "paging": true,
-                "lengthChange": true,
+            initDataTable(id, {
                 language: {
                     searchPlaceholder: "Use ^ and $ for start and end",
                 },
-                "searching": true,
-                "ordering": true,
                 "columnDefs": [
                     {"orderable": false, "targets": [-1]}
                 ],
@@ -109,7 +105,6 @@
                 "serverSide": true,
                 "ajax": url,
                 "info": false,
-                "autoWidth": false,
                 {% if SETTING.get('default_domain_table_size')|string in ['10','25','50','100'] %}
                     "lengthMenu": [[10, 25, 50, 100, -1],
                         [10, 25, 50, 100, "All"]],

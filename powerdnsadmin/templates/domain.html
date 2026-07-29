@@ -238,13 +238,7 @@
         window.nNew = false;
 
         // set up user data table
-        $("#tbl_records").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
+        initDataTable("#tbl_records", {
             {% if SETTING.get('default_record_table_size') | string in ['5','15','20'] %}
                 "lengthMenu": [[5, 15, 20, -1],
                     [5, 15, 20, "All"]],
@@ -296,13 +290,7 @@
         });
 
         {% if catalog_members is not none %}
-            $("#tbl_catalog_members").DataTable({
-                "paging": true,
-                "lengthChange": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
+            initDataTable("#tbl_catalog_members", {
                 {% if SETTING.get('default_domain_table_size') | string in ['10','25','50','100'] %}
                     "lengthMenu": [[10, 25, 50, 100, -1],
                         [10, 25, 50, 100, "All"]],

@@ -71,13 +71,9 @@
 {% block extrascripts %}
     <script>
         // set up settings table
-        $("#tbl_settings").DataTable({
+        initDataTable("#tbl_settings", {
             "paging": false,
-            "lengthChange": false,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false
+            "lengthChange": false
         });
         $(document.body).on('click', '.setting-toggle-button', function () {
             var setting = $(this).prop('id');
