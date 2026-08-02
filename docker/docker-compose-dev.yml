@@ -30,6 +30,8 @@ services:
         condition: service_healthy
       pdns-server:
         condition: service_started
+      terraform-pdns-seed:
+        condition: service_completed_successfully
 
   pdns-server:
     image: powerdns/pdns-auth-51:5.1.3
@@ -59,6 +61,29 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+
+  terraform-pdns-seed:
+    image: powerdns-admin-dev-terraform
+    build:
+      context: ./dev/terraform
+    networks:
+      - dev
+    environment:
+      PDNS_SERVER_URL: ${PDNS_SERVER_URL:-http://pdns-server:8081/api/v1}
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      TF_VAR_zone_count: ${TF_ZONE_COUNT:-2000}
+      TF_VAR_records_per_zone: ${TF_RECORDS_PER_ZONE:-2}
+      TF_VAR_zone_suffix: ${TF_ZONE_SUFFIX:-terraform.test.}
+      TF_VAR_record_ttl: ${TF_RECORD_TTL:-300}
+      TF_PARALLELISM: ${TF_PARALLELISM:-100}
+      TF_COMMAND: ${TF_COMMAND:-apply}
+      TF_DATA_DIR: /state/.terraform
+    volumes:
+      - powerdns-admin-dev-terraform:/state
+    depends_on:
+      pdns-server:
+        condition: service_started
+    restart: "no"
 
   mysql:
     image: mysql:8.4
@@ -105,3 +130,4 @@ networks:
 volumes:
   powerdns-admin-dev-mysql:
   powerdns-admin-dev-postgres:
+  powerdns-admin-dev-terraform:

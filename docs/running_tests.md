@@ -40,6 +40,7 @@ building the local application image:
 # WARNING: --volumes deletes both development database volumes and their data.
 docker compose -f docker-compose-dev.yml down --volumes
 docker pull powerdnsadmin/pda-legacy:v0.4.2
+docker compose -f docker-compose-dev.yml build terraform-pdns-seed
 PDA_IMAGE=powerdnsadmin/pda-legacy:v0.4.2 \
   docker compose -f docker-compose-dev.yml up -d --no-build
 ```
@@ -69,6 +70,52 @@ healthy, verify both the expected migration revisions in the log and the
 pre-upgrade data through the UI or API. Use `down` without `--volumes` between
 runs when the database must be retained. If an existing volume already contains
 data at the desired old schema revision, omit the destructive baseline reset.
+
+##### Seed a large PowerDNS dataset with Terraform
+
+The development scenario includes a one-shot Terraform service for load and
+migration testing. By default it manages 10,000 deterministic Native zones
+under `terraform.test.`, with 20 A-record RRsets in each zone. Its state is
+stored in the `powerdns-admin-dev-terraform` named volume, so subsequent runs
+converge the existing dataset instead of blindly adding duplicates.
+
+The normal development command builds and runs the seeder automatically. The
+PowerDNS-Admin service starts only after the Terraform apply succeeds:
+
+```console
+docker compose -f docker-compose-dev.yml up --build
+```
+
+The service accepts the PowerDNS API v1 URL and API key through
+`PDNS_SERVER_URL` and `PDNS_API_KEY`. The Compose defaults target the development
+PowerDNS service at `http://pdns-server:8081/api/v1` with the `changeme` key.
+The dataset and apply concurrency can also be tuned:
+
+```console
+PDNS_SERVER_URL=http://pdns-server:8081/api/v1 \
+PDNS_API_KEY=changeme \
+TF_ZONE_COUNT=10000 \
+TF_RECORDS_PER_ZONE=20 \
+TF_ZONE_SUFFIX=terraform.test. \
+TF_RECORD_TTL=300 \
+TF_PARALLELISM=50 \
+  docker compose -f docker-compose-dev.yml up --build
+```
+
+The default plan manages 210,000 Terraform resources and can take substantial
+time and memory to apply. Use smaller `TF_ZONE_COUNT` and
+`TF_RECORDS_PER_ZONE` values for a smoke test. Removing the Terraform state
+volume does not remove zones from PowerDNS; run `terraform destroy` through the
+same configuration before deleting state when the generated data must also be
+removed. Pass the same dataset settings used during apply when they differed
+from the defaults:
+
+```console
+TF_COMMAND=destroy \
+TF_ZONE_COUNT=10000 \
+TF_RECORDS_PER_ZONE=20 \
+  docker compose -f docker-compose-dev.yml run --rm terraform-pdns-seed
+```
 
 #### Python test suite
 
