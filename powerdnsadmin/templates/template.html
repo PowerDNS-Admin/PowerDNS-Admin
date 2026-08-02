@@ -107,9 +107,8 @@
 
 {% block head_styles %}
     <style>
-        /* Page Specific Overrides */
-        table.records tbody td:first-of-type,
-        table.records tbody td:nth-child(0n+2) { text-align: left; }
+        /* Page Specific Overrides: Description column also reads left-to-right */
+        table#tbl_template_list tbody td:nth-child(0n+2) { text-align: left; }
     </style>
 {% endblock %}
 

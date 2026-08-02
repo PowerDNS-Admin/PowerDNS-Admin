@@ -4,15 +4,15 @@ services:
   powerdns-admin:
     image: powerdns-admin-browser-test-app
     build:
-      context: .
-      dockerfile: docker-common/Dockerfile.app
+      context: ..
+      dockerfile: docker/common/Dockerfile.app
       args:
-        DOCKER_SCENARIO: docker-browser-test
+        DOCKER_SCENARIO: browser-test
         INSTALL_TEST_DEPENDENCIES: "1"
     networks:
       - browser-test
     env_file:
-      - ./docker-browser-test/env
+      - browser-test/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
       PDNS_HOST: pdns-server
@@ -32,12 +32,12 @@ services:
   pdns-server:
     image: powerdns-admin-browser-test-pdns
     build:
-      context: .
-      dockerfile: docker-common/Dockerfile.pdns
+      context: ..
+      dockerfile: docker/common/Dockerfile.pdns
     networks:
       - browser-test
     env_file:
-      - ./docker-browser-test/env
+      - browser-test/env
     environment:
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
       PDNS_RESET_DATABASE: "1"
@@ -47,8 +47,8 @@ services:
     # Chrome and Edge stable Linux packages are x86_64-only.
     platform: linux/amd64
     build:
-      context: .
-      dockerfile: docker-browser-test/browser/Dockerfile
+      context: ..
+      dockerfile: docker/browser-test/browser/Dockerfile
     init: true
     ipc: host
     networks:

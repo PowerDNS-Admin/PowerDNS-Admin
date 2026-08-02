@@ -4,15 +4,15 @@ services:
   python-tests:
     image: powerdns-admin-python-tests
     build:
-      context: .
-      dockerfile: docker-common/Dockerfile.app
+      context: ..
+      dockerfile: common/Dockerfile.app
       args:
-        DOCKER_SCENARIO: docker-test
+        DOCKER_SCENARIO: test
         INSTALL_TEST_DEPENDENCIES: "1"
     networks:
       - test
     env_file:
-      - ./docker-test/env
+      - test/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
@@ -24,12 +24,12 @@ services:
   pdns-server:
     image: powerdns-admin-python-tests-pdns
     build:
-      context: .
-      dockerfile: docker-common/Dockerfile.pdns
+      context: ..
+      dockerfile: common/Dockerfile.pdns
     networks:
       - test
     env_file:
-      - ./docker-test/env
+      - test/env
     environment:
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
       PDNS_RESET_DATABASE: "1"

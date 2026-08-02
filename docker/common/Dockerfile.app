@@ -111,8 +111,8 @@ WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app /app
-COPY ./docker-common/wait-for-pdns.sh /opt/wait-for-pdns.sh
-COPY ./${DOCKER_SCENARIO}/ /opt/scenario/
+COPY ./docker/common/wait-for-pdns.sh /opt/wait-for-pdns.sh
+COPY ./docker/${DOCKER_SCENARIO}/ /opt/scenario/
 
 RUN mkdir -p /data \
     && test "$(python -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" \

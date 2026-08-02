@@ -9,7 +9,7 @@ Docker images. No host `node_modules` directory is required or created.
 
 #### Development inspection
 
-The development scenario lives in `docker-dev/` and reuses the persistent
+The development scenario lives in `docker/dev/` and reuses the persistent
 application database volume from the former combined Compose project:
 
 ```console
@@ -25,7 +25,7 @@ docker compose -f docker-compose-dev.yml down
 
 #### Python test suite
 
-The Python-only scenario lives in `docker-test/`. It has no host ports or
+The Python-only scenario lives in `docker/test/`. It has no host ports or
 persistent application volume and starts PowerDNS from a clean schema:
 
 ```console
@@ -42,7 +42,7 @@ docker compose -f docker-compose-test.yml down
 
 #### Full browser test suite
 
-The full-stack scenario lives in `docker-browser-test/`:
+The full-stack scenario lives in `docker/browser-test/`:
 
 ```console
 docker compose -f docker-compose-browser-test.yml up \

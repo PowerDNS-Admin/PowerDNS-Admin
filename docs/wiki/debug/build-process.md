@@ -1,4 +1,10 @@
-This discribes how to debug the buildprocess 
+This discribes how to debug the buildprocess
+
+> **Note:** this describes the legacy Alpine-based `docker/legacy/Dockerfile`.
+> It is no longer used to build the published PowerDNS-Admin image; the
+> current production build uses `docker/common/Dockerfile.app` (see
+> `../../../docker/docker-compose-dev.yml`, `../../../docker/docker-compose-test.yml`, and
+> `.github/workflows/build-and-publish.yml`). Kept here for reference only.
 
 
 docker-compose.yml
@@ -12,7 +18,7 @@ services:
     restart: always
     build:
         context: git
-        dockerfile: docker/Dockerfile
+        dockerfile: docker/legacy/Dockerfile
     network_mode: "host"
     logging:
       driver: json-file
@@ -29,7 +35,7 @@ services:
       - CSRF_COOKIE_SECURE=False
 ```
 
-Create a git folder in the location of the `docker-compose.yml` and clone the repo into it
+Create a git folder in the location of the `../../../docker/docker-compose.yml` and clone the repo into it
 
 ```
 mkdir git
@@ -37,7 +43,7 @@ cd git
 git clone https://github.com/PowerDNS-Admin/PowerDNS-Admin.git .
 ```
 
-In case you are behind an SSL Filter like me, you can add the following to each stage of the `git/docker/Dockerfile`
+In case you are behind an SSL Filter like me, you can add the following to each stage of the `git/docker/legacy/Dockerfile`
 
 This installs the command `update-ca-certificates` from the alpine repo and adds an ssl cert to the trust chain, make sure you are getting the right version in case the base image version changes
 
