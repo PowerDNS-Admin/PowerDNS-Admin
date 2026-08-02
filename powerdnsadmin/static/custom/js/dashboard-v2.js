@@ -12,6 +12,10 @@
     var dnssecStatusContext = null;
     var dnssecStatusPollTimer = null;
     var switchingDnssecModal = false;
+    var initialTable = root.querySelector(
+        '.tab-pane.active [data-dashboard-v2-table]');
+    var initialLoadComplete = false;
+    var backgroundTablesStarted = false;
 
     function element(tagName, className, text) {
         var node = document.createElement(tagName);
@@ -60,33 +64,18 @@
         return link.outerHTML;
     }
 
-    function renderDnssec(data, type, row) {
+    function renderDnssec(data, type) {
         if (type !== 'display') {
             return data ? 1 : 0;
         }
 
-        if (!row.permissions.manageDnssec) {
-            var status = element(
-                'span', 'badge ' + (data ? 'text-bg-success' : 'text-bg-danger'));
-            status.appendChild(icon(data ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open'));
-            status.appendChild(document.createTextNode(data ? ' Enabled' : ' Disabled'));
-            return status.outerHTML;
-        }
-
-        var actionClass = data ? 'button_dnssec_status_v2' : 'button_dnssec_configure';
-        var button = element(
-            'button', 'btn badge ' + (data ? 'btn-success' : 'btn-danger') + ' ' + actionClass);
-        button.type = 'button';
-        button.id = row.name;
-        button.title = data ? 'Edit DNSSEC' : 'Enable DNSSEC';
-        button.dataset.domain = row.name;
-        if (data) {
-            button.dataset.statusUrl = row.urls.dnssecStatusV2;
-        } else {
-            button.dataset.enableUrl = row.urls.dnssecEnableV2;
-        }
-        button.appendChild(icon(data ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open'));
-        return button.outerHTML;
+        var pill = element(
+            'span',
+            'badge rounded-pill dashboard-dnssec-pill ' +
+                (data ? 'is-signed' : 'is-unsigned'));
+        pill.appendChild(element('span', 'dashboard-dnssec-dot'));
+        pill.appendChild(document.createTextNode(data ? ' Signed' : ' Unsigned'));
+        return pill.outerHTML;
     }
 
     function renderZoneType(data, type) {
@@ -108,7 +97,7 @@
     function renderPrimary(data, type) {
         var value = data;
         if (!value || value === '[]') {
-            value = 'N/A';
+            value = '—';
         } else {
             var matches = Array.from(String(value).matchAll(/'(.+?)'/g));
             if (matches.length) {
@@ -118,34 +107,53 @@
         return type === 'display' ? htmlText(value) : value;
     }
 
+    function renderOptionalText(data, type) {
+        var value = data || '—';
+        return type === 'display' ? htmlText(value) : value;
+    }
+
     function renderActions(data, type, row) {
         if (type !== 'display') {
             return '';
         }
 
-        var dropdown = element('div', 'dropdown');
-        var toggle = element('button', 'btn btn-primary dropdown-toggle');
-        var menuId = 'dropdownMenu-v2-' + row.id;
-        toggle.type = 'button';
-        toggle.id = menuId;
-        toggle.dataset.bsToggle = 'dropdown';
-        toggle.setAttribute('aria-haspopup', 'true');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.appendChild(icon('fa-solid fa-bars'));
-        dropdown.appendChild(toggle);
+        var wrapper = element(
+            'div', 'dashboard-v2-row-actions d-inline-flex align-items-center gap-1');
+
+        var editButton = element(
+            'button',
+            'btn btn-sm dashboard-v2-edit-button dashboard-v2-navigate');
+        editButton.type = 'button';
+        editButton.dataset.url = row.urls.records;
+        editButton.appendChild(document.createTextNode('Edit records'));
+        wrapper.appendChild(editButton);
 
         var menu = element('div', 'dropdown-menu');
-        menu.setAttribute('aria-labelledby', menuId);
-        appendMenuButton(menu, {
-            className: 'btn-success', icon: 'fa-solid fa-pencil',
-            label: 'Edit Records', url: row.urls.records
-        });
 
         if (row.permissions.manageZone) {
             appendMenuButton(menu, {
                 className: 'btn-danger', icon: 'fa-solid fa-cog',
                 label: 'Zone Settings', url: row.urls.settings
             });
+        }
+        if (row.permissions.manageDnssec) {
+            var dnssecButton = element(
+                'button',
+                'dropdown-item ' +
+                    (row.dnssec ? 'button_dnssec_status_v2' : 'button_dnssec_configure'));
+            dnssecButton.type = 'button';
+            dnssecButton.id = row.name;
+            dnssecButton.dataset.domain = row.name;
+            if (row.dnssec) {
+                dnssecButton.dataset.statusUrl = row.urls.dnssecStatusV2;
+            } else {
+                dnssecButton.dataset.enableUrl = row.urls.dnssecEnableV2;
+            }
+            dnssecButton.appendChild(icon(row.dnssec ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open'));
+            dnssecButton.appendChild(document.createTextNode(' Manage DNSSEC'));
+            menu.appendChild(dnssecButton);
+        }
+        if (row.permissions.manageZone) {
             appendMenuButton(menu, {
                 className: 'btn-success button_template', icon: 'fa-solid fa-clone',
                 label: 'Create Template', id: row.name
@@ -164,8 +172,26 @@
                 label: 'Remove Zone', url: row.urls.remove
             });
         }
-        dropdown.appendChild(menu);
-        return dropdown.outerHTML;
+
+        if (menu.childElementCount) {
+            var dropdown = element('div', 'dropdown dashboard-action-dropdown');
+            var toggle = element(
+                'button',
+                'btn btn-sm dropdown-toggle dashboard-v2-menu-toggle');
+            var menuId = 'dropdownMenu-v2-' + row.id;
+            toggle.type = 'button';
+            toggle.id = menuId;
+            toggle.dataset.bsToggle = 'dropdown';
+            toggle.setAttribute('aria-haspopup', 'true');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.appendChild(icon('fa-solid fa-ellipsis'));
+            dropdown.appendChild(toggle);
+            menu.setAttribute('aria-labelledby', menuId);
+            dropdown.appendChild(menu);
+            wrapper.appendChild(dropdown);
+        }
+
+        return wrapper.outerHTML;
     }
 
     function stateFor(table) {
@@ -202,6 +228,35 @@
         table.setAttribute('aria-busy', 'false');
     }
 
+    function compactRequestData(requestData, includeRefresh) {
+        var data = {
+            draw: requestData.draw,
+            start: requestData.start,
+            length: requestData.length,
+            'search[value]': requestData.search.value
+        };
+        requestData.order.forEach(function (order, index) {
+            data['order[' + index + '][column]'] = order.column;
+            data['order[' + index + '][dir]'] = order.dir;
+        });
+        if (includeRefresh) {
+            data.refresh = '1';
+        }
+        return data;
+    }
+
+    function initializeBackgroundTables() {
+        if (backgroundTablesStarted) {
+            return;
+        }
+        backgroundTablesStarted = true;
+        root.querySelectorAll('[data-dashboard-v2-table]').forEach(function (table) {
+            if (table !== initialTable) {
+                initializeTable(table);
+            }
+        });
+    }
+
     function initializeTable(table) {
         if (tables.has(table)) {
             return tables.get(table);
@@ -222,9 +277,32 @@
             searchDelay: 300,
             pageLength: Number(table.dataset.pageLength),
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+            dom: "<'dashboard-v2-table-toolbar d-flex flex-wrap align-items-center " +
+                "justify-content-between gap-3'<'dashboard-v2-filter'f>" +
+                "<'dashboard-v2-length'l>>" +
+                "<'dashboard-v2-table-scroll'tr>" +
+                "<'dashboard-v2-table-footer d-flex flex-wrap align-items-center " +
+                "justify-content-between gap-3'ip>",
             language: {
-                searchPlaceholder: 'Use ^ and $ for start and end',
+                search: '',
+                searchPlaceholder: 'Search zones — use ^ and $ for start and end',
+                lengthMenu: 'Rows _MENU_',
+                paginate: {previous: 'Prev', next: 'Next'},
                 processing: '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Updating results…'
+            },
+            infoCallback: function (settings, start, end, max, total) {
+                if (!total) {
+                    return 'No zones';
+                }
+                if (start === 1 && end === total) {
+                    return 'Showing ' + total + ' of ' + total + ' zones';
+                }
+                return 'Showing ' + start + '–' + end + ' of ' + total + ' zones';
+            },
+            initComplete: function () {
+                var wrapper = $(table).closest('.dataTables_wrapper');
+                wrapper.find('.dataTables_filter input').attr('aria-label', 'Search zones');
+                wrapper.find('.dataTables_length select').attr('aria-label', 'Rows per page');
             },
             columns: [
                 {data: 'name', render: renderName},
@@ -232,18 +310,15 @@
                 {data: 'type', render: renderZoneType},
                 {data: 'serial', render: renderSerial},
                 {data: 'primary', render: renderPrimary},
-                {data: 'account', render: $.fn.dataTable.render.text()},
+                {data: 'account', render: renderOptionalText},
                 {data: null, render: renderActions, orderable: false, searchable: false}
             ],
             ajax: function (requestData, callback) {
-                if (refreshPending) {
-                    requestData.refresh = '1';
-                }
                 $.ajax({
                     url: table.dataset.source,
                     method: 'GET',
                     dataType: 'json',
-                    data: requestData
+                    data: compactRequestData(requestData, refreshPending)
                 }).done(function (response) {
                     refreshPending = false;
                     callback(response);
@@ -256,6 +331,11 @@
                         data: []
                     });
                     showError(table, xhr);
+                }).always(function () {
+                    if (table === initialTable) {
+                        initialLoadComplete = true;
+                        initializeBackgroundTables();
+                    }
                 });
             }
         });
@@ -676,7 +756,7 @@
         loadDnssecStatus();
     }
 
-    root.addEventListener('click', function (event) {
+    document.addEventListener('click', function (event) {
         var retry = event.target.closest('.dashboard-table-retry');
         if (retry) {
             var table = retry.closest('.tab-pane').querySelector('[data-dashboard-v2-table]');
@@ -710,7 +790,10 @@
 
     document.getElementById('dashboard-v2-tabs').addEventListener('shown.bs.tab', function (event) {
         var pane = document.querySelector(event.target.dataset.bsTarget);
-        initializeTable(pane.querySelector('[data-dashboard-v2-table]'));
+        var table = pane.querySelector('[data-dashboard-v2-table]');
+        if (initialLoadComplete || table === initialTable) {
+            initializeTable(table).columns.adjust();
+        }
     });
 
     $(document.body).on('click.dashboardV2', '.refresh-bg-button', function () {
@@ -886,7 +969,7 @@
         });
     });
 
-    initializeTable(root.querySelector('.tab-pane.active [data-dashboard-v2-table]'));
+    initializeTable(initialTable);
     }
 
     if (document.readyState === 'loading') {

@@ -119,6 +119,10 @@ def test_session_warning_modal_is_bound_after_dom_is_ready():
 
 def test_dashboard_uses_bootstrap_5_tabs_and_aligned_breadcrumbs():
     template = Path('powerdnsadmin/templates/dashboard.html').read_text()
+    domain_row = Path(
+        'powerdnsadmin/templates/dashboard_domain.html').read_text()
+    custom_javascript = Path(
+        'powerdnsadmin/static/custom/js/custom.js').read_text()
     page_header = Path(
         'powerdnsadmin/templates/includes/page_header.html').read_text()
 
@@ -126,6 +130,9 @@ def test_dashboard_uses_bootstrap_5_tabs_and_aligned_breadcrumbs():
     assert 'data-toggle="pill"' not in template
     assert "{% set page_title = 'Dashboard' %}" in template
     assert 'breadcrumb justify-content-sm-end mb-0' in page_header
+    assert 'dropdown dashboard-action-dropdown' in domain_row
+    assert 'initializeDashboardDropdownPortals' in custom_javascript
+    assert 'document.body.appendChild(menu)' in custom_javascript
 
 
 def test_dashboard_v2_is_a_parallel_client_rendered_preview():
@@ -147,11 +154,24 @@ def test_dashboard_v2_is_a_parallel_client_rendered_preview():
     assert 'data-dashboard-v2-table' in template
     assert '<tbody></tbody>' in template
     assert '{% for domain in' not in template
+    assert 'dashboard-v2-card-header' in template
+    assert 'dashboard-v2-tabs' in template
+    assert 'Forward Zones' in template
+    assert 'Reverse Zones' in template
+    assert 'dashboard-v2-forward-option' in template
+    assert 'dashboard-v2-reverse-option' in template
+    assert '>IPv4<' in template.replace('\n', '').replace(' ', '')
+    assert '>IPv6<' in template.replace('\n', '').replace(' ', '')
+    assert 'dashboard-v2-table-toolbar' in template
+    assert 'dashboard-v2-table-footer' in template
+    assert 'td.dataTables_empty' in template
     assert "shown.bs.tab" in javascript
     assert 'serverSide: true' in javascript
     assert 'deferRender: true' in javascript
     assert 'document.createElement' in javascript
     assert '.innerHTML' not in javascript
+    assert "'dropdown dashboard-action-dropdown'" in javascript
+    assert "document.addEventListener('click'" in javascript
     assert 'id="modal_dnssec_enable_v2"' in template
     assert 'dnssec-enable-v2-keytype' in template
     assert 'dnssec-enable-v2-algorithm' in template
@@ -163,6 +183,18 @@ def test_dashboard_v2_is_a_parallel_client_rendered_preview():
     assert 'dnssec-rollover-v2-type' in template
     assert 'button_dnssec_configure' in javascript
     assert 'button_dnssec_status_v2' in javascript
+    assert 'dashboard-dnssec-pill' in javascript
+    assert "' Signed'" in javascript
+    assert "' Unsigned'" in javascript
+    assert "'Edit records'" in javascript
+    assert "' Manage DNSSEC'" in javascript
+    assert 'fa-solid fa-ellipsis' in javascript
+    assert "lengthMenu: 'Rows _MENU_'" in javascript
+    assert "paginate: {previous: 'Prev', next: 'Next'}" in javascript
+    assert 'renderOptionalText' in javascript
+    assert 'compactRequestData' in javascript
+    assert 'initializeBackgroundTables' in javascript
+    assert 'initialLoadComplete' in javascript
     assert 'loadDnssecStatus' in javascript
     assert 'openDnssecRolloverModal' in javascript
     assert 'undelegated' in javascript
