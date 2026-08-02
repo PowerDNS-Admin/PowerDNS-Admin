@@ -1,5 +1,8 @@
 import re
 
+import pyotp
+
+from powerdnsadmin.models.base import db
 from powerdnsadmin.models.user import User
 
 
@@ -24,6 +27,51 @@ def test_login_page_does_not_refresh_an_idle_session(
 
     assert login_page.status_code == 200
     assert b'http-equiv="refresh"' not in login_page.data.lower()
+
+
+def test_login_only_prompts_for_otp_when_user_has_totp_configured(
+        app, client, initial_data, test_admin_user):
+    login_page = client.get('/login')
+    assert b'name="otptoken"' not in login_page.data
+
+    # Production secrets are 16 characters (the width of User.otp_secret).
+    otp_secret = 'JBSWY3DPEHPK3PXP'
+    with app.app_context():
+        administrator = User.query.filter_by(username=test_admin_user).one()
+        administrator.otp_secret = otp_secret
+        db.session.commit()
+
+    try:
+        password_response = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(login_page),
+            },
+        )
+
+        assert password_response.status_code == 200
+        assert b'name="otptoken"' in password_response.data
+        assert b'name="password"' not in password_response.data
+
+        otp_response = client.post(
+            '/login',
+            data={
+                'otptoken': pyotp.TOTP(otp_secret).now(),
+                '_csrf_token': csrf_token(password_response),
+            },
+        )
+
+        assert otp_response.status_code == 302
+        assert otp_response.headers['Location'].endswith('/login')
+    finally:
+        with app.app_context():
+            administrator = User.query.filter_by(
+                username=test_admin_user).one()
+            administrator.otp_secret = ''
+            db.session.commit()
 
 
 def test_successful_login_rotates_session_and_remains_valid_for_dashboard_v2(

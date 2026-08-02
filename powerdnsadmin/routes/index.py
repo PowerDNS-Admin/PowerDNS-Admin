@@ -173,6 +173,38 @@ def login():
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard.dashboard'))
 
+    if request.args.get('restart'):
+        clear_pending_totp()
+
+    pending_totp_user_id = session.get('pending_totp_user_id')
+    if pending_totp_user_id is not None:
+        pending_totp_user = db.session.get(User, pending_totp_user_id)
+        if pending_totp_user is None or not pending_totp_user.otp_secret:
+            clear_pending_totp()
+            if request.method == 'POST':
+                return redirect(url_for('index.login'))
+        elif request.method == 'GET':
+            return render_template('login.html',
+                                   saml_enabled=SAML_ENABLED,
+                                   otp_required=True,
+                                   username=pending_totp_user.username)
+        else:
+            otp_token = request.form.get('otptoken', '')
+            auth_method = session.get('pending_totp_auth_method', 'LOCAL')
+            remember_me = session.get('pending_totp_remember', False)
+            if not otp_token.isdigit() or not pending_totp_user.verify_totp(otp_token):
+                signin_history(pending_totp_user.username, auth_method, False)
+                return render_template('login.html',
+                                       saml_enabled=SAML_ENABLED,
+                                       otp_required=True,
+                                       username=pending_totp_user.username,
+                                       error='Invalid credentials')
+
+            clear_pending_totp()
+            apply_autoprovisioning(pending_totp_user, auth_method)
+            return authenticate_user(pending_totp_user, auth_method,
+                                     remember_me)
+
     if 'google_token' in session:
         user_data = json.loads(google.get('userinfo').text)
         google_first_name = user_data['given_name']
@@ -512,7 +544,9 @@ def login():
                                    saml_enabled=SAML_ENABLED,
                                    error=e)
 
-        # check if user enabled OPT authentication
+        # Only prompt for OTP after the supplied credentials identify a user
+        # who has TOTP configured. This avoids showing an irrelevant OTP field
+        # to every user on the initial sign-in form.
         if user.otp_secret:
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
@@ -522,29 +556,47 @@ def login():
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
             else:
+                session['pending_totp_user_id'] = user.id
+                session['pending_totp_auth_method'] = auth_method
+                session['pending_totp_remember'] = remember_me
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
-                                       error='Token required')
+                                       otp_required=True,
+                                       username=user.username)
 
-        if Setting().get('autoprovisioning') and auth_method != 'LOCAL':
-            urn_value = Setting().get('urn_value')
-            Entitlements = user.read_entitlements(Setting().get('autoprovisioning_attribute'))
-            if len(Entitlements) == 0 and Setting().get('purge'):
-                user.set_role("User")
-                user.revoke_privilege(True)
-
-            elif len(Entitlements) != 0:
-                if checkForPDAEntries(Entitlements, urn_value):
-                    user.updateUser(Entitlements)
-                else:
-                    current_app.logger.warning(
-                        'Not a single powerdns-admin record was found, possibly a typo in the prefix')
-                    if Setting().get('purge'):
-                        user.set_role("User")
-                        user.revoke_privilege(True)
-                        current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.')
+        apply_autoprovisioning(user, auth_method)
 
         return authenticate_user(user, auth_method, remember_me)
+
+
+def clear_pending_totp():
+    session.pop('pending_totp_user_id', None)
+    session.pop('pending_totp_auth_method', None)
+    session.pop('pending_totp_remember', None)
+
+
+def apply_autoprovisioning(user, auth_method):
+    if not Setting().get('autoprovisioning') or auth_method == 'LOCAL':
+        return
+
+    urn_value = Setting().get('urn_value')
+    Entitlements = user.read_entitlements(
+        Setting().get('autoprovisioning_attribute'))
+    if len(Entitlements) == 0 and Setting().get('purge'):
+        user.set_role("User")
+        user.revoke_privilege(True)
+    elif len(Entitlements) != 0:
+        if checkForPDAEntries(Entitlements, urn_value):
+            user.updateUser(Entitlements)
+        else:
+            current_app.logger.warning(
+                'Not a single powerdns-admin record was found, possibly a typo in the prefix')
+            if Setting().get('purge'):
+                user.set_role("User")
+                user.revoke_privilege(True)
+                current_app.logger.warning(
+                    'Procceding to revoke every privilige from ' +
+                    user.username + '.')
 
 
 def checkForPDAEntries(Entitlements, urn_value):
