@@ -1,5 +1,6 @@
 import os
 import base64
+import time
 import traceback
 import bcrypt
 import pyotp
@@ -34,6 +35,7 @@ class User(db.Model):
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
+    otp_last_used = db.Column(db.BigInteger)
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates="users", lazy=True)
@@ -49,6 +51,7 @@ class User(db.Model):
                  role_id=None,
                  email=None,
                  otp_secret=None,
+                 otp_last_used=None,
                  confirmed=False,
                  reload_info=True):
         self.id = id
@@ -60,6 +63,7 @@ class User(db.Model):
         self.role_id = role_id
         self.email = email
         self.otp_secret = otp_secret
+        self.otp_last_used = otp_last_used
         self.confirmed = confirmed
 
         if reload_info:
@@ -74,6 +78,7 @@ class User(db.Model):
                 self.email = user_info.email
                 self.role_id = user_info.role_id
                 self.otp_secret = user_info.otp_secret
+                self.otp_last_used = user_info.otp_last_used
                 self.confirmed = user_info.confirmed
 
     def is_authenticated(self):
@@ -97,7 +102,29 @@ class User(db.Model):
 
     def verify_totp(self, token):
         totp = pyotp.TOTP(self.otp_secret)
-        return totp.verify(token, valid_window = 5)
+        current_timecode = int(time.time()) // totp.interval
+
+        matched_timecode = None
+        for offset in (0, -1, 1):
+            candidate_timecode = current_timecode + offset
+            candidate = totp.at(candidate_timecode * totp.interval)
+            if pyotp.utils.strings_equal(str(token), candidate):
+                matched_timecode = candidate_timecode
+                break
+
+        if self.id is None or matched_timecode is None:
+            return False
+
+        claimed = User.query.filter(
+            User.id == self.id,
+            db.or_(User.otp_last_used.is_(None),
+                   User.otp_last_used < matched_timecode),
+        ).update(
+            {User.otp_last_used: matched_timecode},
+            synchronize_session=False,
+        )
+        db.session.commit()
+        return claimed == 1
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
@@ -534,6 +561,7 @@ class User(db.Model):
 
         if enable_otp is not None:
             user.otp_secret = ""
+            user.otp_last_used = None
 
         if enable_otp == True:
             # generate the opt secret key
