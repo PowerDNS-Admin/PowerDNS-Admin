@@ -58,7 +58,7 @@ COPY . /app
 RUN yarnpkg install --immutable --inline-builds \
     && rm -rf /app/powerdnsadmin/static/node_modules \
     && ln -s ../../node_modules /app/powerdnsadmin/static/node_modules \
-    && flask assets build \
+    && SESSION_TYPE=filesystem flask assets build \
     # The generated Font Awesome CSS references these public font files.
     && rm /app/powerdnsadmin/static/node_modules \
     && mkdir -p /app/powerdnsadmin/static/node_modules/@fortawesome/fontawesome-free \

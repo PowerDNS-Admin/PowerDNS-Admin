@@ -14,9 +14,12 @@ class AppSettings(object):
         'salt': '$2b$12$yLUMTIfl21FKJQpTkRQXCu',
         'secret_key': 'e951e5a1f4b94151b360f47edf596dd2',
         'session_cookie_secure': False,
-        'session_type': 'sqlalchemy',
+        'session_type': os.getenv('SESSION_TYPE', 'sqlalchemy'),
         'sqlalchemy_track_modifications': True,
-        'sqlalchemy_database_uri': 'sqlite:///' + os.path.join(basedir, 'pdns.db'),
+        'sqlalchemy_database_uri': os.getenv(
+            'SQLALCHEMY_DATABASE_URI',
+            'mysql://powerdns_admin:changeme@mysql/powerdns_admin'
+        ),
         'sqlalchemy_engine_options': {},
 
         # General Settings

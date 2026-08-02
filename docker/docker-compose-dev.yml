@@ -2,7 +2,9 @@ name: powerdns-admin-dev
 
 services:
   powerdns-admin:
-    image: powerdns-admin-dev
+    # Override PDA_IMAGE to start an older release against the same database
+    # volume before recreating this service from the local build.
+    image: ${PDA_IMAGE:-powerdns-admin-dev}
     build:
       context: ..
       dockerfile: docker/common/Dockerfile.app
@@ -16,20 +18,21 @@ services:
       - dev/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
+      # Set this to postgresql://powerdns_admin:changeme@postgres/powerdns_admin
+      # when selecting the gpgsql backend below.
+      SQLALCHEMY_DATABASE_URI: ${SQLALCHEMY_DATABASE_URI:-mysql://powerdns_admin:changeme@mysql/powerdns_admin}
       PDNS_HOST: pdns-server
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
-    #volumes:
-    #  - powerdns-admin-dev-data:/data
-    tmpfs:
-      - /data
     depends_on:
-      - pdns-server
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      pdns-server:
+        condition: service_started
 
   pdns-server:
-    image: powerdns-admin-dev-pdns
-    build:
-      context: ..
-      dockerfile: docker/common/Dockerfile.pdns
+    image: powerdns/pdns-auth-51:5.1.3
     ports:
       - "5053:53"
       - "5053:53/udp"
@@ -39,12 +42,66 @@ services:
     env_file:
       - dev/env
     environment:
-      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      PDNS_AUTH_API_KEY: ${PDNS_API_KEY:-changeme}
+      TEMPLATE_FILES: pdns-database
+      # Use gpgsql, postgres, and 5432 to select PostgreSQL.
+      PDNS_LAUNCH: ${PDNS_LAUNCH:-gmysql}
+      PDNS_DB_HOST: ${PDNS_DB_HOST:-mysql}
+      PDNS_DB_PORT: ${PDNS_DB_PORT:-3306}
+      PDNS_DB_NAME: powerdns
+      PDNS_DB_USER: powerdns
+      PDNS_DB_PASSWORD: changeme
+    volumes:
+      - ./common/pdns.conf:/etc/powerdns/pdns.conf:ro
+      - ./common/pdns-database.conf.j2:/etc/powerdns/templates.d/pdns-database.j2:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    networks:
+      - dev
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: powerdns_admin
+      MYSQL_USER: powerdns_admin
+      MYSQL_PASSWORD: changeme
+    volumes:
+      - powerdns-admin-dev-mysql:/var/lib/mysql
+      - ./common/mysql-init.sql:/docker-entrypoint-initdb.d/10-powerdns.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  postgres:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    networks:
+      - dev
+    environment:
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - powerdns-admin-dev-postgres:/var/lib/postgresql/data
+      - ./common/postgres-init.sql:/docker-entrypoint-initdb.d/10-powerdns.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
 networks:
   dev:
 
 volumes:
-  powerdns-admin-dev-data:
-    # Preserve the database created by the former combined Compose project.
-    name: powerdns-admin_powerdns-admin-data
+  powerdns-admin-dev-mysql:
+  powerdns-admin-dev-postgres:

@@ -1,7 +1,5 @@
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-
 BIND_ADDRESS = '0.0.0.0'
 CAPTCHA_ENABLE = True
 CAPTCHA_HEIGHT = 60
@@ -18,8 +16,7 @@ SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
 SERVER_EXTERNAL_SSL = os.getenv('SERVER_EXTERNAL_SSL', True)
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_CLEANUP_N_REQUESTS = 100
-SESSION_TYPE = 'sqlalchemy'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+SESSION_TYPE = os.getenv('SESSION_TYPE', 'sqlalchemy')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 # SQLA_DB_USER = 'pda'
 # SQLA_DB_PASSWORD = 'changeme'
@@ -31,3 +28,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = True
 #     SQLA_DB_HOST,
 #     SQLA_DB_NAME
 # )
+SQLALCHEMY_DATABASE_URI = os.getenv(
+    'SQLALCHEMY_DATABASE_URI',
+    'mysql://powerdns_admin:changeme@mysql/powerdns_admin'
+)
