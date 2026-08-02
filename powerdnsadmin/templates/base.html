@@ -37,6 +37,24 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <button class="nav-link no-prompt border-0 bg-transparent p-0" type="button"
+                                data-bs-toggle="dropdown" data-theme-toggle aria-expanded="false"
+                                aria-label="Select color mode" title="Select color mode">
+                            <i class="fa-solid fa-circle-half-stroke" data-theme-icon aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item" type="button" data-theme-option="auto" aria-pressed="false">
+                                <i class="fa-solid fa-circle-half-stroke me-2" aria-hidden="true"></i>Auto
+                            </button></li>
+                            <li><button class="dropdown-item" type="button" data-theme-option="light" aria-pressed="false">
+                                <i class="fa-solid fa-sun me-2" aria-hidden="true"></i>Light
+                            </button></li>
+                            <li><button class="dropdown-item" type="button" data-theme-option="dark" aria-pressed="false">
+                                <i class="fa-solid fa-moon me-2" aria-hidden="true"></i>Dark
+                            </button></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link no-prompt" data-lte-toggle="fullscreen" href="#" role="button"
                            aria-label="Toggle fullscreen">
@@ -72,9 +90,9 @@
                     <div class="pda-user-info">
                         <p>{{ current_user.firstname }} {{ current_user.lastname }}</p>
                         <span>
-                            <a href="{{ url_for('user.profile') }}"><i class="nav-icon fa-solid fa-user"></i> Edit Profile</a>
+                            <a href="{{ url_for('user.profile') }}"><i class="nav-icon fa-solid fa-user"></i><span class="pda-user-link-text"> Edit Profile</span></a>
                             &nbsp;|&nbsp;
-                            <a href="{{ url_for('index.logout') }}"><i class="nav-icon fa-solid fa-sign-out-alt"></i> Logout</a>
+                            <a href="{{ url_for('index.logout') }}"><i class="nav-icon fa-solid fa-sign-out-alt"></i><span class="pda-user-link-text"> Logout</span></a>
                         </span>
                     </div>
                 </div>

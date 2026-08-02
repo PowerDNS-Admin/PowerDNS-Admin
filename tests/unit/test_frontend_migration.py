@@ -99,7 +99,9 @@ def test_theme_bootstrap_matches_adminlte_color_mode_storage():
     template = Path(
         'powerdnsadmin/templates/includes/theme_bootstrap.html').read_text()
 
-    assert "localStorage.getItem('lte-theme')" in template
+    assert "var storageKey = 'lte-theme';" in template
+    assert 'window.localStorage.getItem(storageKey)' in template
+    assert 'window.localStorage.setItem(storageKey, theme)' in template
     assert "prefers-color-scheme: dark" in template
     assert "setAttribute('data-bs-theme', resolvedTheme)" in template
     assert 'root.style.colorScheme = resolvedTheme' in template
