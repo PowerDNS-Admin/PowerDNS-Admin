@@ -3,7 +3,7 @@ import re
 import traceback
 from flask import current_app
 from flask_login import current_user
-from urllib.parse import urljoin
+from urllib.parse import quote_plus, urljoin
 from distutils.util import strtobool
 
 from ..lib import utils
@@ -76,12 +76,10 @@ class Domain(db.Model):
         """
         Get all zones which has in PowerDNS
         """
-        import urllib.parse
-
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain_name))),
+                                 '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
             headers=headers,
             timeout=int(
                 Setting().get('pdns_api_timeout')),
@@ -292,8 +290,6 @@ class Domain(db.Model):
         """
         Read zone from PowerDNS and add into PDNS-Admin
         """
-        import urllib.parse
-
         headers = {'X-API-Key': self.PDNS_API_KEY}
         if not domain:
             try:
@@ -301,7 +297,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}'.format(
-                                                 urllib.parse.quote_plus(domain_dict['name']))),
+                                                 quote_plus(domain_dict['name']))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     verify=Setting().get('verify_ssl_connections'))
@@ -345,8 +341,6 @@ class Domain(db.Model):
             raise
 
     def update_soa_setting(self, domain_name, soa_edit_api):
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Zone does not exist.'}
@@ -364,7 +358,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain.name))),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -397,8 +391,6 @@ class Domain(db.Model):
         """
         Update zone kind: Native / Master / Slave
         """
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Znoe does not exist.'}
@@ -410,7 +402,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain.name))),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -444,8 +436,6 @@ class Domain(db.Model):
         """
         Update domain catalog zone
         """
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Znoe does not exist.'}
@@ -457,7 +447,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain.name))),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -586,13 +576,11 @@ class Domain(db.Model):
         """
         Delete a single zone name from powerdns
         """
-        import urllib.parse
-
         headers = {'X-API-Key': self.PDNS_API_KEY}
 
         utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain_name))),
+                                 '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
             headers=headers,
             timeout=int(Setting().get('pdns_api_timeout')),
             method='DELETE',
@@ -717,7 +705,7 @@ class Domain(db.Model):
                 r = utils.fetch_json(urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                          '/servers/localhost/zones/{0}/axfr-retrieve'.format(
-                                             urllib.parse.quote_plus(domain.name))),
+                                             quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(
                         Setting().get('pdns_api_timeout')),
@@ -740,8 +728,6 @@ class Domain(db.Model):
         """
         Get zone DNSSEC information
         """
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY}
@@ -750,7 +736,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 urllib.parse.quote_plus(domain.name))),
+                                                 quote_plus(domain.name))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='GET',
@@ -818,8 +804,6 @@ class Domain(db.Model):
 
     def set_domain_api_rectify(self, domain_name, enabled):
         """Enable or disable API-RECTIFY without changing cryptokeys."""
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'This zone does not exist'}
@@ -833,7 +817,7 @@ class Domain(db.Model):
                 urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                     '/servers/localhost/zones/{0}'.format(
-                        urllib.parse.quote_plus(domain.name))),
+                        quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(Setting().get('pdns_api_timeout')),
                 method='PUT',
@@ -857,8 +841,6 @@ class Domain(db.Model):
 
     def create_dnssec_key(self, domain_name, key_parameters):
         """Create one cryptokey without changing any existing key."""
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'This zone does not exist'}
@@ -872,7 +854,7 @@ class Domain(db.Model):
                 urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                     '/servers/localhost/zones/{0}/cryptokeys'.format(
-                        urllib.parse.quote_plus(domain.name))),
+                        quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(Setting().get('pdns_api_timeout')),
                 method='POST',
@@ -897,8 +879,6 @@ class Domain(db.Model):
 
     def update_dnssec_key(self, domain_name, key_id, active, published):
         """Set the complete active/published state for one cryptokey."""
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'This zone does not exist'}
@@ -912,7 +892,7 @@ class Domain(db.Model):
                 urljoin(
                     self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                     '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                        urllib.parse.quote_plus(domain.name), int(key_id))),
+                        quote_plus(domain.name), int(key_id))),
                 headers=headers,
                 timeout=int(Setting().get('pdns_api_timeout')),
                 method='PUT',
@@ -941,8 +921,6 @@ class Domain(db.Model):
         """
         Remove keys DNSSEC
         """
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
@@ -952,7 +930,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                                                 urllib.parse.quote_plus(domain.name), key_id)),
+                                                 quote_plus(domain.name), key_id)),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     method='DELETE',
@@ -1010,7 +988,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(domain_name)),
+                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),

@@ -4,7 +4,7 @@ import dns.reversename
 import dns.inet
 import dns.name
 from flask import current_app
-from urllib.parse import urljoin
+from urllib.parse import quote_plus, urljoin
 from distutils.util import strtobool
 from itertools import groupby
 
@@ -51,7 +51,7 @@ class Record(object):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      headers=headers,
@@ -103,7 +103,7 @@ class Record(object):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain_name)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
@@ -298,7 +298,7 @@ class Record(object):
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-            '/servers/localhost/zones/{0}'.format(domain_name)),
+            '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
                                   headers=headers,
                                   method='PATCH',
                                   verify=Setting().get('verify_ssl_connections'),
@@ -512,7 +512,7 @@ class Record(object):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
@@ -584,7 +584,7 @@ class Record(object):
         try:
             utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                              headers=headers,
                              timeout=int(Setting().get('pdns_api_timeout')),
                              method='PATCH',
@@ -606,7 +606,7 @@ class Record(object):
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-            '/servers/localhost/zones/{0}'.format(domain)),
+            '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                                  headers=headers,
                                  timeout=int(
                                      Setting().get('pdns_api_timeout')),
