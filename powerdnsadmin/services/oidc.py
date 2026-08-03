@@ -1,4 +1,4 @@
-from flask import request, session, redirect, url_for, current_app
+from flask import session
 
 from .base import authlib_oauth_client
 from ..models.setting import Setting
@@ -38,19 +38,5 @@ def oidc_oauth():
         'oidc',
         **authlib_params
     )
-
-    @current_app.route('/oidc/authorized')
-    def oidc_authorized():
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        session['oidc_oauthredir'] = url_for('.oidc_authorized', **params)
-        token = oidc.authorize_access_token()
-        if token is None:
-            return 'Access denied: reason=%s error=%s' % (
-                request.args['error'], request.args['error_description'])
-        session['oidc_token'] = token
-        return redirect(url_for('index.login', **params))
 
     return oidc
