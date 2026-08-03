@@ -7,7 +7,6 @@ import ipaddress
 import base64
 import string
 from zxcvbn import zxcvbn
-from distutils.util import strtobool
 from yaml import Loader, load
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
@@ -1137,8 +1136,8 @@ def dyndns_update():
             ondemand_creation = DomainSetting.query.filter(
                 DomainSetting.domain == domain).filter(
                 DomainSetting.setting == 'create_via_dyndns').first()
-            if (ondemand_creation is not None) and (strtobool(
-                    ondemand_creation.value) == True):
+            if (ondemand_creation is not None) and utils.parse_boolean(
+                    ondemand_creation.value):
 
                 # Build the rrset
                 rrset_data = [{

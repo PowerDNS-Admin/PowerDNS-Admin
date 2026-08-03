@@ -102,6 +102,26 @@ docker compose -f docker/docker-compose-test.yml up \
   --exit-code-from python-tests
 ```
 
+The test container measures branch coverage for the `powerdnsadmin` package.
+It prints a missing-lines summary to the terminal and writes these ignored
+local artifacts:
+
+- `docker/test-results/coverage/coverage.xml`
+- `docker/test-results/coverage/html/index.html`
+
+Coverage reporting does not impose a minimum percentage by default. To enforce
+an established project threshold for a local run, set `COVERAGE_FAIL_UNDER`:
+
+```console
+COVERAGE_FAIL_UNDER=38 \
+  docker compose -f docker/docker-compose-test.yml up \
+  --build --force-recreate --abort-on-container-exit \
+  --exit-code-from python-tests
+```
+
+The 2026-08-03 baseline is 38.37%, so `38` is the initial non-regression floor.
+Raise it gradually as coverage improves.
+
 To remove the test environment's containers and network, run:
 
 ```console
@@ -120,7 +140,7 @@ docker compose -f docker/docker-compose-browser-test.yml up \
   --exit-code-from browser-tests
 ```
 
-This environment resets its own PowerDNS database, migrates and seeds its own PowerDNS-Admin database, verifies the API connection to PowerDNS, starts the web application, and runs the complete Python test suite. Only after these checks pass does it run the signed-in Chrome, Edge, and Firefox tests in both light and dark modes. The browser setup creates a zone through the UI and confirms it directly through the PowerDNS API.
+This environment resets its own PowerDNS database, migrates and seeds its own PowerDNS-Admin database, verifies the API connection to PowerDNS, and starts the web application before running the signed-in Chrome, Edge, and Firefox tests in both light and dark modes. The browser setup creates a zone through the UI and confirms it directly through the PowerDNS API. The Python suite runs separately through `docker/docker-compose-test.yml` so it has an isolated database and produces its own coverage reports.
 
 The browser dependencies and `node_modules` exist only in the browser-runner image. The runner uses the `linux/amd64` platform because stable Linux packages for Chrome and Edge are not published for ARM. Docker Desktop will emulate this on ARM hosts.
 

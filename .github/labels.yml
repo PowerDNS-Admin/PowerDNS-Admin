@@ -6,15 +6,15 @@ labels:
   - name: bug / security-vulnerability
     description: Security vulnerability identified with the application
     color: 'd73a4a'
+  - name: chore / dependency
+    description: Routine dependency or dependency-tooling update
+    color: '6f42c1'
   - name: docs / discussion
     description: Documentation change proposals
     color: '0075ca'
   - name: docs / request
     description: Documentation change request
     color: '0075ca'
-  - name: feature / dependency
-    description: Existing feature dependency
-    color: '008672'
   - name: feature / discussion
     description: New or existing feature discussion
     color: '008672'
@@ -78,6 +78,9 @@ labels:
   - name: mod / wont-fix
     description: This will not be worked on
     color: 'e5ef23'
+  - name: security / dependency-update
+    description: Dependency update that resolves a confirmed CVE
+    color: 'b60205'
   - name: skill / database
     description: Requires a database skill-set
     color: '5319E7'

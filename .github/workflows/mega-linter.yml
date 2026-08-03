@@ -26,6 +26,7 @@ jobs:
   lint:
     name: Validate compiled Debian 13.6 image
     runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Repository checkout
@@ -71,7 +72,7 @@ jobs:
         uses: oxsecurity/megalinter@v9
         env:
           CLEAR_REPORT_FOLDER: true
-          DEFAULT_BRANCH: master
+          DEFAULT_BRANCH: dev
           DEFAULT_WORKSPACE: ${{ github.workspace }}/.megalinter-compiled
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IGNORE_GITIGNORED_FILES: false

@@ -1,37 +1,43 @@
-name: 'Update Release Notes'
+---
+name: Update release notes
 
 on:
   release:
-    types: [published]
+    types:
+      - published
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-notes-${{ github.event.release.id }}
+  cancel-in-progress: false
 
 jobs:
   update-release-notes:
+    name: Add supported versions
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: 'Checkout code'
-        uses: actions/checkout@v3
-
-      - name: 'Read supported versions'
-        id: supported_versions
-        run: |
-          python_versions=$(jq -r '.python.supported_versions | join(", ")' app-support.json)
-          browser_versions=$(jq -r '.browsers | to_entries | .[] | "\(.key) \(.value.minimum_version)+"' app-support.json | paste -sd ", ")
-          powerdns_versions=$(jq -r '.powerdns_auth.supported_versions | join(", ")' app-support.json)
-          echo "::set-output name=python_versions::$python_versions"
-          echo "::set-output name=browser_versions::$browser_versions"
-          echo "::set-output name=powerdns_versions::$powerdns_versions"
-
-      - name: 'Update release body'
-        uses: softprops/action-gh-release@v1
+      - name: Checkout release tag
+        uses: actions/checkout@v6
         with:
-          body_append: |
-            ### Supported Python Versions
-            ${{ steps.supported_versions.outputs.python_versions }}
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
 
-            ### Supported Browser Versions
-            ${{ steps.supported_versions.outputs.browser_versions }}
+      - name: Build idempotent release update
+        run: |
+          python .github/scripts/update-release-notes.py \
+            --event "${GITHUB_EVENT_PATH}" \
+            --support app-support.json \
+            --output release-update.json
 
-            ### Supported PowerDNS Authoritative Server Versions
-            ${{ steps.supported_versions.outputs.powerdns_versions }}
+      - name: Update release body
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          gh api \
+            --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
+            --input release-update.json

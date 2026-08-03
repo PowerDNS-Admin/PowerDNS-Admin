@@ -4,7 +4,6 @@ import traceback
 from flask import current_app
 from flask_login import current_user
 from urllib.parse import quote_plus, urljoin
-from distutils.util import strtobool
 
 from ..lib import utils
 from .base import db, domain_apikey

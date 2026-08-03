@@ -5,7 +5,6 @@ import dns.inet
 import dns.name
 from flask import current_app
 from urllib.parse import quote_plus, urljoin
-from distutils.util import strtobool
 from itertools import groupby
 
 from .. import utils

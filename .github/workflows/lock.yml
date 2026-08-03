@@ -1,6 +1,5 @@
 ---
-# lock-threads (https://github.com/marketplace/actions/lock-threads)
-name: 'Lock threads'
+name: Lock inactive closed threads
 
 on:
   schedule:
@@ -11,14 +10,20 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: lock-inactive-threads
+  cancel-in-progress: false
+
 jobs:
   lock:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: dessant/lock-threads@v3
+      - name: Lock inactive closed issues and pull requests
+        uses: dessant/lock-threads@v6
         with:
-          issue-inactive-days: 90
-          pr-inactive-days: 30
-          issue-lock-reason: 'resolved'
+          issue-inactive-days: '90'
+          pr-inactive-days: '30'
+          issue-lock-reason: resolved
           exclude-any-issue-labels: 'bug / security-vulnerability, mod / announcement, mod / accepted, mod / reviewing, mod / testing'
           exclude-any-pr-labels: 'bug / security-vulnerability, mod / announcement, mod / accepted, mod / reviewing, mod / testing'

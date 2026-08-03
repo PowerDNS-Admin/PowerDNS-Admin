@@ -17,9 +17,9 @@ All four components can be installed on a single server. For larger installation
 
 -   **Operating System:** A Linux-based system is required. While other systems may work, they are not officially tested or supported.
 -   **Python:**
-    -   Supported versions: 3.10, 3.11, 3.12, 3.13
-    -   Python 3.9 and earlier are not supported due to application dependencies.
-    -   Python 3.14 and later are not yet tested or supported.
+    -   Supported versions: 3.12, 3.13, 3.14
+    -   Python 3.11 and earlier are not supported.
+    -   Python 3.15 and later are not yet tested or supported.
 -   **Database:** PowerDNS-Admin requires its own database, which must be separate from the PowerDNS database. The following databases are supported:
     -   MySQL
     -   PostgreSQL

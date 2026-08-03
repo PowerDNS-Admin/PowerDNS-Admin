@@ -26,10 +26,7 @@ until curl --fail --silent http://localhost/login >/dev/null; do
     sleep 1
 done
 
-# Run the existing Python cases only after the real application deployment is
-# migrated, seeded, serving HTTP, and verified against this profile's PDNS.
-pytest -W ignore::DeprecationWarning --capture=no -vv
-
-# The browser service cannot start until the deployment tests above pass.
+# The browser service cannot start until the seeded deployment is reachable.
+# Python tests run in their dedicated CI job and use an isolated database.
 touch /tmp/browser-test-ready
 wait "${server_pid}"

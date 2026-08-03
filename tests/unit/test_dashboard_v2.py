@@ -1,8 +1,13 @@
 import base64
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
+from sqlalchemy import event
 
+from powerdnsadmin.models.base import db
+from powerdnsadmin.models.domain import Domain
+from powerdnsadmin.models.user import User
 from powerdnsadmin.routes.dashboard import (
     _validate_dnssec_key_parameters,
     _validate_dnssec_rollover_parameters,
@@ -12,6 +17,111 @@ from powerdnsadmin.routes.dashboard import (
 
 DNSKEY_PUBLIC = base64.b64encode(bytes(range(64))).decode('ascii')
 DNSKEY = '257 3 13 ' + DNSKEY_PUBLIC
+
+
+def _authenticate_dashboard_user(app, client, username):
+    with app.app_context():
+        user_id = User.query.filter_by(username=username).one().id
+
+    with client.session_transaction() as session:
+        session['_user_id'] = str(user_id)
+        session['_fresh'] = True
+
+
+def _dashboard_v2_count_queries(app, client, search=None):
+    _authenticate_dashboard_user(
+        app, client, app.config['TEST_ADMIN_USER'])
+
+    with app.app_context():
+        engine = db.engine
+
+    count_queries = []
+
+    def capture_count_query(conn, cursor, statement, parameters, context,
+                            executemany):
+        if 'select count(' in statement.lower():
+            count_queries.append(statement)
+
+    query = {'length': 10}
+    if search is not None:
+        query['search[value]'] = search
+
+    event.listen(engine, 'before_cursor_execute', capture_count_query)
+    try:
+        response = client.get(
+            '/dashboard/v2/domains/forward', query_string=query)
+    finally:
+        event.remove(engine, 'before_cursor_execute', capture_count_query)
+
+    assert response.status_code == 200
+    return count_queries
+
+
+def test_dashboard_v2_reuses_total_count_without_search(app, client,
+                                                         initial_data):
+    count_queries = _dashboard_v2_count_queries(app, client)
+
+    assert len(count_queries) == 1
+
+
+def test_dashboard_v2_counts_filtered_domains_when_searching(app, client,
+                                                              initial_data):
+    count_queries = _dashboard_v2_count_queries(app, client, search='example')
+
+    assert len(count_queries) == 2
+
+
+@pytest.mark.parametrize(
+    'url',
+    [
+        '/dashboard/',
+        '/dashboard/v2/domains/forward?refresh=1&length=10',
+    ],
+)
+def test_regular_user_cannot_trigger_global_domain_sync(app, client,
+                                                         initial_data, url):
+    _authenticate_dashboard_user(app, client, app.config['TEST_USER'])
+
+    with patch.object(Domain, 'update') as update_domains, \
+            patch('powerdnsadmin.routes.dashboard.render_template',
+                  return_value=''):
+        response = client.get(url)
+
+    assert response.status_code == 200
+    update_domains.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    'url',
+    [
+        '/dashboard/',
+        '/dashboard/v2/domains/forward?refresh=1&length=10',
+    ],
+)
+def test_administrator_can_trigger_global_domain_sync(app, client,
+                                                       initial_data, url):
+    _authenticate_dashboard_user(
+        app, client, app.config['TEST_ADMIN_USER'])
+
+    with patch.object(Domain, 'update') as update_domains, \
+            patch('powerdnsadmin.routes.dashboard.render_template',
+                  return_value=''):
+        response = client.get(url)
+
+    assert response.status_code == 200
+    update_domains.assert_called_once_with()
+
+
+def test_dashboard_v2_does_not_request_initial_refresh_for_regular_user(
+        app, client, initial_data):
+    _authenticate_dashboard_user(app, client, app.config['TEST_USER'])
+
+    with patch('powerdnsadmin.routes.dashboard.render_template',
+               return_value='') as render:
+        response = client.get('/dashboard/v2/')
+
+    assert response.status_code == 200
+    assert render.call_args.kwargs['refresh_on_first_load'] is False
 
 
 def _rollover_reference(backend_key_id=10):

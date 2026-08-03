@@ -5,19 +5,69 @@ updates:
     target-branch: dev
     directory: /
     schedule:
-      interval: daily
-    ignore:
-      - dependency-name: "*"
-        update-types: [ "version-update:semver-major" ]
+      interval: weekly
+      day: monday
+    groups:
+      npm-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
     labels:
-      - 'feature / dependency'
+      - 'chore / dependency'
+    commit-message:
+      prefix: 'chore(deps)'
+
   - package-ecosystem: pip
     target-branch: dev
     directory: /
     schedule:
-      interval: daily
-    ignore:
-      - dependency-name: "*"
-        update-types: [ "version-update:semver-major" ]
+      interval: weekly
+      day: monday
+    groups:
+      pip-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
     labels:
-      - 'feature / dependency'
+      - 'chore / dependency'
+    commit-message:
+      prefix: 'chore(deps)'
+
+  - package-ecosystem: github-actions
+    target-branch: dev
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    labels:
+      - 'chore / dependency'
+    commit-message:
+      prefix: 'chore(deps)'
+
+  - package-ecosystem: docker
+    target-branch: dev
+    directories:
+      - /docker/browser-test/browser
+      - /docker/common
+      - /docker/dev/terraform
+      - /docker/legacy
+      - /docker/rocky
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      docker-images:
+        patterns:
+          - '*'
+    labels:
+      - 'chore / dependency'
+    commit-message:
+      prefix: 'chore(deps)'

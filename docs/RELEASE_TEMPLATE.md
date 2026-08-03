@@ -69,20 +69,38 @@ is for what changes for someone running the app.
 ## GitHub Release body
 
 The GitHub Release body is the CHANGELOG.md entry for that version
-(Highlights + categorized sections), plus two additions that don't belong
-in CHANGELOG.md itself:
+(Highlights + categorized sections), plus the same two closing sections
+GitHub's own auto-generated release notes have always used for this repo
+(see any pre-0.5.1 release, e.g. v0.4.2) — match that convention exactly
+rather than inventing a new one:
 
 ```markdown
 # vX.Y.Z
 
 <Highlights + categorized sections, copied from CHANGELOG.md>
 
-## Contributors
+### New Contributors
 
-<@handle1, @handle2, ... — from `git shortlog -sne vPREV..vX.Y.Z`>
+* <name or @handle> made their first contribution in <full PR URL, bare, no markdown link>
 
 **Full Changelog**: https://github.com/PowerDNS-Admin/PowerDNS-Admin/compare/vPREV...vX.Y.Z
 ```
+
+**New Contributors** only lists people with zero commits reachable from the
+previous tag (`git log --author=<email> --oneline vPREV | wc -l` == 0) —
+check each contributor, don't assume. Omit the section entirely if no one
+qualifies. There is no separate aggregate "Contributors" list — GitHub's
+native format doesn't have one (attribution normally lives in a per-PR
+"What's Changed" list, which this project's Highlights+categorized format
+replaces, so don't add a substitute for it).
+
+GitHub's own "auto-generate release notes" feature computes New
+Contributors and the compare link automatically, but only when drafting a
+release against a tag that doesn't have a release yet — it cannot be
+invoked to backfill an already-published release. When updating an
+existing/legacy release's notes (as opposed to cutting a new one), there
+is no automation to lean on: run the `git log` check above by hand for
+every contributor and write the section yourself.
 
 The supported-versions block is appended after publish by CI; leave it out
 of what you draft by hand.

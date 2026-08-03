@@ -9,6 +9,23 @@ from collections.abc import Iterable
 from urllib.parse import urlparse
 
 
+TRUE_STRINGS = frozenset({'1', 'true', 't', 'yes', 'y', 'on'})
+FALSE_STRINGS = frozenset({'0', 'false', 'f', 'no', 'n', 'off'})
+
+
+def parse_boolean(value):
+    """Return a boolean for a conventional string representation."""
+    if isinstance(value, bool):
+        return value
+
+    normalized = str(value).strip().lower()
+    if normalized in TRUE_STRINGS:
+        return True
+    if normalized in FALSE_STRINGS:
+        return False
+    raise ValueError(f'invalid truth value {value!r}')
+
+
 def auth_from_url(url):
     auth = None
     parsed_url = urlparse(url).netloc
@@ -120,7 +137,7 @@ def display_record_name(data):
     if record_name == domain_name:
         return '@'
     else:
-        return re.sub('\.{}$'.format(domain_name), '', record_name)
+        return re.sub(rf'\.{re.escape(domain_name)}$', '', record_name)
 
 
 def display_master_name(data):

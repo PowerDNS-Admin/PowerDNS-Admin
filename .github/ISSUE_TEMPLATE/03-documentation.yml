@@ -1,0 +1,55 @@
+name: 📖 Documentation Change
+description: Suggest an addition, correction, or clarification to the documentation
+labels: ["docs / request"]
+body:
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched the open and closed issues and did not find an existing request.
+          required: true
+
+  - type: dropdown
+    id: change-type
+    attributes:
+      label: Change type
+      options:
+        - Addition
+        - Correction
+        - Clarification
+        - Removal
+        - Formatting or cleanup
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Link to the page or provide the repository path and section heading.
+      placeholder: docs/wiki/example.md, under "Configuration"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-problem
+    attributes:
+      label: Current problem
+      description: Explain what is missing, outdated, ambiguous, or incorrect.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed change
+      description: Describe the content or wording that should replace the current documentation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add related issues, screenshots, references, or version-specific details.

@@ -1,0 +1,112 @@
+name: 🐛 Bug Report
+description: Report a reproducible problem in a supported PowerDNS-Admin release
+labels: ["bug / broken-feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form only for reproducible bugs. For installation, configuration,
+        or usage help, start a Discussion instead. Report security vulnerabilities
+        privately through a draft security advisory.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched the open and closed issues and did not find a duplicate.
+          required: true
+        - label: I reproduced this on the latest stable release or a currently supported release.
+          required: true
+        - label: This report does not contain passwords, API keys, session cookies, or other secrets.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: PowerDNS-Admin version
+      description: Provide the exact release, tag, or commit SHA.
+      placeholder: v0.5.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment method
+      options:
+        - Official container image
+        - Docker Compose
+        - Bare-metal or virtual environment
+        - Kubernetes or another orchestrator
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the operating system, database, Python, PowerDNS Authoritative Server, browser, and reverse proxy versions that apply.
+      value: |
+        - Operating system:
+        - Database and version:
+        - Python version:
+        - PowerDNS Authoritative Server version:
+        - Browser and version:
+        - Reverse proxy and version:
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Give the smallest complete sequence another person can follow on a clean installation.
+      placeholder: |
+        1. Create ...
+        2. Configure ...
+        3. Select ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Explain what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Explain what happened instead, including the complete error message when applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Remove secrets and personal data. You can drag screenshots or log files into this field.
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Regression
+      description: Did this work in an earlier PowerDNS-Admin release?
+      options:
+        - "Yes"
+        - "No"
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add configuration details, related issues, or anything else that may help reproduce the problem.

@@ -86,6 +86,7 @@ services:
       - browser-test
     environment:
       BASE_URL: http://powerdns-admin
+      BROWSER_TEST_SMOKE: ${BROWSER_TEST_SMOKE:-0}
       PDNS_API_URL: http://pdns-server:8081
       EXPECTED_PDNS_API_URL: http://pdns-server:8081
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}

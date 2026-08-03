@@ -14,9 +14,13 @@ services:
     env_file:
       - test/env
     environment:
+      COVERAGE_FAIL_UNDER: ${COVERAGE_FAIL_UNDER:-}
+      COVERAGE_OUTPUT_DIR: /test-results/coverage
       FLASK_CONF: /app/configs/docker_config.py
       SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+    volumes:
+      - ./test-results/coverage:/test-results/coverage
     depends_on:
       mysql:
         condition: service_healthy
