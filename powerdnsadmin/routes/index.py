@@ -181,8 +181,11 @@ def oidc_authorized():
         session['oidc_oauthredir'] = url_for('index.oidc_authorized', **params)
         token = oidc.authorize_access_token()
         if token is None:
-            return 'Access denied: reason=%s error=%s' % (
-                request.args['error'], request.args['error_description'])
+            msg = 'Access denied: reason=%s error=%s' % (
+                request.args.get('error', 'unknown'),
+                request.args.get('error_description', 'unknown'),
+            )
+            return render_template('errors/400.html', msg=msg), 400
         session['oidc_token'] = token
         return redirect(url_for('index.login', **params))
 
