@@ -162,8 +162,29 @@ def oidc_login():
         params = {'_external': True}
         if isinstance(use_ssl, bool):
             params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('oidc_authorized', **params)
+        redirect_uri = url_for('index.oidc_authorized', **params)
         return oidc.authorize_redirect(redirect_uri)
+
+
+@index_bp.route('/oidc/authorized')
+def oidc_authorized():
+    if not Setting().get('oidc_oauth_enabled') or oidc is None:
+        current_app.logger.error(
+            'OIDC OAuth is disabled or you have not yet reloaded the pda application after enabling.'
+        )
+        abort(400)
+    else:
+        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+        params = {'_external': True}
+        if isinstance(use_ssl, bool):
+            params['_scheme'] = 'https' if use_ssl else 'http'
+        session['oidc_oauthredir'] = url_for('index.oidc_authorized', **params)
+        token = oidc.authorize_access_token()
+        if token is None:
+            return 'Access denied: reason=%s error=%s' % (
+                request.args['error'], request.args['error_description'])
+        session['oidc_token'] = token
+        return redirect(url_for('index.login', **params))
 
 
 @index_bp.route('/login', methods=['GET', 'POST'])
