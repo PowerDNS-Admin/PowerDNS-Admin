@@ -26,6 +26,17 @@ A web interface for PowerDNS with advanced features.
 -   API for zone and record management
 -   Full IDN/Punycode support
 
+## Compatibility
+
+PowerDNS-Admin is built and tested against the current stable release of
+the PowerDNS Authoritative Server, plus recent prior minor releases.
+Support for versions older than 5.0 has been dropped entirely, even where
+PowerDNS itself continues to backport critical/security fixes to them.
+See
+[`app-support.json`](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/app-support.json)
+for the exact PowerDNS, Python, and browser versions supported by the
+current release.
+
 ## Running PowerDNS-Admin
 
 The quickest way to run PowerDNS-Admin is with Docker. For instructions on installing PowerDNS-Admin directly on your system, please refer to our [wiki](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/wiki/).
