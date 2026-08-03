@@ -18,7 +18,7 @@ class AppSettings(object):
         'sqlalchemy_track_modifications': True,
         'sqlalchemy_database_uri': os.getenv(
             'SQLALCHEMY_DATABASE_URI',
-            'mysql://powerdns_admin:changeme@mysql/powerdns_admin'
+            'sqlite:////data/powerdns-admin.db'
         ),
         'sqlalchemy_engine_options': {},
 

@@ -3,7 +3,6 @@ ARG PYTHON_FULL_VERSION=3.13.5
 ARG PYTHON_PATCH_LEVEL=5
 
 FROM debian:${DEBIAN_VERSION}-slim AS builder
-LABEL maintainer="k@ndk.name"
 
 ARG DOCKER_SCENARIO
 ARG INSTALL_TEST_DEPENDENCIES=0
@@ -68,7 +67,6 @@ RUN yarnpkg install --immutable --inline-builds \
 
 
 FROM debian:${DEBIAN_VERSION}-slim AS runtime
-LABEL maintainer="k@ndk.name"
 
 ARG DEBIAN_VERSION
 ARG DOCKER_SCENARIO
