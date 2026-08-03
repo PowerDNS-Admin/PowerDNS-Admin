@@ -1,9 +1,39 @@
 import re
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.user import User
+
+
+def test_zone_sync_updates_catalog_for_existing_zone(app):
+    domain = SimpleNamespace(
+        name='member.example',
+        master='[]',
+        type='NATIVE',
+        serial=1,
+        notified_serial=1,
+        last_check=0,
+        dnssec=0,
+        catalog='old-catalog.example',
+        account_id=None,
+    )
+    data = {
+        'masters': [],
+        'kind': 'NATIVE',
+        'serial': 1,
+        'notified_serial': 1,
+        'last_check': False,
+        'dnssec': False,
+        'catalog': 'new-catalog.example.',
+    }
+
+    with app.app_context():
+        Domain.update_pdns_admin_domain(
+            None, domain, account_id=None, data=data, do_commit=False)
+
+    assert domain.catalog == 'new-catalog.example'
 
 
 def test_zone_creation_without_catalog_is_backward_compatible(initial_data,

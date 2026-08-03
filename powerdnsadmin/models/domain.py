@@ -201,6 +201,8 @@ class Domain(db.Model):
             return {'status': 'error', 'msg': 'Cannot update zone table'}
 
     def update_pdns_admin_domain(self, domain, account_id, data, do_commit=True):
+        catalog = (data.get('catalog') or '').rstrip('.') or None
+
         # existing domain, only update if something actually has changed
         if (domain.master != str(data['masters'])
                 or domain.type != data['kind']
@@ -208,11 +210,13 @@ class Domain(db.Model):
                 or domain.notified_serial != data['notified_serial']
                 or domain.last_check != (1 if data['last_check'] else 0)
                 or domain.dnssec != data['dnssec']
+                or domain.catalog != catalog
                 or domain.account_id != account_id):
 
             domain.master = str(data['masters'])
             domain.type = data['kind']
             domain.serial = data['serial']
+            domain.catalog = catalog
             domain.notified_serial = data['notified_serial']
             domain.last_check = 1 if data['last_check'] else 0
             domain.dnssec = 1 if data['dnssec'] else 0
