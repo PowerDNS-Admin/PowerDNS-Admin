@@ -2,7 +2,7 @@ import json
 import secrets
 import string
 from base64 import b64encode
-from urllib.parse import urljoin
+from urllib.parse import quote_plus, urljoin
 
 from flask import (Blueprint, g, request, abort, current_app, make_response, jsonify)
 from werkzeug.local import LocalProxy
@@ -277,7 +277,7 @@ def api_login_delete_zone(domain_name):
     pdns_api_key = Setting().get('pdns_api_key')
     api_uri_with_prefix = utils.pdns_api_extended_uri()
     api_full_uri = api_uri_with_prefix + '/servers/localhost/zones'
-    api_full_uri += '/' + domain_name
+    api_full_uri += '/' + quote_plus(domain_name)
     headers = {}
     headers['X-API-Key'] = pdns_api_key
 
