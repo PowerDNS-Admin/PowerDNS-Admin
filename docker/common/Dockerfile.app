@@ -3,7 +3,6 @@ ARG PYTHON_FULL_VERSION=3.13.5
 ARG PYTHON_PATCH_LEVEL=5
 
 FROM debian:${DEBIAN_VERSION}-slim AS builder
-LABEL maintainer="k@ndk.name"
 
 ARG DOCKER_SCENARIO
 ARG INSTALL_TEST_DEPENDENCIES=0
@@ -58,7 +57,7 @@ COPY . /app
 RUN yarnpkg install --immutable --inline-builds \
     && rm -rf /app/powerdnsadmin/static/node_modules \
     && ln -s ../../node_modules /app/powerdnsadmin/static/node_modules \
-    && flask assets build \
+    && SESSION_TYPE=filesystem flask assets build \
     # The generated Font Awesome CSS references these public font files.
     && rm /app/powerdnsadmin/static/node_modules \
     && mkdir -p /app/powerdnsadmin/static/node_modules/@fortawesome/fontawesome-free \
@@ -68,7 +67,6 @@ RUN yarnpkg install --immutable --inline-builds \
 
 
 FROM debian:${DEBIAN_VERSION}-slim AS runtime
-LABEL maintainer="k@ndk.name"
 
 ARG DEBIAN_VERSION
 ARG DOCKER_SCENARIO
@@ -111,8 +109,8 @@ WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app /app
-COPY ./docker-common/wait-for-pdns.sh /opt/wait-for-pdns.sh
-COPY ./${DOCKER_SCENARIO}/ /opt/scenario/
+COPY ./docker/common/wait-for-pdns.sh /opt/wait-for-pdns.sh
+COPY ./docker/${DOCKER_SCENARIO}/ /opt/scenario/
 
 RUN mkdir -p /data \
     && test "$(python -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" \

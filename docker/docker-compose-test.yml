@@ -1,0 +1,69 @@
+name: powerdns-admin-test
+
+services:
+  python-tests:
+    image: powerdns-admin-python-tests
+    build:
+      context: ..
+      dockerfile: docker/common/Dockerfile.app
+      args:
+        DOCKER_SCENARIO: test
+        INSTALL_TEST_DEPENDENCIES: "1"
+    networks:
+      - test
+    env_file:
+      - test/env
+    environment:
+      FLASK_CONF: /app/configs/docker_config.py
+      SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      pdns-server:
+        condition: service_started
+
+  pdns-server:
+    image: powerdns/pdns-auth-51:5.1.3
+    networks:
+      - test
+    env_file:
+      - test/env
+    environment:
+      PDNS_AUTH_API_KEY: ${PDNS_API_KEY:-changeme}
+      TEMPLATE_FILES: pdns-database
+      PDNS_LAUNCH: gmysql
+      PDNS_DB_HOST: mysql
+      PDNS_DB_PORT: 3306
+      PDNS_DB_NAME: powerdns
+      PDNS_DB_USER: powerdns
+      PDNS_DB_PASSWORD: changeme
+    volumes:
+      - ./common/pdns.conf:/etc/powerdns/pdns.conf:ro
+      - ./common/pdns-database.conf.j2:/etc/powerdns/templates.d/pdns-database.j2:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    networks:
+      - test
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: powerdns_admin
+      MYSQL_USER: powerdns_admin
+      MYSQL_PASSWORD: changeme
+    volumes:
+      - ./common/mysql-init.sql:/docker-entrypoint-initdb.d/10-powerdns.sql:ro
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+networks:
+  test:

@@ -3,6 +3,7 @@ from base64 import b64encode
 
 import pytest
 from flask_migrate import upgrade as flask_migrate_upgrade
+from sqlalchemy import MetaData
 
 from powerdnsadmin import create_app
 from powerdnsadmin.models.api_key import ApiKey
@@ -12,13 +13,25 @@ from powerdnsadmin.models.user import User
 
 
 def remove_test_database(app):
-    """Close SQLAlchemy's pooled SQLite handles before removing the file."""
+    """Remove the test schema so the next module starts from a clean database."""
+    sqlite_database = None
+
     with app.app_context():
         db.session.remove()
+
+        if db.engine.url.get_backend_name() == 'sqlite':
+            sqlite_database = db.engine.url.database
+        else:
+            # Reflect the live schema so Alembic's version table and tables
+            # created by extensions are removed along with the ORM tables.
+            metadata = MetaData()
+            metadata.reflect(bind=db.engine)
+            metadata.drop_all(bind=db.engine)
+
         db.engine.dispose()
 
-    if os.path.exists(app.config['TEST_DB_LOCATION']):
-        os.unlink(app.config['TEST_DB_LOCATION'])
+    if sqlite_database and os.path.exists(sqlite_database):
+        os.unlink(sqlite_database)
 
 
 @pytest.fixture(scope="session")

@@ -37,75 +37,80 @@
             {% if SETTING.get('ldap_enabled') or SETTING.get('local_db_enabled') %}
                 <form action="" method="post" class="needs-validation" novalidate>
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <div class="mb-3">
-                        <label class="visually-hidden" for="username">Username</label>
-                        <input type="text" class="form-control" placeholder="Username" name="username" id="username"
-                               required
-                               autofocus
-                               {% if username %}value="{{ username }}" {% endif %}>
-                        <div class="invalid-feedback">Please input your username.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="visually-hidden" for="password">Password</label>
-                        <input type="password" class="form-control" placeholder="Password" name="password" id="password"
-                               required
-                               {% if password %}value="{{ password }}" {% endif %}>
-                        <div class="invalid-feedback">Please input your password.</div>
-                    </div>
-                    {% if SETTING.get('otp_field_enabled') %}
+                    {% if otp_required %}
+                        <p class="login-box-msg">Enter the authentication code for {{ username }}.</p>
                         <div class="mb-3">
                             <label class="visually-hidden" for="otptoken">OTP Token</label>
                             <input type="text" class="form-control" placeholder="OTP Token" name="otptoken" id="otptoken"
-                                   autocomplete="off">
+                                   inputmode="numeric" autocomplete="one-time-code" required autofocus>
+                            <div class="invalid-feedback">Please input your OTP token.</div>
                         </div>
-                    {% endif %}
-                    {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
-                        <div class="mb-3">
-                            <label class="visually-hidden" for="auth_method">Authentication method</label>
-                            <select class="form-select" name="auth_method" id="auth_method">
-                                <option value="LOCAL">
-                                    LOCAL Authentication
-                                </option>
-                                {% if SETTING.get('login_ldap_first') %}
-                                    <option value="LDAP" selected="selected">
-                                        LDAP Authentication
-                                    </option>
-                                {% else %}
-                                    <option value="LDAP">
-                                        LDAP Authentication
-                                    </option>
-                                {% endif %}
-                            </select>
-                        </div>
-                    {% elif SETTING.get('ldap_enabled') and not SETTING.get('local_db_enabled') %}
-                        <div>
-                            <input type="hidden" name="auth_method" value="LDAP">
-                        </div>
-                    {% elif SETTING.get('local_db_enabled') and not SETTING.get('ldap_enabled') %}
-                        <div>
-                            <input type="hidden" name="auth_method" value="LOCAL">
-                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Verify</button>
+                        <a href="{{ url_for('index.login', restart=1) }}" class="btn btn-link w-100">
+                            Sign in as a different user
+                        </a>
                     {% else %}
-                        <div>
-                            <input type="hidden" name="auth_method" value="LOCAL">
+                        <div class="mb-3">
+                            <label class="visually-hidden" for="username">Username</label>
+                            <input type="text" class="form-control" placeholder="Username" name="username" id="username"
+                                   required autofocus
+                                   {% if username %}value="{{ username }}" {% endif %}>
+                            <div class="invalid-feedback">Please input your username.</div>
                         </div>
-                    {% endif %}
-                    <div class="row">
-                        <div class="col-8">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                                <label class="form-check-label" for="remember">
-                                    Remember Me
-                                </label>
+                        <div class="mb-3">
+                            <label class="visually-hidden" for="password">Password</label>
+                            <input type="password" class="form-control" placeholder="Password" name="password" id="password"
+                                   required>
+                            <div class="invalid-feedback">Please input your password.</div>
+                        </div>
+                        {% if SETTING.get('ldap_enabled') and SETTING.get('local_db_enabled') %}
+                            <div class="mb-3">
+                                <label class="visually-hidden" for="auth_method">Authentication method</label>
+                                <select class="form-select" name="auth_method" id="auth_method">
+                                    <option value="LOCAL">
+                                        LOCAL Authentication
+                                    </option>
+                                    {% if SETTING.get('login_ldap_first') %}
+                                        <option value="LDAP" selected="selected">
+                                            LDAP Authentication
+                                        </option>
+                                    {% else %}
+                                        <option value="LDAP">
+                                            LDAP Authentication
+                                        </option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        {% elif SETTING.get('ldap_enabled') and not SETTING.get('local_db_enabled') %}
+                            <div>
+                                <input type="hidden" name="auth_method" value="LDAP">
+                            </div>
+                        {% elif SETTING.get('local_db_enabled') and not SETTING.get('ldap_enabled') %}
+                            <div>
+                                <input type="hidden" name="auth_method" value="LOCAL">
+                            </div>
+                        {% else %}
+                            <div>
+                                <input type="hidden" name="auth_method" value="LOCAL">
+                            </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                    <label class="form-check-label" for="remember">
+                                        Remember Me
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <button type="submit" class="btn btn-primary w-100">Sign In</button>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <button type="submit" class="btn btn-primary w-100">Sign In</button>
-                        </div>
-                    </div>
+                    {% endif %}
                 </form>
             {% endif %}
-            {% if SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') or SETTING.get('azure_oauth_enabled') %}
+            {% if not otp_required and (SETTING.get('google_oauth_enabled') or SETTING.get('github_oauth_enabled') or SETTING.get('oidc_oauth_enabled') or SETTING.get('azure_oauth_enabled')) %}
                 <div class="social-auth-links text-center">
                     {% if SETTING.get('ldap_enabled') or SETTING.get('local_db_enabled') %}
                         <p>- OR -</p>
@@ -140,12 +145,12 @@
                     {% endif %}
                 </div>
             {% endif %}
-            {% if saml_enabled %}
+            {% if saml_enabled and not otp_required %}
                 <a href="{{ url_for('index.saml_login') }}">
                     SAML login
                 </a>
             {% endif %}
-            {% if SETTING.get('signup_enabled') %}
+            {% if SETTING.get('signup_enabled') and not otp_required %}
                 <br>
                 <a href="{{ url_for('index.register') }}" class="text-center">
                     Create an account

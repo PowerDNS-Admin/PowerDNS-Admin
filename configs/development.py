@@ -1,6 +1,5 @@
 import os
 #import urllib.parse
-basedir = os.path.abspath(os.path.dirname(__file__))
 
 ### BASIC APP CONFIG
 SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
@@ -45,8 +44,10 @@ SESSION_TYPE = 'sqlalchemy'
 #    SQLA_DB_NAME
 #)
 
-### DATABASE - SQLite
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+SQLALCHEMY_DATABASE_URI = os.getenv(
+    'SQLALCHEMY_DATABASE_URI',
+    'mysql://powerdns_admin:changeme@mysql/powerdns_admin'
+)
 
 ### SMTP config
 # MAIL_SERVER = 'localhost'

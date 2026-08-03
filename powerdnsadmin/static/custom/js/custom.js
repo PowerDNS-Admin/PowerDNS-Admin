@@ -42,6 +42,54 @@ function initDataTable(selector, options) {
     return $(selector).DataTable($.extend(true, {}, DATATABLE_DEFAULTS, options || {}));
 }
 
+// Responsive table containers clip absolutely positioned dropdown menus. Move
+// dashboard action menus to the document while they are open so Popper can
+// position them against the viewport, then restore their original DOM position.
+var dashboardDropdownPortals = new WeakMap();
+
+function initializeDashboardDropdownPortals() {
+    document.addEventListener('show.bs.dropdown', function (event) {
+        var toggle = event.target;
+        var dropdown = toggle.closest('.dashboard-action-dropdown');
+        if (!dropdown || dashboardDropdownPortals.has(toggle)) {
+            return;
+        }
+
+        var menu = dropdown.querySelector(':scope > .dropdown-menu');
+        if (!menu) {
+            return;
+        }
+
+        dashboardDropdownPortals.set(toggle, {
+            menu: menu,
+            parent: menu.parentNode,
+            nextSibling: menu.nextSibling
+        });
+        document.body.appendChild(menu);
+    });
+
+    document.addEventListener('shown.bs.dropdown', function (event) {
+        if (!dashboardDropdownPortals.has(event.target)) {
+            return;
+        }
+
+        var dropdown = bootstrap.Dropdown.getInstance(event.target);
+        if (dropdown) {
+            dropdown.update();
+        }
+    });
+
+    document.addEventListener('hidden.bs.dropdown', function (event) {
+        var portal = dashboardDropdownPortals.get(event.target);
+        if (!portal) {
+            return;
+        }
+
+        portal.parent.insertBefore(portal.menu, portal.nextSibling);
+        dashboardDropdownPortals.delete(event.target);
+    });
+}
+
 function initializeNativeValidation() {
     document.querySelectorAll('form.needs-validation').forEach(function (form) {
         form.addEventListener('submit', function (event) {
@@ -55,6 +103,7 @@ function initializeNativeValidation() {
 }
 
 document.addEventListener('DOMContentLoaded', initializeNativeValidation);
+document.addEventListener('DOMContentLoaded', initializeDashboardDropdownPortals);
 
 function getModalElement(target) {
     if (typeof target === 'string') {

@@ -41,7 +41,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./docker-common/Dockerfile.app
+          file: ./docker/common/Dockerfile.app
           load: true
           tags: powerdns-admin/megalinter-debian13.6:${{ github.sha }}
           build-args: |

@@ -309,14 +309,12 @@ def api_login_delete_zone(domain_name):
             current_app.logger.debug("Request to powerdns API successful")
 
             domain = Domain()
-            domain_id = domain.get_id_by_name(domain_name)
             domain.update()
 
             history = History(msg='Delete zone {0}'.format(
                 utils.pretty_domain_name(domain_name)),
                 detail='',
-                created_by=current_user.username,
-                domain_id=domain_id)
+                created_by=current_user.username)
             history.add()
 
     except Exception as e:
@@ -839,6 +837,7 @@ def api_update_user(user_id):
         user.email = email
     if otp_secret is not None:
         user.otp_secret = otp_secret
+        user.otp_last_used = None
     if confirmed is not None:
         user.confirmed = confirmed
     if requested_role is not None:

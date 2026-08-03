@@ -1,5 +1,8 @@
 import re
 
+import pyotp
+
+from powerdnsadmin.models.base import db
 from powerdnsadmin.models.user import User
 
 
@@ -24,6 +27,137 @@ def test_login_page_does_not_refresh_an_idle_session(
 
     assert login_page.status_code == 200
     assert b'http-equiv="refresh"' not in login_page.data.lower()
+
+
+def test_login_only_prompts_for_otp_when_user_has_totp_configured(
+        app, client, initial_data, test_admin_user, monkeypatch):
+    login_page = client.get('/login')
+    assert b'name="otptoken"' not in login_page.data
+
+    # Production secrets are 16 characters (the width of User.otp_secret).
+    otp_secret = 'JBSWY3DPEHPK3PXP'
+    current_time = 2_000_000_000
+    monkeypatch.setattr(
+        'powerdnsadmin.models.user.time.time', lambda: current_time)
+    with app.app_context():
+        administrator = User.query.filter_by(username=test_admin_user).one()
+        administrator.otp_secret = otp_secret
+        db.session.commit()
+
+    try:
+        password_response = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(login_page),
+            },
+        )
+
+        assert password_response.status_code == 200
+        assert b'name="otptoken"' in password_response.data
+        assert b'name="password"' not in password_response.data
+
+        otp_token = pyotp.TOTP(otp_secret).at(current_time)
+        otp_response = client.post(
+            '/login',
+            data={
+                'otptoken': otp_token,
+                '_csrf_token': csrf_token(password_response),
+            },
+        )
+
+        assert otp_response.status_code == 302
+        assert otp_response.headers['Location'].endswith('/login')
+
+        client.get('/logout')
+        replay_login_page = client.get('/login')
+        replay_password_response = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(replay_login_page),
+            },
+        )
+        replay_response = client.post(
+            '/login',
+            data={
+                'otptoken': otp_token,
+                '_csrf_token': csrf_token(replay_password_response),
+            },
+        )
+
+        assert replay_response.status_code == 200
+        assert b'Invalid credentials' in replay_response.data
+
+        # Two steps away is outside the tolerated +/-1 step window, so this
+        # must be rejected regardless of the replay-claim state.
+        expired_token = pyotp.TOTP(otp_secret).at(current_time - 60)
+        expired_response = client.post(
+            '/login',
+            data={
+                'otptoken': expired_token,
+                '_csrf_token': csrf_token(replay_response),
+            },
+        )
+
+        assert expired_response.status_code == 200
+        assert b'Invalid credentials' in expired_response.data
+    finally:
+        with app.app_context():
+            administrator = User.query.filter_by(
+                username=test_admin_user).one()
+            administrator.otp_secret = ''
+            administrator.otp_last_used = None
+            db.session.commit()
+
+
+def test_login_accepts_totp_token_from_an_adjacent_time_step(
+        app, client, initial_data, test_admin_user, monkeypatch):
+    otp_secret = 'JBSWY3DPEHPK3PXP'
+    current_time = 2_000_000_000
+    monkeypatch.setattr(
+        'powerdnsadmin.models.user.time.time', lambda: current_time)
+    with app.app_context():
+        administrator = User.query.filter_by(username=test_admin_user).one()
+        administrator.otp_secret = otp_secret
+        db.session.commit()
+
+    try:
+        login_page = client.get('/login')
+        password_response = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(login_page),
+            },
+        )
+
+        # Simulates an authenticator app running one 30-second step ahead of
+        # the server's clock -- still inside the tolerated window.
+        drifted_token = pyotp.TOTP(otp_secret).at(current_time + 30)
+        otp_response = client.post(
+            '/login',
+            data={
+                'otptoken': drifted_token,
+                '_csrf_token': csrf_token(password_response),
+            },
+        )
+
+        assert otp_response.status_code == 302
+        assert otp_response.headers['Location'].endswith('/login')
+    finally:
+        with app.app_context():
+            administrator = User.query.filter_by(
+                username=test_admin_user).one()
+            administrator.otp_secret = ''
+            administrator.otp_last_used = None
+            db.session.commit()
 
 
 def test_successful_login_rotates_session_and_remains_valid_for_dashboard_v2(

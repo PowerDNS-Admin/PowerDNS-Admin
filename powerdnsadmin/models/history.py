@@ -15,7 +15,7 @@ class History(db.Model):
     created_by = db.Column(db.String(128))
     created_on = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     domain_id = db.Column(db.Integer,
-                          db.ForeignKey('domain.id'),
+                          db.ForeignKey('domain.id', ondelete='SET NULL'),
                           nullable=True)
 
     def __init__(self, id=None, msg=None, detail=None, created_by=None, domain_id=None):

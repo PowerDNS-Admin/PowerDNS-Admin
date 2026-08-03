@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - .github/**
       - deploy/**
-      - docker-test/**
+      - docker/test/**
       - docs/**
       - .dockerignore
       - .gitattributes
@@ -20,8 +20,8 @@ on:
       - .lgtm.yml
       - .whitesource
       - .yarnrc
-      - docker-compose.yml
-      - docker-compose-test.yml
+      - ../../docker/docker-compose.yml
+      - ../../docker/docker-compose-test.yml
       - LICENSE
       - README.md
       - SECURITY.md
@@ -66,7 +66,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           context: ./
-          file: ./docker-common/Dockerfile.app
+          file: ./docker/common/Dockerfile.app
           build-args: |
             DOCKER_SCENARIO=production
             INSTALL_TEST_DEPENDENCIES=0

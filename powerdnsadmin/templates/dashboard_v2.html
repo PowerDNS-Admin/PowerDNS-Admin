@@ -11,39 +11,72 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-outline card-primary shadow">
-                        <div class="card-header">
-                            <h3 class="card-title mb-2">
-                                Zones
-                                <span class="badge text-bg-info ms-1">v2 preview</span>
+                    <div class="card dashboard-v2-card">
+                        <div class="card-header dashboard-v2-card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <h3 class="card-title mb-0">
+                                    Zones
+                                </h3>
+                                <span class="badge dashboard-v2-preview-badge">v2 preview</span>
                                 {% if show_bg_domain_button %}
                                     <button type="button" title="Synchronize Zones"
                                             class="btn btn-tool refresh-bg-button">
                                         <i class="fa-solid fa-sync"></i>
                                     </button>
                                 {% endif %}
-                            </h3>
-                            <div class="card-tools d-flex align-items-center gap-2">
+                            </div>
+                            <div class="dashboard-v2-header-actions d-flex flex-wrap align-items-center gap-2">
                                 <a class="btn btn-sm btn-outline-secondary no-prompt"
                                    href="{{ url_for('dashboard.dashboard') }}">
                                     Classic dashboard
                                 </a>
                                 <div class="nav-tabs-custom">
-                                    <ul class="nav nav-tabs card-header-tabs" id="dashboard-v2-tabs"
+                                    <ul class="nav dashboard-v2-tabs" id="dashboard-v2-tabs"
                                         role="tablist">
-                                        {% for tab_id in zone_tabs.order %}
-                                            <li class="nav-item" role="presentation">
-                                                <button class="nav-link {% if loop.first %}active{% endif %}"
-                                                        id="tab-control-{{ tab_id }}"
-                                                        data-bs-toggle="pill"
-                                                        data-bs-target="#tab_{{ tab_id }}_v2"
-                                                        type="button" role="tab"
-                                                        aria-controls="tab_{{ tab_id }}_v2"
-                                                        aria-selected="{{ 'true' if loop.first else 'false' }}">
-                                                    Zones <b>{{ zone_tabs.tabs[tab_id].display_name }}</b>
-                                                </button>
-                                            </li>
-                                        {% endfor %}
+                                        <li class="nav-item dashboard-v2-zone-option dashboard-v2-forward-option"
+                                            role="presentation">
+                                            <button class="nav-link active"
+                                                    id="tab-control-forward"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#tab_forward_v2"
+                                                    type="button" role="tab"
+                                                    title="Show forward zones"
+                                                    aria-controls="tab_forward_v2"
+                                                    aria-selected="true">
+                                                Forward Zones
+                                            </button>
+                                        </li>
+                                        <li class="dashboard-v2-tab-section" aria-hidden="true">
+                                            Reverse Zones
+                                        </li>
+                                        <li class="nav-item dashboard-v2-zone-option dashboard-v2-reverse-option"
+                                            role="presentation">
+                                            <button class="nav-link"
+                                                    id="tab-control-reverse_ipv4"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#tab_reverse_ipv4_v2"
+                                                    type="button" role="tab"
+                                                    aria-label="Reverse Zones IPv4"
+                                                    title="Show IPv4 reverse zones"
+                                                    aria-controls="tab_reverse_ipv4_v2"
+                                                    aria-selected="false">
+                                                IPv4
+                                            </button>
+                                        </li>
+                                        <li class="nav-item dashboard-v2-zone-option dashboard-v2-reverse-option"
+                                            role="presentation">
+                                            <button class="nav-link"
+                                                    id="tab-control-reverse_ipv6"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#tab_reverse_ipv6_v2"
+                                                    type="button" role="tab"
+                                                    aria-label="Reverse Zones IPv6"
+                                                    title="Show IPv6 reverse zones"
+                                                    aria-controls="tab_reverse_ipv6_v2"
+                                                    aria-selected="false">
+                                                IPv6
+                                            </button>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -54,7 +87,7 @@
                                     <div id="tab_{{ tab_id }}_v2"
                                          class="tab-pane fade {% if loop.first %}show active{% endif %}"
                                          role="tabpanel" aria-labelledby="tab-control-{{ tab_id }}">
-                                        <div class="card-body table-responsive records p-0 pt-2">
+                                        <div class="card-body dashboard-v2-table-region records p-0">
                                             <div class="dashboard-table-state px-3 py-5 text-center"
                                                  id="tbl_domain_list_{{ tab_id }}_v2_state"
                                                  role="status" aria-live="polite">
@@ -75,7 +108,7 @@
                                                 </div>
                                             </div>
                                             <table id="tbl_domain_list_{{ tab_id }}_v2"
-                                                   class="table table-striped table-hover table-sm records d-none"
+                                                   class="table table-hover records d-none"
                                                    data-dashboard-v2-table
                                                    data-source="{{ url_for('dashboard.domains_v2', tab_id=tab_id) }}"
                                                    data-page-length="{{ default_page_length }}"
@@ -109,9 +142,271 @@
 
 {% block head_styles %}
     <style>
-        table.records tbody td:first-of-type { text-align: left; }
+        #dashboard-v2 .dashboard-v2-card {
+            overflow: hidden;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08);
+        }
+        #dashboard-v2 .dashboard-v2-card-header {
+            min-height: 4.25rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-card-header::after { display: none; }
+        #dashboard-v2 .dashboard-v2-card-header .card-title {
+            float: none;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        #dashboard-v2 .dashboard-v2-preview-badge {
+            border: 1px solid rgba(var(--bs-primary-rgb), 0.55);
+            border-radius: 999px;
+            background: rgba(var(--bs-primary-rgb), 0.12);
+            color: var(--bs-primary);
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        #dashboard-v2 .dashboard-v2-tabs {
+            gap: 0.15rem;
+            padding: 0.2rem;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.55rem;
+        }
+        #dashboard-v2 .dashboard-v2-tabs .nav-link {
+            padding: 0.35rem 0.75rem;
+            border: 0;
+            border-radius: 0.4rem;
+            color: var(--bs-secondary-color);
+            font-size: 0.875rem;
+        }
+        #dashboard-v2 .dashboard-v2-tabs .nav-link.active {
+            background: var(--bs-secondary-bg);
+            color: var(--bs-emphasis-color);
+            box-shadow: inset 0 0 0 1px var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-tab-section {
+            display: flex;
+            align-items: center;
+            margin-left: 0.35rem;
+            padding: 0 0.55rem 0 0.8rem;
+            border-left: 1px solid var(--bs-border-color);
+            color: var(--bs-secondary-color);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            min-width: 4.25rem;
+            border: 1px solid var(--bs-border-color);
+            background: var(--bs-secondary-bg);
+            color: var(--bs-emphasis-color);
+            font-weight: 600;
+            justify-content: center;
+            transition: border-color 120ms ease, background-color 120ms ease,
+                color 120ms ease, box-shadow 120ms ease;
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link::before {
+            width: 0.45rem;
+            height: 0.45rem;
+            border: 1px solid currentColor;
+            border-radius: 50%;
+            content: "";
+            opacity: 0.65;
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link:hover {
+            border-color: rgba(var(--bs-primary-rgb), 0.65);
+            background: rgba(var(--bs-primary-rgb), 0.1);
+            color: var(--bs-primary);
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link:focus-visible {
+            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.2);
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link.active {
+            border-color: rgba(var(--bs-primary-rgb), 0.75);
+            background: rgba(var(--bs-primary-rgb), 0.16);
+            color: var(--bs-primary);
+            box-shadow: inset 0 0 0 1px rgba(var(--bs-primary-rgb), 0.18);
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link.active::before {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary);
+            box-shadow: inset 0 0 0 1px var(--bs-body-bg);
+            opacity: 1;
+        }
+        #dashboard-v2 .dashboard-v2-table-toolbar,
+        #dashboard-v2 .dashboard-v2-table-footer {
+            min-height: 3.65rem;
+            padding: 0.75rem 1.25rem;
+        }
+        #dashboard-v2 .dashboard-v2-table-toolbar {
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-table-footer {
+            border-top: 1px solid var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-table-scroll { overflow-x: auto; }
+        #dashboard-v2 .dashboard-v2-filter .dataTables_filter,
+        #dashboard-v2 .dashboard-v2-length .dataTables_length { text-align: inherit; }
+        #dashboard-v2 .dashboard-v2-filter label {
+            position: relative;
+            margin: 0;
+        }
+        #dashboard-v2 .dashboard-v2-filter label::before {
+            position: absolute;
+            top: 50%;
+            left: 0.75rem;
+            z-index: 1;
+            color: var(--bs-secondary-color);
+            content: "\f002";
+            font-family: "Font Awesome 7 Free";
+            font-weight: 900;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        #dashboard-v2 .dashboard-v2-filter input {
+            width: min(21.25rem, 72vw);
+            margin: 0;
+            padding-left: 2.15rem;
+            border-radius: 0.45rem;
+        }
+        #dashboard-v2 .dashboard-v2-length label {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 0;
+            color: var(--bs-secondary-color);
+            font-size: 0.8rem;
+        }
+        #dashboard-v2 .dashboard-v2-length select {
+            min-width: 3.75rem;
+            margin: 0;
+        }
+        #dashboard-v2 table.records {
+            min-width: 58rem;
+            margin: 0 !important;
+        }
+        #dashboard-v2 table.records thead th,
+        #dashboard-v2 table.records tbody td {
+            padding: 0.75rem 1.25rem;
+            text-align: left;
+            vertical-align: middle;
+        }
+        #dashboard-v2 table.records thead th {
+            border-bottom: 1px solid var(--bs-border-color);
+            color: var(--bs-secondary-color);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        #dashboard-v2 table.records tbody td {
+            border-bottom-color: rgba(var(--bs-secondary-rgb), 0.12);
+            color: var(--bs-secondary-color);
+        }
+        #dashboard-v2 table.records tbody tr:last-child td { border-bottom: 0; }
+        #dashboard-v2 table.records th:last-child,
+        #dashboard-v2 table.records td:last-child {
+            width: 1%;
+            text-align: right;
+            white-space: nowrap;
+        }
+        #dashboard-v2 table.records td.dataTables_empty {
+            width: auto;
+            padding: 2.5rem 1.25rem;
+            text-align: center;
+            white-space: normal;
+        }
+        #dashboard-v2 table.records td:first-child,
+        #dashboard-v2 table.records td:nth-child(4) {
+            font-family: var(--bs-font-monospace);
+        }
+        #dashboard-v2 table.records td:first-child a {
+            color: var(--bs-link-color);
+            text-decoration: none;
+        }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting::before,
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_asc::before,
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_desc::before {
+            display: none;
+        }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting::after { opacity: 0; }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_asc::after,
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_desc::after {
+            position: static;
+            display: inline;
+            margin-left: 0.3rem;
+            color: var(--bs-primary);
+            opacity: 1;
+        }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_asc::after { content: "↑"; }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_desc::after { content: "↓"; }
+        #dashboard-v2 .dashboard-dnssec-pill {
+            border: 1px solid var(--bs-border-color);
+            background: var(--bs-secondary-bg);
+            color: var(--bs-secondary-color);
+            font-weight: 500;
+        }
+        #dashboard-v2 .dashboard-dnssec-pill.is-signed {
+            border-color: rgba(var(--bs-success-rgb), 0.45);
+            background: rgba(var(--bs-success-rgb), 0.12);
+            color: var(--bs-success);
+        }
+        .dashboard-dnssec-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin-inline-end: 0.2rem;
+            border-radius: 50%;
+            background: currentColor;
+            vertical-align: middle;
+        }
+        #dashboard-v2 .dashboard-v2-edit-button,
+        #dashboard-v2 .dashboard-v2-menu-toggle {
+            border-color: var(--bs-border-color);
+            background: var(--bs-secondary-bg);
+            color: var(--bs-emphasis-color);
+        }
+        #dashboard-v2 .dashboard-v2-menu-toggle { width: 2rem; }
+        #dashboard-v2 .dashboard-v2-menu-toggle::after { display: none; }
+        #dashboard-v2 .dashboard-v2-table-footer .dataTables_info {
+            padding: 0;
+            color: var(--bs-secondary-color);
+            font-size: 0.8rem;
+        }
+        #dashboard-v2 .dashboard-v2-table-footer .dataTables_paginate { padding: 0; }
+        #dashboard-v2 .dashboard-v2-table-footer .pagination { margin: 0; }
+        #dashboard-v2 .dashboard-v2-table-footer .page-link {
+            padding: 0.3rem 0.65rem;
+            font-size: 0.8rem;
+        }
         .dashboard-table-state { min-height: 13rem; }
         .dashboard-table-state .spinner-border { width: 2.5rem; height: 2.5rem; }
+        @media (max-width: 767.98px) {
+            #dashboard-v2 .dashboard-v2-card-header,
+            #dashboard-v2 .dashboard-v2-header-actions { align-items: stretch !important; }
+            #dashboard-v2 .dashboard-v2-header-actions { width: 100%; }
+            #dashboard-v2 .dashboard-v2-tabs { flex: 1 1 auto; }
+            #dashboard-v2 .dashboard-v2-tabs .nav-item { flex: 1 1 auto; }
+            #dashboard-v2 .dashboard-v2-tabs .nav-link { width: 100%; }
+            #dashboard-v2 .dashboard-v2-tab-section {
+                flex-basis: 100%;
+                margin: 0.2rem 0 0;
+                padding: 0.45rem 0.55rem 0.2rem;
+                border-top: 1px solid var(--bs-border-color);
+                border-left: 0;
+            }
+            #dashboard-v2 .dashboard-v2-table-toolbar { align-items: stretch !important; }
+            #dashboard-v2 .dashboard-v2-filter,
+            #dashboard-v2 .dashboard-v2-filter input { width: 100%; }
+        }
     </style>
 {% endblock %}
 
