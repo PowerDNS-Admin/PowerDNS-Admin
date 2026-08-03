@@ -540,24 +540,26 @@ class Domain(db.Model):
         if re.search('ip6.arpa', reverse_host_address):
             for i in range(1, 32, 1):
                 address = re.search(
-                    '((([a-f0-9]\.){' + str(i) + '})(?P<ipname>.+6.arpa)\.?)',
-                    reverse_host_address)
+                    r'((([a-f0-9]\.){' + str(i) +
+                    r'})(?P<ipname>.+6.arpa)\.?)', reverse_host_address)
                 if None != self.get_id_by_name(address.group('ipname')):
                     c = i
                     break
             return re.search(
-                '((([a-f0-9]\.){' + str(c) + '})(?P<ipname>.+6.arpa)\.?)',
+                r'((([a-f0-9]\.){' + str(c) +
+                r'})(?P<ipname>.+6.arpa)\.?)',
                 reverse_host_address).group('ipname')
         else:
             for i in range(1, 4, 1):
                 address = re.search(
-                    '((([0-9]+\.){' + str(i) + '})(?P<ipname>.+r.arpa)\.?)',
-                    reverse_host_address)
+                    r'((([0-9]+\.){' + str(i) +
+                    r'})(?P<ipname>.+r.arpa)\.?)', reverse_host_address)
                 if None != self.get_id_by_name(address.group('ipname')):
                     c = i
                     break
             return re.search(
-                '((([0-9]+\.){' + str(c) + '})(?P<ipname>.+r.arpa)\.?)',
+                r'((([0-9]+\.){' + str(c) +
+                r'})(?P<ipname>.+r.arpa)\.?)',
                 reverse_host_address).group('ipname')
 
     def delete(self, domain_name):
