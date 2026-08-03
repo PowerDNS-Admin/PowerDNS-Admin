@@ -1,0 +1,37 @@
+name: 'Update Release Notes'
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
+
+      - name: 'Read supported versions'
+        id: supported_versions
+        run: |
+          python_versions=$(jq -r '.python.supported_versions | join(", ")' app-support.json)
+          browser_versions=$(jq -r '.browsers | to_entries | .[] | "\(.key) \(.value.minimum_version)+"' app-support.json | paste -sd ", ")
+          powerdns_versions=$(jq -r '.powerdns_auth.supported_versions | join(", ")' app-support.json)
+          echo "::set-output name=python_versions::$python_versions"
+          echo "::set-output name=browser_versions::$browser_versions"
+          echo "::set-output name=powerdns_versions::$powerdns_versions"
+
+      - name: 'Update release body'
+        uses: softprops/action-gh-release@v1
+        with:
+          body_append: |
+            ### Supported Python Versions
+            ${{ steps.supported_versions.outputs.python_versions }}
+
+            ### Supported Browser Versions
+            ${{ steps.supported_versions.outputs.browser_versions }}
+
+            ### Supported PowerDNS Authoritative Server Versions
+            ${{ steps.supported_versions.outputs.powerdns_versions }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

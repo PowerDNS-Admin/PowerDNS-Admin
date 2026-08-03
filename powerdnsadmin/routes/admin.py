@@ -220,8 +220,7 @@ def before_request():
 @login_required
 @operator_role_required
 def server_statistics():
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     domains = Domain.query.all()
@@ -250,8 +249,7 @@ def server_statistics():
 @login_required
 @operator_role_required
 def server_configuration():
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     domains = Domain.query.all()
@@ -1432,24 +1430,19 @@ def setting_pdns():
     if request.method == 'GET':
         pdns_api_url = Setting().get('pdns_api_url')
         pdns_api_key = Setting().get('pdns_api_key')
-        pdns_version = Setting().get('pdns_version')
         return render_template('admin_setting_pdns.html',
                                pdns_api_url=pdns_api_url,
-                               pdns_api_key=pdns_api_key,
-                               pdns_version=pdns_version)
+                               pdns_api_key=pdns_api_key)
     elif request.method == 'POST':
         pdns_api_url = request.form.get('pdns_api_url')
         pdns_api_key = request.form.get('pdns_api_key')
-        pdns_version = request.form.get('pdns_version')
 
         Setting().set('pdns_api_url', pdns_api_url)
         Setting().set('pdns_api_key', pdns_api_key)
-        Setting().set('pdns_version', pdns_version)
 
         return render_template('admin_setting_pdns.html',
                                pdns_api_url=pdns_api_url,
-                               pdns_api_key=pdns_api_key,
-                               pdns_version=pdns_version)
+                               pdns_api_key=pdns_api_key)
 
 
 @admin_bp.route('/setting/dns-records', methods=['GET', 'POST'])

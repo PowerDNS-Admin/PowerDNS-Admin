@@ -50,7 +50,6 @@ def test_powerdns_payload_omits_unselected_catalog(app):
         setting.return_value.get.side_effect = {
             'pdns_api_url': 'http://powerdns.test',
             'pdns_api_key': 'test-key',
-            'pdns_version': '4.9.0',
             'pdns_api_timeout': 5,
             'verify_ssl_connections': False,
         }.get

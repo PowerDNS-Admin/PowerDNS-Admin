@@ -18,7 +18,7 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
-                                {% if not SETTING.get('pdns_api_url') or not SETTING.get('pdns_api_key') or not SETTING.get('pdns_version') %}
+                                {% if not SETTING.get('pdns_api_url') or not SETTING.get('pdns_api_key') %}
                                     <div class="alert alert-danger alert-dismissible">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert"
                                                 aria-label="Close"></button>
@@ -41,14 +41,6 @@
                                            required
                                            value="{{ pdns_api_key }}">
                                     <div class="invalid-feedback">Please input a valid PowerDNS API key.</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="pdns_version">PowerDNS Version</label>
-                                    <input type="text" class="form-control" placeholder="PowerDNS Version"
-                                           name="pdns_version" id="pdns_version"
-                                           required
-                                           value="{{ pdns_version }}">
-                                    <div class="invalid-feedback">Please input the PowerDNS version.</div>
                                 </div>
                             </div>
                             <!-- /.card-body -->
@@ -79,8 +71,6 @@
                                 <dd>Your PowerDNS API URL (eg. http://127.0.0.1:8081/).</dd>
                                 <dt>PowerDNS API Key</dt>
                                 <dd>Your PowerDNS API key.</dd>
-                                <dt>PowerDNS Version</dt>
-                                <dd>Your PowerDNS version number (eg. 5.1.0).</dd>
                             </dl>
                             <p>Find more details at
                                 <a href="https://doc.powerdns.com/md/httpapi/README/" target="_blank">https://doc.powerdns.com/md/httpapi/README/</a>

@@ -1,16 +1,23 @@
-# Getting started with PowerDNS-Admin
+# Getting Started with PowerDNS-Admin
 
+Before you can use PowerDNS-Admin, you need to configure the database connection. This is done by setting the `SQLALCHEMY_DATABASE_URI` in your `FLASK_CONF` file. The location of this file may vary depending on your installation method.
 
-In your FLASK_CONF (check the installation directions for where yours is) file, make sure you have the database URI filled in (in some previous documentation this was called config.py):
+### Database Configuration
 
-For MySQL / MariaDB:
+For **MySQL / MariaDB**:
+
 ```
 SQLALCHEMY_DATABASE_URI = 'mysql://username:password@127.0.0.1/db_name'
 ```
 
-For Postgres:
+For **PostgreSQL**:
+
 ```
 SQLALCHEMY_DATABASE_URI = 'postgresql://powerdnsadmin:powerdnsadmin@127.0.0.1/powerdnsadmindb'
 ```
 
-Open your web browser and go to `http://localhost:9191` to visit PowerDNS-Admin web interface. Register a user. The first user will be in the Administrator role.
+### First-time Login
+
+Once you have configured the database, open your web browser and navigate to `http://localhost:9191` to access the PowerDNS-Admin web interface.
+
+The first user to register will be granted the Administrator role.

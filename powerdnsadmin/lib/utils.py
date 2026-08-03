@@ -6,7 +6,6 @@ import ipaddress
 import idna
 
 from collections.abc import Iterable
-from distutils.version import StrictVersion
 from urllib.parse import urlparse
 
 
@@ -184,14 +183,8 @@ def display_time(amount, units='s', remove_seconds=True):
     return final_string
 
 
-def pdns_api_extended_uri(version):
-    """
-    Check the pdns version
-    """
-    if StrictVersion(version) >= StrictVersion('4.0.0'):
-        return "api/v1"
-    else:
-        return ""
+def pdns_api_extended_uri():
+    return "api/v1"
 
 
 def display_setting_state(value):

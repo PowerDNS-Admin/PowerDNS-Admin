@@ -967,8 +967,7 @@ def dnssec_status_v2(domain_name):
 @login_required
 def dashboard_v2():
     """Render the non-blocking, client-rendered dashboard preview."""
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     bg_domain_updates = Setting().get('bg_domain_updates')
@@ -987,15 +986,13 @@ def dashboard_v2():
         default_page_length=default_page_length,
         dnssec_key_types=DNSSEC_KEY_TYPES,
         dnssec_algorithms=DNSSEC_ALGORITHMS,
-        dnssec_rollover_types=DNSSEC_ROLLOVER_TYPES,
-        pdns_version=Setting().get('pdns_version'))
+        dnssec_rollover_types=DNSSEC_ROLLOVER_TYPES)
 
 
 @dashboard_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
@@ -1012,8 +1009,7 @@ def dashboard():
     # Add custom boxes to render_template
     return render_template('dashboard.html',
                            zone_tabs=ZoneTabs,
-                           show_bg_domain_button=show_bg_domain_button,
-                           pdns_version=Setting().get('pdns_version'))
+                           show_bg_domain_button=show_bg_domain_button)
 
 
 @dashboard_bp.route('/domains-updater', methods=['GET', 'POST'])

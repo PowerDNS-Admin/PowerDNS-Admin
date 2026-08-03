@@ -1,67 +1,39 @@
-This discribes how to debug the buildprocess
+This document describes how to build and debug the PowerDNS-Admin Docker image.
 
-> **Note:** this describes the legacy Alpine-based `docker/legacy/Dockerfile`.
-> It is no longer used to build the published PowerDNS-Admin image; the
-> current production build uses `docker/common/Dockerfile.app` (see
-> `../../../docker/docker-compose-dev.yml`, `../../../docker/docker-compose-test.yml`, and
-> `.github/workflows/build-and-publish.yml`). Kept here for reference only.
+## Production Build
 
+The production Docker image is built using the `docker/common/Dockerfile.app` file and is orchestrated by the `.github/workflows/build-and-publish.yml` GitHub Actions workflow.
 
-docker-compose.yml
+### Image Naming
 
+The primary Docker image is published to Docker Hub as `powerdnsadmin/pda-legacy`. While the name includes "legacy," this is the current, actively maintained image. The name is a historical artifact.
+
+### Local Building and Testing
+
+To build the image locally for testing or development, you can use the `docker-compose-dev.yml` file.
+
+```console
+# From the root of the project
+docker-compose -f docker/docker-compose-dev.yml up --build
 ```
-version: "3"
+
+This command will build the `app` service using the `docker/common/Dockerfile.app` file and start the necessary services for a development environment.
+
+## Debugging
+
+For debugging purposes, you can modify the `docker-compose-dev.yml` file to override the default command and keep the container running.
+
+For example, you can change the `command` for the `app` service to `tail -f /dev/null`:
+
+```yaml
 services:
   app:
-    image: powerdns/custom
-    container_name: powerdns
-    restart: always
-    build:
-        context: git
-        dockerfile: docker/legacy/Dockerfile
-    network_mode: "host"
-    logging:
-      driver: json-file
-      options:
-        max-size: 50m
-    environment:
-      - BIND_ADDRESS=127.0.0.1:8082
-      - SECRET_KEY='VerySecret'
-      - SQLALCHEMY_DATABASE_URI=mysql://pdnsadminuser:password@127.0.0.1/powerdnsadmin
-      - GUNICORN_TIMEOUT=60
-      - GUNICORN_WORKERS=2
-      - GUNICORN_LOGLEVEL=DEBUG
-      - OFFLINE_MODE=False
-      - CSRF_COOKIE_SECURE=False
+    # ... other service configuration
+    command: tail -f /dev/null
 ```
 
-Create a git folder in the location of the `../../../docker/docker-compose.yml` and clone the repo into it
+This will start the container and keep it running, allowing you to get a shell inside it for debugging:
 
+```console
+docker-compose -f docker/docker-compose-dev.yml exec app /bin/bash
 ```
-mkdir git
-cd git 
-git clone https://github.com/PowerDNS-Admin/PowerDNS-Admin.git .
-```
-
-In case you are behind an SSL Filter like me, you can add the following to each stage of the `git/docker/legacy/Dockerfile`
-
-This installs the command `update-ca-certificates` from the alpine repo and adds an ssl cert to the trust chain, make sure you are getting the right version in case the base image version changes
-
-```
-RUN mkdir /tmp-pkg && cd /tmp-pkg && wget http://dl-cdn.alpinelinux.org/alpine/v3.17/main/x86_64/ca-certificates-20220614-r4.apk && apk add --allow-untrusted --no-network --no-cache /tmp-pkg/ca-certificates-20220614-r4.apk || true
-RUN rm -rf /tmp/pkg
-COPY MyCustomCerts.crt /usr/local/share/ca-certificates/MyCustomCerts.crt
-RUN update-ca-certificates
-COPY pip.conf /etc/pip.conf
-```
-
-`MyCustomCerts.crt` and `pip.conf` have to be placed inside the `git` folder.
-
-The content of `pip.conf` is:
-
-```
-[global]
-cert = /usr/local/share/ca-certificates/MyCustomCerts.crt
-```
-
-For easier debugging you can change the `CMD` of the `Dockerfile` to `CMD ["tail","-f", "/dev/null"]` though I expect you to be fluent in Docker in case you wish to debug

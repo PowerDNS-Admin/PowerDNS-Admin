@@ -1,36 +1,27 @@
-# General installation
+# General Installation
 
 ## PowerDNS-Admin Architecture
 
 ![PowerDNS-Admin Component Layout](Architecture.png)
 
-A PowerDNS-Admin installation includes four main components:
+A PowerDNS-Admin installation consists of four main components:
 
-- PowerDNS-Admin Database
-- PowerDNS-Admin Application Server
-- PowerDNS-Admin Frontend Web server
-- PowerDNS server
+-   **PowerDNS-Admin Database:** Stores application data.
+-   **PowerDNS-Admin Application Server:** The core application logic.
+-   **PowerDNS-Admin Frontend Web Server:** Serves the user interface.
+-   **PowerDNS Server:** The DNS server that PowerDNS-Admin manages.
 
-All four components can be installed on one server. For larger installations or
-security isolation, they can instead be split across multiple servers.
+All four components can be installed on a single server. For larger installations or for security purposes, they can be distributed across multiple servers.
 
-## Requirements for PowerDNS-Admin:
+## Requirements
 
-- A linux based system. Others (Arch-based for example) may work but are currently not tested.
-  - Ubuntu versions tested:
-    - To fill in
-  - Red hat versions tested:
-    - To fill in
-  - Supported Python versions:
-    - 3.10
-    - 3.11
-    - 3.12
-    - 3.13
-  - Python 3.9 and earlier are not supported by the current application
-    dependencies.
-  - Python 3.14 and later are not yet tested or supported.
-- A database for PowerDNS-Admin, if you are using a database for PowerDNS itself this must be separate to that database. The currently supported databases are:
-  - MySQL
-  - PostgreSQL
-  - SQLite
-- A PowerDNS server that PowerDNS-Admin will manage.
+-   **Operating System:** A Linux-based system is required. While other systems may work, they are not officially tested or supported.
+-   **Python:**
+    -   Supported versions: 3.10, 3.11, 3.12, 3.13
+    -   Python 3.9 and earlier are not supported due to application dependencies.
+    -   Python 3.14 and later are not yet tested or supported.
+-   **Database:** PowerDNS-Admin requires its own database, which must be separate from the PowerDNS database. The following databases are supported:
+    -   MySQL
+    -   PostgreSQL
+    -   SQLite
+-   **PowerDNS:** A PowerDNS server that will be managed by PowerDNS-Admin.

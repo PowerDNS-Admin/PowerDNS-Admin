@@ -56,8 +56,7 @@ class Domain(db.Model):
         # PDNS configs
         self.PDNS_STATS_URL = Setting().get('pdns_api_url')
         self.PDNS_API_KEY = Setting().get('pdns_api_key')
-        self.PDNS_VERSION = Setting().get('pdns_version')
-        self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
+        self.API_EXTENDED_URL = utils.pdns_api_extended_uri()
 
     def __repr__(self):
         return '<Domain {0}>'.format(self.name)

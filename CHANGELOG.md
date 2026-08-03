@@ -1,6 +1,28 @@
 # Changelog
 
-## [0.5.1]
+## [Unreleased]
+
+### Breaking Changes
+
+-   This release removes support for PowerDNS versions older than 5.0. Users running older versions of PowerDNS will need to use an older version of PowerDNS-Admin.
+
+### Features
+
+-   A new GitHub Actions workflow to automatically add support information to release notes.
+-   A new `app-support.json` file to consolidate the supported versions of Python, browsers, and the PowerDNS Authoritative Server.
+-   A new guide for migrating from SQLite to PostgreSQL or MySQL.
+
+### Documentation
+
+-   The `README.md`, `docs/running_tests.md`, and `docs/wiki/debug/build-process.md` have been updated for consistency, clarity, and tone.
+-   Outdated and historical documentation has been removed.
+
+### Code Refactoring
+
+-   All backward compatibility checks for older versions of PowerDNS have been removed from the codebase.
+-   The `pdns_version` setting has been removed from the application.
+
+## [0.5.1] - 2026-08-02
 
 Summary of changes since `v0.4.2`.
 
