@@ -1,5 +1,6 @@
 import os
 import base64
+import time
 import traceback
 import bcrypt
 import pyotp
@@ -8,7 +9,8 @@ import ldap.filter
 from collections import OrderedDict
 from flask import current_app
 from flask_login import AnonymousUserMixin
-from sqlalchemy import orm
+from sqlalchemy import func, orm
+from sqlalchemy.exc import IntegrityError
 import qrcode as qrc
 import qrcode.image.svg as qrc_svg
 from io import BytesIO
@@ -33,6 +35,7 @@ class User(db.Model):
     lastname = db.Column(db.String(64))
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
+    otp_last_used = db.Column(db.BigInteger)
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates="users", lazy=True)
@@ -48,6 +51,7 @@ class User(db.Model):
                  role_id=None,
                  email=None,
                  otp_secret=None,
+                 otp_last_used=None,
                  confirmed=False,
                  reload_info=True):
         self.id = id
@@ -59,6 +63,7 @@ class User(db.Model):
         self.role_id = role_id
         self.email = email
         self.otp_secret = otp_secret
+        self.otp_last_used = otp_last_used
         self.confirmed = confirmed
 
         if reload_info:
@@ -73,6 +78,7 @@ class User(db.Model):
                 self.email = user_info.email
                 self.role_id = user_info.role_id
                 self.otp_secret = user_info.otp_secret
+                self.otp_last_used = user_info.otp_last_used
                 self.confirmed = user_info.confirmed
 
     def is_authenticated(self):
@@ -96,7 +102,29 @@ class User(db.Model):
 
     def verify_totp(self, token):
         totp = pyotp.TOTP(self.otp_secret)
-        return totp.verify(token, valid_window = 5)
+        current_timecode = int(time.time()) // totp.interval
+
+        matched_timecode = None
+        for offset in (0, -1, 1):
+            candidate_timecode = current_timecode + offset
+            candidate = totp.at(candidate_timecode * totp.interval)
+            if pyotp.utils.strings_equal(str(token), candidate):
+                matched_timecode = candidate_timecode
+                break
+
+        if self.id is None or matched_timecode is None:
+            return False
+
+        claimed = User.query.filter(
+            User.id == self.id,
+            db.or_(User.otp_last_used.is_(None),
+                   User.otp_last_used < matched_timecode),
+        ).update(
+            {User.otp_last_used: matched_timecode},
+            synchronize_session=False,
+        )
+        db.session.commit()
+        return claimed == 1
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
@@ -116,7 +144,7 @@ class User(db.Model):
         return False
 
     def get_user_info_by_id(self):
-        user_info = User.query.get(int(self.id))
+        user_info = db.session.get(User, int(self.id))
         return user_info
 
     def get_user_info_by_username(self):
@@ -418,14 +446,17 @@ class User(db.Model):
         Create local user witch stores username / password in the DB
         """
         # check if username existed
-        user = User.query.filter(str(User.username).lower() == self.username.lower()).first()
+        user = User.query.filter(
+            func.lower(User.username) == self.username.lower()).first()
         if user:
             return {'status': False, 'msg': 'Username is already in use'}
 
         # check if email existed
-        user = User.query.filter(str(User.email).lower() == self.email.lower()).first()
-        if user:
-            return {'status': False, 'msg': 'Email address is already in use'}
+        if self.email:
+            user = User.query.filter(
+                func.lower(User.email) == self.email.lower()).first()
+            if user:
+                return {'status': False, 'msg': 'Email address is already in use'}
 
         # first register user will be in Administrator role
         if self.role_id is None:
@@ -444,8 +475,22 @@ class User(db.Model):
         if self.password and self.password != '*':
             self.password = self.password.decode("utf-8")
 
-        db.session.add(self)
-        db.session.commit()
+        try:
+            db.session.add(self)
+            db.session.commit()
+        except IntegrityError:
+            # A concurrent request can pass the checks above before this one
+            # commits. Always make the scoped session reusable after a failed
+            # flush and return the same result as the pre-insert checks.
+            db.session.rollback()
+            return {
+                'status': False,
+                'msg': 'Username or email address is already in use'
+            }
+        except Exception:
+            db.session.rollback()
+            raise
+
         return {'status': True, 'msg': 'Created user successfully'}
 
     def update_local_user(self):
@@ -516,6 +561,7 @@ class User(db.Model):
 
         if enable_otp is not None:
             user.otp_secret = ""
+            user.otp_last_used = None
 
         if enable_otp == True:
             # generate the opt secret key

@@ -1,24 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "admin_keys" %}
+{% set page_title = 'API Keys' %}
 {% block title %}<title>API Keys - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">API Keys</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">API Keys</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -28,7 +12,7 @@
                     <h3 class="card-title">API Keys</h3>
                     <div class="card-tools">
                         <a href="{{ url_for('admin.edit_key') }}">
-                            <button type="button" class="btn btn-primary float-right button_add_key" title="Create Key">
+                            <button type="button" class="btn btn-primary float-end button_add_key" title="Create Key">
                                 <i class="fa-solid fa-plus"></i>&nbsp;Create Key
                             </button>
                         </a>
@@ -60,11 +44,11 @@
                                 {% endif %}{% endfor %}</td>
                                 <td>
                                     <div class="dropdown">
-                                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu"
-                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu-{{ key.id }}"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <i class="fa-solid fa-bars"></i>
                                         </button>
-                                        <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenu-{{ key.id }}">
                                             <button type="button" class="dropdown-item btn-warning"
                                                     onclick="window.location.href='{{ url_for('admin.edit_key', key_id=key.id) }}'">
                                                 <i class="fa-solid fa-edit"></i>&nbsp;Edit API Key
@@ -95,13 +79,8 @@
 {% block extrascripts %}
     <script>
         // set up key data table
-        $("#tbl_keys").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
+        initDataTable("#tbl_keys", {
             "info": false,
-            "autoWidth": false,
             "lengthMenu": [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
@@ -122,28 +101,27 @@
                     '_csrf_token': '{{ csrf_token() }}'
                 }
                 applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-keys', false, true);
-                modal.modal('hide');
+                hideModal(modal);
             })
-            modal.modal('show');
+            showModal(modal);
         });
     </script>
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade modal-warning" id="modal_delete">
+    <div class="modal fade" id="modal_delete" tabindex="-1"
+         aria-labelledby="modal_delete_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_delete_label">Confirmation</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
                     <button type="button" class="btn btn-danger" id="button_delete_confirm">

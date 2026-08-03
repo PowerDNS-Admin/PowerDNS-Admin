@@ -1,25 +1,9 @@
 {% extends "base.html" %}
 {% set active_page = "admin_settings" %}
+{% set page_title = 'Authentication Settings' %}
+{% set breadcrumb_items = [{'label': 'Settings'}] %}
 {% block title %}<title>Authentication Settings - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Authentication Settings</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-                        <li class="breadcrumb-item">Settings</li>
-                        <li class="breadcrumb-item active">Authentication Settings</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -36,32 +20,29 @@
                                 <div class="overlay-wrapper" data-bind="visible: loading() || saving()">
                                     <div class="overlay">
                                         <i class="fas fa-3x fa-sync-alt fa-spin"></i>
-                                        <div class="text-bold pt-2 pl-2"
+                                        <div class="text-bold pt-2 ps-2"
                                              data-bind="text: (loading() ? 'Loading' : 'Saving') + ' settings...'"></div>
                                     </div>
                                 </div>
                                 <!-- /.overlay-wrapper -->
                                 <div class="alert alert-dismissible alert-success" style="display: none;"
                                      data-bind="visible: saved">
-                                    <button type="button" class="close" aria-hidden="true"
-                                            data-bind="click: saved(false)">×
-                                    </button>
+                                    <button type="button" class="btn-close" aria-label="Close"
+                                            data-bind="click: saved(false)"></button>
                                     <h5><i class="icon fas fa-check"></i> Saved!</h5>
                                     These settings have been saved to the database.
                                 </div>
                                 <div class="alert alert-dismissible alert-danger" style="display: none;"
                                      data-bind="visible: save_failed">
-                                    <button type="button" class="close" aria-hidden="true"
-                                            data-bind="click: save_failed(false)">×
-                                    </button>
+                                    <button type="button" class="btn-close" aria-label="Close"
+                                            data-bind="click: save_failed(false)"></button>
                                     <h5><i class="icon fas fa-ban"></i> Error!</h5>
                                     These settings could <strong>not</strong> be saved to the database!
                                 </div>
                                 <div class="alert alert-dismissible" style="display: none;"
                                      data-bind="visible: messages().length, class: 'alert alert-dismissible alert-' + messages_class()">
-                                    <button type="button" class="close" aria-hidden="true"
-                                            data-bind="click: messages([])">×
-                                    </button>
+                                    <button type="button" class="btn-close" aria-label="Close"
+                                            data-bind="click: messages([])"></button>
                                     <h5><i class="icon fas fa-info"></i> Additional Information</h5>
                                     <ul data-bind="foreach: messages">
                                         <li data-bind="text: $data"></li>
@@ -70,38 +51,38 @@
                                 <div class="nav-tabs-custom">
                                     <ul class="nav nav-tabs" role="tablist">
                                         <li class="nav-item">
-                                            <a data-tab="local"
+                                            <button type="button" data-tab="local"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'local' ? ' active' : '')"
-                                               href="#" data-toggle="pill" role="tab">Local</a>
+                                               role="tab">Local</button>
                                         </li>
                                         <li class="nav-item">
-                                            <a data-tab="ldap"
+                                            <button type="button" data-tab="ldap"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'ldap' ? ' active' : '')"
-                                               href="#" data-toggle="pill" role="tab">LDAP</a>
+                                               role="tab">LDAP</button>
                                         </li>
                                         <li class="nav-item">
-                                            <a data-tab="google"
+                                            <button type="button" data-tab="google"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'google' ? ' active' : '')"
-                                               href="#" data-toggle="pill" role="tab">Google
-                                                OAuth</a>
+                                               role="tab">Google
+                                                OAuth</button>
                                         </li>
                                         <li class="nav-item">
-                                            <a data-tab="github"
+                                            <button type="button" data-tab="github"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'github' ? ' active' : '')"
-                                               href="#" data-toggle="pill" role="tab">GitHub
-                                                OAuth</a>
+                                               role="tab">GitHub
+                                                OAuth</button>
                                         </li>
                                         <li class="nav-item">
-                                            <a data-tab="azure"
+                                            <button type="button" data-tab="azure"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'azure' ? ' active' : '')"
-                                               href="#" data-toggle="pill" role="tab">Azure
-                                                OAuth</a>
+                                               role="tab">Azure
+                                                OAuth</button>
                                         </li>
                                         <li class="nav-item">
-                                            <a data-tab="oidc"
+                                            <button type="button" data-tab="oidc"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'oidc' ? ' active' : '')"
-                                               href="#" data-toggle="pill" role="tab">OpenID
-                                                Connect OAuth</a>
+                                               role="tab">OpenID
+                                                Connect OAuth</button>
                                         </li>
                                     </ul>
                                     <div class="tab-content">
@@ -116,30 +97,30 @@
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox" id="local_db_enabled"
                                                                        name="local_db_enabled"
-                                                                       class="checkbox"
+                                                                       class="form-check-input"
                                                                        data-bind="checked: local_db_enabled">
-                                                                <label for="local_db_enabled">Local DB
+                                                                <label class="form-check-label" for="local_db_enabled">Local DB
                                                                     Authentication</label>
                                                             </div>
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox" id="signup_enabled"
                                                                        name="signup_enabled"
-                                                                       class="checkbox"
+                                                                       class="form-check-input"
                                                                        data-bind="enable: local_db_enabled, checked: signup_enabled">
-                                                                <label for="signup_enabled">Allow users to sign
+                                                                <label class="form-check-label" for="signup_enabled">Allow users to sign
                                                                     up</label>
                                                             </div>
                                                             <fieldset>
                                                                 <legend>Password Requirements</legend>
-                                                                <div class="form-group">
+                                                                <div class="form-check mb-3">
                                                                     <input type="checkbox" id="pwd_enforce_characters"
                                                                            name="pwd_enforce_characters"
-                                                                           class="checkbox"
+                                                                           class="form-check-input"
                                                                            data-bind="enable: local_db_enabled, checked: pwd_enforce_characters">
-                                                                    <label for="pwd_enforce_characters">
+                                                                    <label class="form-check-label" for="pwd_enforce_characters">
                                                                         Enforce Character Requirements
                                                                     </label>
                                                                 </div>
@@ -180,12 +161,12 @@
                                                                            name="pwd_min_special" id="pwd_min_special"
                                                                            data-bind="enable: local_db_enabled() && pwd_enforce_characters(), value: pwd_min_special, valueUpdate: 'afterkeydown'">
                                                                 </div>
-                                                                <div class="form-group">
+                                                                <div class="form-check mb-3">
                                                                     <input type="checkbox" id="pwd_enforce_complexity"
                                                                            name="pwd_enforce_complexity"
-                                                                           class="checkbox"
+                                                                           class="form-check-input"
                                                                            data-bind="enable: local_db_enabled, checked: pwd_enforce_complexity">
-                                                                    <label for="pwd_enforce_complexity">
+                                                                    <label class="form-check-label" for="pwd_enforce_complexity">
                                                                         Enforce Complexity Requirement
                                                                     </label>
                                                                 </div>
@@ -304,9 +285,8 @@
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     {% if error %}
                                                         <div class="alert alert-danger alert-dismissible">
-                                                            <button type="button" class="close" data-dismiss="alert"
-                                                                    aria-hidden="true">&times;
-                                                            </button>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                                    aria-label="Close"></button>
                                                             <h4><i class="icon fa fa-ban"></i> Error!</h4>
                                                             {{ error }}
                                                         </div>
@@ -318,12 +298,12 @@
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
                                                             <fieldset>
-                                                                <div class="form-group">
+                                                                <div class="form-check mb-3">
                                                                     <input type="checkbox" id="ldap_enabled"
                                                                            name="ldap_enabled"
-                                                                           class="checkbox"
+                                                                           class="form-check-input"
                                                                            data-bind="checked: ldap_enabled">
-                                                                    <label for="ldap_enabled">Enable LDAP
+                                                                    <label class="form-check-label" for="ldap_enabled">Enable LDAP
                                                                         Authentication</label>
                                                                 </div>
                                                                 <div class="form-group">
@@ -773,11 +753,11 @@
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox" id="google_oauth_enabled"
-                                                                       name="google_oauth_enabled" class="checkbox"
+                                                                       name="google_oauth_enabled" class="form-check-input"
                                                                        data-bind="checked: google_oauth_enabled">
-                                                                <label for="google_oauth_enabled">Enable Google
+                                                                <label class="form-check-label" for="google_oauth_enabled">Enable Google
                                                                     OAuth</label>
                                                             </div>
                                                             <div class="form-group">
@@ -817,13 +797,13 @@
                                                                        data-bind="enable: google_oauth_enabled, value: google_base_url, valueUpdate: 'afterkeydown'">
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox"
                                                                        id="google_oauth_auto_configure"
                                                                        name="google_oauth_auto_configure"
-                                                                       class="checkbox"
+                                                                       class="form-check-input"
                                                                        data-bind="enable: google_oauth_enabled, checked: google_oauth_auto_configure">
-                                                                <label for="google_oauth_auto_configure">Enable
+                                                                <label class="form-check-label" for="google_oauth_auto_configure">Enable
                                                                     Google
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
@@ -898,11 +878,11 @@
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox" id="github_oauth_enabled"
-                                                                       name="github_oauth_enabled" class="checkbox"
+                                                                       name="github_oauth_enabled" class="form-check-input"
                                                                        data-bind="checked: github_oauth_enabled">
-                                                                <label for="github_oauth_enabled">Enable GitHub
+                                                                <label class="form-check-label" for="github_oauth_enabled">Enable GitHub
                                                                     OAuth</label>
                                                             </div>
                                                             <div class="form-group">
@@ -941,13 +921,13 @@
                                                                        data-bind="enable: github_oauth_enabled, value: github_oauth_api_url, valueUpdate: 'afterkeydown'">
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox"
                                                                        id="github_oauth_auto_configure"
                                                                        name="github_oauth_auto_configure"
-                                                                       class="checkbox"
+                                                                       class="form-check-input"
                                                                        data-bind="enable: github_oauth_enabled, checked: github_oauth_auto_configure">
-                                                                <label for="github_oauth_auto_configure">Enable
+                                                                <label class="form-check-label" for="github_oauth_auto_configure">Enable
                                                                     GitHub
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
@@ -1020,11 +1000,11 @@
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox" id="azure_oauth_enabled"
-                                                                       name="azure_oauth_enabled" class="checkbox"
+                                                                       name="azure_oauth_enabled" class="form-check-input"
                                                                        data-bind="checked: azure_oauth_enabled">
-                                                                <label for="azure_oauth_enabled">Enable Microsoft
+                                                                <label class="form-check-label" for="azure_oauth_enabled">Enable Microsoft
                                                                     Azure
                                                                     OAuth</label>
                                                             </div>
@@ -1064,13 +1044,13 @@
                                                                        data-bind="enable: azure_oauth_enabled, value: azure_oauth_api_url, valueUpdate: 'afterkeydown'">
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox"
                                                                        id="azure_oauth_auto_configure"
                                                                        name="azure_oauth_auto_configure"
-                                                                       class="checkbox"
+                                                                       class="form-check-input"
                                                                        data-bind="enable: azure_oauth_enabled, checked: azure_oauth_auto_configure">
-                                                                <label for="azure_oauth_auto_configure">Enable Azure
+                                                                <label class="form-check-label" for="azure_oauth_auto_configure">Enable Azure
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
                                                             <div class="form-group"
@@ -1283,7 +1263,7 @@
                                                                     You then need to grant admin approval for your
                                                                     organisation.
                                                                 </li>
-                                                                <li>For the Scope, use <b>User.Read openid mail
+                                                                <li>For the Scope, use <b>User.Read openid email
                                                                     profile</b>
                                                                 </li>
                                                                 <li>Replace the [tenantID] in the default URLs for
@@ -1323,11 +1303,11 @@
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox" id="oidc_oauth_enabled"
-                                                                       name="oidc_oauth_enabled" class="checkbox"
+                                                                       name="oidc_oauth_enabled" class="form-check-input"
                                                                        data-bind="checked: oidc_oauth_enabled">
-                                                                <label for="oidc_oauth_enabled">Enable OpenID
+                                                                <label class="form-check-label" for="oidc_oauth_enabled">Enable OpenID
                                                                     Connect
                                                                     OAuth</label>
                                                             </div>
@@ -1365,13 +1345,13 @@
                                                                        data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_api_url, valueUpdate: 'afterkeydown'">
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
-                                                            <div class="form-group">
+                                                            <div class="form-check mb-3">
                                                                 <input type="checkbox"
                                                                        id="oidc_oauth_auto_configure"
                                                                        name="oidc_oauth_auto_configure"
-                                                                       class="checkbox"
+                                                                       class="form-check-input"
                                                                        data-bind="enable: oidc_oauth_enabled, checked: oidc_oauth_auto_configure">
-                                                                <label for="oidc_oauth_auto_configure">Enable OIDC
+                                                                <label class="form-check-label" for="oidc_oauth_auto_configure">Enable OIDC
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
                                                             <div class="form-group"
@@ -1527,12 +1507,6 @@
         </div>
         <!-- /.container-fluid -->
     </section>
-{% endblock %}
-
-{% block head_styles %}
-    <style>
-        .error { color: red !important; }
-    </style>
 {% endblock %}
 
 {% block extrascripts %}

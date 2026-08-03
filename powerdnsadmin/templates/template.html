@@ -1,24 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "admin_domain_template" %}
+{% set page_title = 'Zone Templates' %}
 {% block title %}<title>Zone Templates - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Zone Templates</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Zone Templates</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -28,13 +12,12 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-danger alert-dismissible">
-                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;
-                                </button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
                                 <h4>
                                     <i class="fa-solid fa-ban"></i> Error!
                                 </h4>
                                 <div class="alert-message block-message error">
-                                    <a class="close" href="#">x</a>
                                     <ul>
                                         {%- for msg in errors %}
                                             <li>{{ msg }}</li>
@@ -85,11 +68,11 @@
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-primary dropdown-toggle" type="button"
-                                                        id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true"
+                                                        id="dropdownMenu-{{ loop.index }}" data-bs-toggle="dropdown" aria-haspopup="true"
                                                         aria-expanded="false">
                                                     <i class="fa-solid fa-bars"></i>
                                                 </button>
-                                                <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenu-{{ loop.index }}">
                                                     <button type="button" class="dropdown-item btn-warning"
                                                             onclick="window.location.href='{{ url_for('admin.edit_template', template=template.name) }}'">
                                                         <i class="fa-solid fa-edit"></i>&nbsp;Edit Template
@@ -124,22 +107,16 @@
 
 {% block head_styles %}
     <style>
-        /* Page Specific Overrides */
-        table.records tbody td:first-of-type,
-        table.records tbody td:nth-child(0n+2) { text-align: left; }
+        /* Page Specific Overrides: Description column also reads left-to-right */
+        table#tbl_template_list tbody td:nth-child(0n+2) { text-align: left; }
     </style>
 {% endblock %}
 
 {% block extrascripts %}
     <script>
         // Initialize DataTables
-        $("#tbl_template_list").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": false,
-            "autoWidth": false
+        initDataTable("#tbl_template_list", {
+            "info": false
         });
 
         // handle delete button

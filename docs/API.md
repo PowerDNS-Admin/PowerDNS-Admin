@@ -5,8 +5,8 @@
 1. Run docker image docker-compose up, go to UI http://localhost:9191, at http://localhost:9191/swagger is swagger API specification
 2. Click to register user, type e.g. user: admin and password: admin
 3. Login to UI in settings enable allow domain creation for users, now you can create and manage domains with admin account and also ordinary users
-4. Click on the API Keys menu then click on teh "Add Key" button to add a new Administrator Key
-5. Keep the base64 encoded apikey somewhere safe as it won't be available in clear anymore
+4. As an Administrator, click the API Keys menu and then "Add Key" to add a new Administrator key.
+5. Keep the Base64-encoded API key somewhere safe. It is returned only once and cannot be retrieved again.
 
 
 #### Accessing the API
@@ -15,15 +15,15 @@ PDA has its own API, that should not be confused with the PowerDNS API. Keep in 
 
 The PDA API consists of two distinct parts:
 
-- The /powerdnsadmin endpoints manages PDA content (accounts, users, apikeys) and also allow domain creation/deletion
-- The /server endpoints are proxying queries to the backend PowerDNS instance's API. PDA acts as a proxy managing several API Keys and permissions to the PowerDNS content.
+- The `/pdnsadmin` endpoints manage PDA content (accounts, users, API keys) and also allow domain creation and deletion.
+- The `/servers` endpoints proxy queries to the backend PowerDNS API. PDA applies its API-key roles and zone permissions before forwarding a request.
 
 The requests to the API needs two headers:
 
 - The classic 'Content-Type: application/json' is required to all POST and PUT requests, though it's harmless to use it on each call
 - The authentication header to provide either the login:password basic authentication or the Api Key authentication.
 
-When you access the `/powerdnsadmin` endpoint, you must use the Basic Auth:
+When you access a `/pdnsadmin` endpoint, you must use Basic authentication:
 
 ```bash
 # Encode your user and password to base64
@@ -33,48 +33,67 @@ YWRtaW46YWRtaW4=
 curl -H 'Authorization: Basic YWRtaW46YWRtaW4=' -X <method> <url>
 ```
 
-When you access the `/server` endpoint, you must use the ApiKey
+When you access a `/servers` endpoint, you must use an API key:
 
 ```bash
 # Use the already base64 encoded key in your header
 curl -H 'X-API-Key: YUdDdGhQM0tMQWV5alpJ' -X <method> <url>
 ```
 
-Finally, the `/sync_domains` endpoint accepts both basic and apikey authentication
+The `/sync_domains` endpoint accepts either Basic authentication or an API
+key, but the credential must have the Administrator or Operator role.
+
+API authorization always follows the credential sent with the API request.
+An existing browser login session does not raise or otherwise change the
+credential's privileges.
+
+API-key role grants follow these rules:
+
+- Administrators may create or grant Administrator, Operator, and User keys.
+- Operators may create or grant Operator and User keys, but never Administrator keys.
+- Ordinary Users may create only User keys for zones they can access and cannot assign accounts.
+
+API-key list and detail responses contain metadata only. They never contain
+the plaintext key or its stored verifier. The plaintext `plain_key` field is
+returned exactly once by the create operation.
+
+For Basic-authenticated zone deletion, Administrators and Operators may
+remove zones. An ordinary User may remove only an assigned zone and only when
+the `allow_user_remove_domain` setting is enabled. Enabling
+`allow_user_create_domain` does not enable deletion.
 
 #### Examples
 
-Creating domain via `/powerdnsadmin`:
+Creating a domain via `/pdnsadmin`:
 
 ```bash
 curl -L -vvv -H 'Content-Type: application/json' -H 'Authorization: Basic YWRtaW46YWRtaW4=' -X POST http://localhost:9191/api/v1/pdnsadmin/zones --data '{"name": "yourdomain.com.", "kind": "NATIVE", "nameservers": ["ns1.mydomain.com."]}'
 ```
 
-Creating an apikey which has the Administrator role:
+Creating an API key with the Administrator role (Administrator credentials are required):
 
 ```bash
 # Create the key
 curl -L -vvv -H 'Content-Type: application/json' -H 'Authorization: Basic YWRtaW46YWRtaW4=' -X POST http://localhost:9191/api/v1/pdnsadmin/apikeys --data '{"description": "masterkey","domains":[], "role": "Administrator"}'
 ```
-Example response (don't forget to save the plain key from the output)
+Example response (save `plain_key` securely):
 
 ```json
-[
-  {
-    "accounts": [],
-    "description": "masterkey",
-    "domains": [],
-    "role": {
-      "name": "Administrator",
-      "id": 1
-    },
-    "id": 2,
-    "plain_key": "aGCthP3KLAeyjZI"
-  }
-]
+{
+  "accounts": [],
+  "description": "masterkey",
+  "domains": [],
+  "role": {
+    "name": "Administrator",
+    "id": 1
+  },
+  "id": 2,
+  "plain_key": "aGCthP3KLAeyjZI"
+}
 ```
 
-We can use the apikey for all calls to PowerDNS (don't forget to specify Content-Type):
+Administrator API keys are required for server metadata endpoints such as
+`/servers` and `/servers/{server_id}`:
 
 Getting powerdns configuration (Administrator Key is needed):
 

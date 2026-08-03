@@ -1,0 +1,106 @@
+<meta name="color-scheme" content="light dark">
+<script>
+    (function () {
+        var root = document.documentElement;
+        var storageKey = 'lte-theme';
+        var themeToggleSelector = '[data-theme-toggle]';
+        var themeOptionSelector = '[data-theme-option]';
+        var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function getStoredTheme() {
+            try {
+                var storedTheme = window.localStorage.getItem(storageKey);
+                if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'auto') {
+                    return storedTheme;
+                }
+            } catch (error) {
+                // Local storage can be unavailable in privacy-restricted browser contexts.
+            }
+            return 'auto';
+        }
+
+        function resolveTheme(theme) {
+            if (theme === 'light' || theme === 'dark') {
+                return theme;
+            }
+            return mediaQuery.matches ? 'dark' : 'light';
+        }
+
+        function persistTheme(theme) {
+            try {
+                window.localStorage.setItem(storageKey, theme);
+            } catch (error) {
+                // Local storage can be unavailable in privacy-restricted browser contexts.
+            }
+        }
+
+        function updateThemeToggle(theme) {
+            var resolvedTheme = resolveTheme(theme);
+            var toggleButtons = document.querySelectorAll(themeToggleSelector);
+
+            toggleButtons.forEach(function (button) {
+                var icon = button.querySelector('[data-theme-icon]');
+                if (icon) {
+                    icon.classList.remove('fa-sun', 'fa-moon', 'fa-circle-half-stroke');
+                    if (theme === 'auto') {
+                        icon.classList.add('fa-circle-half-stroke');
+                    } else if (resolvedTheme === 'dark') {
+                        icon.classList.add('fa-moon');
+                    } else {
+                        icon.classList.add('fa-sun');
+                    }
+                }
+                button.setAttribute('aria-label', 'Select color mode');
+                button.setAttribute('title', 'Select color mode');
+            });
+
+            document.querySelectorAll(themeOptionSelector).forEach(function (option) {
+                var optionTheme = option.getAttribute('data-theme-option');
+                var active = optionTheme === theme;
+                option.classList.toggle('active', active);
+                option.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        }
+
+        function applyTheme(theme) {
+            var resolvedTheme = resolveTheme(theme);
+            root.setAttribute('data-bs-theme', resolvedTheme);
+            root.style.colorScheme = resolvedTheme;
+            root.style.backgroundColor = resolvedTheme === 'dark' ? '#212529' : '#ffffff';
+            updateThemeToggle(theme);
+        }
+
+        function setTheme(theme) {
+            persistTheme(theme);
+            applyTheme(theme);
+        }
+
+        var selectedTheme = getStoredTheme();
+        applyTheme(selectedTheme);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            root.style.removeProperty('background-color');
+
+            document.querySelectorAll(themeOptionSelector).forEach(function (option) {
+                option.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    setTheme(this.getAttribute('data-theme-option'));
+                });
+            });
+
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', function () {
+                    if (getStoredTheme() === 'auto') {
+                        applyTheme('auto');
+                    }
+                });
+            } else if (mediaQuery.addListener) {
+                mediaQuery.addListener(function () {
+                    if (getStoredTheme() === 'auto') {
+                        applyTheme('auto');
+                    }
+                });
+            }
+        }, { once: true });
+    }());
+</script>

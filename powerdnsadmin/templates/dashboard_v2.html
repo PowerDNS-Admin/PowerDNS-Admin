@@ -1,0 +1,696 @@
+{% extends "dashboard.html" %}
+{% set active_page = "dashboard" %}
+{% set page_title = 'Dashboard v2' %}
+{% block title %}<title>Dashboard v2 - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block content %}
+    <section id="dashboard-v2" class="content"
+             data-csrf-token="{{ csrf_token() }}"
+             data-create-template-url="{{ url_for('admin.create_template_from_zone') }}"
+             data-domains-updater-url="{{ url_for('dashboard.domains_updater') }}">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card dashboard-v2-card">
+                        <div class="card-header dashboard-v2-card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <h3 class="card-title mb-0">
+                                    Zones
+                                </h3>
+                                <span class="badge dashboard-v2-preview-badge">v2 preview</span>
+                                {% if show_bg_domain_button %}
+                                    <button type="button" title="Synchronize Zones"
+                                            class="btn btn-tool refresh-bg-button">
+                                        <i class="fa-solid fa-sync"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                            <div class="dashboard-v2-header-actions d-flex flex-wrap align-items-center gap-2">
+                                <a class="btn btn-sm btn-outline-secondary no-prompt"
+                                   href="{{ url_for('dashboard.dashboard') }}">
+                                    Classic dashboard
+                                </a>
+                                <div class="nav-tabs-custom">
+                                    <ul class="nav dashboard-v2-tabs" id="dashboard-v2-tabs"
+                                        role="tablist">
+                                        <li class="nav-item dashboard-v2-zone-option dashboard-v2-forward-option"
+                                            role="presentation">
+                                            <button class="nav-link active"
+                                                    id="tab-control-forward"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#tab_forward_v2"
+                                                    type="button" role="tab"
+                                                    title="Show forward zones"
+                                                    aria-controls="tab_forward_v2"
+                                                    aria-selected="true">
+                                                Forward Zones
+                                            </button>
+                                        </li>
+                                        <li class="dashboard-v2-tab-section" aria-hidden="true">
+                                            Reverse Zones
+                                        </li>
+                                        <li class="nav-item dashboard-v2-zone-option dashboard-v2-reverse-option"
+                                            role="presentation">
+                                            <button class="nav-link"
+                                                    id="tab-control-reverse_ipv4"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#tab_reverse_ipv4_v2"
+                                                    type="button" role="tab"
+                                                    aria-label="Reverse Zones IPv4"
+                                                    title="Show IPv4 reverse zones"
+                                                    aria-controls="tab_reverse_ipv4_v2"
+                                                    aria-selected="false">
+                                                IPv4
+                                            </button>
+                                        </li>
+                                        <li class="nav-item dashboard-v2-zone-option dashboard-v2-reverse-option"
+                                            role="presentation">
+                                            <button class="nav-link"
+                                                    id="tab-control-reverse_ipv6"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#tab_reverse_ipv6_v2"
+                                                    type="button" role="tab"
+                                                    aria-label="Reverse Zones IPv6"
+                                                    title="Show IPv6 reverse zones"
+                                                    aria-controls="tab_reverse_ipv6_v2"
+                                                    aria-selected="false">
+                                                IPv6
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="tab-content">
+                                {% for tab_id in zone_tabs.order %}
+                                    <div id="tab_{{ tab_id }}_v2"
+                                         class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                                         role="tabpanel" aria-labelledby="tab-control-{{ tab_id }}">
+                                        <div class="card-body dashboard-v2-table-region records p-0">
+                                            <div class="dashboard-table-state px-3 py-5 text-center"
+                                                 id="tbl_domain_list_{{ tab_id }}_v2_state"
+                                                 role="status" aria-live="polite">
+                                                <div class="dashboard-table-loading">
+                                                    <div class="spinner-border text-primary mb-3" role="presentation"></div>
+                                                    <p class="mb-0">Please wait while we load the zone data…</p>
+                                                </div>
+                                                <div class="dashboard-table-error alert alert-danger mb-0 d-none"
+                                                     role="alert">
+                                                    <p class="dashboard-table-error-message mb-2">
+                                                        The zone data could not be loaded.
+                                                    </p>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-danger dashboard-table-retry">
+                                                        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                                                        Retry
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <table id="tbl_domain_list_{{ tab_id }}_v2"
+                                                   class="table table-hover records d-none"
+                                                   data-dashboard-v2-table
+                                                   data-source="{{ url_for('dashboard.domains_v2', tab_id=tab_id) }}"
+                                                   data-page-length="{{ default_page_length }}"
+                                                   data-refresh-on-load="{{ 'true' if loop.first and refresh_on_first_load else 'false' }}"
+                                                   data-state-id="tbl_domain_list_{{ tab_id }}_v2_state"
+                                                   aria-busy="true">
+                                                <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>DNSSEC</th>
+                                                    <th>Type</th>
+                                                    <th>Serial</th>
+                                                    <th>Primary</th>
+                                                    <th>Account</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block head_styles %}
+    <style>
+        #dashboard-v2 .dashboard-v2-card {
+            overflow: hidden;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08);
+        }
+        #dashboard-v2 .dashboard-v2-card-header {
+            min-height: 4.25rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-card-header::after { display: none; }
+        #dashboard-v2 .dashboard-v2-card-header .card-title {
+            float: none;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        #dashboard-v2 .dashboard-v2-preview-badge {
+            border: 1px solid rgba(var(--bs-primary-rgb), 0.55);
+            border-radius: 999px;
+            background: rgba(var(--bs-primary-rgb), 0.12);
+            color: var(--bs-primary);
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        #dashboard-v2 .dashboard-v2-tabs {
+            gap: 0.15rem;
+            padding: 0.2rem;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.55rem;
+        }
+        #dashboard-v2 .dashboard-v2-tabs .nav-link {
+            padding: 0.35rem 0.75rem;
+            border: 0;
+            border-radius: 0.4rem;
+            color: var(--bs-secondary-color);
+            font-size: 0.875rem;
+        }
+        #dashboard-v2 .dashboard-v2-tabs .nav-link.active {
+            background: var(--bs-secondary-bg);
+            color: var(--bs-emphasis-color);
+            box-shadow: inset 0 0 0 1px var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-tab-section {
+            display: flex;
+            align-items: center;
+            margin-left: 0.35rem;
+            padding: 0 0.55rem 0 0.8rem;
+            border-left: 1px solid var(--bs-border-color);
+            color: var(--bs-secondary-color);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            min-width: 4.25rem;
+            border: 1px solid var(--bs-border-color);
+            background: var(--bs-secondary-bg);
+            color: var(--bs-emphasis-color);
+            font-weight: 600;
+            justify-content: center;
+            transition: border-color 120ms ease, background-color 120ms ease,
+                color 120ms ease, box-shadow 120ms ease;
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link::before {
+            width: 0.45rem;
+            height: 0.45rem;
+            border: 1px solid currentColor;
+            border-radius: 50%;
+            content: "";
+            opacity: 0.65;
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link:hover {
+            border-color: rgba(var(--bs-primary-rgb), 0.65);
+            background: rgba(var(--bs-primary-rgb), 0.1);
+            color: var(--bs-primary);
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link:focus-visible {
+            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.2);
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link.active {
+            border-color: rgba(var(--bs-primary-rgb), 0.75);
+            background: rgba(var(--bs-primary-rgb), 0.16);
+            color: var(--bs-primary);
+            box-shadow: inset 0 0 0 1px rgba(var(--bs-primary-rgb), 0.18);
+        }
+        #dashboard-v2 .dashboard-v2-zone-option .nav-link.active::before {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary);
+            box-shadow: inset 0 0 0 1px var(--bs-body-bg);
+            opacity: 1;
+        }
+        #dashboard-v2 .dashboard-v2-table-toolbar,
+        #dashboard-v2 .dashboard-v2-table-footer {
+            min-height: 3.65rem;
+            padding: 0.75rem 1.25rem;
+        }
+        #dashboard-v2 .dashboard-v2-table-toolbar {
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-table-footer {
+            border-top: 1px solid var(--bs-border-color);
+        }
+        #dashboard-v2 .dashboard-v2-table-scroll { overflow-x: auto; }
+        #dashboard-v2 .dashboard-v2-filter .dataTables_filter,
+        #dashboard-v2 .dashboard-v2-length .dataTables_length { text-align: inherit; }
+        #dashboard-v2 .dashboard-v2-filter label {
+            position: relative;
+            margin: 0;
+        }
+        #dashboard-v2 .dashboard-v2-filter label::before {
+            position: absolute;
+            top: 50%;
+            left: 0.75rem;
+            z-index: 1;
+            color: var(--bs-secondary-color);
+            content: "\f002";
+            font-family: "Font Awesome 7 Free";
+            font-weight: 900;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        #dashboard-v2 .dashboard-v2-filter input {
+            width: min(21.25rem, 72vw);
+            margin: 0;
+            padding-left: 2.15rem;
+            border-radius: 0.45rem;
+        }
+        #dashboard-v2 .dashboard-v2-length label {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 0;
+            color: var(--bs-secondary-color);
+            font-size: 0.8rem;
+        }
+        #dashboard-v2 .dashboard-v2-length select {
+            min-width: 3.75rem;
+            margin: 0;
+        }
+        #dashboard-v2 table.records {
+            min-width: 58rem;
+            margin: 0 !important;
+        }
+        #dashboard-v2 table.records thead th,
+        #dashboard-v2 table.records tbody td {
+            padding: 0.75rem 1.25rem;
+            text-align: left;
+            vertical-align: middle;
+        }
+        #dashboard-v2 table.records thead th {
+            border-bottom: 1px solid var(--bs-border-color);
+            color: var(--bs-secondary-color);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        #dashboard-v2 table.records tbody td {
+            border-bottom-color: rgba(var(--bs-secondary-rgb), 0.12);
+            color: var(--bs-secondary-color);
+        }
+        #dashboard-v2 table.records tbody tr:last-child td { border-bottom: 0; }
+        #dashboard-v2 table.records th:last-child,
+        #dashboard-v2 table.records td:last-child {
+            width: 1%;
+            text-align: right;
+            white-space: nowrap;
+        }
+        #dashboard-v2 table.records td.dataTables_empty {
+            width: auto;
+            padding: 2.5rem 1.25rem;
+            text-align: center;
+            white-space: normal;
+        }
+        #dashboard-v2 table.records td:first-child,
+        #dashboard-v2 table.records td:nth-child(4) {
+            font-family: var(--bs-font-monospace);
+        }
+        #dashboard-v2 table.records td:first-child a {
+            color: var(--bs-link-color);
+            text-decoration: none;
+        }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting::before,
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_asc::before,
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_desc::before {
+            display: none;
+        }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting::after { opacity: 0; }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_asc::after,
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_desc::after {
+            position: static;
+            display: inline;
+            margin-left: 0.3rem;
+            color: var(--bs-primary);
+            opacity: 1;
+        }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_asc::after { content: "↑"; }
+        #dashboard-v2 table.dataTable thead > tr > th.sorting_desc::after { content: "↓"; }
+        #dashboard-v2 .dashboard-dnssec-pill {
+            border: 1px solid var(--bs-border-color);
+            background: var(--bs-secondary-bg);
+            color: var(--bs-secondary-color);
+            font-weight: 500;
+        }
+        #dashboard-v2 .dashboard-dnssec-pill.is-signed {
+            border-color: rgba(var(--bs-success-rgb), 0.45);
+            background: rgba(var(--bs-success-rgb), 0.12);
+            color: var(--bs-success);
+        }
+        .dashboard-dnssec-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin-inline-end: 0.2rem;
+            border-radius: 50%;
+            background: currentColor;
+            vertical-align: middle;
+        }
+        #dashboard-v2 .dashboard-v2-edit-button,
+        #dashboard-v2 .dashboard-v2-menu-toggle {
+            border-color: var(--bs-border-color);
+            background: var(--bs-secondary-bg);
+            color: var(--bs-emphasis-color);
+        }
+        #dashboard-v2 .dashboard-v2-menu-toggle { width: 2rem; }
+        #dashboard-v2 .dashboard-v2-menu-toggle::after { display: none; }
+        #dashboard-v2 .dashboard-v2-table-footer .dataTables_info {
+            padding: 0;
+            color: var(--bs-secondary-color);
+            font-size: 0.8rem;
+        }
+        #dashboard-v2 .dashboard-v2-table-footer .dataTables_paginate { padding: 0; }
+        #dashboard-v2 .dashboard-v2-table-footer .pagination { margin: 0; }
+        #dashboard-v2 .dashboard-v2-table-footer .page-link {
+            padding: 0.3rem 0.65rem;
+            font-size: 0.8rem;
+        }
+        .dashboard-table-state { min-height: 13rem; }
+        .dashboard-table-state .spinner-border { width: 2.5rem; height: 2.5rem; }
+        @media (max-width: 767.98px) {
+            #dashboard-v2 .dashboard-v2-card-header,
+            #dashboard-v2 .dashboard-v2-header-actions { align-items: stretch !important; }
+            #dashboard-v2 .dashboard-v2-header-actions { width: 100%; }
+            #dashboard-v2 .dashboard-v2-tabs { flex: 1 1 auto; }
+            #dashboard-v2 .dashboard-v2-tabs .nav-item { flex: 1 1 auto; }
+            #dashboard-v2 .dashboard-v2-tabs .nav-link { width: 100%; }
+            #dashboard-v2 .dashboard-v2-tab-section {
+                flex-basis: 100%;
+                margin: 0.2rem 0 0;
+                padding: 0.45rem 0.55rem 0.2rem;
+                border-top: 1px solid var(--bs-border-color);
+                border-left: 0;
+            }
+            #dashboard-v2 .dashboard-v2-table-toolbar { align-items: stretch !important; }
+            #dashboard-v2 .dashboard-v2-filter,
+            #dashboard-v2 .dashboard-v2-filter input { width: 100%; }
+        }
+    </style>
+{% endblock %}
+
+{% block extrascripts %}
+    <script src="{{ url_for('static', filename='custom/js/dashboard-v2.js', v='dnssec-rollover-1') }}"></script>
+{% endblock %}
+
+{% block modals %}
+    {{ super() }}
+    <div class="modal fade" id="modal_dnssec_enable_v2" tabindex="-1"
+         aria-labelledby="modal_dnssec_enable_v2_label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_dnssec_enable_v2_label">
+                        Enable DNSSEC
+                    </h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Generate and activate a DNSSEC key for
+                        <strong id="dnssec-enable-v2-domain"></strong>.
+                    </p>
+                    <div id="dnssec-enable-v2-error" class="alert alert-danger d-none"
+                         role="alert"></div>
+                    <form id="dnssec-enable-v2-form">
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-enable-v2-keytype">Key role</label>
+                            <select class="form-select" id="dnssec-enable-v2-keytype" required>
+                                {% for key_type in dnssec_key_types %}
+                                    <option value="{{ key_type.value }}"
+                                            {% if key_type.value == 'csk' %}selected{% endif %}>
+                                        {{ key_type.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                A CSK uses one key for both zone and key signing. Select KSK or ZSK
+                                only when operating a deliberate split-key policy.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-enable-v2-algorithm">Algorithm</label>
+                            <select class="form-select" id="dnssec-enable-v2-algorithm" required>
+                                {% for algorithm in dnssec_algorithms %}
+                                    <option value="{{ algorithm.value }}"
+                                            data-bits="{{ algorithm.bits|list|tojson }}"
+                                            data-default-bits="{{ algorithm.default_bits }}"
+                                            {% if algorithm.value == 'ecdsa256' %}selected{% endif %}>
+                                        {{ algorithm.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Algorithm availability depends on how the connected PowerDNS server
+                                was compiled. ECDSA P-256 is the recommended PowerDNS profile.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-enable-v2-bits">Key size</label>
+                            <select class="form-select" id="dnssec-enable-v2-bits" required></select>
+                            <div class="form-text">
+                                Elliptic-curve algorithms have a fixed key size. RSA algorithms allow
+                                an explicit size selection.
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mb-0" role="note">
+                            After enablement, publish the generated DS record with the parent zone or
+                            registrar. Publishing an incorrect DS record can make the zone unreachable.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success"
+                            id="dnssec-enable-v2-submit" form="dnssec-enable-v2-form">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        Generate key and enable DNSSEC
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal_dnssec_status_v2" tabindex="-1"
+         aria-labelledby="modal_dnssec_status_v2_label" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h4 class="modal-title" id="modal_dnssec_status_v2_label">
+                            DNSSEC delegation status
+                        </h4>
+                        <div class="text-body-secondary">
+                            <span id="dnssec-status-v2-domain"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dnssec-status-v2-loading" class="py-5 text-center" role="status">
+                        <div class="spinner-border text-primary mb-3" aria-hidden="true"></div>
+                        <p class="mb-0">Checking PowerDNS keys and parent nameservers…</p>
+                    </div>
+                    <div id="dnssec-status-v2-error" class="alert alert-danger d-none"
+                         role="alert"></div>
+                    <div id="dnssec-status-v2-content" class="d-none">
+                        <div id="dnssec-status-v2-summary" class="alert" role="status"></div>
+                        <p class="small text-body-secondary">
+                            Last checked: <span id="dnssec-status-v2-checked-at">Not yet checked</span>.
+                            Results are fetched directly from each authoritative parent nameserver;
+                            recursive resolver caches are not used for the DS comparison.
+                        </p>
+
+                        <div id="dnssec-status-v2-rollover" class="card card-outline card-info mb-4 d-none">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Active rollover</h5>
+                            </div>
+                            <div class="card-body py-3">
+                                <dl class="row mb-2">
+                                    <dt class="col-sm-3">Type</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-type"></dd>
+                                    <dt class="col-sm-3">State</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-state"></dd>
+                                    <dt class="col-sm-3">Existing keys</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-old-keys"></dd>
+                                    <dt class="col-sm-3">Replacement keys</dt>
+                                    <dd class="col-sm-9" id="dnssec-status-v2-rollover-new-keys"></dd>
+                                </dl>
+                                <div id="dnssec-status-v2-rollover-reconciliation"
+                                     class="alert mb-2" role="status"></div>
+                                <div id="dnssec-status-v2-rollover-guidance"
+                                     class="alert alert-info mb-0"></div>
+                            </div>
+                        </div>
+
+                        <h5>Keys in PowerDNS</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-sm table-striped align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Role</th>
+                                    <th>Algorithm</th>
+                                    <th>Size</th>
+                                    <th>Active</th>
+                                    <th>Published</th>
+                                    <th>DS records</th>
+                                </tr>
+                                </thead>
+                                <tbody id="dnssec-status-v2-keys"></tbody>
+                            </table>
+                        </div>
+
+                        <h5>DS records for the registrar</h5>
+                        <div id="dnssec-status-v2-expected" class="mb-4"></div>
+
+                        <div class="d-flex align-items-baseline justify-content-between gap-2">
+                            <h5>Parent nameserver propagation</h5>
+                            <span id="dnssec-status-v2-parent" class="small text-body-secondary"></span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Nameserver</th>
+                                    <th>Queried address</th>
+                                    <th>Status</th>
+                                    <th>Observed DS or error</th>
+                                </tr>
+                                </thead>
+                                <tbody id="dnssec-status-v2-nameservers"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span class="small text-body-secondary me-auto">
+                        Pending checks refresh automatically every 15 seconds.
+                    </span>
+                    <button type="button" class="btn btn-outline-primary"
+                            id="dnssec-status-v2-refresh">
+                        <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                        Check now
+                    </button>
+                    <button type="button" class="btn btn-outline-danger d-none"
+                            id="dnssec-status-v2-cancel-rollover">
+                        Cancel staged rollover
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                            id="dnssec-status-v2-start-rollover">
+                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                        Start rollover
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal_dnssec_rollover_v2" tabindex="-1"
+         aria-labelledby="modal_dnssec_rollover_v2_label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_dnssec_rollover_v2_label">
+                        Start DNSSEC rollover
+                    </h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Stage a replacement key for
+                        <strong id="dnssec-rollover-v2-domain"></strong>.
+                        Existing keys will not be changed.
+                    </p>
+                    <div id="dnssec-rollover-v2-error" class="alert alert-danger d-none"
+                         role="alert"></div>
+                    <form id="dnssec-rollover-v2-form">
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-rollover-v2-type">
+                                Rollover type
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-type" required>
+                                {% for rollover_type in dnssec_rollover_types %}
+                                    <option value="{{ rollover_type.value }}">
+                                        {{ rollover_type.label }} — {{ rollover_type.description }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="dnssec-rollover-v2-keytype-group">
+                            <label class="form-label" for="dnssec-rollover-v2-keytype">
+                                Key role being replaced
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-keytype" required>
+                                {% for key_type in dnssec_key_types %}
+                                    <option value="{{ key_type.value }}">{{ key_type.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-rollover-v2-algorithm">
+                                Algorithm
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-algorithm" required>
+                                {% for algorithm in dnssec_algorithms %}
+                                    <option value="{{ algorithm.value }}"
+                                            data-bits="{{ algorithm.bits|list|tojson }}"
+                                            data-default-bits="{{ algorithm.default_bits }}">
+                                        {{ algorithm.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="dnssec-rollover-v2-bits">
+                                Key size
+                            </label>
+                            <select class="form-select" id="dnssec-rollover-v2-bits" required></select>
+                        </div>
+                        <div class="alert alert-warning mb-0" role="note">
+                            Starting a rollover only stages the replacement key. Retirement of the
+                            old key remains blocked until the required propagation and TTL checks pass.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                            id="dnssec-rollover-v2-submit" form="dnssec-rollover-v2-form">
+                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                        Stage replacement key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

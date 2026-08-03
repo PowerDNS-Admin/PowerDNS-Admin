@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Email Confirmation - {{ SITE_NAME }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
     <!-- Tell the browser to be responsive to screen width -->
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% assets "css_login" -%}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {%- endassets %}
-    <![endif]-->
 </head>
-<body class="hold-transition register-page">
-<section class="content">
-    <div class="error-page">
-        <div class="error-content">
+<body class="register-page bg-body-secondary">
+<main class="register-box">
+    <div class="card shadow">
+        <div class="card-body">
             {% if status == 1 %}
                 <h3>
-                    <i class="fa fa-thumbs-o-up text-success"></i> Email verification successful!
+                    <i class="fa-solid fa-thumbs-up text-success"></i> Email verification successful!
                 </h3>
                 <p>
                     You have confirmed your account. <a href="{{ url_for('index.login') }}">Click here</a> to login.
                 </p>
             {% elif status == 2 %}
                 <h3>
-                    <i class="fa fa-hand-stop-o text-info"></i> Already verified!
+                    <i class="fa-solid fa-hand text-info"></i> Already verified!
                 </h3>
                 <p>
                     You have confirmed your account already. <a href="{{ url_for('index.login') }}">Click here</a> to
@@ -33,7 +33,7 @@
                 </p>
             {% else %}
                 <h3>
-                    <i class="fa fa-warning text-yellow"></i> Email verification failed!
+                    <i class="fa-solid fa-triangle-exclamation text-warning"></i> Email verification failed!
                 </h3>
                 <p>
                     The confirmation link is invalid or has expired. <a
@@ -42,10 +42,8 @@
                 </p>
             {% endif %}
         </div>
-        <!-- /.error-content -->
     </div>
-    <!-- /.error-page -->
-</section>
+</main>
 </body>
 
 </html>

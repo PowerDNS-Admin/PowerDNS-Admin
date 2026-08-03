@@ -26,6 +26,7 @@ from ..models.base import db
 
 from ..lib.errors import ApiKeyCreateFail
 from ..lib.schema import ApiPlainKeySchema
+from ..lib.user_authorization import user_update_authorization_error
 
 apikey_plain_schema = ApiPlainKeySchema(many=True)
 
@@ -212,12 +213,8 @@ class HistoryRecordEntry:
 def before_request():
     # Manage session timeout
     session.permanent = True
-    # current_app.permanent_session_lifetime = datetime.timedelta(
-    #     minutes=int(Setting().get('session_timeout')))
-    current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
+    current_app.permanent_session_lifetime = datetime.timedelta(minutes=int(Setting().get('session_timeout')))
     session.modified = True
-
 
 @admin_bp.route('/server/statistics', methods=['GET'])
 @login_required
@@ -283,7 +280,9 @@ def edit_user(user_username=None):
         if not user:
             return render_template('errors/404.html'), 404
 
-        if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+        authorization_error = user_update_authorization_error(
+            current_user, target=user)
+        if authorization_error:
             return render_template('errors/401.html'), 401
     else:
         user = None
@@ -437,7 +436,7 @@ def manage_keys():
         jdata = request.json
         if jdata['action'] == 'delete_key':
 
-            apikey = ApiKey.query.get(jdata['data'])
+            apikey = db.session.get(ApiKey, jdata['data'])
             try:
                 history_apikey_id = apikey.id
                 history_apikey_role = apikey.role.name
@@ -569,13 +568,6 @@ def manage_user():
                 username = data['username']
                 role_name = data['role_name']
 
-                if username == current_user.username:
-                    return make_response(
-                        jsonify({
-                            'status': 'error',
-                            'msg': 'You cannot change you own roles.'
-                        }), 400)
-
                 user = User.query.filter(User.username == username).first()
                 if not user:
                     return make_response(
@@ -584,22 +576,17 @@ def manage_user():
                             'msg': 'User does not exist.'
                         }), 404)
 
-                if user.role.name == 'Administrator' and current_user.role.name != 'Administrator':
+                authorization_error = user_update_authorization_error(
+                    current_user,
+                    target=user,
+                    requested_role_name=role_name,
+                    role_change=True,
+                )
+                if authorization_error:
                     return make_response(
                         jsonify({
-                            'status':
-                                'error',
-                            'msg':
-                                'You do not have permission to change Administrator users role.'
-                        }), 400)
-
-                if role_name == 'Administrator' and current_user.role.name != 'Administrator':
-                    return make_response(
-                        jsonify({
-                            'status':
-                                'error',
-                            'msg':
-                                'You do not have permission to promote a user to Administrator role.'
+                            'status': 'error',
+                            'msg': authorization_error,
                         }), 400)
 
                 user = User(username=username)

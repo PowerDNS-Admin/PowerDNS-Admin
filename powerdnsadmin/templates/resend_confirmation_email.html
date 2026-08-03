@@ -1,64 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Resend Confirmation Email - {{ SITE_NAME }}</title>
     <link rel="icon" href="/static/img/favicon.png">
     <!-- Tell the browser to be responsive to screen width -->
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% assets "css_login" -%}
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {%- endassets %}
-    <![endif]-->
 </head>
-<body class="hold-transition register-page">
+<body class="register-page bg-body-secondary">
 <div class="register-box">
-    <div class="register-logo">
-        <a href="{{ url_for('index.index') }}"><b>PowerDNS</b>-Admin</a>
-    </div>
-    <div class="register-box-body">
+    <div class="card card-outline card-primary shadow">
+        <div class="card-header text-center">
+            <a href="{{ url_for('index.index') }}" class="h3"><b>PowerDNS</b>-Admin</a>
+        </div>
+        <div class="card-body">
         {% if error %}
-            <div class="alert alert-danger alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endif %}
         <p>
             Enter your email address to get account confirmation link.
         </p>
-        <form method="post" data-toggle="validator">
+        <form method="post" class="needs-validation" novalidate>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group has-feedback">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                <input type="email" name="email" class="form-control" placeholder="Email address"
-                       data-error="Please input your email" required>
-                <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-                <span class="help-block with-errors"></span>
+            <div class="mb-3">
+                <label class="visually-hidden" for="email">Email address</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="Email address"
+                       required>
+                <div class="invalid-feedback">Please input a valid email address.</div>
             </div>
-            <div class="row">
-                <div class="col-xs-4 pull-left">
-                    <button type="button" class="btn btn-flat btn-block" id="button_back">Back</button>
+            <div class="row g-2">
+                <div class="col-6">
+                    <button type="button" class="btn btn-secondary w-100" id="button_back">Back</button>
                 </div>
-                <div class="col-xs-4 pull-right">
-                    <button type="submit" class="btn btn-flat btn-primary btn-block">Resend</button>
+                <div class="col-6">
+                    <button type="submit" class="btn btn-primary w-100">Resend</button>
                 </div>
                 <!-- /.col -->
             </div>
-            <div class="form-group">
+            <div class="mt-3">
                 <p>
                     {% if status == 0 %}
-                        <font color="red">Email not found!</font>
+                        <span class="text-danger">Email not found!</span>
                     {% elif status == 1 %}
-                        <font color="red">Email already confirmed!</font>
+                        <span class="text-danger">Email already confirmed!</span>
                     {% elif status == 2 %}
-                        <font color="green">Confirmation email sent!</font>
+                        <span class="text-success">Confirmation email sent!</span>
                     {% endif %}
                 </p>
             </div>
         </form>
+        </div>
     </div>
-    <!-- /.register-box-body -->
 </div>
 <!-- /.register-box -->
 <div class="text-center pt-3">
@@ -68,14 +68,11 @@
 {% assets "js_login" -%}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {%- endassets %}
-{% assets "js_validation" -%}
-    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{%- endassets %}
 <script>
-    $(function () {
-        $('#button_back').click(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('button_back').addEventListener('click', function () {
             window.location.href = '{{ url_for('index.login') }}';
-        })
+        });
     });
 </script>
 </body>

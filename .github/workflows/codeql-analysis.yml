@@ -26,7 +26,7 @@ on:
       - .github/**
       - deploy/**
       - docker/**
-      - docker-test/**
+      - docker/test/**
       - docs/**
       - powerdnsadmin/static/assets/**
       - powerdnsadmin/static/custom/css/**
@@ -38,8 +38,8 @@ on:
       - .lgtm.yml
       - .whitesource
       - .yarnrc
-      - docker-compose.yml
-      - docker-compose-test.yml
+      - ../../docker/docker-compose.yml
+      - ../../docker/docker-compose-test.yml
       - LICENSE
       - package.json
       - README.md
@@ -59,7 +59,7 @@ on:
       - .github/**
       - deploy/**
       - docker/**
-      - docker-test/**
+      - docker/test/**
       - docs/**
       - powerdnsadmin/static/assets/**
       - powerdnsadmin/static/custom/css/**
@@ -71,8 +71,8 @@ on:
       - .lgtm.yml
       - .whitesource
       - .yarnrc
-      - docker-compose.yml
-      - docker-compose-test.yml
+      - ../../docker/docker-compose.yml
+      - ../../docker/docker-compose-test.yml
       - LICENSE
       - package.json
       - README.md

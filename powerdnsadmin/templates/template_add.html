@@ -1,26 +1,9 @@
 {% extends "base.html" %}
 {% set active_page = "admin_domain_template" %}
+{% set page_title = 'Create Zone Template' %}
+{% set breadcrumb_items = [{'label': 'Zone Templates', 'url': url_for('admin.templates')}] %}
 {% block title %}<title>Create Zone Template - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        Create Zone Template
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('admin.templates') }}">Templates</a></li>
-                        <li class="breadcrumb-item active">Create Zone Template</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -30,13 +13,12 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-danger alert-dismissible">
-                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;
-                                </button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
                                 <h4>
                                     <i class="fa-solid fa-ban"></i> Error!
                                 </h4>
                                 <div class="alert-message block-message error">
-                                    <a class="close" href="#">x</a>
                                     <ul>
                                         {%- for msg in errors %}
                                             <li>{{ msg }}</li>
@@ -54,7 +36,7 @@
             {% endwith %}
             <div class="row">
                 <div class="col-12 col-sm-6 col-lg-4">
-                    <form role="form" method="post" action="{{ url_for('admin.create_template') }}">
+                    <form role="form" method="post" action="{{ url_for('admin.create_template') }}" class="needs-validation" novalidate>
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <div class="card card-outline card-primary shadow">
                             <div class="card-header">
@@ -62,12 +44,13 @@
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body">
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="name">Template Name</label>
                                     <input type="text" class="form-control" name="name" id="name"
-                                           placeholder="Enter a valid template name (required)">
+                                           placeholder="Enter a valid template name (required)" required>
+                                    <div class="invalid-feedback">Please enter a template name.</div>
                                 </div>
-                                <div class="form-group">
+                                <div class="mb-3">
                                     <label for="description">Template Description</label>
                                     <input type="text" class="form-control" name="description" id="description"
                                            placeholder="Enter a template description (optional)">
@@ -75,11 +58,11 @@
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
-                                <button type="button" class="btn btn-secondary float-left" title="Cancel"
+                                <button type="button" class="btn btn-secondary float-start" title="Cancel"
                                         onclick="window.location.href='{{ url_for('admin.templates') }}'">
                                     Cancel
                                 </button>
-                                <button type="submit" class="btn btn-primary float-right" title="Save Template">
+                                <button type="submit" class="btn btn-primary float-end" title="Save Template">
                                     <i class="fa-solid fa-save"></i>&nbsp;Save Template
                                 </button>
                             </div>

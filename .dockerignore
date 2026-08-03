@@ -73,6 +73,11 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+playwright-report/
+test-results/
+.megalinter-compiled/
+megalinter-reports/
+mega-linter.log
 
 # Translations
 *.mo

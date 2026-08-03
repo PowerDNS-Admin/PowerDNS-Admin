@@ -46,18 +46,21 @@ index_bp = Blueprint('index',
                      url_prefix='/')
 
 
-@index_bp.before_app_first_request
+@index_bp.before_app_request
 def register_modules():
     global google
     global github
     global azure
     global oidc
     global saml
+    if current_app.extensions.get('pda_auth_modules_registered'):
+        return
     google = google_oauth()
     github = github_oauth()
     azure = azure_oauth()
     oidc = oidc_oauth()
     saml = SAML()
+    current_app.extensions['pda_auth_modules_registered'] = True
 
 
 @index_bp.before_request
@@ -66,18 +69,17 @@ def before_request():
     g.user = current_user
     login_manager.anonymous_user = Anonymous
 
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(minutes=int(Setting().get('session_timeout')))
+    session.modified = True
+
     # Check site is in maintenance mode
     maintenance = Setting().get('maintenance')
     if maintenance and current_user.is_authenticated and current_user.role.name not in [
         'Administrator', 'Operator'
     ]:
         return render_template('maintenance.html')
-
-    # Manage session timeout
-    session.permanent = True
-    current_app.permanent_session_lifetime = datetime.timedelta(
-        minutes=int(Setting().get('session_timeout')))
-    session.modified = True
 
 
 @index_bp.route('/', methods=['GET'])
@@ -88,6 +90,15 @@ def index():
 
 @index_bp.route('/ping', methods=['GET'])
 def ping():
+    return make_response('ok')
+
+
+@index_bp.route('/healthcheck', methods=['GET'])
+def healthcheck():
+    # Manage session timeout
+    session.permanent = False
+    current_app.permanent_session_lifetime = datetime.timedelta(minutes=0)
+    session.modified = True
     return make_response('ok')
 
 
@@ -161,6 +172,38 @@ def login():
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard.dashboard'))
+
+    if request.args.get('restart'):
+        clear_pending_totp()
+
+    pending_totp_user_id = session.get('pending_totp_user_id')
+    if pending_totp_user_id is not None:
+        pending_totp_user = db.session.get(User, pending_totp_user_id)
+        if pending_totp_user is None or not pending_totp_user.otp_secret:
+            clear_pending_totp()
+            if request.method == 'POST':
+                return redirect(url_for('index.login'))
+        elif request.method == 'GET':
+            return render_template('login.html',
+                                   saml_enabled=SAML_ENABLED,
+                                   otp_required=True,
+                                   username=pending_totp_user.username)
+        else:
+            otp_token = request.form.get('otptoken', '')
+            auth_method = session.get('pending_totp_auth_method', 'LOCAL')
+            remember_me = session.get('pending_totp_remember', False)
+            if not otp_token.isdigit() or not pending_totp_user.verify_totp(otp_token):
+                signin_history(pending_totp_user.username, auth_method, False)
+                return render_template('login.html',
+                                       saml_enabled=SAML_ENABLED,
+                                       otp_required=True,
+                                       username=pending_totp_user.username,
+                                       error='Invalid credentials')
+
+            clear_pending_totp()
+            apply_autoprovisioning(pending_totp_user, auth_method)
+            return authenticate_user(pending_totp_user, auth_method,
+                                     remember_me)
 
     if 'google_token' in session:
         user_data = json.loads(google.get('userinfo').text)
@@ -353,7 +396,7 @@ def login():
                     account_id = account.get_id_by_name(account_name=sanitized_group_name)
 
                     if account_id:
-                        account = Account.query.get(account_id)
+                        account = db.session.get(Account, account_id)
                         # check if user has permissions
                         account_users = account.get_user()
                         current_app.logger.info('Group: {} Users: {}'.format(
@@ -392,7 +435,7 @@ def login():
         return authenticate_user(user, 'Azure OAuth')
 
     if 'oidc_token' in session:
-        user_data = json.loads(oidc.get('userinfo').text)
+        user_data = oidc.userinfo()
         oidc_username = user_data[Setting().get('oidc_oauth_username')]
         oidc_first_name = user_data[Setting().get('oidc_oauth_firstname')]
         oidc_last_name = user_data[Setting().get('oidc_oauth_last_name')]
@@ -501,7 +544,9 @@ def login():
                                    saml_enabled=SAML_ENABLED,
                                    error=e)
 
-        # check if user enabled OPT authentication
+        # Only prompt for OTP after the supplied credentials identify a user
+        # who has TOTP configured. This avoids showing an irrelevant OTP field
+        # to every user on the initial sign-in form.
         if user.otp_secret:
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
@@ -511,29 +556,47 @@ def login():
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
             else:
+                session['pending_totp_user_id'] = user.id
+                session['pending_totp_auth_method'] = auth_method
+                session['pending_totp_remember'] = remember_me
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
-                                       error='Token required')
+                                       otp_required=True,
+                                       username=user.username)
 
-        if Setting().get('autoprovisioning') and auth_method != 'LOCAL':
-            urn_value = Setting().get('urn_value')
-            Entitlements = user.read_entitlements(Setting().get('autoprovisioning_attribute'))
-            if len(Entitlements) == 0 and Setting().get('purge'):
-                user.set_role("User")
-                user.revoke_privilege(True)
-
-            elif len(Entitlements) != 0:
-                if checkForPDAEntries(Entitlements, urn_value):
-                    user.updateUser(Entitlements)
-                else:
-                    current_app.logger.warning(
-                        'Not a single powerdns-admin record was found, possibly a typo in the prefix')
-                    if Setting().get('purge'):
-                        user.set_role("User")
-                        user.revoke_privilege(True)
-                        current_app.logger.warning('Procceding to revoke every privilige from ' + user.username + '.')
+        apply_autoprovisioning(user, auth_method)
 
         return authenticate_user(user, auth_method, remember_me)
+
+
+def clear_pending_totp():
+    session.pop('pending_totp_user_id', None)
+    session.pop('pending_totp_auth_method', None)
+    session.pop('pending_totp_remember', None)
+
+
+def apply_autoprovisioning(user, auth_method):
+    if not Setting().get('autoprovisioning') or auth_method == 'LOCAL':
+        return
+
+    urn_value = Setting().get('urn_value')
+    Entitlements = user.read_entitlements(
+        Setting().get('autoprovisioning_attribute'))
+    if len(Entitlements) == 0 and Setting().get('purge'):
+        user.set_role("User")
+        user.revoke_privilege(True)
+    elif len(Entitlements) != 0:
+        if checkForPDAEntries(Entitlements, urn_value):
+            user.updateUser(Entitlements)
+        else:
+            current_app.logger.warning(
+                'Not a single powerdns-admin record was found, possibly a typo in the prefix')
+            if Setting().get('purge'):
+                user.set_role("User")
+                user.revoke_privilege(True)
+                current_app.logger.warning(
+                    'Procceding to revoke every privilige from ' +
+                    user.username + '.')
 
 
 def checkForPDAEntries(Entitlements, urn_value):
@@ -612,6 +675,14 @@ def get_azure_groups(uri):
 # but user isn't using it yet, enable OTP, get QR code and display it, logging the user out.
 def authenticate_user(user, authenticator, remember=False):
     login_user(user, remember=remember)
+    # Do not keep using the anonymous/pre-authentication server-side session
+    # after the user's identity has changed. Besides preventing session
+    # fixation, this gives the authenticated session its own fresh expiry
+    # instead of inheriting the lifetime of a login page that may have been
+    # open for a long time.
+    current_app.session_interface.regenerate(session)
+    session.permanent = True
+    session.modified = True
     signin_history(user.username, authenticator, True)
     if Setting().get('otp_force') and Setting().get('otp_field_enabled') and not user.otp_secret \
             and session['authentication_type'] not in ['OAuth']:
@@ -842,6 +913,9 @@ def register():
                     return render_template('register.html',
                                            error=result['msg'], captcha_enable=CAPTCHA_ENABLE)
             except Exception as e:
+                db.session.rollback()
+                current_app.logger.exception(
+                    'Unable to register local user %r', username)
                 return render_template('register.html', error=e, captcha_enable=CAPTCHA_ENABLE)
         else:
             return render_template('errors/404.html'), 404

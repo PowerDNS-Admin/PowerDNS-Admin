@@ -38,12 +38,12 @@
 
 {% macro actions(domain) %}
     <td>
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu" data-toggle="dropdown"
+        <div class="dropdown dashboard-action-dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu-{{ domain.id }}" data-bs-toggle="dropdown"
                     aria-haspopup="true" aria-expanded="false">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu-{{ domain.id }}">
                 <button class="dropdown-item btn-success" type="button"
                         onclick="window.location.href='{{ url_for('domain.domain', domain_name=domain.name) }}'">
                     <i class="fa-solid fa-pencil"></i>&nbsp;Edit Records

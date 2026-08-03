@@ -3,12 +3,35 @@ from base64 import b64encode
 
 import pytest
 from flask_migrate import upgrade as flask_migrate_upgrade
+from sqlalchemy import MetaData
 
 from powerdnsadmin import create_app
 from powerdnsadmin.models.api_key import ApiKey
 from powerdnsadmin.models.base import db
 from powerdnsadmin.models.setting import Setting
 from powerdnsadmin.models.user import User
+
+
+def remove_test_database(app):
+    """Remove the test schema so the next module starts from a clean database."""
+    sqlite_database = None
+
+    with app.app_context():
+        db.session.remove()
+
+        if db.engine.url.get_backend_name() == 'sqlite':
+            sqlite_database = db.engine.url.database
+        else:
+            # Reflect the live schema so Alembic's version table and tables
+            # created by extensions are removed along with the ORM tables.
+            metadata = MetaData()
+            metadata.reflect(bind=db.engine)
+            metadata.drop_all(bind=db.engine)
+
+        db.engine.dispose()
+
+    if sqlite_database and os.path.exists(sqlite_database):
+        os.unlink(sqlite_database)
 
 
 @pytest.fixture(scope="session")
@@ -87,6 +110,7 @@ def initial_data(app):
     api_url_setting = Setting('pdns_api_url', pdns_api_url)
     api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
     allow_create_domain_setting = Setting('allow_user_create_domain', True)
+    allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
 
     with app.app_context():
         try:
@@ -94,6 +118,7 @@ def initial_data(app):
             db.session.add(api_url_setting)
             db.session.add(api_key_setting)
             db.session.add(allow_create_domain_setting)
+            db.session.add(allow_remove_domain_setting)
 
             test_user = app.config.get('TEST_USER')
             test_user_pass = app.config.get('TEST_USER_PASSWORD')
@@ -121,7 +146,7 @@ def initial_data(app):
             raise e
 
     yield
-    os.unlink(app.config['TEST_DB_LOCATION'])
+    remove_test_database(app)
 
 
 @pytest.fixture(scope="module")
@@ -170,7 +195,7 @@ def initial_apikey_data(app):
             raise e
 
     yield
-    os.unlink(app.config['TEST_DB_LOCATION'])
+    remove_test_database(app)
 
 
 @pytest.fixture

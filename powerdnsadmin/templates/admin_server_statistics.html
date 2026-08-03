@@ -1,26 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "server_statistics" %}
+{% set page_title = 'Server Statistics' %}
 {% block title %}<title>Server Statistics - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">
-                        Server Statistics
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Server Statistics</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -70,13 +52,6 @@
 {% block extrascripts %}
     <script>
         // Initialize DataTables
-        $("#tbl_statistics").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false
-        });
+        initDataTable("#tbl_statistics");
     </script>
 {% endblock %}

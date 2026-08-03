@@ -65,20 +65,17 @@
 <script>
   var table;
   $(document).ready(function () {
-    table = $('#tbl_history').DataTable({
+    table = initDataTable('#tbl_history', {
       "order": [
         [0, "desc"]
       ],
-      "searching": true,
       "columnDefs": [{
         "type": "time",
         "render": function (data, type, row) {
-          return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+          return formatUtcDateTimeLocal(data);
         },
         "targets": 0
       }],
-      "info": true,
-      "autoWidth": false,
       orderCellsTop: true,
       fixedHeader: true
     });
@@ -87,7 +84,7 @@
       var history_id = $(this).val();
       var info = $("#history-info-div-" + history_id).html();
       $('#modal-info-content').html(info);
-      modal.modal('show');
+      showModal(modal);
     });
     $(document.body).on("click", ".button-filter", function (e) {
       e.stopPropagation();

@@ -27,6 +27,7 @@ class Domain(db.Model):
     last_check = db.Column(db.Integer)
     dnssec = db.Column(db.Integer)
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'))
+    catalog = db.Column(db.String(255), index=True, unique=False)
     account = db.relationship("Account", back_populates="domains")
     settings = db.relationship('DomainSetting', back_populates='domain')
     apikeys = db.relationship("ApiKey",
@@ -76,10 +77,12 @@ class Domain(db.Model):
         """
         Get all zones which has in PowerDNS
         """
+        import urllib.parse
+
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(domain_name)),
+                                 '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain_name))),
             headers=headers,
             timeout=int(
                 Setting().get('pdns_api_timeout')),
@@ -232,7 +235,8 @@ class Domain(db.Model):
             soa_edit_api,
             domain_ns=[],
             domain_master_ips=[],
-            account_name=None):
+            account_name=None,
+            catalog_name=None):
         """
         Add a zone to power dns
         """
@@ -256,6 +260,8 @@ class Domain(db.Model):
             "soa_edit_api": soa_edit_api,
             "account": account_name
         }
+        if catalog_name:
+            post_data["catalog"] = catalog_name
 
         try:
             jdata = utils.fetch_json(
@@ -287,6 +293,8 @@ class Domain(db.Model):
         """
         Read zone from PowerDNS and add into PDNS-Admin
         """
+        import urllib.parse
+
         headers = {'X-API-Key': self.PDNS_API_KEY}
         if not domain:
             try:
@@ -294,7 +302,7 @@ class Domain(db.Model):
                     urljoin(
                         self.PDNS_STATS_URL, self.API_EXTENDED_URL +
                                              '/servers/localhost/zones/{0}'.format(
-                                                 domain_dict['name'])),
+                                                 urllib.parse.quote_plus(domain_dict['name']))),
                     headers=headers,
                     timeout=int(Setting().get('pdns_api_timeout')),
                     verify=Setting().get('verify_ssl_connections'))
@@ -320,6 +328,8 @@ class Domain(db.Model):
         d.last_check = domain['last_check']
         d.dnssec = 1 if domain['dnssec'] else 0
         d.account_id = account_id
+        if domain.get('catalog'):
+            d.catalog = domain['catalog'].rstrip('.')
         db.session.add(d)
         try:
             if do_commit:
@@ -336,6 +346,8 @@ class Domain(db.Model):
             raise
 
     def update_soa_setting(self, domain_name, soa_edit_api):
+        import urllib.parse
+
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Zone does not exist.'}
@@ -353,7 +365,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                                     '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -386,6 +398,8 @@ class Domain(db.Model):
         """
         Update zone kind: Native / Master / Slave
         """
+        import urllib.parse
+
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if not domain:
             return {'status': 'error', 'msg': 'Znoe does not exist.'}
@@ -397,7 +411,7 @@ class Domain(db.Model):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(domain.name)),
+                                     '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain.name))),
                 headers=headers,
                 timeout=int(
                     Setting().get('pdns_api_timeout')),
@@ -425,6 +439,58 @@ class Domain(db.Model):
                 'status': 'error',
                 'msg': 'Cannot update kind for this zone.'
             }
+
+
+    def update_catalog(self, domain_name, catalog_name):
+        """
+        Update domain catalog zone
+        """
+        import urllib.parse
+
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'Znoe does not exist.'}
+
+        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
+
+        post_data = {"catalog": catalog_name}
+
+        try:
+            jdata = utils.fetch_json(urljoin(
+                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                                     '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain.name))),
+                headers=headers,
+                timeout=int(
+                    Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data=post_data)
+            if 'error' in jdata.keys():
+                current_app.logger.error(jdata['error'])
+                return {'status': 'error', 'msg': jdata['error']}
+            else:
+                domain.catalog = catalog_name
+                db.session.commit()
+
+                current_app.logger.info(
+                    'Update zone catalog for {0} successfully'.format(
+                        domain_name))
+                return {
+                    'status': 'ok',
+                    'msg': 'Zone catalog changed successfully'
+                }
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(
+                'Cannot update catalog for zone {0}. Error: {1}'.format(
+                    domain_name, e))
+            current_app.logger.debug(traceback.format_exc())
+
+            return {
+                'status': 'error',
+                'msg': 'Cannot update catalog for this zone.'
+            }
+
 
     def create_reverse_domain(self, domain_name, domain_reverse_name):
         """
@@ -521,11 +587,13 @@ class Domain(db.Model):
         """
         Delete a single zone name from powerdns
         """
+        import urllib.parse
+
         headers = {'X-API-Key': self.PDNS_API_KEY}
 
         utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(domain_name)),
+                                 '/servers/localhost/zones/{0}'.format(urllib.parse.quote_plus(domain_name))),
             headers=headers,
             timeout=int(Setting().get('pdns_api_timeout')),
             method='DELETE',
@@ -643,8 +711,6 @@ class Domain(db.Model):
         """
         Update records from Master DNS server
         """
-        import urllib.parse
-
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
             headers = {'X-API-Key': self.PDNS_API_KEY}
@@ -709,62 +775,33 @@ class Domain(db.Model):
         else:
             return {'status': 'error', 'msg': 'This zone does not exist'}
 
-    def enable_domain_dnssec(self, domain_name):
+    def enable_domain_dnssec(self, domain_name, key_parameters=None):
         """
-        Enable zone DNSSEC
-        """
-        import urllib.parse
+        Enable zone DNSSEC.
 
+        ``key_parameters`` is used by dashboard v2 to explicitly select the
+        key type, algorithm, and size. Calls from the classic dashboard omit
+        it and retain the original PowerDNS-default behavior.
+        """
         domain = Domain.query.filter(Domain.name == domain_name).first()
         if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
             try:
                 # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
-                post_data = {"api_rectify": True}
-                jdata = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}'.format(
-                                                 urllib.parse.quote_plus(domain.name)
-                                             )),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    method='PUT',
-                    verify=Setting().get('verify_ssl_connections'),
-                    data=post_data)
-                if 'error' in jdata:
-                    return {
-                        'status': 'error',
-                        'msg':
-                            'API-RECTIFY could not be enabled for this zone',
-                        'jdata': jdata
-                    }
+                rectify = self.set_domain_api_rectify(domain_name, True)
+                if rectify.get('status') != 'ok':
+                    return rectify
 
                 # Activate DNSSEC
                 post_data = {"keytype": "ksk", "active": True}
-                jdata = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 urllib.parse.quote_plus(domain.name)
-                                             )),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    method='POST',
-                    verify=Setting().get('verify_ssl_connections'),
-                    data=post_data)
-                if 'error' in jdata:
-                    return {
-                        'status':
-                            'error',
-                        'msg':
-                            'Cannot enable DNSSEC for this zone. Error: {0}'.
-                                format(jdata['error']),
-                        'jdata':
-                            jdata
+                if key_parameters is not None:
+                    post_data = {
+                        "keytype": key_parameters["keytype"],
+                        "algorithm": key_parameters["algorithm"],
+                        "bits": key_parameters["bits"],
+                        "active": key_parameters["active"],
+                        "published": key_parameters["published"],
                     }
-
-                return {'status': 'ok'}
+                return self.create_dnssec_key(domain_name, post_data)
 
             except Exception as e:
                 current_app.logger.error(
@@ -779,6 +816,127 @@ class Domain(db.Model):
 
         else:
             return {'status': 'error', 'msg': 'This zone does not exist'}
+
+    def set_domain_api_rectify(self, domain_name, enabled):
+        """Enable or disable API-RECTIFY without changing cryptokeys."""
+        import urllib.parse
+
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'This zone does not exist'}
+
+        headers = {
+            'X-API-Key': self.PDNS_API_KEY,
+            'Content-Type': 'application/json',
+        }
+        try:
+            jdata = utils.fetch_json(
+                urljoin(
+                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                    '/servers/localhost/zones/{0}'.format(
+                        urllib.parse.quote_plus(domain.name))),
+                headers=headers,
+                timeout=int(Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data={'api_rectify': bool(enabled)})
+            if 'error' in jdata:
+                return {
+                    'status': 'error',
+                    'msg': 'API-RECTIFY could not be updated for this zone',
+                    'jdata': jdata,
+                }
+            return {'status': 'ok'}
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot update API-RECTIFY. DETAIL: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return {
+                'status': 'error',
+                'msg': 'There was something wrong, please contact administrator',
+            }
+
+    def create_dnssec_key(self, domain_name, key_parameters):
+        """Create one cryptokey without changing any existing key."""
+        import urllib.parse
+
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'This zone does not exist'}
+
+        headers = {
+            'X-API-Key': self.PDNS_API_KEY,
+            'Content-Type': 'application/json',
+        }
+        try:
+            jdata = utils.fetch_json(
+                urljoin(
+                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                    '/servers/localhost/zones/{0}/cryptokeys'.format(
+                        urllib.parse.quote_plus(domain.name))),
+                headers=headers,
+                timeout=int(Setting().get('pdns_api_timeout')),
+                method='POST',
+                verify=Setting().get('verify_ssl_connections'),
+                data=key_parameters)
+            if 'error' in jdata:
+                return {
+                    'status': 'error',
+                    'msg': 'Cannot create a DNSSEC key for this zone. Error: {0}'.
+                           format(jdata['error']),
+                    'jdata': jdata,
+                }
+            return {'status': 'ok', 'key': jdata}
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot create DNSSEC key. DETAIL: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return {
+                'status': 'error',
+                'msg': 'There was something wrong, please contact administrator',
+            }
+
+    def update_dnssec_key(self, domain_name, key_id, active, published):
+        """Set the complete active/published state for one cryptokey."""
+        import urllib.parse
+
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            return {'status': 'error', 'msg': 'This zone does not exist'}
+
+        headers = {
+            'X-API-Key': self.PDNS_API_KEY,
+            'Content-Type': 'application/json',
+        }
+        try:
+            jdata = utils.fetch_json(
+                urljoin(
+                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
+                    '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
+                        urllib.parse.quote_plus(domain.name), int(key_id))),
+                headers=headers,
+                timeout=int(Setting().get('pdns_api_timeout')),
+                method='PUT',
+                verify=Setting().get('verify_ssl_connections'),
+                data={
+                    'active': bool(active),
+                    'published': bool(published),
+                })
+            if 'error' in jdata:
+                return {
+                    'status': 'error',
+                    'msg': 'Cannot update DNSSEC key {0}.'.format(key_id),
+                    'jdata': jdata,
+                }
+            return {'status': 'ok'}
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot update DNSSEC key. DETAIL: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return {
+                'status': 'error',
+                'msg': 'There was something wrong, please contact administrator',
+            }
 
     def delete_dnssec_key(self, domain_name, key_id):
         """
@@ -809,25 +967,6 @@ class Domain(db.Model):
                                 format(jdata['error']),
                         'jdata':
                             jdata
-                    }
-
-                # Disable API-RECTIFY for zone, AFTER deactivating DNSSEC
-                post_data = {"api_rectify": False}
-                jdata = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}'.format(domain.name)),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    method='PUT',
-                    verify=Setting().get('verify_ssl_connections'),
-                    data=post_data)
-                if 'error' in jdata:
-                    return {
-                        'status': 'error',
-                        'msg':
-                            'API-RECTIFY could not be disabled for this zone',
-                        'jdata': jdata
                     }
 
                 return {'status': 'ok'}

@@ -34,13 +34,17 @@ class ApiKey(db.Model):
                 for _ in range(15))
             self.plain_key = rand_key
             self.key = self.get_hashed_password(rand_key).decode('utf-8')
-            current_app.logger.debug("Hashed key: {0}".format(self.key))
         else:
             self.key = key
 
     def create(self):
         try:
-            self.role = Role.query.filter(Role.name == self.role_name).first()
+            # Relationship collections can associate this object with persistent
+            # parents before it is added to the session. Avoid an early autoflush
+            # while looking up the role under SQLAlchemy 2.
+            with db.session.no_autoflush:
+                self.role = db.session.scalar(
+                    db.select(Role).where(Role.name == self.role_name))
             db.session.add(self)
             db.session.commit()
         except Exception as e:

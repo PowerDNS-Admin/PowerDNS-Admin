@@ -1,24 +1,8 @@
 {% extends "base.html" %}
 {% set active_page = "admin_users" %}
+{% set page_title = 'Users' %}
 {% block title %}<title>Users - {{ SITE_NAME }}</title>{% endblock %}
 
-{% block dashboard_stat %}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Users</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
-                        <li class="breadcrumb-item active">Users</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
 
 {% block content %}
     <section class="content">
@@ -63,10 +47,12 @@
                                             <select id="{{ user.username }}" class="user_role"
                                                     {% if user.username==current_user.username or (current_user.role.name=='Operator' and user.role.name=='Administrator') %}disabled{% endif %}>
                                                 {% for role in roles %}
-                                                    <option value="{{ role.name }}"
-                                                            {% if role.id==user.role.id %}selected{% endif %}>
-                                                        {{ role.name }}
-                                                    </option>
+                                                    {% if current_user.role.name == 'Administrator' or role.name != 'Administrator' or role.id == user.role.id %}
+                                                        <option value="{{ role.name }}"
+                                                                {% if role.id==user.role.id %}selected{% endif %}>
+                                                            {{ role.name }}
+                                                        </option>
+                                                    {% endif %}
                                                 {% endfor %}
                                             </select>
                                         </td>
@@ -81,12 +67,12 @@
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-primary dropdown-toggle" type="button"
-                                                        id="dropdownMenu" data-toggle="dropdown" aria-haspopup="true"
+                                                        id="dropdownMenu-{{ user.id }}" data-bs-toggle="dropdown" aria-haspopup="true"
                                                         aria-expanded="false"
                                                         {% if current_user.role.name=='Operator' and user.role.name=='Administrator' %}disabled{% endif %}>
                                                     <i class="fa-solid fa-bars"></i>
                                                 </button>
-                                                <div class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenu-{{ user.id }}">
                                                     <button type="button" class="dropdown-item btn-warning"
                                                             onclick="window.location.href='{{ url_for('admin.edit_user', user_username=user.username) }}'">
                                                         <i class="fa-solid fa-edit"></i>&nbsp;Edit User
@@ -124,13 +110,8 @@
 {% block extrascripts %}
     <script>
         // set up user data table
-        $("#tbl_users").DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
+        initDataTable("#tbl_users", {
             "info": false,
-            "autoWidth": false,
             "lengthMenu": [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
@@ -152,9 +133,9 @@
                     '_csrf_token': '{{ csrf_token() }}'
                 }
                 applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', true);
-                modal.modal('hide');
+                hideModal(modal);
             })
-            modal.modal('show');
+            showModal(modal);
         });
 
         // handle deletion of user
@@ -170,9 +151,9 @@
                     '_csrf_token': '{{ csrf_token() }}'
                 }
                 applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', false, true);
-                modal.modal('hide');
+                hideModal(modal);
             })
-            modal.modal('show');
+            showModal(modal);
         });
 
         // handle user role changing
@@ -193,23 +174,22 @@
 {% endblock %}
 
 {% block modals %}
-    <div class="modal fade" id="modal_revoke">
+    <div class="modal fade" id="modal_revoke" tabindex="-1"
+         aria-labelledby="modal_revoke_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_revoke_label">Confirmation</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
-                    <button type="button" class="btn btn-danger float-right" id="button_revoke_confirm">
+                    <button type="button" class="btn btn-danger float-end" id="button_revoke_confirm">
                         Revoke
                     </button>
                 </div>
@@ -217,23 +197,22 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal_delete">
+    <div class="modal fade" id="modal_delete" tabindex="-1"
+         aria-labelledby="modal_delete_label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Confirmation</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h4 class="modal-title" id="modal_delete_label">Confirmation</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default float-right" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
-                    <button type="button" class="btn btn-danger float-right" id="button_delete_confirm">
+                    <button type="button" class="btn btn-danger float-end" id="button_delete_confirm">
                         Delete
                     </button>
                 </div>

@@ -4,11 +4,12 @@
 }
 
 table td {
-    font-family:'Roboto Mono' !important;
+    font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono",
+                 "Liberation Mono", Menlo, Consolas, monospace !important;
 }
 
-/*Fit default macbook screen*/
-.small-box .icon {
+/* Fit the default laptop viewport. */
+.small-box .small-box-icon {
     font-size: 70px !important;
 }
 
@@ -33,30 +34,136 @@ table td {
    color: olive;
 }
 
-.user-footer {
-    background-color: #222d32 !important;
+@media (min-width: 1200px) {
+    body.pda-layout-boxed .app-wrapper {
+        max-width: 1250px;
+        margin-inline: auto;
+        box-shadow: var(--bs-box-shadow);
+    }
 }
 
-.ms-container {
-    background-size: 20px 20px;
-    background-position: center;
+.pda-dual-list-options {
+    min-height: 14rem;
 }
 
-.search-input {
+@media (max-width: 767.98px) {
+    .pda-dual-list-controls {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.pda-user-panel {
+    padding-inline: 0.5rem;
+    padding-block: 0.5rem;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
     width: 100%;
 }
 
-.sidebar .image { padding-top: 0.7em; }
-.sidebar .info { color: #fff; }
-.sidebar .info p { margin: 0; }
-.sidebar .info a { font-size: 0.8em; }
+.pda-user-image img {
+    width: 1.9rem;
+    height: 1.9rem;
+    object-fit: cover;
+}
+
+.pda-user-info {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-inline-start: 0.5rem;
+    color: var(--bs-body-color);
+}
+
+.pda-user-info span {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.15rem;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pda-user-info p {
+    margin: 0;
+}
+
+.pda-user-info a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8em;
+    white-space: nowrap;
+    text-decoration: none;
+    color: inherit;
+}
+
+.pda-user-info a i,
+.pda-user-info a .pda-user-link-text {
+    text-decoration: none;
+}
+
+.pda-user-info a:hover .pda-user-link-text,
+.pda-user-info a:focus .pda-user-link-text {
+    text-decoration: underline;
+}
+
+.pda-unsaved-banner {
+    z-index: 1025;
+    display: grid;
+    grid-template-rows: 0fr;
+    padding-inline: 0.5rem;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.75rem);
+    transition: grid-template-rows 180ms ease,
+                opacity 180ms ease,
+                transform 180ms ease,
+                visibility 0s linear 180ms;
+}
+
+.pda-unsaved-banner.is-floating {
+    position: fixed;
+    top: var(--pda-banner-top);
+    left: var(--pda-banner-left);
+    width: var(--pda-banner-width);
+}
+
+.pda-unsaved-banner.is-visible {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
+}
+
+.pda-unsaved-banner-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.pda-unsaved-banner .alert {
+    margin-block: 0.75rem;
+    border-color: var(--bs-warning-border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pda-unsaved-banner {
+        transition: none;
+    }
+}
 
 /* Global Styles */
 table.records thead th, table.records tbody td { text-align: center; vertical-align: middle; }
 table.records thead th:last-of-type { width: 50px; }
+table.records tbody td:first-of-type { text-align: left; }
 div.records > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
 div.records > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
 div.records > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
+
+.card-footer > .error { color: red !important; }
 
 .diff {
     font-family: monospace;
@@ -69,14 +176,36 @@ div.records > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
 
 .diff-deletion {
     background-color: lightcoral;
+    color: #000;
+    border-left: 3px solid #a00;
 }
 .diff-deletion::before {
     content: "-";
 }
 
+[data-bs-theme="dark"] .diff-deletion {
+    background-color: rgba(200, 50, 50, 0.3);
+    color: #ff6b6b;
+    border-left: 3px solid #ff6b6b;
+}
+
 .diff-addition {
     background-color: lightgreen;
+    color: #000;
+    border-left: 3px solid #080;
 }
 .diff-addition::before {
     content: "+";
 }
+
+[data-bs-theme="dark"] .diff-addition {
+    background-color: rgba(50, 200, 50, 0.3);
+    color: #51cf66;
+    border-left: 3px solid #51cf66;
+}
+
+.diff-unchanged {
+    background-color: transparent;
+    color: inherit;
+}
+

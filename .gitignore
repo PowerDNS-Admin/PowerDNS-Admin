@@ -21,6 +21,13 @@ pip-log.txt
 .coverage
 .tox
 nosetests.xml
+test-results
+
+#AI tools
+.claude
+.codex
+.junie
+.air
 
 # tmp files
 .~*
@@ -42,5 +49,19 @@ powerdnsadmin/static/generated
 .venv*
 venv*
 .pytest_cache
+playwright-report
+test-results/browser
+test-results/megalinter
+.megalinter-compiled
+megalinter-reports
+mega-linter.log
 .DS_Store
 yarn-error.log
+
+## Misc Docker folders
+docker/docker-compose-megalinter.yml
+docker/docker-compose-pip-audit.yml
+docker/docker-compose-rocky.yml
+docker/rocky/
+docker/megalinter/
+.github/workflows/build-rocky.yml

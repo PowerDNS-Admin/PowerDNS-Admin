@@ -1,9 +1,12 @@
 # PowerDNS-Admin
 
 A PowerDNS web interface with advanced features.
+#### The following badges are for the dev branch
 
-[![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
-[![Docker Image](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
+[![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
+[![Docker Image](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
+
+
 
 #### Features:
 
@@ -23,8 +26,6 @@ A PowerDNS web interface with advanced features.
 - Easy IPv6 PTR record editing
 - Provides an API for zone and record management among other features
 - Provides full IDN/Punycode support
-
-## [Project Update - PLEASE READ!!!](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1708)
 
 ## Running PowerDNS-Admin
 
@@ -55,7 +56,7 @@ This creates a volume named `pda-data` to persist the default SQLite database wi
 #### Option 2: Using docker-compose
 
 1. Update the configuration   
-   Edit the `docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
+   Edit the `docker/docker-compose.yml` file to update the database connection string in `SQLALCHEMY_DATABASE_URI`.
    Other environment variables are mentioned in
    the [AppSettings.defaults](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/powerdnsadmin/lib/settings.py) dictionary.
    To use a Docker-style secrets convention, one may append `_FILE` to the environment variables with a path to a file
