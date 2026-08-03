@@ -37,7 +37,46 @@
         };
     }
 
+    function serviceBindingParser(value) {
+        var match = value.trim().match(/^(\S+)(?:\s+(\S+))?(?:\s+([\s\S]*))?$/);
+
+        return match ? [match[1], match[2] || '', match[3] || ''] : ['', '', ''];
+    }
+
+    function normalizeServiceBindingParameters(value) {
+        return value.trim().replace(
+            /(^|\s)([a-z0-9-]+)="([^"\\\s]*)"(?=\s|$)/gi,
+            '$1$2=$3');
+    }
+
+    function formatServiceBinding(values) {
+        var record = values[0].trim() + ' ' +
+            appendTrailingDot(values[1].trim());
+        var parameters = normalizeServiceBindingParameters(values[2]);
+
+        return parameters ? record + ' ' + parameters : record;
+    }
+
+    var serviceBindingFields = [
+        ['SvcPriority', 'eg. 1'],
+        ['TargetName', 'eg. svc.example.com'],
+        ['SvcParams', 'eg. alpn=h2,h3 port=8443', 'textarea']
+    ];
+
     var definitions = {
+        APL: {
+            fields: [[
+                'Address Prefix List',
+                'eg. 1:192.0.2.0/24 !2:2001:db8::/32',
+                'textarea'
+            ]],
+            parse: function (value) {
+                return [value];
+            },
+            format: function (values) {
+                return values[0].trim();
+            }
+        },
         CAA: {
             fields: [
                 ['CAA Flag', '0'],
@@ -59,6 +98,11 @@
                 return appendTrailingDot(values[0] + ' ' + values[1]);
             }
         },
+        HTTPS: {
+            fields: serviceBindingFields,
+            parse: serviceBindingParser,
+            format: formatServiceBinding
+        },
         SRV: {
             fields: [
                 ['SRV Priority', '0'],
@@ -70,6 +114,11 @@
             format: function (values) {
                 return appendTrailingDot(values.join(' '));
             }
+        },
+        SVCB: {
+            fields: serviceBindingFields,
+            parse: serviceBindingParser,
+            format: formatServiceBinding
         },
         SOA: {
             fields: [

@@ -106,7 +106,16 @@ class Setting(db.Model):
                 if hasattr(result, 'value'):
                     result = result.value
 
-                return AppSettings.convert_type(setting, result)
+                result = AppSettings.convert_type(setting, result)
+                if setting in ('forward_records_allow_edit',
+                               'reverse_records_allow_edit'):
+                    # Keep saved administrator choices while making record
+                    # types introduced by newer releases available to opt in.
+                    result = {
+                        **AppSettings.defaults[setting],
+                        **result,
+                    }
+                return result
             else:
                 return AppSettings.defaults[setting]
         else:

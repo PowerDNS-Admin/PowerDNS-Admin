@@ -293,8 +293,17 @@ def test_record_helper_is_shared_by_domain_and_template_editors():
         assert 'caa_flag' not in editor
         assert 'modal_custom_record' not in editor
 
-    for record_type in ('CAA', 'MX', 'SRV', 'SOA', 'TLSA', 'TXT', 'LUA'):
+    for record_type in (
+            'APL', 'CAA', 'HTTPS', 'MX', 'SRV', 'SVCB', 'SOA', 'TLSA',
+            'TXT', 'LUA'):
         assert f'{record_type}:' in helper
+
+    assert "['SvcPriority', 'eg. 1']" in helper
+    assert "['TargetName', 'eg. svc.example.com']" in helper
+    assert "['SvcParams', 'eg. alpn=h2,h3 port=8443', 'textarea']" in helper
+    assert 'appendTrailingDot(values[1].trim())' in helper
+    assert 'normalizeServiceBindingParameters(values[2])' in helper
+    assert "'Address Prefix List'" in helper
 
     assert 'global.initializeRecordHelper = initializeRecordHelper' in helper
     assert 'document.body.dataset.recordHelperInitialized' in helper
