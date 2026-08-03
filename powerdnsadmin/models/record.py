@@ -404,7 +404,7 @@ class Record(object):
             domain_setting = DomainSetting.query.filter(
                 DomainSetting.domain == domain_obj).filter(
                     DomainSetting.setting == 'auto_ptr').first()
-            auto_ptr_enabled = strtobool(
+            auto_ptr_enabled = utils.parse_boolean(
                 domain_setting.value) if domain_setting else False
 
         # If it is enabled, we create/delete the PTR records automatically

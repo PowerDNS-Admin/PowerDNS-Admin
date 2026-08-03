@@ -493,7 +493,7 @@ class Domain(db.Model):
         domain_auto_ptr = DomainSetting.query.filter(
             DomainSetting.domain == domain_obj).filter(
             DomainSetting.setting == 'auto_ptr').first()
-        domain_auto_ptr = strtobool(
+        domain_auto_ptr = utils.parse_boolean(
             domain_auto_ptr.value) if domain_auto_ptr else False
         system_auto_ptr = Setting().get('auto_ptr')
         self.name = domain_name
