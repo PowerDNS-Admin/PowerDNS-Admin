@@ -339,7 +339,7 @@ def test_page_header_markup_is_owned_by_the_shared_component():
 
 
 def test_history_uses_native_date_inputs_without_bootstrap_datepicker():
-    template = Path('powerdnsadmin/templates/admin/history.html').read_text()
+    template = Path('powerdnsadmin/templates/admin/history/history.html').read_text()
     asset_sources = (*css_main.contents, *js_main.contents)
 
     assert 'type="date" id="min"' in template
