@@ -67,7 +67,7 @@ services:
     tmpfs:
       - /var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent && mysql -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent --skip-column-names -e \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='powerdns' AND table_name IN ('domains','records','comments')\" | grep -q '^3$'"]
       interval: 2s
       timeout: 5s
       retries: 30
