@@ -3,16 +3,6 @@ name: MegaLinter
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - dev
-      - master
-    tags:
-      - 'v*.*.*'
-  pull_request:
-    branches:
-      - dev
-      - master
 
 permissions:
   contents: read
