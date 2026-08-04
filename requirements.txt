@@ -16,7 +16,7 @@ bravado-core==6.4.1
 certifi==2026.7.22
 cffi==2.1.0
 #configobj==5.0.9
-cryptography==49.0.0
+cryptography==50.0.0
 #cssmin==0.2.0
 dnspython==2.8.0
 flask_session_captcha==1.5.0
