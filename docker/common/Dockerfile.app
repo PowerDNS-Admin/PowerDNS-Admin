@@ -115,7 +115,7 @@ COPY ./docker/${DOCKER_SCENARIO}/ /opt/scenario/
 RUN mkdir -p /data \
     && test "$(python -c 'import platform; print(platform.python_version())')" = "${PYTHON_FULL_VERSION}" \
     && test "$(python -c 'import sys; print(sys.version_info.micro)')" = "${PYTHON_PATCH_LEVEL}" \
-    && chmod u+x /opt/wait-for-pdns.sh /opt/scenario/*.sh
+    && chmod 0755 /opt/wait-for-pdns.sh /opt/scenario/*.sh
 
 ENTRYPOINT ["/opt/scenario/entrypoint.sh"]
 CMD ["gunicorn", "powerdnsadmin:create_app()"]

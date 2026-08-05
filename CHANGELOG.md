@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-05
+
 ### Breaking Changes
 
 -   This release removes support for PowerDNS versions older than 5.0. Users running older versions of PowerDNS will need to use an older version of PowerDNS-Admin.
@@ -36,6 +38,7 @@
 -   PowerDNS zone names are now URL-encoded consistently in zone, record, and API-management request paths, preventing failures for names containing characters that require escaping.
 -   Zone synchronization now updates catalog membership for existing zones when PowerDNS reports a changed or removed catalog.
 -   The OIDC authorization callback is now registered with the application blueprint at startup, preventing Flask 3 from raising an `AssertionError` after request handling has begun.
+-   The Docker image's entrypoint and scenario scripts are now installed with world-execute permission (`chmod 0755`) instead of owner-only (`chmod u+x`), fixing a startup failure when the container is run as a non-root user (`docker run --user`, or Kubernetes `runAsNonRoot`/Pod Security Standards).
 
 ### Security
 
