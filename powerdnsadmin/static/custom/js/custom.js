@@ -511,17 +511,15 @@ function getdnssec(url, domain){
             var dnssec_msg = '';
             var dnssec = data['dnssec'];
 
-            if (dnssec.length == 0 && parseFloat(PDNS_VERSION) >= 4.1) {
+            if (dnssec.length == 0) {
               dnssec_msg = '<h3>DNSSEC is disabled. Click on Enable to activate it.';
               modal.find('.modal-body p').html(dnssec_msg);
               dnssec_footer = '<button type="button" class="btn btn-success button_dnssec_enable float-start" id="'+domain+'">Enable</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Cancel</button>';
               modal.find('.modal-footer ').html(dnssec_footer);
             }
             else {
-                if (parseFloat(PDNS_VERSION) >= 4.1) {
-                  dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable float-start" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Close</button>';
-                  modal.find('.modal-footer ').html(dnssec_footer);
-                }
+                dnssec_footer = '<button type="button" class="btn btn-danger button_dnssec_disable float-start" id="'+domain+'">Disable DNSSEC</button><button type="button" class="btn btn-secondary float-end" data-bs-dismiss="modal">Close</button>';
+                modal.find('.modal-footer ').html(dnssec_footer);
                 for (var i = 0; i < dnssec.length; i++) {
                   if (dnssec[i]['active']){
                       dnssec_msg += '<form>'+

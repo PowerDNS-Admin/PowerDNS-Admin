@@ -1,0 +1,11 @@
+[run]
+branch = True
+source = powerdnsadmin
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = True
+
+[html]
+title = PowerDNS-Admin Python coverage

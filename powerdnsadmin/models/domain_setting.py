@@ -7,6 +7,11 @@ from .base import db
 
 class DomainSetting(db.Model):
     __tablename__ = 'domain_setting'
+    __table_args__ = (
+        db.Index('ix_domain_setting_domain_id_setting',
+                 'domain_id', 'setting'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     domain_id = db.Column(db.Integer, db.ForeignKey('domain.id'))
     domain = db.relationship('Domain', back_populates='settings')

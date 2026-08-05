@@ -1,0 +1,147 @@
+---
+name: Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+      - master
+  pull_request:
+    branches:
+      - dev
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  unit:
+    name: Unit tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.12'
+          - '3.13'
+          - '3.14'
+    env:
+      PDNS_API_KEY: changeme
+      PDNS_HOST: localhost
+      PDNS_PORT: '8081'
+      PDNS_PROTO: http
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            default-libmysqlclient-dev \
+            libffi-dev \
+            libldap2-dev \
+            libpq-dev \
+            libsasl2-dev \
+            libssl-dev \
+            libxml2-dev \
+            libxmlsec1-dev \
+            libxmlsec1-openssl \
+            libxslt1-dev \
+            pkg-config
+
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip --requirement requirements-dev.txt
+
+      - name: Build frontend assets
+        env:
+          FLASK_APP: powerdnsadmin/__init__.py
+          SESSION_TYPE: filesystem
+          YARN_NODE_LINKER: node-modules
+        run: |
+          corepack enable
+          yarn install --immutable --inline-builds
+          ln -s ../../node_modules powerdnsadmin/static/node_modules
+          flask assets build
+
+      - name: Reject invalid Python escape sequences
+        run: python -W error::SyntaxWarning -m compileall -q powerdnsadmin tests
+
+      - name: Run unit tests
+        run: python -m pytest --capture=no --verbose tests/unit
+
+  full-suite:
+    name: Python tests (full suite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run complete Python test suite
+        run: |
+          docker compose -f docker/docker-compose-test.yml up \
+            --build \
+            --force-recreate \
+            --abort-on-container-exit \
+            --exit-code-from python-tests
+
+      - name: Capture Compose logs
+        if: failure()
+        run: docker compose -f docker/docker-compose-test.yml logs --no-color > python-tests.log
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-test-logs-${{ github.run_id }}
+          path: python-tests.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Tear down test environment
+        if: always()
+        run: docker compose -f docker/docker-compose-test.yml down --volumes --remove-orphans
+
+  required:
+    name: Python tests
+    if: always()
+    needs:
+      - unit
+      - full-suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every Python test job to pass
+        env:
+          UNIT_RESULT: ${{ needs.unit.result }}
+          FULL_SUITE_RESULT: ${{ needs.full-suite.result }}
+        run: |
+          test "${UNIT_RESULT}" = success
+          test "${FULL_SUITE_RESULT}" = success

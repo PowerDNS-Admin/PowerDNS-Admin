@@ -248,7 +248,6 @@
 <!-- ./app-wrapper -->
 <script type="text/javascript">
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-    var PDNS_VERSION = '{{ pdns_version }}';
 </script>
 {% block scripts %}
     {% assets "js_main" -%}

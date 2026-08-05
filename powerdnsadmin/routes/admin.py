@@ -220,8 +220,7 @@ def before_request():
 @login_required
 @operator_role_required
 def server_statistics():
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     domains = Domain.query.all()
@@ -250,8 +249,7 @@ def server_statistics():
 @login_required
 @operator_role_required
 def server_configuration():
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     domains = Domain.query.all()
@@ -289,7 +287,7 @@ def edit_user(user_username=None):
         create = True
 
     if request.method == 'GET':
-        return render_template('admin_edit_user.html',
+        return render_template('admin/user/edit.html',
                                user=user,
                                create=create)
 
@@ -308,7 +306,7 @@ def edit_user(user_username=None):
 
         if create:
             if not fdata.get('password', ''):
-                return render_template('admin_edit_user.html',
+                return render_template('admin/user/edit.html',
                                        user=user,
                                        create=create,
                                        blank_password=True)
@@ -326,7 +324,7 @@ def edit_user(user_username=None):
             history.add()
             return redirect(url_for('admin.manage_user'))
 
-        return render_template('admin_edit_user.html',
+        return render_template('admin/user/edit.html',
                                user=user,
                                create=create,
                                error=result['msg'])
@@ -352,7 +350,7 @@ def edit_key(key_id=None):
             return render_template('errors/404.html'), 404
 
     if request.method == 'GET':
-        return render_template('admin_edit_key.html',
+        return render_template('admin/key/edit.html',
                                key=apikey,
                                domains=domains,
                                accounts=accounts,
@@ -409,7 +407,7 @@ def edit_key(key_id=None):
                           created_by=current_user.username)
         history.add()
 
-        return render_template('admin_edit_key.html',
+        return render_template('admin/key/edit.html',
                                key=apikey,
                                domains=domains,
                                accounts=accounts,
@@ -429,7 +427,7 @@ def manage_keys():
             current_app.logger.error('Error: {0}'.format(e))
             abort(500)
 
-        return render_template('admin_manage_keys.html',
+        return render_template('admin/key/manage.html',
                                keys=apikeys)
 
     elif request.method == 'POST':
@@ -472,7 +470,7 @@ def manage_user():
     if request.method == 'GET':
         roles = Role.query.all()
         users = User.query.order_by(User.username).all()
-        return render_template('admin_manage_user.html',
+        return render_template('admin/user/manage.html',
                                users=users,
                                roles=roles)
 
@@ -644,7 +642,7 @@ def edit_account(account_name=None):
 
     if request.method == 'GET':
         if account_name is None or not account:
-            return render_template('admin_edit_account.html',
+            return render_template('admin/account/edit.html',
                                    account=None,
                                    account_user_ids=[],
                                    users=users,
@@ -655,7 +653,7 @@ def edit_account(account_name=None):
             account = Account.query.filter(
                 Account.name == account_name).first()
             account_user_ids = account.get_user()
-            return render_template('admin_edit_account.html',
+            return render_template('admin/account/edit.html',
                                    account=account,
                                    account_user_ids=account_user_ids,
                                    users=users,
@@ -686,7 +684,7 @@ def edit_account(account_name=None):
             # account __init__ sanitizes and lowercases the name, so to manage expectations
             # we let the user reenter the name until it's not empty and it's valid (ignoring the case)
             if account.name == "" or account.name != account_name.lower():
-                return render_template('admin_edit_account.html',
+                return render_template('admin/account/edit.html',
                                        account=account,
                                        account_user_ids=account_user_ids,
                                        users=users,
@@ -696,7 +694,7 @@ def edit_account(account_name=None):
                                        invalid_accountname=True)
 
             if Account.query.filter(Account.name == account.name).first():
-                return render_template('admin_edit_account.html',
+                return render_template('admin/account/edit.html',
                                        account=account,
                                        account_user_ids=account_user_ids,
                                        users=users,
@@ -731,7 +729,7 @@ def edit_account(account_name=None):
             history.add()
             return redirect(url_for('admin.manage_account'))
 
-        return render_template('admin_edit_account.html',
+        return render_template('admin/account/edit.html',
                                account=account,
                                account_user_ids=account_user_ids,
                                users=users,
@@ -748,7 +746,7 @@ def manage_account():
         for account in accounts:
             account.user_num = AccountUser.query.filter(
                 AccountUser.account_id == account.id).count()
-        return render_template('admin_manage_account.html', accounts=accounts)
+        return render_template('admin/account/manage.html', accounts=accounts)
 
     if request.method == 'POST':
         #
@@ -1081,7 +1079,7 @@ def history():
                 accounts += a.name + " "
             for u in all_user_names:
                 users += u.username + " "
-        return render_template('admin_history.html', all_domain_names=doms, all_account_names=accounts,
+        return render_template('admin/history.html', all_domain_names=doms, all_account_names=accounts,
                                all_usernames=users)
 
 
@@ -1337,7 +1335,7 @@ def history_table():  # ajax call data
         # Remove elements previously flagged as None
         detailedHistories = [h for h in detailedHistories if h is not None]
 
-        return render_template('admin_history_table.html', histories=detailedHistories,
+        return render_template('admin/history/table.html', histories=detailedHistories,
                                len_histories=len(detailedHistories), lim=lim)
 
 
@@ -1381,7 +1379,7 @@ def setting_basic():
         'warn_session_timeout',
     ]
 
-    return render_template('admin_setting_basic.html', settings=settings)
+    return render_template('admin/setting/basic.html', settings=settings)
 
 
 @admin_bp.route('/setting/basic/<path:setting>/edit', methods=['POST'])
@@ -1432,24 +1430,19 @@ def setting_pdns():
     if request.method == 'GET':
         pdns_api_url = Setting().get('pdns_api_url')
         pdns_api_key = Setting().get('pdns_api_key')
-        pdns_version = Setting().get('pdns_version')
-        return render_template('admin_setting_pdns.html',
+        return render_template('admin/setting/pdns.html',
                                pdns_api_url=pdns_api_url,
-                               pdns_api_key=pdns_api_key,
-                               pdns_version=pdns_version)
+                               pdns_api_key=pdns_api_key)
     elif request.method == 'POST':
         pdns_api_url = request.form.get('pdns_api_url')
         pdns_api_key = request.form.get('pdns_api_key')
-        pdns_version = request.form.get('pdns_version')
 
         Setting().set('pdns_api_url', pdns_api_url)
         Setting().set('pdns_api_key', pdns_api_key)
-        Setting().set('pdns_version', pdns_version)
 
-        return render_template('admin_setting_pdns.html',
+        return render_template('admin/setting/pdns.html',
                                pdns_api_url=pdns_api_url,
-                               pdns_api_key=pdns_api_key,
-                               pdns_version=pdns_version)
+                               pdns_api_key=pdns_api_key)
 
 
 @admin_bp.route('/setting/dns-records', methods=['GET', 'POST'])
@@ -1460,7 +1453,7 @@ def setting_records():
     if request.method == 'GET':
         forward_records = Setting().get('forward_records_allow_edit')
         reverse_records = Setting().get('reverse_records_allow_edit')
-        return render_template('admin_setting_records.html',
+        return render_template('admin/setting/records.html',
                                f_records=forward_records,
                                r_records=reverse_records)
     elif request.method == 'POST':
@@ -1483,7 +1476,7 @@ def setting_records():
 @login_required
 @admin_role_required
 def setting_authentication():
-    return render_template('admin_setting_authentication.html')
+    return render_template('admin/setting/authentication.html')
 
 
 @admin_bp.route('/setting/authentication/api', methods=['POST'])
@@ -1512,7 +1505,7 @@ def setting_authentication_api():
 @operator_role_required
 def templates():
     templates = DomainTemplate.query.all()
-    return render_template('template.html', templates=templates)
+    return render_template('zone_template/template.html', templates=templates)
 
 
 @admin_bp.route('/template/create', methods=['GET', 'POST'])
@@ -1520,7 +1513,7 @@ def templates():
 @operator_role_required
 def create_template():
     if request.method == 'GET':
-        return render_template('template_add.html')
+        return render_template('zone_template/add.html')
     if request.method == 'POST':
         try:
             name = request.form.getlist('name')[0]
@@ -1673,7 +1666,7 @@ def edit_template(template):
                         comment=jr.comment if jr.comment else '')
                     records.append(record)
 
-            return render_template('template_edit.html',
+            return render_template('zone_template/edit.html',
                                    template=t.name,
                                    records=records,
                                    editable_records=records_allow_to_edit,

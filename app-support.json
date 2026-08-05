@@ -1,0 +1,31 @@
+{
+  "python": {
+    "requires_python": ">=3.12,<3.15",
+    "supported_versions": [
+      "3.12",
+      "3.13",
+      "3.14"
+    ]
+  },
+  "browsers": {
+    "chrome": {
+      "minimum_version": "150",
+      "test_channel": "stable"
+    },
+    "edge": {
+      "minimum_version": "150",
+      "test_channel": "stable"
+    },
+    "firefox": {
+      "minimum_version": "151",
+      "test_channel": "playwright"
+    }
+  },
+  "powerdns_auth": {
+    "supported_versions": [
+      "5.0",
+      "5.1"
+    ],
+    "policy": "PowerDNS-Admin is tested against the listed minor versions of the PowerDNS Authoritative Server. It is expected to be compatible with patch releases within these minor versions."
+  }
+}

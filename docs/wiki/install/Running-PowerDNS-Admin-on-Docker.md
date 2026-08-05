@@ -1,10 +1,11 @@
-# Installation on docker
+# Running PowerDNS-Admin on Docker
 
-The Docker image is powerdnsadmin/pda-legacy available on [DockerHub](https://hub.docker.com/r/powerdnsadmin/pda-legacy)
+The official Docker image for PowerDNS-Admin is available on Docker Hub as `powerdnsadmin/pda-legacy`.
 
-The supported environment variables to configure the container are located [here](../configuration/Environment-variables.md).
+For a list of supported environment variables that can be used to configure the container, please see the [Environment Variables](../configuration/Environment-variables.md) documentation.
 
-You can run the container and expose the web server on port 9191 using:
+To run the container and expose the web server on port 9191, you can use the following command:
+
 ```bash
 docker run -d \
     -e SECRET_KEY='a-very-secret-key' \

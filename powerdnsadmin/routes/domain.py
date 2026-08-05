@@ -4,7 +4,6 @@ import datetime
 import traceback
 import dns.name
 import dns.reversename
-from distutils.version import StrictVersion
 from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session
 from flask_login import login_required, current_user, login_manager
 
@@ -90,39 +89,35 @@ def domain(domain_name):
     # TODO:
     #   - Find a way to make it consistent, or
     #   - Only allow one comment for that case
-    if StrictVersion(Setting().get('pdns_version')) >= StrictVersion('4.0.0'):
-        pretty_v6 = Setting().get('pretty_ipv6_ptr')
-        for r in rrsets:
-            if r['type'] in records_allow_to_edit:
-                r_name = r['name'].rstrip('.')
+    pretty_v6 = Setting().get('pretty_ipv6_ptr')
+    for r in rrsets:
+        if r['type'] in records_allow_to_edit:
+            r_name = r['name'].rstrip('.')
 
-                # If it is reverse zone and pretty_ipv6_ptr setting
-                # is enabled, we reformat the name for ipv6 records.
-                if pretty_v6 and r['type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
-                    r_name = dns.reversename.to_address(
-                        dns.name.from_text(r_name))
+            # If it is reverse zone and pretty_ipv6_ptr setting
+            # is enabled, we reformat the name for ipv6 records.
+            if pretty_v6 and r['type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+                r_name = dns.reversename.to_address(
+                    dns.name.from_text(r_name))
 
-                # Create the list of records in format that
-                # PDA jinja2 template can understand.
-                index = 0
-                for record in r['records']:
-                    if (len(r['comments'])>index):
-                        c=r['comments'][index]['content']
-                    else:
-                        c=''
-                    record_entry = RecordEntry(
-                        name=r_name,
-                        type=r['type'],
-                        status='Disabled' if record['disabled'] else 'Active',
-                        ttl=r['ttl'],
-                        data=record['content'],
-                        comment=c,
-                        is_allowed_edit=True)
-                    index += 1
-                    records.append(record_entry)
-    else:
-        # Unsupported version
-        abort(500)
+            # Create the list of records in format that
+            # PDA jinja2 template can understand.
+            index = 0
+            for record in r['records']:
+                if (len(r['comments'])>index):
+                    c=r['comments'][index]['content']
+                else:
+                    c=''
+                record_entry = RecordEntry(
+                    name=r_name,
+                    type=r['type'],
+                    status='Disabled' if record['disabled'] else 'Active',
+                    ttl=r['ttl'],
+                    data=record['content'],
+                    comment=c,
+                    is_allowed_edit=True)
+                index += 1
+                records.append(record_entry)
 
     if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
         editable_records = forward_records_allow_to_edit

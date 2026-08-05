@@ -558,9 +558,12 @@ def domains_v2(tab_id):
     if tab_id not in ZoneTabs.tabs:
         abort(404)
 
+    is_operator = current_user.role.name in ['Administrator', 'Operator']
+
     # The classic dashboard performs this update before returning any HTML.
     # V2 defers it to the first data request so the loading state can render.
-    if (tab_id == ZoneTabs.order[0]
+    if (is_operator
+            and tab_id == ZoneTabs.order[0]
             and request.args.get('refresh') == '1'
             and not Setting().get('bg_domain_updates')):
         current_app.logger.info(
@@ -576,7 +579,7 @@ def domains_v2(tab_id):
         start_wildcard = '' if search.startswith('^') else '%'
         end_wildcard = '' if search.endswith('$') else '%'
         pattern = start_wildcard + search.strip('^$') + end_wildcard
-        if current_user.role.name in ['Administrator', 'Operator']:
+        if is_operator:
             domains = domains.filter(db.or_(
                 Domain.name.ilike(pattern),
                 Account.name.ilike(pattern),
@@ -584,8 +587,9 @@ def domains_v2(tab_id):
             ))
         else:
             domains = domains.filter(Domain.name.ilike(pattern))
-
-    filtered_count = domains.count()
+        filtered_count = domains.count()
+    else:
+        filtered_count = total_count
 
     sortable_columns = {
         0: Domain.name,
@@ -593,7 +597,7 @@ def domains_v2(tab_id):
         2: Domain.type,
         3: Domain.serial,
         4: Domain.master,
-        5: Account.name if current_user.role.name in ['Administrator', 'Operator'] else Domain.account_id,
+        5: Account.name if is_operator else Domain.account_id,
     }
     order_by = []
     order_index = 0
@@ -619,7 +623,6 @@ def domains_v2(tab_id):
         minimum=1, maximum=100)
     domains = domains.options(joinedload(Domain.account)).offset(start).limit(length)
 
-    is_operator = current_user.role.name in ['Administrator', 'Operator']
     allow_history = is_operator or Setting().get('allow_user_view_history')
     allow_remove = is_operator or Setting().get('allow_user_remove_domain')
     allow_dnssec = is_operator or not Setting().get('dnssec_admins_only')
@@ -967,14 +970,12 @@ def dnssec_status_v2(domain_name):
 @login_required
 def dashboard_v2():
     """Render the non-blocking, client-rendered dashboard preview."""
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
     bg_domain_updates = Setting().get('bg_domain_updates')
-    show_bg_domain_button = (
-        bg_domain_updates
-        and current_user.role.name in ['Administrator', 'Operator'])
+    is_operator = current_user.role.name in ['Administrator', 'Operator']
+    show_bg_domain_button = bg_domain_updates and is_operator
     default_page_length = _bounded_integer(
         Setting().get('default_domain_table_size'), 10,
         minimum=1, maximum=100)
@@ -983,37 +984,33 @@ def dashboard_v2():
         'dashboard_v2.html',
         zone_tabs=ZoneTabs,
         show_bg_domain_button=show_bg_domain_button,
-        refresh_on_first_load=not bg_domain_updates,
+        refresh_on_first_load=not bg_domain_updates and is_operator,
         default_page_length=default_page_length,
         dnssec_key_types=DNSSEC_KEY_TYPES,
         dnssec_algorithms=DNSSEC_ALGORITHMS,
-        dnssec_rollover_types=DNSSEC_ROLLOVER_TYPES,
-        pdns_version=Setting().get('pdns_version'))
+        dnssec_rollover_types=DNSSEC_ROLLOVER_TYPES)
 
 
 @dashboard_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    if not Setting().get('pdns_api_url') or not Setting().get(
-            'pdns_api_key') or not Setting().get('pdns_version'):
+    if not Setting().get('pdns_api_url') or not Setting().get('pdns_api_key'):
         return redirect(url_for('admin.setting_pdns'))
 
-    BG_DOMAIN_UPDATE = Setting().get('bg_domain_updates')
-    if not BG_DOMAIN_UPDATE:
+    bg_domain_updates = Setting().get('bg_domain_updates')
+    is_operator = current_user.role.name in ['Administrator', 'Operator']
+    if not bg_domain_updates and is_operator:
         current_app.logger.info('Updating zones in foreground...')
         Domain().update()
-    else:
+    elif bg_domain_updates:
         current_app.logger.info('Updating zones in background...')
 
-    show_bg_domain_button = BG_DOMAIN_UPDATE
-    if BG_DOMAIN_UPDATE and current_user.role.name not in ['Administrator', 'Operator']:
-        show_bg_domain_button = False
+    show_bg_domain_button = bg_domain_updates and is_operator
 
     # Add custom boxes to render_template
     return render_template('dashboard.html',
                            zone_tabs=ZoneTabs,
-                           show_bg_domain_button=show_bg_domain_button,
-                           pdns_version=Setting().get('pdns_version'))
+                           show_bg_domain_button=show_bg_domain_button)
 
 
 @dashboard_bp.route('/domains-updater', methods=['GET', 'POST'])

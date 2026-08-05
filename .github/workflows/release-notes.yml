@@ -1,0 +1,43 @@
+---
+name: Update release notes
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-notes-${{ github.event.release.id }}
+  cancel-in-progress: false
+
+jobs:
+  update-release-notes:
+    name: Add supported versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Build idempotent release update
+        run: |
+          python .github/scripts/update-release-notes.py \
+            --event "${GITHUB_EVENT_PATH}" \
+            --support app-support.json \
+            --output release-update.json
+
+      - name: Update release body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          gh api \
+            --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
+            --input release-update.json

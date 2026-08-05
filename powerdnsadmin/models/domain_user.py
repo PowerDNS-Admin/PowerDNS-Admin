@@ -3,6 +3,11 @@ from .base import db
 
 class DomainUser(db.Model):
     __tablename__ = 'domain_user'
+    __table_args__ = (
+        db.Index('ix_domain_user_user_id_domain_id',
+                 'user_id', 'domain_id'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     domain_id = db.Column(db.Integer,
                           db.ForeignKey('domain.id'),

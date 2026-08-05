@@ -2,6 +2,9 @@
 # Reference: https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository#configuring-the-template-chooser
 blank_issues_enabled: false
 contact_links:
-  - name: 📖 Project Update - PLEASE READ!
-    url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1708
-    about: "Important information about the future of this project"
+  - name: 💬 Support and usage questions
+    url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/new
+    about: Ask for help installing, configuring, or using PowerDNS-Admin
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/PowerDNS-Admin/PowerDNS-Admin/security/advisories/new
+    about: Privately report a reproducible vulnerability in a supported release

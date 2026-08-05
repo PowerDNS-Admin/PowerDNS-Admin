@@ -1,0 +1,81 @@
+name: ✨ Feature Request
+description: Propose a well-defined addition or change to PowerDNS-Admin
+labels: ["feature / request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for a concrete proposal. If you are still exploring the
+        problem or need help choosing an approach, start a Discussion first.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched the open and closed issues and did not find an existing request.
+          required: true
+        - label: I am not submitting a pull request until this issue is approved and assigned.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the user or operator problem this proposal would solve, without assuming a particular implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the intended workflow, behavior, API, or user-interface changes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Explain who benefits, how often the need occurs, and why current behavior is insufficient.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe workarounds or alternative designs and why they are inadequate.
+
+  - type: dropdown
+    id: change-category
+    attributes:
+      label: Expected change category
+      description: Choose the closest release-note category; maintainers may reclassify it during triage.
+      options:
+        - Added
+        - Changed
+        - Deprecated
+        - Removed
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and migration impact
+      description: Note configuration, API, database, deployment, or backward-compatibility implications.
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: External dependencies
+      description: List any new libraries or external services the proposal would require.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add mockups, examples, related issues, or implementation notes.

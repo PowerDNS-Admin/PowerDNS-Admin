@@ -3,6 +3,11 @@ from .base import db
 
 class ApiKeyAccount(db.Model):
     __tablename__ = 'apikey_account'
+    __table_args__ = (
+        db.Index('ix_apikey_account_apikey_id_account_id',
+                 'apikey_id', 'account_id'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     apikey_id = db.Column(db.Integer,
                           db.ForeignKey('apikey.id'),

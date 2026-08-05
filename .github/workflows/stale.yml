@@ -1,5 +1,5 @@
-# close-stale-issues (https://github.com/marketplace/actions/close-stale-issues)
-name: 'Close Stale Threads'
+---
+name: Mark stale threads
 
 on:
   schedule:
@@ -10,37 +10,42 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: stale-threads
+  cancel-in-progress: false
+
 jobs:
   stale:
-
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/stale@v6
+      - name: Process inactive issues and pull requests
+        uses: actions/stale@v10
         with:
-          close-issue-message: >
-            This issue has been automatically closed due to lack of activity. In an
-            effort to reduce noise, please do not comment any further. Note that the
-            core maintainers may elect to reopen this issue at a later date if deemed
-            necessary.
-          close-pr-message: >
-            This PR has been automatically closed due to lack of activity.
-          days-before-stale: 90
-          days-before-close: 30
-          exempt-issue-labels: 'bug / security-vulnerability, mod / announcement, mod / accepted, mod / reviewing, mod / testing'
+          days-before-issue-stale: 90
+          days-before-issue-close: -1
+          days-before-pr-stale: 90
+          days-before-pr-close: 30
+          exempt-all-issue-assignees: true
+          exempt-all-issue-milestones: true
+          exempt-draft-pr: true
+          exempt-issue-labels: 'bug / security-vulnerability, mod / announcement, mod / accepted, mod / reviewing, mod / testing, mod / good-first-issue, mod / help-wanted'
           operations-per-run: 100
-          remove-stale-when-updated: false
+          remove-issue-stale-when-updated: true
+          remove-pr-stale-when-updated: true
           stale-issue-label: 'mod / stale'
-          stale-issue-message: >
-            This issue has been automatically marked as stale because it has not had
-            recent activity. It will be closed if no further activity occurs. PDA
-            is governed by a small group of core maintainers which means not all opened
-            issues may receive direct feedback. **Do not** attempt to circumvent this
-            process by "bumping" the issue; doing so will result in its immediate closure
-            and you may be barred from participating in any future discussions. Please see our
-            [Contribution Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CONTRIBUTING.md).
           stale-pr-label: 'mod / stale'
+          stale-issue-message: >
+            This issue has been marked stale because it has not had recent
+            activity. It will remain open. If you can provide current
+            reproduction details or other relevant information, please add them
+            in a new comment and the stale label will be removed automatically.
           stale-pr-message: >
-            This PR has been automatically marked as stale because it has not had
-            recent activity. It will be closed automatically if no further action is
-            taken. Please see our
-            [Contribution Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/docs/CONTRIBUTING.md).
+            This pull request has been marked stale because it has not had recent
+            activity. Please comment with its current status or update the branch
+            if you intend to continue. It will close after 30 more days without
+            activity.
+          close-pr-message: >
+            This pull request was closed after an extended period without
+            activity. It can be reopened if work resumes and the branch is
+            brought up to date.

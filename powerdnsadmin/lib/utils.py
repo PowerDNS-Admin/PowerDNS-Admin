@@ -6,8 +6,24 @@ import ipaddress
 import idna
 
 from collections.abc import Iterable
-from distutils.version import StrictVersion
 from urllib.parse import urlparse
+
+
+TRUE_STRINGS = frozenset({'1', 'true', 't', 'yes', 'y', 'on'})
+FALSE_STRINGS = frozenset({'0', 'false', 'f', 'no', 'n', 'off'})
+
+
+def parse_boolean(value):
+    """Return a boolean for a conventional string representation."""
+    if isinstance(value, bool):
+        return value
+
+    normalized = str(value).strip().lower()
+    if normalized in TRUE_STRINGS:
+        return True
+    if normalized in FALSE_STRINGS:
+        return False
+    raise ValueError(f'invalid truth value {value!r}')
 
 
 def auth_from_url(url):
@@ -121,7 +137,7 @@ def display_record_name(data):
     if record_name == domain_name:
         return '@'
     else:
-        return re.sub('\.{}$'.format(domain_name), '', record_name)
+        return re.sub(rf'\.{re.escape(domain_name)}$', '', record_name)
 
 
 def display_master_name(data):
@@ -184,14 +200,8 @@ def display_time(amount, units='s', remove_seconds=True):
     return final_string
 
 
-def pdns_api_extended_uri(version):
-    """
-    Check the pdns version
-    """
-    if StrictVersion(version) >= StrictVersion('4.0.0'):
-        return "api/v1"
-    else:
-        return ""
+def pdns_api_extended_uri():
+    return "api/v1"
 
 
 def display_setting_state(value):

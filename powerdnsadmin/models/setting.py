@@ -1,4 +1,3 @@
-import sys
 import traceback
 import pytimeparse
 from ast import literal_eval
@@ -148,10 +147,6 @@ class Setting(db.Model):
 
         records = literal_eval(setting_value) if isinstance(setting_value, str) else setting_value
         types = [r for r in records if records[r]]
-
-        # Sort alphabetically if python version is smaller than 3.6
-        if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
-            types.sort()
 
         return types
 

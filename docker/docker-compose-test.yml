@@ -14,9 +14,13 @@ services:
     env_file:
       - test/env
     environment:
+      COVERAGE_FAIL_UNDER: ${COVERAGE_FAIL_UNDER:-}
+      COVERAGE_OUTPUT_DIR: /test-results/coverage
       FLASK_CONF: /app/configs/docker_config.py
       SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+    volumes:
+      - ./test-results/coverage:/test-results/coverage
     depends_on:
       mysql:
         condition: service_healthy
@@ -59,7 +63,7 @@ services:
     tmpfs:
       - /var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent && mysql -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent --skip-column-names -e \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='powerdns' AND table_name IN ('domains','records','comments')\" | grep -q '^3$'"]
       interval: 2s
       timeout: 5s
       retries: 30

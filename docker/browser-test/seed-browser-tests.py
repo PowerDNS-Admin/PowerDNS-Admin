@@ -22,7 +22,6 @@ def main():
         settings = {
             "pdns_api_url": pdns_url,
             "pdns_api_key": os.environ.get("PDNS_API_KEY", "changeme"),
-            "pdns_version": "4.1.1",
             "local_db_enabled": True,
             "signup_enabled": False,
             "captcha_enable": False,

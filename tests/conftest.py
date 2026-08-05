@@ -53,8 +53,6 @@ def load_data(setting_name, *args, **kwargs):
         return 'http://empty'
     if setting_name == 'pdns_api_key':
         return 'XXXX'
-    if setting_name == 'pdns_version':
-        return '4.1.0'
     if setting_name == 'google_oauth_enabled':
         return False
     if setting_name == 'session_timeout':

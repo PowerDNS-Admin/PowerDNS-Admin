@@ -4,8 +4,7 @@ import dns.reversename
 import dns.inet
 import dns.name
 from flask import current_app
-from urllib.parse import urljoin
-from distutils.util import strtobool
+from urllib.parse import quote_plus, urljoin
 from itertools import groupby
 
 from .. import utils
@@ -40,8 +39,7 @@ class Record(object):
         # PDNS configs
         self.PDNS_STATS_URL = Setting().get('pdns_api_url')
         self.PDNS_API_KEY = Setting().get('pdns_api_key')
-        self.PDNS_VERSION = Setting().get('pdns_version')
-        self.API_EXTENDED_URL = utils.pdns_api_extended_uri(self.PDNS_VERSION)
+        self.API_EXTENDED_URL = utils.pdns_api_extended_uri()
         self.PRETTY_IPV6_PTR = Setting().get('pretty_ipv6_ptr')
 
     def get_rrsets(self, domain):
@@ -52,7 +50,7 @@ class Record(object):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
                                      headers=headers,
@@ -104,7 +102,7 @@ class Record(object):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain_name)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
@@ -299,7 +297,7 @@ class Record(object):
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-            '/servers/localhost/zones/{0}'.format(domain_name)),
+            '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
                                   headers=headers,
                                   method='PATCH',
                                   verify=Setting().get('verify_ssl_connections'),
@@ -406,7 +404,7 @@ class Record(object):
             domain_setting = DomainSetting.query.filter(
                 DomainSetting.domain == domain_obj).filter(
                     DomainSetting.setting == 'auto_ptr').first()
-            auto_ptr_enabled = strtobool(
+            auto_ptr_enabled = utils.parse_boolean(
                 domain_setting.value) if domain_setting else False
 
         # If it is enabled, we create/delete the PTR records automatically
@@ -513,7 +511,7 @@ class Record(object):
         try:
             jdata = utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                                      headers=headers,
                                      timeout=int(
                                          Setting().get('pdns_api_timeout')),
@@ -585,7 +583,7 @@ class Record(object):
         try:
             utils.fetch_json(urljoin(
                 self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                '/servers/localhost/zones/{0}'.format(domain)),
+                '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                              headers=headers,
                              timeout=int(Setting().get('pdns_api_timeout')),
                              method='PATCH',
@@ -607,7 +605,7 @@ class Record(object):
         headers = {'X-API-Key': self.PDNS_API_KEY}
         jdata = utils.fetch_json(urljoin(
             self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-            '/servers/localhost/zones/{0}'.format(domain)),
+            '/servers/localhost/zones/{0}'.format(quote_plus(domain))),
                                  headers=headers,
                                  timeout=int(
                                      Setting().get('pdns_api_timeout')),

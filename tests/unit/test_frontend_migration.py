@@ -279,7 +279,7 @@ def test_zone_editor_uses_a_persistent_unsaved_changes_banner():
 def test_record_helper_is_shared_by_domain_and_template_editors():
     domain = Path('powerdnsadmin/templates/domain.html').read_text()
     template_editor = Path(
-        'powerdnsadmin/templates/template_edit.html').read_text()
+        'powerdnsadmin/templates/zone_template/edit.html').read_text()
     modal = Path(
         'powerdnsadmin/templates/includes/record_helper_modal.html').read_text()
     helper = Path(
@@ -339,7 +339,7 @@ def test_page_header_markup_is_owned_by_the_shared_component():
 
 
 def test_history_uses_native_date_inputs_without_bootstrap_datepicker():
-    template = Path('powerdnsadmin/templates/admin_history.html').read_text()
+    template = Path('powerdnsadmin/templates/admin/history/history.html').read_text()
     asset_sources = (*css_main.contents, *js_main.contents)
 
     assert 'type="date" id="min"' in template

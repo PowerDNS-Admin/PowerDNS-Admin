@@ -1,7 +1,7 @@
 # Contribution Guide
 
 **Looking for help?** Try taking a look at the project's
-[Support Guide](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/.github/SUPPORT.md) or joining
+[Support Guide](../.github/SUPPORT.md) or joining
 our [Discord Server](https://discord.powerdnsadmin.org).
 
 <div align="center">
@@ -46,7 +46,7 @@ Some general tips for engaging here on GitHub:
 
 * If you have a rough idea that's not quite ready for formal submission yet, start a [GitHub discussion](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions) instead. This is a great way to test the viability and narrow down the scope of a new feature prior to submitting a formal proposal, and can serve to generate interest in your idea from other community members.
 
-* Once you're ready, submit a feature request [using this template](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/choose). Be sure to provide sufficient context and detail to convey exactly what you're proposing and why. The stronger your use case, the better chance your proposal has of being accepted.
+* Once you're ready, submit a feature request [using the issue chooser](https://github.com/PowerDNS-Admin/PowerDNS-Admin/issues/new/choose). Be sure to provide sufficient context and detail to convey exactly what you're proposing and why. The stronger your use case, the better chance your proposal has of being accepted.
 
 * Some other tips to keep in mind:
   * Don't prepend your issue title with a label like `[Feature]`; the proper label will be assigned automatically.
@@ -66,14 +66,42 @@ Some general tips for engaging here on GitHub:
 
 * It's very important that you not submit a pull request until a relevant issue has been opened **and** assigned to you. Otherwise, you risk wasting time on work that may ultimately not be needed.
 
-* New pull requests should generally be based off of the `dev` branch, rather than `master`. The `dev` branch is used for ongoing development, while `master` is used for tracking stable releases.
+* New pull requests should target `dev`, the repository's default and active
+  development branch. The `master` branch is reserved for stable releases;
+  changes are promoted there from `dev` as part of the release process.
 
 * In most cases, it is not necessary to add a changelog entry: A maintainer will take care of this when the PR is merged. (This helps avoid merge conflicts resulting from multiple PRs being submitted simultaneously.)
 
-* All code submissions should meet the following criteria (CI will eventually enforce these checks):
-  * Python syntax is valid
+* All code submissions should meet the following criteria:
+  * Python syntax is valid for Python 3.12 and later
+  * Regular expressions use raw strings (`r'...'`) or raw f-strings
+      (`rf'...'`), with `re.escape()` for interpolated literal values
+  * Invalid escape-sequence warnings are rejected by running
+      `python -W error::SyntaxWarning -m compileall -q powerdnsadmin tests`
   * PEP 8 compliance is enforced, with the exception that lines may be
       greater than 80 characters in length
+  * The complete Python unit and integration test suite passes (enforced by CI)
+  * Browser-facing changes pass the relevant local browser tests
+
+* Run the Python test environment before submitting a pull request:
+
+  ```console
+  docker compose -f docker/docker-compose-test.yml up \
+    --build --force-recreate --abort-on-container-exit \
+    --exit-code-from python-tests
+  ```
+
+  This run prints Python branch coverage and writes XML and HTML reports under
+  `docker/test-results/coverage/`. To check an established minimum locally,
+  prefix the command with `COVERAGE_FAIL_UNDER=<percentage>`.
+
+* For browser-facing changes, also run:
+
+  ```console
+  docker compose -f docker/docker-compose-browser-test.yml up \
+    --build --force-recreate --abort-on-container-exit \
+    --exit-code-from browser-tests
+  ```
 
 * Some other tips to keep in mind:
   * If you'd like to volunteer for someone else's issue, please post a comment on that issue letting us know. (This will allow the maintainers to assign it to you.)
@@ -87,7 +115,7 @@ We're always looking for motivated individuals to join the maintainers team and 
 * Expertise working with SQLite, MySQL, and/or PostgreSQL databases
 * Javascript & TypeScript proficiency
 * A knack for web application design (HTML & CSS)
-* Familiarity with git and software development best practices
+* Familiarity with Git and software development best practices
 * Excellent attention to detail
 * Working experience in the field of network operations as it relates to the use of DNS (Domain Name System) servers.
 
