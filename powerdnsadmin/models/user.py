@@ -466,7 +466,7 @@ class User(db.Model):
                 name='Administrator').first().id
 
         if hasattr(self, "plain_text_password"):
-            if self.plain_text_password != None:
+            if self.plain_text_password:
                 self.password = self.get_hashed_password(
                     self.plain_text_password)
         else:
@@ -521,7 +521,7 @@ class User(db.Model):
 
         # store new password hash (only if changed)
         if hasattr(self, "plain_text_password"):
-            if self.plain_text_password != None:
+            if self.plain_text_password:
                 user.password = self.get_hashed_password(
                     self.plain_text_password).decode("utf-8")
 
@@ -540,7 +540,7 @@ class User(db.Model):
         user.lastname = self.lastname if self.lastname else user.lastname
 
         if hasattr(self, "plain_text_password"):
-            if self.plain_text_password != None:
+            if self.plain_text_password:
                 user.password = self.get_hashed_password(
                  self.plain_text_password).decode("utf-8")
 
