@@ -33,7 +33,7 @@ To link to Keycloak for authentication, you need to create a new client in the K
 * Enter the following details:
   * Client key -> Client ID
   * Client secret > Client secret copied from keycloak
-  * Scope: `profile`
+  * Scope: `openid profile email`
   * API URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/
   * Token URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/token
   * Authorize URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/auth
@@ -47,7 +47,7 @@ To link to oidc service for authenticationregister your PowerDNS-Admin in the OI
 
 Enable OpenID Connect OAuth option.
 * Client key, The client ID
-* Scope, The scope of the data.
+* Scope, The scope of the data. The required `openid` scope is added automatically.
 * API URL, <oidc_provider_link>/auth (The ending can be different with each provider)
 * Token URL, <oidc_provider_link>/token 
 * Authorize URL, <oidc_provider_link>/auth

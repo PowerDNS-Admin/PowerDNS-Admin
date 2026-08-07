@@ -7,3 +7,8 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
 )
 
 CAPTCHA_ENABLE = False
+
+SERVER_EXTERNAL_SSL = os.getenv(
+    'SERVER_EXTERNAL_SSL',
+    False
+)

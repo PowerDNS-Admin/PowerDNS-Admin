@@ -5,6 +5,10 @@
 ### Bug Fixes
 
 -   Empty password values submitted when users edit their own profile or when administrators edit a user are now treated as no password change instead of being hashed.
+-   OpenID Connect authentication now automatically adds the required `openid` scope while preserving configured scopes, fixing sign-in failures with providers such as Microsoft Entra ID when existing settings omit it.
+-   OpenID Connect authentication now combines validated ID-token claims with the UserInfo response, allowing providers such as Microsoft Entra ID to supply `preferred_username` through the ID token when their UserInfo endpoint omits it.
+-   Google, GitHub, and Microsoft OAuth callback routes are now registered during application setup, preventing Flask from rejecting late route registration after the first request.
+-   The `SERVER_EXTERNAL_SSL` environment variable is now converted to a Boolean, allowing explicit `true` and `false` values to control OAuth callback URL schemes correctly.
 
 ## [0.6.0] - 2026-08-05
 

@@ -1,4 +1,4 @@
-from flask import request, session, redirect, url_for, current_app
+from flask import session
 
 from .base import authlib_oauth_client
 from ..models.setting import Setting
@@ -37,19 +37,5 @@ def azure_oauth():
         'azure',
         **authlib_params
     )
-
-    @current_app.route('/azure/authorized')
-    def azure_authorized():
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        session['azure_oauthredir'] = url_for('.azure_authorized', **params)
-        token = azure.authorize_access_token()
-        if token is None:
-            return 'Access denied: reason=%s error=%s' % (
-                request.args['error'], request.args['error_description'])
-        session['azure_token'] = (token)
-        return redirect(url_for('index.login', **params))
 
     return azure
