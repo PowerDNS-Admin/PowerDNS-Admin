@@ -89,7 +89,7 @@ def profile():
             return render_template('user_profile.html', error_messages=password_policy)
 
         user = User(username=current_user.username,
-                    plain_text_password=new_password,
+                    plain_text_password=new_password or None,
                     firstname=firstname,
                     lastname=lastname,
                     email=email,

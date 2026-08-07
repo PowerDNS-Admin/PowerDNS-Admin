@@ -129,8 +129,8 @@ class User(db.Model):
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
-        if plain_text_password is None:
-            return plain_text_password
+        if not plain_text_password:
+            return None
 
         pw = plain_text_password if plain_text_password else self.plain_text_password
         return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())

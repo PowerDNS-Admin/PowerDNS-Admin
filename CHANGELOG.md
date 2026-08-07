@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Bug Fixes
+
+-   Empty password values submitted when users edit their own profile or when administrators edit a user are now treated as no password change instead of being hashed.
+
 ## [0.6.0] - 2026-08-05
 
 ### Breaking Changes
