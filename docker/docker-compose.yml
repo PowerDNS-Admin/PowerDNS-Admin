@@ -1,8 +1,11 @@
-version: "3"
-
 services:
   app:
-    image: powerdnsadmin/pda-legacy:latest
+    image: powerdns-admin-prod-app
+    build:
+      context: ..
+      dockerfile: docker/common/Dockerfile.app
+      args:
+        DOCKER_SCENARIO: production
     container_name: powerdns_admin
     ports:
       - "9191:80"
@@ -11,7 +14,27 @@ services:
       options:
         max-size: 50m
     environment:
-      - SQLALCHEMY_DATABASE_URI=mysql://pda:changeme@host.docker.internal/pda
-      - GUNICORN_TIMEOUT=60
-      - GUNICORN_WORKERS=2
-      - GUNICORN_LOGLEVEL=DEBUG
+      FLASK_CONF: /app/configs/docker_config.py
+      SQLALCHEMY_DATABASE_URI: mysql://pda:changeme@mysql/pda
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: pda
+      MYSQL_USER: pda
+      MYSQL_PASSWORD: changeme
+    volumes:
+      - pda-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  pda-mysql:

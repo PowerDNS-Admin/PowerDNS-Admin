@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Features
+
+-   The default local production Docker Compose stack now builds PowerDNS-Admin from the checked-out source and starts a persistent MySQL 8.4 service, waiting for the database to become healthy before running migrations and starting the application.
+
+### Documentation
+
+-   The Docker installation and build guides now distinguish the standalone Docker Hub image's SQLite default from the repository Compose stack's bundled MySQL database and document the current `docker compose` build workflow.
+
 ### Bug Fixes
 
 -   Empty password values submitted when users edit their own profile or when administrators edit a user are now treated as no password change instead of being hashed.
