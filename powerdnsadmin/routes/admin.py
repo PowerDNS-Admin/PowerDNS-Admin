@@ -1079,7 +1079,7 @@ def history():
                 accounts += a.name + " "
             for u in all_user_names:
                 users += u.username + " "
-        return render_template('admin/history.html', all_domain_names=doms, all_account_names=accounts,
+        return render_template('admin/history/history.html', all_domain_names=doms, all_account_names=accounts,
                                all_usernames=users)
 
 
