@@ -1,4 +1,4 @@
-from flask import request, session, redirect, url_for, current_app
+from flask import session
 
 from .base import authlib_oauth_client
 from ..models.setting import Setting
@@ -38,21 +38,5 @@ def google_oauth():
         'google',
         **authlib_params
     )
-
-    @current_app.route('/google/authorized')
-    def google_authorized():
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        session['google_oauthredir'] = url_for('.google_authorized', **params)
-        token = google.authorize_access_token()
-        if token is None:
-            return 'Access denied: reason=%s error=%s' % (
-                request.args['error_reason'],
-                request.args['error_description']
-            )
-        session['google_token'] = token
-        return redirect(url_for('index.login', **params))
 
     return google

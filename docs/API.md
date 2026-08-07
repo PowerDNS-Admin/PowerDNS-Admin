@@ -139,17 +139,22 @@ curl -H 'Content-Type: application/json' -X PATCH --data '{"rrsets": [ {"name": 
 
 ### Generate ER diagram
 
-With docker
+The Compose MySQL service is not published to the host by default. To generate a diagram from the local Compose database, temporarily add this port mapping to the `mysql` service in `docker/docker-compose.yml`:
+
+```yaml
+services:
+  mysql:
+    ports:
+      - "3306:3306"
+```
+
+Start the stack and connect using the example Compose credentials. On Debian or Ubuntu, the complete command sequence is:
 
 ```bash
-# Install build packages
-apt-get install python-dev graphviz libgraphviz-dev pkg-config
-# Get the required python libraries
-pip install graphviz mysqlclient ERAlchemy
-# Start the docker container
-docker-compose up -d
-# Set environment variables
-source .env
-# Generate the diagrams
-eralchemy -i 'mysql://${PDA_DB_USER}:${PDA_DB_PASSWORD}@'$(docker inspect powerdns-admin-mysql|jq -jr '.[0].NetworkSettings.Networks.powerdnsadmin_default.IPAddress')':3306/powerdns_admin' -o /tmp/output.pdf
+docker compose -f docker/docker-compose.yml up -d --build
+sudo apt-get install graphviz libgraphviz-dev pkg-config default-libmysqlclient-dev build-essential
+python -m pip install graphviz mysqlclient ERAlchemy
+eralchemy -i 'mysql://pda:changeme@127.0.0.1:3306/pda' -o /tmp/output.pdf
 ```
+
+Remove the temporary port mapping afterward. Do not publish the database port in a production deployment.

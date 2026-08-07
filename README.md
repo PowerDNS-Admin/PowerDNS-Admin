@@ -67,7 +67,7 @@ This option is recommended if you need to customize the configuration.
 
 1.  **Update the configuration**
 
-    Edit the `docker/docker-compose.yml` file to set the `SQLALCHEMY_DATABASE_URI`. You can find a list of other environment variables in the [`AppSettings.defaults`](powerdnsadmin/lib/settings.py) file.
+    The included Compose configuration starts MySQL and connects PowerDNS-Admin to it automatically. Before deploying, replace the example database passwords in `docker/docker-compose.yml`. You can find a list of other environment variables in the [`AppSettings.defaults`](powerdnsadmin/lib/settings.py) file.
 
     To use Docker-style secrets, you can append `_FILE` to an environment variable with a path to a file containing the secret (e.g., `SQLALCHEMY_DATABASE_URI_FILE=/run/secrets/db_uri`).
 
@@ -77,7 +77,7 @@ This option is recommended if you need to customize the configuration.
 
     ```
     # From the root of the project
-    $ docker compose -f docker/docker-compose.yml up
+    $ docker compose -f docker/docker-compose.yml up --build
     ```
 
 You can now access PowerDNS-Admin in your browser at http://localhost:9191.

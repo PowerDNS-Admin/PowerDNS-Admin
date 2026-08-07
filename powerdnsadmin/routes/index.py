@@ -28,7 +28,7 @@ from ..models.history import History
 from ..services.google import google_oauth
 from ..services.github import github_oauth
 from ..services.azure import azure_oauth
-from ..services.oidc import oidc_oauth
+from ..services.oidc import merge_oidc_claims, oidc_oauth
 from ..services.saml import SAML
 from ..services.token import confirm_token
 from ..services.email import send_account_verification
@@ -113,8 +113,29 @@ def google_login():
         params = {'_external': True}
         if isinstance(use_ssl, bool):
             params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('google_authorized', **params)
+        redirect_uri = url_for('index.google_authorized', **params)
         return google.authorize_redirect(redirect_uri)
+
+
+@index_bp.route('/google/authorized')
+def google_authorized():
+    if not Setting().get('google_oauth_enabled') or google is None:
+        abort(400)
+    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+    params = {'_external': True}
+    if isinstance(use_ssl, bool):
+        params['_scheme'] = 'https' if use_ssl else 'http'
+    session['google_oauthredir'] = url_for(
+        'index.google_authorized', **params)
+    token = google.authorize_access_token()
+    if token is None:
+        msg = 'Access denied: reason=%s error=%s' % (
+            request.args.get('error_reason', 'unknown'),
+            request.args.get('error_description', 'unknown'),
+        )
+        return render_template('errors/400.html', msg=msg), 400
+    session['google_token'] = token
+    return redirect(url_for('index.login', **params))
 
 
 @index_bp.route('/github/login')
@@ -129,8 +150,29 @@ def github_login():
         params = {'_external': True}
         if isinstance(use_ssl, bool):
             params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('github_authorized', **params)
+        redirect_uri = url_for('index.github_authorized', **params)
         return github.authorize_redirect(redirect_uri)
+
+
+@index_bp.route('/github/authorized')
+def github_authorized():
+    if not Setting().get('github_oauth_enabled') or github is None:
+        abort(400)
+    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+    params = {'_external': True}
+    if isinstance(use_ssl, bool):
+        params['_scheme'] = 'https' if use_ssl else 'http'
+    session['github_oauthredir'] = url_for(
+        'index.github_authorized', **params)
+    token = github.authorize_access_token()
+    if token is None:
+        msg = 'Access denied: reason=%s error=%s' % (
+            request.args.get('error', 'unknown'),
+            request.args.get('error_description', 'unknown'),
+        )
+        return render_template('errors/400.html', msg=msg), 400
+    session['github_token'] = token
+    return redirect(url_for('index.login', **params))
 
 
 @index_bp.route('/azure/login')
@@ -145,8 +187,29 @@ def azure_login():
         params = {'_external': True}
         if isinstance(use_ssl, bool):
             params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('azure_authorized', **params)
+        redirect_uri = url_for('index.azure_authorized', **params)
         return azure.authorize_redirect(redirect_uri)
+
+
+@index_bp.route('/azure/authorized')
+def azure_authorized():
+    if not Setting().get('azure_oauth_enabled') or azure is None:
+        abort(400)
+    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+    params = {'_external': True}
+    if isinstance(use_ssl, bool):
+        params['_scheme'] = 'https' if use_ssl else 'http'
+    session['azure_oauthredir'] = url_for(
+        'index.azure_authorized', **params)
+    token = azure.authorize_access_token()
+    if token is None:
+        msg = 'Access denied: reason=%s error=%s' % (
+            request.args.get('error', 'unknown'),
+            request.args.get('error_description', 'unknown'),
+        )
+        return render_template('errors/400.html', msg=msg), 400
+    session['azure_token'] = token
+    return redirect(url_for('index.login', **params))
 
 
 @index_bp.route('/oidc/login')
@@ -458,11 +521,39 @@ def login():
         return authenticate_user(user, 'Azure OAuth')
 
     if 'oidc_token' in session:
-        user_data = oidc.userinfo()
-        oidc_username = user_data[Setting().get('oidc_oauth_username')]
-        oidc_first_name = user_data[Setting().get('oidc_oauth_firstname')]
-        oidc_last_name = user_data[Setting().get('oidc_oauth_last_name')]
-        oidc_email = user_data[Setting().get('oidc_oauth_email')]
+        try:
+            oidc_metadata = oidc.load_server_metadata()
+        except Exception as e:
+            current_app.logger.warning(
+                'OIDC: unable to load server metadata ({}); '
+                'falling back to relative userinfo endpoint'.format(e))
+            oidc_metadata = {}
+
+        userinfo_endpoint = oidc_metadata.get('userinfo_endpoint')
+        try:
+            if userinfo_endpoint:
+                userinfo_resp = oidc.get(userinfo_endpoint, timeout=15)
+            else:
+                userinfo_resp = oidc.get('userinfo', timeout=15)
+            userinfo_resp.raise_for_status()
+            user_data = merge_oidc_claims(
+                session.get('oidc_token'), userinfo_resp.json())
+        except Exception as e:
+            current_app.logger.error('OIDC: failed to fetch userinfo: {}'.format(e))
+            session.pop('oidc_token', None)
+            return redirect(url_for('index.login'))
+
+        oidc_username = user_data.get(Setting().get('oidc_oauth_username'))
+        oidc_first_name = user_data.get(Setting().get('oidc_oauth_firstname'), '')
+        oidc_last_name = user_data.get(Setting().get('oidc_oauth_last_name'), '')
+        oidc_email = user_data.get(Setting().get('oidc_oauth_email'), '')
+
+        if not oidc_username:
+            current_app.logger.error(
+                'OIDC: username claim "{}" not present in OIDC claims'.format(
+                    Setting().get('oidc_oauth_username')))
+            session.pop('oidc_token', None)
+            return redirect(url_for('index.login'))
 
         user = User.query.filter_by(username=oidc_username).first()
         if not user:
