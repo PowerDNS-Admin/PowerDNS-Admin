@@ -20,7 +20,10 @@ class AppSettings(object):
             'SQLALCHEMY_DATABASE_URI',
             'sqlite:////data/powerdns-admin.db'
         ),
-        'sqlalchemy_engine_options': {},
+        'sqlalchemy_engine_options': {
+            'pool_pre_ping': True,
+            'pool_recycle': 600,
+        },
 
         # General Settings
         'captcha_enable': True,

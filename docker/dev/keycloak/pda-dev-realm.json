@@ -1,0 +1,125 @@
+{
+  "realm": "pda-dev",
+  "enabled": true,
+  "displayName": "PowerDNS-Admin Development",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "clients": [
+    {
+      "clientId": "powerdns-admin",
+      "name": "PowerDNS-Admin",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "clientAuthenticatorType": "client-secret",
+      "secret": "dev-client-secret",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:9191/oidc/authorized",
+        "https://localhost:9191/oidc/authorized"
+      ],
+      "webOrigins": [
+        "http://localhost:9191",
+        "https://localhost:9191"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:9191/*##https://localhost:9191/*"
+      }
+    },
+    {
+      "clientId": "http://localhost:9191/saml/metadata",
+      "name": "PowerDNS-Admin SAML",
+      "enabled": true,
+      "protocol": "saml",
+      "baseUrl": "http://localhost:9191",
+      "frontchannelLogout": true,
+      "fullScopeAllowed": true,
+      "redirectUris": [
+        "http://localhost:9191/saml/authorized",
+        "https://localhost:9191/saml/authorized"
+      ],
+      "defaultClientScopes": [],
+      "optionalClientScopes": [],
+      "attributes": {
+        "saml.authnstatement": "true",
+        "saml.assertion.signature": "true",
+        "saml.client.signature": "false",
+        "saml.encrypt": "false",
+        "saml.force.post.binding": "true",
+        "saml.multivalued.roles": "true",
+        "saml.onetimeuse.condition": "false",
+        "saml.server.signature": "true",
+        "saml.server.signature.keyinfo.ext": "false",
+        "saml.signature.algorithm": "RSA_SHA256",
+        "saml_name_id_format": "username",
+        "saml_assertion_consumer_url_post": "http://localhost:9191/saml/authorized",
+        "saml_single_logout_service_url_redirect": "http://localhost:9191/saml/sls"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "attribute.name": "username",
+            "attribute.nameformat": "Basic",
+            "friendly.name": "username"
+          }
+        },
+        {
+          "name": "email",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "attribute.name": "email",
+            "attribute.nameformat": "Basic",
+            "friendly.name": "email"
+          }
+        },
+        {
+          "name": "givenname",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "firstName",
+            "attribute.name": "givenname",
+            "attribute.nameformat": "Basic",
+            "friendly.name": "givenname"
+          }
+        },
+        {
+          "name": "surname",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "lastName",
+            "attribute.name": "surname",
+            "attribute.nameformat": "Basic",
+            "friendly.name": "surname"
+          }
+        },
+        {
+          "name": "groups",
+          "protocol": "saml",
+          "protocolMapper": "saml-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "attribute.name": "groups",
+            "full.path": "false",
+            "single": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

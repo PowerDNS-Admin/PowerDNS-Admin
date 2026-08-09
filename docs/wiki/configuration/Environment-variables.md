@@ -6,7 +6,7 @@ The following environment variables are supported for configuring the applicatio
 |--------------------------------|--------------------------------------------------------------------------|------------|---------------|
 | BIND_ADDRESS                   |                                                                          |            |               |
 | CSRF_COOKIE_SECURE             |                                                                          |            |               |
-| SESSION_TYPE                   |                                                                          |            | `filesystem`  |
+| SESSION_TYPE                   |                                                                          |            | `sqlalchemy`  |
 | LDAP_ENABLED                   |                                                                          |            |               |
 | LOCAL_DB_ENABLED               |                                                                          |            |               |
 | LOG_LEVEL                      |                                                                          |            |               |
@@ -61,7 +61,7 @@ The following environment variables are supported for configuring the applicatio
 | SIGNUP_ENABLED                 |                                                                          |            |               |
 | SQLALCHEMY_DATABASE_URI        | SQL Alchemy URI to connect to the database.                              | No         | No default    |
 | SQLALCHEMY_TRACK_MODIFICATIONS |                                                                          |            |               |
-| SQLALCHEMY_ENGINE_OPTIONS      | A JSON string, e.g., `'{"pool_recycle":600,"echo":1}"'` [^2]              |            |               |
+| SQLALCHEMY_ENGINE_OPTIONS      | A JSON string, e.g., `'{"pool_pre_ping":true,"pool_recycle":600}'` [^2]   |            | `{"pool_pre_ping": true, "pool_recycle": 600}` |
 
 [^1]: For information on how to generate a Flask secret key, please see the [Flask documentation](https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY).
 [^2]: For a list of all available engine options, please see the Flask-SQLAlchemy documentation.

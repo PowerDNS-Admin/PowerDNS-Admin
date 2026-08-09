@@ -1,0 +1,22 @@
+{
+	auto_https disable_redirects
+}
+
+https://localhost:8443 {
+	tls internal
+
+	redir / /ipa/ui/ 302
+
+	reverse_proxy https://ipa.example.org {
+		header_up Host ipa.example.org
+		header_up X-Forwarded-Host ipa.example.org
+		header_up X-Forwarded-Proto https
+		header_up Referer "^https://localhost:8443(.*)$" "https://ipa.example.org$1"
+		header_up Origin "^https://localhost:8443$" "https://ipa.example.org"
+		header_down Location "^https://ipa\\.example\\.org(?::443)?(.*)$" "https://localhost:8443$1"
+
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}

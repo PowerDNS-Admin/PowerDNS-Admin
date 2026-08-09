@@ -275,7 +275,7 @@ test('creates and submits project-specific core DNS records', async ({ page, req
     {
       name: `${projectName}-TXT`,
       type: 'TXT',
-      value: `PowerDNS Admin browser test for ${projectName}`,
+      value: `PowerDNS-Admin browser test for ${projectName}`,
     },
     {
       name: `${projectName}-CNAME`,

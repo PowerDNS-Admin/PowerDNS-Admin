@@ -6,6 +6,7 @@ import ipaddress
 import idna
 
 from collections.abc import Iterable
+from pathlib import Path
 from urllib.parse import urlparse
 
 
@@ -283,3 +284,23 @@ def format_datetime(value, format_str="%Y-%m-%d %I:%M %p"):
     if value is None:
         return ""
     return value.strftime(format_str)
+
+
+def read_app_version(app_root_path):
+    """Return the release version from the package VERSION file.
+
+    The file lives inside the ``powerdnsadmin`` package so Docker images and
+    bare-metal installs resolve the same path from ``app.root_path``.
+    """
+    version_path = Path(app_root_path).resolve() / 'VERSION'
+    try:
+        version = version_path.read_text(encoding='utf-8').strip()
+    except OSError as exc:
+        raise RuntimeError(
+            f'Unable to read application version from {version_path}'
+        ) from exc
+
+    if not version:
+        raise RuntimeError(f'Application version file is empty: {version_path}')
+
+    return version

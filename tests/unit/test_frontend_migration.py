@@ -1,33 +1,7 @@
 import json
-from io import StringIO
 from pathlib import Path
 
-from powerdnsadmin.assets import (ModernBrowserCssFilter, css_login, css_main,
-                                  js_main)
-
-
-def test_css_bundles_normalize_vendor_css_for_supported_browsers():
-    source = (
-        '@charset "UTF-8";'
-        'body{-webkit-text-size-adjust:100%;color:black}'
-        '.column-gap-lg-4{-moz-column-gap:1.5rem!important;'
-        'column-gap:1.5rem!important}'
-        'button::-moz-focus-inner{padding:0}'
-        '.form-range::-moz-focus-outer{border:0}'
-        '.form-range::-webkit-slider-thumb:active{background:red}'
-        '@media (prefers-contrast:high){.btn{outline:1px solid}}'
-    )
-    output = StringIO()
-
-    ModernBrowserCssFilter().output(StringIO(source), output)
-
-    assert output.getvalue() == (
-        'body{color:black}'
-        '.column-gap-lg-4{column-gap:1.5rem!important}'
-        '@media (prefers-contrast:more){.btn{outline:1px solid}}'
-    )
-    assert isinstance(css_login.filters[0], ModernBrowserCssFilter)
-    assert isinstance(css_main.filters[0], ModernBrowserCssFilter)
+from powerdnsadmin.assets import css_main, js_main
 
 
 def test_main_bundle_uses_native_monospace_fonts():

@@ -23,6 +23,48 @@ services:
       SQLALCHEMY_DATABASE_URI: ${SQLALCHEMY_DATABASE_URI:-mysql://powerdns_admin:changeme@mysql/powerdns_admin}
       PDNS_HOST: pdns-server
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+      OIDC_OAUTH_ENABLED: "true"
+      OIDC_OAUTH_KEY: powerdns-admin
+      OIDC_OAUTH_SECRET: dev-client-secret
+      OIDC_OAUTH_SCOPE: openid email profile
+      OIDC_OAUTH_API_URL: http://keycloak:8080/realms/pda-dev/protocol/openid-connect/
+      OIDC_OAUTH_AUTO_CONFIGURE: "true"
+      OIDC_OAUTH_METADATA_URL: http://keycloak:8080/realms/pda-dev/.well-known/openid-configuration
+      SAML_ENABLED: "true"
+      SAML_DEBUG: "true"
+      SAML_METADATA_URL: http://keycloak:8080/realms/pda-dev/protocol/saml/descriptor
+      SAML_METADATA_CACHE_LIFETIME: "60"
+      SAML_IDP_ENTITY_ID: http://localhost:8080/realms/pda-dev
+      SAML_IDP_SSO_BINDING: urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
+      SAML_NAMEID_FORMAT: urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
+      SAML_ATTRIBUTE_USERNAME: username
+      SAML_ATTRIBUTE_EMAIL: email
+      SAML_ATTRIBUTE_GIVENNAME: givenname
+      SAML_ATTRIBUTE_SURNAME: surname
+      SAML_ATTRIBUTE_GROUP: groups
+      SAML_GROUP_ADMIN_NAME: pda-admins
+      SAML_GROUP_OPERATOR_NAME: pda-operators
+      SAML_SP_ENTITY_ID: http://localhost:9191/saml/metadata
+      SAML_SP_CONTACT_NAME: PowerDNS-Admin Development
+      SAML_SP_CONTACT_MAIL: powerdns-admin@example.org
+      SAML_SIGN_REQUEST: "false"
+      SAML_WANT_MESSAGE_SIGNED: "true"
+      SAML_ASSERTION_ENCRYPTED: "false"
+      SAML_LOGOUT: "false"
+      LDAP_ENABLED: "true"
+      LDAP_TYPE: ldap
+      LDAP_URI: ldap://ldap.example.org:389
+      LDAP_BASE_DN: ou=people,dc=example,dc=org
+      LDAP_ADMIN_USERNAME: uid=pda-bind,ou=people,dc=example,dc=org
+      LDAP_ADMIN_PASSWORD: DevPassword123!
+      LDAP_FILTER_BASIC: (|(memberOf=cn=pda-users,ou=groups,dc=example,dc=org)(memberOf=cn=pda-operators,ou=groups,dc=example,dc=org)(memberOf=cn=pda-admins,ou=groups,dc=example,dc=org))
+      LDAP_FILTER_USERNAME: uid
+      LDAP_FILTER_GROUP: (objectClass=groupOfNames)
+      LDAP_FILTER_GROUPNAME: member
+      LDAP_SG_ENABLED: "true"
+      LDAP_ADMIN_GROUP: cn=pda-admins,ou=groups,dc=example,dc=org
+      LDAP_OPERATOR_GROUP: cn=pda-operators,ou=groups,dc=example,dc=org
+      LDAP_USER_GROUP: cn=pda-users,ou=groups,dc=example,dc=org
     depends_on:
       mysql:
         condition: service_healthy
@@ -32,6 +74,108 @@ services:
         condition: service_started
       terraform-pdns-seed:
         condition: service_completed_successfully
+      keycloak-federation-config:
+        condition: service_completed_successfully
+
+  # OpenLDAP from Alpine packages (OpenLDAP Project software). Prefer this
+  # lightweight default for daily development; see docker-compose-dev.freeipa.yml
+  # for the optional FreeIPA identity backend.
+  openldap:
+    image: powerdns-admin-dev-openldap
+    build:
+      context: ./dev/openldap
+    hostname: ldap.example.org
+    networks:
+      dev:
+        aliases:
+          - ldap.example.org
+    volumes:
+      - powerdns-admin-dev-openldap:/var/lib/openldap/openldap-data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "ldapsearch -x -H ldap://127.0.0.1:389 -D cn=admin,dc=example,dc=org -w DevPassword123! -b dc=example,dc=org '(uid=pda-user)' memberOf | grep -q 'cn=pda-users'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.0
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    networks:
+      - dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: changeme
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql:3306/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      # Frontchannel redirects go to the host browser, while discovery called
+      # through Docker DNS advertises internal URLs for backchannel requests.
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+    volumes:
+      - ./dev/keycloak/pda-dev-realm.json:/opt/keycloak/data/import/pda-dev-realm.json:ro
+    depends_on:
+      keycloak-db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # MySQL's /docker-entrypoint-initdb.d scripts only run for a new volume.
+  # This idempotent job also provisions Keycloak when reusing an existing one.
+  keycloak-db-init:
+    image: mysql:8.4
+    networks:
+      - dev
+    environment:
+      MYSQL_PWD: changeme
+    volumes:
+      - ./dev/keycloak/mysql-init.sql:/opt/keycloak/mysql-init.sql:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mysql --host=mysql --user=root < /opt/keycloak/mysql-init.sql"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: "no"
+
+  keycloak-federation-config:
+    image: python:3.13-alpine
+    networks:
+      - dev
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USERNAME: admin
+      KEYCLOAK_ADMIN_PASSWORD: changeme
+      KEYCLOAK_REALM: pda-dev
+      KEYCLOAK_OIDC_CLIENT_ID: powerdns-admin
+      KEYCLOAK_SAML_CLIENT_ID: http://localhost:9191/saml/metadata
+      KEYCLOAK_LDAP_PROVIDER_NAME: openldap
+      KEYCLOAK_LDAP_VENDOR: other
+      KEYCLOAK_LDAP_UUID_ATTRIBUTE: entryUUID
+      KEYCLOAK_LDAP_BIND_DN: uid=keycloak-bind,ou=people,dc=example,dc=org
+      KEYCLOAK_LDAP_BIND_PASSWORD: DevPassword123!
+      KEYCLOAK_LDAP_URL: ldap://ldap.example.org:389
+      KEYCLOAK_LDAP_USERS_DN: ou=people,dc=example,dc=org
+      KEYCLOAK_LDAP_GROUPS_DN: ou=groups,dc=example,dc=org
+      KEYCLOAK_LDAP_USER_SEARCH_FILTER: (|(memberOf=cn=pda-users,ou=groups,dc=example,dc=org)(memberOf=cn=pda-operators,ou=groups,dc=example,dc=org)(memberOf=cn=pda-admins,ou=groups,dc=example,dc=org))
+      KEYCLOAK_LDAP_GROUP_FILTER: (|(cn=pda-users)(cn=pda-operators)(cn=pda-admins))
+      KEYCLOAK_LDAP_SEARCH_SCOPE: "1"
+    volumes:
+      - ./dev/keycloak/configure-ldap.py:/configure-ldap.py:ro
+    command: ["python", "/configure-ldap.py"]
+    depends_on:
+      openldap:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    restart: "no"
 
   pdns-server:
     image: powerdns/pdns-auth-51:5.1.3
@@ -71,16 +215,17 @@ services:
     environment:
       PDNS_SERVER_URL: ${PDNS_SERVER_URL:-http://pdns-server:8081/api/v1}
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
-      TF_VAR_zone_count: ${TF_ZONE_COUNT:-2000}
+      TF_VAR_zone_count: ${TF_ZONE_COUNT:-500}
       TF_VAR_records_per_zone: ${TF_RECORDS_PER_ZONE:-2}
       TF_VAR_zone_suffix: ${TF_ZONE_SUFFIX:-terraform.test.}
       TF_VAR_record_ttl: ${TF_RECORD_TTL:-300}
-      TF_PARALLELISM: ${TF_PARALLELISM:-100}
+      TF_PARALLELISM: ${TF_PARALLELISM:-50}
       TF_COMMAND: ${TF_COMMAND:-apply}
-      TF_DATA_DIR: /state/.terraform
-    volumes:
-      - powerdns-admin-dev-terraform:/state
+      PG_CONN_STR: ${TF_PG_CONN_STR:-postgres://terraform:changeme@postgres:5432/terraform?sslmode=disable}
+      PG_SCHEMA_NAME: ${TF_PG_SCHEMA_NAME:-pdns_seed}
     depends_on:
+      postgres:
+        condition: service_healthy
       pdns-server:
         condition: service_started
     restart: "no"
@@ -128,6 +273,6 @@ networks:
   dev:
 
 volumes:
+  powerdns-admin-dev-openldap:
   powerdns-admin-dev-mysql:
   powerdns-admin-dev-postgres:
-  powerdns-admin-dev-terraform:

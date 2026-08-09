@@ -8,9 +8,10 @@ terraform {
     }
   }
 
-  backend "local" {
-    path = "/state/terraform.tfstate"
-  }
+  # Connection settings come from PG_CONN_STR / PG_SCHEMA_NAME on the
+  # terraform-pdns-seed service. Net-new deployments only; no local-state
+  # migration path is provided.
+  backend "pg" {}
 }
 
 provider "powerdns" {}

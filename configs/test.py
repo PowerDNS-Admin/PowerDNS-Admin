@@ -8,11 +8,14 @@ BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
 HSTS_ENABLED = False
 
-### DATABASE - SQLite
-TEST_DB_LOCATION = '/tmp/testing.sqlite'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(TEST_DB_LOCATION)
+### DATABASE - MySQL 8.4 (same credentials as docker compose test/dev)
+# Compose overrides the host to `mysql`; CI/local runners use 127.0.0.1.
+SQLALCHEMY_DATABASE_URI = os.getenv(
+    'SQLALCHEMY_DATABASE_URI',
+    'mysql://powerdns_admin:changeme@127.0.0.1/powerdns_admin'
+)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SESSION_TYPE = 'filesystem'
+SESSION_TYPE = 'sqlalchemy'
 
 # SAML Authnetication
 SAML_ENABLED = False

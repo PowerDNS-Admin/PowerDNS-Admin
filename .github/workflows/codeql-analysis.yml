@@ -7,22 +7,32 @@ on:
     branches:
       - dev
       - master
-    paths-ignore:
-      - 'docs/**'
-      - 'powerdnsadmin/static/assets/**'
-      - 'powerdnsadmin/static/img/**'
-      - '**/*.md'
+    # When to run (allowlist). Kept in sync with the paths: allowlist in
+    # .github/codeql/codeql-config.yml, which also controls what to analyze.
+    paths:
+      - 'powerdnsadmin/**'
+      - 'configs/**'
+      - 'migrations/**'
+      - 'run.py'
+      - 'update_accounts.py'
+      - 'update_zones.py'
+      - '.github/workflows/codeql-analysis.yml'
+      - '.github/codeql/**'
   pull_request:
     branches:
       - dev
       - master
-    paths-ignore:
-      - 'docs/**'
-      - 'powerdnsadmin/static/assets/**'
-      - 'powerdnsadmin/static/img/**'
-      - '**/*.md'
+    paths:
+      - 'powerdnsadmin/**'
+      - 'configs/**'
+      - 'migrations/**'
+      - 'run.py'
+      - 'update_accounts.py'
+      - 'update_zones.py'
+      - '.github/workflows/codeql-analysis.yml'
+      - '.github/codeql/**'
   schedule:
-    - cron: '45 2 * * 2'
+    - cron: '45 2 * * 1'
 
 permissions:
   contents: read
@@ -57,6 +67,9 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"

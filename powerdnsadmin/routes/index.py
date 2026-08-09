@@ -10,6 +10,7 @@ from zxcvbn import zxcvbn
 from yaml import Loader, load
 from flask import Blueprint, render_template, make_response, url_for, current_app, g, session, request, redirect, abort
 from flask_login import login_user, logout_user, login_required, current_user
+from authlib.integrations.base_client.errors import MismatchingStateError
 
 from .base import captcha, csrf, login_manager
 from ..lib import utils
@@ -43,6 +44,31 @@ index_bp = Blueprint('index',
                      __name__,
                      template_folder='templates',
                      url_prefix='/')
+
+
+def handle_stale_oauth_callback():
+    """Recover from a stale OAuth state after an IdP redirect.
+
+    Mirrors expired login/registration CSRF handling: clear any partial
+    session and return a fresh login page instead of a 500.
+    """
+    logout_user()
+    session.clear()
+    session['_remember'] = 'clear'
+    return render_template(
+        'login.html',
+        saml_enabled=current_app.config.get('SAML_ENABLED', False),
+        error='Your sign-in session expired. Please try again.',
+    ), 400
+
+
+def authorize_oauth_access_token(client):
+    try:
+        return client.authorize_access_token(), None
+    except MismatchingStateError:
+        current_app.logger.info(
+            'OAuth callback state mismatch; clearing session for a fresh login')
+        return None, handle_stale_oauth_callback()
 
 
 @index_bp.before_app_request
@@ -127,7 +153,9 @@ def google_authorized():
         params['_scheme'] = 'https' if use_ssl else 'http'
     session['google_oauthredir'] = url_for(
         'index.google_authorized', **params)
-    token = google.authorize_access_token()
+    token, stale_response = authorize_oauth_access_token(google)
+    if stale_response is not None:
+        return stale_response
     if token is None:
         msg = 'Access denied: reason=%s error=%s' % (
             request.args.get('error_reason', 'unknown'),
@@ -164,7 +192,9 @@ def github_authorized():
         params['_scheme'] = 'https' if use_ssl else 'http'
     session['github_oauthredir'] = url_for(
         'index.github_authorized', **params)
-    token = github.authorize_access_token()
+    token, stale_response = authorize_oauth_access_token(github)
+    if stale_response is not None:
+        return stale_response
     if token is None:
         msg = 'Access denied: reason=%s error=%s' % (
             request.args.get('error', 'unknown'),
@@ -201,7 +231,9 @@ def azure_authorized():
         params['_scheme'] = 'https' if use_ssl else 'http'
     session['azure_oauthredir'] = url_for(
         'index.azure_authorized', **params)
-    token = azure.authorize_access_token()
+    token, stale_response = authorize_oauth_access_token(azure)
+    if stale_response is not None:
+        return stale_response
     if token is None:
         msg = 'Access denied: reason=%s error=%s' % (
             request.args.get('error', 'unknown'),
@@ -241,7 +273,9 @@ def oidc_authorized():
         if isinstance(use_ssl, bool):
             params['_scheme'] = 'https' if use_ssl else 'http'
         session['oidc_oauthredir'] = url_for('index.oidc_authorized', **params)
-        token = oidc.authorize_access_token()
+        token, stale_response = authorize_oauth_access_token(oidc)
+        if stale_response is not None:
+            return stale_response
         if token is None:
             msg = 'Access denied: reason=%s error=%s' % (
                 request.args.get('error', 'unknown'),

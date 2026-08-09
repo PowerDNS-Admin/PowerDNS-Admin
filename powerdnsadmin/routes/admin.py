@@ -709,7 +709,7 @@ def edit_account(account_name=None):
 
         if result['status']:
             account = Account.query.filter(
-                Account.name == account_name).first()
+                Account.name == fdata['accountname']).first()
             old_domains = Domain.query.filter(Domain.account_id == account.id).all()
 
             for domain_name in new_domain_list:

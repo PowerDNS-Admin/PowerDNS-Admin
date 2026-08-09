@@ -18,6 +18,10 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_CLEANUP_N_REQUESTS = 100
 SESSION_TYPE = os.getenv('SESSION_TYPE', 'sqlalchemy')
 SQLALCHEMY_TRACK_MODIFICATIONS = True
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'pool_pre_ping': True,
+    'pool_recycle': 600,
+}
 # SQLA_DB_USER = 'pda'
 # SQLA_DB_PASSWORD = 'changeme'
 # SQLA_DB_HOST = '127.0.0.1'

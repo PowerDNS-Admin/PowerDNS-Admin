@@ -4,7 +4,7 @@ A web interface for PowerDNS with advanced features.
 
 ### Development status
 
-[![Tests](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml)
+[![Python tests](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml)
 [![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
 [![Docker Image](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
 

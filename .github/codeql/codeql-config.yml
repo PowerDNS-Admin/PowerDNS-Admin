@@ -1,0 +1,19 @@
+# What CodeQL analyzes: an allowlist of real application source (paths),
+# then a denylist of non-source or noise within that (paths-ignore).
+# This same allowlist also drives the push/pull_request trigger filter in
+# .github/workflows/codeql-analysis.yml, so push/PR and the weekly schedule
+# both cover exactly the same scope. Schedule and workflow_dispatch always
+# run and still honor this file.
+# https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options#specifying-directories-to-scan
+paths:
+  - powerdnsadmin/**
+  - configs/**
+  - migrations/**
+  - run.py
+  - update_accounts.py
+  - update_zones.py
+paths-ignore:
+  - configs/test.py
+  - powerdnsadmin/static/assets/**
+  - powerdnsadmin/static/img/**
+  - '**/*.md'

@@ -4,6 +4,9 @@ CREATE DATABASE powerdns_admin OWNER powerdns_admin;
 CREATE USER powerdns WITH PASSWORD 'changeme';
 CREATE DATABASE powerdns OWNER powerdns;
 
+CREATE USER terraform WITH PASSWORD 'changeme';
+CREATE DATABASE terraform OWNER terraform;
+
 \connect powerdns
 SET ROLE powerdns;
 
