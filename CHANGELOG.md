@@ -40,6 +40,14 @@
     smoke once on Python 3.13, and can also target the suite through the Docker
     Python test Compose stack.
 
+### Code Refactoring
+
+-   OAuth/OIDC and SAML endpoints now use dedicated blueprints registered
+    during application setup instead of sharing the main index route module.
+    Common post-authentication session handling and federated-identity account
+    and role provisioning have been extracted into shared modules, with audit
+    history identifying whether provisioning originated from OIDC or SAML.
+
 ### Documentation
 
 -   The development guide documents the default OpenLDAP identity backend, the
@@ -48,6 +56,9 @@
     SAML sign-in flows.
 -   The testing guide now documents how to run the smoke suite through Docker
     Compose.
+-   Microsoft identity settings, login text, logs, and OAuth documentation now
+    use the current Microsoft Entra ID product name. Existing `azure_oauth_*`
+    settings and `/azure/` callback routes remain unchanged for compatibility.
 
 ### Security
 
@@ -64,6 +75,22 @@
 
 ### Breaking Changes
 
+-   OIDC provider logout now follows OpenID Connect RP-Initiated Logout 1.0:
+    the request uses `post_logout_redirect_uri`, `id_token_hint`, and
+    `client_id` instead of the legacy `redirect_uri` parameter. Deployments
+    must register the PowerDNS-Admin login URL as an allowed post-logout
+    redirect URI. Providers that only accept proprietary or legacy logout
+    parameters may require a provider-specific endpoint or integration.
+-   SAML HTTP-Redirect URL encoding no longer defaults to lowercase percent
+    escapes. The previous unconditional AD FS compatibility behavior could
+    alter the query string used to validate responses from providers such as
+    Keycloak, causing otherwise valid signed logout responses to be rejected.
+    Deployments whose identity provider requires lowercase percent escapes for
+    signed outbound login or logout requests must now explicitly set
+    `SAML_LOWERCASE_URLENCODING=true`. Adding this setting allows those AD FS
+    deployments to retain their required request encoding without changing
+    exact-query signature validation or the provider-neutral default for other
+    SAML identity providers.
 -   The release version file moved from the repository root `VERSION` to
     `powerdnsadmin/VERSION`. Application startup reads that package path via
     `app.root_path` and fails if the file is missing or empty. Docker images,
@@ -82,6 +109,25 @@
 
 ### Bug Fixes
 
+-   OIDC logout now discovers the provider's `end_session_endpoint`, retains
+    the configured logout URL as a fallback, identifies the provider session
+    with the login ID token, and reliably clears the local session when the
+    provider does not support RP-initiated logout.
+-   Logout now removes OAuth callback state, SAML identity and session data,
+    pending TOTP and first-login state, and other authentication-only session
+    values while retaining unrelated state such as the CSRF token.
+-   The development Compose environment now enables SAML single logout so the
+    application logout route initiates logout at the Keycloak identity provider.
+-   SAML HTTP-Redirect logout signatures are now verified against the exact
+    encoded query string received from the identity provider, preventing valid
+    Keycloak LogoutResponse signatures from failing after URL re-encoding.
+-   SAML, OAuth, and OIDC JIT provisioning now log whether the local user was
+    created or already existed together with the resulting role and account
+    memberships, and report local user creation or profile-update failures
+    instead of continuing with only a successful-authentication message.
+-   Users created through SAML, OAuth, or OIDC JIT provisioning now generate a
+    `Created user` entry in the application admin history attributed to the
+    originating identity provider.
 -   Stale OAuth/OIDC callbacks that fail Authlib state validation
     (`MismatchingStateError`) now clear the session and return the login page
     with an expiry message, matching the existing handling for expired login

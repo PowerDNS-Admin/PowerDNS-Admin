@@ -47,6 +47,7 @@ The following environment variables are supported for configuring the applicatio
 | SAML_KEY                       |                                                                          |            |               |
 | SAML_LOGOUT                    |                                                                          |            |               |
 | SAML_LOGOUT_URL                |                                                                          |            |               |
+| SAML_LOWERCASE_URLENCODING     | Use lowercase percent escapes for outbound SAML HTTP-Redirect requests for AD FS compatibility. | No | `false` |
 | SAML_METADATA_CACHE_LIFETIME   |                                                                          |            |               |
 | SAML_METADATA_URL              |                                                                          |            |               |
 | SAML_NAMEID_FORMAT             |                                                                          |            |               |

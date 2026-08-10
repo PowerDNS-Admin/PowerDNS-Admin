@@ -19,7 +19,7 @@ A web interface for PowerDNS with advanced features.
     -   Local users
     -   SAML
     -   LDAP (OpenLDAP / Active Directory)
-    -   OAuth (Google / GitHub / Azure / OpenID)
+    -   OAuth (Google / GitHub / Microsoft Entra ID / OpenID)
 -   Two-factor authentication (TOTP)
 -   PDNS service configuration and statistics monitoring
 -   DynDNS 2 protocol support

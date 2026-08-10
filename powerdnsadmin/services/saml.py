@@ -80,9 +80,16 @@ class SAML(object):
             'script_name': request.path,
             'get_data': request.args.copy(),
             'post_data': request.form.copy(),
-            # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-            'lowercase_urlencoding': True,
-            'query_string': request.query_string
+            # Validate HTTP-Redirect signatures against the exact encoded query
+            # sent by the IdP. Re-encoding parsed values can change otherwise
+            # equivalent percent escapes and invalidate a correct signature.
+            'validate_signature_from_qs': True,
+            # Some AD FS installations require lowercase percent escapes on
+            # outbound signed Redirect requests. This does not affect inbound
+            # validation because query_string preserves the received bytes.
+            'lowercase_urlencoding': current_app.config.get(
+                'SAML_LOWERCASE_URLENCODING', False),
+            'query_string': request.query_string.decode('ascii')
         }
 
     def init_saml_auth(self, req):

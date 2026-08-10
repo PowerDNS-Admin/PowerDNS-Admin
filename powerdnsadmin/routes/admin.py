@@ -1169,7 +1169,7 @@ def history_table():  # ajax call data
                                                              and len(
             request.args.get('user_name_filter')) != 0 else None
         """
-            Auth methods: LOCAL, Github OAuth, Azure OAuth, SAML, OIDC OAuth, Google OAuth
+            Auth methods: LOCAL, GitHub OAuth, Microsoft Entra ID OAuth, SAML, OIDC OAuth, Google OAuth
         """
         auth_methods = []
         if (request.args.get('auth_local_only_checkbox') is None \

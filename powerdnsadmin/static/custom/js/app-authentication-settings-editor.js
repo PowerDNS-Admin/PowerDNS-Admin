@@ -69,7 +69,7 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
         github_oauth_token_url: '',
         github_oauth_authorize_url: '',
 
-        // Azure AD OAuth2 Settings
+        // Microsoft Entra ID OAuth2 Settings
         azure_oauth_enabled: false,
         azure_oauth_key: '',
         azure_oauth_secret: '',
@@ -684,8 +684,6 @@ let AuthenticationSettingsModel = function (user_data, api_url, csrf_token, sele
                     url: true,
                 },
                 oidc_oauth_logout_url: {
-                    required: oidc_oauth_enabled,
-                    minlength: 1,
                     maxlength: 255,
                     url: true,
                 },

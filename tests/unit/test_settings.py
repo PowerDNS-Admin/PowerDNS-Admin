@@ -17,3 +17,17 @@ def test_load_environment_converts_server_external_ssl_to_boolean(
     AppSettings.load_environment(app)
 
     assert app.config['SERVER_EXTERNAL_SSL'] is expected_value
+
+
+@pytest.mark.parametrize(('configured_value', 'expected_value'), [
+    ('true', True),
+    ('false', False),
+])
+def test_load_environment_converts_saml_lowercase_urlencoding_to_boolean(
+        monkeypatch, configured_value, expected_value):
+    monkeypatch.setenv('SAML_LOWERCASE_URLENCODING', configured_value)
+    app = SimpleNamespace(config={})
+
+    AppSettings.load_environment(app)
+
+    assert app.config['SAML_LOWERCASE_URLENCODING'] is expected_value

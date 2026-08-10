@@ -137,7 +137,7 @@ class AppSettings(object):
         'github_oauth_token_url': 'https://github.com/login/oauth/access_token',
         'github_oauth_authorize_url': 'https://github.com/login/oauth/authorize',
 
-        # Azure OAuth Settings
+        # Microsoft Entra ID OAuth Settings
         'azure_oauth_enabled': False,
         'azure_oauth_key': '',
         'azure_oauth_secret': '',
@@ -199,6 +199,7 @@ class AppSettings(object):
         'saml_sp_contact_name': None,
         'saml_sp_contact_mail': None,
         'saml_sign_request': False,
+        'saml_lowercase_urlencoding': False,
         'saml_want_message_signed': True,
         'saml_logout': True,
         'saml_logout_url': None,
@@ -419,7 +420,7 @@ class AppSettings(object):
         'github_oauth_token_url': str,
         'github_oauth_authorize_url': str,
 
-        # Azure OAuth Settings
+        # Microsoft Entra ID OAuth Settings
         'azure_oauth_enabled': bool,
         'azure_oauth_key': str,
         'azure_oauth_secret': str,
@@ -481,6 +482,7 @@ class AppSettings(object):
         'saml_sp_contact_name': str,
         'saml_sp_contact_mail': str,
         'saml_sign_request': bool,
+        'saml_lowercase_urlencoding': bool,
         'saml_want_message_signed': bool,
         'saml_logout': bool,
         'saml_logout_url': str,
@@ -546,7 +548,7 @@ class AppSettings(object):
             'github_oauth_token_url',
             'github_oauth_authorize_url',
 
-            # Azure OAuth Settings
+            # Microsoft Entra ID OAuth Settings
             'azure_oauth_enabled',
             'azure_oauth_key',
             'azure_oauth_secret',

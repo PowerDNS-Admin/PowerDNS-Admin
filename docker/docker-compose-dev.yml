@@ -48,9 +48,10 @@ services:
       SAML_SP_CONTACT_NAME: PowerDNS-Admin Development
       SAML_SP_CONTACT_MAIL: powerdns-admin@example.org
       SAML_SIGN_REQUEST: "false"
+      SAML_LOWERCASE_URLENCODING: "false"
       SAML_WANT_MESSAGE_SIGNED: "true"
       SAML_ASSERTION_ENCRYPTED: "false"
-      SAML_LOGOUT: "false"
+      SAML_LOGOUT: "true"
       LDAP_ENABLED: "true"
       LDAP_TYPE: ldap
       LDAP_URI: ldap://ldap.example.org:389
