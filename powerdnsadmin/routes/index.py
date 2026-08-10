@@ -127,163 +127,96 @@ def healthcheck():
     return make_response('ok')
 
 
-@index_bp.route('/google/login')
-def google_login():
-    if not Setting().get('google_oauth_enabled') or google is None:
+def external_url_params():
+    """Build the url_for() kwargs used for externally-facing OAuth redirect URIs."""
+    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
+    params = {'_external': True}
+    if isinstance(use_ssl, bool):
+        params['_scheme'] = 'https' if use_ssl else 'http'
+    return params
+
+
+def oauth_login(client, setting_key, provider_key, provider_label):
+    """Shared handler for the '/<provider>/login' routes: kick off the
+    Authlib redirect to the provider, once its client is enabled and ready.
+    """
+    if not Setting().get(setting_key) or client is None:
         current_app.logger.error(
-            'Google OAuth is disabled or you have not yet reloaded the pda application after enabling.'
+            '%s OAuth is disabled or you have not yet reloaded the pda application after enabling.'
+            % provider_label
         )
         abort(400)
-    else:
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('index.google_authorized', **params)
-        return google.authorize_redirect(redirect_uri)
+    redirect_uri = url_for(f'index.{provider_key}_authorized', **external_url_params())
+    return client.authorize_redirect(redirect_uri)
+
+
+def oauth_authorized(client, setting_key, provider_key, provider_label,
+                     token_session_key, reason_param='error'):
+    """Shared handler for the '/<provider>/authorized' callbacks: exchange
+    the Authlib code for a token and stash it in the session for /login to
+    pick up and resolve into a User.
+    """
+    if not Setting().get(setting_key) or client is None:
+        current_app.logger.error(
+            '%s OAuth is disabled or you have not yet reloaded the pda application after enabling.'
+            % provider_label
+        )
+        abort(400)
+    params = external_url_params()
+    authorized_endpoint = f'index.{provider_key}_authorized'
+    session[f'{provider_key}_oauthredir'] = url_for(authorized_endpoint, **params)
+    token, stale_response = authorize_oauth_access_token(client)
+    if stale_response is not None:
+        return stale_response
+    if token is None:
+        msg = 'Access denied: reason=%s error=%s' % (
+            request.args.get(reason_param, 'unknown'),
+            request.args.get('error_description', 'unknown'),
+        )
+        return render_template('errors/400.html', msg=msg), 400
+    session[token_session_key] = token
+    return redirect(url_for('index.login', **params))
+
+
+@index_bp.route('/google/login')
+def google_login():
+    return oauth_login(google, 'google_oauth_enabled', 'google', 'Google')
 
 
 @index_bp.route('/google/authorized')
 def google_authorized():
-    if not Setting().get('google_oauth_enabled') or google is None:
-        abort(400)
-    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-    params = {'_external': True}
-    if isinstance(use_ssl, bool):
-        params['_scheme'] = 'https' if use_ssl else 'http'
-    session['google_oauthredir'] = url_for(
-        'index.google_authorized', **params)
-    token, stale_response = authorize_oauth_access_token(google)
-    if stale_response is not None:
-        return stale_response
-    if token is None:
-        msg = 'Access denied: reason=%s error=%s' % (
-            request.args.get('error_reason', 'unknown'),
-            request.args.get('error_description', 'unknown'),
-        )
-        return render_template('errors/400.html', msg=msg), 400
-    session['google_token'] = token
-    return redirect(url_for('index.login', **params))
+    return oauth_authorized(google, 'google_oauth_enabled', 'google', 'Google',
+                            'google_token', reason_param='error_reason')
 
 
 @index_bp.route('/github/login')
 def github_login():
-    if not Setting().get('github_oauth_enabled') or github is None:
-        current_app.logger.error(
-            'Github OAuth is disabled or you have not yet reloaded the pda application after enabling.'
-        )
-        abort(400)
-    else:
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('index.github_authorized', **params)
-        return github.authorize_redirect(redirect_uri)
+    return oauth_login(github, 'github_oauth_enabled', 'github', 'Github')
 
 
 @index_bp.route('/github/authorized')
 def github_authorized():
-    if not Setting().get('github_oauth_enabled') or github is None:
-        abort(400)
-    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-    params = {'_external': True}
-    if isinstance(use_ssl, bool):
-        params['_scheme'] = 'https' if use_ssl else 'http'
-    session['github_oauthredir'] = url_for(
-        'index.github_authorized', **params)
-    token, stale_response = authorize_oauth_access_token(github)
-    if stale_response is not None:
-        return stale_response
-    if token is None:
-        msg = 'Access denied: reason=%s error=%s' % (
-            request.args.get('error', 'unknown'),
-            request.args.get('error_description', 'unknown'),
-        )
-        return render_template('errors/400.html', msg=msg), 400
-    session['github_token'] = token
-    return redirect(url_for('index.login', **params))
+    return oauth_authorized(github, 'github_oauth_enabled', 'github', 'Github', 'github_token')
 
 
 @index_bp.route('/azure/login')
 def azure_login():
-    if not Setting().get('azure_oauth_enabled') or azure is None:
-        current_app.logger.error(
-            'Microsoft OAuth is disabled or you have not yet reloaded the pda application after enabling.'
-        )
-        abort(400)
-    else:
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('index.azure_authorized', **params)
-        return azure.authorize_redirect(redirect_uri)
+    return oauth_login(azure, 'azure_oauth_enabled', 'azure', 'Microsoft')
 
 
 @index_bp.route('/azure/authorized')
 def azure_authorized():
-    if not Setting().get('azure_oauth_enabled') or azure is None:
-        abort(400)
-    use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-    params = {'_external': True}
-    if isinstance(use_ssl, bool):
-        params['_scheme'] = 'https' if use_ssl else 'http'
-    session['azure_oauthredir'] = url_for(
-        'index.azure_authorized', **params)
-    token, stale_response = authorize_oauth_access_token(azure)
-    if stale_response is not None:
-        return stale_response
-    if token is None:
-        msg = 'Access denied: reason=%s error=%s' % (
-            request.args.get('error', 'unknown'),
-            request.args.get('error_description', 'unknown'),
-        )
-        return render_template('errors/400.html', msg=msg), 400
-    session['azure_token'] = token
-    return redirect(url_for('index.login', **params))
+    return oauth_authorized(azure, 'azure_oauth_enabled', 'azure', 'Microsoft', 'azure_token')
 
 
 @index_bp.route('/oidc/login')
 def oidc_login():
-    if not Setting().get('oidc_oauth_enabled') or oidc is None:
-        current_app.logger.error(
-            'OIDC OAuth is disabled or you have not yet reloaded the pda application after enabling.'
-        )
-        abort(400)
-    else:
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        redirect_uri = url_for('index.oidc_authorized', **params)
-        return oidc.authorize_redirect(redirect_uri)
+    return oauth_login(oidc, 'oidc_oauth_enabled', 'oidc', 'OIDC')
 
 
 @index_bp.route('/oidc/authorized')
 def oidc_authorized():
-    if not Setting().get('oidc_oauth_enabled') or oidc is None:
-        current_app.logger.error(
-            'OIDC OAuth is disabled or you have not yet reloaded the pda application after enabling.'
-        )
-        abort(400)
-    else:
-        use_ssl = current_app.config.get('SERVER_EXTERNAL_SSL')
-        params = {'_external': True}
-        if isinstance(use_ssl, bool):
-            params['_scheme'] = 'https' if use_ssl else 'http'
-        session['oidc_oauthredir'] = url_for('index.oidc_authorized', **params)
-        token, stale_response = authorize_oauth_access_token(oidc)
-        if stale_response is not None:
-            return stale_response
-        if token is None:
-            msg = 'Access denied: reason=%s error=%s' % (
-                request.args.get('error', 'unknown'),
-                request.args.get('error_description', 'unknown'),
-            )
-            return render_template('errors/400.html', msg=msg), 400
-        session['oidc_token'] = token
-        return redirect(url_for('index.login', **params))
+    return oauth_authorized(oidc, 'oidc_oauth_enabled', 'oidc', 'OIDC', 'oidc_token')
 
 
 @index_bp.route('/login', methods=['GET', 'POST'])
