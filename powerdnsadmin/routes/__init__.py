@@ -9,6 +9,8 @@ from .dashboard import dashboard_bp
 from .domain import domain_bp
 from .admin import admin_bp
 from .api import api_bp, apilist_bp
+from .dyndns import dyndns_bp
+from .swagger import swagger_bp
 
 
 def init_app(app):
@@ -23,6 +25,8 @@ def init_app(app):
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(apilist_bp)
+    app.register_blueprint(dyndns_bp)
+    app.register_blueprint(swagger_bp)
 
     app.register_error_handler(400, handle_bad_request)
     app.register_error_handler(401, handle_unauthorized_access)
