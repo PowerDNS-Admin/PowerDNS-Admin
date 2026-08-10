@@ -19,22 +19,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jquery@npm:^3.5.16":
-  version: 3.5.34
-  resolution: "@types/jquery@npm:3.5.34"
-  dependencies:
-    "@types/sizzle": "npm:*"
-  checksum: 10c0/c85eec82531912cc497c34daad3509cf54875a0457c64d82b4fe17a4a27a313150c0882b7dd345b7e98c9116e0bae64c3942b7a76f6edcd664efa701cd1f2d81
-  languageName: node
-  linkType: hard
-
-"@types/sizzle@npm:*":
-  version: 2.3.10
-  resolution: "@types/sizzle@npm:2.3.10"
-  checksum: 10c0/d43ec1cd0b5e1f66b1abeaf359608853629cd3d6b8dc8b3b40b85a5ee2ce149a4485ccd7eee5c58b5a2814d384f5a951f1dab5d49041ad83457270cb2bc66fe7
-  languageName: node
-  linkType: hard
-
 "admin-lte@npm:4.1.0":
   version: 4.1.0
   resolution: "admin-lte@npm:4.1.0"
@@ -63,22 +47,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"datatables.net-plugins@npm:^1.13.1":
-  version: 1.13.6
-  resolution: "datatables.net-plugins@npm:1.13.6"
+"datatables.net-plugins@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "datatables.net-plugins@npm:3.0.1"
   dependencies:
-    "@types/jquery": "npm:^3.5.16"
-    datatables.net: "npm:^1.13.2"
-  checksum: 10c0/fec64da13830586b411422934835f0d6ccbfb1ddfd35ea4bd3723e5107285552a6c098f79f18a2c2724a1de3cdfc55fb99cf53e412ad12aae714d316d80000b2
+    datatables.net: "npm:^3"
+  checksum: 10c0/bc8e83a48b3fd40b1a0a461b777bb6e2d2f0f47e0c1cc80271fcdd6b0d305aac1ce48492657ec05dd504ea51ebe9147a58a4d7d738aad62f119b434181aec29e
   languageName: node
   linkType: hard
 
-"datatables.net@npm:1.13.11, datatables.net@npm:^1.13.2":
+"datatables.net@npm:1.13.11":
   version: 1.13.11
   resolution: "datatables.net@npm:1.13.11"
   dependencies:
     jquery: "npm:1.8 - 4"
   checksum: 10c0/943e3d64943dde2740880f5c193c75472e7877b4c2f197d6c0e5a99fdb148770542b1e3f66016ad596a14aaf5dab4202c4585e7a1aa8b9c4b7dd8782dbcfa0ac
+  languageName: node
+  linkType: hard
+
+"datatables.net@npm:^3":
+  version: 3.0.1
+  resolution: "datatables.net@npm:3.0.1"
+  checksum: 10c0/5f073e96ee7a2a4d84396f9902487b95825297921e6a129383d70a37b0ccdb42a8d6e172717cddcbca9fe664abb821687916b8a74f1783e7a8873a1b006f83b7
   languageName: node
   linkType: hard
 
@@ -131,7 +121,7 @@ __metadata:
     bootstrap: "npm:5.3.8"
     datatables.net: "npm:1.13.11"
     datatables.net-bs5: "npm:1.13.11"
-    datatables.net-plugins: "npm:^1.13.1"
+    datatables.net-plugins: "npm:^3.0.1"
     jquery: "npm:^3.6.0"
     jquery-validation: "npm:^1.19.5"
     jtimeout: "npm:^3.2.0"
