@@ -53,13 +53,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"datatables.net-bs5@npm:1.13.11":
-  version: 1.13.11
-  resolution: "datatables.net-bs5@npm:1.13.11"
+"datatables.net-bs5@npm:3.0.1":
+  version: 3.0.1
+  resolution: "datatables.net-bs5@npm:3.0.1"
   dependencies:
-    datatables.net: "npm:1.13.11"
-    jquery: "npm:1.8 - 4"
-  checksum: 10c0/a4757c3d1b215ec49d92b509e5041a54d0326d710d34645dc28dfa2e754c9999284ba7427691e5106e1a0777a71ea50ebdd1c337332275c5544557fffecfdc03
+    datatables.net: "npm:3.0.1"
+  checksum: 10c0/d68a30fcba880f6c1497e09b401f6388b59721b7bf8745253c6d14428db27ab521c4fd049360edb9654175b25570a77c325d64ca2795674d285b5354edd64cfc
   languageName: node
   linkType: hard
 
@@ -79,6 +78,13 @@ __metadata:
   dependencies:
     jquery: "npm:1.8 - 4"
   checksum: 10c0/943e3d64943dde2740880f5c193c75472e7877b4c2f197d6c0e5a99fdb148770542b1e3f66016ad596a14aaf5dab4202c4585e7a1aa8b9c4b7dd8782dbcfa0ac
+  languageName: node
+  linkType: hard
+
+"datatables.net@npm:3.0.1":
+  version: 3.0.1
+  resolution: "datatables.net@npm:3.0.1"
+  checksum: 10c0/5f073e96ee7a2a4d84396f9902487b95825297921e6a129383d70a37b0ccdb42a8d6e172717cddcbca9fe664abb821687916b8a74f1783e7a8873a1b006f83b7
   languageName: node
   linkType: hard
 
@@ -130,7 +136,7 @@ __metadata:
     admin-lte: "npm:4.1.0"
     bootstrap: "npm:5.3.8"
     datatables.net: "npm:1.13.11"
-    datatables.net-bs5: "npm:1.13.11"
+    datatables.net-bs5: "npm:3.0.1"
     datatables.net-plugins: "npm:^1.13.1"
     jquery: "npm:^3.6.0"
     jquery-validation: "npm:^1.19.5"
