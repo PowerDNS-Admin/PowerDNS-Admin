@@ -221,9 +221,9 @@ def logout():
     ) and 'samlSessionIndex' in session and current_app.config.get('SAML_LOGOUT'):
         return saml_routes.start_idp_logout()
 
-    redirect_uri = url_for('index.login')
+    oidc_logout = None
     if 'oidc_token' in session:
-        redirect_uri = oauth_routes.oidc_logout_url() or redirect_uri
+        oidc_logout = oauth_routes.prepare_oidc_logout()
 
     # Clean cookies and flask session
     clear_session()
@@ -248,7 +248,12 @@ def logout():
 
         return res
 
-    return redirect(redirect_uri)
+    if oidc_logout:
+        oidc_response = oauth_routes.start_oidc_logout(*oidc_logout)
+        if oidc_response is not None:
+            return oidc_response
+
+    return redirect(url_for('index.login'))
 
 
 def password_policy_check(user, password):

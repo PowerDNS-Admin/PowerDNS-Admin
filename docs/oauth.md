@@ -26,7 +26,8 @@ To link to Keycloak for authentication, you need to create a new client in the K
 * Go to Clients > Create
 * Enter a Client ID (for example 'powerdns-admin') and click 'Save'
 * Scroll down to 'Access Type' and choose 'Confidential'.
-* Scroll down to 'Valid Redirect URIs' and enter 'https://<pdnsa address>/oidc/authorized'
+* Scroll down to 'Valid Redirect URIs' and enter `https://<PowerDNS-Admin address>/oidc/authorized`
+* Add `https://<PowerDNS-Admin address>/oidc/logged-out` to the client's valid post-logout redirect URIs
 * Click 'Save'
 * Go to the 'Credentials' tab and copy the Client Secret
 * Log in to PowerDNS-Admin and go to 'Settings > Authentication > OpenID Connect OAuth'
@@ -37,7 +38,7 @@ To link to Keycloak for authentication, you need to create a new client in the K
   * API URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/
   * Token URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/token
   * Authorize URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/auth
-  * Logout URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/logout
+  * Logout URL fallback: leave empty when Keycloak discovery is enabled; otherwise use https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/logout
   * Leave the rest default
 * Save the changes and restart PowerDNS-Admin
 * Use the new 'Sign in using OpenID Connect' button to log in.
@@ -55,15 +56,16 @@ Enable OpenID Connect OAuth option.
 * Logout URL fallback, <oidc_provider_link>/logout. This is optional when the
   provider metadata publishes `end_session_endpoint`.
 
-PowerDNS-Admin implements
+PowerDNS-Admin uses Authlib to implement
 [OpenID Connect RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
 At logout it prefers the discovered `end_session_endpoint`, sends the login ID
 token as `id_token_hint`, identifies the configured client with `client_id`,
-and sends the registered login URL as `post_logout_redirect_uri`. If discovery
-does not publish a logout endpoint, the configured Logout URL fallback is
-used. If neither is available, only the local PowerDNS-Admin session is ended.
-Register the PowerDNS-Admin login URL as an allowed post-logout redirect URI at
-the provider.
+and sends `/oidc/logged-out` as `post_logout_redirect_uri`. Authlib generates,
+stores, validates, and consumes the logout `state` around that callback. If
+discovery does not publish a logout endpoint, the configured Logout URL
+fallback is used. If neither is available, only the local PowerDNS-Admin
+session is ended. Register the externally visible PowerDNS-Admin
+`/oidc/logged-out` URL as an allowed post-logout redirect URI at the provider.
 
 * Username, This will be the claim that will be used as the username. (Usually preferred_username)
 * First Name, This will be the firstname of the user. (Usually given_name)

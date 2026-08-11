@@ -27,7 +27,7 @@
         "https://localhost:9191"
       ],
       "attributes": {
-        "post.logout.redirect.uris": "http://localhost:9191/*##https://localhost:9191/*"
+        "post.logout.redirect.uris": "http://localhost:9191/oidc/logged-out##https://localhost:9191/oidc/logged-out"
       }
     },
     {

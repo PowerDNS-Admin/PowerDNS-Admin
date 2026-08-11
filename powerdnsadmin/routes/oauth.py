@@ -1,11 +1,10 @@
 import json
 import re
 from collections.abc import Mapping
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Blueprint, render_template, url_for, current_app, session, request, redirect, abort
 from flask_login import logout_user
-from authlib.integrations.base_client.errors import MismatchingStateError
+from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 
 from .auth_session import authenticate_user
 from ..models.base import db
@@ -80,12 +79,13 @@ def external_url_params():
     return params
 
 
-def oidc_logout_url():
-    """Build an OpenID Connect RP-Initiated Logout 1.0 request URL.
+def prepare_oidc_logout():
+    """Capture the inputs Authlib needs for RP-Initiated Logout.
 
     Prefer the provider's discovered ``end_session_endpoint`` and retain the
     configured logout URL as a fallback for providers without discovery
-    metadata. Returning ``None`` deliberately falls back to local logout.
+    metadata. The caller clears the authenticated session before asking
+    Authlib to create its logout redirect and fresh state entry.
     """
     token = session.get('oidc_token')
     if not isinstance(token, Mapping):
@@ -113,24 +113,52 @@ def oidc_logout_url():
             'OIDC provider does not publish or configure a logout endpoint; '
             'performing local logout only')
         return None
+    if oidc is None:
+        current_app.logger.info(
+            'OIDC client is unavailable; performing local logout only')
+        return None
 
-    post_logout_redirect_uri = url_for(
-        'index.login', **external_url_params())
-    parameters = {
-        'post_logout_redirect_uri': post_logout_redirect_uri,
-    }
-    id_token = token.get('id_token')
-    if id_token:
-        parameters['id_token_hint'] = id_token
+    # Authlib's logout helper always reads end_session_endpoint from server
+    # metadata. Supplying the configured fallback there lets the same
+    # standards-compliant builder and state handling serve manual providers.
+    oidc.server_metadata['end_session_endpoint'] = endpoint
+    return oidc, token.get('id_token')
 
+
+def start_oidc_logout(oidc, id_token):
+    """Delegate the RP-Initiated Logout request and state to Authlib."""
+    parameters = {}
     client_id = Setting().get('oidc_oauth_key')
     if client_id:
         parameters['client_id'] = client_id
+    try:
+        return oidc.logout_redirect(
+            post_logout_redirect_uri=url_for(
+                'oauth.oidc_logged_out', **external_url_params()),
+            id_token_hint=id_token,
+            **parameters)
+    except Exception as e:
+        current_app.logger.warning(
+            'OIDC: unable to start provider logout (%s); local logout is '
+            'already complete', e)
+        return None
 
-    endpoint_parts = urlsplit(endpoint)
-    query = dict(parse_qsl(endpoint_parts.query, keep_blank_values=True))
-    query.update(parameters)
-    return urlunsplit(endpoint_parts._replace(query=urlencode(query)))
+
+@oauth_bp.route('/oidc/logged-out')
+def oidc_logged_out():
+    """Validate the state returned by the OIDC provider after logout."""
+    oidc = get_oauth_client('oidc')
+    if oidc is None:
+        abort(400)
+    try:
+        oidc.validate_logout_response()
+    except OAuthError as e:
+        current_app.logger.warning(
+            'OIDC logout response rejected: %s', e)
+        return render_template(
+            'errors/400.html',
+            msg='The OIDC logout response state was missing or invalid.'), 400
+    return redirect(url_for('index.login'))
 
 
 def oauth_login(client, setting_key, provider_key, provider_label):

@@ -1,8 +1,8 @@
 import json
-from urllib.parse import parse_qs, urlsplit
 
 import pytest
-from authlib.integrations.base_client.errors import MismatchingStateError
+from flask import redirect, session
+from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 
 import powerdnsadmin.routes.oauth as oauth_routes
 from powerdnsadmin.models.history import History
@@ -113,6 +113,10 @@ def test_oauth_callbacks_are_registered_during_application_setup(app):
         'oauth.azure_authorized'
     assert callback_endpoints['/oidc/authorized'] == \
         'oauth.oidc_authorized'
+    assert any(
+        rule.rule == '/oidc/logged-out' and
+        rule.endpoint == 'oauth.oidc_logged_out'
+        for rule in app.url_map.iter_rules())
 
 
 def test_saml_routes_are_registered_during_application_setup(app):
@@ -295,13 +299,25 @@ def test_oidc_authorized_mismatching_state_clears_session_and_returns_login(
 def test_oidc_logout_uses_discovered_rp_initiated_logout_endpoint(
         app, client, initial_data, monkeypatch):
     class FakeOidcClient:
+        server_metadata = {}
+        logout_parameters = None
+
         def load_server_metadata(self):
             return {
                 'end_session_endpoint':
                     'https://idp.example.test/oidc/logout?provider=value'
             }
 
-    set_oauth_client(app, 'oidc', FakeOidcClient())
+        def logout_redirect(self, **kwargs):
+            self.logout_parameters = kwargs
+            session['_state_oidc_logout-state'] = {
+                'data': {'post_logout_redirect_uri':
+                         kwargs['post_logout_redirect_uri']}
+            }
+            return redirect(self.server_metadata['end_session_endpoint'])
+
+    fake_client = FakeOidcClient()
+    set_oauth_client(app, 'oidc', fake_client)
     monkeypatch.setitem(app.config, 'SERVER_EXTERNAL_SSL', True)
     with app.app_context():
         assert Setting().set('oidc_oauth_key', 'powerdns-admin')
@@ -316,27 +332,33 @@ def test_oidc_logout_uses_discovered_rp_initiated_logout_endpoint(
     response = client.get('/logout')
 
     assert response.status_code == 302
-    location = urlsplit(response.headers['Location'])
-    assert location.scheme == 'https'
-    assert location.netloc == 'idp.example.test'
-    assert location.path == '/oidc/logout'
-    assert parse_qs(location.query) == {
-        'provider': ['value'],
-        'post_logout_redirect_uri': ['https://localhost/login'],
-        'id_token_hint': ['login-id-token'],
-        'client_id': ['powerdns-admin'],
+    assert response.headers['Location'] == \
+        'https://idp.example.test/oidc/logout?provider=value'
+    assert fake_client.logout_parameters == {
+        'post_logout_redirect_uri': 'https://localhost/oidc/logged-out',
+        'id_token_hint': 'login-id-token',
+        'client_id': 'powerdns-admin',
     }
     with client.session_transaction() as oidc_session:
         assert 'oidc_token' not in oidc_session
+        assert '_state_oidc_logout-state' in oidc_session
 
 
 def test_oidc_logout_uses_configured_endpoint_when_discovery_has_none(
         app, client, initial_data, monkeypatch):
     class FakeOidcClient:
+        server_metadata = {}
+        logout_parameters = None
+
         def load_server_metadata(self):
             return {}
 
-    set_oauth_client(app, 'oidc', FakeOidcClient())
+        def logout_redirect(self, **kwargs):
+            self.logout_parameters = kwargs
+            return redirect(self.server_metadata['end_session_endpoint'])
+
+    fake_client = FakeOidcClient()
+    set_oauth_client(app, 'oidc', fake_client)
     monkeypatch.setitem(app.config, 'SERVER_EXTERNAL_SSL', False)
     with app.app_context():
         assert Setting().set('oidc_oauth_key', 'powerdns-admin')
@@ -349,11 +371,12 @@ def test_oidc_logout_uses_configured_endpoint_when_discovery_has_none(
 
     response = client.get('/logout')
 
-    location = urlsplit(response.headers['Location'])
-    assert location.netloc == 'fallback.example.test'
-    assert parse_qs(location.query) == {
-        'post_logout_redirect_uri': ['http://localhost/login'],
-        'client_id': ['powerdns-admin'],
+    assert response.headers['Location'] == \
+        'https://fallback.example.test/session/end'
+    assert fake_client.logout_parameters == {
+        'post_logout_redirect_uri': 'http://localhost/oidc/logged-out',
+        'id_token_hint': None,
+        'client_id': 'powerdns-admin',
     }
 
 
@@ -376,3 +399,36 @@ def test_oidc_logout_without_provider_endpoint_still_clears_local_session(
     assert response.headers['Location'].endswith('/login')
     with client.session_transaction() as oidc_session:
         assert 'oidc_token' not in oidc_session
+
+
+def test_oidc_logout_callback_validates_authlib_state_and_returns_to_login(
+        app, client):
+    class FakeOidcClient:
+        validated = False
+
+        def validate_logout_response(self):
+            self.validated = True
+            return {'post_logout_redirect_uri':
+                    'https://localhost/oidc/logged-out'}
+
+    fake_client = FakeOidcClient()
+    set_oauth_client(app, 'oidc', fake_client)
+
+    response = client.get('/oidc/logged-out?state=valid-state')
+
+    assert response.status_code == 302
+    assert response.headers['Location'].endswith('/login')
+    assert fake_client.validated is True
+
+
+def test_oidc_logout_callback_rejects_invalid_authlib_state(app, client):
+    class FakeOidcClient:
+        def validate_logout_response(self):
+            raise OAuthError(description='Invalid state parameter')
+
+    set_oauth_client(app, 'oidc', FakeOidcClient())
+
+    response = client.get('/oidc/logged-out?state=invalid-state')
+
+    assert response.status_code == 400
+    assert b'logout response state was missing or invalid' in response.data

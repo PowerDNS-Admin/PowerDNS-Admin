@@ -78,9 +78,10 @@
 -   OIDC provider logout now follows OpenID Connect RP-Initiated Logout 1.0:
     the request uses `post_logout_redirect_uri`, `id_token_hint`, and
     `client_id` instead of the legacy `redirect_uri` parameter. Deployments
-    must register the PowerDNS-Admin login URL as an allowed post-logout
-    redirect URI. Providers that only accept proprietary or legacy logout
-    parameters may require a provider-specific endpoint or integration.
+    must register the externally visible PowerDNS-Admin `/oidc/logged-out` URL
+    as an allowed post-logout redirect URI. Providers that only accept
+    proprietary or legacy logout parameters may require a provider-specific
+    endpoint or integration.
 -   SAML HTTP-Redirect URL encoding no longer defaults to lowercase percent
     escapes. The previous unconditional AD FS compatibility behavior could
     alter the query string used to validate responses from providers such as
@@ -111,8 +112,9 @@
 
 -   OIDC logout now discovers the provider's `end_session_endpoint`, retains
     the configured logout URL as a fallback, identifies the provider session
-    with the login ID token, and reliably clears the local session when the
-    provider does not support RP-initiated logout.
+    with the login ID token, and delegates redirect construction plus logout
+    state generation and validation to Authlib. It reliably clears the local
+    session when the provider does not support RP-initiated logout.
 -   Logout now removes OAuth callback state, SAML identity and session data,
     pending TOTP and first-login state, and other authentication-only session
     values while retaining unrelated state such as the CSRF token.
