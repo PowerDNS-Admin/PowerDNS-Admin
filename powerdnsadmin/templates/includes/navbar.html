@@ -1,0 +1,107 @@
+<nav class="app-header navbar navbar-expand bg-body">
+    <div class="container-fluid pda-navbar-bar">
+        <ul class="navbar-nav pda-navbar-start">
+            <li class="nav-item">
+                <a class="nav-link no-prompt" data-lte-toggle="sidebar" href="#" role="button"
+                   aria-label="Toggle navigation sidebar">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                </a>
+            </li>
+        </ul>
+        {% if current_user.id is defined %}
+            <div class="pda-navbar-search-center">
+                <form action="{{ url_for('admin.global_search') }}" method="get" role="search"
+                      class="pda-navbar-search d-none d-lg-flex align-items-center gap-2"
+                      aria-label="Global search">
+                    <span class="pda-navbar-search-label d-none d-xl-inline text-nowrap"
+                          id="navbar_global_search_label">
+                        Global Search
+                    </span>
+                    <div class="input-group input-group-sm">
+                        <label class="visually-hidden" for="navbar_global_search">Global search</label>
+                        <input type="search" class="form-control" id="navbar_global_search" name="q"
+                               placeholder="Zones, records, comments…"
+                               aria-labelledby="navbar_global_search_label"
+                               value="{% if active_page == 'admin_global_search' %}{{ query|default('', true) }}{% endif %}"
+                               autocomplete="off">
+                        <button type="submit" class="btn btn-outline-secondary" title="Run global search"
+                                aria-label="Run global search">
+                            <i class="fa-solid fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </form>
+                <a class="nav-link no-prompt d-lg-none" href="{{ url_for('admin.global_search') }}"
+                   aria-label="Global search" title="Global search">
+                    <i class="fa-solid fa-search" aria-hidden="true"></i>
+                </a>
+            </div>
+        {% else %}
+            <div class="pda-navbar-search-center" aria-hidden="true"></div>
+        {% endif %}
+        <ul class="navbar-nav pda-navbar-end">
+            <li class="nav-item dropdown">
+                <button class="nav-link no-prompt border-0 bg-transparent p-0" type="button"
+                        data-bs-toggle="dropdown" data-theme-toggle aria-expanded="false"
+                        aria-label="Select color mode" title="Select color mode">
+                    <i class="fa-solid fa-circle-half-stroke" data-theme-icon aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" type="button" data-theme-option="auto" aria-pressed="false">
+                        <i class="fa-solid fa-circle-half-stroke me-2" aria-hidden="true"></i>Auto
+                    </button></li>
+                    <li><button class="dropdown-item" type="button" data-theme-option="light" aria-pressed="false">
+                        <i class="fa-solid fa-sun me-2" aria-hidden="true"></i>Light
+                    </button></li>
+                    <li><button class="dropdown-item" type="button" data-theme-option="dark" aria-pressed="false">
+                        <i class="fa-solid fa-moon me-2" aria-hidden="true"></i>Dark
+                    </button></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link no-prompt" data-lte-toggle="fullscreen" href="#" role="button"
+                   aria-label="Toggle fullscreen">
+                    <i data-lte-icon="maximize" class="fa-solid fa-expand-arrows-alt" aria-hidden="true"></i>
+                    <i data-lte-icon="minimize" class="fa-solid fa-compress d-none" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% if current_user.id is defined %}
+                <li class="nav-item dropdown user-menu">
+                    <a href="#" class="nav-link dropdown-toggle no-prompt" data-bs-toggle="dropdown"
+                       aria-expanded="false" aria-label="Open user menu">
+                        <img src="{{ user_image_url }}" class="user-image rounded-circle shadow"
+                             alt="User Image">
+                        <span class="d-none d-xl-inline">
+                            {{ current_user.firstname }} {{ current_user.lastname }}
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+                        <li class="user-header text-bg-primary">
+                            <img src="{{ user_image_url }}" class="rounded-circle shadow" alt="User Image">
+                            <p>
+                                {{ current_user.firstname }} {{ current_user.lastname }}
+                                {% if current_user.role %}
+                                    <small>Role: {{ current_user.role.name }}</small>
+                                {% endif %}
+                            </p>
+                        </li>
+                        {% if current_user.email %}
+                            <li class="user-body">
+                                <div class="row">
+                                    <div class="col-12 text-center text-body-secondary text-break">
+                                        {{ current_user.email }}
+                                    </div>
+                                </div>
+                            </li>
+                        {% endif %}
+                        <li class="user-footer">
+                            <a href="{{ url_for('user.profile') }}"
+                               class="btn btn-outline-secondary">Profile</a>
+                            <a href="{{ url_for('index.logout') }}"
+                               class="btn btn-outline-danger float-end">Sign out</a>
+                        </li>
+                    </ul>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

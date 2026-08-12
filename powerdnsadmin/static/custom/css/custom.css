@@ -71,6 +71,60 @@ table td {
     padding: 0.375rem 0.75rem !important;
 }
 
+.pda-navbar-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.75rem;
+}
+
+.pda-navbar-start {
+    justify-self: start;
+}
+
+.pda-navbar-search-center {
+    justify-self: center;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.pda-navbar-end {
+    justify-self: end;
+    flex-wrap: nowrap;
+}
+
+.pda-navbar-search {
+    width: 100%;
+    min-width: 0;
+}
+
+.pda-navbar-search-label {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}
+
+.pda-navbar-search .form-control,
+.pda-navbar-search .btn {
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+}
+
+.pda-navbar-search .form-control::placeholder {
+    color: var(--bs-secondary-color);
+}
+
+.pda-navbar-search .btn {
+    padding: 0.25rem 0.5rem !important;
+}
+
+.pda-navbar-search .btn:hover,
+.pda-navbar-search .btn:focus {
+    color: var(--bs-body-color);
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+}
+
 .pda-unsaved-banner {
     z-index: 1025;
     display: grid;

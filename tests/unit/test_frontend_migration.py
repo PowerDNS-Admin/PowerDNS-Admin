@@ -32,27 +32,54 @@ def test_javascript_dependencies_are_bundled_before_their_extensions():
 
 def test_base_template_uses_adminlte_4_layout_and_treeview():
     template = Path('powerdnsadmin/templates/base.html').read_text()
+    navbar = Path('powerdnsadmin/templates/includes/navbar.html').read_text()
+    sidebar = Path('powerdnsadmin/templates/includes/sidebar.html').read_text()
+    modals = Path(
+        'powerdnsadmin/templates/includes/default_modals.html').read_text()
 
     for required_markup in (
         'class="app-wrapper"',
-        'class="app-header navbar',
-        'class="app-sidebar ',
         'class="app-main"',
         'class="app-content"',
         'class="app-footer"',
-        'data-lte-toggle="sidebar"',
-        'data-lte-toggle="treeview"',
-        'nav-item dropdown user-menu',
-        'user-header text-bg-primary',
-        'user-footer',
+        "{% include 'includes/navbar.html' %}",
+        "{% include 'includes/sidebar.html' %}",
+        "{% include 'includes/default_modals.html' %}",
         "{% include 'includes/page_header.html' %}",
         '{% block page_header_after %}',
     ):
         assert required_markup in template
 
-    assert 'data-widget=' not in template
+    for required_markup in (
+        'class="app-header navbar',
+        'data-lte-toggle="sidebar"',
+        'nav-item dropdown user-menu',
+        'user-header text-bg-primary',
+        'user-footer',
+        'pda-navbar-search',
+        'pda-navbar-search-center',
+        "url_for('admin.global_search')",
+    ):
+        assert required_markup in navbar
+
+    for required_markup in (
+        'class="app-sidebar ',
+        'data-lte-toggle="treeview"',
+        'fa-screwdriver-wrench',
+        "active_page.startswith('admin_setting')",
+        'admin_setting_basic',
+        'show_administration',
+    ):
+        assert required_markup in sidebar
+
+    assert 'active_page == \'admin_settings\'' not in sidebar
+    assert 'Global Search' not in sidebar
+    assert "url_for('admin.global_search')" not in sidebar
+
+    assert 'id="modal_session_warning"' in modals
+    assert 'data-widget=' not in template + navbar + sidebar
     assert 'block dashboard_stat' not in template
-    assert 'pda-user-panel' not in template
+    assert 'pda-user-panel' not in template + navbar + sidebar
 
 
 def test_theme_is_resolved_before_stylesheets_in_every_document_template():

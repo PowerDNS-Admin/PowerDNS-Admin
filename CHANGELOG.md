@@ -4,6 +4,14 @@
 
 ### Features
 
+-   The top navbar now hosts an AdminLTE-style user menu card (avatar, name,
+    role, profile, and sign out), replacing the previous sidebar user panel.
+-   When no LDAP photo or Gravatar is available, `/user/image` now serves a
+    generated initials avatar (stable color per username) and falls back to a
+    circle-user SVG instead of the old silhouette PNG.
+-   Global Search moves into a centered navbar control (labeled on wide
+    viewports, icon-only on smaller ones) that submits to the existing global
+    search page, so it stays available without a sidebar entry.
 -   The development Docker Compose environment defaults to an OpenLDAP identity
     source built from Alpine packages of the OpenLDAP Project software, with
     seeded bind accounts, role users, and groups mapped to the Administrator,
@@ -39,9 +47,19 @@
     unit tests on the oldest and newest supported Pythons (3.12 and 3.14), runs
     smoke once on Python 3.13, and can also target the suite through the Docker
     Python test Compose stack.
+-   Frontend migration tests now cover the split layout includes, navbar Global
+    Search control, settings child active-page markers, and avatar helper
+    behavior.
 
 ### Code Refactoring
 
+-   Authenticated chrome is split out of `base.html` into
+    `includes/navbar.html`, `includes/sidebar.html`, and
+    `includes/default_modals.html` while keeping the existing pageheader and
+    defaultmodals override blocks.
+-   The sidebar now highlights individual Settings children, shows the
+    Administration section only when Activity and/or admin/operator items apply,
+    and uses a distinct icon for Server Configuration versus Settings.
 -   OAuth/OIDC and SAML endpoints now use dedicated blueprints registered
     during application setup instead of sharing the main index route module.
     Common post-authentication session handling and federated-identity account
@@ -110,6 +128,10 @@
 
 ### Bug Fixes
 
+-   The navbar Global Search control now uses theme CSS variables so its label
+    and field remain readable in dark mode, and the header uses a responsive
+    grid so the centered search no longer overlaps the user menu when the
+    window narrows.
 -   OIDC logout now discovers the provider's `end_session_endpoint`, retains
     the configured logout URL as a fallback, identifies the provider session
     with the login ID token, and delegates redirect construction plus logout
