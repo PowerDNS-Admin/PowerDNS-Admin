@@ -59,8 +59,13 @@ def test_base_template_uses_adminlte_4_layout_and_treeview():
         'pda-navbar-search',
         'pda-navbar-search-center',
         "url_for('admin.global_search')",
+        'user_display_name',
+        'd-none d-md-block',
     ):
         assert required_markup in navbar
+
+    assert 'alt="User Image"' not in navbar
+    assert 'Toggle fullscreen' in navbar
 
     for required_markup in (
         'class="app-sidebar ',

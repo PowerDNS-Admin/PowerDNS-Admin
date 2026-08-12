@@ -6,6 +6,10 @@
 
 -   The top navbar now hosts an AdminLTE-style user menu card (avatar, name,
     role, profile, and sign out), replacing the previous sidebar user panel.
+    The menu uses a resolved display name (first and last name, falling back to
+    username) for the toggle label and image `alt` text, and the fullscreen
+    control is hidden below the `md` breakpoint so it does not crowd the right
+    cluster on small screens.
 -   When no LDAP photo or Gravatar is available, `/user/image` now serves a
     generated initials avatar (stable color per username) and falls back to a
     circle-user SVG instead of the old silhouette PNG.

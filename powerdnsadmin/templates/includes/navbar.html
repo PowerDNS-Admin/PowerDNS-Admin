@@ -57,7 +57,7 @@
                     </button></li>
                 </ul>
             </li>
-            <li class="nav-item">
+            <li class="nav-item d-none d-md-block">
                 <a class="nav-link no-prompt" data-lte-toggle="fullscreen" href="#" role="button"
                    aria-label="Toggle fullscreen">
                     <i data-lte-icon="maximize" class="fa-solid fa-expand-arrows-alt" aria-hidden="true"></i>
@@ -65,20 +65,23 @@
                 </a>
             </li>
             {% if current_user.id is defined %}
+                {% set user_display_name = ((current_user.firstname or '') ~ ' ' ~ (current_user.lastname or '')).strip() %}
+                {% if not user_display_name %}
+                    {% set user_display_name = current_user.username %}
+                {% endif %}
                 <li class="nav-item dropdown user-menu">
                     <a href="#" class="nav-link dropdown-toggle no-prompt" data-bs-toggle="dropdown"
-                       aria-expanded="false" aria-label="Open user menu">
+                       aria-expanded="false" aria-label="Open user menu for {{ user_display_name }}">
                         <img src="{{ user_image_url }}" class="user-image rounded-circle shadow"
-                             alt="User Image">
-                        <span class="d-none d-xl-inline">
-                            {{ current_user.firstname }} {{ current_user.lastname }}
-                        </span>
+                             alt="{{ user_display_name }}">
+                        <span class="d-none d-xl-inline">{{ user_display_name }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                         <li class="user-header text-bg-primary">
-                            <img src="{{ user_image_url }}" class="rounded-circle shadow" alt="User Image">
+                            <img src="{{ user_image_url }}" class="rounded-circle shadow"
+                                 alt="{{ user_display_name }}">
                             <p>
-                                {{ current_user.firstname }} {{ current_user.lastname }}
+                                {{ user_display_name }}
                                 {% if current_user.role %}
                                     <small>Role: {{ current_user.role.name }}</small>
                                 {% endif %}
