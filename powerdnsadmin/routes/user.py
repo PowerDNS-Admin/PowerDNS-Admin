@@ -7,6 +7,7 @@ from flask_login import current_user, login_required, login_manager
 
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
+from ..lib.avatar import avatar_initials, initials_avatar_svg
 from .index import password_policy_check
 
 
@@ -172,5 +173,15 @@ def image():
         current_app.logger.debug('Redirect user image request to gravatar')
         return redirect(url, 307)
 
-    # Fallback to the local default image
-    return current_app.send_static_file('img/user_image.png')
+    initials = avatar_initials(
+        firstname=current_user.firstname,
+        lastname=current_user.lastname,
+        username=current_user.username)
+    if initials:
+        current_app.logger.debug('Return generated initials avatar')
+        return return_image(
+            initials_avatar_svg(initials, seed=current_user.username).encode('utf-8'),
+            content_type='image/svg+xml')
+
+    # Fallback to the local default silhouette
+    return current_app.send_static_file('img/user_avatar.svg')

@@ -62,6 +62,44 @@
                             <i data-lte-icon="minimize" class="fa-solid fa-compress d-none" aria-hidden="true"></i>
                         </a>
                     </li>
+                    {% if current_user.id is defined %}
+                        <li class="nav-item dropdown user-menu">
+                            <a href="#" class="nav-link dropdown-toggle no-prompt" data-bs-toggle="dropdown"
+                               aria-expanded="false" aria-label="Open user menu">
+                                <img src="{{ user_image_url }}" class="user-image rounded-circle shadow"
+                                     alt="User Image">
+                                <span class="d-none d-md-inline">
+                                    {{ current_user.firstname }} {{ current_user.lastname }}
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+                                <li class="user-header text-bg-primary">
+                                    <img src="{{ user_image_url }}" class="rounded-circle shadow" alt="User Image">
+                                    <p>
+                                        {{ current_user.firstname }} {{ current_user.lastname }}
+                                        {% if current_user.role %}
+                                            <small>Role: {{ current_user.role.name }}</small>
+                                        {% endif %}
+                                    </p>
+                                </li>
+                                {% if current_user.email %}
+                                    <li class="user-body">
+                                        <div class="row">
+                                            <div class="col-12 text-center text-body-secondary text-break">
+                                                {{ current_user.email }}
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                                <li class="user-footer">
+                                    <a href="{{ url_for('user.profile') }}"
+                                       class="btn btn-outline-secondary">Profile</a>
+                                    <a href="{{ url_for('index.logout') }}"
+                                       class="btn btn-outline-danger float-end">Sign out</a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </nav>
@@ -83,19 +121,6 @@
         </div>
         <div class="sidebar-wrapper">
             {% if current_user.id is defined %}
-                <div class="pda-user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
-                    <div class="pda-user-image">
-                        <img src="{{ user_image_url }}" class="rounded-circle shadow-sm" alt="User Image">
-                    </div>
-                    <div class="pda-user-info">
-                        <p>{{ current_user.firstname }} {{ current_user.lastname }}</p>
-                        <span>
-                            <a href="{{ url_for('user.profile') }}"><i class="nav-icon fa-solid fa-user"></i><span class="pda-user-link-text"> Edit Profile</span></a>
-                            &nbsp;|&nbsp;
-                            <a href="{{ url_for('index.logout') }}"><i class="nav-icon fa-solid fa-sign-out-alt"></i><span class="pda-user-link-text"> Logout</span></a>
-                        </span>
-                    </div>
-                </div>
                 <nav class="mt-2" aria-label="Main navigation">
                 <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
                     data-accordion="false">

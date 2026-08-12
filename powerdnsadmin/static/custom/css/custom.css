@@ -52,59 +52,23 @@ table td {
     }
 }
 
-.pda-user-panel {
-    padding-inline: 0.5rem;
-    padding-block: 0.5rem;
-    border-bottom: 1px solid var(--bs-border-color-translucent);
-    width: 100%;
+.navbar-nav > .user-menu > .nav-link {
+    display: flex;
+    align-items: center;
 }
 
-.pda-user-image img {
-    width: 1.9rem;
-    height: 1.9rem;
+.navbar-nav > .user-menu .user-image {
+    float: none;
+    margin-top: 0;
     object-fit: cover;
 }
 
-.pda-user-info {
-    min-width: 0;
-    flex: 1 1 auto;
-    padding-inline-start: 0.5rem;
-    color: var(--bs-body-color);
+.navbar-nav > .user-menu > .dropdown-menu > li.user-header > img {
+    object-fit: cover;
 }
 
-.pda-user-info span {
-    display: inline-flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.15rem;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pda-user-info p {
-    margin: 0;
-}
-
-.pda-user-info a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.8em;
-    white-space: nowrap;
-    text-decoration: none;
-    color: inherit;
-}
-
-.pda-user-info a i,
-.pda-user-info a .pda-user-link-text {
-    text-decoration: none;
-}
-
-.pda-user-info a:hover .pda-user-link-text,
-.pda-user-info a:focus .pda-user-link-text {
-    text-decoration: underline;
+.navbar-nav > .user-menu .user-footer .btn {
+    padding: 0.375rem 0.75rem !important;
 }
 
 .pda-unsaved-banner {

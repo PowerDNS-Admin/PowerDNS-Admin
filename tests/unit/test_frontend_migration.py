@@ -42,6 +42,9 @@ def test_base_template_uses_adminlte_4_layout_and_treeview():
         'class="app-footer"',
         'data-lte-toggle="sidebar"',
         'data-lte-toggle="treeview"',
+        'nav-item dropdown user-menu',
+        'user-header text-bg-primary',
+        'user-footer',
         "{% include 'includes/page_header.html' %}",
         '{% block page_header_after %}',
     ):
@@ -49,6 +52,7 @@ def test_base_template_uses_adminlte_4_layout_and_treeview():
 
     assert 'data-widget=' not in template
     assert 'block dashboard_stat' not in template
+    assert 'pda-user-panel' not in template
 
 
 def test_theme_is_resolved_before_stylesheets_in_every_document_template():
