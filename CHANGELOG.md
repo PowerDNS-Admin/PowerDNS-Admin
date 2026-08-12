@@ -13,9 +13,13 @@
 -   When no LDAP photo or Gravatar is available, `/user/image` now serves a
     generated initials avatar (stable color per username) and falls back to a
     circle-user SVG instead of the old silhouette PNG.
--   Global Search moves into a centered navbar control (labeled on wide
-    viewports, icon-only on smaller ones) that submits to the existing global
-    search page, so it stays available without a sidebar entry.
+-   Global Search moves into a centered navbar control (placeholder plus
+    search icon) that submits to the existing global search page, so it stays
+    available without a sidebar entry. `/` or `Ctrl`/`Cmd+K` still focus the
+    field, a clear control overlays the input when a query is present without
+    changing the field width, and on smaller viewports the search icon expands
+    the field in the bar instead of navigating away (the icon still links to
+    Global Search without JavaScript).
 -   The development Docker Compose environment defaults to an OpenLDAP identity
     source built from Alpine packages of the OpenLDAP Project software, with
     seeded bind accounts, role users, and groups mapped to the Administrator,
@@ -52,8 +56,8 @@
     smoke once on Python 3.13, and can also target the suite through the Docker
     Python test Compose stack.
 -   Frontend migration tests now cover the split layout includes, navbar Global
-    Search control, settings child active-page markers, and avatar helper
-    behavior.
+    Search control (keyboard focus, clear button, and mobile expand), settings
+    child active-page markers, and avatar helper behavior.
 
 ### Code Refactoring
 
@@ -132,10 +136,12 @@
 
 ### Bug Fixes
 
--   The navbar Global Search control now uses theme CSS variables so its label
-    and field remain readable in dark mode, and the header uses a responsive
-    grid so the centered search no longer overlaps the user menu when the
-    window narrows.
+-   The navbar Global Search control now uses theme CSS variables so the field
+    remains readable in dark mode, and the header uses a responsive grid so the
+    centered search no longer overlaps the user menu when the window narrows.
+-   The sidebar brand and top navbar now share the same header height, and the
+    sidebar uses a 1px right border instead of a box shadow so the four chrome
+    corners meet on one pixel.
 -   HTTP and SAML error pages now use a standalone AdminLTE 4-style full-page
     layout (Bootstrap utilities, no app sidebar/chrome) instead of the legacy
     in-shell `.error-page` markup.

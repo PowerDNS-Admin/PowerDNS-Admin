@@ -66,6 +66,14 @@ def test_base_template_uses_adminlte_4_layout_and_treeview():
 
     assert 'alt="User Image"' not in navbar
     assert 'Toggle fullscreen' in navbar
+    assert 'data-pda-navbar-search' in navbar
+    assert 'data-pda-navbar-search-clear' in navbar
+    assert 'data-pda-navbar-search-toggle' in navbar
+    assert 'd-none d-lg-flex' not in navbar
+    assert 'aria-keyshortcuts="Control+K Meta+K /"' in navbar
+    assert 'pda-navbar-search-label' not in navbar
+    assert 'pda-navbar-search-shortcut' not in navbar
+    assert 'aria-label="Global search"' in navbar
 
     for required_markup in (
         'class="app-sidebar ',
@@ -85,6 +93,48 @@ def test_base_template_uses_adminlte_4_layout_and_treeview():
     assert 'data-widget=' not in template + navbar + sidebar
     assert 'block dashboard_stat' not in template
     assert 'pda-user-panel' not in template + navbar + sidebar
+
+
+def test_navbar_global_search_supports_keyboard_clear_and_mobile_expand():
+    navbar = Path('powerdnsadmin/templates/includes/navbar.html').read_text()
+    javascript = Path('powerdnsadmin/static/custom/js/custom.js').read_text()
+    stylesheet = Path('powerdnsadmin/static/custom/css/custom.css').read_text()
+
+    assert 'initializeNavbarSearch' in javascript
+    assert "document.addEventListener('DOMContentLoaded', initializeNavbarSearch)" in javascript
+    assert "event.key === '/'" in javascript
+    assert 'event.metaKey || event.ctrlKey' in javascript
+    assert "event.key === 'Escape'" in javascript
+    assert 'clearButton.hidden = !input.value' in javascript
+    assert 'is-search-open' in javascript
+    assert 'is-expanded' in javascript
+    assert 'isTypingTarget' in javascript
+
+    assert 'pda-navbar-search-clear' in navbar
+    assert 'pda-navbar-search-input-wrap' in navbar
+    assert 'pda-navbar-search-toggle' in navbar
+    assert 'pda-navbar-search-icon-close' in navbar
+    assert 'pda-navbar-search-shortcut' not in navbar
+    assert 'pda-navbar-search-label' not in navbar
+    assert "href=\"{{ url_for('admin.global_search') }}\"" in navbar
+
+    assert '.pda-navbar-search-center.is-expanded .pda-navbar-search' in stylesheet
+    assert '.pda-navbar-bar.is-search-open .pda-navbar-end' in stylesheet
+    assert '::-webkit-search-cancel-button' in stylesheet
+    assert 'pda-navbar-search-input-wrap' in stylesheet
+    assert 'grid-area: 1 / 1' in stylesheet
+    assert 'padding-right: 2rem' in stylesheet
+    assert 'field-sizing: fixed' in stylesheet
+
+
+def test_layout_chrome_aligns_sidebar_brand_with_header():
+    stylesheet = Path('powerdnsadmin/static/custom/css/custom.css').read_text()
+
+    assert '--pda-chrome-header-height: calc(3.5rem + 1px)' in stylesheet
+    assert '.app-header.navbar' in stylesheet
+    assert 'height: var(--pda-chrome-header-height)' in stylesheet
+    assert '.app-sidebar.shadow' in stylesheet
+    assert 'border-right: 1px solid var(--bs-border-color)' in stylesheet
 
 
 def test_error_pages_use_adminlte_4_standalone_layout():

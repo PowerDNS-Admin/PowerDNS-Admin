@@ -42,6 +42,33 @@ table td {
     }
 }
 
+/* AdminLTE sizes .sidebar-brand at 3.5rem (border-box, 1px border inside)
+   while .app-header is auto: 2.5rem nav-links + 0.5rem×2 padding + 1px
+   border = 3.5rem + 1px. The sidebar .shadow also paints to the right of
+   the brand row, so the four chrome corners miss by 1–2px. */
+:root {
+    --pda-chrome-header-height: calc(3.5rem + 1px);
+}
+
+.app-header.navbar {
+    --bs-navbar-padding-y: 0;
+    height: var(--pda-chrome-header-height);
+    min-height: var(--pda-chrome-header-height);
+}
+
+.app-header .pda-navbar-bar {
+    height: 100%;
+}
+
+.sidebar-brand {
+    height: var(--pda-chrome-header-height);
+}
+
+.app-sidebar.shadow {
+    box-shadow: none;
+    border-right: 1px solid var(--bs-border-color);
+}
+
 .pda-dual-list-options {
     min-height: 14rem;
 }
@@ -78,14 +105,24 @@ table td {
     column-gap: 0.75rem;
 }
 
+@media (min-width: 992px) {
+    .pda-navbar-bar {
+        grid-template-columns: minmax(0, 1fr) 28rem minmax(0, 1fr);
+    }
+}
+
 .pda-navbar-start {
     justify-self: start;
 }
 
 .pda-navbar-search-center {
-    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-self: stretch;
+    width: 100%;
     max-width: 100%;
     min-width: 0;
+    gap: 0.25rem;
 }
 
 .pda-navbar-end {
@@ -94,17 +131,43 @@ table td {
 }
 
 .pda-navbar-search {
+    display: flex;
+    align-items: center;
     width: 100%;
     min-width: 0;
 }
 
-.pda-navbar-search-label {
-    font-size: 0.75rem;
-    color: var(--bs-secondary-color);
+.pda-navbar-search .input-group {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    width: auto;
+    min-width: 0;
+}
+
+.pda-navbar-search .input-group > .pda-navbar-search-input-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+}
+
+.pda-navbar-search-input-wrap > .form-control,
+.pda-navbar-search-input-wrap > .pda-navbar-search-clear {
+    grid-area: 1 / 1;
+}
+
+.pda-navbar-search-input-wrap > .form-control {
+    min-width: 0;
+    width: 100%;
+    padding-right: 2rem;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    field-sizing: fixed;
 }
 
 .pda-navbar-search .form-control,
-.pda-navbar-search .btn {
+.pda-navbar-search .input-group > .btn {
     color: var(--bs-body-color);
     background-color: var(--bs-body-bg);
     border-color: var(--bs-border-color);
@@ -114,15 +177,81 @@ table td {
     color: var(--bs-secondary-color);
 }
 
-.pda-navbar-search .btn {
+.pda-navbar-search input[type="search"]::-webkit-search-decoration,
+.pda-navbar-search input[type="search"]::-webkit-search-cancel-button,
+.pda-navbar-search input[type="search"]::-webkit-search-results-button,
+.pda-navbar-search input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.pda-navbar-search .input-group > .btn {
     padding: 0.25rem 0.5rem !important;
 }
 
-.pda-navbar-search .btn:hover,
-.pda-navbar-search .btn:focus {
+.pda-navbar-search .input-group > .btn:hover,
+.pda-navbar-search .input-group > .btn:focus {
     color: var(--bs-body-color);
     background-color: var(--bs-tertiary-bg);
     border-color: var(--bs-border-color);
+}
+
+.pda-navbar-search-input-wrap > .pda-navbar-search-clear {
+    justify-self: end;
+    align-self: stretch;
+    z-index: 5;
+    width: 2rem;
+    padding: 0 !important;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--bs-secondary-color);
+}
+
+.pda-navbar-search-input-wrap > .pda-navbar-search-clear:hover,
+.pda-navbar-search-input-wrap > .pda-navbar-search-clear:focus {
+    color: var(--bs-body-color);
+    background: transparent;
+    box-shadow: none;
+}
+
+.pda-navbar-search-clear[hidden] {
+    display: none !important;
+}
+
+.pda-navbar-search-icon-close {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .pda-navbar-search {
+        display: none;
+    }
+
+    .pda-navbar-search-center.is-expanded {
+        justify-self: stretch;
+        width: 100%;
+    }
+
+    .pda-navbar-search-center.is-expanded .pda-navbar-search {
+        display: flex;
+    }
+
+    .pda-navbar-search-center.is-expanded .pda-navbar-search-icon-open {
+        display: none;
+    }
+
+    .pda-navbar-search-center.is-expanded .pda-navbar-search-icon-close {
+        display: inline-block;
+    }
+
+    .pda-navbar-bar.is-search-open {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .pda-navbar-bar.is-search-open .pda-navbar-end {
+        display: none;
+    }
 }
 
 .pda-unsaved-banner {

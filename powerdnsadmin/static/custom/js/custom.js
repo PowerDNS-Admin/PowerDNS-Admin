@@ -102,8 +102,169 @@ function initializeNativeValidation() {
     });
 }
 
+function initializeNavbarSearch() {
+    var root = document.querySelector('[data-pda-navbar-search]');
+    if (!root) {
+        return;
+    }
+
+    var input = document.getElementById('navbar_global_search');
+    var clearButton = root.querySelector('[data-pda-navbar-search-clear]');
+    var toggleButton = root.querySelector('[data-pda-navbar-search-toggle]');
+    var bar = root.closest('.pda-navbar-bar');
+    var desktopSearchQuery = window.matchMedia('(min-width: 992px)');
+
+    if (!input) {
+        return;
+    }
+
+    function isExpanded() {
+        return root.classList.contains('is-expanded');
+    }
+
+    function isDesktopSearch() {
+        return desktopSearchQuery.matches;
+    }
+
+    function isTypingTarget(element) {
+        if (!element || element === document.body || element === document.documentElement) {
+            return false;
+        }
+
+        var tag = (element.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+            return true;
+        }
+        if (element.isContentEditable) {
+            return true;
+        }
+
+        var role = element.getAttribute && element.getAttribute('role');
+        return role === 'textbox' || role === 'combobox' || role === 'searchbox';
+    }
+
+    function syncClearButton() {
+        if (!clearButton) {
+            return;
+        }
+        clearButton.hidden = !input.value;
+    }
+
+    function setToggleState(expanded) {
+        if (!toggleButton) {
+            return;
+        }
+
+        toggleButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        if (expanded) {
+            toggleButton.setAttribute('aria-label', 'Close global search');
+            toggleButton.setAttribute('title', 'Close global search');
+        } else {
+            toggleButton.setAttribute('aria-label', 'Global search');
+            toggleButton.setAttribute('title', 'Global search');
+        }
+    }
+
+    function expandSearch() {
+        root.classList.add('is-expanded');
+        if (bar) {
+            bar.classList.add('is-search-open');
+        }
+        setToggleState(true);
+    }
+
+    function collapseSearch() {
+        root.classList.remove('is-expanded');
+        if (bar) {
+            bar.classList.remove('is-search-open');
+        }
+        setToggleState(false);
+    }
+
+    function focusSearch() {
+        if (!isDesktopSearch()) {
+            expandSearch();
+        }
+        input.focus();
+        if (typeof input.select === 'function') {
+            input.select();
+        }
+    }
+
+    syncClearButton();
+    if (input.value && !isDesktopSearch()) {
+        expandSearch();
+    }
+
+    input.addEventListener('input', syncClearButton);
+
+    if (clearButton) {
+        clearButton.addEventListener('click', function () {
+            input.value = '';
+            syncClearButton();
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+            input.focus();
+        });
+    }
+
+    if (toggleButton) {
+        toggleButton.addEventListener('click', function (event) {
+            if (isDesktopSearch()) {
+                return;
+            }
+
+            event.preventDefault();
+            if (isExpanded()) {
+                collapseSearch();
+                input.blur();
+            } else {
+                focusSearch();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (document.querySelector('.modal.show')) {
+            return;
+        }
+
+        var isModK = (event.key === 'k' || event.key === 'K') &&
+            (event.metaKey || event.ctrlKey) && !event.altKey;
+        var isSlash = event.key === '/' && !event.metaKey && !event.ctrlKey &&
+            !event.altKey && !event.shiftKey;
+        var searchHasFocus = root.contains(document.activeElement);
+
+        if (isModK) {
+            event.preventDefault();
+            focusSearch();
+            return;
+        }
+
+        if (isSlash && !isTypingTarget(event.target)) {
+            event.preventDefault();
+            focusSearch();
+            return;
+        }
+
+        if (event.key === 'Escape' && searchHasFocus) {
+            if (!isDesktopSearch()) {
+                collapseSearch();
+            }
+            input.blur();
+        }
+    });
+
+    document.addEventListener('pointerdown', function (event) {
+        if (isDesktopSearch() || !isExpanded() || root.contains(event.target)) {
+            return;
+        }
+        collapseSearch();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', initializeNativeValidation);
 document.addEventListener('DOMContentLoaded', initializeDashboardDropdownPortals);
+document.addEventListener('DOMContentLoaded', initializeNavbarSearch);
 
 function getModalElement(target) {
     if (typeof target === 'string') {

@@ -9,30 +9,41 @@
             </li>
         </ul>
         {% if current_user.id is defined %}
-            <div class="pda-navbar-search-center">
+            {% set navbar_search_query = query|default('', true) if active_page == 'admin_global_search' else '' %}
+            <div class="pda-navbar-search-center" data-pda-navbar-search>
                 <form action="{{ url_for('admin.global_search') }}" method="get" role="search"
-                      class="pda-navbar-search d-none d-lg-flex align-items-center gap-2"
+                      class="pda-navbar-search"
                       aria-label="Global search">
-                    <span class="pda-navbar-search-label d-none d-xl-inline text-nowrap"
-                          id="navbar_global_search_label">
-                        Global Search
-                    </span>
                     <div class="input-group input-group-sm">
-                        <label class="visually-hidden" for="navbar_global_search">Global search</label>
-                        <input type="search" class="form-control" id="navbar_global_search" name="q"
-                               placeholder="Zones, records, comments…"
-                               aria-labelledby="navbar_global_search_label"
-                               value="{% if active_page == 'admin_global_search' %}{{ query|default('', true) }}{% endif %}"
-                               autocomplete="off">
+                        <div class="pda-navbar-search-input-wrap">
+                            <input type="search" class="form-control" id="navbar_global_search" name="q"
+                                   placeholder="Zones, records, comments…"
+                                   aria-label="Global search"
+                                   aria-keyshortcuts="Control+K Meta+K /"
+                                   title="Search zones, records, and comments. Press / or Ctrl+K to focus."
+                                   value="{{ navbar_search_query }}"
+                                   autocomplete="off" size="1">
+                            <button type="button" class="btn pda-navbar-search-clear"
+                                    data-pda-navbar-search-clear
+                                    title="Clear search" aria-label="Clear search"
+                                    {% if not navbar_search_query %}hidden{% endif %}>
+                                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <button type="submit" class="btn btn-outline-secondary" title="Run global search"
                                 aria-label="Run global search">
                             <i class="fa-solid fa-search" aria-hidden="true"></i>
                         </button>
                     </div>
                 </form>
-                <a class="nav-link no-prompt d-lg-none" href="{{ url_for('admin.global_search') }}"
+                <a class="nav-link no-prompt d-lg-none pda-navbar-search-toggle"
+                   href="{{ url_for('admin.global_search') }}"
+                   data-pda-navbar-search-toggle
+                   aria-expanded="false"
+                   aria-controls="navbar_global_search"
                    aria-label="Global search" title="Global search">
-                    <i class="fa-solid fa-search" aria-hidden="true"></i>
+                    <i class="fa-solid fa-search pda-navbar-search-icon-open" aria-hidden="true"></i>
+                    <i class="fa-solid fa-xmark pda-navbar-search-icon-close" aria-hidden="true"></i>
                 </a>
             </div>
         {% else %}
