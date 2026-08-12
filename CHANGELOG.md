@@ -132,6 +132,9 @@
     and field remain readable in dark mode, and the header uses a responsive
     grid so the centered search no longer overlaps the user menu when the
     window narrows.
+-   HTTP and SAML error pages now use a standalone AdminLTE 4-style full-page
+    layout (Bootstrap utilities, no app sidebar/chrome) instead of the legacy
+    in-shell `.error-page` markup.
 -   OIDC logout now discovers the provider's `end_session_endpoint`, retains
     the configured logout URL as a fallback, identifies the provider session
     with the login ID token, and delegates redirect construction plus logout

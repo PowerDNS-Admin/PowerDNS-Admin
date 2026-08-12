@@ -1,35 +1,27 @@
-{% extends "base.html" %}
-{% set page_title = 'SAML Authentication Error' %}
+{% extends "errors/base.html" %}
 {% block title %}<title>SAML Authentication Error - {{ SITE_NAME }}</title>{% endblock %}
 
+{% block error_body %}
+    <div class="display-1 fw-bold text-warning lh-1 mb-3">SAML</div>
+    <h1 class="h3 mb-3">Authentication failed.</h1>
+    <p class="text-secondary mb-3">
+        Something went wrong while processing the SAML response.
+    </p>
+    {% if errors %}
+        <ul class="list-unstyled text-start col-11 col-sm-10 mx-auto mb-4">
+            {% for error in errors %}
+                <li class="mb-1">
+                    <i class="fa-solid fa-circle-exclamation text-warning me-1" aria-hidden="true"></i>
+                    {{ error }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}
 
-{% block content %}
-    <section class="content">
-        <div class="error-page">
-            <div>
-                <h1 class="headline text-yellow" style="font-size:46px;">SAML Authentication Error</h1>
-            </div>
-            <br/>
-            <br/>
-            <div class="error-content">
-                <h3>
-                    <i class="fa-solid fa-exclamation-triangle text-yellow"></i>
-                    Oops! Something went wrong with your authentication.
-                </h3>
-                <br>
-                <p>
-                    Login failed.
-                    <br>
-                    Error(s) when processing SAML Response:
-                    <br>
-                <ul>
-                    {% for error in errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
-                </p>
-            </div>
-        </div>
-    </section>
+{% block error_actions %}
+    <a href="{{ url_for('index.login') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
+        Back to sign in
+    </a>
 {% endblock %}

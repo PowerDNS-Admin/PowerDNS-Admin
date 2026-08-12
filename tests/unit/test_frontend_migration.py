@@ -82,6 +82,19 @@ def test_base_template_uses_adminlte_4_layout_and_treeview():
     assert 'pda-user-panel' not in template + navbar + sidebar
 
 
+def test_error_pages_use_adminlte_4_standalone_layout():
+    error_base = Path('powerdnsadmin/templates/errors/base.html').read_text()
+    not_found = Path('powerdnsadmin/templates/errors/404.html').read_text()
+
+    assert 'extends "base.html"' not in not_found
+    assert 'extends "errors/base.html"' in not_found
+    assert 'min-vh-100' in error_base
+    assert 'bg-body-tertiary' in error_base
+    assert 'display-1 fw-bold' in not_found
+    assert 'pda-error-page' not in error_base + not_found
+    assert 'class="app-sidebar' not in error_base
+
+
 def test_theme_is_resolved_before_stylesheets_in_every_document_template():
     template_root = Path('powerdnsadmin/templates')
     theme_include = "{% include 'includes/theme_bootstrap.html' %}"
