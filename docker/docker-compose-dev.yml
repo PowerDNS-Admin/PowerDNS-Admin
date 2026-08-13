@@ -18,9 +18,13 @@ services:
       - dev/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
-      # Set this to postgresql://powerdns_admin:changeme@postgres/powerdns_admin
-      # when selecting the gpgsql backend below.
-      SQLALCHEMY_DATABASE_URI: ${SQLALCHEMY_DATABASE_URI:-mysql://powerdns_admin:changeme@mysql/powerdns_admin}
+      # Use postgres, postgres, and 5432 when selecting the gpgsql backend below.
+      DATABASE_DRIVER: ${DATABASE_DRIVER:-mysql}
+      DATABASE_USER: ${DATABASE_USER:-powerdns_admin}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_HOST: ${DATABASE_HOST:-mysql}
+      DATABASE_PORT: ${DATABASE_PORT:-3306}
+      DATABASE_NAME: ${DATABASE_NAME:-powerdns_admin}
       PDNS_HOST: pdns-server
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
       OIDC_OAUTH_ENABLED: "true"

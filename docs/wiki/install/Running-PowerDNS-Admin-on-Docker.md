@@ -6,11 +6,12 @@ For a list of supported environment variables that can be used to configure the 
 
 ## Run the Docker Hub image
 
-The standalone image uses SQLite by default. The following command stores its database in a named volume and exposes the web server on port 9191:
+PowerDNS-Admin requires an explicit database configuration. The following example selects SQLite, stores its database in a named volume, and exposes the web server on port 9191:
 
 ```bash
 docker run -d \
     -e SECRET_KEY='a-very-secret-key' \
+    -e SQLALCHEMY_DATABASE_URI='sqlite:////data/powerdns-admin.db' \
     -v pda-data:/data \
     -p 9191:80 \
     powerdnsadmin/pda-legacy:latest

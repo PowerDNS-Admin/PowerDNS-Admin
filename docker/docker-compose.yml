@@ -15,7 +15,11 @@ services:
         max-size: 50m
     environment:
       FLASK_CONF: /app/configs/docker_config.py
-      SQLALCHEMY_DATABASE_URI: mysql://pda:changeme@mysql/pda
+      DATABASE_DRIVER: mysql
+      DATABASE_USER: pda
+      DATABASE_PASSWORD: changeme
+      DATABASE_HOST: mysql
+      DATABASE_NAME: pda
     depends_on:
       mysql:
         condition: service_healthy

@@ -23,17 +23,3 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     'pool_pre_ping': True,
     'pool_recycle': 600,
 }
-# SQLA_DB_USER = 'pda'
-# SQLA_DB_PASSWORD = 'changeme'
-# SQLA_DB_HOST = '127.0.0.1'
-# SQLA_DB_NAME = 'pda'
-# SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
-#     urllib.parse.quote_plus(SQLA_DB_USER),
-#     urllib.parse.quote_plus(SQLA_DB_PASSWORD),
-#     SQLA_DB_HOST,
-#     SQLA_DB_NAME
-# )
-SQLALCHEMY_DATABASE_URI = os.getenv(
-    'SQLALCHEMY_DATABASE_URI',
-    'sqlite:////data/powerdns-admin.db'
-)

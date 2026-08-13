@@ -44,11 +44,6 @@ SESSION_TYPE = 'sqlalchemy'
 #    SQLA_DB_NAME
 #)
 
-SQLALCHEMY_DATABASE_URI = os.getenv(
-    'SQLALCHEMY_DATABASE_URI',
-    'mysql://powerdns_admin:changeme@mysql/powerdns_admin'
-)
-
 ### SMTP config
 # MAIL_SERVER = 'localhost'
 # MAIL_PORT = 25

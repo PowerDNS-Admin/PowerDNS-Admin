@@ -4,6 +4,14 @@
 
 ### Features
 
+-   Database connection settings can be supplied as separate `DATABASE_*`
+    environment variables (`DRIVER`, `USER`, `PASSWORD`, `HOST`, `PORT`,
+    `NAME`, `EXTRA_PARAMS`) instead of a single `SQLALCHEMY_DATABASE_URI`.
+    User and password are percent-encoded automatically so Docker Compose can
+    share an unencoded password with other services. `DATABASE_EXTRA_PARAMS`
+    appends driver-specific URI query flags such as `ssl=true`. An explicit
+    `SQLALCHEMY_DATABASE_URI` (or `_FILE`) still wins when set. The development
+    and production Docker Compose stacks use the split variables. (`#1899`)
 -   The top navbar now hosts an AdminLTE-style user menu card (avatar, name,
     role, profile, and sign out), replacing the previous sidebar user panel.
     The menu uses a resolved display name (first and last name, falling back to
@@ -101,6 +109,13 @@
 
 ### Breaking Changes
 
+-   PowerDNS-Admin no longer supplies an implicit SQLite database URI.
+    Deployments must now set `SQLALCHEMY_DATABASE_URI`, configure that value in
+    a Python configuration file, or provide the required split `DATABASE_*`
+    environment variables. Existing standalone Docker deployments that relied
+    on the default must explicitly set
+    `SQLALCHEMY_DATABASE_URI=sqlite:////data/powerdns-admin.db` to continue
+    using their database in the `/data` volume.
 -   OIDC provider logout now follows OpenID Connect RP-Initiated Logout 1.0:
     the request uses `post_logout_redirect_uri`, `id_token_hint`, and
     `client_id` instead of the legacy `redirect_uri` parameter. Deployments
