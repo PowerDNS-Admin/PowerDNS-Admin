@@ -389,6 +389,25 @@ def test_record_helper_is_shared_by_domain_and_template_editors():
     assert 'data-bs-dismiss="modal"' in modal
 
 
+def test_zone_template_editor_keeps_editable_columns_readable():
+    template_editor = Path(
+        'powerdnsadmin/templates/zone_template/edit.html').read_text()
+    javascript = Path(
+        'powerdnsadmin/static/custom/js/custom.js').read_text()
+    stylesheet = Path(
+        'powerdnsadmin/static/custom/css/custom.css').read_text()
+
+    assert 'records zone-template-records' in template_editor
+    for column_class in (
+            'record-name-column', 'record-type-column',
+            'record-status-column', 'record-ttl-column'):
+        assert f'className: "{column_class}"' in template_editor
+        assert f'table.zone-template-records .{column_class}' in stylesheet
+
+    for field_id in ('record_type', 'record_status', 'record_ttl'):
+        assert f'<select class="form-select" id="{field_id}"' in javascript
+
+
 def test_page_header_markup_is_owned_by_the_shared_component():
     template_root = Path('powerdnsadmin/templates')
     page_header = (template_root / 'includes/page_header.html').read_text()
