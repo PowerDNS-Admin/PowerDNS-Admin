@@ -56,10 +56,6 @@ def ping():
 
 @index_bp.route('/healthcheck', methods=['GET'])
 def healthcheck():
-    # Manage session timeout
-    session.permanent = False
-    current_app.permanent_session_lifetime = datetime.timedelta(minutes=0)
-    session.modified = True
     return make_response('ok')
 
 
