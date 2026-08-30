@@ -65,11 +65,13 @@ permission" over "Fixed a permission bug."
    - PowerDNS Authoritative Server: <powerdns_auth.supported_versions>
    ```
 4. Start a fresh empty `## [Unreleased]` section above it.
-5. Tag and publish the release. The `release-notes.yml` workflow reads the
-   tag, extracts that version's entry from `CHANGELOG.md`, and makes it the
-   GitHub Release body automatically. It removes the changelog's Supported
-   Versions subsection and regenerates that block from `app-support.json`.
-   Do not copy and paste the changelog entry into the GitHub Release draft.
+5. Tag and publish the release with an empty body. The `release-notes.yml`
+   workflow reads the tag, extracts that version's entry from `CHANGELOG.md`,
+   and makes it the GitHub Release body automatically. It asks GitHub to
+   generate release notes, retains only the New Contributors and Full
+   Changelog sections, removes the changelog's Supported Versions subsection,
+   and regenerates that block from `app-support.json`. Do not copy and paste
+   the changelog entry or click Generate release notes in the release draft.
 
 ## Highlights section
 
@@ -90,11 +92,11 @@ is for what changes for someone running the app.
 ## GitHub Release body
 
 The workflow builds the GitHub Release body from the CHANGELOG.md entry for
-the published tag (Highlights + categorized sections). Any other content
-already in the release draft is preserved after the changelog entry, so
-GitHub's auto-generated New Contributors and Full Changelog sections can be
-created before publishing without copying the changelog manually. The
-supported-versions block is regenerated last from `app-support.json`.
+the published tag (Highlights + categorized sections). It independently asks
+GitHub for generated notes and retains only the New Contributors and Full
+Changelog sections, avoiding a duplicate What's Changed list. Any other
+content already in the release draft is preserved after the changelog entry.
+The supported-versions block is regenerated last from `app-support.json`.
 
 The resulting body follows this structure:
 

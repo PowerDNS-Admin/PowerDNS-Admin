@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Validate CalVer release tag
@@ -30,11 +31,33 @@ jobs:
           python3 .github/scripts/validate-release-version.py
           "${{ github.event.release.tag_name }}"
 
+      - name: Find previous release tag
+        id: previous
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          previous_tag="$(git describe --tags --abbrev=0 "${RELEASE_TAG}^")"
+          echo "tag=${previous_tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate GitHub contributor notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIOUS_TAG: ${{ steps.previous.outputs.tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: >-
+          gh api
+          --method POST
+          "repos/${GITHUB_REPOSITORY}/releases/generate-notes"
+          --field "tag_name=${RELEASE_TAG}"
+          --field "previous_tag_name=${PREVIOUS_TAG}"
+          > generated-release-notes.json
+
       - name: Build idempotent release update
         run: |
           python3 .github/scripts/update-release-notes.py \
             --event "${GITHUB_EVENT_PATH}" \
             --changelog CHANGELOG.md \
+            --generated-notes generated-release-notes.json \
             --support app-support.json \
             --output release-update.json
 

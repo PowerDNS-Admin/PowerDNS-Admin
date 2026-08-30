@@ -47,6 +47,17 @@ The first CalVer release.
 - An older fix.
 """
 
+GENERATED_NOTES = """## What's Changed
+
+* Fix something by @regular in #100
+
+## New Contributors
+
+* @first-timer made their first contribution in #101
+
+**Full Changelog**: https://github.com/example/project/compare/v0.6.1...v2026.08.1
+"""
+
 
 class ReleaseNotesTests(unittest.TestCase):
 
@@ -64,23 +75,34 @@ class ReleaseNotesTests(unittest.TestCase):
             CHANGELOG,
             SUPPORT,
             '### New Contributors\n\n* Example contributor',
+            GENERATED_NOTES,
         )
 
         self.assertIn('# v2026.08.1', body)
         self.assertIn('The first CalVer release.', body)
         self.assertIn('### New Contributors', body)
+        self.assertIn('@first-timer made their first contribution', body)
+        self.assertIn('**Full Changelog**:', body)
+        self.assertNotIn("Fix something by @regular", body)
         self.assertIn('- Python: 3.12, 3.13', body)
         self.assertEqual(body.count('### Supported Versions'), 1)
 
     def test_rebuilding_generated_body_is_idempotent(self):
         first = release_notes.build_release_body(
-            'v2026.08.1', CHANGELOG, SUPPORT, 'Manual note'
+            'v2026.08.1', CHANGELOG, SUPPORT, 'Manual note', GENERATED_NOTES
         )
         second = release_notes.build_release_body(
-            'v2026.08.1', CHANGELOG, SUPPORT, first
+            'v2026.08.1', CHANGELOG, SUPPORT, first, GENERATED_NOTES
         )
 
         self.assertEqual(second, first)
+
+    def test_generated_footer_omits_whats_changed(self):
+        footer = release_notes.github_generated_footer(GENERATED_NOTES)
+
+        self.assertIn('## New Contributors', footer)
+        self.assertIn('**Full Changelog**:', footer)
+        self.assertNotIn("What's Changed", footer)
 
     def test_missing_version_fails(self):
         with self.assertRaisesRegex(ValueError, 'found 0'):

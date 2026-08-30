@@ -11,6 +11,8 @@ START_MARKER = '<!-- supported-versions:start -->'
 END_MARKER = '<!-- supported-versions:end -->'
 CHANGELOG_START_MARKER = '<!-- changelog-entry:start -->'
 CHANGELOG_END_MARKER = '<!-- changelog-entry:end -->'
+GITHUB_NOTES_START_MARKER = '<!-- github-generated-notes:start -->'
+GITHUB_NOTES_END_MARKER = '<!-- github-generated-notes:end -->'
 BLOCK_PATTERN = re.compile(
     rf'\n?{re.escape(START_MARKER)}.*?{re.escape(END_MARKER)}',
     re.DOTALL,
@@ -18,6 +20,11 @@ BLOCK_PATTERN = re.compile(
 CHANGELOG_BLOCK_PATTERN = re.compile(
     rf'\n?{re.escape(CHANGELOG_START_MARKER)}.*?'
     rf'{re.escape(CHANGELOG_END_MARKER)}',
+    re.DOTALL,
+)
+GITHUB_NOTES_BLOCK_PATTERN = re.compile(
+    rf'\n?{re.escape(GITHUB_NOTES_START_MARKER)}.*?'
+    rf'{re.escape(GITHUB_NOTES_END_MARKER)}',
     re.DOTALL,
 )
 CHANGELOG_HEADING_PATTERN = re.compile(
@@ -28,12 +35,22 @@ SUPPORTED_VERSIONS_SECTION_PATTERN = re.compile(
     r'^### Supported Versions\s*$.*?(?=^### |\Z)',
     re.MULTILINE | re.DOTALL,
 )
+NEW_CONTRIBUTORS_PATTERN = re.compile(
+    r'^#{2,3} New Contributors\s*$.*?'
+    r'(?=^\*\*Full Changelog\*\*:|^Full Changelog:|\Z)',
+    re.MULTILINE | re.DOTALL,
+)
+FULL_CHANGELOG_PATTERN = re.compile(
+    r'^(?:\*\*Full Changelog\*\*|Full Changelog):[^\n]*$',
+    re.MULTILINE,
+)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--event', required=True, type=Path)
     parser.add_argument('--changelog', required=True, type=Path)
+    parser.add_argument('--generated-notes', required=True, type=Path)
     parser.add_argument('--support', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     return parser.parse_args()
@@ -101,15 +118,38 @@ def generated_changelog_block(tag, entry):
     ))
 
 
-def build_release_body(tag, changelog, support, current_body=''):
+def github_generated_footer(generated_body):
+    sections = []
+    contributors = NEW_CONTRIBUTORS_PATTERN.search(generated_body)
+    if contributors:
+        sections.append(contributors.group(0).strip())
+    full_changelog = FULL_CHANGELOG_PATTERN.search(generated_body)
+    if full_changelog:
+        sections.append(full_changelog.group(0).strip())
+    if not sections:
+        return ''
+
+    return '\n'.join((
+        GITHUB_NOTES_START_MARKER,
+        '\n\n'.join(sections),
+        GITHUB_NOTES_END_MARKER,
+    ))
+
+
+def build_release_body(tag, changelog, support, current_body='',
+                       generated_body=''):
     version = release_version(tag)
     entry = changelog_entry(changelog, version)
     preserved_body = CHANGELOG_BLOCK_PATTERN.sub('', current_body)
     preserved_body = BLOCK_PATTERN.sub('', preserved_body).strip()
+    preserved_body = GITHUB_NOTES_BLOCK_PATTERN.sub('', preserved_body).strip()
 
     sections = [generated_changelog_block(tag, entry)]
     if preserved_body:
         sections.append(preserved_body)
+    generated_footer = github_generated_footer(generated_body)
+    if generated_footer:
+        sections.append(generated_footer)
     sections.append(supported_versions_block(support))
     return '\n\n'.join(sections) + '\n'
 
@@ -118,10 +158,13 @@ def main():
     args = parse_args()
     event = json.loads(args.event.read_text())
     changelog = args.changelog.read_text(encoding='utf-8')
+    generated_notes = json.loads(args.generated_notes.read_text())
     support = json.loads(args.support.read_text())
     current_body = event['release'].get('body') or ''
     tag = event['release']['tag_name']
-    updated_body = build_release_body(tag, changelog, support, current_body)
+    updated_body = build_release_body(
+        tag, changelog, support, current_body, generated_notes.get('body') or ''
+    )
     args.output.write_text(json.dumps({'body': updated_body}) + '\n')
 
 
