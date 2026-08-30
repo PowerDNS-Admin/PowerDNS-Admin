@@ -1,0 +1,63 @@
+<div class="modal fade" id="modal_error" tabindex="-1" aria-labelledby="modal_error_label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-bg-danger">
+                <h4 class="modal-title" id="modal_error_label">Error</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal -->
+<div class="modal fade" id="modal_success" tabindex="-1" aria-labelledby="modal_success_label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-bg-success">
+                <h4 class="modal-title" id="modal_success_label">Success</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" data-bs-backdrop="static" id="modal_session_warning" tabindex="-1"
+     aria-labelledby="modal_session_warning_label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-bg-warning">
+                <h4 class="modal-title" id="modal_session_warning_label">Session timeout warning</h4>
+            </div>
+            <div class="modal-body">
+                <p>Your session is about to expire. You will be automatically signed out in</p>
+                <h3><span id="modal-time"></span></h3>
+                <p>To continue your session, select <strong>Stay Signed In</strong>.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success button_stay_signed_in"
+                        data-bs-dismiss="modal">
+                    Stay Signed In
+                </button>
+                <button type="button" class="btn btn-danger button_sign_out" data-bs-dismiss="modal">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,22 +1,10 @@
-{% extends "base.html" %}
-{% set page_title = 'HTTP 500 Error' %}
+{% extends "errors/base.html" %}
 {% block title %}<title>HTTP 500 Error - {{ SITE_NAME }}</title>{% endblock %}
 
-
-{% block content %}
-    <section class="content">
-        <div class="error-page">
-            <h2 class="headline text-yellow">HTTP 500 Error</h2>
-            <div class="error-content">
-                <h3>
-                    <i class="fa-solid fa-exclamation-triangle text-yellow"></i>
-                    Oops! Something went wrong.
-                </h3>
-                <p>
-                    Try again later.
-                    You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
-                </p>
-            </div>
-        </div>
-    </section>
+{% block error_body %}
+    <div class="display-1 fw-bold text-danger lh-1 mb-3">500</div>
+    <h1 class="h3 mb-3">Oops! Something went wrong.</h1>
+    <p class="text-secondary mb-4">
+        We encountered an unexpected error. Try again later, or return home.
+    </p>
 {% endblock %}

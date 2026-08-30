@@ -26,7 +26,7 @@
                         </div>
                         <div class="card-body table-responsive">
                             <table id="tbl_records"
-                                   class="table table-bordered table-striped table-hover table-sm records">
+                                   class="table table-bordered table-striped table-hover table-sm records zone-template-records">
                                 <thead>
                                 <tr>
                                     <th>Name</th>
@@ -122,6 +122,22 @@
                 {
                     className: "length-break",
                     targets: [4, 5]
+                },
+                {
+                    className: "record-name-column",
+                    targets: [0]
+                },
+                {
+                    className: "record-type-column",
+                    targets: [1]
+                },
+                {
+                    className: "record-status-column",
+                    targets: [2]
+                },
+                {
+                    className: "record-ttl-column",
+                    targets: [3]
                 }
             ],
             "orderFixed": [[8, 'asc']]

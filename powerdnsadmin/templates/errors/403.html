@@ -1,25 +1,10 @@
-{% extends "base.html" %}
-{% set page_title = 'HTTP 403 Error' %}
-
+{% extends "errors/base.html" %}
 {% block title %}<title>HTTP 403 Error - {{ SITE_NAME }}</title>{% endblock %}
 
-
-{% block content %}
-    <section class="content">
-        <div class="error-page">
-            <h2 class="headline text-yellow">
-                HTTP 403 Error
-            </h2>
-            <div class="error-content">
-                <h3>
-                    <i class="fa-solid fa-exclamation-triangle text-yellow"></i>
-                    Oops! Access Denied
-                </h3>
-                <p>
-                    You don't have permission to access this page
-                    You may <a href="{{ url_for('dashboard.dashboard') }}">return to the dashboard</a>.
-                </p>
-            </div>
-        </div>
-    </section>
+{% block error_body %}
+    <div class="display-1 fw-bold text-warning lh-1 mb-3">403</div>
+    <h1 class="h3 mb-3">Oops! Access denied.</h1>
+    <p class="text-secondary mb-4">
+        You don't have permission to access this page. Meanwhile, you may return home.
+    </p>
 {% endblock %}

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import quote
 
 basedir = os.path.abspath(Path(os.path.dirname(__file__)).parent)
 
@@ -16,11 +17,10 @@ class AppSettings(object):
         'session_cookie_secure': False,
         'session_type': os.getenv('SESSION_TYPE', 'sqlalchemy'),
         'sqlalchemy_track_modifications': True,
-        'sqlalchemy_database_uri': os.getenv(
-            'SQLALCHEMY_DATABASE_URI',
-            'sqlite:////data/powerdns-admin.db'
-        ),
-        'sqlalchemy_engine_options': {},
+        'sqlalchemy_engine_options': {
+            'pool_pre_ping': True,
+            'pool_recycle': 600,
+        },
 
         # General Settings
         'captcha_enable': True,
@@ -134,7 +134,7 @@ class AppSettings(object):
         'github_oauth_token_url': 'https://github.com/login/oauth/access_token',
         'github_oauth_authorize_url': 'https://github.com/login/oauth/authorize',
 
-        # Azure OAuth Settings
+        # Microsoft Entra ID OAuth Settings
         'azure_oauth_enabled': False,
         'azure_oauth_key': '',
         'azure_oauth_secret': '',
@@ -196,6 +196,7 @@ class AppSettings(object):
         'saml_sp_contact_name': None,
         'saml_sp_contact_mail': None,
         'saml_sign_request': False,
+        'saml_lowercase_urlencoding': False,
         'saml_want_message_signed': True,
         'saml_logout': True,
         'saml_logout_url': None,
@@ -299,7 +300,6 @@ class AppSettings(object):
         'session_cookie_secure': bool,
         'session_type': str,
         'sqlalchemy_track_modifications': bool,
-        'sqlalchemy_database_uri': str,
         'sqlalchemy_engine_options': dict,
 
         # General Settings
@@ -416,7 +416,7 @@ class AppSettings(object):
         'github_oauth_token_url': str,
         'github_oauth_authorize_url': str,
 
-        # Azure OAuth Settings
+        # Microsoft Entra ID OAuth Settings
         'azure_oauth_enabled': bool,
         'azure_oauth_key': str,
         'azure_oauth_secret': str,
@@ -478,6 +478,7 @@ class AppSettings(object):
         'saml_sp_contact_name': str,
         'saml_sp_contact_mail': str,
         'saml_sign_request': bool,
+        'saml_lowercase_urlencoding': bool,
         'saml_want_message_signed': bool,
         'saml_logout': bool,
         'saml_logout_url': str,
@@ -543,7 +544,7 @@ class AppSettings(object):
             'github_oauth_token_url',
             'github_oauth_authorize_url',
 
-            # Azure OAuth Settings
+            # Microsoft Entra ID OAuth Settings
             'azure_oauth_enabled',
             'azure_oauth_key',
             'azure_oauth_secret',
@@ -621,26 +622,170 @@ class AppSettings(object):
 
         return value
 
+    DATABASE_URI_COMPONENTS = (
+        'DATABASE_DRIVER',
+        'DATABASE_USER',
+        'DATABASE_PASSWORD',
+        'DATABASE_HOST',
+        'DATABASE_PORT',
+        'DATABASE_NAME',
+    )
+
+    DATABASE_DRIVER_SCHEMES = {
+        'mysql': 'mysql',
+        'mariadb': 'mysql',
+        'postgres': 'postgresql',
+        'postgresql': 'postgresql',
+        'sqlite': 'sqlite',
+    }
+
+    @staticmethod
+    def read_environment_value(env_name, strip=False,
+                               strip_file_newline=False):
+        """Return an environment value, supporting Docker-style NAME_FILE secrets."""
+        file_name = env_name + '_FILE'
+        if file_name in os.environ:
+            if env_name in os.environ:
+                raise AttributeError(
+                    "Both {} and {} are set but are exclusive.".format(
+                        env_name, file_name))
+            with open(os.environ[file_name]) as secret_file:
+                current_value = secret_file.read()
+            if strip_file_newline:
+                current_value = current_value.rstrip('\r\n')
+        elif env_name in os.environ:
+            current_value = os.environ[env_name]
+        else:
+            return None
+
+        if strip and isinstance(current_value, str):
+            current_value = current_value.strip()
+            if current_value == '':
+                return None
+        return current_value
+
+    @staticmethod
+    def _format_database_host(host):
+        if ':' in host and not host.startswith('['):
+            return '[{}]'.format(host)
+        return host
+
+    @staticmethod
+    def _format_database_query(extra_params):
+        """Turn a DATABASE_EXTRA_PARAMS query string into a URI suffix."""
+        if extra_params is None:
+            return ''
+
+        extra_params = extra_params.strip()
+        if extra_params.startswith('?'):
+            extra_params = extra_params[1:].strip()
+        if not extra_params:
+            return ''
+        return '?' + extra_params
+
+    @staticmethod
+    def build_database_uri_from_environment():
+        """Build a SQLAlchemy URI from DATABASE_* environment variables.
+
+        User and password are percent-encoded so values with ``@``, ``#``,
+        commas, and other reserved characters do not need a second encoded
+        secret. Returns ``None`` when no DATABASE_* variables are set.
+        """
+        preserved_components = {
+            'DATABASE_USER',
+            'DATABASE_PASSWORD',
+            'DATABASE_NAME',
+        }
+        components = {}
+        for name in AppSettings.DATABASE_URI_COMPONENTS:
+            preserve_value = name in preserved_components
+            components[name] = AppSettings.read_environment_value(
+                name,
+                strip=not preserve_value,
+                strip_file_newline=preserve_value,
+            )
+        extra_params = AppSettings.read_environment_value(
+            'DATABASE_EXTRA_PARAMS', strip=True)
+        if (not any(value is not None for value in components.values())
+                and extra_params is None):
+            return None
+
+        driver = (components['DATABASE_DRIVER'] or 'mysql').lower()
+        if driver not in AppSettings.DATABASE_DRIVER_SCHEMES:
+            raise ValueError(
+                'Unsupported DATABASE_DRIVER {!r}. Expected one of: {}.'.format(
+                    components['DATABASE_DRIVER'],
+                    ', '.join(sorted(AppSettings.DATABASE_DRIVER_SCHEMES))))
+
+        scheme = AppSettings.DATABASE_DRIVER_SCHEMES[driver]
+        database_name = components['DATABASE_NAME']
+        if database_name is None or database_name == '':
+            raise ValueError(
+                'DATABASE_NAME is required when building SQLALCHEMY_DATABASE_URI '
+                'from DATABASE_* environment variables.')
+
+        query = AppSettings._format_database_query(extra_params)
+        if scheme == 'sqlite':
+            return 'sqlite:///{}{}'.format(database_name, query)
+
+        host = components['DATABASE_HOST']
+        if not host:
+            raise ValueError(
+                'DATABASE_HOST is required when building SQLALCHEMY_DATABASE_URI '
+                'from DATABASE_* environment variables.')
+
+        user = components['DATABASE_USER']
+        password = components['DATABASE_PASSWORD']
+        if password is not None and not user:
+            raise ValueError(
+                'DATABASE_USER is required when DATABASE_PASSWORD is set.')
+
+        authority = AppSettings._format_database_host(host)
+        port = components['DATABASE_PORT']
+        if port is not None:
+            try:
+                port_number = int(port)
+            except ValueError as exc:
+                raise ValueError('DATABASE_PORT must be an integer.') from exc
+            if not 1 <= port_number <= 65535:
+                raise ValueError(
+                    'DATABASE_PORT must be between 1 and 65535.')
+            authority = '{}:{}'.format(authority, port_number)
+
+        if user is not None and user != '':
+            userinfo = quote(user, safe='')
+            if password is not None:
+                userinfo = '{}:{}'.format(
+                    userinfo, quote(password, safe=''))
+            authority = '{}@{}'.format(userinfo, authority)
+
+        return '{}://{}/{}{}'.format(
+            scheme, authority, database_name, query)
+
     @staticmethod
     def load_environment(app):
         """ Load app settings from environment variables when defined. """
-        import os
-
         for var_name, default_value in AppSettings.defaults.items():
             env_name = var_name.upper()
-            current_value = None
-
-            if env_name + '_FILE' in os.environ:
-                if env_name in os.environ:
-                    raise AttributeError(
-                        "Both {} and {} are set but are exclusive.".format(
-                            env_name, env_name + '_FILE'))
-                with open(os.environ[env_name + '_FILE']) as f:
-                    current_value = f.read()
-                f.close()
-
-            elif env_name in os.environ:
-                current_value = os.environ[env_name]
+            current_value = AppSettings.read_environment_value(env_name)
 
             if current_value is not None:
                 app.config[env_name] = AppSettings.convert_type(var_name, current_value)
+
+        explicit_uri = AppSettings.read_environment_value(
+            'SQLALCHEMY_DATABASE_URI', strip_file_newline=True)
+        if explicit_uri is not None:
+            if not explicit_uri.strip():
+                raise ValueError('SQLALCHEMY_DATABASE_URI cannot be empty.')
+            app.config['SQLALCHEMY_DATABASE_URI'] = explicit_uri
+        else:
+            built_uri = AppSettings.build_database_uri_from_environment()
+            if built_uri is not None:
+                app.config['SQLALCHEMY_DATABASE_URI'] = built_uri
+
+        configured_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
+        if (configured_uri is None
+                or isinstance(configured_uri, str) and not configured_uri.strip()):
+            raise ValueError(
+                'Database configuration is required. Set '
+                'SQLALCHEMY_DATABASE_URI or the DATABASE_* variables.')

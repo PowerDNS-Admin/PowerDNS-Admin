@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% set active_page = "admin_settings" %}
+{% set active_page = "admin_setting_authentication" %}
 {% set page_title = 'Authentication Settings' %}
 {% set breadcrumb_items = [{'label': 'Settings'}] %}
 {% block title %}<title>Authentication Settings - {{ SITE_NAME }}</title>{% endblock %}
@@ -75,7 +75,7 @@
                                         <li class="nav-item">
                                             <button type="button" data-tab="azure"
                                                data-bind="click: onTabClick, class: 'nav-link' + (tab_active() == 'azure' ? ' active' : '')"
-                                               role="tab">Azure
+                                               role="tab">Microsoft Entra ID
                                                 OAuth</button>
                                         </li>
                                         <li class="nav-item">
@@ -996,7 +996,7 @@
                                                 <div class="col-12 col-sm-6 col-lg-4">
                                                     <div class="card">
                                                         <div class="card-header">
-                                                            <h3 class="card-title">Azure OAuth Settings</h3>
+                                                            <h3 class="card-title">Microsoft Entra ID OAuth Settings</h3>
                                                         </div>
                                                         <!-- /.card-header -->
                                                         <div class="card-body">
@@ -1005,14 +1005,13 @@
                                                                        name="azure_oauth_enabled" class="form-check-input"
                                                                        data-bind="checked: azure_oauth_enabled">
                                                                 <label class="form-check-label" for="azure_oauth_enabled">Enable Microsoft
-                                                                    Azure
-                                                                    OAuth</label>
+                                                                    Entra ID OAuth</label>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="azure_oauth_key">Client ID</label>
                                                                 <input type="text" class="form-control"
                                                                        name="azure_oauth_key" id="azure_oauth_key"
-                                                                       placeholder="Azure OAuth Client ID"
+                                                                       placeholder="Microsoft Entra ID OAuth Client ID"
                                                                        data-bind="enable: azure_oauth_enabled, value: azure_oauth_key, valueUpdate: 'afterkeydown'">
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
@@ -1022,7 +1021,7 @@
                                                                 <input type="text" class="form-control"
                                                                        name="azure_oauth_secret"
                                                                        id="azure_oauth_secret"
-                                                                       placeholder="Azure OAuth Client Secret"
+                                                                       placeholder="Microsoft Entra ID OAuth Client Secret"
                                                                        data-bind="enable: azure_oauth_enabled, value: azure_oauth_secret, valueUpdate: 'afterkeydown'">
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
@@ -1050,7 +1049,7 @@
                                                                        name="azure_oauth_auto_configure"
                                                                        class="form-check-input"
                                                                        data-bind="enable: azure_oauth_enabled, checked: azure_oauth_auto_configure">
-                                                                <label class="form-check-label" for="azure_oauth_auto_configure">Enable Azure
+                                                                <label class="form-check-label" for="azure_oauth_auto_configure">Enable Microsoft Entra ID
                                                                     OAuth Auto-Configuration</label>
                                                             </div>
                                                             <div class="form-group"
@@ -1134,7 +1133,7 @@
                                                                 </div>
                                                             </fieldset>
                                                             <fieldset>
-                                                                <legend>Azure Group Account Sync / Creation</legend>
+                                                                <legend>Microsoft Entra ID Group Account Sync / Creation</legend>
                                                                 <div class="form-group">
                                                                     <label
                                                                         for="azure_group_accounts_enabled">Status</label>
@@ -1159,7 +1158,7 @@
                                                                     </div>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="azure_group_accounts_name">Azure group
+                                                                    <label for="azure_group_accounts_name">Microsoft Entra ID group
                                                                         name
                                                                         claim</label>
                                                                     <input type="text" class="form-control"
@@ -1170,7 +1169,7 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="azure_group_accounts_name_re">Azure
+                                                                    <label for="azure_group_accounts_name_re">Microsoft Entra ID
                                                                         group name
                                                                         claim regex</label>
                                                                     <input type="text" class="form-control"
@@ -1181,7 +1180,7 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="azure_group_accounts_description">Azure
+                                                                    <label for="azure_group_accounts_description">Microsoft Entra ID
                                                                         group
                                                                         description claim</label>
                                                                     <input type="text" class="form-control"
@@ -1192,7 +1191,7 @@
                                                                     <span class="help-block with-errors"></span>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="azure_group_accounts_description_re">Azure
+                                                                    <label for="azure_group_accounts_description_re">Microsoft Entra ID
                                                                         group name
                                                                         description regex</label>
                                                                     <input type="text" class="form-control"
@@ -1220,15 +1219,14 @@
                                                             <p>Fill in all the fields in the left form.</p>
                                                             <p>You first need to define an Application Registration in
                                                                 your
-                                                                Azure
-                                                                Active Directory, with the appropriate HTTPS URL for
+                                                                Microsoft Entra ID, with the appropriate HTTPS URL for
                                                                 this
                                                                 endpoint,
                                                                 and with the appropriate rights, as explained in the
                                                                 documentation.</p>
                                                             <p>
                                                             <ul>
-                                                                <li>Under the Azure Active Directory, select App
+                                                                <li>In Microsoft Entra ID, select App
                                                                     Registrations, and
                                                                     create a new one. Give it any name you want, and the
                                                                     Redirect
@@ -1388,12 +1386,13 @@
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="oidc_oauth_logout_url">Logout
-                                                                    URL</label>
+                                                                    URL fallback</label>
                                                                 <input type="text" class="form-control"
                                                                        name="oidc_oauth_logout_url"
                                                                        id="oidc_oauth_logout_url"
-                                                                       placeholder="e.g. https://{YOUR_DOMAIN}/login/oauth/logout"
+                                                                       placeholder="Optional when discovery publishes end_session_endpoint"
                                                                        data-bind="enable: oidc_oauth_enabled, value: oidc_oauth_logout_url, valueUpdate: 'afterkeydown'">
+                                                                <small class="form-text text-muted">PowerDNS-Admin uses the discovered OIDC end_session_endpoint first. Configure this only for providers that do not publish one.</small>
                                                                 <span class="help-block with-errors"></span>
                                                             </div>
                                                             <fieldset>

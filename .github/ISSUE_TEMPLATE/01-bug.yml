@@ -26,7 +26,7 @@ body:
     attributes:
       label: PowerDNS-Admin version
       description: Provide the exact release, tag, or commit SHA.
-      placeholder: v0.5.1
+      placeholder: v2026.08.1
     validations:
       required: true
 

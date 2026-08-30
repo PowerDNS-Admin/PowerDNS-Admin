@@ -1,10 +1,10 @@
 ### OAuth Authentication
 
-#### Microsoft Azure
+#### Microsoft Entra ID
 
-To link to Azure for authentication, you need to register PowerDNS-Admin in Azure.  This requires your PowerDNS-Admin web interface to use an HTTPS URL.
+To use Microsoft Entra ID for authentication, register PowerDNS-Admin in the Microsoft Entra admin center. This requires your PowerDNS-Admin web interface to use an HTTPS URL.
 
-* Under the Azure Active Directory, select App Registrations, and create a new one.  Give it any name you want, and the Redirect URI shoule be type 'Web' and of the format https://powerdnsadmin/azure/authorized (replace the host name approriately).
+* In Microsoft Entra ID, select App registrations and create a new one. Give it any name you want. The redirect URI should use the Web platform and the format `https://powerdnsadmin/azure/authorized` (replace the host name appropriately). The legacy `/azure/` route remains unchanged for compatibility.
 * Select the newly-created registration
 * On the Overview page, the Application ID is your new Client ID to use with PowerDNS-Admin
 * On the Overview page, make a note of your Directory/Tenant ID - you need it for the API URLs later
@@ -26,7 +26,8 @@ To link to Keycloak for authentication, you need to create a new client in the K
 * Go to Clients > Create
 * Enter a Client ID (for example 'powerdns-admin') and click 'Save'
 * Scroll down to 'Access Type' and choose 'Confidential'.
-* Scroll down to 'Valid Redirect URIs' and enter 'https://<pdnsa address>/oidc/authorized'
+* Scroll down to 'Valid Redirect URIs' and enter `https://<PowerDNS-Admin address>/oidc/authorized`
+* Add `https://<PowerDNS-Admin address>/oidc/logged-out` to the client's valid post-logout redirect URIs
 * Click 'Save'
 * Go to the 'Credentials' tab and copy the Client Secret
 * Log in to PowerDNS-Admin and go to 'Settings > Authentication > OpenID Connect OAuth'
@@ -37,7 +38,7 @@ To link to Keycloak for authentication, you need to create a new client in the K
   * API URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/
   * Token URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/token
   * Authorize URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/auth
-  * Logout URL: https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/logout
+  * Logout URL fallback: leave empty when Keycloak discovery is enabled; otherwise use https://<keycloak url>/auth/realms/<realm>/protocol/openid-connect/logout
   * Leave the rest default
 * Save the changes and restart PowerDNS-Admin
 * Use the new 'Sign in using OpenID Connect' button to log in.
@@ -52,7 +53,19 @@ Enable OpenID Connect OAuth option.
 * Token URL, <oidc_provider_link>/token 
 * Authorize URL, <oidc_provider_link>/auth
 * Metadata URL, <oidc_provider_link>/.well-known/openid-configuration
-* Logout URL, <oidc_provider_link>/logout
+* Logout URL fallback, <oidc_provider_link>/logout. This is optional when the
+  provider metadata publishes `end_session_endpoint`.
+
+PowerDNS-Admin uses Authlib to implement
+[OpenID Connect RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
+At logout it prefers the discovered `end_session_endpoint`, sends the login ID
+token as `id_token_hint`, identifies the configured client with `client_id`,
+and sends `/oidc/logged-out` as `post_logout_redirect_uri`. Authlib generates,
+stores, validates, and consumes the logout `state` around that callback. If
+discovery does not publish a logout endpoint, the configured Logout URL
+fallback is used. If neither is available, only the local PowerDNS-Admin
+session is ended. Register the externally visible PowerDNS-Admin
+`/oidc/logged-out` URL as an allowed post-logout redirect URI at the provider.
 
 * Username, This will be the claim that will be used as the username. (Usually preferred_username)
 * First Name, This will be the firstname of the user. (Usually given_name)

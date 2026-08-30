@@ -709,7 +709,7 @@ def edit_account(account_name=None):
 
         if result['status']:
             account = Account.query.filter(
-                Account.name == account_name).first()
+                Account.name == fdata['accountname']).first()
             old_domains = Domain.query.filter(Domain.account_id == account.id).all()
 
             for domain_name in new_domain_list:
@@ -1079,7 +1079,7 @@ def history():
                 accounts += a.name + " "
             for u in all_user_names:
                 users += u.username + " "
-        return render_template('admin/history.html', all_domain_names=doms, all_account_names=accounts,
+        return render_template('admin/history/history.html', all_domain_names=doms, all_account_names=accounts,
                                all_usernames=users)
 
 
@@ -1169,7 +1169,7 @@ def history_table():  # ajax call data
                                                              and len(
             request.args.get('user_name_filter')) != 0 else None
         """
-            Auth methods: LOCAL, Github OAuth, Azure OAuth, SAML, OIDC OAuth, Google OAuth
+            Auth methods: LOCAL, GitHub OAuth, Microsoft Entra ID OAuth, SAML, OIDC OAuth, Google OAuth
         """
         auth_methods = []
         if (request.args.get('auth_local_only_checkbox') is None \

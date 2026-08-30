@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   update-release-notes:
-    name: Add supported versions
+    name: Build release notes
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,10 +25,16 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
           persist-credentials: false
 
+      - name: Validate CalVer release tag
+        run: >-
+          python3 .github/scripts/validate-release-version.py
+          "${{ github.event.release.tag_name }}"
+
       - name: Build idempotent release update
         run: |
-          python .github/scripts/update-release-notes.py \
+          python3 .github/scripts/update-release-notes.py \
             --event "${GITHUB_EVENT_PATH}" \
+            --changelog CHANGELOG.md \
             --support app-support.json \
             --output release-update.json
 

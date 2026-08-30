@@ -3,7 +3,7 @@ from base64 import b64encode
 
 import pytest
 from flask_migrate import upgrade as flask_migrate_upgrade
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, text
 
 from powerdnsadmin import create_app
 from powerdnsadmin.models.api_key import ApiKey
@@ -12,21 +12,44 @@ from powerdnsadmin.models.setting import Setting
 from powerdnsadmin.models.user import User
 
 
+def ensure_sqlalchemy_session_table(app):
+    """Flask-Session's sessions table is created at app init, not by Alembic.
+
+    Module teardown drops the full schema, so recreate the table afterward.
+    Tests that only hit the test client (no initial_data) still need it.
+    """
+    model = getattr(app.session_interface, 'sql_session_model', None)
+    if model is None:
+        return
+    with db.engine.begin() as connection:
+        model.__table__.create(bind=connection, checkfirst=True)
+
+
 def remove_test_database(app):
     """Remove the test schema so the next module starts from a clean database."""
     sqlite_database = None
 
     with app.app_context():
         db.session.remove()
+        backend = db.engine.url.get_backend_name()
 
-        if db.engine.url.get_backend_name() == 'sqlite':
+        if backend == 'sqlite':
             sqlite_database = db.engine.url.database
         else:
             # Reflect the live schema so Alembic's version table and tables
             # created by extensions are removed along with the ORM tables.
-            metadata = MetaData()
-            metadata.reflect(bind=db.engine)
-            metadata.drop_all(bind=db.engine)
+            # MySQL needs FOREIGN_KEY_CHECKS off for a reliable full drop.
+            with db.engine.begin() as connection:
+                if backend == 'mysql':
+                    connection.execute(text('SET FOREIGN_KEY_CHECKS=0'))
+                metadata = MetaData()
+                metadata.reflect(bind=connection)
+                metadata.drop_all(bind=connection)
+                if backend == 'mysql':
+                    connection.execute(text('SET FOREIGN_KEY_CHECKS=1'))
+
+            # Keep Flask-Session usable for modules that do not re-run migrations.
+            ensure_sqlalchemy_session_table(app)
 
         db.engine.dispose()
 
@@ -99,24 +122,30 @@ def basic_auth_user_headers(app):
 
 @pytest.fixture(scope="module")
 def initial_data(app):
+    # Always tear down, including when setup fails after committing rows.
+    # Otherwise the next module hits duplicate-key errors on MySQL.
+    try:
+        pdns_proto = os.environ['PDNS_PROTO']
+        pdns_host = os.environ['PDNS_HOST']
+        pdns_port = os.environ['PDNS_PORT']
+        pdns_api_url = '{0}://{1}:{2}'.format(pdns_proto, pdns_host, pdns_port)
 
-    pdns_proto = os.environ['PDNS_PROTO']
-    pdns_host = os.environ['PDNS_HOST']
-    pdns_port = os.environ['PDNS_PORT']
-    pdns_api_url = '{0}://{1}:{2}'.format(pdns_proto, pdns_host, pdns_port)
+        api_url_setting = Setting('pdns_api_url', pdns_api_url)
+        api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
+        allow_create_domain_setting = Setting('allow_user_create_domain', True)
+        allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
 
-    api_url_setting = Setting('pdns_api_url', pdns_api_url)
-    api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
-    allow_create_domain_setting = Setting('allow_user_create_domain', True)
-    allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
+        # Drop any leftover schema from a prior module or compose run.
+        remove_test_database(app)
 
-    with app.app_context():
-        try:
+        with app.app_context():
             flask_migrate_upgrade(directory="migrations")
+            ensure_sqlalchemy_session_table(app)
             db.session.add(api_url_setting)
             db.session.add(api_key_setting)
             db.session.add(allow_create_domain_setting)
             db.session.add(allow_remove_domain_setting)
+            db.session.commit()
 
             test_user = app.config.get('TEST_USER')
             test_user_pass = app.config.get('TEST_USER_PASSWORD')
@@ -139,33 +168,34 @@ def initial_data(app):
             if not ret['status']:
                 raise Exception("Error occurred creating user {0}".format(ret['msg']))
 
-        except Exception as e:
-            print("Unexpected ERROR: {0}".format(e))
-            raise e
-
-    yield
-    remove_test_database(app)
+        yield
+    finally:
+        remove_test_database(app)
 
 
 @pytest.fixture(scope="module")
 def initial_apikey_data(app):
-    pdns_proto = os.environ['PDNS_PROTO']
-    pdns_host = os.environ['PDNS_HOST']
-    pdns_port = os.environ['PDNS_PORT']
-    pdns_api_url = '{0}://{1}:{2}'.format(pdns_proto, pdns_host, pdns_port)
+    try:
+        pdns_proto = os.environ['PDNS_PROTO']
+        pdns_host = os.environ['PDNS_HOST']
+        pdns_port = os.environ['PDNS_PORT']
+        pdns_api_url = '{0}://{1}:{2}'.format(pdns_proto, pdns_host, pdns_port)
 
-    api_url_setting = Setting('pdns_api_url', pdns_api_url)
-    api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
-    allow_create_domain_setting = Setting('allow_user_create_domain', True)
-    allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
+        api_url_setting = Setting('pdns_api_url', pdns_api_url)
+        api_key_setting = Setting('pdns_api_key', os.environ['PDNS_API_KEY'])
+        allow_create_domain_setting = Setting('allow_user_create_domain', True)
+        allow_remove_domain_setting = Setting('allow_user_remove_domain', True)
 
-    with app.app_context():
-        try:
+        remove_test_database(app)
+
+        with app.app_context():
             flask_migrate_upgrade(directory="migrations")
+            ensure_sqlalchemy_session_table(app)
             db.session.add(api_url_setting)
             db.session.add(api_key_setting)
             db.session.add(allow_create_domain_setting)
             db.session.add(allow_remove_domain_setting)
+            db.session.commit()
 
             test_user_apikey = app.config.get('TEST_USER_APIKEY')
             test_admin_apikey = app.config.get('TEST_ADMIN_APIKEY')
@@ -188,12 +218,9 @@ def initial_apikey_data(app):
                                  role_name="User")
             user_apikey.create()
 
-        except Exception as e:
-            print("Unexpected ERROR: {0}".format(e))
-            raise e
-
-    yield
-    remove_test_database(app)
+        yield
+    finally:
+        remove_test_database(app)
 
 
 @pytest.fixture

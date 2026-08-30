@@ -32,3 +32,19 @@ def test_saved_record_settings_gain_new_types_without_losing_choices():
     assert record_types['CAA'] is True
     assert all(record_types[record_type] is False
                for record_type in NEW_RECORD_TYPES)
+
+
+def test_editable_record_types_are_sorted_and_deduplicated(monkeypatch):
+    setting = Setting()
+
+    def supported_record_types(zone_type):
+        if zone_type == Setting.ZONE_TYPE_FORWARD:
+            return ['TXT', 'A', 'MX']
+        return ['PTR', 'MX', 'AAAA']
+
+    monkeypatch.setattr(setting, 'get_supported_record_types',
+                        supported_record_types)
+
+    assert setting.get_records_allow_to_edit() == [
+        'A', 'AAAA', 'MX', 'PTR', 'TXT'
+    ]

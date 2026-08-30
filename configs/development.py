@@ -44,11 +44,6 @@ SESSION_TYPE = 'sqlalchemy'
 #    SQLA_DB_NAME
 #)
 
-SQLALCHEMY_DATABASE_URI = os.getenv(
-    'SQLALCHEMY_DATABASE_URI',
-    'mysql://powerdns_admin:changeme@mysql/powerdns_admin'
-)
-
 ### SMTP config
 # MAIL_SERVER = 'localhost'
 # MAIL_PORT = 25
@@ -178,6 +173,9 @@ SAML_ENABLED = False
 
 # Configures if SAML tokens should be encrypted.
 # SAML_SIGN_REQUEST = False
+# #Compatibility option for AD FS deployments that require lowercase percent
+# #escapes when PowerDNS-Admin signs HTTP-Redirect requests. Defaults to False.
+# SAML_LOWERCASE_URLENCODING = False
 # #Use SAML standard logout mechanism retreived from idp metadata
 # #If configured false don't care about SAML session on logout.
 # #Logout from PowerDNS-Admin only and keep SAML session authenticated.

@@ -8,7 +8,11 @@ All `docker compose` commands should be run from the project root.
 
 #### Development Environment
 
-The development environment is located in the `docker/dev/` directory. Its MySQL and PostgreSQL data is stored in named volumes, which means that recreating the application container will not affect the databases.
+The development environment is located in the `docker/dev/` directory. Its
+MySQL, PostgreSQL, and OpenLDAP data is stored in named volumes, so recreating
+the application container does not affect those services' data. Terraform state
+is stored in the development PostgreSQL `terraform` database; provider plugins
+are downloaded on each seeder run.
 
 To start the development environment, run the following command:
 
@@ -16,7 +20,93 @@ To start the development environment, run the following command:
 docker compose -f docker/docker-compose-dev.yml up --build
 ```
 
-PowerDNS-Admin will be available at <http://localhost:9191>, and PowerDNS will be available at <http://localhost:8081>.
+PowerDNS-Admin will be available at <http://localhost:9191>, PowerDNS will be
+available at <http://localhost:8081>, and the Keycloak administration console
+will be available at <http://localhost:8080>. Keycloak shares the development
+MySQL server but uses its own `keycloak` database and user. The one-shot
+`keycloak-db-init` service creates them for both new and existing development
+MySQL volumes.
+
+OpenLDAP is the default development identity source. The OpenLDAP image is
+built from Alpine packages of the OpenLDAP Project software (not a third-party
+LDAP appliance image). On first start it loads bind accounts, three
+role-specific users, and their groups from
+`docker/dev/openldap/bootstrap-*.ldif` into the `powerdns-admin-dev-openldap`
+volume. The `keycloak-federation-config` job then connects the `pda-dev` realm
+to that directory. PowerDNS-Admin uses the same directory directly for LDAP
+sign-in, as well as through Keycloak for OpenID Connect and SAML.
+
+Use these development-only credentials:
+
+- Keycloak administrator: `admin` / `changeme`
+- LDAP users: `pda-user`, `pda-operator`, or `pda-admin` / `DevPassword123!`
+- OpenLDAP directory administrator: `cn=admin,dc=example,dc=org` /
+  `DevPassword123!`
+- OIDC client: `powerdns-admin` / `dev-client-secret`
+
+Open <http://localhost:9191> and select **Sign in using OpenID Connect** or
+**SAML login** to authenticate through Keycloak, or select
+**LDAP Authentication** to authenticate against OpenLDAP directly. The SAML
+client emits `username`, `email`, `givenname`, `surname`, and `groups`
+attributes (with all group memberships in one multi-valued `groups`
+attribute). The SAML client does not use Keycloak's default `role_list`
+scope, which would otherwise emit repeated `Role` attributes that
+python3-saml rejects. The `pda-admins` and `pda-operators` groups map to the
+matching PowerDNS-Admin SAML roles; direct LDAP sign-in maps all three seeded
+groups to the User, Operator, or Administrator role.
+
+The SAML service-provider metadata is available at
+<http://localhost:9191/saml/metadata>, and Keycloak's identity-provider
+descriptor is available at
+<http://localhost:8080/realms/pda-dev/protocol/saml/descriptor>. The realm does
+not require TLS in development and both the OIDC and SAML clients accept HTTP
+and HTTPS callback URLs for local proxy testing. Do not reuse these credentials
+or this configuration in production.
+
+##### Optional FreeIPA identity backend
+
+To exercise a FreeIPA-backed directory instead of OpenLDAP, add the FreeIPA
+override file:
+
+```console
+docker compose -f docker/docker-compose-dev.yml \
+  -f docker/docker-compose-dev.freeipa.yml up --build
+```
+
+That path starts FreeIPA (`quay.io/freeipa/freeipa-server`), the localhost UI
+proxy, and the FreeIPA seed job, and retargets PowerDNS-Admin and Keycloak
+federation at the IPA tree. The FreeIPA administration interface is exposed
+only on the loopback interface at <https://localhost:8443/ipa/ui/>. The
+localhost FreeIPA endpoint uses a development certificate issued by Caddy's
+local CA. A browser may show a certificate warning until that CA is trusted.
+Its root certificate is available from the running container with:
+
+```console
+docker compose -f docker/docker-compose-dev.yml \
+  -f docker/docker-compose-dev.freeipa.yml cp \
+  freeipa-web:/data/caddy/pki/authorities/local/root.crt \
+  /tmp/powerdns-admin-freeipa-localhost-ca.crt
+```
+
+Trust that certificate using the operating system or browser certificate
+manager only on development machines. The proxy rewrites FreeIPA's canonical
+host headers and redirects; other containers continue to connect directly to
+`ipa.example.org`.
+
+FreeIPA credentials match the OpenLDAP seed (`pda-user`, `pda-operator`,
+`pda-admin` / `DevPassword123!`). The FreeIPA administrator is `admin` /
+`DevPassword123!`. FreeIPA stores its directory, Kerberos, and CA state in the
+`powerdns-admin-dev-freeipa` volume; it does not use a SQL database.
+
+FreeIPA's first start can take several minutes. It runs systemd and therefore
+uses the Docker engine's cgroup hierarchy. Its `/run` directory is volume-backed
+because Docker Desktop tmpfs mounts do not support the POSIX ACLs required by
+389 Directory Server.
+
+When switching between OpenLDAP and FreeIPA against an existing Keycloak
+volume, the federation job removes LDAP providers that do not match the
+active backend. A full `down --volumes` is still the cleanest reset if the
+Keycloak MySQL volume retains federated users from the previous directory.
 
 To stop the development environment, run:
 
@@ -24,6 +114,8 @@ To stop the development environment, run:
 docker compose -f docker/docker-compose-dev.yml down
 ```
 
+Include the FreeIPA override file in `down` as well if that is how the stack
+was started.
 ##### Testing In-Place Upgrades
 
 The `PDA_IMAGE` feature gate allows you to select a published PowerDNS-Admin image instead of the default `powerdns-admin-dev` image. This is useful for testing in-place upgrades by initializing the database with an older release, adding data, and then running the current version's migrations against that database.
@@ -31,7 +123,8 @@ The `PDA_IMAGE` feature gate allows you to select a published PowerDNS-Admin ima
 To start with a clean v0.4.2 baseline, first remove the existing development containers and volumes, pull the desired release, and then start the environment without building the local application image:
 
 ```console
-# WARNING: The --volumes flag will delete both development database volumes and their data.
+# WARNING: --volumes deletes all development data, including MySQL, PostgreSQL
+# (and with it Terraform state), and OpenLDAP (or FreeIPA if that override was used).
 docker compose -f docker/docker-compose-dev.yml down --volumes
 docker pull powerdnsadmin/pda-legacy:v0.4.2
 docker compose -f docker/docker-compose-dev.yml build terraform-pdns-seed
@@ -58,15 +151,29 @@ The recreated application will run `flask db upgrade` on startup. After it is he
 
 ##### Seeding a Large PowerDNS Dataset with Terraform
 
-The development environment includes a one-shot Terraform service for load and migration testing. By default, it manages 10,000 deterministic Native zones under `terraform.test.`, with 20 A-record RRsets in each zone. Its state is stored in the `powerdns-admin-dev-terraform` named volume, so subsequent runs will converge the existing dataset instead of creating duplicates.
+The development environment includes a one-shot Terraform service for load and
+migration testing. Dataset size, TTL, zone suffix, apply/destroy command, and
+parallelism defaults live only in `docker/docker-compose-dev.yml`: 500 Native
+zones under `terraform.test.` with 2 A-record RRsets each (1,500 Terraform
+resources). State is stored in the development PostgreSQL instance (`terraform`
+database, `pdns_seed` schema) via Terraform's `pg` backend, so subsequent runs
+converge the existing dataset instead of creating duplicates. This layout is for
+net-new deployments only; there is no migration from the former local file state
+volume.
 
-The standard development command will build and run the seeder automatically. The PowerDNS-Admin service will only start after the Terraform apply has succeeded:
+The standard development command will build and run the seeder automatically.
+The PowerDNS-Admin service will only start after the Terraform apply has
+succeeded:
 
 ```console
 docker compose -f docker/docker-compose-dev.yml up --build
 ```
 
-The service accepts the PowerDNS API v1 URL and API key via the `PDNS_SERVER_URL` and `PDNS_API_KEY` environment variables. The Compose defaults target the development PowerDNS service at `http://pdns-server:8081/api/v1` with the key `changeme`. You can also tune the dataset and apply concurrency:
+The service accepts the PowerDNS API v1 URL and API key via the
+`PDNS_SERVER_URL` and `PDNS_API_KEY` environment variables. The Compose
+defaults target the development PowerDNS service at
+`http://pdns-server:8081/api/v1` with the key `changeme`. To grow the
+dataset beyond the Compose defaults, override the `TF_*` variables:
 
 ```console
 PDNS_SERVER_URL=http://pdns-server:8081/api/v1 \
@@ -79,20 +186,28 @@ TF_PARALLELISM=50 \
   docker compose -f docker/docker-compose-dev.yml up --build
 ```
 
-The default plan manages 210,000 Terraform resources and can take a significant amount of time and memory to apply. For a quicker smoke test, use smaller values for `TF_ZONE_COUNT` and `TF_RECORDS_PER_ZONE`.
+That override manages 210,000 Terraform resources and can take a
+significant amount of time and memory to apply.
 
-Removing the Terraform state volume will not remove the zones from PowerDNS. To remove the generated data, you must run `terraform destroy` with the same configuration.
+Wiping the PostgreSQL volume (or deleting the `terraform` database) removes
+Terraform state but does not remove the zones from PowerDNS. To remove the
+generated data, run `terraform destroy` with the same configuration while state
+is still available:
 
 ```console
 TF_COMMAND=destroy \
-TF_ZONE_COUNT=10000 \
-TF_RECORDS_PER_ZONE=20 \
   docker compose -f docker/docker-compose-dev.yml run --rm terraform-pdns-seed
 ```
 
 #### Python Test Suite
 
-The Python-only test environment is located in `docker/test/`. It does not expose any host ports, does not have a persistent application volume, and starts PowerDNS with a clean schema.
+The Python-only test environment is located in `docker/test/`. It does not
+expose any host ports, does not have a persistent application volume, and
+starts PowerDNS with a clean schema. PowerDNS-Admin and its SQLAlchemy
+sessions use MySQL 8.4 (`powerdns_admin` / `changeme`), matching the
+development Compose credentials. GitHub Actions unit and smoke jobs start the
+same MySQL 8.4 service image and point `SQLALCHEMY_DATABASE_URI` at
+`127.0.0.1`.
 
 To run the Python test suite, use the following command:
 
@@ -101,6 +216,24 @@ docker compose -f docker/docker-compose-test.yml up \
   --build --force-recreate --abort-on-container-exit \
   --exit-code-from python-tests
 ```
+
+##### Smoke Tests
+
+`tests/smoke/` is a fast HTTP suite meant to catch "shipped broken"
+regressions before a tag: `/healthcheck`, `/ping`, `/api`, `/swagger`, login
+page rendering, local login/logout, anonymous redirects from protected pages,
+admin/operator page loads after reorganizations, dashboard v2 domains JSON
+without a PowerDNS refresh, and footer/`powerdnsadmin/VERSION` consistency.
+GitHub Actions runs unit tests on the oldest and newest supported Pythons
+(3.12 and 3.14) and runs smoke once on Python 3.13. To run only the smoke
+suite in Docker:
+
+```console
+docker compose -f docker/docker-compose-test.yml run --rm --build \
+  python-tests tests/smoke
+```
+
+Tear down with `docker compose -f docker/docker-compose-test.yml down` when finished.
 
 The test container measures branch coverage for the `powerdnsadmin` package.
 It prints a missing-lines summary to the terminal and writes these ignored

@@ -4,6 +4,8 @@ set -eu
 
 : "${PDNS_SERVER_URL:?PDNS_SERVER_URL must contain the PowerDNS API v1 URL}"
 : "${PDNS_API_KEY:?PDNS_API_KEY must contain the PowerDNS API key}"
+: "${TF_COMMAND:?TF_COMMAND must be set to apply or destroy}"
+: "${TF_PARALLELISM:?TF_PARALLELISM must be set to a positive integer}"
 
 PDNS_SERVER_URL="${PDNS_SERVER_URL%/}"
 export PDNS_SERVER_URL
@@ -24,7 +26,7 @@ done
 
 terraform init -input=false
 
-case "${TF_COMMAND:-apply}" in
+case "${TF_COMMAND}" in
   apply|destroy)
     ;;
   *)
@@ -33,7 +35,7 @@ case "${TF_COMMAND:-apply}" in
     ;;
 esac
 
-terraform "${TF_COMMAND:-apply}" \
+terraform "${TF_COMMAND}" \
   -auto-approve \
   -input=false \
-  -parallelism="${TF_PARALLELISM:-50}"
+  -parallelism="${TF_PARALLELISM}"

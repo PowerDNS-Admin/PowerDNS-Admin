@@ -1,0 +1,76 @@
+dn: dc=example,dc=org
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: Example Organization
+dc: example
+
+dn: ou=people,dc=example,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=keycloak-bind,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: Keycloak Bind
+sn: Bind
+givenName: Keycloak
+uid: keycloak-bind
+mail: keycloak-bind@example.org
+userPassword: DevPassword123!
+
+dn: uid=pda-bind,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: PowerDNS-Admin Bind
+sn: Bind
+givenName: PowerDNS-Admin
+uid: pda-bind
+mail: pda-bind@example.org
+userPassword: DevPassword123!
+
+dn: uid=pda-user,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: PowerDNS-Admin User
+sn: User
+givenName: PowerDNS-Admin
+uid: pda-user
+mail: pda-user@example.org
+userPassword: DevPassword123!
+
+dn: uid=pda-operator,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: PowerDNS-Admin Operator
+sn: Operator
+givenName: PowerDNS-Admin
+uid: pda-operator
+mail: pda-operator@example.org
+userPassword: DevPassword123!
+
+dn: uid=pda-admin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: PowerDNS-Admin Administrator
+sn: Administrator
+givenName: PowerDNS-Admin
+uid: pda-admin
+mail: pda-admin@example.org
+userPassword: DevPassword123!

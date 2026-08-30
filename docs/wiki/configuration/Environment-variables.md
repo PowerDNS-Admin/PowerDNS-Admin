@@ -6,7 +6,7 @@ The following environment variables are supported for configuring the applicatio
 |--------------------------------|--------------------------------------------------------------------------|------------|---------------|
 | BIND_ADDRESS                   |                                                                          |            |               |
 | CSRF_COOKIE_SECURE             |                                                                          |            |               |
-| SESSION_TYPE                   |                                                                          |            | `filesystem`  |
+| SESSION_TYPE                   |                                                                          |            | `sqlalchemy`  |
 | LDAP_ENABLED                   |                                                                          |            |               |
 | LOCAL_DB_ENABLED               |                                                                          |            |               |
 | LOG_LEVEL                      |                                                                          |            |               |
@@ -47,6 +47,7 @@ The following environment variables are supported for configuring the applicatio
 | SAML_KEY                       |                                                                          |            |               |
 | SAML_LOGOUT                    |                                                                          |            |               |
 | SAML_LOGOUT_URL                |                                                                          |            |               |
+| SAML_LOWERCASE_URLENCODING     | Use lowercase percent escapes for outbound SAML HTTP-Redirect requests for AD FS compatibility. | No | `false` |
 | SAML_METADATA_CACHE_LIFETIME   |                                                                          |            |               |
 | SAML_METADATA_URL              |                                                                          |            |               |
 | SAML_NAMEID_FORMAT             |                                                                          |            |               |
@@ -59,9 +60,18 @@ The following environment variables are supported for configuring the applicatio
 | SECRET_KEY                     | Flask secret key [^1]                                                    | Yes        | No default    |
 | SESSION_COOKIE_SECURE          |                                                                          |            |               |
 | SIGNUP_ENABLED                 |                                                                          |            |               |
-| SQLALCHEMY_DATABASE_URI        | SQL Alchemy URI to connect to the database.                              | No         | No default    |
+| SQLALCHEMY_DATABASE_URI        | SQL Alchemy URI to connect to the database. Takes precedence over `DATABASE_*`. | Yes, unless using `DATABASE_*` | No default |
+| DATABASE_DRIVER                | Driver used to build the URI: `mysql`, `mariadb`, `postgres`/`postgresql`, or `sqlite`. | No | `mysql` |
+| DATABASE_USER                  | Database username. Percent-encoded when the URI is built.                | No         |               |
+| DATABASE_PASSWORD              | Database password. Percent-encoded when the URI is built.                | No         |               |
+| DATABASE_HOST                  | Database hostname or IP. Required for MySQL/PostgreSQL when using `DATABASE_*`. | No | |
+| DATABASE_PORT                  | Database port. Omitted from the URI when unset.                          | No         |               |
+| DATABASE_NAME                  | Database name, or SQLite file path. Required when using `DATABASE_*`.    | No         |               |
+| DATABASE_EXTRA_PARAMS          | Extra URI query flags, e.g. `ssl=true&charset=utf8mb4`. Values must already be URL-encoded. | No | |
 | SQLALCHEMY_TRACK_MODIFICATIONS |                                                                          |            |               |
-| SQLALCHEMY_ENGINE_OPTIONS      | A JSON string, e.g., `'{"pool_recycle":600,"echo":1}"'` [^2]              |            |               |
+| SQLALCHEMY_ENGINE_OPTIONS      | A JSON string, e.g., `'{"pool_pre_ping":true,"pool_recycle":600}'` [^2]   |            | `{"pool_pre_ping": true, "pool_recycle": 600}` |
+
+PowerDNS-Admin has no default database URI. Set `SQLALCHEMY_DATABASE_URI`, configure it in a Python configuration file, or provide the required `DATABASE_*` variables. When `SQLALCHEMY_DATABASE_URI` is unset, PowerDNS-Admin builds it from the `DATABASE_*` variables. That avoids a second, URL-encoded copy of the password in Compose files when the value contains `@`, `#`, commas, or other reserved characters. Driver-specific URI flags (TLS, charset, timeouts, and similar) go in `DATABASE_EXTRA_PARAMS` as a query string. The query string is appended unchanged apart from an optional leading `?`, so its values must already be URL-encoded. Docker-style secrets work on these names too (for example `DATABASE_PASSWORD_FILE=/run/secrets/db_password`).
 
 [^1]: For information on how to generate a Flask secret key, please see the [Flask documentation](https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY).
 [^2]: For a list of all available engine options, please see the Flask-SQLAlchemy documentation.

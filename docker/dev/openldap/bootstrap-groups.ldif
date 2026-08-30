@@ -1,0 +1,20 @@
+dn: cn=pda-users,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: pda-users
+description: PowerDNS-Admin users
+member: uid=pda-user,ou=people,dc=example,dc=org
+
+dn: cn=pda-operators,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: pda-operators
+description: PowerDNS-Admin operators
+member: uid=pda-operator,ou=people,dc=example,dc=org
+
+dn: cn=pda-admins,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: pda-admins
+description: PowerDNS-Admin administrators
+member: uid=pda-admin,ou=people,dc=example,dc=org

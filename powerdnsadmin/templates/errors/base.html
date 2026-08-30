@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {% include 'includes/theme_bootstrap.html' %}
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    {% block title %}<title>Error - {{ SITE_NAME }}</title>{% endblock %}
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% assets "css_login" -%}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {%- endassets %}
+    {% if SETTING.get('custom_css') %}
+        <link rel="stylesheet" href="/static/custom/{{ SETTING.get('custom_css') }}">
+    {% endif %}
+</head>
+<body class="bg-body-tertiary">
+{% set home_endpoint = 'dashboard.dashboard' if current_user.is_authenticated else 'index.login' %}
+{% set home_label = 'Back to dashboard' if current_user.is_authenticated else 'Back to sign in' %}
+<main class="d-flex align-items-center min-vh-100 py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6 text-center">
+                {% block error_body %}{% endblock %}
+                {% block error_actions %}
+                    <a href="{{ url_for(home_endpoint) }}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
+                        {{ home_label }}
+                    </a>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

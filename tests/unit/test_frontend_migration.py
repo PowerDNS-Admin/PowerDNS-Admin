@@ -1,33 +1,7 @@
 import json
-from io import StringIO
 from pathlib import Path
 
-from powerdnsadmin.assets import (ModernBrowserCssFilter, css_login, css_main,
-                                  js_main)
-
-
-def test_css_bundles_normalize_vendor_css_for_supported_browsers():
-    source = (
-        '@charset "UTF-8";'
-        'body{-webkit-text-size-adjust:100%;color:black}'
-        '.column-gap-lg-4{-moz-column-gap:1.5rem!important;'
-        'column-gap:1.5rem!important}'
-        'button::-moz-focus-inner{padding:0}'
-        '.form-range::-moz-focus-outer{border:0}'
-        '.form-range::-webkit-slider-thumb:active{background:red}'
-        '@media (prefers-contrast:high){.btn{outline:1px solid}}'
-    )
-    output = StringIO()
-
-    ModernBrowserCssFilter().output(StringIO(source), output)
-
-    assert output.getvalue() == (
-        'body{color:black}'
-        '.column-gap-lg-4{column-gap:1.5rem!important}'
-        '@media (prefers-contrast:more){.btn{outline:1px solid}}'
-    )
-    assert isinstance(css_login.filters[0], ModernBrowserCssFilter)
-    assert isinstance(css_main.filters[0], ModernBrowserCssFilter)
+from powerdnsadmin.assets import css_main, js_main
 
 
 def test_main_bundle_uses_native_monospace_fonts():
@@ -58,23 +32,122 @@ def test_javascript_dependencies_are_bundled_before_their_extensions():
 
 def test_base_template_uses_adminlte_4_layout_and_treeview():
     template = Path('powerdnsadmin/templates/base.html').read_text()
+    navbar = Path('powerdnsadmin/templates/includes/navbar.html').read_text()
+    sidebar = Path('powerdnsadmin/templates/includes/sidebar.html').read_text()
+    modals = Path(
+        'powerdnsadmin/templates/includes/default_modals.html').read_text()
 
     for required_markup in (
         'class="app-wrapper"',
-        'class="app-header navbar',
-        'class="app-sidebar ',
         'class="app-main"',
         'class="app-content"',
         'class="app-footer"',
-        'data-lte-toggle="sidebar"',
-        'data-lte-toggle="treeview"',
+        "{% include 'includes/navbar.html' %}",
+        "{% include 'includes/sidebar.html' %}",
+        "{% include 'includes/default_modals.html' %}",
         "{% include 'includes/page_header.html' %}",
         '{% block page_header_after %}',
     ):
         assert required_markup in template
 
-    assert 'data-widget=' not in template
+    for required_markup in (
+        'class="app-header navbar',
+        'data-lte-toggle="sidebar"',
+        'nav-item dropdown user-menu',
+        'user-header text-bg-primary',
+        'user-footer',
+        'pda-navbar-search',
+        'pda-navbar-search-center',
+        "url_for('admin.global_search')",
+        'user_display_name',
+        'd-none d-md-block',
+    ):
+        assert required_markup in navbar
+
+    assert 'alt="User Image"' not in navbar
+    assert 'Toggle fullscreen' in navbar
+    assert 'data-pda-navbar-search' in navbar
+    assert 'data-pda-navbar-search-clear' in navbar
+    assert 'data-pda-navbar-search-toggle' in navbar
+    assert 'd-none d-lg-flex' not in navbar
+    assert 'aria-keyshortcuts="Control+K Meta+K /"' in navbar
+    assert 'pda-navbar-search-label' not in navbar
+    assert 'pda-navbar-search-shortcut' not in navbar
+    assert 'aria-label="Global search"' in navbar
+
+    for required_markup in (
+        'class="app-sidebar ',
+        'data-lte-toggle="treeview"',
+        'fa-screwdriver-wrench',
+        "active_page.startswith('admin_setting')",
+        'admin_setting_basic',
+        'show_administration',
+    ):
+        assert required_markup in sidebar
+
+    assert 'active_page == \'admin_settings\'' not in sidebar
+    assert 'Global Search' not in sidebar
+    assert "url_for('admin.global_search')" not in sidebar
+
+    assert 'id="modal_session_warning"' in modals
+    assert 'data-widget=' not in template + navbar + sidebar
     assert 'block dashboard_stat' not in template
+    assert 'pda-user-panel' not in template + navbar + sidebar
+
+
+def test_navbar_global_search_supports_keyboard_clear_and_mobile_expand():
+    navbar = Path('powerdnsadmin/templates/includes/navbar.html').read_text()
+    javascript = Path('powerdnsadmin/static/custom/js/custom.js').read_text()
+    stylesheet = Path('powerdnsadmin/static/custom/css/custom.css').read_text()
+
+    assert 'initializeNavbarSearch' in javascript
+    assert "document.addEventListener('DOMContentLoaded', initializeNavbarSearch)" in javascript
+    assert "event.key === '/'" in javascript
+    assert 'event.metaKey || event.ctrlKey' in javascript
+    assert "event.key === 'Escape'" in javascript
+    assert 'clearButton.hidden = !input.value' in javascript
+    assert 'is-search-open' in javascript
+    assert 'is-expanded' in javascript
+    assert 'isTypingTarget' in javascript
+
+    assert 'pda-navbar-search-clear' in navbar
+    assert 'pda-navbar-search-input-wrap' in navbar
+    assert 'pda-navbar-search-toggle' in navbar
+    assert 'pda-navbar-search-icon-close' in navbar
+    assert 'pda-navbar-search-shortcut' not in navbar
+    assert 'pda-navbar-search-label' not in navbar
+    assert "href=\"{{ url_for('admin.global_search') }}\"" in navbar
+
+    assert '.pda-navbar-search-center.is-expanded .pda-navbar-search' in stylesheet
+    assert '.pda-navbar-bar.is-search-open .pda-navbar-end' in stylesheet
+    assert '::-webkit-search-cancel-button' in stylesheet
+    assert 'pda-navbar-search-input-wrap' in stylesheet
+    assert 'grid-area: 1 / 1' in stylesheet
+    assert 'padding-right: 2rem' in stylesheet
+    assert 'field-sizing: fixed' in stylesheet
+
+
+def test_layout_chrome_aligns_sidebar_brand_with_header():
+    stylesheet = Path('powerdnsadmin/static/custom/css/custom.css').read_text()
+
+    assert '--pda-chrome-header-height: calc(3.5rem + 1px)' in stylesheet
+    assert '.app-header.navbar' in stylesheet
+    assert 'height: var(--pda-chrome-header-height)' in stylesheet
+    assert '.app-sidebar.shadow' in stylesheet
+    assert 'border-right: 1px solid var(--bs-border-color)' in stylesheet
+
+
+def test_error_pages_use_adminlte_4_standalone_layout():
+    error_base = Path('powerdnsadmin/templates/errors/base.html').read_text()
+    not_found = Path('powerdnsadmin/templates/errors/404.html').read_text()
+
+    assert 'extends "base.html"' not in not_found
+    assert 'extends "errors/base.html"' in not_found
+    assert 'min-vh-100' in error_base
+    assert 'bg-body-tertiary' in error_base
+    assert 'display-1 fw-bold' in not_found
+    assert 'pda-error-page' not in error_base + not_found
+    assert 'class="app-sidebar' not in error_base
 
 
 def test_theme_is_resolved_before_stylesheets_in_every_document_template():
@@ -314,6 +387,25 @@ def test_record_helper_is_shared_by_domain_and_template_editors():
     assert 'id="modal_custom_record"' in modal
     assert 'data-record-helper-save' in modal
     assert 'data-bs-dismiss="modal"' in modal
+
+
+def test_zone_template_editor_keeps_editable_columns_readable():
+    template_editor = Path(
+        'powerdnsadmin/templates/zone_template/edit.html').read_text()
+    javascript = Path(
+        'powerdnsadmin/static/custom/js/custom.js').read_text()
+    stylesheet = Path(
+        'powerdnsadmin/static/custom/css/custom.css').read_text()
+
+    assert 'records zone-template-records' in template_editor
+    for column_class in (
+            'record-name-column', 'record-type-column',
+            'record-status-column', 'record-ttl-column'):
+        assert f'className: "{column_class}"' in template_editor
+        assert f'table.zone-template-records .{column_class}' in stylesheet
+
+    for field_id in ('record_type', 'record_status', 'record_ttl'):
+        assert f'<select class="form-select" id="{field_id}"' in javascript
 
 
 def test_page_header_markup_is_owned_by_the_shared_component():

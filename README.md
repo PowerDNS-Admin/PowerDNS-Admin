@@ -4,7 +4,7 @@ A web interface for PowerDNS with advanced features.
 
 ### Development status
 
-[![Tests](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml)
+[![Python tests](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/tests.yml)
 [![CodeQL](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/codeql-analysis.yml)
 [![Docker Image](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml/badge.svg?branch=dev)](https://github.com/PowerDNS-Admin/PowerDNS-Admin/actions/workflows/build-and-publish.yml)
 
@@ -19,7 +19,7 @@ A web interface for PowerDNS with advanced features.
     -   Local users
     -   SAML
     -   LDAP (OpenLDAP / Active Directory)
-    -   OAuth (Google / GitHub / Azure / OpenID)
+    -   OAuth (Google / GitHub / Microsoft Entra ID / OpenID)
 -   Two-factor authentication (TOTP)
 -   PDNS service configuration and statistics monitoring
 -   DynDNS 2 protocol support
@@ -52,12 +52,13 @@ This option is ideal for getting started quickly. To run the latest stable relea
 ```
 $ docker run -d \
     -e SECRET_KEY='a-very-secret-key' \
+    -e SQLALCHEMY_DATABASE_URI='sqlite:////data/powerdns-admin.db' \
     -v pda-data:/data \
     -p 9191:80 \
     powerdnsadmin/pda-legacy:latest
 ```
 
-This command creates a volume named `pda-data` to persist the application's SQLite database.
+This example explicitly selects SQLite and creates a volume named `pda-data` to persist its database. PowerDNS-Admin does not select a database by default.
 
 **Note on image name:** While the image is named `pda-legacy`, it is the current and actively maintained version. The name is a historical artifact.
 
@@ -69,7 +70,7 @@ This option is recommended if you need to customize the configuration.
 
     The included Compose configuration starts MySQL and connects PowerDNS-Admin to it automatically. Before deploying, replace the example database passwords in `docker/docker-compose.yml`. You can find a list of other environment variables in the [`AppSettings.defaults`](powerdnsadmin/lib/settings.py) file.
 
-    To use Docker-style secrets, you can append `_FILE` to an environment variable with a path to a file containing the secret (e.g., `SQLALCHEMY_DATABASE_URI_FILE=/run/secrets/db_uri`).
+    Database settings can be passed as a single `SQLALCHEMY_DATABASE_URI` or as separate `DATABASE_DRIVER`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, and `DATABASE_EXTRA_PARAMS` variables. Split variables are percent-encoded automatically, so a password with `@` or `#` does not need a second encoded copy. `DATABASE_EXTRA_PARAMS` carries driver-specific URI flags such as `ssl=true`. To use Docker-style secrets, append `_FILE` to an environment variable with a path to a file containing the secret (e.g., `DATABASE_PASSWORD_FILE=/run/secrets/db_password`).
 
     Ensure you set the `SECRET_KEY` environment variable to a long, random string. For more information, please see the [Flask configuration documentation](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY).
 

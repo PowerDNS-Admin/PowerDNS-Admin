@@ -22,6 +22,14 @@ def create_app(config=None):
         format=
         "[%(asctime)s] [%(filename)s:%(lineno)d] %(levelname)s - %(message)s")
 
+    # Verbose SQLAlchemy pool logging only in debug mode. The development
+    # Compose scenario runs `flask run --debug` (sets FLASK_DEBUG); operators
+    # can also raise PDNS_ADMIN_LOG_LEVEL=DEBUG without Flask debug.
+    flask_debug = os.environ.get('FLASK_DEBUG', '').lower() in (
+        '1', 'true', 'yes', 'on')
+    if log_level == logging.DEBUG or flask_debug:
+        logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
+
     # If we use Docker + Gunicorn, adjust the
     # log handler
     if "GUNICORN_LOGLEVEL" in os.environ:
@@ -52,6 +60,9 @@ def create_app(config=None):
 
     # Load any settings defined with environment variables
     AppSettings.load_environment(app)
+
+    # Single source of truth for Docker and bare-metal deployments.
+    app.config['APP_VERSION'] = utils.read_app_version(app.root_path)
 
     # HSTS
     if app.config.get('HSTS_ENABLED'):
@@ -105,5 +116,9 @@ def create_app(config=None):
     def inject_setting():
         setting = Setting()
         return dict(SETTING=setting)
+
+    @app.context_processor
+    def inject_app_version():
+        return dict(APP_VERSION=app.config['APP_VERSION'])
 
     return app

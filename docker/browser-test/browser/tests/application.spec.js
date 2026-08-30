@@ -231,6 +231,58 @@ test('authenticated pages render without browser or layout failures', async ({ p
   expect(failures, failures.join('\n')).toEqual([]);
 });
 
+test('zone template record fields remain readable while editing', async ({ page }, testInfo) => {
+  const templateName = `layout-${testInfo.project.name}`;
+
+  await page.goto('/admin/templates', { waitUntil: 'networkidle' });
+  const existingTemplate = page.getByRole('link', {
+    name: templateName,
+    exact: true,
+  });
+
+  if (!(await existingTemplate.count())) {
+    await page.goto('/admin/template/create', { waitUntil: 'networkidle' });
+    await page.locator('#name').fill(templateName);
+    await page.locator('#description').fill('Browser layout regression test');
+    await Promise.all([
+      page.waitForURL(/\/admin\/templates(?:\/list)?$/),
+      page.getByRole('button', { name: 'Save Template' }).click(),
+    ]);
+  }
+
+  await page.goto(`/admin/template/${templateName}/edit`, {
+    waitUntil: 'networkidle',
+  });
+  await page.getByRole('button', { name: 'Add Record' }).click();
+
+  const editRow = page.locator('#tbl_records tbody tr:has(#record_type)');
+  await expect(editRow).toHaveCount(1);
+  await editRow.locator('#record_status').selectOption('true');
+
+  const recordTypes = await editRow.locator('#record_type option').allTextContents();
+  expect(recordTypes).toEqual([...recordTypes].sort());
+
+  const widths = await editRow.evaluate((row) => Object.fromEntries(
+    ['name', 'type', 'status', 'ttl'].map((column) => [
+      column,
+      row.querySelector(`.record-${column}-column`).getBoundingClientRect().width,
+    ]),
+  ));
+  expect(widths.name).toBeGreaterThanOrEqual(159);
+  expect(widths.type).toBeGreaterThanOrEqual(127);
+  expect(widths.status).toBeGreaterThanOrEqual(127);
+  expect(widths.ttl).toBeGreaterThanOrEqual(159);
+
+  for (const fieldId of ['record_type', 'record_status', 'record_ttl']) {
+    await expect(editRow.locator(`#${fieldId}`)).toHaveClass(/form-select/);
+  }
+
+  const pageOverflow = await page.evaluate(() => (
+    document.documentElement.scrollWidth - document.documentElement.clientWidth
+  ));
+  expect(pageOverflow).toBeLessThanOrEqual(1);
+});
+
 test('theme toggle switches between auto, light, and dark modes', async ({ page }) => {
   await page.goto('/dashboard/', { waitUntil: 'networkidle' });
   await page.evaluate(() => window.localStorage.removeItem('lte-theme'));
@@ -275,7 +327,7 @@ test('creates and submits project-specific core DNS records', async ({ page, req
     {
       name: `${projectName}-TXT`,
       type: 'TXT',
-      value: `PowerDNS Admin browser test for ${projectName}`,
+      value: `PowerDNS-Admin browser test for ${projectName}`,
     },
     {
       name: `${projectName}-CNAME`,

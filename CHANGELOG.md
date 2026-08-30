@@ -2,6 +2,218 @@
 
 ## [Unreleased]
 
+## [2026.08.1] - 2026-08-30
+
+### Breaking Changes
+
+-   Release identifiers now use Calendar Versioning in the form
+    `YYYY.0M.RELEASE`, beginning with `2026.08.1`, instead of Semantic
+    Versioning. Git tags retain the `v` prefix, while the application version
+    and changelog omit it. Automation or deployment constraints that assume
+    `MAJOR.MINOR.PATCH` must be updated for the new scheme.
+-   PowerDNS-Admin no longer supplies an implicit SQLite database URI.
+    Deployments must now set `SQLALCHEMY_DATABASE_URI`, configure that value in
+    a Python configuration file, or provide the required split `DATABASE_*`
+    environment variables. Existing standalone Docker deployments that relied
+    on the default must explicitly set
+    `SQLALCHEMY_DATABASE_URI=sqlite:////data/powerdns-admin.db` to continue
+    using their database in the `/data` volume.
+-   OIDC provider logout now follows OpenID Connect RP-Initiated Logout 1.0:
+    the request uses `post_logout_redirect_uri`, `id_token_hint`, and
+    `client_id` instead of the legacy `redirect_uri` parameter. Deployments
+    must register the externally visible PowerDNS-Admin `/oidc/logged-out` URL
+    as an allowed post-logout redirect URI. Providers that only accept
+    proprietary or legacy logout parameters may require a provider-specific
+    endpoint or integration.
+-   SAML HTTP-Redirect URL encoding no longer defaults to lowercase percent
+    escapes. The previous unconditional AD FS compatibility behavior could
+    alter the query string used to validate responses from providers such as
+    Keycloak, causing otherwise valid signed logout responses to be rejected.
+    Deployments whose identity provider requires lowercase percent escapes for
+    signed outbound login or logout requests must now explicitly set
+    `SAML_LOWERCASE_URLENCODING=true`. Adding this setting allows those AD FS
+    deployments to retain their required request encoding without changing
+    exact-query signature validation or the provider-neutral default for other
+    SAML identity providers.
+-   The release version file moved from the repository root `VERSION` to
+    `powerdnsadmin/VERSION`. Application startup reads that package path via
+    `app.root_path` and fails if the file is missing or empty. Docker images,
+    packaging scripts, CI, and bare-metal installs that still expect or inject
+    a root-level `VERSION` must ship or generate `powerdnsadmin/VERSION`
+    instead. The footer renders that value as `APP_VERSION` at runtime.
+-   `SQLALCHEMY_ENGINE_OPTIONS` now defaults to `pool_pre_ping=True` and
+    `pool_recycle=600` in both `default_config` and `AppSettings`.
+    Deployments that relied on the previous empty/unset engine options
+    (unbounded connection reuse, or a custom `SQLALCHEMY_ENGINE_OPTIONS`
+    that assumed no built-in pool settings) will see different pooling
+    behavior: connections are pinged on checkout and recycled after 600
+    seconds. Override `SQLALCHEMY_ENGINE_OPTIONS` explicitly if you need
+    different values; setting the variable replaces the entire options
+    dict rather than merging with these defaults.
+
+### Features
+
+-   Database connection settings can be supplied as separate `DATABASE_*`
+    environment variables (`DRIVER`, `USER`, `PASSWORD`, `HOST`, `PORT`,
+    `NAME`, `EXTRA_PARAMS`) instead of a single `SQLALCHEMY_DATABASE_URI`.
+    User and password are percent-encoded automatically so Docker Compose can
+    share an unencoded password with other services. `DATABASE_EXTRA_PARAMS`
+    appends driver-specific URI query flags such as `ssl=true`. An explicit
+    `SQLALCHEMY_DATABASE_URI` (or `_FILE`) still wins when set. The development
+    and production Docker Compose stacks use the split variables. (`#1899`)
+-   The top navbar now hosts an AdminLTE-style user menu card (avatar, name,
+    role, profile, and sign out), replacing the previous sidebar user panel.
+    The menu uses a resolved display name (first and last name, falling back to
+    username) for the toggle label and image `alt` text, and the fullscreen
+    control is hidden below the `md` breakpoint so it does not crowd the right
+    cluster on small screens.
+-   When no LDAP photo or Gravatar is available, `/user/image` now serves a
+    generated initials avatar (stable color per username) and falls back to a
+    circle-user SVG instead of the old silhouette PNG.
+-   Global Search moves into a centered navbar control (placeholder plus
+    search icon) that submits to the existing global search page, so it stays
+    available without a sidebar entry. `/` or `Ctrl`/`Cmd+K` still focus the
+    field, a clear control overlays the input when a query is present without
+    changing the field width, and on smaller viewports the search icon expands
+    the field in the bar instead of navigating away (the icon still links to
+    Global Search without JavaScript).
+-   The development Docker Compose environment defaults to an OpenLDAP identity
+    source built from Alpine packages of the OpenLDAP Project software, with
+    seeded bind accounts, role users, and groups mapped to the Administrator,
+    Operator, and User roles. FreeIPA remains available through
+    `docker/docker-compose-dev.freeipa.yml`.
+-   The development PowerDNS-Admin authenticates those users directly over LDAP,
+    while Keycloak 26.7 federates the same directory for OpenID Connect and
+    SAML, including attribute and group-to-role mappings.
+-   The development stack now uses a persistent MySQL 8.4 database for
+    PowerDNS-Admin (schema created and seeded automatically). Keycloak shares
+    that server on an isolated schema and accepts both HTTP and HTTPS callbacks
+    for local proxy testing.
+-   The development Docker environment now sets `PDNS_API_URL` so
+    PowerDNS-Admin is preconfigured for the composed PowerDNS API and no longer
+    prompts for the API URL on first login.
+-   The development Terraform PowerDNS seeder now stores state in the staged
+    PostgreSQL service (`pg` backend, `terraform` database) instead of a local
+    state file or named volume. Provider plugins are downloaded on each seeder
+    run. This is for net-new deployments only; existing local-state volumes are
+    not migrated.
+
+### Testing
+
+-   Unit, smoke, and Compose Python tests now use MySQL 8.4 for the application
+    database and SQLAlchemy sessions (same credentials as the development
+    stack). The SQLite test-config default is removed; CI unit/smoke jobs start
+    a MySQL 8.4 service container.
+-   Added a fast HTTP smoke suite under `tests/smoke/` covering healthcheck,
+    `/ping`, `/api`, `/swagger`, login page rendering, local login/logout,
+    anonymous redirects away from protected pages, admin/operator page loads
+    after the template reorganization, dashboard v2 domains JSON without a
+    PowerDNS refresh, and footer/`powerdnsadmin/VERSION` consistency. CI runs
+    unit tests on the oldest and newest supported Pythons (3.12 and 3.14), runs
+    smoke once on Python 3.13, and can also target the suite through the Docker
+    Python test Compose stack.
+-   Frontend migration tests now cover the split layout includes, navbar Global
+    Search control (keyboard focus, clear button, and mobile expand), settings
+    child active-page markers, and avatar helper behavior.
+
+### Code Refactoring
+
+-   Authenticated chrome is split out of `base.html` into
+    `includes/navbar.html`, `includes/sidebar.html`, and
+    `includes/default_modals.html` while keeping the existing pageheader and
+    defaultmodals override blocks.
+-   The sidebar now highlights individual Settings children, shows the
+    Administration section only when Activity and/or admin/operator items apply,
+    and uses a distinct icon for Server Configuration versus Settings.
+-   OAuth/OIDC and SAML endpoints now use dedicated blueprints registered
+    during application setup instead of sharing the main index route module.
+    Common post-authentication session handling and federated-identity account
+    and role provisioning have been extracted into shared modules, with audit
+    history identifying whether provisioning originated from OIDC or SAML.
+
+### Documentation
+
+-   The development guide documents the default OpenLDAP identity backend, the
+    optional FreeIPA override, seeded credentials and roles, Keycloak
+    administration, SAML metadata endpoints, and the LDAP, OpenID Connect, and
+    SAML sign-in flows.
+-   The testing guide now documents how to run the smoke suite through Docker
+    Compose.
+-   Microsoft identity settings, login text, logs, and OAuth documentation now
+    use the current Microsoft Entra ID product name. Existing `azure_oauth_*`
+    settings and `/azure/` callback routes remain unchanged for compatibility.
+
+### Security
+
+-   Added `.github/secret_scanning.yml` to close Secret Scanning push-protection
+    alerts for intentional lab credentials in the dev/test Docker Compose
+    stacks, with a callout that `docker/common/postgres-init.sql` and
+    `docker/common/mysql-init.sql` are shared by those non-production stacks
+    only and must never be reused to initialize a production database.
+-   CodeQL's push/pull_request trigger and analysis scope
+    (`.github/codeql/codeql-config.yml`) are now kept in sync as a single
+    allowlist covering `powerdnsadmin/`, `configs/`, `migrations/`, and the
+    top-level entry-point scripts, so scheduled and push/PR scans cover the
+    same real application source.
+
+
+### Bug Fixes
+
+-   The OIDC token-update callback now accepts the additional token context
+    supplied by Authlib and safely merges partial refresh responses with the
+    existing session token, preserving refresh and access tokens when an
+    identity provider omits them from its response. (`#1889`)
+-   The `/healthcheck` endpoint no longer marks the visitor session as
+    non-permanent or sets the application-wide permanent session lifetime to
+    zero, which could cause unrelated authenticated sessions to expire.
+    (`#1905`)
+-   The navbar Global Search control now uses theme CSS variables so the field
+    remains readable in dark mode, and the header uses a responsive grid so the
+    centered search no longer overlaps the user menu when the window narrows.
+-   The sidebar brand and top navbar now share the same header height, and the
+    sidebar uses a 1px right border instead of a box shadow so the four chrome
+    corners meet on one pixel.
+-   HTTP and SAML error pages now use a standalone AdminLTE 4-style full-page
+    layout (Bootstrap utilities, no app sidebar/chrome) instead of the legacy
+    in-shell `.error-page` markup.
+-   OIDC logout now discovers the provider's `end_session_endpoint`, retains
+    the configured logout URL as a fallback, identifies the provider session
+    with the login ID token, and delegates redirect construction plus logout
+    state generation and validation to Authlib. It reliably clears the local
+    session when the provider does not support RP-initiated logout.
+-   Logout now removes OAuth callback state, SAML identity and session data,
+    pending TOTP and first-login state, and other authentication-only session
+    values while retaining unrelated state such as the CSRF token.
+-   The development Compose environment now enables SAML single logout so the
+    application logout route initiates logout at the Keycloak identity provider.
+-   SAML HTTP-Redirect logout signatures are now verified against the exact
+    encoded query string received from the identity provider, preventing valid
+    Keycloak LogoutResponse signatures from failing after URL re-encoding.
+-   SAML, OAuth, and OIDC JIT provisioning now log whether the local user was
+    created or already existed together with the resulting role and account
+    memberships, and report local user creation or profile-update failures
+    instead of continuing with only a successful-authentication message.
+-   Users created through SAML, OAuth, or OIDC JIT provisioning now generate a
+    `Created user` entry in the application admin history attributed to the
+    originating identity provider.
+-   Stale OAuth/OIDC callbacks that fail Authlib state validation
+    (`MismatchingStateError`) now clear the session and return the login page
+    with an expiry message, matching the existing handling for expired login
+    and registration CSRF tokens, instead of raising a 500.
+-   The development Keycloak SAML client no longer inherits the default
+    `role_list` scope (which emitted one `Role` Attribute per realm role) and
+    maps groups as a single multi-valued `groups` attribute, so python3-saml's
+    strict duplicate-Name check accepts the assertion.
+-   Renaming an account no longer raises an `AttributeError` when the edit form
+    looks up the account after the name change.
+-   The admin history view now loads the correct
+    `admin/history/history.html` template path.
+-   The PowerDNS API documentation link in settings now points to the current
+    upstream URL.
+-   The application footer version string is now rendered from
+    `powerdnsadmin/VERSION` at runtime for both Docker and bare-metal
+    deployments, instead of a hard-coded template value.
+
 ## [0.6.1] - 2026-08-06
 
 ### Features

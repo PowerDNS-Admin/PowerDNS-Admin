@@ -16,6 +16,7 @@ services:
     environment:
       FLASK_CONF: /app/configs/docker_config.py
       SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
+      SESSION_TYPE: sqlalchemy
       PDNS_HOST: pdns-server
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
       BROWSER_TEST_USERNAME: ${BROWSER_TEST_USERNAME:-browser-admin}

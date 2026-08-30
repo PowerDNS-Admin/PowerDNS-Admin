@@ -133,7 +133,7 @@ class Setting(db.Model):
         return result
 
     def get_records_allow_to_edit(self):
-        return list(
+        return sorted(
             set(self.get_supported_record_types(self.ZONE_TYPE_FORWARD) +
                 self.get_supported_record_types(self.ZONE_TYPE_REVERSE)))
 

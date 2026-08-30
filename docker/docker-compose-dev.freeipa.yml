@@ -1,0 +1,119 @@
+# Optional FreeIPA identity backend for the development stack.
+# OpenLDAP remains the default in docker-compose-dev.yml.
+#
+#   docker compose -f docker/docker-compose-dev.yml \
+#     -f docker/docker-compose-dev.freeipa.yml up --build
+#
+# Switching backends against an existing Keycloak volume may leave a stale
+# user-federation component; prefer `down --volumes` when changing backends.
+
+services:
+  # Keep OpenLDAP from starting when FreeIPA is selected.
+  openldap:
+    profiles: ["openldap-disabled"]
+
+  powerdns-admin:
+    environment:
+      LDAP_URI: ldap://ipa.example.org:389
+      LDAP_BASE_DN: cn=users,cn=accounts,dc=example,dc=org
+      LDAP_ADMIN_USERNAME: uid=pda-bind,cn=users,cn=accounts,dc=example,dc=org
+      LDAP_ADMIN_PASSWORD: DevPassword123!
+      LDAP_FILTER_BASIC: (|(memberOf=cn=pda-users,cn=groups,cn=accounts,dc=example,dc=org)(memberOf=cn=pda-operators,cn=groups,cn=accounts,dc=example,dc=org)(memberOf=cn=pda-admins,cn=groups,cn=accounts,dc=example,dc=org))
+      LDAP_ADMIN_GROUP: cn=pda-admins,cn=groups,cn=accounts,dc=example,dc=org
+      LDAP_OPERATOR_GROUP: cn=pda-operators,cn=groups,cn=accounts,dc=example,dc=org
+      LDAP_USER_GROUP: cn=pda-users,cn=groups,cn=accounts,dc=example,dc=org
+
+  freeipa:
+    image: quay.io/freeipa/freeipa-server:almalinux-9
+    hostname: ipa.example.org
+    read_only: true
+    cgroup: host
+    networks:
+      dev:
+        aliases:
+          - ipa.example.org
+    environment:
+      PASSWORD: DevPassword123!
+      IPA_SERVER_INSTALL_OPTS: >-
+        --unattended
+        --realm=EXAMPLE.ORG
+        --domain=example.org
+        --no-ntp
+        --no-host-dns
+        --skip-mem-check
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: "0"
+    volumes:
+      - powerdns-admin-dev-freeipa:/data
+      # A volume-backed /run supports the POSIX ACLs required by 389
+      # Directory Server; Docker Desktop tmpfs mounts do not.
+      - powerdns-admin-dev-freeipa-run:/run
+      # FreeIPA runs systemd inside the container and needs the engine's
+      # cgroup hierarchy to start and supervise its services.
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "ipactl status >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 60
+      start_period: 300s
+    stop_grace_period: 2m
+    restart: unless-stopped
+
+  freeipa-web:
+    image: caddy:2.11.4-alpine
+    ports:
+      - "127.0.0.1:8443:8443"
+    networks:
+      - dev
+    volumes:
+      - ./dev/freeipa/Caddyfile:/etc/caddy/Caddyfile:ro
+      - powerdns-admin-dev-freeipa-web:/data
+    depends_on:
+      freeipa:
+        condition: service_healthy
+    restart: unless-stopped
+
+  freeipa-seed:
+    image: python:3.13-alpine
+    networks:
+      - dev
+    environment:
+      FREEIPA_URL: https://ipa.example.org
+      FREEIPA_ADMIN_USERNAME: admin
+      FREEIPA_ADMIN_PASSWORD: DevPassword123!
+      FREEIPA_USER_PASSWORD: DevPassword123!
+    volumes:
+      - ./dev/freeipa/seed.py:/seed.py:ro
+    command: ["python", "/seed.py"]
+    depends_on:
+      freeipa:
+        condition: service_healthy
+    restart: "no"
+
+  keycloak-federation-config:
+    environment:
+      KEYCLOAK_LDAP_PROVIDER_NAME: freeipa
+      KEYCLOAK_LDAP_VENDOR: rhds
+      KEYCLOAK_LDAP_UUID_ATTRIBUTE: ipaUniqueID
+      KEYCLOAK_LDAP_BIND_DN: uid=keycloak-bind,cn=users,cn=accounts,dc=example,dc=org
+      KEYCLOAK_LDAP_BIND_PASSWORD: DevPassword123!
+      KEYCLOAK_LDAP_URL: ldap://ipa.example.org:389
+      KEYCLOAK_LDAP_USERS_DN: cn=users,cn=accounts,dc=example,dc=org
+      KEYCLOAK_LDAP_GROUPS_DN: cn=groups,cn=accounts,dc=example,dc=org
+      KEYCLOAK_LDAP_USER_SEARCH_FILTER: (|(memberOf=cn=pda-users,cn=groups,cn=accounts,dc=example,dc=org)(memberOf=cn=pda-operators,cn=groups,cn=accounts,dc=example,dc=org)(memberOf=cn=pda-admins,cn=groups,cn=accounts,dc=example,dc=org))
+      KEYCLOAK_LDAP_GROUP_FILTER: (|(cn=pda-users)(cn=pda-operators)(cn=pda-admins))
+      KEYCLOAK_LDAP_SEARCH_SCOPE: "1"
+    # Replace the default OpenLDAP dependency from docker-compose-dev.yml.
+    depends_on: !override
+      freeipa-seed:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_started
+
+volumes:
+  powerdns-admin-dev-freeipa:
+  powerdns-admin-dev-freeipa-run:
+  powerdns-admin-dev-freeipa-web:

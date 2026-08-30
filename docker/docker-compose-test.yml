@@ -16,8 +16,9 @@ services:
     environment:
       COVERAGE_FAIL_UNDER: ${COVERAGE_FAIL_UNDER:-}
       COVERAGE_OUTPUT_DIR: /test-results/coverage
-      FLASK_CONF: /app/configs/docker_config.py
+      FLASK_CONF: /app/configs/test.py
       SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
+      SESSION_TYPE: sqlalchemy
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
     volumes:
       - ./test-results/coverage:/test-results/coverage

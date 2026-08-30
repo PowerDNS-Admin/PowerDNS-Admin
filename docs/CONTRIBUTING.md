@@ -24,7 +24,7 @@ Some general tips for engaging here on GitHub:
 * To help mitigate notification spam, please avoid "bumping" issues with no activity. (To vote an issue up or down, use a :thumbsup: or :thumbsdown: reaction.)
 * Please avoid pinging members with `@` unless they've previously expressed interest or involvement with that particular issue.
 
-## [Project Update - PLEASE READ!!!](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1708)
+## [Project Update - PLEASE READ!!!](https://github.com/PowerDNS-Admin/PowerDNS-Admin/discussions/1888)
 
 ## :bug: Reporting Bugs
 

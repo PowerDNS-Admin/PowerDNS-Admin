@@ -1,0 +1,152 @@
+<aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+        <a href="{{ url_for('index.index') }}" class="brand-link">
+            <img src="{{ url_for('static', filename='img/favicon.png') }}" alt="PowerDNS-Admin FavIcon"
+                 class="brand-image rounded-circle shadow" style="opacity: .8">
+            <span class="brand-text fw-light">
+                {% if SETTING.get('site_name') %}
+                    <b>{{ SITE_NAME }}</b>
+                {% else %}
+                    <b>PowerDNS</b>-Admin
+                {% endif %}
+            </span>
+        </a>
+    </div>
+    <div class="sidebar-wrapper">
+        {% if current_user.id is defined %}
+            {% set is_admin_ops = current_user.role.name in ['Administrator', 'Operator'] %}
+            {% set can_view_history = is_admin_ops or SETTING.get('allow_user_view_history') %}
+            {% set show_administration = is_admin_ops or can_view_history %}
+            {% set settings_open = active_page is defined and active_page.startswith('admin_setting') %}
+            <nav class="mt-2" aria-label="Main navigation">
+            <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
+                data-accordion="false">
+                <li class="nav-header">Zone Management</li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.dashboard') }}"
+                       class="nav-link{% if active_page == 'dashboard' %} active{% endif %}">
+                        <i class="nav-icon fa-solid fa-tachometer-alt"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+                {% if SETTING.get('allow_user_create_domain') or is_admin_ops %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('domain.add') }}"
+                           class="nav-link{% if active_page == 'new_domain' %} active{% endif %}">
+                            <i class="nav-icon fa-solid fa-plus"></i>
+                            <p>Create Zone</p>
+                        </a>
+                    </li>
+                {% endif %}
+                {% if SETTING.get('allow_user_remove_domain') or is_admin_ops %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('domain.remove') }}"
+                           class="nav-link{% if active_page == 'remove_domain' %} active{% endif %}">
+                            <i class="nav-icon fa-solid fa-trash-alt"></i>
+                            <p>Remove Zone</p>
+                        </a>
+                    </li>
+                {% endif %}
+                {% if show_administration %}
+                    <li class="nav-header">Administration</li>
+                    {% if can_view_history %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.history') }}"
+                               class="nav-link{% if active_page == 'admin_history' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-timeline"></i>
+                                <p>Activity</p>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if is_admin_ops %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.server_statistics') }}"
+                               class="nav-link{% if active_page == 'server_statistics' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-chart-simple"></i>
+                                <p>Server Statistics</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.server_configuration') }}"
+                               class="nav-link{% if active_page == 'server_configuration' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-screwdriver-wrench"></i>
+                                <p>Server Configuration</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.templates') }}"
+                               class="nav-link{% if active_page == 'admin_domain_template' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-clone"></i>
+                                <p>Zone Templates</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.manage_account') }}"
+                               class="nav-link{% if active_page == 'admin_accounts' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-users-rectangle"></i>
+                                <p>Accounts</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.manage_user') }}"
+                               class="nav-link{% if active_page == 'admin_users' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-users"></i>
+                                <p>Users</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.manage_keys') }}"
+                               class="nav-link{% if active_page == 'admin_keys' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-key"></i>
+                                <p>API Keys</p>
+                            </a>
+                        </li>
+                        <li class="nav-item{% if settings_open %} menu-open{% endif %}">
+                            <a href="#" class="nav-link no-prompt{% if settings_open %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-cog"></i>
+                                <p>
+                                    Settings
+                                    <i class="nav-arrow fa-solid fa-angle-right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview"
+                                {% if settings_open %}style="display: block;"{% endif %}>
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin.setting_basic') }}"
+                                       class="nav-link{% if active_page == 'admin_setting_basic' %} active{% endif %}">
+                                        <i class="nav-icon fa-solid fa-gears"></i>
+                                        <p>Basic</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url_for('admin.setting_records') }}"
+                                       class="nav-link{% if active_page == 'admin_setting_records' %} active{% endif %}">
+                                        <i class="nav-icon fa-regular fa-rectangle-list"></i>
+                                        <p>Zone Records</p>
+                                    </a>
+                                </li>
+                                {% if current_user.role.name == 'Administrator' %}
+                                    <li class="nav-item">
+                                        <a href="{{ url_for('admin.setting_pdns') }}"
+                                           class="nav-link{% if active_page == 'admin_setting_pdns' %} active{% endif %}">
+                                            <i class="nav-icon fa-solid fa-server"></i>
+                                            <p>Server</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ url_for('admin.setting_authentication') }}"
+                                           class="nav-link{% if active_page == 'admin_setting_authentication' %} active{% endif %}">
+                                            <i class="nav-icon fa-solid fa-user-shield"></i>
+                                            <p>Authentication</p>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            </nav>
+        {% endif %}
+    </div>
+</aside>
