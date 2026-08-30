@@ -107,6 +107,9 @@ jobs:
       - name: Reject invalid Python escape sequences
         run: python -W error::SyntaxWarning -m compileall -q powerdnsadmin tests
 
+      - name: Test release tooling
+        run: python -m unittest discover -s .github/scripts/tests -v
+
       - name: Run unit tests
         run: python -m pytest --capture=no --verbose tests/unit
 

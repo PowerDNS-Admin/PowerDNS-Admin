@@ -2,6 +2,55 @@
 
 ## [Unreleased]
 
+## [2026.08.1] - 2026-08-30
+
+### Breaking Changes
+
+-   Release identifiers now use Calendar Versioning in the form
+    `YYYY.0M.RELEASE`, beginning with `2026.08.1`, instead of Semantic
+    Versioning. Git tags retain the `v` prefix, while the application version
+    and changelog omit it. Automation or deployment constraints that assume
+    `MAJOR.MINOR.PATCH` must be updated for the new scheme.
+-   PowerDNS-Admin no longer supplies an implicit SQLite database URI.
+    Deployments must now set `SQLALCHEMY_DATABASE_URI`, configure that value in
+    a Python configuration file, or provide the required split `DATABASE_*`
+    environment variables. Existing standalone Docker deployments that relied
+    on the default must explicitly set
+    `SQLALCHEMY_DATABASE_URI=sqlite:////data/powerdns-admin.db` to continue
+    using their database in the `/data` volume.
+-   OIDC provider logout now follows OpenID Connect RP-Initiated Logout 1.0:
+    the request uses `post_logout_redirect_uri`, `id_token_hint`, and
+    `client_id` instead of the legacy `redirect_uri` parameter. Deployments
+    must register the externally visible PowerDNS-Admin `/oidc/logged-out` URL
+    as an allowed post-logout redirect URI. Providers that only accept
+    proprietary or legacy logout parameters may require a provider-specific
+    endpoint or integration.
+-   SAML HTTP-Redirect URL encoding no longer defaults to lowercase percent
+    escapes. The previous unconditional AD FS compatibility behavior could
+    alter the query string used to validate responses from providers such as
+    Keycloak, causing otherwise valid signed logout responses to be rejected.
+    Deployments whose identity provider requires lowercase percent escapes for
+    signed outbound login or logout requests must now explicitly set
+    `SAML_LOWERCASE_URLENCODING=true`. Adding this setting allows those AD FS
+    deployments to retain their required request encoding without changing
+    exact-query signature validation or the provider-neutral default for other
+    SAML identity providers.
+-   The release version file moved from the repository root `VERSION` to
+    `powerdnsadmin/VERSION`. Application startup reads that package path via
+    `app.root_path` and fails if the file is missing or empty. Docker images,
+    packaging scripts, CI, and bare-metal installs that still expect or inject
+    a root-level `VERSION` must ship or generate `powerdnsadmin/VERSION`
+    instead. The footer renders that value as `APP_VERSION` at runtime.
+-   `SQLALCHEMY_ENGINE_OPTIONS` now defaults to `pool_pre_ping=True` and
+    `pool_recycle=600` in both `default_config` and `AppSettings`.
+    Deployments that relied on the previous empty/unset engine options
+    (unbounded connection reuse, or a custom `SQLALCHEMY_ENGINE_OPTIONS`
+    that assumed no built-in pool settings) will see different pooling
+    behavior: connections are pinged on checkout and recycled after 600
+    seconds. Override `SQLALCHEMY_ENGINE_OPTIONS` explicitly if you need
+    different values; setting the variable replaces the entire options
+    dict rather than merging with these defaults.
+
 ### Features
 
 -   Database connection settings can be supplied as separate `DATABASE_*`
@@ -107,50 +156,17 @@
     top-level entry-point scripts, so scheduled and push/PR scans cover the
     same real application source.
 
-### Breaking Changes
-
--   PowerDNS-Admin no longer supplies an implicit SQLite database URI.
-    Deployments must now set `SQLALCHEMY_DATABASE_URI`, configure that value in
-    a Python configuration file, or provide the required split `DATABASE_*`
-    environment variables. Existing standalone Docker deployments that relied
-    on the default must explicitly set
-    `SQLALCHEMY_DATABASE_URI=sqlite:////data/powerdns-admin.db` to continue
-    using their database in the `/data` volume.
--   OIDC provider logout now follows OpenID Connect RP-Initiated Logout 1.0:
-    the request uses `post_logout_redirect_uri`, `id_token_hint`, and
-    `client_id` instead of the legacy `redirect_uri` parameter. Deployments
-    must register the externally visible PowerDNS-Admin `/oidc/logged-out` URL
-    as an allowed post-logout redirect URI. Providers that only accept
-    proprietary or legacy logout parameters may require a provider-specific
-    endpoint or integration.
--   SAML HTTP-Redirect URL encoding no longer defaults to lowercase percent
-    escapes. The previous unconditional AD FS compatibility behavior could
-    alter the query string used to validate responses from providers such as
-    Keycloak, causing otherwise valid signed logout responses to be rejected.
-    Deployments whose identity provider requires lowercase percent escapes for
-    signed outbound login or logout requests must now explicitly set
-    `SAML_LOWERCASE_URLENCODING=true`. Adding this setting allows those AD FS
-    deployments to retain their required request encoding without changing
-    exact-query signature validation or the provider-neutral default for other
-    SAML identity providers.
--   The release version file moved from the repository root `VERSION` to
-    `powerdnsadmin/VERSION`. Application startup reads that package path via
-    `app.root_path` and fails if the file is missing or empty. Docker images,
-    packaging scripts, CI, and bare-metal installs that still expect or inject
-    a root-level `VERSION` must ship or generate `powerdnsadmin/VERSION`
-    instead. The footer renders that value as `APP_VERSION` at runtime.
--   `SQLALCHEMY_ENGINE_OPTIONS` now defaults to `pool_pre_ping=True` and
-    `pool_recycle=600` in both `default_config` and `AppSettings`.
-    Deployments that relied on the previous empty/unset engine options
-    (unbounded connection reuse, or a custom `SQLALCHEMY_ENGINE_OPTIONS`
-    that assumed no built-in pool settings) will see different pooling
-    behavior: connections are pinged on checkout and recycled after 600
-    seconds. Override `SQLALCHEMY_ENGINE_OPTIONS` explicitly if you need
-    different values; setting the variable replaces the entire options
-    dict rather than merging with these defaults.
 
 ### Bug Fixes
 
+-   The OIDC token-update callback now accepts the additional token context
+    supplied by Authlib and safely merges partial refresh responses with the
+    existing session token, preserving refresh and access tokens when an
+    identity provider omits them from its response. (`#1889`)
+-   The `/healthcheck` endpoint no longer marks the visitor session as
+    non-permanent or sets the application-wide permanent session lifetime to
+    zero, which could cause unrelated authenticated sessions to expire.
+    (`#1905`)
 -   The navbar Global Search control now uses theme CSS variables so the field
     remains readable in dark mode, and the header uses a responsive grid so the
     centered search no longer overlaps the user menu when the window narrows.

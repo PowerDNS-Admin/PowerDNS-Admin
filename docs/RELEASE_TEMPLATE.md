@@ -4,6 +4,26 @@ This document defines how PowerDNS-Admin writes release notes, for both
 `CHANGELOG.md` and the GitHub Release page. Follow it when cutting a new
 release so notes stay consistent without needing to be reinvented each time.
 
+## Versioning
+
+PowerDNS-Admin uses Calendar Versioning in the form `YYYY.0M.RELEASE`, such as
+`2026.08.1`. The four-digit year and zero-padded month identify the release
+month, and `RELEASE` starts at `1` each month and increments for every
+published stable release. The zero-padded month keeps version strings in
+calendar order when sorted lexically.
+
+CalVer communicates recency, not the size or compatibility impact of a
+release. Breaking changes and required operator actions must therefore be
+called out explicitly in **Highlights** and **Breaking Changes**. Git tags use
+the `vYYYY.0M.RELEASE` form, while `powerdnsadmin/VERSION` and changelog
+headings omit the `v` prefix. The project used Semantic Versioning through
+`v0.6.1`; `v2026.08.1` is the first CalVer release.
+
+For a stable tag such as `v2026.08.1`, the Docker publishing workflow creates
+the immutable `v2026.08.1` and `2026.08.1` tags, the mutable monthly
+`2026.08` tag, and `latest`. The monthly tag always identifies the newest
+stable release published during that calendar month.
+
 ## Source of truth: CHANGELOG.md
 
 `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/).
@@ -29,7 +49,10 @@ permission" over "Fixed a permission bug."
 
 ## Cutting a release
 
-1. Rename `## [Unreleased]` to `## [x.y.z] - YYYY-MM-DD`.
+1. Rename `## [Unreleased]` to
+   `## [YYYY.0M.RELEASE] - YYYY-MM-DD`, incrementing `RELEASE` from the latest
+   release in that month or starting at `1` for a new month. Set
+   `powerdnsadmin/VERSION` to the same value without the `v` prefix.
 2. Add a **Highlights** subsection directly under the version header,
    before **Breaking Changes**/**Added**/etc. (see below).
 3. Add a **Supported Versions** subsection as the last section of the
@@ -42,13 +65,11 @@ permission" over "Fixed a permission bug."
    - PowerDNS Authoritative Server: <powerdns_auth.supported_versions>
    ```
 4. Start a fresh empty `## [Unreleased]` section above it.
-5. Tag and publish the release. The `release-notes.yml` workflow
-   independently appends the same three lists to the GitHub Release
-   body — this is redundant with step 3 by design (CHANGELOG.md should
-   fully document the release on its own; the workflow just saves
-   re-typing it into the GitHub Release). Don't hand-author the GitHub
-   Release's copy — let CI append it — but do write the CHANGELOG.md
-   copy by hand at cut time.
+5. Tag and publish the release. The `release-notes.yml` workflow reads the
+   tag, extracts that version's entry from `CHANGELOG.md`, and makes it the
+   GitHub Release body automatically. It removes the changelog's Supported
+   Versions subsection and regenerates that block from `app-support.json`.
+   Do not copy and paste the changelog entry into the GitHub Release draft.
 
 ## Highlights section
 
@@ -68,14 +89,17 @@ is for what changes for someone running the app.
 
 ## GitHub Release body
 
-The GitHub Release body is the CHANGELOG.md entry for that version
-(Highlights + categorized sections), plus the same two closing sections
-GitHub's own auto-generated release notes have always used for this repo
-(see any pre-0.5.1 release, e.g. v0.4.2) — match that convention exactly
-rather than inventing a new one:
+The workflow builds the GitHub Release body from the CHANGELOG.md entry for
+the published tag (Highlights + categorized sections). Any other content
+already in the release draft is preserved after the changelog entry, so
+GitHub's auto-generated New Contributors and Full Changelog sections can be
+created before publishing without copying the changelog manually. The
+supported-versions block is regenerated last from `app-support.json`.
+
+The resulting body follows this structure:
 
 ```markdown
-# vX.Y.Z
+# vYYYY.0M.RELEASE
 
 <Highlights + categorized sections, copied from CHANGELOG.md>
 
@@ -83,7 +107,7 @@ rather than inventing a new one:
 
 * <name or @handle> made their first contribution in <full PR URL, bare, no markdown link>
 
-**Full Changelog**: https://github.com/PowerDNS-Admin/PowerDNS-Admin/compare/vPREV...vX.Y.Z
+**Full Changelog**: https://github.com/PowerDNS-Admin/PowerDNS-Admin/compare/vPREV...vYYYY.0M.RELEASE
 ```
 
 **New Contributors** only lists people with zero commits reachable from the
@@ -102,8 +126,9 @@ existing/legacy release's notes (as opposed to cutting a new one), there
 is no automation to lean on: run the `git log` check above by hand for
 every contributor and write the section yourself.
 
-The supported-versions block is appended after publish by CI; leave it out
-of what you draft by hand.
+The changelog and supported-versions blocks are replaced idempotently when the
+workflow is rerun. Only draft additional notes such as New Contributors; do
+not paste the changelog or supported versions into the release draft.
 
 ## Style notes
 

@@ -43,6 +43,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate CalVer release tag
+        if: github.ref_type == 'tag'
+        run: >-
+          python3 .github/scripts/validate-release-version.py
+          "${{ github.ref_name }}"
+
       - name: Docker Image Metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -51,9 +57,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=match,pattern=^v(\d{4}\.(?:0[1-9]|1[0-2])\.[1-9]\d*)$,group=1
+            type=match,pattern=^v(\d{4}\.(?:0[1-9]|1[0-2]))\.[1-9]\d*$,group=1
             type=raw,value=${{ github.ref_name }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
       - name: QEMU Setup
