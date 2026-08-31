@@ -1,1067 +1,1079 @@
-import json
 import re
+import json
+import datetime
 import traceback
-from flask import current_app
-from flask_login import current_user
-from urllib.parse import quote_plus, urljoin
+import dns.name
+import dns.reversename
+from flask import Blueprint, render_template, make_response, url_for, current_app, request, redirect, abort, jsonify, g, session
+from flask_login import login_required, current_user, login_manager
 
-from ..lib import utils
-from .base import db, domain_apikey
-from .setting import Setting
-from .user import User
-from .account import Account
-from .account import AccountUser
-from .domain_user import DomainUser
-from .domain_setting import DomainSetting
-from .history import History
+from ..lib.utils import pretty_domain_name
+from ..lib.utils import pretty_json
+from ..lib.utils import to_idna
+from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec, can_remove_domain
+from ..models.user import User, Anonymous
+from ..models.account import Account
+from ..models.setting import Setting
+from ..models.history import History
+from ..models.domain import Domain
+from ..models.record import Record
+from ..models.record_entry import RecordEntry
+from ..models.domain_template import DomainTemplate
+from ..models.domain_template_record import DomainTemplateRecord
+from ..models.domain_setting import DomainSetting
+from ..models.base import db
+from ..models.domain_user import DomainUser
+from ..models.account_user import AccountUser
+from .admin import extract_changelogs_from_history
+from ..decorators import history_access_required
+domain_bp = Blueprint('domain',
+                      __name__,
+                      template_folder='templates',
+                      url_prefix='/domain')
+
+@domain_bp.before_request
+def before_request():
+    # Check if user is anonymous
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+
+    # Manage session timeout
+    session.permanent = True
+    current_app.permanent_session_lifetime = datetime.timedelta(
+        minutes=int(Setting().get('session_timeout')))
+    session.modified = True
+
+    # Check site is in maintenance mode
+    maintenance = Setting().get('maintenance')
+    if maintenance and current_user.is_authenticated and current_user.role.name not in [
+            'Administrator', 'Operator'
+    ]:
+        return render_template('maintenance.html')
 
 
-class Domain(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), index=True, unique=True)
-    master = db.Column(db.String(128))
-    type = db.Column(db.String(8), nullable=False)
-    serial = db.Column(db.BigInteger)
-    notified_serial = db.Column(db.BigInteger)
-    last_check = db.Column(db.Integer)
-    dnssec = db.Column(db.Integer)
-    account_id = db.Column(db.Integer, db.ForeignKey('account.id'))
-    catalog = db.Column(db.String(255), index=True, unique=False)
-    account = db.relationship("Account", back_populates="domains")
-    settings = db.relationship('DomainSetting', back_populates='domain')
-    apikeys = db.relationship("ApiKey",
-                              secondary=domain_apikey,
-                              back_populates="domains")
+def _domain_record_entries(domain):
+    records_allow_to_edit = Setting().get_records_allow_to_edit()
 
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 master=None,
-                 type='NATIVE',
-                 serial=None,
-                 notified_serial=None,
-                 last_check=None,
-                 dnssec=None,
-                 account_id=None):
-        self.id = id
-        self.name = name
-        self.master = master
-        self.type = type
-        self.serial = serial
-        self.notified_serial = notified_serial
-        self.last_check = last_check
-        self.dnssec = dnssec
-        self.account_id = account_id
-        # PDNS configs
-        self.PDNS_STATS_URL = Setting().get('pdns_api_url')
-        self.PDNS_API_KEY = Setting().get('pdns_api_key')
-        self.API_EXTENDED_URL = utils.pdns_api_extended_uri()
+    rrsets = Record().get_rrsets(domain.name)
+    current_app.logger.debug("Fetched %s rrsets for zone %s", len(rrsets or []), domain.name)
 
-    def __repr__(self):
-        return '<Domain {0}>'.format(self.name)
+    if not rrsets and str(domain.type).lower() != 'slave':
+        abort(500)
 
-    def add_setting(self, setting, value):
-        try:
-            self.settings.append(DomainSetting(setting=setting, value=value))
-            db.session.commit()
-            return True
-        except Exception as e:
-            current_app.logger.error(
-                'Can not create setting {0} for zone {1}. {2}'.format(
-                    setting, self.name, e))
-            return False
+    records = []
+    pretty_v6 = Setting().get('pretty_ipv6_ptr')
 
-    def get_domain_info(self, domain_name):
-        """
-        Get all zones which has in PowerDNS
-        """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
-        jdata = utils.fetch_json(urljoin(
-            self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
-            headers=headers,
-            timeout=int(
-                Setting().get('pdns_api_timeout')),
-            verify=Setting().get('verify_ssl_connections'))
-        return jdata
+    for r in rrsets:
+        if r['type'] not in records_allow_to_edit:
+            continue
 
-    def get_domains(self):
-        """
-        Get all zones which has in PowerDNS
-        """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
-        jdata = utils.fetch_json(
-            urljoin(self.PDNS_STATS_URL,
-                    self.API_EXTENDED_URL + '/servers/localhost/zones'),
-            headers=headers,
-            timeout=int(Setting().get('pdns_api_timeout')),
-            verify=Setting().get('verify_ssl_connections'))
-        return jdata
+        r_name = r['name'].rstrip('.')
 
-    def get_id_by_name(self, name):
-        """
-        Return domain id
-        """
-        try:
-            domain = Domain.query.filter(Domain.name == name).first()
-            return domain.id
-        except Exception as e:
-            current_app.logger.error(
-                'Zone does not exist. ERROR: {0}'.format(e))
-            return None
+        if pretty_v6 and r['type'] == 'PTR' and 'ip6.arpa' in r_name and '*' not in r_name:
+            r_name = dns.reversename.to_address(dns.name.from_text(r_name))
 
-    def search_idn_domains(self, search_string):
-        """
-        Search for IDN zones using the provided search string.
-        """
-        # Compile the regular expression pattern for matching IDN zone names
-        idn_pattern = re.compile(r'^xn--')
+        index = 0
+        for record in r['records']:
+            if len(r['comments']) > index:
+                c = r['comments'][index]['content']
+            else:
+                c = ''
 
-        # Search for zone names that match the IDN pattern
-        idn_domains = [
-            domain for domain in self.get_domains() if idn_pattern.match(domain)
+            records.append(RecordEntry(
+                name=r_name,
+                type=r['type'],
+                status='Disabled' if record['disabled'] else 'Active',
+                ttl=r['ttl'],
+                data=record['content'],
+                comment=c,
+                is_allowed_edit=True))
+            index += 1
+
+    return records
+
+@domain_bp.route('/<path:domain_name>/records', methods=['GET'])
+@login_required
+@can_access_domain
+def domain_records(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    records = _domain_record_entries(domain)
+
+    try:
+        draw = int(request.args.get('draw', 1))
+    except ValueError:
+        draw = 1
+
+    try:
+        start = int(request.args.get('start', 0))
+    except ValueError:
+        start = 0
+
+    try:
+        length = int(request.args.get('length', Setting().get('default_record_table_size')))
+    except ValueError:
+        length = int(Setting().get('default_record_table_size'))
+
+    search_value = request.args.get('search[value]', '').lower()
+
+    total = len(records)
+
+    if search_value:
+        records = [
+            r for r in records
+            if search_value in str(r.name).lower()
+            or search_value in str(r.type).lower()
+            or search_value in str(r.status).lower()
+            or search_value in str(r.ttl).lower()
+            or search_value in str(r.data).lower()
+            or search_value in str(r.comment).lower()
         ]
 
-        # Filter the search results based on the provided search string
-        return [domain for domain in idn_domains if search_string in domain]
+    filtered = len(records)
 
+    sort_map = {
+        0: lambda r: str(r.name).split('.')[::-1],
+        1: lambda r: str(r.type),
+        2: lambda r: str(r.status),
+        3: lambda r: int(r.ttl),
+        4: lambda r: str(r.data),
+        5: lambda r: str(r.comment),
+    }
 
-    def update(self):
-        """
-        Fetch zones (zones) from PowerDNS and update into DB
-        """
-        db_domain = Domain.query.all()
-        list_db_domain = [d.name for d in db_domain]
-        dict_db_domain = dict((x.name, x) for x in db_domain)
-        current_app.logger.info("Found {} zones in PowerDNS-Admin".format(
-            len(list_db_domain)))
-        headers = {'X-API-Key': self.PDNS_API_KEY}
-        try:
-            jdata = utils.fetch_json(
-                urljoin(self.PDNS_STATS_URL,
-                        self.API_EXTENDED_URL + '/servers/localhost/zones'),
-                headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')),
-                verify=Setting().get('verify_ssl_connections'))
-            list_jdomain = [d['name'].rstrip('.') for d in jdata]
-            current_app.logger.info(
-                "Found {} zones in PowerDNS server".format(len(list_jdomain)))
-
-            try:
-                # zones should remove from db since it doesn't exist in powerdns anymore
-                should_removed_db_domain = list(
-                    set(list_db_domain).difference(list_jdomain))
-                for domain_name in should_removed_db_domain:
-                    self.delete_domain_from_pdnsadmin(domain_name, do_commit=False)
-            except Exception as e:
-                current_app.logger.error(
-                    'Can not delete zone from DB. DETAIL: {0}'.format(e))
-                current_app.logger.debug(traceback.format_exc())
-
-            # update/add new zone
-            account_cache = {}
-            for data in jdata:
-                if 'account' in data:
-                    # if no account is set don't try to query db
-                    if data['account'] == '':
-                        find_account_id = None
-                    else:
-                        find_account_id = account_cache.get(data['account'])
-                        # if account was not queried in the past and hence not in cache
-                        if find_account_id is None:
-                            find_account_id = Account().get_id_by_name(data['account'])
-                            # add to cache
-                            account_cache[data['account']] = find_account_id
-                    account_id = find_account_id
-                else:
-                    current_app.logger.debug(
-                        "No 'account' data found in API result - Unsupported PowerDNS version?"
-                    )
-                    account_id = None
-                domain = dict_db_domain.get(data['name'].rstrip('.'), None)
-                if domain:
-                    self.update_pdns_admin_domain(domain, account_id, data, do_commit=False)
-                else:
-                    # add new domain
-                    self.add_domain_to_powerdns_admin(domain=data, do_commit=False)
-
-            db.session.commit()
-            current_app.logger.info('Update zone finished')
-            return {
-                'status': 'ok',
-                'msg': 'Zone table has been updated successfully'
-            }
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(
-                'Cannot update zone table. Error: {0}'.format(e))
-            return {'status': 'error', 'msg': 'Cannot update zone table'}
-
-    def update_pdns_admin_domain(self, domain, account_id, data, do_commit=True):
-        catalog = (data.get('catalog') or '').rstrip('.') or None
-
-        # existing domain, only update if something actually has changed
-        if (domain.master != str(data['masters'])
-                or domain.type != data['kind']
-                or domain.serial != data['serial']
-                or domain.notified_serial != data['notified_serial']
-                or domain.last_check != (1 if data['last_check'] else 0)
-                or domain.dnssec != data['dnssec']
-                or domain.catalog != catalog
-                or domain.account_id != account_id):
-
-            domain.master = str(data['masters'])
-            domain.type = data['kind']
-            domain.serial = data['serial']
-            domain.catalog = catalog
-            domain.notified_serial = data['notified_serial']
-            domain.last_check = 1 if data['last_check'] else 0
-            domain.dnssec = 1 if data['dnssec'] else 0
-            domain.account_id = account_id
-            try:
-                if do_commit:
-                    db.session.commit()
-                current_app.logger.info("Updated PDNS-Admin zone {0}".format(
-                    domain.name))
-            except Exception as e:
-                db.session.rollback()
-                current_app.logger.info("Rolled back zone {0} {1}".format(
-                    domain.name, e))
-                raise
-
-    def add(self,
-            domain_name,
-            domain_type,
-            soa_edit_api,
-            domain_ns=[],
-            domain_master_ips=[],
-            account_name=None,
-            catalog_name=None):
-        """
-        Add a zone to power dns
-        """
-
-        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
-
-        domain_name = domain_name + '.'
-        domain_ns = [ns + '.' for ns in domain_ns]
-
-        if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
-            soa_edit_api = 'DEFAULT'
-
-        elif soa_edit_api == 'OFF':
-            soa_edit_api = ''
-
-        post_data = {
-            "name": domain_name,
-            "kind": domain_type,
-            "masters": domain_master_ips,
-            "nameservers": domain_ns,
-            "soa_edit_api": soa_edit_api,
-            "account": account_name
-        }
-        if catalog_name:
-            post_data["catalog"] = catalog_name
+    # Support multiple ordering columns from DataTables
+    orders = []
+    i = 0
+    while True:
+        col = request.args.get(f'order[{i}][column]')
+        direction = request.args.get(f'order[{i}][dir]', 'asc')
+        if col is None:
+            break
 
         try:
-            jdata = utils.fetch_json(
-                urljoin(self.PDNS_STATS_URL,
-                        self.API_EXTENDED_URL + '/servers/localhost/zones'),
-                headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')),
-                method='POST',
-                verify=Setting().get('verify_ssl_connections'),
-                data=post_data)
-            if 'error' in jdata.keys():
-                current_app.logger.error(jdata['error'])
-                if jdata.get('http_code') == 409:
-                    return {'status': 'error', 'msg': 'Zone already exists'}
-                return {'status': 'error', 'msg': jdata['error']}
+            col = int(col)
+        except ValueError:
+            i += 1
+            continue
+
+        if col in sort_map:
+            orders.append((col, direction))
+
+        i += 1
+
+    # Apply sorting (reverse order for stability)
+    for col, direction in reversed(orders):
+        records.sort(
+            key=sort_map[col],
+            reverse=(direction == 'desc')
+        )
+
+    if length != -1:
+        records = records[start:start + length]
+
+    data = []
+
+    for record in records:
+        if domain.type != 'Slave':
+            actions = ''
+
+            if record.is_allowed_edit():
+                actions += (
+                    '<button type="button" title="Edit" '
+                    'class="btn btn-sm btn-warning button_edit">'
+                    '<i class="fa-solid fa-edit"></i>'
+                    '</button> '
+                )
             else:
-                current_app.logger.info(
-                    'Added zone successfully to PowerDNS: {0}'.format(
-                        domain_name))
-                self.add_domain_to_powerdns_admin(domain_dict=post_data)
-                return {'status': 'ok', 'msg': 'Added zone successfully'}
-        except Exception as e:
-            current_app.logger.error('Cannot add zone {0} {1}'.format(
-                domain_name, e))
-            current_app.logger.debug(traceback.format_exc())
-            return {'status': 'error', 'msg': 'Cannot add this zone.'}
+                actions += (
+                    '<button type="button" class="btn btn-sm btn-warning">'
+                    '<i class="fa-solid fa-exclamation-circle"></i>'
+                    '</button> '
+                )
 
-    def add_domain_to_powerdns_admin(self, domain=None, domain_dict=None, do_commit=True):
-        """
-        Read zone from PowerDNS and add into PDNS-Admin
-        """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
-        if not domain:
-            try:
-                domain = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}'.format(
-                                                 quote_plus(domain_dict['name']))),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    verify=Setting().get('verify_ssl_connections'))
-            except Exception as e:
-                current_app.logger.error('Can not read zone from PDNS')
-                current_app.logger.error(e)
-                current_app.logger.debug(traceback.format_exc())
+            if record.is_allowed_delete():
+                actions += (
+                    '<button type="button" title="Delete" '
+                    'class="btn btn-sm btn-danger button_delete">'
+                    '<i class="fa-solid fa-trash"></i>'
+                    '</button> '
+                )
 
-        if 'account' in domain:
-            account_id = Account().get_id_by_name(domain['account'])
+            if current_user.role.name in ['Administrator', 'Operator'] or Setting().get('allow_user_view_history'):
+                actions += (
+                    '<button type="button" title="Changelog" '
+                    'onclick="show_record_changelog(\\\'{}\\\',\\\'{}\\\',event)" '
+                    'class="btn btn-primary btn-sm">'
+                    '<i class="fa-solid fa-history" aria-hidden="true"></i>'
+                    '</button>'
+                ).format(record.name, record.type)
+
+            row = [
+                record.name,
+                record.type,
+                record.status,
+                str(record.ttl),
+                record.data,
+                record.comment,
+                actions,
+                '1'
+            ]
         else:
-            current_app.logger.debug(
-                "No 'account' data found in API result - Unsupported PowerDNS version?"
-            )
-            account_id = None
-        # add new domain
-        d = Domain()
-        d.name = domain['name'].rstrip('.')  # lgtm [py/modification-of-default-value]
-        d.master = str(domain['masters'])
-        d.type = domain['kind']
-        d.serial = domain['serial']
-        d.notified_serial = domain['notified_serial']
-        d.last_check = domain['last_check']
-        d.dnssec = 1 if domain['dnssec'] else 0
-        d.account_id = account_id
-        if domain.get('catalog'):
-            d.catalog = domain['catalog'].rstrip('.')
-        db.session.add(d)
-        try:
-            if do_commit:
-                db.session.commit()
-            current_app.logger.info(
-                "Synced PowerDNS zone to PDNS-Admin: {0}".format(d.name))
-            return {
-                'status': 'ok',
-                'msg': 'Added zone successfully to PowerDNS-Admin'
-            }
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.info("Rolled back zone {0}".format(d.name))
-            raise
-
-    def update_soa_setting(self, domain_name, soa_edit_api):
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': 'error', 'msg': 'Zone does not exist.'}
-
-        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
-
-        if soa_edit_api not in ["DEFAULT", "INCREASE", "EPOCH", "OFF"]:
-            soa_edit_api = 'DEFAULT'
-
-        elif soa_edit_api == 'OFF':
-            soa_edit_api = ''
-
-        post_data = {"soa_edit_api": soa_edit_api, "kind": domain.type}
-
-        try:
-            jdata = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
-                headers=headers,
-                timeout=int(
-                    Setting().get('pdns_api_timeout')),
-                method='PUT',
-                verify=Setting().get('verify_ssl_connections'),
-                data=post_data)
-            if 'error' in jdata.keys():
-                current_app.logger.error(jdata['error'])
-                return {'status': 'error', 'msg': jdata['error']}
-            else:
-                current_app.logger.info(
-                    'soa-edit-api changed for zone {0} successfully'.format(
-                        domain_name))
-                return {
-                    'status': 'ok',
-                    'msg': 'soa-edit-api changed successfully'
-                }
-        except Exception as e:
-            current_app.logger.debug(e)
-            current_app.logger.debug(traceback.format_exc())
-            current_app.logger.error(
-                'Cannot change soa-edit-api for zone {0}'.format(
-                    domain_name))
-            return {
-                'status': 'error',
-                'msg': 'Cannot change soa-edit-api for this zone.'
-            }
-
-    def update_kind(self, domain_name, kind, masters=[]):
-        """
-        Update zone kind: Native / Master / Slave
-        """
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': 'error', 'msg': 'Znoe does not exist.'}
-
-        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
-
-        post_data = {"kind": kind, "masters": masters}
-
-        try:
-            jdata = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
-                headers=headers,
-                timeout=int(
-                    Setting().get('pdns_api_timeout')),
-                method='PUT',
-                verify=Setting().get('verify_ssl_connections'),
-                data=post_data)
-            if 'error' in jdata.keys():
-                current_app.logger.error(jdata['error'])
-                return {'status': 'error', 'msg': jdata['error']}
-            else:
-                current_app.logger.info(
-                    'Update zone kind for {0} successfully'.format(
-                        domain_name))
-                return {
-                    'status': 'ok',
-                    'msg': 'Zone kind changed successfully'
-                }
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot update kind for zone {0}. Error: {1}'.format(
-                    domain_name, e))
-            current_app.logger.debug(traceback.format_exc())
-
-            return {
-                'status': 'error',
-                'msg': 'Cannot update kind for this zone.'
-            }
-
-
-    def update_catalog(self, domain_name, catalog_name):
-        """
-        Update domain catalog zone
-        """
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': 'error', 'msg': 'Znoe does not exist.'}
-
-        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
-
-        post_data = {"catalog": catalog_name}
-
-        try:
-            jdata = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain.name))),
-                headers=headers,
-                timeout=int(
-                    Setting().get('pdns_api_timeout')),
-                method='PUT',
-                verify=Setting().get('verify_ssl_connections'),
-                data=post_data)
-            if 'error' in jdata.keys():
-                current_app.logger.error(jdata['error'])
-                return {'status': 'error', 'msg': jdata['error']}
-            else:
-                domain.catalog = catalog_name
-                db.session.commit()
-
-                current_app.logger.info(
-                    'Update zone catalog for {0} successfully'.format(
-                        domain_name))
-                return {
-                    'status': 'ok',
-                    'msg': 'Zone catalog changed successfully'
-                }
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(
-                'Cannot update catalog for zone {0}. Error: {1}'.format(
-                    domain_name, e))
-            current_app.logger.debug(traceback.format_exc())
-
-            return {
-                'status': 'error',
-                'msg': 'Cannot update catalog for this zone.'
-            }
-
-
-    def create_reverse_domain(self, domain_name, domain_reverse_name):
-        """
-        Check the existing reverse lookup zone,
-        if not exists create a new one automatically
-        """
-        domain_obj = Domain.query.filter(Domain.name == domain_name).first()
-        domain_auto_ptr = DomainSetting.query.filter(
-            DomainSetting.domain == domain_obj).filter(
-            DomainSetting.setting == 'auto_ptr').first()
-        domain_auto_ptr = utils.parse_boolean(
-            domain_auto_ptr.value) if domain_auto_ptr else False
-        system_auto_ptr = Setting().get('auto_ptr')
-        self.name = domain_name
-        domain_id = self.get_id_by_name(domain_reverse_name)
-        if domain_id is None and \
-                (
-                        system_auto_ptr or
-                        domain_auto_ptr
-                ):
-            result = self.add(domain_reverse_name, 'Master', 'DEFAULT', [], [])
-            self.update()
-            if result['status'] == 'ok':
-                history = History(msg='Add reverse lookup zone {0}'.format(
-                    domain_reverse_name),
-                    detail=json.dumps({
-                        'domain_type': 'Master',
-                        'domain_master_ips': ''
-                    }),
-                    created_by='System')
-                history.add()
-            else:
-                return {
-                    'status': 'error',
-                    'msg': 'Adding reverse lookup zone failed'
-                }
-            domain_user_ids = self.get_user()
-            if len(domain_user_ids) > 0:
-                self.name = domain_reverse_name
-                self.grant_privileges(domain_user_ids)
-                return {
-                    'status':
-                        'ok',
-                    'msg':
-                        'New reverse lookup zone created with granted privileges'
-                }
-            return {
-                'status': 'ok',
-                'msg': 'New reverse lookup zone created without users'
-            }
-        return {'status': 'ok', 'msg': 'Reverse lookup zone already exists'}
-
-    def get_reverse_domain_name(self, reverse_host_address):
-        c = 1
-        if re.search('ip6.arpa', reverse_host_address):
-            for i in range(1, 32, 1):
-                address = re.search(
-                    r'((([a-f0-9]\.){' + str(i) +
-                    r'})(?P<ipname>.+6.arpa)\.?)', reverse_host_address)
-                if None != self.get_id_by_name(address.group('ipname')):
-                    c = i
-                    break
-            return re.search(
-                r'((([a-f0-9]\.){' + str(c) +
-                r'})(?P<ipname>.+6.arpa)\.?)',
-                reverse_host_address).group('ipname')
-        else:
-            for i in range(1, 4, 1):
-                address = re.search(
-                    r'((([0-9]+\.){' + str(i) +
-                    r'})(?P<ipname>.+r.arpa)\.?)', reverse_host_address)
-                if None != self.get_id_by_name(address.group('ipname')):
-                    c = i
-                    break
-            return re.search(
-                r'((([0-9]+\.){' + str(c) +
-                r'})(?P<ipname>.+r.arpa)\.?)',
-                reverse_host_address).group('ipname')
-
-    def delete(self, domain_name):
-        """
-        Delete a single zone name from powerdns
-        """
-        try:
-            self.delete_domain_from_powerdns(domain_name)
-            self.delete_domain_from_pdnsadmin(domain_name)
-            return {'status': 'ok', 'msg': 'Delete zone successfully'}
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot delete zone {0}'.format(domain_name))
-            current_app.logger.error(e)
-            current_app.logger.debug(traceback.format_exc())
-            return {'status': 'error', 'msg': 'Cannot delete zone'}
-
-    def delete_domain_from_powerdns(self, domain_name):
-        """
-        Delete a single zone name from powerdns
-        """
-        headers = {'X-API-Key': self.PDNS_API_KEY}
-
-        utils.fetch_json(urljoin(
-            self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                 '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
-            headers=headers,
-            timeout=int(Setting().get('pdns_api_timeout')),
-            method='DELETE',
-            verify=Setting().get('verify_ssl_connections'))
-        current_app.logger.info(
-            'Deleted zone successfully from PowerDNS: {0}'.format(
-                domain_name))
-        return {'status': 'ok', 'msg': 'Delete zone successfully'}
-
-    def delete_domain_from_pdnsadmin(self, domain_name, do_commit=True):
-        # Revoke permission before deleting zone
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        domain_user = DomainUser.query.filter(
-            DomainUser.domain_id == domain.id)
-        if domain_user:
-            domain_user.delete()
-        domain_setting = DomainSetting.query.filter(
-            DomainSetting.domain_id == domain.id)
-        if domain_setting:
-            domain_setting.delete()
-        domain.apikeys[:] = []
-
-        # Remove history for zone
-        if not Setting().get('preserve_history'):
-            domain_history = History.query.filter(
-                History.domain_id == domain.id
-            )
-            if domain_history:
-                domain_history.delete()
-
-        # then remove zone
-        Domain.query.filter(Domain.name == domain_name).delete()
-        if do_commit:
-            db.session.commit()
-        current_app.logger.info(
-            "Deleted zone successfully from pdnsADMIN: {}".format(
-                domain_name))
-
-    def get_user(self):
-        """
-        Get users (id) who have access to this zone name
-        """
-        user_ids = []
-        query = db.session.query(
-            DomainUser, Domain).filter(User.id == DomainUser.user_id).filter(
-            Domain.id == DomainUser.domain_id).filter(
-            Domain.name == self.name).all()
-        for q in query:
-            user_ids.append(q[0].user_id)
-        return user_ids
-
-    def grant_privileges(self, new_user_ids):
-        """
-        Reconfigure domain_user table
-        """
-
-        domain_id = self.get_id_by_name(self.name)
-        domain_user_ids = self.get_user()
-
-        removed_ids = list(set(domain_user_ids).difference(new_user_ids))
-        added_ids = list(set(new_user_ids).difference(domain_user_ids))
-
-        try:
-            for uid in removed_ids:
-                DomainUser.query.filter(DomainUser.user_id == uid).filter(
-                    DomainUser.domain_id == domain_id).delete()
-                db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(
-                'Cannot revoke user privileges on zone {0}. DETAIL: {1}'.
-                    format(self.name, e))
-            current_app.logger.debug(print(traceback.format_exc()))
-
-        try:
-            for uid in added_ids:
-                du = DomainUser(domain_id, uid)
-                db.session.add(du)
-                db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(
-                'Cannot grant user privileges to zone {0}. DETAIL: {1}'.
-                    format(self.name, e))
-            current_app.logger.debug(print(traceback.format_exc()))
-
-    def revoke_privileges_by_id(self, user_id):
-        """
-        Remove a single user from privilege list based on user_id
-        """
-        new_uids = [u for u in self.get_user() if u != user_id]
-        users = []
-        for uid in new_uids:
-            users.append(User(id=uid).get_user_info_by_id().username)
-
-        self.grant_privileges(users)
-
-    def add_user(self, user):
-        """
-        Add a single user to zone by User
-        """
-        try:
-            du = DomainUser(self.id, user.id)
-            db.session.add(du)
-            db.session.commit()
-            return True
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(
-                'Cannot add user privileges on zone {0}. DETAIL: {1}'.
-                format(self.name, e))
-            return False
-
-    def update_from_master(self, domain_name):
-        """
-        Update records from Master DNS server
-        """
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
-            try:
-                r = utils.fetch_json(urljoin(
-                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                         '/servers/localhost/zones/{0}/axfr-retrieve'.format(
-                                             quote_plus(domain.name))),
-                    headers=headers,
-                    timeout=int(
-                        Setting().get('pdns_api_timeout')),
-                    method='PUT',
-                    verify=Setting().get('verify_ssl_connections'))
-                return {'status': 'ok', 'msg': r.get('result')}
-            except Exception as e:
-                current_app.logger.error(
-                    'Cannot update from master. DETAIL: {0}'.format(e))
-                return {
-                    'status':
-                        'error',
-                    'msg':
-                        'There was something wrong, please contact administrator'
-                }
-        else:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-    def get_domain_dnssec(self, domain_name):
-        """
-        Get zone DNSSEC information
-        """
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY}
-            try:
-                jdata = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}/cryptokeys'.format(
-                                                 quote_plus(domain.name))),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    method='GET',
-                    verify=Setting().get('verify_ssl_connections'))
-                if 'error' in jdata:
-                    return {
-                        'status': 'error',
-                        'msg': 'DNSSEC is not enabled for this zone'
-                    }
-                else:
-                    return {'status': 'ok', 'dnssec': jdata}
-            except Exception as e:
-                current_app.logger.error(
-                    'Cannot get zone dnssec. DETAIL: {0}'.format(e))
-                return {
-                    'status':
-                        'error',
-                    'msg':
-                        'There was something wrong, please contact administrator'
-                }
-        else:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-    def enable_domain_dnssec(self, domain_name, key_parameters=None):
-        """
-        Enable zone DNSSEC.
-
-        ``key_parameters`` is used by dashboard v2 to explicitly select the
-        key type, algorithm, and size. Calls from the classic dashboard omit
-        it and retain the original PowerDNS-default behavior.
-        """
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if domain:
-            try:
-                # Enable API-RECTIFY for domain, BEFORE activating DNSSEC
-                rectify = self.set_domain_api_rectify(domain_name, True)
-                if rectify.get('status') != 'ok':
-                    return rectify
-
-                # Activate DNSSEC
-                post_data = {"keytype": "ksk", "active": True}
-                if key_parameters is not None:
-                    post_data = {
-                        "keytype": key_parameters["keytype"],
-                        "algorithm": key_parameters["algorithm"],
-                        "bits": key_parameters["bits"],
-                        "active": key_parameters["active"],
-                        "published": key_parameters["published"],
-                    }
-                return self.create_dnssec_key(domain_name, post_data)
-
-            except Exception as e:
-                current_app.logger.error(
-                    'Cannot enable dns sec. DETAIL: {}'.format(e))
-                current_app.logger.debug(traceback.format_exc())
-                return {
-                    'status':
-                        'error',
-                    'msg':
-                        'There was something wrong, please contact administrator'
-                }
-
-        else:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-    def set_domain_api_rectify(self, domain_name, enabled):
-        """Enable or disable API-RECTIFY without changing cryptokeys."""
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-        headers = {
-            'X-API-Key': self.PDNS_API_KEY,
-            'Content-Type': 'application/json',
-        }
-        try:
-            jdata = utils.fetch_json(
-                urljoin(
-                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                    '/servers/localhost/zones/{0}'.format(
-                        quote_plus(domain.name))),
-                headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')),
-                method='PUT',
-                verify=Setting().get('verify_ssl_connections'),
-                data={'api_rectify': bool(enabled)})
-            if 'error' in jdata:
-                return {
-                    'status': 'error',
-                    'msg': 'API-RECTIFY could not be updated for this zone',
-                    'jdata': jdata,
-                }
-            return {'status': 'ok'}
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot update API-RECTIFY. DETAIL: {0}'.format(e))
-            current_app.logger.debug(traceback.format_exc())
-            return {
-                'status': 'error',
-                'msg': 'There was something wrong, please contact administrator',
-            }
-
-    def create_dnssec_key(self, domain_name, key_parameters):
-        """Create one cryptokey without changing any existing key."""
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-        headers = {
-            'X-API-Key': self.PDNS_API_KEY,
-            'Content-Type': 'application/json',
-        }
-        try:
-            jdata = utils.fetch_json(
-                urljoin(
-                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                    '/servers/localhost/zones/{0}/cryptokeys'.format(
-                        quote_plus(domain.name))),
-                headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')),
-                method='POST',
-                verify=Setting().get('verify_ssl_connections'),
-                data=key_parameters)
-            if 'error' in jdata:
-                return {
-                    'status': 'error',
-                    'msg': 'Cannot create a DNSSEC key for this zone. Error: {0}'.
-                           format(jdata['error']),
-                    'jdata': jdata,
-                }
-            return {'status': 'ok', 'key': jdata}
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot create DNSSEC key. DETAIL: {0}'.format(e))
-            current_app.logger.debug(traceback.format_exc())
-            return {
-                'status': 'error',
-                'msg': 'There was something wrong, please contact administrator',
-            }
-
-    def update_dnssec_key(self, domain_name, key_id, active, published):
-        """Set the complete active/published state for one cryptokey."""
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-        headers = {
-            'X-API-Key': self.PDNS_API_KEY,
-            'Content-Type': 'application/json',
-        }
-        try:
-            jdata = utils.fetch_json(
-                urljoin(
-                    self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                    '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                        quote_plus(domain.name), int(key_id))),
-                headers=headers,
-                timeout=int(Setting().get('pdns_api_timeout')),
-                method='PUT',
-                verify=Setting().get('verify_ssl_connections'),
-                data={
-                    'active': bool(active),
-                    'published': bool(published),
-                })
-            if 'error' in jdata:
-                return {
-                    'status': 'error',
-                    'msg': 'Cannot update DNSSEC key {0}.'.format(key_id),
-                    'jdata': jdata,
-                }
-            return {'status': 'ok'}
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot update DNSSEC key. DETAIL: {0}'.format(e))
-            current_app.logger.debug(traceback.format_exc())
-            return {
-                'status': 'error',
-                'msg': 'There was something wrong, please contact administrator',
-            }
-
-    def delete_dnssec_key(self, domain_name, key_id):
-        """
-        Remove keys DNSSEC
-        """
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if domain:
-            headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
-            try:
-                # Deactivate DNSSEC
-                jdata = utils.fetch_json(
-                    urljoin(
-                        self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                             '/servers/localhost/zones/{0}/cryptokeys/{1}'.format(
-                                                 quote_plus(domain.name), key_id)),
-                    headers=headers,
-                    timeout=int(Setting().get('pdns_api_timeout')),
-                    method='DELETE',
-                    verify=Setting().get('verify_ssl_connections'))
-                if jdata != True:
-                    return {
-                        'status':
-                            'error',
-                        'msg':
-                            'Cannot disable DNSSEC for this zone. Error: {0}'.
-                                format(jdata['error']),
-                        'jdata':
-                            jdata
-                    }
-
-                return {'status': 'ok'}
-
-            except Exception as e:
-                current_app.logger.error(
-                    'Cannot delete dnssec key. DETAIL: {0}'.format(e))
-                current_app.logger.debug(traceback.format_exc())
-                return {
-                    'status': 'error',
-                    'msg':
-                        'There was something wrong, please contact administrator',
-                    'domain': domain.name,
-                    'id': key_id
-                }
-
-        else:
-            return {'status': 'error', 'msg': 'This zone does not exist'}
-
-    def assoc_account(self, account_id, update=True):
-        """
-        Associate account with a zone, specified by account id
-        """
-        domain_name = self.name
-
-        # Sanity check - domain name
-        if domain_name == "":
-            return {'status': False, 'msg': 'No zone name specified'}
-
-        # read domain and check that it exists
-        domain = Domain.query.filter(Domain.name == domain_name).first()
-        if not domain:
-            return {'status': False, 'msg': 'Zone does not exist'}
-
-        headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
-
-        account_name_old = Account().get_name_by_id(domain.account_id)
-        account_name = Account().get_name_by_id(account_id)
-
-        post_data = {"account": account_name}
-
-        try:
-            jdata = utils.fetch_json(urljoin(
-                self.PDNS_STATS_URL, self.API_EXTENDED_URL +
-                                     '/servers/localhost/zones/{0}'.format(quote_plus(domain_name))),
-                headers=headers,
-                timeout=int(
-                    Setting().get('pdns_api_timeout')),
-                method='PUT',
-                verify=Setting().get('verify_ssl_connections'),
-                data=post_data)
-
-            if 'error' in jdata.keys():
-                current_app.logger.error(jdata['error'])
-                return {'status': 'error', 'msg': jdata['error']}
-            else:
-                if update:
-                    self.update()
-                msg_str = 'Account changed for zone {0} successfully'
-                current_app.logger.info(msg_str.format(domain_name))
-                history = History(msg='Update zone {0} associate account {1}'.format(domain.name, 'none' if account_name == '' else account_name),
-                              detail = json.dumps({
-                                    'assoc_account': 'None' if account_name == '' else account_name,
-                                    'dissoc_account': 'None' if account_name_old == '' else account_name_old
-                                }),
-                              created_by=current_user.username)
-                history.add()
-                return {'status': 'ok', 'msg': 'account changed successfully'}
-
-        except Exception as e:
-            current_app.logger.debug(e)
-            current_app.logger.debug(traceback.format_exc())
-            msg_str = 'Cannot change account for zone {0}'
-            current_app.logger.error(msg_str.format(domain_name))
-            return {
-                'status': 'error',
-                'msg': 'Cannot change account for this zone.'
-            }
-
-    def get_account(self):
-        """
-        Get current account associated with this zone
-        """
-        domain = Domain.query.filter(Domain.name == self.name).first()
-
-        return domain.account
-
-    def is_valid_access(self, user_id):
-        """
-        Check if the user is allowed to access this
-        zone name
-        """
-        return db.session.query(Domain) \
+            row = [
+                record.name,
+                record.type,
+                record.status,
+                str(record.ttl),
+                record.data,
+                '1'
+            ]
+
+        data.append(row)
+
+    return make_response(jsonify({
+        'draw': draw,
+        'recordsTotal': total,
+        'recordsFiltered': filtered,
+        'data': data
+    }), 200)
+
+@domain_bp.route('/<path:domain_name>', methods=['GET'])
+@login_required
+@can_access_domain
+def domain(domain_name):
+    import urllib.parse
+
+    # Validate the domain existing in the local DB
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    quick_edit = Setting().get('record_quick_edit')
+    forward_records_allow_to_edit = Setting().get_supported_record_types(
+        Setting().ZONE_TYPE_FORWARD)
+    reverse_records_allow_to_edit = Setting().get_supported_record_types(
+        Setting().ZONE_TYPE_REVERSE)
+    ttl_options = Setting().get_ttl_options()
+
+    if not re.search(r'ip6\.arpa|in-addr\.arpa$', domain_name):
+        editable_records = forward_records_allow_to_edit
+    else:
+        editable_records = reverse_records_allow_to_edit
+
+    # catalog zone
+    catalog_members = None
+    if domain.type == 'Producer':
+        catalog_members = Domain.query.filter(Domain.catalog == domain.name).all()
+
+    return render_template('domain.html',
+                           domain=domain,
+                           editable_records=editable_records,
+                           quick_edit=quick_edit,
+                           ttl_options=ttl_options,
+                           current_user=current_user,
+                           catalog_members=catalog_members,
+                           domain_name_safe=urllib.parse.quote_plus(domain_name),
+                           allow_user_view_history=Setting().get('allow_user_view_history'))
+
+
+@domain_bp.route('/remove', methods=['GET', 'POST'])
+@login_required
+@can_remove_domain
+def remove():
+    # domains is a list of all the domains a User may access
+    # Admins may access all
+    # Regular users only if they are associated with the domain
+    if current_user.role.name in ['Administrator', 'Operator']:
+        domains = Domain.query.order_by(Domain.name).all()
+    else:
+        # Get query for domain to which the user has access permission.
+        # This includes direct domain permission AND permission through
+        # account membership
+        domains = db.session.query(Domain) \
             .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
             .outerjoin(Account, Domain.account_id == Account.id) \
             .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
             .filter(
-            db.or_(
-                DomainUser.user_id == user_id,
-                AccountUser.user_id == user_id
-            )).filter(Domain.id == self.id).first()
+                db.or_(
+                    DomainUser.user_id == current_user.id,
+                    AccountUser.user_id == current_user.id
+                )).order_by(Domain.name)
 
-    # Return None if this zone does not exist as record, 
-    # Return the parent zone that hold the record if exist
-    def is_overriding(self, domain_name):
-        upper_domain_name = '.'.join(domain_name.split('.')[1:])
-        while upper_domain_name != '':
-            if self.get_id_by_name(upper_domain_name.rstrip('.')) != None:
-                    upper_domain = self.get_domain_info(upper_domain_name)
-                    if 'rrsets' in upper_domain:
-                        for r in upper_domain['rrsets']:
-                            if domain_name.rstrip('.') in r['name'].rstrip('.'):
-                                current_app.logger.error('Zone already exists as a record: {} under zone: {}'.format(r['name'].rstrip('.'), upper_domain_name))
-                                return upper_domain_name
-            upper_domain_name = '.'.join(upper_domain_name.split('.')[1:])
-        return None
+    if request.method == 'POST':
+        # TODO Change name from 'domainid' to something else, its confusing
+        domain_name = request.form['domainid']
+
+        # Get domain from Database, might be None
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+
+        # Check if the domain is in domains before removal
+        if domain not in domains:
+            abort(403)
+
+        # Delete
+        d = Domain()
+        result = d.delete(domain_name)
+
+        if result['status'] == 'error':
+            abort(500)
+
+        history = History(msg='Delete zone {0}'.format(
+            pretty_domain_name(domain_name)),
+                          created_by=current_user.username)
+        history.add()
+
+        return redirect(url_for('dashboard.dashboard'))
+
+    else:
+        # On GET return the domains we got earlier
+        return render_template('domain_remove.html',
+                               domainss=domains)
+
+@domain_bp.route('/<path:domain_name>/changelog', methods=['GET'])
+@login_required
+@can_access_domain
+@history_access_required
+def changelog(domain_name):
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    # get all changelogs for this domain, in descening order
+    if current_user.role.name in [ 'Administrator', 'Operator' ]:
+        histories = History.query.filter(History.domain_id == domain.id).order_by(History.created_on.desc()).all()
+    else:
+        # if the user isn't an administrator or operator,
+        # allow_user_view_history must be enabled to get here,
+        # so include history for the domains for the user
+        histories = db.session.query(History) \
+            .join(Domain, History.domain_id == Domain.id) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .order_by(History.created_on.desc()) \
+            .filter(
+                db.and_(db.or_(
+                                DomainUser.user_id == current_user.id,
+                                AccountUser.user_id == current_user.id
+                        ),
+                        History.domain_id == domain.id,
+                        History.detail.isnot(None)
+                )
+            ).all()
+
+    changes_set = extract_changelogs_from_history(histories)
+
+    return render_template('domain_changelog.html', domain=domain, allHistoryChanges=changes_set)
+
+"""
+Returns a changelog for a specific pair of (record_name, record_type)
+"""
+@domain_bp.route('/<path:domain_name>/changelog/<path:record_name>/<string:record_type>', methods=['GET'])
+@login_required
+@can_access_domain
+@history_access_required
+def record_changelog(domain_name, record_name, record_type):
+
+    g.user = current_user
+    login_manager.anonymous_user = Anonymous
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    # get all changelogs for this domain, in descening order
+    if current_user.role.name in [ 'Administrator', 'Operator' ]:
+        histories = History.query \
+            .filter(
+                db.and_(
+                        History.domain_id == domain.id,
+                        History.detail.like("%{}%".format(record_name))
+                )
+            ) \
+            .order_by(History.created_on.desc()) \
+            .all()
+    else:
+        # if the user isn't an administrator or operator,
+        # allow_user_view_history must be enabled to get here,
+        # so include history for the domains for the user
+        histories = db.session.query(History) \
+            .join(Domain, History.domain_id == Domain.id) \
+            .outerjoin(DomainUser, Domain.id == DomainUser.domain_id) \
+            .outerjoin(Account, Domain.account_id == Account.id) \
+            .outerjoin(AccountUser, Account.id == AccountUser.account_id) \
+            .filter(
+                db.and_(db.or_(
+                                DomainUser.user_id == current_user.id,
+                                AccountUser.user_id == current_user.id
+                        ),
+                        History.domain_id == domain.id,
+                        History.detail.like("%{}%".format(record_name))
+                )
+            ) \
+            .order_by(History.created_on.desc()) \
+            .all()
+
+    changes_set = extract_changelogs_from_history(histories, record_name, record_type)
+
+    return render_template('domain_changelog.html', domain=domain, allHistoryChanges=changes_set,
+                            record_name = record_name, record_type = record_type)
+
+@domain_bp.route('/add', methods=['GET', 'POST'])
+@login_required
+@can_create_domain
+def add():
+    templates = DomainTemplate.query.all()
+    if request.method == 'POST':
+        try:
+            domain_name = request.form.getlist('domain_name')[0]
+            domain_type = request.form.getlist('radio_type')[0]
+            domain_template = request.form.getlist('domain_template')[0]
+            soa_edit_api = request.form.getlist('radio_type_soa_edit_api')[0]
+            account_id = request.form.getlist('accountid')[0]
+            catalog_name = request.form.get('catalog_name') or None
+
+            if ' ' in domain_name or not domain_name or not domain_type:
+                return render_template(
+                    'errors/400.html',
+                    msg="Please enter a valid zone name"), 400
+
+            if domain_name.endswith('.'):
+                domain_name = domain_name[:-1]
+
+            # If User creates the domain, check some additional stuff
+            if current_user.role.name not in ['Administrator', 'Operator']:
+                # Get all the account_ids of the user
+                user_accounts_ids = current_user.get_accounts()
+                user_accounts_ids = [x.id for x in user_accounts_ids]
+                # User may not create domains without Account
+                if int(account_id) == 0 or int(account_id) not in user_accounts_ids:
+                    return render_template(
+                        'errors/400.html',
+                        msg="Please use a valid Account"), 400
+
+
+            #TODO: Validate ip addresses input
+
+            # Encode domain name into punycode (IDN)
+            try:
+                domain_name = to_idna(domain_name, 'encode')
+            except:
+                current_app.logger.error("Cannot encode the zone name {}".format(domain_name))
+                current_app.logger.debug(traceback.format_exc())
+                return render_template(
+                    'errors/400.html',
+                    msg="Please enter a valid zone name"), 400
+
+            if domain_type == 'slave':
+                if request.form.getlist('domain_master_address'):
+                    domain_master_string = request.form.getlist(
+                        'domain_master_address')[0]
+                    domain_master_string = domain_master_string.replace(
+                        ' ', '')
+                    domain_master_ips = domain_master_string.split(',')
+            else:
+                domain_master_ips = []
+
+            account_name = Account().get_name_by_id(account_id)
+
+            d = Domain()
+
+            ### Test if a record same as the domain already exists in an upper level domain
+            if Setting().get('deny_domain_override'):
+
+                upper_domain = None
+                domain_override = False
+                domain_override_toggle = False
+
+                if current_user.role.name in ['Administrator', 'Operator']:
+                    domain_override = request.form.get('domain_override')
+                    domain_override_toggle = True
+
+
+                # If overriding box is not selected.
+                # False = Do not allow ovrriding, perform checks
+                # True = Allow overriding, do not perform checks
+                if not domain_override:
+                    upper_domain = d.is_overriding(domain_name)
+
+                if upper_domain:
+                    if current_user.role.name in ['Administrator', 'Operator']:
+                        accounts = Account.query.order_by(Account.name).all()
+                    else:
+                        accounts = current_user.get_accounts()
+
+                    msg = 'Zone already exists as a record under zone: {}'.format(upper_domain)
+
+                    return render_template('domain_add.html',
+                                            domain_override_message=msg,
+                                            accounts=accounts,
+                                            domain_override_toggle=domain_override_toggle)
+
+            result = d.add(domain_name=domain_name,
+                           domain_type=domain_type,
+                           soa_edit_api=soa_edit_api,
+                           domain_master_ips=domain_master_ips,
+                           account_name=account_name,
+                           catalog_name=catalog_name)
+            if result['status'] == 'ok':
+                domain_id = Domain().get_id_by_name(domain_name)
+                history = History(msg='Add zone {0}'.format(
+                    pretty_domain_name(domain_name)),
+                                  detail = json.dumps({
+                                      'domain_type': domain_type,
+                                      'domain_master_ips': domain_master_ips,
+                                      'account_id': account_id
+                                  }),
+                                  created_by=current_user.username,
+                                  domain_id=domain_id)
+                history.add()
+
+                # grant user access to the domain
+                Domain(name=domain_name).grant_privileges([current_user.id])
+
+                # apply template if needed
+                if domain_template != '0':
+                    template = DomainTemplate.query.filter(
+                        DomainTemplate.id == domain_template).first()
+                    template_records = DomainTemplateRecord.query.filter(
+                        DomainTemplateRecord.template_id ==
+                        domain_template).all()
+                    record_data = []
+                    for template_record in template_records:
+                        record_row = {
+                            'record_data': template_record.data,
+                            'record_name': template_record.name,
+                            'record_status': 'Active' if template_record.status else 'Disabled',
+                            'record_ttl': template_record.ttl,
+                            'record_type': template_record.type,
+                            'comment_data': [{'content': template_record.comment, 'account': ''}]
+                        }
+                        record_data.append(record_row)
+                    r = Record()
+                    result = r.apply(domain_name, record_data)
+                    if result['status'] == 'ok':
+                        history = History(
+                            msg='Applying template {0} to {1} successfully.'.
+                            format(template.name, domain_name),
+                            detail = json.dumps({
+                                    'domain':
+                                    domain_name,
+                                    'template':
+                                    template.name,
+                                    'add_rrsets':
+                                    result['data'][0]['rrsets'],
+                                    'del_rrsets':
+                                    result['data'][1]['rrsets']
+                                }),
+                            created_by=current_user.username,
+                            domain_id=domain_id)
+                        history.add()
+                    else:
+                        history = History(
+                            msg=
+                            'Failed to apply template {0} to {1}.'
+                            .format(template.name, domain_name),
+                            detail = json.dumps(result),
+                            created_by=current_user.username)
+                        history.add()
+                return redirect(url_for('dashboard.dashboard'))
+            else:
+                return render_template('errors/400.html',
+                                       msg=result['msg']), 400
+        except Exception as e:
+            current_app.logger.error('Cannot add zone. Error: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            abort(500)
+
+    # Get
+    else:
+        domain_override_toggle = False
+        catalog_zones = []
+        # Admins and Operators can set to any account
+        if current_user.role.name in ['Administrator', 'Operator']:
+            accounts = Account.query.order_by(Account.name).all()
+            catalog_zones = Domain.query.filter(Domain.type == 'Producer').all()
+            domain_override_toggle = True
+        else:
+            accounts = current_user.get_accounts()
+        return render_template('domain_add.html',
+                               templates=templates,
+                               accounts=accounts,
+                               catalog_zones=catalog_zones,
+                               domain_override_toggle=domain_override_toggle)
+
+
+
+@domain_bp.route('/setting/<path:domain_name>/delete', methods=['POST'])
+@login_required
+@operator_role_required
+def delete(domain_name):
+    d = Domain()
+    result = d.delete(domain_name)
+
+    if result['status'] == 'error':
+        abort(500)
+
+    history = History(msg='Delete zone {0}'.format(
+        pretty_domain_name(domain_name)),
+                      created_by=current_user.username)
+    history.add()
+
+    return redirect(url_for('dashboard.dashboard'))
+
+
+@domain_bp.route('/setting/<path:domain_name>/manage', methods=['GET', 'POST'])
+@login_required
+@operator_role_required
+def setting(domain_name):
+    if request.method == 'GET':
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+        if not domain:
+            abort(404)
+        users = User.query.all()
+        accounts = Account.query.order_by(Account.name).all()
+        catalog_zones = Domain.query.filter(Domain.type == 'Producer').all()
+
+        # get list of user ids to initialize selection data
+        d = Domain(name=domain_name)
+        domain_user_ids = d.get_user()
+        account = d.get_account()
+        domain_info = d.get_domain_info(domain_name)
+
+        return render_template('domain_setting.html',
+                               domain=domain,
+                               users=users,
+                               domain_user_ids=domain_user_ids,
+                               accounts=accounts,
+                               catalog_zones=catalog_zones,
+                               zone_catalog=domain_info.get("catalog"),
+                               domain_account=account,
+                               zone_type=domain_info["kind"].lower(),
+                               masters=','.join(domain_info["masters"]),
+                               soa_edit_api=domain_info["soa_edit_api"].upper())
+
+    if request.method == 'POST':
+        # username in right column
+        new_user_list = request.form.getlist('domain_multi_user[]')
+        new_user_ids = [
+            user.id for user in User.query.filter(
+                User.username.in_(new_user_list)).all() if user
+        ]
+
+        # grant/revoke user privileges
+        d = Domain(name=domain_name)
+        d.grant_privileges(new_user_ids)
+
+        history = History(
+            msg='Change zone {0} access control'.format(
+                pretty_domain_name(domain_name)),
+            detail=json.dumps({'user_has_access': new_user_list}),
+            created_by=current_user.username,
+            domain_id=d.id)
+        history.add()
+
+        return redirect(url_for('domain.setting', domain_name=domain_name))
+
+
+@domain_bp.route('/setting/<path:domain_name>/change_type',
+                 methods=['POST'])
+@login_required
+@operator_role_required
+def change_type(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+    domain_type = request.form.get('domain_type')
+    if domain_type is None:
+        abort(500)
+    if domain_type == '0':
+        return redirect(url_for('domain.setting', domain_name=domain_name))
+
+    #TODO: Validate ip addresses input
+    domain_master_ips = []
+    if domain_type == 'slave' and request.form.getlist('domain_master_address'):
+        domain_master_string = request.form.getlist(
+            'domain_master_address')[0]
+        domain_master_string = domain_master_string.replace(
+            ' ', '')
+        domain_master_ips = domain_master_string.split(',')
+
+    d = Domain()
+    status = d.update_kind(domain_name=domain_name,
+                           kind=domain_type,
+                           masters=domain_master_ips)
+    if status['status'] == 'ok':
+        history = History(msg='Update type for zone {0}'.format(
+                pretty_domain_name(domain_name)),
+                          detail=json.dumps({
+                              "domain": domain_name,
+                              "type": domain_type,
+                              "masters": domain_master_ips
+                          }),
+                          created_by=current_user.username,
+                          domain_id=Domain().get_id_by_name(domain_name))
+        history.add()
+        return redirect(url_for('domain.setting', domain_name = domain_name))
+    else:
+        abort(500)
+
+
+@domain_bp.route('/setting/<path:domain_name>/change_catalog',
+                 methods=['POST'])
+@login_required
+@operator_role_required
+def change_catalog(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+    domain_catalog = request.form.get('domain_catalog')
+    if domain_catalog is None:
+        abort(500)
+    if domain_catalog == '0':
+        domain_catalog = ''
+
+    d = Domain()
+    status = d.update_catalog(domain_name=domain_name,
+                           catalog_name=domain_catalog)
+    if status['status'] == 'ok':
+        history = History(msg='Update catalog for zone {0}'.format(
+                pretty_domain_name(domain_name)),
+                          detail=json.dumps({
+                              "domain": domain_name,
+                              "catalog": domain_catalog
+                          }),
+                          created_by=current_user.username,
+                          domain_id=Domain().get_id_by_name(domain_name))
+        history.add()
+        return redirect(url_for('domain.setting', domain_name = domain_name))
+    else:
+        abort(500)
+
+
+@domain_bp.route('/setting/<path:domain_name>/change_soa_setting',
+                 methods=['POST'])
+@login_required
+@operator_role_required
+def change_soa_edit_api(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+    new_setting = request.form.get('soa_edit_api')
+    if new_setting is None:
+        abort(500)
+    if new_setting == '0':
+        return redirect(url_for('domain.setting', domain_name=domain_name))
+
+    d = Domain()
+    status = d.update_soa_setting(domain_name=domain_name,
+                                  soa_edit_api=new_setting)
+    if status['status'] == 'ok':
+        history = History(
+            msg='Update soa_edit_api for zone {0}'.format(
+                pretty_domain_name(domain_name)),
+            detail = json.dumps({
+                'domain': domain_name,
+                'soa_edit_api': new_setting
+            }),
+            created_by=current_user.username,
+            domain_id=d.get_id_by_name(domain_name))
+        history.add()
+        return redirect(url_for('domain.setting', domain_name = domain_name))
+    else:
+        abort(500)
+
+
+@domain_bp.route('/setting/<path:domain_name>/change_account',
+                 methods=['POST'])
+@login_required
+@operator_role_required
+def change_account(domain_name):
+    domain = Domain.query.filter(Domain.name == domain_name).first()
+    if not domain:
+        abort(404)
+
+    account_id = request.form.get('accountid')
+    status = Domain(name=domain.name).assoc_account(account_id)
+    if status['status']:
+        return redirect(url_for('domain.setting', domain_name=domain.name))
+    else:
+        abort(500)
+
+
+@domain_bp.route('/<path:domain_name>/apply',
+                 methods=['POST'],
+                 strict_slashes=False)
+@login_required
+@can_access_domain
+def record_apply(domain_name):
+    try:
+        jdata = request.json
+        submitted_serial = jdata['serial']
+        submitted_record = jdata.get('record')
+        record_changes = jdata.get('record_changes')
+        domain = Domain.query.filter(Domain.name == domain_name).first()
+
+        if domain:
+            current_app.logger.debug('Current zone serial: {0}'.format(
+                domain.serial))
+
+            if int(submitted_serial) != domain.serial:
+                return make_response(
+                    jsonify({
+                        'status':
+                        'error',
+                        'msg':
+                        'The zone has been changed by another session or user. Please refresh this web page to load updated records.'
+                    }), 500)
+        else:
+            return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'Zone name {0} does not exist'.format(pretty_domain_name(domain_name))
+                }), 404)
+
+        r = Record()
+        if record_changes is not None:
+            upserts = record_changes.get('upserts', [])
+            deletes = record_changes.get('deletes', [])
+            if not upserts and not deletes:
+                return make_response(jsonify({
+                    'status': 'error',
+                    'msg': 'No changed records were submitted.'
+                }), 400)
+            current_app.logger.debug(
+                'Applying partial record changes for zone %s: %s upserts, %s deletes',
+                domain_name,
+                len(upserts),
+                len(deletes)
+            )
+            result = r.apply_record_changes(domain_name, upserts, deletes)
+        else:
+            if submitted_record is None:
+                return make_response(jsonify({
+                    'status': 'error',
+                    'msg': 'No records were submitted.'
+                }), 400)
+            zone_name = domain.name.rstrip('.')
+            for record in submitted_record:
+                record_name = str(record.get('record_name', '')).rstrip('.')
+                if record_name == zone_name:
+                    record['record_name'] = '@'
+            result = r.apply(domain_name, submitted_record)
+        if result['status'] == 'ok':
+            history = History(
+                msg='Apply record changes to zone {0}'.format(pretty_domain_name(domain_name)),
+                detail = json.dumps({
+                        'domain': domain_name,
+                        'add_rrsets': result['data'][0]['rrsets'],
+                        'del_rrsets': result['data'][1]['rrsets']
+                    }),
+                created_by=current_user.username,
+                domain_id=domain.id)
+            history.add()
+            return make_response(jsonify(result), 200)
+        else:
+            history = History(
+                msg='Failed to apply record changes to zone {0}'.format(
+                    pretty_domain_name(domain_name)),
+                detail = json.dumps({
+                        'domain': domain_name,
+                        'msg': result['msg'],
+                    }),
+                created_by=current_user.username)
+            history.add()
+            return make_response(jsonify(result), 400)
+    except Exception as e:
+        current_app.logger.error(
+            'Cannot apply record changes. Error: {0}'.format(e))
+        current_app.logger.debug(traceback.format_exc())
+        return make_response(
+            jsonify({
+                'status': 'error',
+                'msg': 'Error when applying new changes'
+            }), 500)
+
+
+@domain_bp.route('/<path:domain_name>/update',
+                 methods=['POST'],
+                 strict_slashes=False)
+@login_required
+@can_access_domain
+def record_update(domain_name):
+    """
+    This route is used for zone work as Slave Zone only
+    Pulling the records update from its Master
+    """
+    try:
+        jdata = request.json
+
+        domain_name = jdata['domain']
+        d = Domain()
+        result = d.update_from_master(domain_name)
+        if result['status'] == 'ok':
+            return make_response(
+                jsonify({
+                    'status': 'ok',
+                    'msg': result['msg']
+                }), 200)
+        else:
+            return make_response(
+                jsonify({
+                    'status': 'error',
+                    'msg': result['msg']
+                }), 500)
+    except Exception as e:
+        current_app.logger.error('Cannot update record. Error: {0}'.format(e))
+        current_app.logger.debug(traceback.format_exc())
+        return make_response(
+            jsonify({
+                'status': 'error',
+                'msg': 'Error when applying new changes'
+            }), 500)
+
+
+@domain_bp.route('/<path:domain_name>/info', methods=['GET'])
+@login_required
+@can_access_domain
+def info(domain_name):
+    domain = Domain()
+    domain_info = domain.get_domain_info(domain_name)
+    return make_response(jsonify(domain_info), 200)
+
+
+@domain_bp.route('/<path:domain_name>/dnssec', methods=['GET'])
+@login_required
+@can_access_domain
+def dnssec(domain_name):
+    domain = Domain()
+    dnssec = domain.get_domain_dnssec(domain_name)
+    return make_response(jsonify(dnssec), 200)
+
+
+@domain_bp.route('/<path:domain_name>/dnssec/enable', methods=['POST'])
+@login_required
+@can_access_domain
+@can_configure_dnssec
+def dnssec_enable(domain_name):
+    domain = Domain()
+    dnssec = domain.enable_domain_dnssec(domain_name)
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    history = History(
+        msg='DNSSEC was enabled for zone ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
+    return make_response(jsonify(dnssec), 200)
+
+
+@domain_bp.route('/<path:domain_name>/dnssec/disable', methods=['POST'])
+@login_required
+@can_access_domain
+@can_configure_dnssec
+def dnssec_disable(domain_name):
+    domain = Domain()
+    dnssec = domain.get_domain_dnssec(domain_name)
+
+    if dnssec.get('status') != 'ok':
+        return make_response(jsonify(dnssec), 502)
+
+    for key in dnssec['dnssec']:
+        result = domain.delete_dnssec_key(domain_name, key['id'])
+        if result.get('status') != 'ok':
+            return make_response(jsonify(result), 502)
+    rectify = domain.set_domain_api_rectify(domain_name, False)
+    if rectify.get('status') != 'ok':
+        return make_response(jsonify(rectify), 502)
+    domain_object = Domain.query.filter(domain_name == Domain.name).first()
+    domain_object.dnssec = 0
+    history = History(
+        msg='DNSSEC was disabled for zone ' + domain_name ,
+        created_by=current_user.username,
+        domain_id=domain_object.id)
+    history.add()
+    return make_response(jsonify({'status': 'ok', 'msg': 'DNSSEC removed.'}))
+
+
+@domain_bp.route('/<path:domain_name>/manage-setting', methods=['GET', 'POST'])
+@login_required
+@operator_role_required
+def admin_setdomainsetting(domain_name):
+    if request.method == 'POST':
+        #
+        # post data should in format
+        # {'action': 'set_setting', 'setting': 'default_action, 'value': 'True'}
+        #
+        try:
+            jdata = request.json
+            data = jdata['data']
+
+            if jdata['action'] == 'set_setting':
+                new_setting = data['setting']
+                new_value = str(data['value'])
+                domain = Domain.query.filter(
+                    Domain.name == domain_name).first()
+                setting = DomainSetting.query.filter(
+                    DomainSetting.domain == domain).filter(
+                        DomainSetting.setting == new_setting).first()
+
+                if setting:
+                    if setting.set(new_value):
+                        history = History(
+                            msg='Setting {0} changed value to {1} for {2}'.
+                            format(new_setting, new_value,
+                                   pretty_domain_name(domain_name)),
+                            created_by=current_user.username,
+                            domain_id=domain.id)
+                        history.add()
+                        return make_response(
+                            jsonify({
+                                'status': 'ok',
+                                'msg': 'Setting updated.'
+                            }))
+                    else:
+                        return make_response(
+                            jsonify({
+                                'status': 'error',
+                                'msg': 'Unable to set value of setting.'
+                            }))
+                else:
+                    if domain.add_setting(new_setting, new_value):
+                        history = History(
+                            msg=
+                            'New setting {0} with value {1} for {2} has been created'
+                            .format(new_setting, new_value, pretty_domain_name(domain_name)),
+                            created_by=current_user.username,
+                            domain_id=domain.id)
+                        history.add()
+                        return make_response(
+                            jsonify({
+                                'status': 'ok',
+                                'msg': 'New setting created and updated.'
+                            }))
+                    else:
+                        return make_response(
+                            jsonify({
+                                'status': 'error',
+                                'msg': 'Unable to create new setting.'
+                            }))
+            else:
+                return make_response(
+                    jsonify({
+                        'status': 'error',
+                        'msg': 'Action not supported.'
+                    }), 400)
+        except Exception as e:
+            current_app.logger.error(
+                'Cannot change zone setting. Error: {0}'.format(e))
+            current_app.logger.debug(traceback.format_exc())
+            return make_response(
+                jsonify({
+                    'status':
+                    'error',
+                    'msg':
+                    'There is something wrong, please contact Administrator.'
+                }), 400)
