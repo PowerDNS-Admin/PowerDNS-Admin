@@ -162,49 +162,13 @@
                                     {% if domain.type != 'Slave' %}
                                         <th>Comment</th>
                                         <th>Actions</th>
+                                        <th>Invisible Sorting Column</th>
                                     {% else %}
                                         <th>Invisible Sorting Column</th>
                                     {% endif %}
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for record in records %}
-                                    <tr class="odd row_record" id="{{ domain.name }}">
-                                        <td>{{ (record.name,domain.name) | display_record_name | pretty_domain_name }}</td>
-                                        <td>{{ record.type }}</td>
-                                        <td>{{ record.status }}</td>
-                                        <td>{{ record.ttl }}</td>
-                                        <td>{{ record.data | pretty_domain_name }}</td>
-                                        {% if domain.type != 'Slave' %}
-                                            <td>{{ record.comment }}</td>
-                                            <td>
-                                                {% if record.is_allowed_edit() %}
-                                                    <button type="button" title="Edit" class="btn btn-sm btn-warning button_edit">
-                                                        <i class="fa-solid fa-edit"></i>
-                                                    </button>
-                                                {% else %}
-                                                    <button type="button" class="btn btn-sm btn-warning">
-                                                        <i class="fa-solid fa-exclamation-circle"></i>
-                                                    </button>
-                                                {% endif %}
-                                                {% if record.is_allowed_delete() %}
-                                                    <button type="button" title="Delete" class="btn btn-sm btn-danger button_delete">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                {% endif %}
-                                                {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
-                                                    <button type="button" title="Changelog"
-                                                            onclick="show_record_changelog('{{ record.name }}','{{ record.type }}',event)"
-                                                            class="btn btn-primary btn-sm">
-                                                        <i class="fa-solid fa-history" aria-hidden="true"></i>
-                                                    </button>
-                                                {% endif %}
-                                            </td>
-                                        {% endif %}
-                                        <!-- hidden column that we can sort on -->
-                                        <td>1</td>
-                                    </tr>
-                                {% endfor %}
                                 </tbody>
                             </table>
                         </div>
@@ -251,15 +215,96 @@
         window.ttl_options = {{ ttl_options | tojson }};
         window.nEditing = null;
         window.nNew = false;
+        window.pendingRecordUpserts = {};
+        window.pendingRecordDeletes = {};
+        window.editOriginalData = null;
+        window.zoneName = {{ domain.name | pretty_domain_name | tojson }};
+        function displayRecordName(recordName) {
+            var name = (recordName || '').replace(/\.$/, '');
+            var zone = (window.zoneName || '').replace(/\.$/, '');
+            if (!name || name === '@') {
+                return name || '@';
+            }
+            if (name === zone) {
+                return '@';
+            }
+            var suffix = '.' + zone;
+            if (zone && name.endsWith(suffix)) {
+                return name.slice(0, -suffix.length);
+            }
+            return name;
+        }
+        function displayRow(row) {
+            row[0] = displayRecordName(row[0]);
+            return row;
+        }
+        function cloneRowData(row) {
+            return row ? row.slice() : row;
+        }
+        function recordKey(row) {
+            return JSON.stringify([
+                row[0] || '', row[1] || '', row[2] || '',
+                row[3] || '', row[4] || '', row[5] || ''
+            ]);
+        }
+        function normalizeRecord(row) {
+            return {
+                'record_name': row[0],
+                'record_type': row[1],
+                'record_status': row[2],
+                'record_ttl': row[3],
+                'record_data': row[4],
+                'comment_data': [{'content': row[5] || '', 'account': ''}]
+            };
+        }
+        function applyPendingChangesToAjaxRows(json) {
+            {% if domain.type != 'Slave' %}
+                var rows = [];
+                var seenKeys = {};
+                json.data.forEach(function(row) {
+                    row = displayRow(row);
+                    var key = recordKey(row);
+                    if (window.pendingRecordDeletes[key]) {
+                        return;
+                    }
+                    if (window.pendingRecordUpserts[key]) {
+                        row = window.pendingRecordUpserts[key];
+                    }
+                    rows.push(row);
+                    seenKeys[recordKey(row)] = true;
+                });
+                Object.keys(window.pendingRecordUpserts).forEach(function(key) {
+                    if (!seenKeys[key] && !window.pendingRecordDeletes[key]) {
+                        rows.unshift(window.pendingRecordUpserts[key]);
+                    }
+                });
+                json.data = rows;
+            {% else %}
+                json.data = json.data.map(displayRow);
+            {% endif %}
+            return json.data;
+        }
 
         // set up user data table
         initDataTable("#tbl_records", {
+            "serverSide": true,
+            "processing": true,
+            "searchDelay": 500,
+            "ajax": {
+                "url": "{{ url_for('domain.domain_records', domain_name=domain.name) }}",
+                "dataSrc": function(json) {
+                    return applyPendingChangesToAjaxRows(json);
+                }
+            },
+            "createdRow": function(row) {
+                $(row).addClass("odd row_record").attr("id", "{{ domain.name }}");
+            },
             {% if SETTING.get('default_record_table_size') | string in ['5','15','20'] %}
-                "lengthMenu": [[5, 15, 20, -1],
-                    [5, 15, 20, "All"]],
+                "lengthMenu": [[5, 15, 20],
+                    [5, 15, 20]],
             {% else %}
-                "lengthMenu": [[5, 15, 20, {{ SETTING.get('default_record_table_size') }}, -1],
-                    [5, 15, 20, {{ SETTING.get('default_record_table_size') }}, "All"]],
+                "lengthMenu": [[5, 15, 20, {{ SETTING.get('default_record_table_size') }}],
+                    [5, 15, 20, {{ SETTING.get('default_record_table_size') }}]],
             {% endif %}
             "pageLength": {{ SETTING.get('default_record_table_size') }},
             "language": {
@@ -271,37 +316,36 @@
                     type: 'natural',
                     targets: [0, 4]
                 },
-                {
-                    targets: [0, 1, 2, 3, 4, 5],
-                    render: $.fn.dataTable.render.text()
-                },
-                {
-                    // hidden column so that we can add new records on top
-                    // regardless of whatever sorting is done. See orderFixed
-                    visible: false,
-                    {% if domain.type != 'Slave' %}
+                {% if domain.type != 'Slave' %}
+                    {
+                        targets: [0, 1, 2, 3, 4, 5],
+                        render: $.fn.dataTable.render.text()
+                    },
+                    {
+                        targets: [6],
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        visible: false,
                         targets: [7]
-                    {% else %}
+                    },
+                {% else %}
+                    {
+                        targets: [0, 1, 2, 3, 4],
+                        render: $.fn.dataTable.render.text()
+                    },
+                    {
+                        visible: false,
                         targets: [5]
-                    {% endif %}
-                },
+                    },
+                {% endif %}
                 {
                     targets: [0],
-                    className: "text-end",
-                    data: {
-                        '_': "0",
-                        'sort': function (row, _type, _set, _meta) {
-                            const data = row[0] || '';
-                            return data.split('.').reverse().join('.');
-                        },
-                    },
+                    className: "text-end"
                 }
             ],
-            {% if domain.type != 'Slave' %}
-                "orderFixed": [[7, 'asc']]
-            {% else %}
-                "orderFixed": [[5, 'asc']]
-            {% endif %}
+            "orderFixed": []
         });
 
         {% if catalog_members is not none %}
@@ -344,18 +388,23 @@
             e.stopPropagation();
             var modal = $("#modal_delete");
             var table = $("#tbl_records").DataTable();
-            var record = $(this).prop('id');
             var nRow = $(this).parents('tr')[0];
-            var info = "Are you sure you want to delete " + record + "?";
+            var rowData = table.row(nRow).data();
+            if (!rowData) {
+                showErrorModal("Unable to identify the selected record.");
+                return;
+            }
+            var info = "Are you sure you want to delete " + rowData[0] + " " + rowData[1] + "?";
             modal.find('.modal-body p').text(info);
             showModal(modal);
-
-            $("#button_delete_confirm").unbind().one('click', function (e) {
-                table.row(nRow).remove().draw();
+            $("#button_delete_confirm").unbind().one('click', function () {
+                var key = recordKey(rowData);
+                window.pendingRecordDeletes[key] = rowData;
+                delete window.pendingRecordUpserts[key];
+                table.row(nRow).remove().draw(false);
                 detectUnsavedChanges(table);
                 hideModal(modal);
             });
-
         });
         // handle edit button and record click
         {% if domain.type != 'Slave' %}
@@ -373,16 +422,19 @@
                 } else if (nEditing !== null && nEditing != nRow && nNew == false) {
                     /* Currently editing - but not this row - restore the old before continuing to edit mode */
                     restoreRow(table, nEditing);
+                    window.editOriginalData = cloneRowData(table.row(nRow).data());
                     editRow(table, nRow);
                     nEditing = nRow;
                 } else if (nNew == true) {
                     /* adding a new row, delete it and start editing */
-                    table.row(nEditing).remove().draw();
+                    table.row(nEditing).remove().draw(false);
                     nNew = false;
+                    window.editOriginalData = cloneRowData(table.row(nRow).data());
                     editRow(table, nRow);
                     nEditing = nRow;
                 } else {
                     /* No edit in progress - let's start one */
+                    window.editOriginalData = cloneRowData(table.row(nRow).data());
                     editRow(table, nRow);
                     nEditing = nRow;
                 }
@@ -405,7 +457,24 @@
 
             // following unbind("click") is to avoid multiple times execution
             modal.find('#button_apply_confirm').unbind("click").click(function () {
-                var data = {'serial': serial, 'record': getTableData(table), '_csrf_token': '{{ csrf_token() }}'};
+                var upserts = [];
+                var deletes = [];
+                Object.keys(window.pendingRecordUpserts).forEach(function(key) {
+                    upserts.push(normalizeRecord(window.pendingRecordUpserts[key]));
+                });
+                Object.keys(window.pendingRecordDeletes).forEach(function(key) {
+                    deletes.push(normalizeRecord(window.pendingRecordDeletes[key]));
+                });
+                if (!upserts.length && !deletes.length) {
+                    showErrorModal("There are no changes to apply.");
+                    hideModal(modal);
+                    return;
+                }
+                var data = {
+                    'serial': serial,
+                    'record_changes': {'upserts': upserts, 'deletes': deletes},
+                    '_csrf_token': '{{ csrf_token() }}'
+                };
                 applyRecordChanges(data, domain);
                 hideModal(modal);
             })
@@ -419,18 +488,20 @@
                 showErrorModal("Previous record not saved. Please save it before adding more record.");
                 return;
             }
-            // clear search first
-            $("#tbl_records").DataTable().search('').columns().search('').draw();
-
-            // add new row
-            var default_type = records_allow_edit[0]
-            {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_view_history %}
-                var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '', '0']);
-            {% else %}
-                var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
-            {% endif %}
-            editRow($("#tbl_records").DataTable(), nRow);
-            document.getElementById("edit-row-focus").focus();
+            var table = $("#tbl_records").DataTable();
+            // Clear search without triggering an extra asynchronous server-side draw.
+            table.search('').columns().search('');
+            var default_type = records_allow_edit[0];
+            var newRowData = ['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '0'];
+            var nRow = table.row.add(newRowData).node();
+            $(nRow).addClass("odd row_record").attr("id", "{{ domain.name }}");
+            $(table.table().body()).prepend(nRow);
+            editRow(table, nRow);
+            var focusEl = document.getElementById("edit-row-focus");
+            if (focusEl) {
+                focusEl.focus();
+            }
+            window.editOriginalData = null;
             nEditing = nRow;
             nNew = true;
         });
@@ -440,7 +511,7 @@
             e.stopPropagation();
             var oTable = $("#tbl_records").DataTable();
             if (nNew) {
-                oTable.row(nEditing).remove().draw();
+                oTable.row(nEditing).remove().draw(false);
                 nEditing = null;
                 nNew = false;
             } else {
@@ -454,6 +525,18 @@
             e.stopPropagation();
             var table = $("#tbl_records").DataTable();
             saveRow(table, nEditing);
+            var newData = cloneRowData(table.row(nEditing).data());
+            var newKey = recordKey(newData);
+            if (window.editOriginalData) {
+                var oldKey = recordKey(window.editOriginalData);
+                if (oldKey !== newKey) {
+                    window.pendingRecordDeletes[oldKey] = window.editOriginalData;
+                    delete window.pendingRecordUpserts[oldKey];
+                }
+            }
+            window.pendingRecordUpserts[newKey] = newData;
+            delete window.pendingRecordDeletes[newKey];
+            window.editOriginalData = null;
             detectUnsavedChanges(table);
             nEditing = null;
             nNew = false;
@@ -565,42 +648,11 @@
         });
 
         function detectUnsavedChanges(table) {
-            // Reset unsavedChanges to false at the start of the function
-            unsavedChanges = false;
-            var index = 0;
-            var origcount = {{ records|length }};
-            var count = table.page.info().recordsTotal;
-
-            if (count != origcount) {
-                unsavedChanges = true; //a record was either added or deleted.
-            } else {
-                {% for record in records %}
-                var origrecordname = '{{ (record.name,domain.name) | display_record_name }}';
-                var origrecordtype = '{{ record.type }}';
-                var origrecordstatus = '{{ record.status }}';
-                var origrecordttl = '{{ record.ttl }}';
-                var origrecorddata = '{{ record.data }}';
-                origrecorddata = origrecorddata.replace(/&#34;/g, '\"');
-                var origrecordcomment = '{{ record.comment }}';
-                if (!table.row(index) || typeof table.row(index) == 'undefined') {
-                    unsavedChanges = true; //sanity check otherwise below code throws error if row at that index doesn't exist.
-                } else {
-                    var editrecordname = table.row(index).data()[0];
-                    var editrecordtype = table.row(index).data()[1];
-                    var editrecordstatus = table.row(index).data()[2];
-                    var editrecordttl = table.row(index).data()[3];
-                    var editrecorddata = table.row(index).data()[4];
-                    var editrecordcomment = table.row(index).data()[5];
-                    if (origrecordname != editrecordname || origrecordtype != editrecordtype || origrecordstatus != editrecordstatus || origrecordttl != editrecordttl ||  origrecorddata != editrecorddata ||  origrecordcomment != editrecordcomment) {
-                        unsavedChanges = true;
-                    }
-                }
-                index++;
-                {% endfor %}
-            }
+            unsavedChanges =
+                Object.keys(window.pendingRecordUpserts).length > 0 ||
+                Object.keys(window.pendingRecordDeletes).length > 0;
             unsavedChangesWarning(unsavedChanges);
         }
-
         function unsavedChangesWarning(unsavedChanges) {
             unsavedChangesBanner.classList.toggle('is-visible', unsavedChanges);
             unsavedChangesBanner.setAttribute('aria-hidden', String(!unsavedChanges));

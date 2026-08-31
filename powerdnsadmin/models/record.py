@@ -3,6 +3,7 @@ import traceback
 import dns.reversename
 import dns.inet
 import dns.name
+import copy
 from flask import current_app
 from urllib.parse import quote_plus, urljoin
 from itertools import groupby
@@ -42,6 +43,300 @@ class Record(object):
         self.API_EXTENDED_URL = utils.pdns_api_extended_uri()
         self.PRETTY_IPV6_PTR = Setting().get('pretty_ipv6_ptr')
 
+    def _record_comment_content(self, record):
+        if record.get('record_comment') is not None:
+            return record.get('record_comment') or ''
+
+        comment_data = record.get('comment_data') or []
+        if isinstance(comment_data, list) and comment_data:
+            return comment_data[0].get('content', '') or ''
+
+        return ''
+
+    def _normalize_submitted_record(self, record):
+        normalized = dict(record)
+        normalized['record_comment'] = self._record_comment_content(record)
+        return normalized
+
+    def _normalize_rrset_for_compare(self, rrset):
+        rrset = copy.deepcopy(rrset)
+
+        while len(rrset.get('comments', [])) < len(rrset.get('records', [])):
+            rrset.setdefault('comments', []).append({
+                'content': '',
+                'account': ''
+            })
+
+        for comment in rrset.get('comments', []):
+            comment.pop('modified_at', None)
+
+        zipped = list(zip(rrset.get('records', []), rrset.get('comments', [])))
+        zipped.sort(key=by_record_content_pair)
+
+        if zipped:
+            rrset['records'], rrset['comments'] = [list(t) for t in zip(*zipped)]
+        else:
+            rrset['records'], rrset['comments'] = [], []
+
+        return rrset
+
+    def _rrset_key(self, rrset):
+        return rrset['name'], rrset['type']
+
+    def _remove_one_record_from_rrset(self, rrset, record_content, comment_content):
+        records = rrset.get('records', [])
+        comments = rrset.get('comments', [])
+
+        while len(comments) < len(records):
+            comments.append({
+                'content': '',
+                'account': ''
+            })
+
+        for index, existing_record in enumerate(records):
+            existing_comment = comments[index] if index < len(comments) else {
+                'content': '',
+                'account': ''
+            }
+
+            if (
+                existing_record.get('content') == record_content.get('content')
+                and bool(existing_record.get('disabled')) == bool(record_content.get('disabled'))
+                and (existing_comment.get('content') or '') == (comment_content.get('content') or '')
+            ):
+                del records[index]
+                del comments[index]
+                return True
+
+        return False
+
+    def _add_one_record_to_rrset(self, rrset, record_content, comment_content):
+        records = rrset.setdefault('records', [])
+        comments = rrset.setdefault('comments', [])
+
+        while len(comments) < len(records):
+            comments.append({
+                'content': '',
+                'account': ''
+            })
+
+        records.append(record_content)
+        comments.append(comment_content or {
+            'content': '',
+            'account': ''
+        })
+
+    def _increment_soa_rrset_serial(self, rrset):
+        soa = copy.deepcopy(rrset)
+
+        if soa.get('type') != 'SOA' or not soa.get('records'):
+            return soa
+
+        content = soa['records'][0].get('content', '')
+        parts = content.split()
+
+        if len(parts) >= 3:
+            try:
+                parts[2] = str(int(parts[2]) + 1)
+                soa['records'][0]['content'] = ' '.join(parts)
+            except ValueError:
+                current_app.logger.warning(
+                    'Unable to increment SOA serial for %s because serial is not numeric: %s',
+                    soa.get('name'),
+                    parts[2]
+                )
+
+        return soa
+
+    def _current_soa_rrset(self, current_rrsets):
+        for rrset in current_rrsets:
+            if rrset.get('type') == 'SOA':
+                return self._normalize_rrset_for_compare(rrset)
+        return None
+
+    def apply_record_changes(self, domain_name, upserts, deletes):
+        """
+        Apply only changed records to PowerDNS.
+
+        PowerDNS updates are RRset-based. This method only replaces/deletes
+        affected RRsets, plus SOA with serial incremented by one.
+        """
+        try:
+            upserts = [self._normalize_submitted_record(r) for r in upserts]
+            deletes = [self._normalize_submitted_record(r) for r in deletes]
+
+            upsert_rrsets = self.build_rrsets(domain_name, upserts) if upserts else []
+            delete_rrsets = self.build_rrsets(domain_name, deletes) if deletes else []
+
+            affected_keys = set()
+            for rrset in upsert_rrsets + delete_rrsets:
+                affected_keys.add(self._rrset_key(rrset))
+
+            if not affected_keys:
+                return {
+                    'status': 'ok',
+                    'msg': 'No record changes to apply',
+                    'data': ({'rrsets': []}, {'rrsets': []})
+                }
+
+            current_rrsets = self.get_rrsets(domain_name)
+
+            zone_has_comments = False
+            current_by_key = {}
+
+            for rrset in current_rrsets:
+                for comment in rrset.get('comments', []):
+                    if 'modified_at' in comment:
+                        zone_has_comments = True
+
+                normalized = self._normalize_rrset_for_compare(rrset)
+                current_by_key[self._rrset_key(normalized)] = normalized
+
+            working_by_key = {}
+
+            for key in affected_keys:
+                if key in current_by_key:
+                    working_by_key[key] = copy.deepcopy(current_by_key[key])
+                else:
+                    name, record_type = key
+                    ttl = 3600
+
+                    for rrset in upsert_rrsets + delete_rrsets:
+                        if self._rrset_key(rrset) == key:
+                            ttl = rrset.get('ttl', ttl)
+                            break
+
+                    working_by_key[key] = {
+                        'name': name,
+                        'type': record_type,
+                        'ttl': ttl,
+                        'records': [],
+                        'comments': []
+                    }
+
+            for rrset in delete_rrsets:
+                key = self._rrset_key(rrset)
+                target = working_by_key[key]
+
+                for index, record_content in enumerate(rrset.get('records', [])):
+                    comment_content = rrset.get('comments', [{}])[index] if rrset.get('comments') else {
+                        'content': '',
+                        'account': ''
+                    }
+
+                    self._remove_one_record_from_rrset(
+                        target,
+                        record_content,
+                        comment_content
+                    )
+
+            for rrset in upsert_rrsets:
+                key = self._rrset_key(rrset)
+                target = working_by_key[key]
+
+                target['ttl'] = rrset.get('ttl', target.get('ttl', 3600))
+
+                for index, record_content in enumerate(rrset.get('records', [])):
+                    comment_content = rrset.get('comments', [{}])[index] if rrset.get('comments') else {
+                        'content': '',
+                        'account': ''
+                    }
+
+                    self._add_one_record_to_rrset(
+                        target,
+                        record_content,
+                        comment_content
+                    )
+
+            new_rrsets = {'rrsets': []}
+            del_rrsets = {'rrsets': []}
+
+            allowed_types = Setting().get_records_allow_to_edit()
+
+            for key, final_rrset in working_by_key.items():
+                name, record_type = key
+
+                if record_type not in allowed_types:
+                    continue
+
+                final_rrset = self._normalize_rrset_for_compare(final_rrset)
+                current_rrset = current_by_key.get(key)
+
+                if not final_rrset.get('records'):
+                    if current_rrset and record_type != 'SOA':
+                        delete_rrset = copy.deepcopy(current_rrset)
+                        delete_rrset['changetype'] = 'DELETE'
+                        del_rrsets['rrsets'].append(delete_rrset)
+                    continue
+
+                if current_rrset != final_rrset:
+                    replace_rrset = copy.deepcopy(final_rrset)
+
+                    if replace_rrset.get('type') == 'SOA':
+                        replace_rrset = self._increment_soa_rrset_serial(replace_rrset)
+
+                    replace_rrset['changetype'] = 'REPLACE'
+                    new_rrsets['rrsets'].append(replace_rrset)
+
+            # Force SOA serial increment when non-SOA records changed.
+            # If SOA itself is already being replaced above, do not add it twice.
+            if new_rrsets['rrsets'] or del_rrsets['rrsets']:
+                has_soa_replace = any(r.get('type') == 'SOA' for r in new_rrsets['rrsets'])
+
+                if not has_soa_replace:
+                    current_soa = self._current_soa_rrset(current_rrsets)
+
+                    if current_soa:
+                        soa_replace = self._increment_soa_rrset_serial(current_soa)
+                        soa_replace['changetype'] = 'REPLACE'
+                        new_rrsets['rrsets'].append(soa_replace)
+
+            api_payload = self.to_api_payload(
+                new_rrsets['rrsets'],
+                del_rrsets['rrsets'],
+                zone_has_comments
+            )
+
+            current_app.logger.debug(
+                "partial api payload: \n{}".format(utils.pretty_json(api_payload))
+            )
+
+            if api_payload['rrsets']:
+                result = self.apply_rrsets(domain_name, api_payload)
+
+                if result and 'error' in result.keys():
+                    current_app.logger.error(
+                        'Cannot apply partial record changes. PDNS error: {}'.format(result['error'])
+                    )
+                    return {
+                        'status': 'error',
+                        'msg': result['error'].replace("'", "")
+                    }
+
+            self.auto_ptr(domain_name, new_rrsets, del_rrsets)
+            self.update_db_serial(domain_name)
+
+            current_app.logger.info('Partial record changes were applied successfully.')
+
+            return {
+                'status': 'ok',
+                'msg': 'Record was applied successfully',
+                'data': (new_rrsets, del_rrsets)
+            }
+
+        except Exception as e:
+            current_app.logger.error(
+                "Cannot apply partial record changes to zone {0}. Error: {1}".format(
+                    domain_name,
+                    e
+                )
+            )
+            current_app.logger.debug(traceback.format_exc())
+            return {
+                'status': 'error',
+                'msg': 'There was something wrong, please contact administrator'
+            }
+    # End New
     def get_rrsets(self, domain):
         """
         Query zone's rrsets via PDNS API
@@ -445,7 +740,7 @@ class Record(object):
                         self.type = 'PTR'
                         self.data = record['content']
                         self.delete(domain_reverse_name)
-                
+
                 for r in new_rrsets:
                     for record in r['records']:
                         # Format the reverse record name
