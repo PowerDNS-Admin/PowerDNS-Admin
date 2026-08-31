@@ -17,17 +17,18 @@ def csrf_token(response):
 
 def test_edit_account_assigns_domain_and_user_without_posted_account_name(
         app, logged_in_admin_client, monkeypatch):
-    account_name = 'account-edit-regression'
+    submitted_account_name = 'account-edit-regression'
     domain_name = 'account-edit-regression.example'
 
     with app.app_context():
         account = Account(
-            name=account_name,
+            name=submitted_account_name,
             description='Original description',
             contact='Original contact',
             mail='original@example.com',
         )
         assert account.create_account()['status']
+        account_name = account.name
         db.session.add(Domain(name=domain_name))
         db.session.commit()
 
