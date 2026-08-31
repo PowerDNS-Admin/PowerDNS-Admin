@@ -708,8 +708,12 @@ def edit_account(account_name=None):
             result = account.update_account()
 
         if result['status']:
+            # The account name field is disabled when editing, so browsers do
+            # not include it in the submitted form. Use the canonical name on
+            # the account object for both create and edit requests.
+            canonical_account_name = account.name
             account = Account.query.filter(
-                Account.name == fdata['accountname']).first()
+                Account.name == canonical_account_name).first()
             old_domains = Domain.query.filter(Domain.account_id == account.id).all()
 
             for domain_name in new_domain_list:

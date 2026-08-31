@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Bug Fixes
+
+-   Editing an account can once again assign zones and users. The account
+    editor no longer attempts to read the disabled account-name field from the
+    submitted form, which caused Werkzeug to return HTTP 400 before saving the
+    associations. (`#1913`)
+
 ## [2026.08.1] - 2026-08-30
 
 ### Breaking Changes
