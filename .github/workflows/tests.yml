@@ -7,6 +7,8 @@ on:
     branches:
       - dev
       - master
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches:
       - dev
@@ -196,6 +198,9 @@ jobs:
 
   full-suite:
     name: Python tests (full suite)
+    needs:
+      - unit
+      - smoke
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -249,3 +254,68 @@ jobs:
           test "${UNIT_RESULT}" = success
           test "${SMOKE_RESULT}" = success
           test "${FULL_SUITE_RESULT}" = success
+
+  docker-changes:
+    name: Check for Docker image changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should_build: ${{ steps.changes.outputs.should_build }}
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check changed paths
+        id: changes
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if [ "${EVENT_NAME}" != push ] || [ "${REF_TYPE}" = tag ]; then
+            echo "should_build=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          ignored_only=true
+          if [ -z "${BEFORE_SHA}" ] ||
+             [ "${BEFORE_SHA}" = "0000000000000000000000000000000000000000" ] ||
+             ! git cat-file -e "${BEFORE_SHA}^{commit}"; then
+            echo "should_build=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          changed_files=(git diff --name-only "${BEFORE_SHA}" "${CURRENT_SHA}")
+
+          while IFS= read -r changed_path; do
+            case "${changed_path}" in
+              .github/*|deploy/*|docker/test/*|docs/*|.dockerignore|.gitattributes|.gitignore|.whitesource|.yarnrc|LICENSE|README.md|SECURITY.md)
+                ;;
+              *)
+                ignored_only=false
+                break
+                ;;
+            esac
+          done < <("${changed_files[@]}")
+
+          if [ "${ignored_only}" = true ]; then
+            echo "should_build=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "should_build=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+  docker-image:
+    name: Build and publish Docker image
+    needs:
+      - required
+      - docker-changes
+    if: >-
+      needs.required.result == 'success' &&
+      needs.docker-changes.outputs.should_build == 'true' &&
+      github.repository == 'PowerDNS-Admin/PowerDNS-Admin' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/build-and-publish.yml
+    secrets: inherit

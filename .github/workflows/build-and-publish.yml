@@ -2,26 +2,7 @@
 name: 'Docker Image'
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - 'dev'
-      - 'master'
-    tags:
-      - 'v*.*.*'
-    paths-ignore:
-      - .github/**
-      - deploy/**
-      - docker/test/**
-      - docs/**
-      - .dockerignore
-      - .gitattributes
-      - .gitignore
-      - .whitesource
-      - .yarnrc
-      - LICENSE
-      - README.md
-      - SECURITY.md
+  workflow_call:
 
 permissions:
   contents: read
