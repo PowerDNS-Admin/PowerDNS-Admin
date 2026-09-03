@@ -25,6 +25,7 @@ from ..models.api_key import ApiKey
 from ..models.base import db
 
 from ..lib.errors import ApiKeyCreateFail
+from ..lib.history import get_records, normalize_history_detail, normalize_rrset
 from ..lib.schema import ApiPlainKeySchema
 from ..lib.user_authorization import user_update_authorization_error
 
@@ -50,17 +51,8 @@ def get_record_changes(del_rrset, add_rrset):
         then `old_state` is None, when it's "deletion" then `new_state` is None.
     """
 
-    def get_records(rrset):
-        """For the given RRset return a combined list of records and comments."""
-        if not rrset or 'records' not in rrset:
-            return []
-        records = [dict(record) for record in rrset['records']]
-        for i, record in enumerate(records):
-            if 'comments' in rrset and len(rrset['comments']) > i:
-                record['comment'] = rrset['comments'][i].get('content', None)
-            else:
-                record['comment'] = None
-        return records
+    del_rrset = normalize_rrset(del_rrset) or {}
+    add_rrset = normalize_rrset(add_rrset) or {}
 
     def record_is_unchanged(old, new):
         """Returns True if the old record is not different from the new one."""
@@ -123,8 +115,13 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
         if entry.detail is None:
             continue
         
-        if "add_rrsets" in entry.detail:
-            details = json.loads(entry.detail)
+        if "add_rrsets" in entry.detail or "del_rrsets" in entry.detail:
+            try:
+                details = normalize_history_detail(json.loads(entry.detail))
+            except (json.JSONDecodeError, TypeError, ValueError):
+                current_app.logger.warning(
+                    'Skipping invalid history detail for history %s', entry.id)
+                continue
             if not details['add_rrsets'] and not details['del_rrsets']:
                 continue
         else:  # not a record entry
@@ -177,8 +174,8 @@ class HistoryRecordEntry:
         # search the add_rrset index into the add_rrset set for the key (name, type)
 
         self.history_entry = history_entry
-        self.add_rrset = add_rrset
-        self.del_rrset = del_rrset
+        self.add_rrset = normalize_rrset(add_rrset) or {}
+        self.del_rrset = normalize_rrset(del_rrset) or {}
         self.change_type = change_type  # "*": edit or unchanged, "+" new tuple(name,type), "-" deleted (name,type) tuple
         self.changed_fields = []  # contains a subset of : [ttl, name, type]
         self.changeSet = []  # all changes for the records of this add_rrset-del_rrset pair
@@ -189,10 +186,10 @@ class HistoryRecordEntry:
             self.changed_fields.append("ttl")
 
         elif change_type == "*":  # edit of unchanged
-            if add_rrset['ttl'] != del_rrset['ttl']:
+            if self.add_rrset['ttl'] != self.del_rrset['ttl']:
                 self.changed_fields.append("ttl")
 
-        self.changeSet = get_record_changes(del_rrset, add_rrset)
+        self.changeSet = get_record_changes(self.del_rrset, self.add_rrset)
 
     def toDict(self):
         return {
@@ -818,7 +815,12 @@ class DetailedHistory():
             self.detailed_msg = ""
             return
 
-        detail_dict = json.loads(history.detail)
+        try:
+            detail_dict = json.loads(history.detail)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            current_app.logger.warning(
+                'Skipping invalid history detail for history %s', history.id)
+            return
 
         if 'domain_type' in detail_dict and 'account_id' in detail_dict:  # this is a zone creation
             self.detailed_msg = render_template_string("""

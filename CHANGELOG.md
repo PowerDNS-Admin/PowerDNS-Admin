@@ -8,6 +8,10 @@
     editor no longer attempts to read the disabled account-name field from the
     submitted form, which caused Werkzeug to return HTTP 400 before saving the
     associations. (`#1913`)
+-   The changelog now handles PowerDNS RRset history entries with missing or
+    null comment metadata, legacy delete-only entries, and corrupt history
+    details without returning HTTP 500. RRset history is normalized
+    consistently for new API changes and existing database entries. (`#1915`)
 
 ## [2026.08.1] - 2026-08-30
 
