@@ -6,7 +6,7 @@
     "admin-lte": "4.1.0",
     "bootstrap": "5.3.8",
     "datatables.net": "1.13.11",
-    "datatables.net-bs5": "1.13.11",
+    "datatables.net-bs5": "3.0.1",
     "datatables.net-plugins": "^1.13.1",
     "jquery": "^3.6.0",
     "jquery-validation": "^1.19.5",
