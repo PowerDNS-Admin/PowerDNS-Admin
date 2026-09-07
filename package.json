@@ -3,7 +3,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "7.3.1",
     "@popperjs/core": "2.11.8",
-    "admin-lte": "4.1.0",
+    "admin-lte": "4.9.1",
     "bootstrap": "5.3.8",
     "datatables.net": "1.13.11",
     "datatables.net-bs5": "1.13.11",
