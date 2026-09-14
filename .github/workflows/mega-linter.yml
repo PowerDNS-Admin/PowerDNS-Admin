@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Repository checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -59,7 +59,7 @@ jobs:
 
       - name: MegaLinter
         id: megalinter
-        uses: oxsecurity/megalinter@v9
+        uses: oxsecurity/megalinter@v10
         env:
           CLEAR_REPORT_FOLDER: true
           DEFAULT_BRANCH: dev
