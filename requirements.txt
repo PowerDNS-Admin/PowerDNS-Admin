@@ -38,7 +38,7 @@ qrcode==7.4.2
 requests==2.34.2
 rjsmin==1.2.5
 webcolors==25.10.0
-werkzeug==3.1.8
+werkzeug==3.1.9
 #zipp==3.23.1
 rcssmin==1.2.2
 zxcvbn==4.5.0
