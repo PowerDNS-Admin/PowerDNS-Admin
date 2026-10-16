@@ -60,7 +60,7 @@
         }
         var link = element('a');
         link.href = row.urls.records;
-        link.appendChild(element('strong', '', data));
+        link.appendChild(element('strong', '', row.displayName || data));
         return link.outerHTML;
     }
 
