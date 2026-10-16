@@ -68,8 +68,9 @@
 
                 {% if current_user.role.name in ['Administrator', 'Operator'] or allow_user_remove_domain %}
                     <div class="dropdown-divider"></div>
-                    <button type="button" class="dropdown-item btn-secondary button_delete"
-                            onclick="window.location.href='{{ url_for('domain.remove') }}'">
+                    <button type="button" class="dropdown-item btn-secondary dashboard-remove-zone"
+                            data-domain="{{ domain.name }}"
+                            data-display-name="{{ domain.name | pretty_domain_name }}">
                         <span style="color: red;"><i class="fa-solid fa-trash"></i>&nbsp;Remove Zone</span>
                     </button>
                 {% endif %}
