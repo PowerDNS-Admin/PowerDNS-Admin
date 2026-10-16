@@ -84,6 +84,7 @@
 {% endblock %}
 
 {% block extrascripts %}
+    <script src="{{ url_for('static', filename='custom/js/dashboard-zone-delete.js') }}"></script>
     <script>
         //SYBPATCH START//
         function setUpDomainList(id, url) {
@@ -173,6 +174,7 @@
 {% endblock %}
 
 {% block modals %}
+    {% include "includes/dashboard_zone_delete.html" %}
     <div class="modal fade" id="modal_history_info" tabindex="-1" aria-labelledby="modal_history_info_label"
          aria-hidden="true">
         <div class="modal-dialog">

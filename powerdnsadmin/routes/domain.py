@@ -187,6 +187,8 @@ def remove():
                           created_by=current_user.username)
         history.add()
 
+        if request.accept_mimetypes.best == 'application/json':
+            return jsonify(status='ok')
         return redirect(url_for('dashboard.dashboard'))
 
     else:
