@@ -27,7 +27,7 @@
           <div class="card-body">
             <button type="button" class="btn btn-primary float-start button_show_records" id="{{ domain.name }}">
               <i class="fa-solid fa-arrow-left"></i>          
-              &nbsp;Manage Zone {{ domain.name }}
+              &nbsp;Manage Zone {{ domain.name | pretty_domain_name }}
             </button>
           </div>
           <div class="card-body">

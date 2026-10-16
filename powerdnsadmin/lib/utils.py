@@ -239,20 +239,19 @@ def ensure_list(l):
 
 
 def pretty_domain_name(domain_name):
-    # Add a debugging statement to print out the domain name
-    print("Received zone name:", domain_name)
+    """Decode IDN labels for display, preserving DNS-specific labels and dots."""
+    if not domain_name:
+        return domain_name
 
-    # Check if the domain name is encoded using Punycode
-    if domain_name.endswith('.xn--'):
-        try:
-            # Decode the domain name using the idna library
-            domain_name = idna.decode(domain_name)
-        except Exception as e:
-            # If the decoding fails, raise an exception with more information
-            raise Exception('Cannot decode IDN zone: {}'.format(e))
-
-    # Return the "pretty" version of the zone name
-    return domain_name
+    labels = domain_name.split('.')
+    for index, label in enumerate(labels):
+        if label.lower().startswith('xn--'):
+            try:
+                labels[index] = idna.decode(label)
+            except idna.IDNAError:
+                # Invalid API data must not prevent the page from rendering.
+                pass
+    return '.'.join(labels)
 
 
 def to_idna(value, action):
