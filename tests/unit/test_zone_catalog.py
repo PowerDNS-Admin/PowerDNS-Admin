@@ -3,6 +3,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+from lxml import html
+
+from powerdnsadmin.models.base import db
+
 from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.user import User
 
@@ -118,3 +123,59 @@ def test_catalog_templates_use_adminlte_4_and_bootstrap_5_markup():
         in domain_setting
     )
     assert 'name="domain_catalog" class="form-control"' not in domain_setting
+
+
+@pytest.mark.parametrize(('zone_type', 'has_member'), [
+    ('Producer', True),
+    ('Producer', False),
+    ('Native', False),
+])
+def test_catalog_members_are_visible_outside_unsaved_changes_banner(
+        initial_data, app, client, zone_type, has_member):
+    zone_name = f'catalog-{zone_type.lower()}-{int(has_member)}.invalid'
+    with app.app_context():
+        zone = Domain(name=zone_name, type=zone_type)
+        db.session.add(zone)
+        if has_member:
+            member = Domain(name='example.org', type='Master')
+            member.catalog = zone.name
+            db.session.add(member)
+        db.session.commit()
+        admin_id = User.query.filter_by(
+            username=app.config['TEST_ADMIN_USER']).one().id
+
+    with client.session_transaction() as session:
+        session['_user_id'] = str(admin_id)
+        session['_fresh'] = True
+
+    with patch('powerdnsadmin.routes.domain.Record.get_rrsets', return_value=[{
+        'name': zone_name + '.', 'type': 'SOA', 'ttl': 3600,
+        'comments': [], 'records': [{
+            'content': 'ns.invalid. hostmaster.invalid. 1 3600 600 86400 60',
+            'disabled': False,
+        }],
+    }]):
+        response = client.get('/domain/' + zone_name)
+
+    assert response.status_code == 200
+    document = html.fromstring(response.data)
+    banner = document.get_element_by_id('unsaved-changes-banner')
+    assert banner.get('aria-hidden') == 'true'
+    cards = document.xpath('//*[@id="catalog-members-card"]')
+    if zone_type != 'Producer':
+        assert not cards
+        return
+
+    assert len(cards) == 1
+    card = cards[0]
+    assert not card.xpath('ancestor::*[@aria-hidden="true" or @hidden]')
+    assert card.xpath(
+        'ancestor::*[contains(concat(" ", normalize-space(@class), " "), '
+        '" app-content ")]')
+    rows = card.xpath('.//tbody/tr')
+    assert len(rows) == int(has_member)
+    if has_member:
+        assert rows[0].xpath('.//a[normalize-space(.)="example.org"]/@href') == [
+            '/domain/example.org']
+        assert rows[0].xpath('.//a[normalize-space(.)="Zone Settings"]')
+        assert rows[0].xpath('.//a[normalize-space(.)="Zone Changelog"]')
