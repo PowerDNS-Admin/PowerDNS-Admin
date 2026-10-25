@@ -1,12 +1,17 @@
 import onelogin.saml2.utils as saml_utils
+import pytest
 from flask import request
+from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 import powerdnsadmin.routes.saml as saml_routes
 from powerdnsadmin.models.history import History
 from powerdnsadmin.services.saml import SAML
 
 
-class FakeSamlAuth:
+class FakeSamlAuth(OneLogin_Saml2_Auth):
+    def __init__(self, request_data):
+        self._request_data = request_data
+
     def process_response(self):
         pass
 
@@ -30,10 +35,10 @@ class FakeSamlAuth:
 
 class FakeSamlClient:
     def prepare_flask_request(self, request):
-        return {'script_name': request.path}
+        return SAML.__new__(SAML).prepare_flask_request(request)
 
     def init_saml_auth(self, request_data):
-        return FakeSamlAuth()
+        return FakeSamlAuth(request_data)
 
 
 def test_saml_redirect_signature_uses_exact_received_query_string(app):
@@ -58,8 +63,19 @@ def test_saml_lowercase_urlencoding_can_be_enabled_for_adfs(app):
     assert request_data['lowercase_urlencoding'] is True
 
 
-def test_saml_jit_user_creation_is_recorded_once_in_admin_history(
-        app, client, initial_data, monkeypatch):
+@pytest.mark.parametrize('relay_state', [
+    None,
+    '',
+    'https://localhost/saml/authorized',
+    'https://attacker.example/phishing',
+    'http://attacker.example/phishing',
+    '//attacker.example/phishing',
+    '/dashboard',
+    r'/\attacker.example/phishing',
+    'https://localhost@attacker.example/phishing',
+])
+def test_saml_login_ignores_relay_state_and_records_user_creation_once(
+        app, client, initial_data, monkeypatch, relay_state):
     monkeypatch.setitem(app.config, 'SAML_ENABLED', True)
     monkeypatch.setitem(app.config, 'SAML_ATTRIBUTE_USERNAME', 'username')
     monkeypatch.setitem(app.config, 'SAML_ATTRIBUTE_EMAIL', 'email')
@@ -71,11 +87,17 @@ def test_saml_jit_user_creation_is_recorded_once_in_admin_history(
     with app.app_context():
         app.extensions[saml_routes._SAML_CLIENT_KEY] = FakeSamlClient()
 
-    first_response = client.post('/saml/authorized')
-    second_response = client.post('/saml/authorized')
+    data = {} if relay_state is None else {'RelayState': relay_state}
+    first_response = client.post('/saml/authorized', data=data)
+    second_response = client.post('/saml/authorized', data=data)
 
     assert first_response.status_code == 302
     assert second_response.status_code == 302
+    assert first_response.location == '/login'
+    assert second_response.location == '/login'
+    with client.session_transaction() as session:
+        assert session['authentication_type'] == 'SAML'
+        assert session['_user_id'] == str(session['user_id'])
     with app.app_context():
         events = History.query.filter_by(
             msg='Created user saml-history-user').all()

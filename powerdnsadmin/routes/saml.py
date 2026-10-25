@@ -99,7 +99,6 @@ def saml_authorized():
     if not current_app.config.get('SAML_ENABLED', False):
         current_app.logger.error("SAML authentication is disabled.")
         abort(400)
-    from onelogin.saml2.utils import OneLogin_Saml2_Utils
     saml = ensure_saml_client()
     req = saml.prepare_flask_request(request)
     auth = saml.init_saml_auth(req)
@@ -110,11 +109,8 @@ def saml_authorized():
         session['samlUserdata'] = auth.get_attributes()
         session['samlNameId'] = auth.get_nameid()
         session['samlSessionIndex'] = auth.get_session_index()
-        self_url = OneLogin_Saml2_Utils.get_self_url(req)
-        self_url = self_url + req['script_name']
-        if 'RelayState' in request.form and self_url != request.form[
-            'RelayState']:
-            return redirect(auth.redirect_to(request.form['RelayState']))
+        # RelayState is untrusted; complete local login and use the fixed
+        # application redirect in authenticate_user instead.
         if current_app.config.get('SAML_ATTRIBUTE_USERNAME', False):
             username = session['samlUserdata'][
                 current_app.config['SAML_ATTRIBUTE_USERNAME']][0].lower()
