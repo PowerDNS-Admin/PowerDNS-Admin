@@ -13,7 +13,7 @@ PyYAML==6.0.3
 SQLAlchemy==2.0.51
 bcrypt==4.3.0
 bravado-core==6.4.1
-certifi==2026.7.22
+certifi==2026.10.19
 cffi==2.1.0
 #configobj==5.0.9
 cryptography==50.0.0
