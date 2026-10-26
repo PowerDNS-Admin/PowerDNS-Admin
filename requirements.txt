@@ -43,4 +43,4 @@ werkzeug==3.1.8
 rcssmin==1.2.2
 zxcvbn==4.5.0
 psycopg2==2.9.12
-setuptools==83.0.0
+setuptools==84.1.0
