@@ -18,7 +18,7 @@ cffi==2.1.0
 #configobj==5.0.9
 cryptography==50.0.0
 #cssmin==0.2.0
-dnspython==2.8.0
+dnspython==2.9.0
 flask_session_captcha==1.5.0
 gunicorn==26.0.0
 itsdangerous==2.2.0
