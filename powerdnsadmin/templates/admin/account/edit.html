@@ -7,6 +7,7 @@
     {% set action_label = 'Edit' %}
     {% set form_action = url_for('admin.edit_account', account_name=account.name) %}
 {% endif %}
+{% set submit_label = 'Create Account' if create else 'Save Account' %}
 {% set page_title = action_label ~ ' Account' %}
 {% set breadcrumb_items = [{'label': 'Accounts', 'url': url_for('admin.manage_account')}] %}
 {% block title %}<title>{{ action_label }} Account - {{ SITE_NAME }}</title>{% endblock %}
@@ -128,8 +129,8 @@
                                     Cancel
                                 </button>
                                 <button type="submit" class="btn btn-primary float-end"
-                                        title="{{ action_label }} Account">
-                                    {{ action_label }} Account
+                                        title="{{ submit_label }}">
+                                    {{ submit_label }}
                                 </button>
                             </div>
                             <!-- /.card-footer -->
