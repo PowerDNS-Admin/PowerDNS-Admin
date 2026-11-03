@@ -9,8 +9,8 @@ import logging
 config = context.config
 
 # Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
+# Upgrades can run in the application process; keep its security loggers active.
+fileConfig(config.config_file_name, disable_existing_loggers=False)
 logger = logging.getLogger('alembic.env')
 
 # add your model's MetaData object here

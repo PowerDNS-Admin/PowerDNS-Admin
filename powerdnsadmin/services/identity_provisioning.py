@@ -3,11 +3,15 @@
 from ..models.account import Account
 from ..models.history import History
 from ..models.role import Role
+from ..routes.auth_session import record_user_event
 
 
 def record_user_creation(user, *, audit_actor):
-    History(msg='Created user {0}'.format(user.username),
-            created_by=audit_actor).add()
+    record_user_event(
+        'Created user {0}'.format(user.username),
+        user.username,
+        audit_actor,
+    )
 
 
 def handle_account(account_name, account_description="", *, audit_actor):
@@ -29,26 +33,39 @@ def handle_account(account_name, account_description="", *, audit_actor):
 
 
 def uplift_to_admin(user, *, audit_actor):
-    if user.role.name != 'Administrator':
+    previous_role = user.role.name if user.role else None
+    if previous_role != 'Administrator':
         user.role_id = Role.query.filter_by(name='Administrator').first().id
-        history = History(msg='Promoting {0} to administrator'.format(
-            user.username),
-            created_by=audit_actor)
-        history.add()
+        record_user_event(
+            'Promoting {0} to administrator'.format(user.username),
+            user.username,
+            audit_actor,
+            role='Administrator',
+            previous_role=previous_role,
+        )
 
 
 def uplift_to_operator(user, *, audit_actor):
-    if user.role.name != 'Operator':
+    previous_role = user.role.name if user.role else None
+    if previous_role != 'Operator':
         user.role_id = Role.query.filter_by(name='Operator').first().id
-        history = History(msg='Promoting {0} to operator'.format(
-            user.username),
-            created_by=audit_actor)
-        history.add()
+        record_user_event(
+            'Promoting {0} to operator'.format(user.username),
+            user.username,
+            audit_actor,
+            role='Operator',
+            previous_role=previous_role,
+        )
 
 
 def demote_to_user(user, *, audit_actor):
-    if user.role.name != 'User':
+    previous_role = user.role.name if user.role else None
+    if previous_role != 'User':
         user.role_id = Role.query.filter_by(name='User').first().id
-        history = History(msg='Demoting {0} to user'.format(user.username),
-                          created_by=audit_actor)
-        history.add()
+        record_user_event(
+            'Demoting {0} to user'.format(user.username),
+            user.username,
+            audit_actor,
+            role='User',
+            previous_role=previous_role,
+        )

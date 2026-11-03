@@ -70,3 +70,22 @@ def init_app(app):
     app.register_error_handler(403, handle_access_forbidden)
     app.register_error_handler(404, handle_page_not_found)
     app.register_error_handler(500, handle_internal_server_error)
+
+    from ..lib.auth_throttle import ThrottleStoreUnavailable
+
+    @app.errorhandler(ThrottleStoreUnavailable)
+    def handle_throttle_store_unavailable(_err):
+        from flask import jsonify, request
+
+        if request.path.startswith('/api'):
+            response = jsonify({
+                "msg": "Authentication throttling is unavailable."
+            })
+            response.status_code = 503
+            response.headers['Cache-Control'] = 'no-store'
+            return response
+        return app.response_class(
+            'authentication throttling unavailable\n',
+            status=503,
+            mimetype='text/plain',
+        )

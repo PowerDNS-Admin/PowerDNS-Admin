@@ -5,7 +5,7 @@ a user's identity has been established, so they live here rather than in any
 one provider's route module.
 """
 import json
-from flask import current_app, session, redirect, url_for, request
+from flask import current_app, has_request_context, session, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user
 
 from ..models.setting import Setting
@@ -52,6 +52,29 @@ def client_ip():
     return str(request_ip).replace('\x00', '')[:255]
 
 
+def record_user_event(msg, username, created_by, source_ip=None, **fields):
+    """Record a user or role change.
+
+    The activity message stays the action. The client address is stored on
+    the row and shown in the detail table, not in the message text.
+    """
+    if source_ip is None:
+        source_ip = client_ip() if has_request_context() else ''
+    else:
+        source_ip = str(source_ip).replace('\x00', '')[:255]
+    detail = {'username': username, 'ip_address': source_ip}
+    detail.update({
+        key: value for key, value in fields.items() if value is not None
+    })
+    current_app.logger.info(
+        '%s from %s', msg, source_ip or 'unknown')
+    History(
+        msg=msg[:256],
+        detail=json.dumps(detail),
+        created_by=created_by,
+    ).add()
+
+
 def record_two_factor_change(username, enabled, created_by=None):
     """Record a two-factor enrollment or removal, including the client address."""
     source_ip = client_ip()
@@ -71,6 +94,56 @@ def record_two_factor_change(username, enabled, created_by=None):
         }),
         created_by=created_by,
     ).add()
+
+
+def record_otp_login_failure(username, authenticator, attempts, limit,
+                             locked_until=None, lock_minutes=None):
+    """Record one rejected login-form code, including its place in the limit.
+
+    The history row stays searchable as ``User {username} authentication``.
+    The counter makes each attempt distinct. The row that reaches the limit
+    also carries the automatic unlock time.
+    """
+    from ..lib.password_login import format_unlock_time
+
+    request_ip = client_ip()
+    counter = 'attempt {0} of {1}'.format(attempts, limit)
+    unlock = format_unlock_time(locked_until) if locked_until else None
+    if unlock and lock_minutes:
+        length = _lock_length(lock_minutes)
+        summary = '{0}, locked for {1} until {2}'.format(counter, length, unlock)
+    elif unlock:
+        summary = '{0}, locked until {1}'.format(counter, unlock)
+    else:
+        summary = counter
+    current_app.logger.warning(
+        "User {} failed to authenticate via {} from {} on /login ({}).".format(
+            username, authenticator, request_ip, summary))
+    History(
+        msg='User {} authentication failed ({})'.format(username, summary)[:256],
+        detail=json.dumps({
+            'username': username,
+            'authenticator': authenticator,
+            'ip_address': request_ip,
+            'success': 0,
+            'attempt': attempts,
+            'attempt_limit': limit,
+            'locked_until': unlock,
+            'path': '/login',
+        }),
+        created_by='System',
+    ).add()
+
+
+def _lock_length(minutes):
+    minutes = int(minutes)
+    if minutes % (24 * 60) == 0 and minutes >= 24 * 60:
+        days = minutes // (24 * 60)
+        return '{0} day{1}'.format(days, '' if days == 1 else 's')
+    if minutes % 60 == 0 and minutes >= 60:
+        hours = minutes // 60
+        return '{0} hour{1}'.format(hours, '' if hours == 1 else 's')
+    return '{0} minute{1}'.format(minutes, '' if minutes == 1 else 's')
 
 
 def signin_history(username, authenticator, success):

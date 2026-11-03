@@ -8,6 +8,7 @@ from flask_login import current_user, login_required, login_manager
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
 from ..lib.avatar import avatar_initials, initials_avatar_svg
+from ..lib.password_login import otp_confirmation_blocked
 from .index import password_policy_check
 
 
@@ -62,13 +63,13 @@ def profile():
                     # A password or a stolen session cannot turn off or
                     # replace a secret that is already enrolled.
                     if current_user.otp_secret:
-                        token = str(data.get('otp_token') or '')
-                        if not current_user.verify_totp(token):
+                        rejected = otp_confirmation_blocked(
+                            current_user, data.get('otp_token'))
+                        if rejected:
                             return make_response(
                                 jsonify({
                                     'status': 'error',
-                                    'msg':
-                                    'Enter the current authentication code to change two-factor authentication.',
+                                    'msg': rejected,
                                 }), 400)
                     user = User(username=current_user.username)
                     if not user.update_profile(enable_otp=enable_otp):

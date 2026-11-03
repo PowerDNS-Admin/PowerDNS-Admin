@@ -29,6 +29,12 @@ def test_login_page_does_not_refresh_an_idle_session(
     assert b'http-equiv="refresh"' not in login_page.data.lower()
 
 
+def test_head_login_returns_the_login_page(client, initial_data):
+    response = client.head('/login')
+
+    assert response.status_code == 200
+
+
 def test_login_only_prompts_for_otp_when_user_has_totp_configured(
         app, client, initial_data, test_admin_user, monkeypatch):
     login_page = client.get('/login')

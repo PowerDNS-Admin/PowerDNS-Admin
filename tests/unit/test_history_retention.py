@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 from powerdnsadmin.models.base import db
@@ -187,3 +188,68 @@ def test_activity_records_host_and_user_agent(app, client, initial_data):
     assert 'Host agent marker' in body
     assert 'pda.example' in body
     assert 'activity-browser/1' in body
+
+
+def test_created_user_and_role_change_record_the_source_address(
+        app, client, initial_data, caplog):
+    caplog.set_level(logging.INFO)
+    _login(client, app)
+    editor = client.get('/admin/user/edit')
+    created = client.post(
+        '/admin/user/edit',
+        data={
+            'username': 'audited-user',
+            'password': 'AuditedPassword123!',
+            'firstname': 'Audited',
+            'lastname': 'User',
+            'email': 'audited-user@example.com',
+            '_csrf_token': _csrf_token(editor),
+        },
+        headers={'X-Forwarded-For': '198.51.100.20, 10.0.0.8'},
+    )
+    assert created.status_code == 302
+
+    token_page = client.get('/admin/setting/pdns')
+    changed = client.post(
+        '/admin/manage-user',
+        json={
+            'action': 'update_user_role',
+            'data': {
+                'username': 'audited-user',
+                'role_name': 'Operator',
+            },
+            '_csrf_token': _csrf_token(token_page),
+        },
+        headers={
+            'X-CSRFToken': _csrf_token(token_page),
+            'X-Forwarded-For': '203.0.113.44',
+        },
+    )
+    assert changed.status_code == 200
+
+    with app.app_context():
+        created_row = History.query.filter(
+            History.msg.startswith('Created user audited-user')).one()
+        role_row = History.query.filter(
+            History.msg.startswith('Change user role of audited-user')).one()
+        assert created_row.msg == 'Created user audited-user'
+        assert role_row.msg == 'Change user role of audited-user to Operator'
+        assert '198.51.100.20' not in created_row.msg
+        assert '203.0.113.44' not in role_row.msg
+        assert json.loads(created_row.detail)['ip_address'] == '198.51.100.20'
+        assert json.loads(role_row.detail)['ip_address'] == '203.0.113.44'
+        assert json.loads(role_row.detail)['previous_role'] == 'User'
+        assert json.loads(role_row.detail)['role'] == 'Operator'
+        created_detail = DetailedHistory(created_row, None).detailed_msg
+        role_detail = DetailedHistory(role_row, None).detailed_msg
+        assert '198.51.100.20' in created_detail
+        assert '203.0.113.44' in role_detail
+        assert 'IP Address' in created_detail
+        assert 'Previous role' in role_detail
+        assert '>User<' in role_detail
+        assert 'Operator' in role_detail
+
+    assert 'Created user audited-user from 198.51.100.20' in caplog.text
+    assert (
+        'Change user role of audited-user to Operator from 203.0.113.44'
+        in caplog.text)

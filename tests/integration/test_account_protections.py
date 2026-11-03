@@ -1,9 +1,13 @@
+import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 import pyotp
 
+from powerdnsadmin.lib.password_login import register_otp_failure
 from powerdnsadmin.models.base import db
+from powerdnsadmin.models.history import History
 from powerdnsadmin.models.setting import Setting
 from powerdnsadmin.models.user import User
 
@@ -39,6 +43,7 @@ def set_otp(app, username, secret):
         account.otp_last_used = None
         account.otp_failed_attempts = 0
         account.otp_locked_until = None
+        account.otp_lockouts = 0
         db.session.commit()
         return account.id
 
@@ -138,6 +143,124 @@ def test_profile_cannot_disable_mfa_without_the_current_code(
         with app.app_context():
             admin = User.query.filter_by(username=test_admin_user).one()
             assert admin.otp_secret == ''
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def _lock_otp(app, username):
+    with app.app_context():
+        account = User.query.filter_by(username=username).one()
+        account.otp_failed_attempts = 5
+        account.otp_locked_until = datetime(2099, 1, 1)
+        db.session.commit()
+
+
+def test_profile_cannot_disable_mfa_while_the_account_is_locked(
+        app, client, initial_data, test_admin_user):
+    login(client, app)
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    _lock_otp(app, test_admin_user)
+    try:
+        profile = client.get('/user/profile')
+        refused = client.post(
+            '/user/profile',
+            json={
+                'action': 'enable_otp',
+                'data': {
+                    'enable_otp': False,
+                    'otp_token': pyotp.TOTP(secret).now(),
+                },
+                '_csrf_token': csrf_token(profile),
+            },
+        )
+        assert refused.status_code == 400
+        assert 'Too many authentication attempts' in refused.get_json()['msg']
+        with app.app_context():
+            admin = User.query.filter_by(username=test_admin_user).one()
+            assert admin.otp_secret == secret
+            assert admin.otp_last_used is None
+            assert admin.otp_failed_attempts == 5
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def test_rejected_profile_codes_use_the_shared_lock(
+        app, client, initial_data, test_admin_user):
+    login(client, app)
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    try:
+        profile = client.get('/user/profile')
+        for _ in range(5):
+            refused = client.post(
+                '/user/profile',
+                json={
+                    'action': 'enable_otp',
+                    'data': {'enable_otp': False, 'otp_token': '000000'},
+                    '_csrf_token': csrf_token(profile),
+                },
+            )
+            assert refused.status_code == 400
+        assert 'Too many authentication attempts' in refused.get_json()['msg']
+        with app.app_context():
+            admin = User.query.filter_by(username=test_admin_user).one()
+            assert admin.otp_failed_attempts == 5
+            assert admin.otp_locked_until is not None
+            assert admin.otp_secret == secret
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def test_administrator_cannot_remove_own_mfa_while_locked(
+        app, client, initial_data, test_admin_user):
+    login(client, app)
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    _lock_otp(app, test_admin_user)
+    try:
+        page = client.get('/admin/manage-user')
+        token_match = re.search(rb"'_csrf_token': '([^']+)'", page.data)
+        assert token_match is not None
+        refused = client.post(
+            '/admin/manage-user',
+            json={
+                'action': 'user_otp_disable',
+                'data': test_admin_user,
+                'otp_token': pyotp.TOTP(secret).now(),
+                '_csrf_token': token_match.group(1).decode('utf-8'),
+            },
+        )
+        assert refused.status_code == 400
+        assert 'Too many authentication attempts' in refused.get_json()['msg']
+        with app.app_context():
+            admin = User.query.filter_by(username=test_admin_user).one()
+            assert admin.otp_secret == secret
+            assert admin.otp_last_used is None
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def test_concurrent_otp_failures_all_count(
+        app, initial_data, test_admin_user):
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+
+    def fail_once(_):
+        with app.app_context():
+            try:
+                account = User.query.filter_by(username=test_admin_user).one()
+                register_otp_failure(account)
+            finally:
+                db.session.remove()
+
+    try:
+        with ThreadPoolExecutor(max_workers=5) as pool:
+            list(pool.map(fail_once, range(5)))
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            assert account.otp_failed_attempts == 5
+            assert account.otp_locked_until is not None
     finally:
         set_otp(app, test_admin_user, '')
 
@@ -485,6 +608,99 @@ def test_rejected_otp_attempts_are_shared_across_password_logins(
             },
         )
         assert unlocked.status_code == 200
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def _submit_wrong_login_codes(client, app, count):
+    page = client.get('/login')
+    response = client.post(
+        '/login',
+        data={
+            'username': app.config['TEST_ADMIN_USER'],
+            'password': app.config['TEST_ADMIN_PASSWORD'],
+            'auth_method': 'LOCAL',
+            '_csrf_token': csrf_token(page),
+        },
+    )
+    assert b'name="otptoken"' in response.data
+    for _ in range(count):
+        response = client.post(
+            '/login',
+            data={
+                'otptoken': '000000',
+                '_csrf_token': csrf_token(response),
+            },
+        )
+    return response
+
+
+def _otp_failure_rows(app, username, after_id):
+    with app.app_context():
+        rows = History.query.filter(
+            History.id > after_id,
+            History.msg.like(
+                'User {0} authentication failed%'.format(username)),
+        ).order_by(History.id).all()
+        return [(row.msg, json.loads(row.detail)) for row in rows]
+
+
+def test_login_failures_record_the_counter_and_staggered_unlock(
+        app, client, initial_data, test_admin_user):
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    try:
+        with app.app_context():
+            after_id = db.session.query(db.func.max(History.id)).scalar() or 0
+        locked = _submit_wrong_login_codes(client, app, 5)
+        assert b'Too many authentication attempts. Try again later.' in locked.data
+        recorded = _otp_failure_rows(app, test_admin_user, after_id)
+        assert [detail['attempt'] for _, detail in recorded] == [1, 2, 3, 4, 5]
+        assert all(detail['path'] == '/login' for _, detail in recorded)
+        assert 'attempt 1 of 5' in recorded[0][0]
+        assert 'locked' not in recorded[0][0]
+        assert 'attempt 5 of 5, locked for 5 minutes until' in recorded[4][0]
+        assert recorded[4][1]['locked_until']
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            remaining = (account.otp_locked_until - datetime.utcnow()).total_seconds()
+            assert account.otp_lockouts == 1
+            assert 4 * 60 < remaining < 6 * 60
+            account.otp_locked_until = datetime(2000, 1, 1)
+            db.session.commit()
+            after_id = db.session.query(db.func.max(History.id)).scalar() or 0
+
+        locked_again = _submit_wrong_login_codes(client, app, 5)
+        assert b'Too many authentication attempts. Try again later.' in locked_again.data
+        recorded = _otp_failure_rows(app, test_admin_user, after_id)
+        assert 'locked for 15 minutes until' in recorded[-1][0]
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            until = account.otp_locked_until
+            remaining = (until - datetime.utcnow()).total_seconds()
+            assert account.otp_lockouts == 2
+            assert 14 * 60 < remaining < 16 * 60
+
+        repeated = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(locked_again),
+            },
+        )
+        assert b'Too many authentication attempts. Try again later.' in repeated.data
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            assert account.otp_lockouts == 2
+            assert account.otp_locked_until == until
+            latest = History.query.filter(
+                History.msg.like(
+                    'User {0} authentication failed%'.format(test_admin_user)),
+            ).order_by(History.id.desc()).first()
+            assert 'attempt 5 of 5, locked until' in latest.msg
+            assert 'locked for' not in latest.msg
     finally:
         set_otp(app, test_admin_user, '')
 

@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from flask import Blueprint, render_template, make_response, url_for, current_app, session, request, redirect, abort
 
 from .auth_session import authenticate_user, clear_session
@@ -15,6 +17,32 @@ saml_bp = Blueprint('saml',
                     url_prefix='/')
 
 _SAML_CLIENT_KEY = 'pda_saml_client'
+
+
+def _safe_relay_state(target, self_url):
+    """Accept root-relative paths and absolute URLs on the current origin."""
+    if (not target or target != target.strip() or '\\' in target
+            or any(ord(char) < 32 or ord(char) == 127 for char in target)):
+        return False
+    try:
+        destination = urlsplit(target)
+        if not destination.scheme and not destination.netloc:
+            return target.startswith('/') and not target.startswith('//')
+        if (destination.scheme not in ('http', 'https')
+                or not destination.hostname
+                or destination.username is not None
+                or destination.password is not None):
+            return False
+        origin = urlsplit(self_url)
+        default_ports = {'http': 80, 'https': 443}
+        destination_port = (destination.port if destination.port is not None
+                            else default_ports[destination.scheme])
+        origin_port = (origin.port if origin.port is not None
+                       else default_ports.get(origin.scheme))
+        return (destination.scheme, destination.hostname, destination_port) == (
+            origin.scheme, origin.hostname, origin_port)
+    except ValueError:
+        return False
 
 
 def ensure_saml_client():
@@ -112,9 +140,14 @@ def saml_authorized():
         session['samlSessionIndex'] = auth.get_session_index()
         self_url = OneLogin_Saml2_Utils.get_self_url(req)
         self_url = self_url + req['script_name']
-        if 'RelayState' in request.form and self_url != request.form[
-            'RelayState']:
-            return redirect(auth.redirect_to(request.form['RelayState']))
+        relay_state = request.form.get('RelayState')
+        if relay_state:
+            if _safe_relay_state(relay_state, self_url):
+                target = auth.redirect_to(relay_state)
+                if target != self_url:
+                    return redirect(target)
+            else:
+                current_app.logger.warning('Ignored unsafe SAML RelayState')
         if current_app.config.get('SAML_ATTRIBUTE_USERNAME', False):
             username = session['samlUserdata'][
                 current_app.config['SAML_ATTRIBUTE_USERNAME']][0].lower()

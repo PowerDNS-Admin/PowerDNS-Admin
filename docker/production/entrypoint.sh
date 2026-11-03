@@ -11,6 +11,7 @@ BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0:80}"
 
 if [ "${1:-}" = "gunicorn" ]; then
     flask db upgrade
+    flask check-auth-throttle
     exec "$@" \
         --timeout "${GUNICORN_TIMEOUT}" \
         --workers "${GUNICORN_WORKERS}" \

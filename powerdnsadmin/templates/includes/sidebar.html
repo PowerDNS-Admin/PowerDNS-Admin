@@ -158,6 +158,16 @@
                             </ul>
                         </li>
                     {% endif %}
+                    {% if current_user.role.name == 'Administrator' %}
+                        <li class="nav-header">Security</li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.blank_passwords') }}"
+                               class="nav-link{% if active_page == 'admin_blank_passwords' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-user-lock"></i>
+                                <p>Blank Passwords</p>
+                            </a>
+                        </li>
+                    {% endif %}
                 {% endif %}
             </ul>
             </nav>

@@ -1,6 +1,6 @@
 import base64
 
-from flask import render_template, url_for, redirect, session, request, current_app
+from flask import g, render_template, url_for, redirect, session, request, current_app
 from flask_login import LoginManager, logout_user
 from flask_seasurf import SeaSurf
 from flask_session_captcha import FlaskSessionCaptcha
@@ -19,6 +19,16 @@ def handle_bad_request(e):
 
 
 def handle_unauthorized_access(e):
+    throttled = getattr(g, 'auth_throttled', None)
+    if throttled is not None:
+        response = current_app.response_class(
+            'Too many authentication attempts. Try again later.\n',
+            status=429,
+            mimetype='text/plain',
+        )
+        response.headers['Retry-After'] = str(throttled.retry_after)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
     session['next'] = request.script_root + request.path
     return redirect(url_for('index.login'))
 
@@ -79,6 +89,9 @@ def load_if_valid(user, method, src_ip, trust_user = False):
             # login_user(user, remember=False)
             return User.query.filter(User.id==user.id).first()
     except Exception as e:
+        from ..lib.auth_throttle import ThrottleStoreUnavailable
+        if isinstance(e, ThrottleStoreUnavailable):
+            raise
         current_app.logger.error('Error: {0}'.format(e))
         return None
 

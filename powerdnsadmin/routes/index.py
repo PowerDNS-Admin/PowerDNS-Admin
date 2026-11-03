@@ -12,12 +12,17 @@ from . import oauth as oauth_routes
 from . import saml as saml_routes
 from .auth_session import (
     authenticate_user, signin_history, clear_session, prepare_welcome_user,
-    record_two_factor_change)
+    record_otp_login_failure, record_two_factor_change, record_user_event)
 from .base import captcha, login_manager
 from ..lib import utils
 from ..lib.password_login import (
-    password_login_blocked, otp_failures_blocked, register_otp_failure,
-    clear_otp_failures, OTP_FAILURE_LIMIT, OTP_FAILURE_MESSAGE)
+    password_login_blocked, otp_failure_state, otp_failures_blocked,
+    otp_lock_message, register_otp_failure, clear_otp_failures,
+    OTP_FAILURE_LIMIT, OTP_FAILURE_MESSAGE)
+from ..lib.auth_throttle import (
+    THROTTLE_MESSAGE, AuthenticationThrottled, ThrottleStoreUnavailable,
+    active_retry_after,
+    authentication_source, credentials_bounded, record_malformed)
 from ..models.base import db
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
@@ -67,7 +72,22 @@ def ping():
 
 @index_bp.route('/healthcheck', methods=['GET'])
 def healthcheck():
+    from ..lib.auth_throttle import throttle_store_ready
+
+    if not throttle_store_ready():
+        return make_response('authentication throttling unavailable\n', 503)
     return make_response('ok')
+
+
+def _throttle_login(saml_enabled, retry_after):
+    response = make_response(render_template(
+        'login.html',
+        saml_enabled=saml_enabled,
+        error=THROTTLE_MESSAGE,
+    ), 429)
+    response.headers['Retry-After'] = str(max(1, int(retry_after)))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 @index_bp.route('/login', methods=['GET', 'POST'])
@@ -76,6 +96,10 @@ def login():
 
     if g.user is not None and current_user.is_authenticated:
         return redirect(url_for('dashboard.dashboard'))
+
+    # Flask allows HEAD on a GET route. HEAD must render the page, not fall
+    # through the POST branch or return nothing.
+    reading = request.method in ('GET', 'HEAD')
 
     if request.args.get('restart'):
         clear_pending_totp()
@@ -103,7 +127,7 @@ def login():
                     'login.html',
                     saml_enabled=SAML_ENABLED,
                     error='The sign-in code expired. Please sign in again.')
-        elif request.method == 'GET':
+        elif reading:
             blocked = otp_failures_blocked(pending_totp_user)
             if blocked:
                 clear_pending_totp()
@@ -118,19 +142,17 @@ def login():
         else:
             otp_token = request.form.get('otptoken', '')
             auth_method = session.get('pending_totp_auth_method', 'LOCAL')
-            blocked = otp_failures_blocked(pending_totp_user)
+            blocked = _locked_login(
+                pending_totp_user, auth_method, SAML_ENABLED)
             if blocked:
                 clear_pending_totp()
-                return render_template(
-                    'login.html',
-                    saml_enabled=SAML_ENABLED,
-                    error=blocked)
+                return blocked
             if not otp_token.isdigit() or not pending_totp_user.verify_totp(otp_token):
-                signin_history(pending_totp_user.username, auth_method, False)
-                register_otp_failure(pending_totp_user)
-                if otp_failures_blocked(pending_totp_user) or pending_totp_failed():
+                locked = _record_rejected_login_code(
+                    pending_totp_user, auth_method, SAML_ENABLED)
+                if locked or pending_totp_failed():
                     clear_pending_totp()
-                    return render_template(
+                    return locked or render_template(
                         'login.html',
                         saml_enabled=SAML_ENABLED,
                         error=OTP_FAILURE_MESSAGE)
@@ -145,16 +167,29 @@ def login():
             apply_autoprovisioning(pending_totp_user, auth_method)
             return authenticate_user(pending_totp_user, auth_method)
 
-    if request.method == 'GET':
+    if reading:
         return render_template('login.html', saml_enabled=SAML_ENABLED)
     elif request.method == 'POST':
         # process Local-DB authentication
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
         otp_token = request.form.get('otptoken')
         auth_method = request.form.get('auth_method', 'LOCAL')
         session[
             'authentication_type'] = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
+
+        source = authentication_source()
+        if not credentials_bounded(username, password):
+            retry = record_malformed(source)
+            if retry:
+                return _throttle_login(SAML_ENABLED, retry)
+            return render_template(
+                'login.html',
+                saml_enabled=SAML_ENABLED,
+                error='Invalid credentials')
+        retry = active_retry_after(source, username)
+        if retry:
+            return _throttle_login(SAML_ENABLED, retry)
 
         user = User(username=username,
                     password=password,
@@ -179,6 +214,11 @@ def login():
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        error='Invalid credentials')
+        except AuthenticationThrottled as throttled:
+            signin_history(username, auth_method, False)
+            return _throttle_login(SAML_ENABLED, throttled.retry_after)
+        except ThrottleStoreUnavailable:
+            raise
         except Exception as e:
             current_app.logger.error(
                 "Cannot authenticate user. Error: {}".format(e))
@@ -191,21 +231,16 @@ def login():
         # who has TOTP configured. This avoids showing an irrelevant OTP field
         # to every user on the initial sign-in form.
         if user.otp_secret:
-            blocked = otp_failures_blocked(user)
+            blocked = _locked_login(user, auth_method, SAML_ENABLED)
             if blocked:
-                return render_template('login.html',
-                                       saml_enabled=SAML_ENABLED,
-                                       error=blocked)
+                return blocked
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
-                    signin_history(user.username, auth_method, False)
-                    register_otp_failure(user)
-                    if otp_failures_blocked(user):
-                        return render_template(
-                            'login.html',
-                            saml_enabled=SAML_ENABLED,
-                            error=OTP_FAILURE_MESSAGE)
+                    locked = _record_rejected_login_code(
+                        user, auth_method, SAML_ENABLED)
+                    if locked:
+                        return locked
                     return render_template('login.html',
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
@@ -225,6 +260,50 @@ def login():
         apply_autoprovisioning(user, auth_method)
 
         return authenticate_user(user, auth_method)
+
+
+def _record_rejected_login_code(user, auth_method, saml_enabled):
+    """Count one wrong login-form code and record that attempt.
+
+    Returns the locked login page when this attempt reaches the limit.
+    """
+    outcome = register_otp_failure(user) or {}
+    attempts = outcome.get('attempts') or 0
+    limit = outcome.get('limit') or OTP_FAILURE_LIMIT
+    locked_until = outcome.get('locked_until')
+    if attempts:
+        record_otp_login_failure(
+            user.username,
+            auth_method,
+            attempts,
+            limit,
+            locked_until=locked_until,
+            lock_minutes=outcome.get('lock_minutes'),
+        )
+    if not locked_until:
+        return None
+    return render_template(
+        'login.html',
+        saml_enabled=saml_enabled,
+        error=otp_lock_message(locked_until))
+
+
+def _locked_login(user, auth_method, saml_enabled):
+    """Record a login-form submission that arrives while the account is locked."""
+    state = otp_failure_state(user)
+    if not state or not state['locked_until']:
+        return None
+    record_otp_login_failure(
+        user.username,
+        auth_method,
+        state['attempts'] or OTP_FAILURE_LIMIT,
+        state['limit'],
+        locked_until=state['locked_until'],
+    )
+    return render_template(
+        'login.html',
+        saml_enabled=saml_enabled,
+        error=otp_lock_message(state['locked_until']))
 
 
 def clear_pending_totp():
@@ -493,6 +572,11 @@ def register():
             try:
                 result = user.create_local_user()
                 if result and result['status']:
+                    record_user_event(
+                        'Created user {0}'.format(user.username),
+                        user.username,
+                        user.username,
+                    )
                     if Setting().get('verify_user_email'):
                         send_account_verification(email)
                     if Setting().get('otp_force') and Setting().get('otp_field_enabled'):

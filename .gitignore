@@ -31,6 +31,9 @@ test-results
 .cursor
 .junie
 skills
+AGENT.md
+AGENTS.md
+CLAUDE.md
 
 
 # tmp files
@@ -69,3 +72,6 @@ docker/docker-compose-rocky.yml
 docker/rocky/
 docker/megalinter/
 .github/workflows/build-rocky.yml
+
+# Local release-note drafts
+/WIP-Changelog.md

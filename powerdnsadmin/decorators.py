@@ -2,6 +2,7 @@ import base64
 import binascii
 from functools import wraps
 from flask import g, request, abort, current_app, Response
+from werkzeug.exceptions import TooManyRequests
 from flask_login import AnonymousUserMixin, current_user
 
 from .models import User, ApiKey, Setting, Domain, Setting
@@ -11,6 +12,11 @@ from .lib.helper import (
     UpstreamPathRejected, apikey_can_reach_zone, canonical_request_path,
     zone_from_path)
 from .lib.password_login import otp_login_blocked, password_login_blocked
+from .lib.auth_throttle import (
+    THROTTLE_MESSAGE, AuthenticationThrottled, ThrottleStoreUnavailable,
+    active_retry_after, api_key_bounded, api_key_retry_after,
+    authentication_source, claim_api_key_slot, credentials_bounded,
+    note_rejected_api_key, record_malformed, release_inflight)
 
 
 def api_authenticated_user():
@@ -152,6 +158,21 @@ def can_create_domain(f):
     return decorated_function
 
 
+def _remember_throttle(exc):
+    g.auth_throttled = exc
+    return None
+
+
+def _throttle_malformed_basic():
+    try:
+        retry = record_malformed(authentication_source())
+    except AuthenticationThrottled as exc:
+        return _remember_throttle(exc)
+    if retry:
+        return _remember_throttle(AuthenticationThrottled(retry))
+    return None
+
+
 def accept_basic_credentials():
     """Return the user authenticated by this request's Basic credentials.
 
@@ -163,9 +184,9 @@ def accept_basic_credentials():
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return None
-    if auth_header[:6] != "Basic ":
+    if len(auth_header) > 1024 or auth_header[:6] != "Basic ":
         current_app.logger.error('Error: Unsupported authorization mechanism!')
-        return None
+        return _throttle_malformed_basic()
 
     auth_header = auth_header[6:]
     try:
@@ -174,15 +195,20 @@ def accept_basic_credentials():
     except (binascii.Error, UnicodeDecodeError) as e:
         current_app.logger.error(
             'Invalid base64-encoded of credential. Error {0}'.format(e))
-        return None
+        return _throttle_malformed_basic()
     except TypeError as e:
         current_app.logger.error('Error: {0}'.format(e))
-        return None
+        return _throttle_malformed_basic()
 
     if len(auth_components) != 2:
-        return None
+        return _throttle_malformed_basic()
 
     (username, password) = auth_components
+    if not credentials_bounded(username, password):
+        return _throttle_malformed_basic()
+    retry = active_retry_after(authentication_source(), username)
+    if retry:
+        return _remember_throttle(AuthenticationThrottled(retry))
     auth_method = request.args.get('auth_method', 'LOCAL')
     auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
     user = User(username=username,
@@ -202,6 +228,10 @@ def accept_basic_credentials():
 
     try:
         auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
+    except AuthenticationThrottled as exc:
+        return _remember_throttle(exc)
+    except ThrottleStoreUnavailable:
+        raise
     except Exception as e:
         current_app.logger.error('Error: {0}'.format(e))
         return None
@@ -218,28 +248,62 @@ def accept_basic_credentials():
     return User.query.filter(User.username == username).first()
 
 
+def _api_key_throttled(retry_after):
+    return _remember_throttle(AuthenticationThrottled(retry_after))
+
+
+def _spend_api_key_failure(source):
+    """Count one rejected key. A closed budget becomes HTTP 429."""
+    retry = note_rejected_api_key(source)
+    if retry:
+        return _api_key_throttled(retry)
+    return None
+
+
 def accept_api_key():
-    """Return the API key authenticated by ``X-API-KEY``, or ``None``."""
+    """Return the API key authenticated by ``X-API-KEY``, or ``None``.
+
+    The source budget is checked before bcrypt. Invalid, malformed, and
+    oversized keys spend that source only. Password and one-time-code
+    counters are left untouched, and the raw token is not logged.
+    """
     auth_header = request.headers.get('X-API-KEY')
     if not auth_header:
         return None
+    source = authentication_source()
+    retry = api_key_retry_after(source)
+    if retry:
+        return _api_key_throttled(retry)
+    if len(auth_header) > 1024:
+        current_app.logger.warning('Rejected oversized API key from %s', source)
+        return _spend_api_key_failure(source)
     try:
         apikey_val = str(base64.b64decode(auth_header), 'utf-8')
-    except (binascii.Error, UnicodeDecodeError) as e:
-        current_app.logger.error(
-            'Invalid base64-encoded X-API-KEY. Error {0}'.format(e))
-        return None
-    except TypeError as e:
-        current_app.logger.error('Error: {0}'.format(e))
-        return None
+    except (binascii.Error, UnicodeDecodeError):
+        current_app.logger.warning('Rejected malformed API key from %s', source)
+        return _spend_api_key_failure(source)
+    except TypeError:
+        current_app.logger.warning('Rejected malformed API key from %s', source)
+        return _spend_api_key_failure(source)
+    if not api_key_bounded(apikey_val):
+        current_app.logger.warning('Rejected malformed API key from %s', source)
+        return _spend_api_key_failure(source)
 
-    apikey = ApiKey(key=apikey_val)
-    apikey.plain_text_password = apikey_val
+    lease = claim_api_key_slot()
+    if lease is False:
+        return _api_key_throttled(1)
     try:
-        return apikey.is_validate(method='LOCAL', src_ip=request.remote_addr)
-    except Exception as e:
-        current_app.logger.error('Error: {0}'.format(e))
-        return None
+        apikey = ApiKey(key=apikey_val)
+        apikey.plain_text_password = apikey_val
+        try:
+            return apikey.is_validate(
+                method='LOCAL', src_ip=request.remote_addr)
+        except Exception:
+            current_app.logger.warning('Rejected API key from %s', source)
+            return _spend_api_key_failure(source)
+    finally:
+        if lease:
+            release_inflight(lease)
 
 
 def establish_api_identity():
@@ -253,12 +317,22 @@ def establish_api_identity():
     g._api_identity_ready = True
     if request.headers.get('X-API-KEY'):
         apikey = accept_api_key()
+        throttled = getattr(g, 'auth_throttled', None)
+        if throttled is not None:
+            error = TooManyRequests(THROTTLE_MESSAGE)
+            error.retry_after = throttled.retry_after
+            raise error
         if apikey is None:
             abort(401)
         g.apikey = apikey
         return
     if request.headers.get('Authorization'):
         user = accept_basic_credentials()
+        throttled = getattr(g, 'auth_throttled', None)
+        if throttled is not None:
+            error = TooManyRequests(THROTTLE_MESSAGE)
+            error.retry_after = throttled.retry_after
+            raise error
         if user is None:
             abort(401)
         g.basic_auth_user = user
@@ -602,7 +676,13 @@ def apikey_auth(f):
 def dyndns_login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.is_authenticated is False:
+        authenticated = current_user.is_authenticated
+        throttled = getattr(g, 'auth_throttled', None)
+        if throttled is not None:
+            response = Response(THROTTLE_MESSAGE + '\n', status=429)
+            response.headers['Retry-After'] = str(throttled.retry_after)
+            return response
+        if authenticated is False:
             return Response(headers={'WWW-Authenticate': 'Basic'}, status=401)
         return f(*args, **kwargs)
 

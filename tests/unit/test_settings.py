@@ -13,6 +13,42 @@ DATABASE_ENV_VARS = AppSettings.DATABASE_URI_COMPONENTS + (
 )
 
 
+@pytest.mark.parametrize('name', ['pdns_api_url', 'pdns_api_key'])
+@pytest.mark.parametrize('source', [
+    'unset', 'configuration file', 'environment', 'secret file', 'empty',
+    'empty configuration',
+])
+def test_pdns_deployment_ownership(monkeypatch, tmp_path, name, source):
+    for setting in ('PDNS_API_URL', 'PDNS_API_KEY'):
+        monkeypatch.delenv(setting, raising=False)
+        monkeypatch.delenv(setting + '_FILE', raising=False)
+    app = SimpleNamespace(config={'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'})
+    env_name = name.upper()
+    if source != 'unset':
+        app.config[env_name] = 'configured-value'
+    value = 'configured-value'
+    if source == 'empty configuration':
+        value = app.config[env_name] = ''
+    if source in ('environment', 'empty'):
+        value = '' if source == 'empty' else 'environment-value'
+        monkeypatch.setenv(env_name, value)
+    elif source == 'secret file':
+        value = 'file-value'
+        secret = tmp_path / 'secret'
+        secret.write_text(value)
+        monkeypatch.setenv(env_name + '_FILE', str(secret))
+    AppSettings.load_environment(app)
+    configured = app.config['_PDNS_CONNECTION_SETTINGS']
+    if source == 'unset':
+        assert name not in configured
+    else:
+        assert configured[name] == {
+            'value': value,
+            'source': ('environment' if source == 'empty' else
+                       'configuration file' if source == 'empty configuration' else source),
+        }
+
+
 @pytest.fixture
 def clean_database_env(monkeypatch):
     for name in DATABASE_ENV_VARS:
@@ -153,6 +189,27 @@ def test_load_environment_requires_database_configuration(
         clean_database_env):
     with pytest.raises(ValueError, match='Database configuration is required'):
         AppSettings.load_environment(SimpleNamespace(config={}))
+
+
+def test_load_environment_strips_newlines_from_secret_files(
+        clean_database_env, monkeypatch, tmp_path):
+    secret = tmp_path / 'secret_key'
+    salt = tmp_path / 'salt'
+    secret.write_text('e951e5a1f4b94151b360f47edf596dd2\n')
+    salt.write_text('$2b$12$yLUMTIfl21FKJQpTkRQXCu\n')
+    for name in ('SECRET_KEY', 'SALT'):
+        monkeypatch.delenv(name, raising=False)
+        monkeypatch.delenv(name + '_FILE', raising=False)
+    monkeypatch.setenv('SECRET_KEY_FILE', str(secret))
+    monkeypatch.setenv('SALT_FILE', str(salt))
+    app = SimpleNamespace(config={
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+    })
+
+    AppSettings.load_environment(app)
+
+    assert app.config['SECRET_KEY'] == 'e951e5a1f4b94151b360f47edf596dd2'
+    assert app.config['SALT'] == '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 
 
 def test_load_environment_preserves_database_uri_from_config_file(

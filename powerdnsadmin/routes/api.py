@@ -34,6 +34,7 @@ from ..lib.schema import (
     UserDetailedSchema,
 )
 from ..lib.user_authorization import user_update_authorization_error
+from .auth_session import record_user_event
 from ..models import (
     User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
     Role,
@@ -130,6 +131,21 @@ def handle_401(err):
     return jsonify({"msg": "Unauthorized"}), 401
 
 
+def _too_many_attempts(err):
+    response = jsonify({
+        "msg": "Too many authentication attempts. Try again later."
+    })
+    response.status_code = 429
+    response.headers['Retry-After'] = str(getattr(err, 'retry_after', 1))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@api_bp.errorhandler(429)
+def handle_429(err):
+    return _too_many_attempts(err)
+
+
 @api_bp.errorhandler(404)
 def handle_404(err):
     return jsonify({"msg": "Not Found"}), 404
@@ -212,6 +228,11 @@ def before_request():
                 "status": False,
                 "msg": "Site is in maintenance mode"
             }), 503)
+
+
+@apilist_bp.errorhandler(429)
+def handle_apilist_429(err):
+    return _too_many_attempts(err)
 
 
 @apilist_bp.errorhandler(401)
@@ -795,9 +816,11 @@ def api_create_user():
             username, email, result['msg']))
         raise UserCreateDuplicate(message=result['msg'])
 
-    history = History(msg='Created user {0}'.format(user.username),
-                      created_by=current_user.username)
-    history.add()
+    record_user_event(
+        'Created user {0}'.format(user.username),
+        user.username,
+        current_user.username,
+    )
     return jsonify(user_single_schema.dump(user)), 201
 
 
@@ -829,6 +852,7 @@ def api_update_user(user_id):
     if not user:
         current_app.logger.debug("User not found for id {}".format(user_id))
         abort(404)
+    previous_role_name = user.role.name if user.role else None
     role_change = role_name is not None or role_id is not None
     requested_role = None
     if role_change:
@@ -901,6 +925,15 @@ def api_update_user(user_id):
     history = History(msg='Updated user {0}'.format(user.username),
                       created_by=current_user.username)
     history.add()
+    if requested_role is not None and requested_role.name != previous_role_name:
+        record_user_event(
+            'Change user role of {0} to {1}'.format(
+                user.username, requested_role.name),
+            user.username,
+            current_user.username,
+            role=requested_role.name,
+            previous_role=previous_role_name,
+        )
     return '', 204
 
 
@@ -917,6 +950,11 @@ def api_delete_user(user_id):
         current_app.logger.debug("Cannot delete self (id {})".format(user_id))
         msg = "Cannot delete self"
         raise UserDeleteFail(message=msg)
+
+    authorization_error = user_update_authorization_error(
+        current_user, target=user)
+    if authorization_error:
+        raise NotEnoughPrivileges(message=authorization_error)
 
     # Remove account associations first
     user_accounts = Account.query.join(AccountUser).join(

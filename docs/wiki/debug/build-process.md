@@ -10,7 +10,7 @@ The primary Docker image is published to Docker Hub as `powerdnsadmin/pda-legacy
 
 ### Local Building and Testing
 
-To build and run the production image from the checked-out source, use the default Compose file. This stack also starts a persistent MySQL 8.4 service and waits for it to become healthy before starting PowerDNS-Admin.
+To build and run the production image from the checked-out source, use the default Compose file. Export `SECRET_KEY` and `SALT` first, as described in [Running PowerDNS-Admin on Docker](../install/Running-PowerDNS-Admin-on-Docker.md). This stack also starts a persistent MySQL 8.4 service and waits for it to become healthy before starting PowerDNS-Admin.
 
 ```console
 # From the root of the project

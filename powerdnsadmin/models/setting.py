@@ -14,9 +14,8 @@ class Setting(db.Model):
 
     ZONE_TYPE_FORWARD = 'forward'
     ZONE_TYPE_REVERSE = 'reverse'
-    # These stay on the process configuration. An administrator saving any
-    # other setting makes that saved value the one the application uses,
-    # including when the environment supplied an older value at startup.
+    # These stay on the process configuration. Other saved settings win over
+    # process values, except explicitly deployment-owned PowerDNS connections.
     CONFIG_LOCKED = frozenset({
         'bind_address',
         'csrf_cookie_secure',
@@ -69,6 +68,8 @@ class Setting(db.Model):
             return False
 
     def toggle(self, setting):
+        if self.deployment_source(setting):
+            return False
         current_setting = Setting.query.filter(Setting.name == setting).first()
 
         if current_setting is None:
@@ -94,6 +95,8 @@ class Setting(db.Model):
             return False
 
     def set(self, setting, value):
+        if self.deployment_source(setting):
+            return False
         import json
         current_setting = Setting.query.filter(Setting.name == setting).first()
 
@@ -125,6 +128,12 @@ class Setting(db.Model):
             return
         current_app.config[str(setting).upper()] = value
 
+    @staticmethod
+    def deployment_source(setting):
+        """Return the source of a deployment-owned PowerDNS setting."""
+        configured = current_app.config.get('_PDNS_CONNECTION_SETTINGS', {})
+        return configured.get(setting, {}).get('source')
+
     def _saved_row(self, setting):
         """Return the stored row, or None when this app has no database.
 
@@ -138,6 +147,9 @@ class Setting(db.Model):
 
     def get(self, setting):
         if setting in AppSettings.defaults:
+            configured = current_app.config.get('_PDNS_CONNECTION_SETTINGS', {})
+            if setting in configured:
+                return AppSettings.convert_type(setting, configured[setting]['value'])
             result = None
             if setting not in self.CONFIG_LOCKED:
                 result = self._saved_row(setting)

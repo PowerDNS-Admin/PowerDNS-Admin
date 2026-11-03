@@ -29,6 +29,9 @@ from ..models.base import db
 from ..lib.errors import ApiKeyCreateFail
 from ..lib.history import get_records, normalize_history_detail, normalize_rrset
 from ..lib.schema import ApiPlainKeySchema
+from ..lib.password_login import otp_confirmation_blocked
+from .auth_session import record_user_event
+from ..lib.blank_password import stored_password_is_blank
 from ..lib.user_authorization import user_update_authorization_error
 
 apikey_plain_schema = ApiPlainKeySchema(many=True)
@@ -311,17 +314,20 @@ def edit_user(user_username=None):
                                        blank_password=True)
 
             result = user.create_local_user()
-            history = History(msg='Created user {0}'.format(user.username),
-                              created_by=current_user.username)
+            if result['status']:
+                record_user_event(
+                    'Created user {0}'.format(user.username),
+                    user.username,
+                    current_user.username,
+                )
+                return redirect(url_for('admin.manage_user'))
 
         else:
             result = user.update_local_user()
-            history = History(msg='Updated user {0}'.format(user.username),
-                              created_by=current_user.username)
-
-        if result['status']:
-            history.add()
-            return redirect(url_for('admin.manage_user'))
+            if result['status']:
+                History(msg='Updated user {0}'.format(user.username),
+                        created_by=current_user.username).add()
+                return redirect(url_for('admin.manage_user'))
 
         return render_template('admin/user/edit.html',
                                user=user,
@@ -506,14 +512,13 @@ def manage_user():
                 target = User.query.filter(User.username == data).first()
                 if (target is not None and target.id == current_user.id
                         and target.otp_secret):
-                    token = str(jdata.get('otp_token') or '')
-                    if not target.verify_totp(token):
+                    rejected = otp_confirmation_blocked(
+                        target, jdata.get('otp_token'))
+                    if rejected:
                         return make_response(
                             jsonify({
-                                'status':
-                                    'error',
-                                'msg':
-                                    'Enter the current authentication code to change two-factor authentication.',
+                                'status': 'error',
+                                'msg': rejected,
                             }), 400)
                 user = User(username=data)
                 result = user.update_profile(enable_otp=False)
@@ -623,14 +628,18 @@ def manage_user():
                             'msg': authorization_error,
                         }), 400)
 
+                previous_role = user.role.name if user.role else None
                 user = User(username=username)
                 result = user.set_role(role_name)
                 if result['status']:
-                    history = History(
-                        msg='Change user role of {0} to {1}'.format(
+                    record_user_event(
+                        'Change user role of {0} to {1}'.format(
                             username, role_name),
-                        created_by=current_user.username)
-                    history.add()
+                        username,
+                        current_user.username,
+                        role=role_name,
+                        previous_role=previous_role,
+                    )
                     return make_response(
                         jsonify({
                             'status': 'ok',
@@ -662,6 +671,21 @@ def manage_user():
                     'msg':
                         'There is something wrong, please contact Administrator.'
                 }), 400)
+
+
+@admin_bp.route('/blank-passwords', methods=['GET'])
+@login_required
+@admin_role_required
+def blank_passwords():
+    """List local accounts whose password hash is the empty string."""
+    users = User.query.order_by(User.username).all()
+    impacted = [
+        user for user in users if stored_password_is_blank(user.password)
+    ]
+    return render_template(
+        'admin/user/blank_passwords.html',
+        users=impacted,
+    )
 
 
 @admin_bp.route('/account/edit/<account_name>', methods=['GET', 'POST'])
@@ -893,6 +917,24 @@ class DetailedHistory():
                             <td>IP Address:</td>
                             <td>{{ ip_address }}</td>
                         </tr>
+                        {% if attempt %}
+                        <tr>
+                            <td>Failed attempts:</td>
+                            <td>{{ attempt }} of {{ attempt_limit }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if locked_until %}
+                        <tr>
+                            <td>Unlocks:</td>
+                            <td>{{ locked_until }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if path %}
+                        <tr>
+                            <td>Path:</td>
+                            <td>{{ path }}</td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
                 """,
@@ -902,7 +944,11 @@ class DetailedHistory():
                                                        auth_result="success" if detail_dict[
                                                                                     'success'] == 1 else "failure",
                                                        authenticator=detail_dict['authenticator'],
-                                                       ip_address=detail_dict['ip_address'])
+                                                       ip_address=detail_dict['ip_address'],
+                                                       attempt=detail_dict.get('attempt'),
+                                                       attempt_limit=detail_dict.get('attempt_limit'),
+                                                       locked_until=detail_dict.get('locked_until'),
+                                                       path=detail_dict.get('path'))
 
         elif history.msg.startswith('Two factor authentication enabled') \
                 or history.msg.startswith('Two factor authentication disabled'):
@@ -914,6 +960,28 @@ class DetailedHistory():
                 """,
                                                        username=DetailedHistory.get_key_val(
                                                            detail_dict, 'username'),
+                                                       ip_address=DetailedHistory.get_key_val(
+                                                           detail_dict, 'ip_address'))
+
+        elif 'ip_address' in detail_dict and 'username' in detail_dict \
+                and 'authenticator' not in detail_dict:
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>User:</td><td>{{ username }}</td></tr>
+                    {% if previous_role %}
+                    <tr><td>Previous role:</td><td>{{ previous_role }}</td></tr>
+                    {% endif %}
+                    {% if role %}
+                    <tr><td>Role:</td><td>{{ role }}</td></tr>
+                    {% endif %}
+                    <tr><td>IP Address:</td><td>{{ ip_address }}</td></tr>
+                </table>
+                """,
+                                                       username=DetailedHistory.get_key_val(
+                                                           detail_dict, 'username'),
+                                                       previous_role=detail_dict.get(
+                                                           'previous_role') or '',
+                                                       role=detail_dict.get('role') or '',
                                                        ip_address=DetailedHistory.get_key_val(
                                                            detail_dict, 'ip_address'))
 
@@ -1574,23 +1642,36 @@ def setting_basic_toggle(setting):
 @login_required
 @admin_role_required
 def setting_pdns():
+    pdns_sources = {
+        name: Setting.deployment_source(name)
+        for name in ('pdns_api_url', 'pdns_api_key')
+    }
     if request.method == 'GET':
         pdns_api_url = Setting().get('pdns_api_url')
         pdns_api_key = Setting().get('pdns_api_key')
         return render_template('admin/setting/pdns.html',
+                               pdns_sources=pdns_sources,
                                pdns_api_url=pdns_api_url,
                                pdns_api_key=pdns_api_key)
     elif request.method == 'POST':
         pdns_api_url = request.form.get('pdns_api_url')
         pdns_api_key = request.form.get('pdns_api_key')
 
-        url_saved = Setting().set('pdns_api_url', pdns_api_url)
-        key_saved = Setting().set('pdns_api_key', pdns_api_key)
+        # Reject forged changes before saving either half of the connection.
+        for name in pdns_sources:
+            if (pdns_sources[name] and name in request.form
+                    and request.form[name] != Setting().get(name)):
+                abort(400, description='Deployment-managed PowerDNS settings are read-only.')
+        url_saved = (bool(pdns_sources['pdns_api_url'])
+                     or Setting().set('pdns_api_url', pdns_api_url))
+        key_saved = (bool(pdns_sources['pdns_api_key'])
+                     or Setting().set('pdns_api_key', pdns_api_key))
         if not url_saved or not key_saved:
             flash('Unable to save the PowerDNS API settings.', 'error')
 
         return render_template(
             'admin/setting/pdns.html',
+            pdns_sources=pdns_sources,
             pdns_api_url=Setting().get('pdns_api_url'),
             pdns_api_key=Setting().get('pdns_api_key'))
 
@@ -1834,6 +1915,7 @@ def edit_template(template):
                 methods=['POST'],
                 strict_slashes=False)
 @login_required
+@operator_role_required
 def apply_records(template):
     try:
         jdata = request.json

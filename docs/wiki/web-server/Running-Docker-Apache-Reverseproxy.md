@@ -5,6 +5,8 @@ This is usually used to add ssl certificates and prepend a subdirectory
 The network_mode host settings is not neccessary but used for ldap availability in this case
 
 
+Export `SECRET_KEY` and `SALT` before starting the stack. Generate them with `python3 -c 'import secrets; print(secrets.token_hex(32))'` and `python3 -c 'import bcrypt; print(bcrypt.gensalt().decode())'`. In this list form, do not wrap the values in quotes. Compose would treat the quote characters as part of the value.
+
 docker-compose.yml
 
 ```
@@ -21,7 +23,8 @@ services:
         max-size: 50m
     environment:
       - BIND_ADDRESS=127.0.0.1:8082
-      - SECRET_KEY='NotVerySecret'
+      - SECRET_KEY=${SECRET_KEY}
+      - SALT=${SALT}
       - SQLALCHEMY_DATABASE_URI=mysql://pdnsadminuser:password@127.0.0.1/powerdnsadmin
       - GUNICORN_TIMEOUT=60
       - GUNICORN_WORKERS=2

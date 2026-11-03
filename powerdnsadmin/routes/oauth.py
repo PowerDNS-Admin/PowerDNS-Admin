@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, url_for, current_app, session, req
 from flask_login import logout_user
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 
-from .auth_session import authenticate_user
+from .auth_session import authenticate_user, client_ip
 from ..models.base import db
 from ..models.user import User
 from ..models.account import Account
@@ -365,21 +365,24 @@ def complete_azure_login():
 
     if Setting().get('azure_sg_enabled'):
         if Setting().get('azure_admin_group') in mygroups:
-            current_app.logger.info('Setting role for user ' +
-                                    azure_username +
-                                    ' to Administrator due to group membership')
+            current_app.logger.info(
+                'Setting role for user %s to Administrator due to group '
+                'membership from %s',
+                azure_username, client_ip() or 'unknown')
             user.set_role("Administrator")
         else:
             if Setting().get('azure_operator_group') in mygroups:
-                current_app.logger.info('Setting role for user ' +
-                                        azure_username +
-                                        ' to Operator due to group membership')
+                current_app.logger.info(
+                    'Setting role for user %s to Operator due to group '
+                    'membership from %s',
+                    azure_username, client_ip() or 'unknown')
                 user.set_role("Operator")
             else:
                 if Setting().get('azure_user_group') in mygroups:
-                    current_app.logger.info('Setting role for user ' +
-                                            azure_username +
-                                            ' to User due to group membership')
+                    current_app.logger.info(
+                        'Setting role for user %s to User due to group '
+                        'membership from %s',
+                        azure_username, client_ip() or 'unknown')
                     user.set_role("User")
                 else:
                     current_app.logger.warning('User ' +

@@ -1,3 +1,4 @@
+import ldap
 import ldap.filter
 
 from powerdnsadmin.models.setting import Setting
@@ -43,6 +44,78 @@ def test_ldap_user_filter_keeps_filter_characters_inside_the_value():
         ldap.filter.escape_filter_chars(username))
     assert 'uid=*' not in search_filter
     assert ')(|(' not in search_filter
+
+
+def test_ldap_connection_uses_the_authentication_lease_as_its_timeout(
+        app, monkeypatch):
+    options = {}
+
+    class Connection:
+        def set_option(self, option, value):
+            options[option] = value
+
+    monkeypatch.setattr(ldap, 'initialize', lambda uri: Connection())
+    monkeypatch.setattr(ldap, 'set_option', lambda *args: None)
+    monkeypatch.setattr(Setting, 'get', lambda self, name: 'ldap://example')
+    monkeypatch.setitem(app.config, 'AUTH_LDAP_TIMEOUT', 7)
+
+    with app.app_context():
+        User(username='alice', reload_info=False).ldap_init_conn()
+
+    assert options[ldap.OPT_TIMEOUT] == 7.0
+    assert options[ldap.OPT_NETWORK_TIMEOUT] == 7.0
+
+
+def test_ldap_operations_share_one_authentication_deadline(app, monkeypatch):
+    import time as time_module
+
+    from powerdnsadmin.lib.auth_throttle import PasswordAttempt
+
+    clock = {'now': 100.0}
+    monkeypatch.setattr(time_module, 'monotonic', lambda: clock['now'])
+    monkeypatch.setitem(app.config, 'AUTH_IN_FLIGHT_LEASE', 30)
+    waits = []
+    searched = {'n': 0}
+
+    class Connection:
+        def set_option(self, option, value):
+            return None
+
+        def simple_bind(self, who, cred):
+            return 1
+
+        def result(self, msgid, all=1, timeout=None):
+            waits.append(timeout)
+            clock['now'] += 20
+            return ldap.RES_BIND, []
+
+        def search(self, *args, **kwargs):
+            searched['n'] += 1
+            return 2
+
+        def whoami_s(self):
+            return 'dn:uid=alice,dc=example,dc=com'
+
+    monkeypatch.setattr(ldap, 'initialize', lambda uri: Connection())
+    monkeypatch.setattr(ldap, 'set_option', lambda *args: None)
+    settings = {
+        'ldap_uri': 'ldap://example',
+        'ldap_type': 'ldap',
+        'ldap_admin_username': 'cn=admin',
+        'ldap_admin_password': 'secret',
+    }
+    monkeypatch.setattr(Setting, 'get', lambda self, name: settings.get(name))
+    user = User(username='alice', password='secret', reload_info=False)
+
+    with app.app_context():
+        with PasswordAttempt('alice', 'secret', False, '198.51.100.200'):
+            assert user.ldap_auth(
+                'uid=alice,dc=example,dc=com', 'secret') is True
+            user.ldap_search('(uid=alice)', 'dc=example,dc=com')
+
+    assert waits[0] == 30
+    assert waits[1] == 10
+    assert searched['n'] == 0
 
 
 def test_ldap_auth_rejects_empty_password_without_binding(app, monkeypatch):

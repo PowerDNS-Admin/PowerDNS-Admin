@@ -61,6 +61,11 @@ def create_app(config=None):
 
     # Load any settings defined with environment variables
     AppSettings.load_environment(app)
+    trusted_proxies = os.environ.get('AUTH_TRUSTED_PROXIES')
+    if trusted_proxies:
+        app.config['AUTH_TRUSTED_PROXIES'] = [
+            item.strip() for item in trusted_proxies.split(',') if item.strip()
+        ]
     assert_deployment_secrets(app)
 
     # Single source of truth for Docker and bare-metal deployments.
@@ -122,5 +127,11 @@ def create_app(config=None):
     @app.context_processor
     def inject_app_version():
         return dict(APP_VERSION=app.config['APP_VERSION'])
+
+    @app.cli.command('check-auth-throttle')
+    def check_auth_throttle():
+        """Fail when the shared authentication limiter table is missing."""
+        from .lib.auth_throttle import assert_throttle_store
+        assert_throttle_store()
 
     return app
