@@ -108,13 +108,13 @@
                                                     <option style="color: red" data-bs-toggle="tooltip"
                                                             title="Associated with: {{ accounts[account_id].name }}"
                                                             value="{{ domain.name }}">
-                                                        {{ domain.name }}
+                                                        {{ domain.name | pretty_domain_name }}
                                                     </option>
                                                 {% endwith %}
                                             {% else %}
                                                 <option {% if account.id and account.id == domain.account_id %}selected{% endif %}
                                                         value="{{ domain.name }}">
-                                                    {{ domain.name }}
+                                                    {{ domain.name | pretty_domain_name }}
                                                 </option>
                                             {% endif %}
                                         {% endfor %}

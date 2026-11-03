@@ -316,3 +316,25 @@ def test_algorithm_rollover_requires_a_different_algorithm():
 
     assert rollover is None
     assert 'different algorithm' in error
+
+
+def test_idn_display_preserves_zone_identifiers(app, client, initial_data):
+    name = 'www.xn--e1aybc.xn--g1af'
+    display_name = 'www.тест.кз'
+    with app.app_context():
+        zone = Domain(name=name)
+        db.session.add(zone)
+        db.session.commit()
+        zone_id = zone.id
+
+    _authenticate_dashboard_user(app, client, app.config['TEST_ADMIN_USER'])
+    response = client.get('/dashboard/v2/domains/forward')
+    assert response.status_code == 200
+    row = next(row for row in response.json['data'] if row['id'] == zone_id)
+    assert row['name'] == name
+    assert row['displayName'] == display_name
+    assert name in row['urls']['records']
+
+    response = client.get('/domain/remove')
+    assert response.status_code == 200
+    assert f'<option value="{zone_id}">{display_name}</option>' in response.text

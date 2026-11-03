@@ -6,6 +6,8 @@ from flask_login import login_required, current_user, login_manager
 from sqlalchemy import not_
 from sqlalchemy.orm import joinedload
 
+from ..lib.utils import pretty_domain_name
+
 from ..decorators import (
     can_access_domain, can_configure_dnssec, operator_role_required)
 from ..models.user import User, Anonymous
@@ -632,6 +634,7 @@ def domains_v2(tab_id):
         data.append({
             'id': domain.id,
             'name': domain.name,
+            'displayName': pretty_domain_name(domain.name),
             'dnssec': bool(domain.dnssec),
             'type': domain.type,
             'serial': domain.serial,

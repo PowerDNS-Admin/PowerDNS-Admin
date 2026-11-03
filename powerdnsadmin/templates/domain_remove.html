@@ -21,7 +21,7 @@
                                     <select id="domainid" class="form-select" style="width:15em;">
                                         <option value="0">- Select Zone -</option>
                                         {% for domain in domainss %}
-                                            <option value="{{ domain.id }}">{{ domain.name }}</option>
+                                            <option value="{{ domain.id }}">{{ domain.name | pretty_domain_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
