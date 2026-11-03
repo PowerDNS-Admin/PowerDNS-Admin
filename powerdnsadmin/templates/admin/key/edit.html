@@ -84,7 +84,7 @@
                                             name="key_multi_domain">
                                         {% for domain in domains %}
                                             <option {% if key and domain in key.domains %}selected{% endif %}
-                                                    value="{{ domain.name }}">{{ domain.name }}</option>
+                                                    value="{{ domain.name }}">{{ domain.name | pretty_domain_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

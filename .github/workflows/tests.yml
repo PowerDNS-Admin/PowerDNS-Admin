@@ -87,7 +87,6 @@ jobs:
             libssl-dev \
             libxml2-dev \
             libxmlsec1-dev \
-            libxmlsec1-openssl \
             libxslt1-dev \
             pkg-config
 
@@ -174,7 +173,6 @@ jobs:
             libssl-dev \
             libxml2-dev \
             libxmlsec1-dev \
-            libxmlsec1-openssl \
             libxslt1-dev \
             pkg-config
 

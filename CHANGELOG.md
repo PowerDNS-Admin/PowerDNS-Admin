@@ -2,103 +2,20 @@
 
 ## [Unreleased]
 
-### Breaking Changes
-
--   Startup refuses a missing, blank, short, malformed, or published
-    `SECRET_KEY` or `SALT`. `SECRET_KEY` must be at least 32 characters.
-    `SALT` must be a bcrypt salt (`$2b$12$` plus 22 salt characters) and must
-    not be the value shipped in this repository. Tests and local Docker
-    stacks skip the check with `TESTING` or `PDA_ALLOW_INSECURE_SECRETS=1`.
-    Production Compose does not set that flag. Replacing `SALT` makes every
-    existing API key stop working. Replacing `SECRET_KEY` signs users out and
-    invalidates outstanding email-confirmation links.
--   Browser sign-in no longer issues a remember-me cookie. A remember-me
-    cookie that is already present is cleared and is not loaded into a server
-    session. Sessions also store `user.session_version`. Sessions created
-    before this column exists do not match, so deploying the migration signs
-    every current browser session out. Run `flask db upgrade` for
-    `a5b6c7d8e9f1`, `b6c7d8e9f0a2`, `c7d8e9f0a1b3`, `d8e9f0a1b4c6`, and
-    `e9f0a1b2c5d7`.
--   Changing a password, from the profile page or the API, bumps
-    `session_version`. The browser that made the change stays signed in.
-    Other sessions for that account are signed out.
--   Password authentication on the login form, browser Basic authentication,
-    and API Basic authentication now share one policy. Local login is refused
-    when local accounts are disabled, an unconfirmed address is refused when
-    email confirmation is required, and an account with two-factor
-    authentication must send the current code in the `X-OTP` header. API keys
-    are unchanged. DynDNS updates that use Basic authentication follow the
-    same rule, so an account with two-factor authentication cannot update
-    with a password alone.
--   The API maintenance check runs after the caller is authenticated. An
-    authenticated user who is not an Administrator or Operator receives HTTP
-    503 and `{"status": false, "msg": "Site is in maintenance mode"}`.
--   An account can no longer change or clear its own `otp_secret` through the
-    API. Only an Administrator editing a different user may set or clear it.
-    On the profile page, changing two-factor authentication after it is
-    already enrolled requires the current code. A pending sign-in code expires
-    after five minutes or five wrong attempts, and refreshing the page does
-    not extend that deadline.
--   Activity rows can no longer be removed from the application. The Clear
-    Activity action is gone, and deleting a zone keeps that zone's activity.
-    The zone link on those rows is cleared. The **Preserve history** setting
-    is no longer shown. Removing history is a direct database change.
--   A setting saved in the application is the value the application uses,
-    including when the environment supplied an older value at startup. The
-    environment is used only until that setting has a saved row. Process
-    values such as `SECRET_KEY`, `SALT`, bind address, port, session type, and
-    log level stay on the process configuration.
--   `GET /api`, the PowerDNS version list, now requires a valid API key.
-    A missing or rejected key returns HTTP 401 and
-    `{"msg": "Unauthorized"}`. Basic authentication and a browser session do
-    not satisfy this route.
-
-### Features
-
--   Administrators and Operators have an **API History** page for every
-    request under `/api`, including calls proxied to PowerDNS. Each row
-    stores the method, path, query, status, client address, authentication
-    type, user or API key, request host, user agent, a redacted request
-    body, and a redacted response body. Passwords, secrets, tokens, and API
-    keys are stored as `[redacted]`. A response larger than 32KB is stored as
-    an omission marker instead of the original payload. A failure to record
-    the row does not change the API response.
--   Administrators and Operators have a **System Activity** page for changes
-    to application settings and configuration. Each row stores the setting
-    name, the previous value, the new value, who changed it, and the client
-    address. Unchanged values are not recorded. Credential settings, including
-    the PowerDNS API key, LDAP password, mail password, and OAuth secrets, are
-    stored as `[redacted]`. The PowerDNS API URL is stored in full.
--   Enabling or disabling two-factor authentication writes an Activity row
-    that includes the source address, using the same first `X-Forwarded-For`
-    value as sign-in history. Enabling is recorded from the profile page and
-    when required two-factor enrollment runs at registration or first sign-in.
-    Disabling is recorded from the user administration page. The Info dialog
-    shows the user and the IP address. Every Activity row also stores the
-    request host and user agent, and the Info dialog shows those too.
-
-### Security
-
--   API requests no longer consult Flask-Login. A request that fails
-    authentication cannot leave behind an authenticated browser session.
--   LDAP login escapes the username before it is placed in the search filter,
-    so characters such as `*`, `(`, and `)` cannot change which directory
-    entry is matched. An empty LDAP password is rejected, and a bind that
-    resolves to anonymous does not count as that user.
--   The deployment refuses the published default `SECRET_KEY` and `SALT`
-    values that previously allowed a forged remember-me cookie for a known
-    user id.
-
 ### Bug Fixes
 
 -   Editing an account can once again assign zones and users. The account
     editor no longer attempts to read the disabled account-name field from the
     submitted form, which caused Werkzeug to return HTTP 400 before saving the
     associations. (`#1913`)
--   Saving the PowerDNS API URL or API key updates the value the application
-    uses. Previously the database and System Activity could show the new
-    value while requests kept using `PDNS_API_URL` or `PDNS_API_KEY` from the
-    environment.
+-   The changelog now handles PowerDNS RRset history entries with missing or
+    null comment metadata, legacy delete-only entries, and corrupt history
+    details without returning HTTP 500. RRset history is normalized
+    consistently for new API changes and existing database entries. (`#1915`)
+-   The changelog now handles PowerDNS RRset history entries with missing or
+    null comment metadata, legacy delete-only entries, and corrupt history
+    details without returning HTTP 500. RRset history is normalized
+    consistently for new API changes and existing database entries. (`#1915`)
 
 ## [2026.08.1] - 2026-08-30
 

@@ -10,6 +10,7 @@ from flask_login import login_required, current_user, login_manager
 from ..lib.utils import pretty_domain_name
 from ..lib.utils import pretty_json
 from ..lib.utils import to_idna
+from ..lib.history import normalize_history_detail
 from ..decorators import can_create_domain, operator_role_required, can_access_domain, can_configure_dnssec, can_remove_domain
 from ..models.user import User, Anonymous
 from ..models.account import Account
@@ -421,7 +422,7 @@ def add():
                         history = History(
                             msg='Applying template {0} to {1} successfully.'.
                             format(template.name, domain_name),
-                            detail = json.dumps({
+                                detail = json.dumps(normalize_history_detail({
                                     'domain':
                                     domain_name,
                                     'template':
@@ -430,7 +431,7 @@ def add():
                                     result['data'][0]['rrsets'],
                                     'del_rrsets':
                                     result['data'][1]['rrsets']
-                                }),
+                                })),
                             created_by=current_user.username,
                             domain_id=domain_id)
                         history.add()
@@ -745,10 +746,14 @@ def record_update(domain_name):
     This route is used for zone work as Slave Zone only
     Pulling the records update from its Master
     """
-    try:
-        jdata = request.json
+    # Authorization above applies to the URL zone, never a body-supplied zone.
+    jdata = request.get_json()
+    if not isinstance(jdata, dict):
+        abort(400)
+    if 'domain' in jdata and jdata['domain'] != domain_name:
+        abort(403)
 
-        domain_name = jdata['domain']
+    try:
         d = Domain()
         result = d.update_from_master(domain_name)
         if result['status'] == 'ok':

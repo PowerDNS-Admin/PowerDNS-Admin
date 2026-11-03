@@ -43,3 +43,20 @@ def test_display_record_name_treats_domain_as_literal_text():
         ('www.exampleXorg', 'example.org')) == 'www.exampleXorg'
     assert utils.display_record_name(
         ('example.org', 'example.org')) == '@'
+
+
+@pytest.mark.parametrize(('value', 'expected'), [
+    ('xn--e1aybc.xn--g1af', 'тест.кз'),
+    ('www.xn--e1aybc.xn--g1af.', 'www.тест.кз.'),
+    ('*.xn--e1aybc.xn--g1af.', '*.тест.кз.'),
+    ('_sip._tcp.xn--e1aybc.xn--g1af.', '_sip._tcp.тест.кз.'),
+    ('xn--bcher-kva', 'bücher'),
+    ('XN--BCHER-KVA.example', 'bücher.example'),
+    ('xn--.example', 'xn--.example'),
+    ('example.org.', 'example.org.'),
+    ('@', '@'),
+    ('', ''),
+    (None, None),
+])
+def test_pretty_domain_name(value, expected):
+    assert utils.pretty_domain_name(value) == expected
