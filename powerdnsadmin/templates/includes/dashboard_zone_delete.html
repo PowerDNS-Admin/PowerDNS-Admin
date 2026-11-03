@@ -1,0 +1,24 @@
+<div class="modal fade" id="modal_dashboard_zone_delete" tabindex="-1"
+     aria-labelledby="dashboard-zone-delete-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" id="dashboard-zone-delete-form"
+              method="post" action="{{ url_for('domain.remove') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="domainid" id="dashboard-zone-delete-name">
+            <div class="modal-header">
+                <h4 class="modal-title" id="dashboard-zone-delete-label">Zone Removal Confirmation</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the zone
+                    <strong id="dashboard-zone-delete-display-name"></strong>?</p>
+                <p>This removes the zone and its records from PowerDNS-Admin and PowerDNS.</p>
+                <div class="alert alert-danger d-none" id="dashboard-zone-delete-error" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="dashboard-zone-delete-submit">Remove Zone</button>
+            </div>
+        </form>
+    </div>
+</div>
