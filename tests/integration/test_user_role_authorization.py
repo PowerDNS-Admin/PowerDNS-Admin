@@ -1,10 +1,12 @@
 import re
 from base64 import b64encode
 
+import pyotp
 import pytest
 
 from powerdnsadmin.models.base import db
 from powerdnsadmin.models.role import Role
+from powerdnsadmin.models.setting import Setting
 from powerdnsadmin.models.user import User
 
 
@@ -77,6 +79,7 @@ def role_security_users(app, initial_data):
 
     yield {
         'operator_username': operator_username,
+        'operator_password': operator_password,
         'operator_headers': basic_auth_headers(
             operator_username, operator_password),
         'target_username': target_username,
@@ -282,3 +285,230 @@ def test_web_administrator_can_promote_user(
     assert response.status_code == 200
     assert_user_role(
         app, role_security_users['target_username'], 'Administrator')
+
+
+def stored_setting(app, name):
+    with app.app_context():
+        row = Setting.query.filter_by(name=name).first()
+        return None if row is None else row.value
+
+
+def set_otp_secret(app, username, secret):
+    with app.app_context():
+        account = User.query.filter_by(username=username).one()
+        account.otp_secret = secret
+        account.otp_last_used = None
+        db.session.commit()
+
+
+def login_with_password(client, username, password):
+    page = client.get('/login')
+    token_match = re.search(
+        rb'name="_csrf_token" value="([^"]+)"',
+        page.data,
+    )
+    assert token_match is not None
+    response = client.post(
+        '/login',
+        data={
+            'username': username,
+            'password': password,
+            'auth_method': 'LOCAL',
+            '_csrf_token': token_match.group(1).decode('utf-8'),
+        },
+    )
+    assert response.status_code == 302
+    return response
+
+
+def test_web_operator_cannot_change_administrator_settings(
+        app, client, role_security_users):
+    headers = role_security_users['operator_headers']
+    page = client.get('/admin/setting/basic', headers=headers)
+    assert page.status_code == 200
+    csrf_token, _ = csrf_token_for_manage_user(client, headers)
+    before_url = stored_setting(app, 'pdns_api_url')
+    before_key = stored_setting(app, 'pdns_api_key')
+
+    edited = client.post(
+        '/admin/setting/basic/pdns_api_url/edit',
+        headers=headers,
+        json={
+            'value': 'http://127.0.0.1:9',
+            '_csrf_token': csrf_token,
+        },
+    )
+    toggled = client.post(
+        '/admin/setting/basic/pdns_api_key/toggle',
+        headers=headers,
+        json={'_csrf_token': csrf_token},
+    )
+    unknown = client.post(
+        '/admin/setting/basic/not_a_real_setting/edit',
+        headers=headers,
+        json={
+            'value': 'x',
+            '_csrf_token': csrf_token,
+        },
+    )
+
+    assert edited.status_code == 403
+    assert toggled.status_code == 403
+    assert unknown.status_code == 403
+    assert stored_setting(app, 'pdns_api_url') == before_url
+    assert stored_setting(app, 'pdns_api_key') == before_key
+    assert stored_setting(app, 'not_a_real_setting') is None
+    assert b'pdns_api_url' not in page.data
+
+
+def test_web_operator_can_still_edit_a_basic_setting(
+        app, client, role_security_users):
+    headers = role_security_users['operator_headers']
+    csrf_token, _ = csrf_token_for_manage_user(client, headers)
+    with app.app_context():
+        original_name = Setting().get('site_name')
+        original_gravatar = Setting().get('gravatar_enabled')
+    try:
+        renamed = client.post(
+            '/admin/setting/basic/site_name/edit',
+            headers=headers,
+            json={
+                'value': 'Operator Basic Site',
+                '_csrf_token': csrf_token,
+            },
+        )
+        assert renamed.status_code == 200
+        with app.app_context():
+            assert Setting().get('site_name') == 'Operator Basic Site'
+
+        toggled = client.post(
+            '/admin/setting/basic/gravatar_enabled/toggle',
+            headers=headers,
+            json={'_csrf_token': csrf_token},
+        )
+        assert toggled.status_code == 200
+        with app.app_context():
+            assert Setting().get('gravatar_enabled') is not original_gravatar
+    finally:
+        with app.app_context():
+            Setting().set('site_name', original_name)
+            Setting().set(
+                'gravatar_enabled',
+                'True' if original_gravatar else 'False')
+
+
+def test_web_operator_cannot_disable_administrator_mfa(
+        app, client, role_security_users, test_admin_user):
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp_secret(app, test_admin_user, secret)
+    try:
+        login_with_password(
+            client,
+            role_security_users['operator_username'],
+            role_security_users['operator_password'],
+        )
+        csrf_token, _ = csrf_token_for_manage_user(client, headers={})
+        response = client.post(
+            '/admin/manage-user',
+            json={
+                'action': 'user_otp_disable',
+                'data': test_admin_user,
+                '_csrf_token': csrf_token,
+            },
+        )
+        assert response.status_code == 400
+        assert 'Administrator' in response.get_json()['msg']
+        with app.app_context():
+            administrator = User.query.filter_by(
+                username=test_admin_user).one()
+            assert administrator.otp_secret == secret
+    finally:
+        set_otp_secret(app, test_admin_user, '')
+
+
+def test_web_operator_cannot_remove_own_mfa_without_the_current_code(
+        app, client, role_security_users):
+    secret = 'JBSWY3DPEHPK3PXP'
+    username = role_security_users['operator_username']
+    login_with_password(
+        client,
+        username,
+        role_security_users['operator_password'],
+    )
+    set_otp_secret(app, username, secret)
+    try:
+        csrf_token, _ = csrf_token_for_manage_user(client, headers={})
+        refused = client.post(
+            '/admin/manage-user',
+            json={
+                'action': 'user_otp_disable',
+                'data': username,
+                '_csrf_token': csrf_token,
+            },
+        )
+        assert refused.status_code == 400
+        assert 'current' in refused.get_json()['msg']
+        with app.app_context():
+            operator = User.query.filter_by(username=username).one()
+            assert operator.otp_secret == secret
+
+        disabled = client.post(
+            '/admin/manage-user',
+            json={
+                'action': 'user_otp_disable',
+                'data': username,
+                'otp_token': pyotp.TOTP(secret).now(),
+                '_csrf_token': csrf_token,
+            },
+        )
+        assert disabled.status_code == 200
+        with app.app_context():
+            operator = User.query.filter_by(username=username).one()
+            assert operator.otp_secret == ''
+    finally:
+        set_otp_secret(app, username, '')
+
+
+def test_web_operator_can_disable_mfa_for_another_user(
+        app, client, role_security_users):
+    secret = 'JBSWY3DPEHPK3PXP'
+    username = role_security_users['target_username']
+    set_otp_secret(app, username, secret)
+    try:
+        csrf_token, _ = csrf_token_for_manage_user(
+            client, role_security_users['operator_headers'])
+        response = client.post(
+            '/admin/manage-user',
+            headers=role_security_users['operator_headers'],
+            json={
+                'action': 'user_otp_disable',
+                'data': username,
+                '_csrf_token': csrf_token,
+            },
+        )
+        assert response.status_code == 200
+        with app.app_context():
+            target = User.query.filter_by(username=username).one()
+            assert target.otp_secret == ''
+    finally:
+        set_otp_secret(app, username, '')
+
+
+def test_web_operator_cannot_delete_an_administrator(
+        app, client, role_security_users, test_admin_user):
+    csrf_token, _ = csrf_token_for_manage_user(
+        client, role_security_users['operator_headers'])
+    response = client.post(
+        '/admin/manage-user',
+        headers=role_security_users['operator_headers'],
+        json={
+            'action': 'delete_user',
+            'data': test_admin_user,
+            '_csrf_token': csrf_token,
+        },
+    )
+
+    assert response.status_code == 400
+    assert 'Administrator' in response.get_json()['msg']
+    with app.app_context():
+        assert User.query.filter_by(username=test_admin_user).one()

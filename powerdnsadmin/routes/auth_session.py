@@ -30,6 +30,7 @@ _AUTH_SESSION_KEYS = (
     'pending_totp_user_id',
     'pending_totp_auth_method',
     'pending_totp_remember',
+    'pending_totp_session_version',
     'welcome_user_id',
     'next',
 )

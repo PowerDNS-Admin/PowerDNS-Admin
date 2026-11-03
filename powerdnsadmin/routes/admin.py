@@ -465,6 +465,23 @@ def manage_keys():
                 }), 200)
 
 
+def _user_management_denied(username):
+    """Block an operator from managing an Administrator account."""
+    if not isinstance(username, str):
+        return None
+    target = User.query.filter(User.username == username).first()
+    if target is None:
+        return None
+    error = user_update_authorization_error(current_user, target=target)
+    if error is None:
+        return None
+    return make_response(
+        jsonify({
+            'status': 'error',
+            'msg': error,
+        }), 400)
+
+
 @admin_bp.route('/manage-user', methods=['GET', 'POST'])
 @login_required
 @operator_role_required
@@ -486,6 +503,21 @@ def manage_user():
             data = jdata['data']
 
             if jdata['action'] == 'user_otp_disable':
+                denied = _user_management_denied(data)
+                if denied is not None:
+                    return denied
+                target = User.query.filter(User.username == data).first()
+                if (target is not None and target.id == current_user.id
+                        and target.otp_secret):
+                    token = str(jdata.get('otp_token') or '')
+                    if not target.verify_totp(token):
+                        return make_response(
+                            jsonify({
+                                'status':
+                                    'error',
+                                'msg':
+                                    'Enter the current authentication code to change two-factor authentication.',
+                            }), 400)
                 user = User(username=data)
                 result = user.update_profile(enable_otp=False)
                 if result:
@@ -517,6 +549,10 @@ def manage_user():
                             'msg': 'You cannot delete yourself.'
                         }), 400)
 
+                denied = _user_management_denied(data)
+                if denied is not None:
+                    return denied
+
                 # Remove account associations first
                 user_accounts = Account.query.join(AccountUser).join(
                     User).filter(AccountUser.user_id == user.id,
@@ -543,6 +579,9 @@ def manage_user():
                         }), 500)
 
             elif jdata['action'] == 'revoke_user_privileges':
+                denied = _user_management_denied(data)
+                if denied is not None:
+                    return denied
                 user = User(username=data)
                 result = user.revoke_privilege()
                 if result:
@@ -1426,52 +1465,69 @@ def system_activity():
     )
 
 
+# Names an Operator may change from the basic settings screen. PowerDNS
+# and authentication settings stay on their Administrator pages.
+_BASIC_SETTINGS = (
+    'account_name_extra_chars',
+    'allow_user_create_domain',
+    'allow_user_remove_domain',
+    'allow_user_view_history',
+    'auto_ptr',
+    'bg_domain_updates',
+    'custom_css',
+    'default_domain_table_size',
+    'default_record_table_size',
+    'delete_sso_accounts',
+    'custom_history_header',
+    'deny_domain_override',
+    'dnssec_admins_only',
+    'enable_api_rr_history',
+    'enforce_api_ttl',
+    'fullscreen_layout',
+    'gravatar_enabled',
+    'login_ldap_first',
+    'maintenance',
+    'max_history_records',
+    'otp_field_enabled',
+    'otp_force',
+    'pdns_api_timeout',
+    'pretty_ipv6_ptr',
+    'record_helper',
+    'record_quick_edit',
+    'session_timeout',
+    'site_name',
+    'ttl_options',
+    'verify_ssl_connections',
+    'verify_user_email',
+    'warn_session_timeout',
+)
+_BASIC_SETTING_NAMES = frozenset(_BASIC_SETTINGS)
+
+
+def _basic_setting_denied(setting):
+    if setting in _BASIC_SETTING_NAMES:
+        return None
+    return make_response(
+        jsonify({
+            'status': 'error',
+            'msg': 'You do not have permission to change this setting.',
+        }), 403)
+
+
 @admin_bp.route('/setting/basic', methods=['GET'])
 @login_required
 @operator_role_required
 def setting_basic():
-    settings = [
-        'account_name_extra_chars',
-        'allow_user_create_domain',
-        'allow_user_remove_domain',
-        'allow_user_view_history',
-        'auto_ptr',
-        'bg_domain_updates',
-        'custom_css',
-        'default_domain_table_size',
-        'default_record_table_size',
-        'delete_sso_accounts',
-        'custom_history_header',
-        'deny_domain_override',
-        'dnssec_admins_only',
-        'enable_api_rr_history',
-        'enforce_api_ttl',
-        'fullscreen_layout',
-        'gravatar_enabled',
-        'login_ldap_first',
-        'maintenance',
-        'max_history_records',
-        'otp_field_enabled',
-        'otp_force',
-        'pdns_api_timeout',
-        'pretty_ipv6_ptr',
-        'record_helper',
-        'record_quick_edit',
-        'session_timeout',
-        'site_name',
-        'ttl_options',
-        'verify_ssl_connections',
-        'verify_user_email',
-        'warn_session_timeout',
-    ]
-
-    return render_template('admin/setting/basic.html', settings=settings)
+    return render_template('admin/setting/basic.html', settings=_BASIC_SETTINGS)
 
 
 @admin_bp.route('/setting/basic/<path:setting>/edit', methods=['POST'])
 @login_required
 @operator_role_required
 def setting_basic_edit(setting):
+    denied = _basic_setting_denied(setting)
+    if denied is not None:
+        return denied
     jdata = request.json
     new_value = jdata['value']
     result = Setting().set(setting, new_value)
@@ -1494,6 +1550,9 @@ def setting_basic_edit(setting):
 @login_required
 @operator_role_required
 def setting_basic_toggle(setting):
+    denied = _basic_setting_denied(setting)
+    if denied is not None:
+        return denied
     result = Setting().toggle(setting)
     if (result):
         return make_response(

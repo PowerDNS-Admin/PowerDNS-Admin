@@ -7,6 +7,9 @@ from flask_login import AnonymousUserMixin, current_user
 from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges, RecordTTLNotAllowed, RecordTypeNotAllowed
 from .lib.errors import DomainAccessForbidden, DomainOverrideForbidden
+from .lib.helper import (
+    UpstreamPathRejected, apikey_can_reach_zone, canonical_request_path,
+    zone_from_path)
 from .lib.password_login import otp_login_blocked, password_login_blocked
 
 
@@ -478,16 +481,23 @@ def apikey_can_access_domain(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        try:
+            canonical_zone = zone_from_path(canonical_request_path())
+        except UpstreamPathRejected:
+            abort(400)
+        route_zone = kwargs.get('zone_id')
+        if isinstance(route_zone, str):
+            route_zone = route_zone.rstrip('.')
+        else:
+            route_zone = None
+        # The route parameter is the zone before ``..`` is normalized.
+        # The zone that would be requested is the one that must be allowed.
+        if (canonical_zone is not None and route_zone is not None
+                and canonical_zone != route_zone):
+            raise DomainAccessForbidden()
+        zone_name = canonical_zone if canonical_zone is not None else route_zone
         if g.apikey.role.name not in ['Administrator', 'Operator']:
-            zone_id = kwargs.get('zone_id').rstrip(".")
-            domain_names = [item.name for item in g.apikey.domains]
-
-            accounts = g.apikey.accounts
-            accounts_domains = [domain.name for a in accounts for domain in a.domains]
-
-            allowed_domains = set(domain_names + accounts_domains)
-
-            if zone_id not in allowed_domains:
+            if not zone_name or not apikey_can_reach_zone(zone_name):
                 raise DomainAccessForbidden()
         return f(*args, **kwargs)
 

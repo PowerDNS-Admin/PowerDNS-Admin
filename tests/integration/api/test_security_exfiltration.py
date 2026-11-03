@@ -477,6 +477,72 @@ def test_user_apikey_cannot_access_another_tenants_zone_subpath(
     assert response.status_code == 403
 
 
+def test_scoped_key_cannot_traverse_into_another_zone(
+        client, api_security_data, monkeypatch):
+    forwarded = []
+
+    def capture(method, url, headers=None, verify=None, json=None):
+        forwarded.append(url)
+        raise AssertionError('traversal must not be forwarded')
+
+    monkeypatch.setattr(
+        'powerdnsadmin.lib.helper.requests.request', capture)
+
+    allowed = api_security_data['allowed_domain_name']
+    private = api_security_data['private_domain_name']
+    paths = [
+        '/api/v1/servers/localhost/zones/{}/../{}'.format(allowed, private),
+        '/api/v1/servers/localhost/zones/{0}/%2e%2e/{1}'.format(allowed, private),
+        '/api/v1/servers/localhost/zones/{0}/foo/../../{1}'.format(
+            allowed, private),
+    ]
+    for path in paths:
+        response = client.get(
+            path, headers=api_security_data['scoped_key_headers'])
+        assert response.status_code == 400, path
+    assert forwarded == []
+
+
+def test_zone_proxy_honors_tls_verification(
+        app, client, api_security_data, monkeypatch):
+    forwarded = []
+
+    class Response:
+        content = b'[]'
+        status_code = 200
+        headers = {}
+
+    def capture(method, url, headers=None, verify=None, json=None):
+        forwarded.append({'url': url, 'verify': verify, 'headers': headers})
+        return Response()
+
+    monkeypatch.setattr(
+        'powerdnsadmin.lib.helper.requests.request', capture)
+    allowed = api_security_data['allowed_domain_name']
+    path = '/api/v1/servers/localhost/zones/{}/metadata'.format(allowed)
+
+    with app.app_context():
+        Setting().set('verify_ssl_connections', 'True')
+    verified = client.get(
+        path, headers=api_security_data['scoped_key_headers'])
+    assert verified.status_code == 200
+    assert forwarded[-1]['verify'] is True
+    assert allowed in forwarded[-1]['url']
+    assert '..' not in forwarded[-1]['url']
+    assert forwarded[-1]['headers']['X-API-KEY']
+
+    with app.app_context():
+        Setting().set('verify_ssl_connections', 'False')
+    try:
+        disabled = client.get(
+            path, headers=api_security_data['scoped_key_headers'])
+        assert disabled.status_code == 200
+        assert forwarded[-1]['verify'] is False
+    finally:
+        with app.app_context():
+            Setting().set('verify_ssl_connections', 'True')
+
+
 def test_user_apikey_can_access_its_own_zone_subpath(
         client, api_security_data, monkeypatch):
     monkeypatch.setattr(

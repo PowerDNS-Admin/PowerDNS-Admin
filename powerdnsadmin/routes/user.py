@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 
-from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, g, session, \
+from flask import Blueprint, request, render_template, make_response, jsonify, redirect, g, session, \
     current_app, after_this_request, abort
 from flask_login import current_user, login_required, login_manager
 
@@ -124,8 +124,10 @@ def profile():
 @user_bp.route('/qrcode')
 @login_required
 def qrcode():
-    if not current_user:
-        return redirect(url_for('index'))
+    # An enrolled secret stays on the server. Scanning it again, or reading
+    # it back from a signed-in browser, requires a fresh enrollment.
+    if not current_user.otp_secret_pending_confirmation():
+        abort(404)
 
     return current_user.get_qrcode_value(), 200, {
         'Content-Type': 'image/svg+xml',

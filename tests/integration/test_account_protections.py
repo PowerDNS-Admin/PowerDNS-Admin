@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 import pyotp
 
@@ -36,6 +37,8 @@ def set_otp(app, username, secret):
         account = User.query.filter_by(username=username).one()
         account.otp_secret = secret
         account.otp_last_used = None
+        account.otp_failed_attempts = 0
+        account.otp_locked_until = None
         db.session.commit()
         return account.id
 
@@ -237,6 +240,251 @@ def test_otp_challenge_expires_and_stops_after_repeated_failures(
         assert b'name="otptoken"' not in locked.data
         with client.session_transaction() as session:
             assert 'pending_totp_user_id' not in session
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def test_enrolled_mfa_secret_is_not_disclosed_to_the_session(
+        app, client, initial_data, test_admin_user):
+    login(client, app)
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    try:
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            account.otp_last_used = 1
+            db.session.commit()
+
+        confirmed = client.get('/user/profile')
+        assert confirmed.status_code == 200
+        assert secret.encode() not in confirmed.data
+        assert b'Your secret key is' not in confirmed.data
+        hidden = client.get('/user/qrcode')
+        assert hidden.status_code == 404
+        assert secret.encode() not in hidden.data
+
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            account.otp_last_used = None
+            db.session.commit()
+
+        enrolling = client.get('/user/profile')
+        assert secret.encode() in enrolling.data
+        qrcode = client.get('/user/qrcode')
+        assert qrcode.status_code == 200
+        assert qrcode.mimetype == 'image/svg+xml'
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def test_password_change_rejects_the_pending_mfa_challenge(
+        app, client, initial_data, test_admin_user):
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    with app.app_context():
+        original_version = User.query.filter_by(
+            username=test_admin_user).one().session_version or 0
+    try:
+        page = client.get('/login')
+        password_response = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(page),
+            },
+        )
+        assert password_response.status_code == 200
+        assert b'name="otptoken"' in password_response.data
+
+        replacement = 'replacement-admin-password'
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            account.password = account.get_hashed_password(
+                replacement).decode('utf-8')
+            account.rotate_session_version()
+            db.session.commit()
+
+        rejected = client.post(
+            '/login',
+            data={
+                'otptoken': pyotp.TOTP(secret).now(),
+                '_csrf_token': csrf_token(password_response),
+            },
+        )
+        assert rejected.status_code == 200
+        assert b'sign-in code expired' in rejected.data
+        assert b'name="otptoken"' not in rejected.data
+        profile = client.get('/user/profile')
+        assert profile.status_code == 302
+        assert '/login' in profile.headers['Location']
+
+        old_password = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(rejected),
+            },
+        )
+        assert b'Invalid credentials' in old_password.data
+
+        resumed = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': replacement,
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(old_password),
+            },
+        )
+        assert b'name="otptoken"' in resumed.data
+        completed = client.post(
+            '/login',
+            data={
+                'otptoken': pyotp.TOTP(secret).now(),
+                '_csrf_token': csrf_token(resumed),
+            },
+        )
+        assert completed.status_code == 302
+    finally:
+        set_otp(app, test_admin_user, '')
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            account.password = account.get_hashed_password(
+                app.config['TEST_ADMIN_PASSWORD']).decode('utf-8')
+            account.session_version = original_version
+            account.otp_secret = ''
+            account.otp_last_used = None
+            db.session.commit()
+
+
+def test_pending_mfa_challenge_without_a_session_version_is_rejected(
+        app, client, initial_data, test_admin_user):
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    try:
+        page = client.get('/login')
+        password_response = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(page),
+            },
+        )
+        assert b'name="otptoken"' in password_response.data
+        with client.session_transaction() as session:
+            session.pop('pending_totp_session_version', None)
+
+        rejected = client.post(
+            '/login',
+            data={
+                'otptoken': pyotp.TOTP(secret).now(),
+                '_csrf_token': csrf_token(password_response),
+            },
+        )
+        assert rejected.status_code == 200
+        assert b'sign-in code expired' in rejected.data
+        profile = client.get('/user/profile')
+        assert profile.status_code == 302
+        assert '/login' in profile.headers['Location']
+    finally:
+        set_otp(app, test_admin_user, '')
+
+
+def _setting_value(app, name, value):
+    with app.app_context():
+        Setting().set(name, value)
+
+
+def test_basic_auth_cannot_skip_forced_mfa_enrollment(
+        app, client, initial_data, basic_auth_admin_headers, test_admin_user):
+    _setting_value(app, 'otp_force', 'True')
+    _setting_value(app, 'otp_field_enabled', 'True')
+    set_otp(app, test_admin_user, '')
+    try:
+        denied = client.get(
+            '/api/v1/pdnsadmin/users', headers=basic_auth_admin_headers)
+        assert denied.status_code == 401
+        dyndns = client.get('/nic/update', headers=basic_auth_admin_headers)
+        assert dyndns.status_code == 401
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            assert not account.otp_secret
+
+        secret = 'JBSWY3DPEHPK3PXP'
+        set_otp(app, test_admin_user, secret)
+        allowed = client.get(
+            '/api/v1/pdnsadmin/users',
+            headers={
+                **basic_auth_admin_headers,
+                'X-OTP': pyotp.TOTP(secret).now(),
+            },
+        )
+        assert allowed.status_code == 200
+    finally:
+        set_otp(app, test_admin_user, '')
+        _setting_value(app, 'otp_force', 'False')
+        _setting_value(app, 'otp_field_enabled', 'True')
+
+
+def test_rejected_otp_attempts_are_shared_across_password_logins(
+        app, client, initial_data, basic_auth_admin_headers, test_admin_user):
+    secret = 'JBSWY3DPEHPK3PXP'
+    set_otp(app, test_admin_user, secret)
+    wrong = {**basic_auth_admin_headers, 'X-OTP': '000000'}
+    try:
+        for _ in range(3):
+            assert client.get(
+                '/api/v1/pdnsadmin/users', headers=wrong).status_code == 401
+        assert client.get('/nic/update', headers=wrong).status_code == 401
+
+        page = client.get('/login')
+        challenge = client.post(
+            '/login',
+            data={
+                'username': app.config['TEST_ADMIN_USER'],
+                'password': app.config['TEST_ADMIN_PASSWORD'],
+                'auth_method': 'LOCAL',
+                '_csrf_token': csrf_token(page),
+            },
+        )
+        assert b'name="otptoken"' in challenge.data
+        locked = client.post(
+            '/login',
+            data={
+                'otptoken': '000000',
+                '_csrf_token': csrf_token(challenge),
+            },
+        )
+        assert b'Too many authentication attempts' in locked.data
+
+        still_locked = client.get(
+            '/api/v1/pdnsadmin/users',
+            headers={
+                **basic_auth_admin_headers,
+                'X-OTP': pyotp.TOTP(secret).now(),
+            },
+        )
+        assert still_locked.status_code == 401
+
+        with app.app_context():
+            account = User.query.filter_by(username=test_admin_user).one()
+            account.otp_locked_until = datetime(2000, 1, 1)
+            db.session.commit()
+
+        unlocked = client.get(
+            '/api/v1/pdnsadmin/users',
+            headers={
+                **basic_auth_admin_headers,
+                'X-OTP': pyotp.TOTP(secret).now(),
+            },
+        )
+        assert unlocked.status_code == 200
     finally:
         set_otp(app, test_admin_user, '')
 

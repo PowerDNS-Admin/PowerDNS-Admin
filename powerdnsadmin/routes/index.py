@@ -15,7 +15,9 @@ from .auth_session import (
     record_two_factor_change)
 from .base import captcha, login_manager
 from ..lib import utils
-from ..lib.password_login import password_login_blocked
+from ..lib.password_login import (
+    password_login_blocked, otp_failures_blocked, register_otp_failure,
+    clear_otp_failures, OTP_FAILURE_LIMIT, OTP_FAILURE_MESSAGE)
 from ..models.base import db
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
@@ -30,7 +32,7 @@ index_bp = Blueprint('index',
 # The password check that opened this challenge is not renewed by the
 # session idle timer. Five minutes or five wrong codes ends it.
 PENDING_TOTP_SECONDS = 300
-PENDING_TOTP_ATTEMPTS = 5
+PENDING_TOTP_ATTEMPTS = OTP_FAILURE_LIMIT
 
 
 @index_bp.before_request
@@ -94,7 +96,21 @@ def login():
             clear_pending_totp()
             if request.method == 'POST':
                 return redirect(url_for('index.login'))
+        elif not pending_totp_version_current(pending_totp_user):
+            clear_pending_totp()
+            if request.method == 'POST':
+                return render_template(
+                    'login.html',
+                    saml_enabled=SAML_ENABLED,
+                    error='The sign-in code expired. Please sign in again.')
         elif request.method == 'GET':
+            blocked = otp_failures_blocked(pending_totp_user)
+            if blocked:
+                clear_pending_totp()
+                return render_template(
+                    'login.html',
+                    saml_enabled=SAML_ENABLED,
+                    error=blocked)
             return render_template('login.html',
                                    saml_enabled=SAML_ENABLED,
                                    otp_required=True,
@@ -102,19 +118,29 @@ def login():
         else:
             otp_token = request.form.get('otptoken', '')
             auth_method = session.get('pending_totp_auth_method', 'LOCAL')
+            blocked = otp_failures_blocked(pending_totp_user)
+            if blocked:
+                clear_pending_totp()
+                return render_template(
+                    'login.html',
+                    saml_enabled=SAML_ENABLED,
+                    error=blocked)
             if not otp_token.isdigit() or not pending_totp_user.verify_totp(otp_token):
                 signin_history(pending_totp_user.username, auth_method, False)
-                if pending_totp_failed():
+                register_otp_failure(pending_totp_user)
+                if otp_failures_blocked(pending_totp_user) or pending_totp_failed():
+                    clear_pending_totp()
                     return render_template(
                         'login.html',
                         saml_enabled=SAML_ENABLED,
-                        error='Too many authentication attempts. Please sign in again.')
+                        error=OTP_FAILURE_MESSAGE)
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        otp_required=True,
                                        username=pending_totp_user.username,
                                        error='Invalid credentials')
 
+            clear_otp_failures(pending_totp_user)
             clear_pending_totp()
             apply_autoprovisioning(pending_totp_user, auth_method)
             return authenticate_user(pending_totp_user, auth_method)
@@ -165,18 +191,32 @@ def login():
         # who has TOTP configured. This avoids showing an irrelevant OTP field
         # to every user on the initial sign-in form.
         if user.otp_secret:
+            blocked = otp_failures_blocked(user)
+            if blocked:
+                return render_template('login.html',
+                                       saml_enabled=SAML_ENABLED,
+                                       error=blocked)
             if otp_token and otp_token.isdigit():
                 good_token = user.verify_totp(otp_token)
                 if not good_token:
                     signin_history(user.username, auth_method, False)
+                    register_otp_failure(user)
+                    if otp_failures_blocked(user):
+                        return render_template(
+                            'login.html',
+                            saml_enabled=SAML_ENABLED,
+                            error=OTP_FAILURE_MESSAGE)
                     return render_template('login.html',
                                            saml_enabled=SAML_ENABLED,
                                            error='Invalid credentials')
+                clear_otp_failures(user)
             else:
                 session['pending_totp_user_id'] = user.id
                 session['pending_totp_auth_method'] = auth_method
                 session['pending_totp_deadline'] = time.time() + PENDING_TOTP_SECONDS
                 session['pending_totp_attempts'] = 0
+                session['pending_totp_session_version'] = int(
+                    user.session_version or 0)
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        otp_required=True,
@@ -193,6 +233,7 @@ def clear_pending_totp():
     session.pop('pending_totp_remember', None)
     session.pop('pending_totp_deadline', None)
     session.pop('pending_totp_attempts', None)
+    session.pop('pending_totp_session_version', None)
 
 
 def pending_totp_open():
@@ -202,6 +243,18 @@ def pending_totp_open():
     if deadline is None or time.time() > float(deadline):
         return False
     return attempts < PENDING_TOTP_ATTEMPTS
+
+
+def pending_totp_version_current(user):
+    """The password that opened this challenge has not been replaced."""
+    issued = session.get('pending_totp_session_version')
+    if issued is None:
+        return False
+    try:
+        issued = int(issued)
+    except (TypeError, ValueError):
+        return False
+    return (user.session_version or 0) == issued
 
 
 def pending_totp_failed():

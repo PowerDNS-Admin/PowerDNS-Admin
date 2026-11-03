@@ -24,10 +24,14 @@ nosetests.xml
 test-results
 
 #AI tools
+.ai
+.air
 .claude
 .codex
+.cursor
 .junie
-.air
+skills
+
 
 # tmp files
 .~*

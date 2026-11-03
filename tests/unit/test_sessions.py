@@ -70,6 +70,7 @@ def test_clear_session_removes_all_authentication_state(app):
         'pending_totp_user_id': 1,
         'pending_totp_auth_method': 'LOCAL',
         'pending_totp_remember': True,
+        'pending_totp_session_version': 0,
         'welcome_user_id': 1,
         'next': '/dashboard',
         '_state_oidc_random': {'data': {'state': 'random'}},

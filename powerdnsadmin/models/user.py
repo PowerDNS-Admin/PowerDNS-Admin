@@ -36,6 +36,9 @@ class User(db.Model):
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
     otp_last_used = db.Column(db.BigInteger)
+    otp_failed_attempts = db.Column(
+        db.Integer, nullable=False, default=0, server_default='0')
+    otp_locked_until = db.Column(db.DateTime, nullable=True)
     session_version = db.Column(
         db.Integer, nullable=False, default=0, server_default='0')
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
@@ -143,6 +146,14 @@ class User(db.Model):
         )
         db.session.commit()
         return claimed == 1
+
+    def otp_secret_pending_confirmation(self):
+        """A secret exists and no authentication code has been accepted yet.
+
+        The secret and its QR code are shown only during this enrollment
+        window. Replacing an enrolled secret still requires a current code.
+        """
+        return bool(self.otp_secret) and self.otp_last_used is None
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time

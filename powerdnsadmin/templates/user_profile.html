@@ -120,7 +120,7 @@
                                             <input type="checkbox" id="otp_toggle" class="form-check-input otp_toggle"
                                                    {% if current_user.otp_secret %}checked{% endif %}>
                                             <label class="form-check-label" for="otp_toggle">Enable Two Factor Authentication</label>
-                                            {% if current_user.otp_secret %}
+                                            {% if current_user.otp_secret_pending_confirmation() %}
                                                 <div id="token_information">
                                                     <p>
                                                         <img id="qrcode" src="{{ url_for('user.qrcode') }}"
@@ -164,6 +164,8 @@
                                                                 nobody can capture them.
                                                     </p>
                                                 </div>
+                                            {% elif current_user.otp_secret %}
+                                                <p>Two-factor authentication is enabled. A current authentication code is required to turn it off.</p>
                                             {% endif %}
                                         </div>
                                         <!-- /.form-group -->
