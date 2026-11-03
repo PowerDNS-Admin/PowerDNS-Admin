@@ -18,6 +18,7 @@ from ..decorators import (
     allowed_record_types, allowed_record_ttl
 )
 from ..lib import utils, helper
+from ..lib.history import normalize_history_detail
 from ..lib.errors import (
     StructuredException,
     DomainNotExists, DomainAlreadyExists, DomainAccessForbidden,
@@ -1168,11 +1169,11 @@ def api_zone_forward(server_id, zone_id):
                 data = request.get_json(force=True)
                 history = History(
                     msg='Apply record changes to zone {0}'.format(zone_id.rstrip('.')),
-                    detail = json.dumps({
+                    detail = json.dumps(normalize_history_detail({
                         'domain': zone_id.rstrip('.'),
                         'add_rrsets': list(filter(lambda r: r['changetype'] == "REPLACE", data['rrsets'])),
                         'del_rrsets': list(filter(lambda r: r['changetype'] == "DELETE", data['rrsets']))
-                    }),
+                    })),
                     created_by=created_by_value,
                     domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
