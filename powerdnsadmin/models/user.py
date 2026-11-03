@@ -7,7 +7,7 @@ import pyotp
 import ldap
 import ldap.filter
 from collections import OrderedDict
-from flask import current_app
+from flask import current_app, has_request_context, session
 from flask_login import AnonymousUserMixin
 from sqlalchemy import func, orm
 from sqlalchemy.exc import IntegrityError
@@ -36,6 +36,8 @@ class User(db.Model):
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
     otp_last_used = db.Column(db.BigInteger)
+    session_version = db.Column(
+        db.Integer, nullable=False, default=0, server_default='0')
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates="users", lazy=True)
@@ -80,6 +82,7 @@ class User(db.Model):
                 self.otp_secret = user_info.otp_secret
                 self.otp_last_used = user_info.otp_last_used
                 self.confirmed = user_info.confirmed
+                self.session_version = user_info.session_version
 
     def is_authenticated(self):
         return True
@@ -92,6 +95,21 @@ class User(db.Model):
 
     def get_id(self):
         return str(self.id)
+
+    def rotate_session_version(self):
+        """Invalidate every other login for this account.
+
+        The request that changed the password keeps its own session by
+        storing the new version. Sessions that still carry the old version
+        fail in ``load_user``.
+        """
+        self.session_version = (self.session_version or 0) + 1
+        if not has_request_context():
+            return
+        if str(session.get('_user_id') or '') != str(self.id):
+            return
+        session['session_version'] = self.session_version
+        session.modified = True
 
     def __repr__(self):
         return '<User {0}>'.format(self.username)
@@ -202,14 +220,78 @@ class User(db.Model):
             current_app.logger.debug('baseDN: {0}'.format(baseDN))
             current_app.logger.debug(traceback.format_exc())
 
+    def ldap_user_filter(self, username_attribute, basic_filter):
+        """Build a user search filter without letting the username change it.
+
+        Characters such as ``*``, ``(`` and ``)`` are data in the username
+        value. Left unescaped, a login name can close the assertion and match
+        a different directory entry, whose groups are then copied onto the
+        account that signed in.
+        """
+        escaped_username = ldap.filter.escape_filter_chars(self.username or '')
+        return "(&({0}={1}){2})".format(
+            username_attribute, escaped_username, basic_filter)
+
+    def ldap_entry_username(self, entry, username_attribute):
+        """Return the username attribute from one LDAP search entry."""
+        try:
+            attributes = entry[0][1]
+        except (IndexError, TypeError):
+            return None
+        if not attributes or not username_attribute:
+            return None
+
+        values = attributes.get(username_attribute)
+        if values is None:
+            wanted = username_attribute.lower()
+            for name, candidate in attributes.items():
+                if name.lower() == wanted:
+                    values = candidate
+                    break
+        if not values:
+            return None
+
+        value = values[0]
+        if isinstance(value, bytes):
+            value = value.decode('utf-8')
+        return value
+
+    def ldap_entry_matches_username(self, entry, username_attribute):
+        found = self.ldap_entry_username(entry, username_attribute)
+        return (found is not None
+                and found.lower() == (self.username or '').lower())
+
     def ldap_auth(self, ldap_username, password):
+        # An empty password makes many directories accept the bind as
+        # anonymous and report success. That must not count as this user.
+        if password is None or password == '':
+            current_app.logger.error(
+                'Rejecting LDAP authentication with an empty password')
+            return False
         try:
             conn = self.ldap_init_conn()
             conn.simple_bind_s(ldap_username, password)
+            if not self._ldap_bind_identified_user(conn):
+                current_app.logger.error(
+                    'LDAP bind did not authenticate directory user "{0}"'
+                    .format(self.username))
+                return False
             return True
         except ldap.LDAPError as e:
             current_app.logger.error(e)
             return False
+
+    def _ldap_bind_identified_user(self, conn):
+        try:
+            who = conn.whoami_s()
+        except ldap.LDAPError:
+            # The password was present and the bind succeeded. A server
+            # without WhoAmI support has nothing further to check.
+            return True
+        if not who:
+            return False
+        normalized = who.strip().lower()
+        return normalized not in ('dn:', 'u:', 'anonymous')
 
     def is_validate(self, method, src_ip='', trust_user=False):
         """
@@ -260,9 +342,8 @@ class User(db.Model):
                         .format(self.username, src_ip))
                     return False
 
-            searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME,
-                                                    self.username,
-                                                    LDAP_FILTER_BASIC)
+            searchFilter = self.ldap_user_filter(
+                LDAP_FILTER_USERNAME, LDAP_FILTER_BASIC)
             current_app.logger.debug('Ldap searchFilter {0}'.format(searchFilter))
 
             ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
@@ -273,14 +354,24 @@ class User(db.Model):
                     'LDAP User "{0}" does not exist. Authentication request from {1}'
                     .format(self.username, src_ip))
                 return False
+            elif not self.ldap_entry_matches_username(
+                    ldap_result[0], LDAP_FILTER_USERNAME):
+                current_app.logger.error(
+                    'LDAP search for "{0}" returned a different account. '
+                    'Authentication request from {1}'
+                    .format(self.username, src_ip))
+                return False
             else:
                 try:
+                    ldap_user_dn = ldap_result[0][0][0]
                     ldap_username = ldap.filter.escape_filter_chars(
-                        ldap_result[0][0][0])
+                        ldap_user_dn)
 
                     if Setting().get('ldap_type') != 'ad' and not trust_user:
-                        # validate ldap user password
-                        if not self.ldap_auth(ldap_username, self.password):
+                        # Bind as the directory entry just verified to be
+                        # this username. The password check rejects an empty
+                        # password, which would otherwise be an anonymous bind.
+                        if not self.ldap_auth(ldap_user_dn, self.password):
                             current_app.logger.error(
                                 'User "{0}" input a wrong LDAP password. Authentication request from {1}'
                                 .format(self.username, src_ip))
@@ -421,7 +512,21 @@ class User(db.Model):
 
             # user already exists in database, set their role based on group membership (if enabled)
             if LDAP_GROUP_SECURITY_ENABLED:
-                self.set_role(role_name)
+                existing = User.query.filter(
+                    User.username == self.username).first()
+                previous_role = None
+                if existing is not None and existing.role is not None:
+                    previous_role = existing.role.name
+                result = self.set_role(role_name)
+                if (result.get('status')
+                        and previous_role is not None
+                        and previous_role != role_name):
+                    from .history import History
+                    History(
+                        msg='LDAP authentication set role of {0} to {1}'.format(
+                            self.username, role_name),
+                        created_by='LDAP',
+                    ).add()
 
             return True
         else:
@@ -524,6 +629,7 @@ class User(db.Model):
             if self.plain_text_password:
                 user.password = self.get_hashed_password(
                     self.plain_text_password).decode("utf-8")
+                user.rotate_session_version()
 
         db.session.commit()
         return {'status': True, 'msg': 'User updated successfully'}
@@ -543,6 +649,7 @@ class User(db.Model):
             if self.plain_text_password:
                 user.password = self.get_hashed_password(
                  self.plain_text_password).decode("utf-8")
+                user.rotate_session_version()
 
         if self.email:
             # Can not update to a new email that
@@ -697,13 +804,18 @@ class User(db.Model):
         LDAP_BASE_DN = Setting().get('ldap_base_dn')
         LDAP_FILTER_USERNAME = Setting().get('ldap_filter_username')
         LDAP_FILTER_BASIC = Setting().get('ldap_filter_basic')
-        searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME,
-                                                        self.username,
-                                                        LDAP_FILTER_BASIC)
+        searchFilter = self.ldap_user_filter(
+            LDAP_FILTER_USERNAME, LDAP_FILTER_BASIC)
         current_app.logger.debug('Ldap searchFilter {0}'.format(searchFilter))
         ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN, [key])
         current_app.logger.debug('Ldap search result: {0}'.format(ldap_result))
         entitlements=[]
+        if ldap_result and not self.ldap_entry_matches_username(
+                ldap_result[0], LDAP_FILTER_USERNAME):
+            current_app.logger.error(
+                'LDAP entitlement search for "{0}" returned a different account'
+                .format(self.username))
+            return entitlements
         if ldap_result:
             dict=ldap_result[0][0][1]
             if len(dict)!=0:

@@ -1,4 +1,5 @@
 import re
+import time
 import traceback
 import datetime
 import base64
@@ -9,9 +10,12 @@ from flask_login import login_required, current_user
 
 from . import oauth as oauth_routes
 from . import saml as saml_routes
-from .auth_session import authenticate_user, signin_history, clear_session, prepare_welcome_user
+from .auth_session import (
+    authenticate_user, signin_history, clear_session, prepare_welcome_user,
+    record_two_factor_change)
 from .base import captcha, login_manager
 from ..lib import utils
+from ..lib.password_login import password_login_blocked
 from ..models.base import db
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
@@ -22,6 +26,11 @@ index_bp = Blueprint('index',
                      __name__,
                      template_folder='templates',
                      url_prefix='/')
+
+# The password check that opened this challenge is not renewed by the
+# session idle timer. Five minutes or five wrong codes ends it.
+PENDING_TOTP_SECONDS = 300
+PENDING_TOTP_ATTEMPTS = 5
 
 
 @index_bp.before_request
@@ -70,6 +79,15 @@ def login():
         clear_pending_totp()
 
     pending_totp_user_id = session.get('pending_totp_user_id')
+    if pending_totp_user_id is not None and not pending_totp_open():
+        clear_pending_totp()
+        pending_totp_user_id = None
+        if request.method == 'POST':
+            return render_template(
+                'login.html',
+                saml_enabled=SAML_ENABLED,
+                error='The sign-in code expired. Please sign in again.')
+
     if pending_totp_user_id is not None:
         pending_totp_user = db.session.get(User, pending_totp_user_id)
         if pending_totp_user is None or not pending_totp_user.otp_secret:
@@ -84,9 +102,13 @@ def login():
         else:
             otp_token = request.form.get('otptoken', '')
             auth_method = session.get('pending_totp_auth_method', 'LOCAL')
-            remember_me = session.get('pending_totp_remember', False)
             if not otp_token.isdigit() or not pending_totp_user.verify_totp(otp_token):
                 signin_history(pending_totp_user.username, auth_method, False)
+                if pending_totp_failed():
+                    return render_template(
+                        'login.html',
+                        saml_enabled=SAML_ENABLED,
+                        error='Too many authentication attempts. Please sign in again.')
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        otp_required=True,
@@ -95,8 +117,7 @@ def login():
 
             clear_pending_totp()
             apply_autoprovisioning(pending_totp_user, auth_method)
-            return authenticate_user(pending_totp_user, auth_method,
-                                     remember_me)
+            return authenticate_user(pending_totp_user, auth_method)
 
     if request.method == 'GET':
         return render_template('login.html', saml_enabled=SAML_ENABLED)
@@ -108,25 +129,23 @@ def login():
         auth_method = request.form.get('auth_method', 'LOCAL')
         session[
             'authentication_type'] = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
-        remember_me = True if 'remember' in request.form else False
-
-        if auth_method == 'LOCAL' and not Setting().get('local_db_enabled'):
-            return render_template(
-                'login.html',
-                saml_enabled=SAML_ENABLED,
-                error='Local authentication is disabled')
 
         user = User(username=username,
                     password=password,
                     plain_text_password=password)
+        blocked = password_login_blocked(
+            user,
+            auth_method,
+            local_db_enabled=Setting().get('local_db_enabled'),
+            verify_user_email=Setting().get('verify_user_email'),
+        )
+        if blocked:
+            return render_template(
+                'login.html',
+                saml_enabled=SAML_ENABLED,
+                error=blocked)
 
         try:
-            if Setting().get('verify_user_email') and user.email and not user.confirmed:
-                return render_template(
-                    'login.html',
-                    saml_enabled=SAML_ENABLED,
-                    error='Please confirm your email address first')
-
             auth = user.is_validate(method=auth_method,
                                     src_ip=request.remote_addr)
             if auth == False:
@@ -156,7 +175,8 @@ def login():
             else:
                 session['pending_totp_user_id'] = user.id
                 session['pending_totp_auth_method'] = auth_method
-                session['pending_totp_remember'] = remember_me
+                session['pending_totp_deadline'] = time.time() + PENDING_TOTP_SECONDS
+                session['pending_totp_attempts'] = 0
                 return render_template('login.html',
                                        saml_enabled=SAML_ENABLED,
                                        otp_required=True,
@@ -164,13 +184,34 @@ def login():
 
         apply_autoprovisioning(user, auth_method)
 
-        return authenticate_user(user, auth_method, remember_me)
+        return authenticate_user(user, auth_method)
 
 
 def clear_pending_totp():
     session.pop('pending_totp_user_id', None)
     session.pop('pending_totp_auth_method', None)
     session.pop('pending_totp_remember', None)
+    session.pop('pending_totp_deadline', None)
+    session.pop('pending_totp_attempts', None)
+
+
+def pending_totp_open():
+    """The password was accepted recently and the guess limit is not exhausted."""
+    deadline = session.get('pending_totp_deadline')
+    attempts = session.get('pending_totp_attempts') or 0
+    if deadline is None or time.time() > float(deadline):
+        return False
+    return attempts < PENDING_TOTP_ATTEMPTS
+
+
+def pending_totp_failed():
+    """Record one wrong code. Return True when the challenge is now closed."""
+    attempts = int(session.get('pending_totp_attempts') or 0) + 1
+    session['pending_totp_attempts'] = attempts
+    if attempts >= PENDING_TOTP_ATTEMPTS or not pending_totp_open():
+        clear_pending_totp()
+        return True
+    return False
 
 
 def apply_autoprovisioning(user, auth_method):
@@ -403,6 +444,8 @@ def register():
                         send_account_verification(email)
                     if Setting().get('otp_force') and Setting().get('otp_field_enabled'):
                         user.update_profile(enable_otp=True)
+                        record_two_factor_change(
+                            user.username, True, created_by=user.username)
                         prepare_welcome_user(user.id)
                         return redirect(url_for('index.welcome'))
                     else:

@@ -58,10 +58,12 @@ def flask_app():
 
 
 def call(flask_app, wrapped, method='GET', json=None, headers=None,
-         query_string=None, kwargs=None):
+         query_string=None, kwargs=None, basic_user=None):
     with flask_app.test_request_context(
             '/', method=method, json=json, headers=headers,
             query_string=query_string):
+        if basic_user is not None:
+            g.basic_auth_user = basic_user
         return wrapped(**(kwargs or {}))
 
 
@@ -159,14 +161,16 @@ def test_privileged_domain_access_does_not_query_database(flask_app,
         flask_app, wrapped, kwargs={'domain_name': 'any.example'}) is ALLOWED
 
 
-def test_api_authenticated_user_prefers_request_credentials(
+def test_api_authenticated_user_ignores_the_browser_session(
         flask_app, monkeypatch):
     browser_user = user(username='browser')
     request_user = user(username='api')
     monkeypatch.setattr(decorators, 'current_user', browser_user)
 
     with flask_app.test_request_context('/'):
-        assert decorators.api_authenticated_user() is browser_user
+        anonymous = decorators.api_authenticated_user()
+        assert anonymous is not browser_user
+        assert anonymous.is_authenticated is False
         g.basic_auth_user = request_user
         assert decorators.api_authenticated_user() is request_user
 
@@ -209,14 +213,14 @@ def test_body_key_callback_obeys_key_and_method_filters(flask_app):
     {'user_id': '7'},
     {'username': 'alice'},
 ])
-def test_api_role_permission_allows_self(flask_app, monkeypatch,
-                                         identity_kwargs):
-    monkeypatch.setattr(decorators, 'current_user', user())
+def test_api_role_permission_allows_self(flask_app, identity_kwargs):
     wrapped = decorators.api_role_can(
         'read profile', roles=['Administrator'], allow_self=True)(
             lambda **kwargs: ALLOWED)
 
-    assert call(flask_app, wrapped, kwargs=identity_kwargs) is ALLOWED
+    assert call(
+        flask_app, wrapped, kwargs=identity_kwargs,
+        basic_user=user()) is ALLOWED
 
 
 def test_api_role_permission_uses_basic_authenticated_user(
@@ -235,13 +239,11 @@ def test_api_role_permission_uses_basic_authenticated_user(
     assert 'delete account' in error.value.message
 
 
-def test_api_role_permission_allows_default_privileged_roles(
-        flask_app, monkeypatch):
+def test_api_role_permission_allows_default_privileged_roles(flask_app):
     wrapped = decorators.api_role_can('list users')(lambda: ALLOWED)
 
     for role in ('Administrator', 'Operator'):
-        monkeypatch.setattr(decorators, 'current_user', user(role))
-        assert call(flask_app, wrapped) is ALLOWED
+        assert call(flask_app, wrapped, basic_user=user(role)) is ALLOWED
 
 
 @pytest.mark.parametrize(
@@ -251,23 +253,24 @@ def test_api_role_permission_allows_default_privileged_roles(
     ])
 def test_basic_user_zone_mutations_require_the_corresponding_setting(
         flask_app, monkeypatch, decorator, setting_name):
-    monkeypatch.setattr(decorators, 'current_user', user())
+    basic_user = user()
     wrapped = decorator(lambda: ALLOWED)
 
     monkeypatch.setattr(
         decorators, 'Setting', lambda: Settings(**{setting_name: False}))
     with pytest.raises(NotEnoughPrivileges):
-        call(flask_app, wrapped, method='POST', json={'name': 'example.'})
+        call(flask_app, wrapped, method='POST', json={'name': 'example.'},
+             basic_user=basic_user)
 
     monkeypatch.setattr(
         decorators, 'Setting', lambda: Settings(**{setting_name: True}))
     assert call(flask_app, wrapped, method='POST', json={
         'name': 'example.'
-    }) is ALLOWED
+    }, basic_user=basic_user) is ALLOWED
 
 
 def test_basic_zone_creation_rejects_domain_override(flask_app, monkeypatch):
-    monkeypatch.setattr(decorators, 'current_user', user('Operator'))
+    basic_user = user('Operator')
     monkeypatch.setattr(
         decorators, 'Setting', lambda: Settings(deny_domain_override=True))
     domain_class = MagicMock()
@@ -276,12 +279,13 @@ def test_basic_zone_creation_rejects_domain_override(flask_app, monkeypatch):
     wrapped = decorators.api_can_create_domain(lambda: ALLOWED)
 
     with pytest.raises(DomainOverrideForbidden):
-        call(flask_app, wrapped, method='POST', json={'name': 'example.'})
+        call(flask_app, wrapped, method='POST', json={'name': 'example.'},
+             basic_user=basic_user)
 
     domain_class.return_value.is_overriding.return_value = False
     assert call(flask_app, wrapped, method='POST', json={
         'name': 'example.'
-    }) is ALLOWED
+    }, basic_user=basic_user) is ALLOWED
 
 
 @pytest.mark.parametrize(
@@ -543,6 +547,8 @@ class FakeUser:
     validation_error = None
     email = None
     confirmed = True
+    otp_secret = None
+    accept_otp = None
     stored_user = user()
     query = MagicMock()
     username = MagicMock()
@@ -552,7 +558,11 @@ class FakeUser:
         self.__dict__.update(kwargs)
         self.email = type(self).email
         self.confirmed = type(self).confirmed
+        self.otp_secret = type(self).otp_secret
         type(self).instances.append(self)
+
+    def verify_totp(self, token):
+        return token == type(self).accept_otp
 
     def is_validate(self, method, src_ip):
         self.validation_method = method
@@ -568,6 +578,8 @@ def fake_user(monkeypatch):
     FakeUser.validation_error = None
     FakeUser.email = None
     FakeUser.confirmed = True
+    FakeUser.otp_secret = None
+    FakeUser.accept_otp = None
     FakeUser.stored_user = user()
     FakeUser.query = MagicMock()
     FakeUser.query.filter.return_value.first.return_value = (
@@ -647,6 +659,33 @@ def test_basic_auth_rejects_unverified_or_invalid_users(
     fake_user.validation_error = RuntimeError('backend unavailable')
     with pytest.raises(Unauthorized):
         call(flask_app, wrapped, headers=basic_header('alice:secret'))
+
+
+def test_basic_auth_rejects_local_password_when_local_login_is_disabled(
+        flask_app, monkeypatch, fake_user):
+    monkeypatch.setattr(
+        decorators, 'Setting',
+        lambda: Settings(verify_user_email=False, local_db_enabled=False))
+    wrapped = decorators.api_basic_auth(lambda: ALLOWED)
+
+    with pytest.raises(Unauthorized):
+        call(flask_app, wrapped, headers=basic_header('alice:secret'))
+
+    assert not hasattr(fake_user.instances[0], 'validation_method')
+
+
+def test_basic_auth_requires_otp_header_when_the_account_has_mfa(
+        flask_app, fake_user):
+    fake_user.otp_secret = 'JBSWY3DPEHPK3PXP'
+    fake_user.accept_otp = '123456'
+    wrapped = decorators.api_basic_auth(lambda: g.basic_auth_user)
+
+    with pytest.raises(Unauthorized):
+        call(flask_app, wrapped, headers=basic_header('alice:secret'))
+
+    headers = basic_header('alice:secret')
+    headers['X-OTP'] = '123456'
+    assert call(flask_app, wrapped, headers=headers) is fake_user.stored_user
 
 
 class FakeApiKey:

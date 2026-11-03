@@ -2,22 +2,24 @@ import base64
 import binascii
 from functools import wraps
 from flask import g, request, abort, current_app, Response
-from flask_login import current_user
+from flask_login import AnonymousUserMixin, current_user
 
 from .models import User, ApiKey, Setting, Domain, Setting
 from .lib.errors import RequestIsNotJSON, NotEnoughPrivileges, RecordTTLNotAllowed, RecordTypeNotAllowed
 from .lib.errors import DomainAccessForbidden, DomainOverrideForbidden
+from .lib.password_login import otp_login_blocked, password_login_blocked
 
 
 def api_authenticated_user():
     """
-    Return the user authenticated by the API's Basic credentials.
+    Return the user authenticated by this request's Basic credentials.
 
-    Flask-Login gives an existing browser session precedence over its request
-    loader. API authorization must instead use the credentials supplied for
-    the current API request.
+    The API before_request runs before those credentials are checked. Falling
+    back to Flask-Login's current_user there loads a remember-me cookie into
+    the server session and saves it, which is how a published SECRET_KEY
+    became a long-lived Administrator session.
     """
-    return getattr(g, 'basic_auth_user', current_user)
+    return getattr(g, 'basic_auth_user', None) or AnonymousUserMixin()
 
 
 def admin_role_required(f):
@@ -147,68 +149,126 @@ def can_create_domain(f):
     return decorated_function
 
 
+def accept_basic_credentials():
+    """Return the user authenticated by this request's Basic credentials.
+
+    The login form, this function, and the browser request loader share
+    ``password_login_blocked`` and ``otp_login_blocked``. An account with a
+    TOTP secret must also send that code in the ``X-OTP`` header. API keys
+    do not come through here.
+    """
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return None
+    if auth_header[:6] != "Basic ":
+        current_app.logger.error('Error: Unsupported authorization mechanism!')
+        return None
+
+    auth_header = auth_header[6:]
+    try:
+        auth_header = str(base64.b64decode(auth_header), 'utf-8')
+        auth_components = auth_header.split(':', maxsplit=1)
+    except (binascii.Error, UnicodeDecodeError) as e:
+        current_app.logger.error(
+            'Invalid base64-encoded of credential. Error {0}'.format(e))
+        return None
+    except TypeError as e:
+        current_app.logger.error('Error: {0}'.format(e))
+        return None
+
+    if len(auth_components) != 2:
+        return None
+
+    (username, password) = auth_components
+    auth_method = request.args.get('auth_method', 'LOCAL')
+    auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
+    user = User(username=username,
+                password=password,
+                plain_text_password=password)
+    blocked = password_login_blocked(
+        user,
+        auth_method,
+        local_db_enabled=Setting().get('local_db_enabled'),
+        verify_user_email=Setting().get('verify_user_email'),
+    )
+    if blocked:
+        current_app.logger.warning(
+            'Basic authentication rejected for user {0}: {1}'.format(
+                username, blocked))
+        return None
+
+    try:
+        auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
+    except Exception as e:
+        current_app.logger.error('Error: {0}'.format(e))
+        return None
+    if not auth:
+        current_app.logger.error('Checking user password failed')
+        return None
+
+    blocked = otp_login_blocked(user, request.headers.get('X-OTP'))
+    if blocked:
+        current_app.logger.warning(
+            'Basic authentication rejected for user {0}: {1}'.format(
+                username, blocked))
+        return None
+    return User.query.filter(User.username == username).first()
+
+
+def accept_api_key():
+    """Return the API key authenticated by ``X-API-KEY``, or ``None``."""
+    auth_header = request.headers.get('X-API-KEY')
+    if not auth_header:
+        return None
+    try:
+        apikey_val = str(base64.b64decode(auth_header), 'utf-8')
+    except (binascii.Error, UnicodeDecodeError) as e:
+        current_app.logger.error(
+            'Invalid base64-encoded X-API-KEY. Error {0}'.format(e))
+        return None
+    except TypeError as e:
+        current_app.logger.error('Error: {0}'.format(e))
+        return None
+
+    apikey = ApiKey(key=apikey_val)
+    apikey.plain_text_password = apikey_val
+    try:
+        return apikey.is_validate(method='LOCAL', src_ip=request.remote_addr)
+    except Exception as e:
+        current_app.logger.error('Error: {0}'.format(e))
+        return None
+
+
+def establish_api_identity():
+    """Authenticate an API request once, before maintenance checks run.
+
+    View decorators call this too. The second call does not check the
+    password or the one-time code again, so a TOTP code is not consumed twice.
+    """
+    if getattr(g, '_api_identity_ready', False):
+        return
+    g._api_identity_ready = True
+    if request.headers.get('X-API-KEY'):
+        apikey = accept_api_key()
+        if apikey is None:
+            abort(401)
+        g.apikey = apikey
+        return
+    if request.headers.get('Authorization'):
+        user = accept_basic_credentials()
+        if user is None:
+            abort(401)
+        g.basic_auth_user = user
+
+
 def api_basic_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-
-        if not auth_header:
-            current_app.logger.error('Error: Authorization header missing!')
+        establish_api_identity()
+        if getattr(g, 'basic_auth_user', None) is None:
+            if not request.headers.get('Authorization'):
+                current_app.logger.error('Error: Authorization header missing!')
             abort(401)
-
-        if auth_header[:6] != "Basic ":
-            current_app.logger.error('Error: Unsupported authorization mechanism!')
-            abort(401)
-
-        # Remove "Basic " from the header value
-        auth_header = auth_header[6:]
-        auth_components = []
-
-        try:
-            auth_header = str(base64.b64decode(auth_header), 'utf-8')
-            # NK: We use auth_components here as we don't know if we'll have a colon,
-            # we split it maximum 1 times to grab the username, the rest of the string would be the password.
-            auth_components = auth_header.split(':', maxsplit=1)
-        except (binascii.Error, UnicodeDecodeError) as e:
-            current_app.logger.error(
-                'Invalid base64-encoded of credential. Error {0}'.format(
-                    e))
-            abort(401)
-        except TypeError as e:
-            current_app.logger.error('Error: {0}'.format(e))
-            abort(401)
-
-        # If we don't have two auth components (username, password), we can abort
-        if len(auth_components) != 2:
-            abort(401)
-
-        (username, password) = auth_components
-
-        user = User(username=username,
-                    password=password,
-                    plain_text_password=password)
-
-        try:
-            if Setting().get('verify_user_email') and user.email and not user.confirmed:
-                current_app.logger.warning(
-                    'Basic authentication failed for user {} because of unverified email address'
-                    .format(username))
-                abort(401)
-
-            auth_method = request.args.get('auth_method', 'LOCAL')
-            auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
-            auth = user.is_validate(method=auth_method, src_ip=request.remote_addr)
-
-            if not auth:
-                current_app.logger.error('Checking user password failed')
-                abort(401)
-            else:
-                user = User.query.filter(User.username == username).first()
-                g.basic_auth_user = user
-        except Exception as e:
-            current_app.logger.error('Error: {0}'.format(e))
-            abort(401)
-
         return f(*args, **kwargs)
 
     return decorated_function
@@ -519,33 +579,11 @@ def allowed_record_ttl(f):
 def apikey_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('X-API-KEY')
-        if auth_header:
-            try:
-                apikey_val = str(base64.b64decode(auth_header), 'utf-8')
-            except (binascii.Error, UnicodeDecodeError) as e:
-                current_app.logger.error('Invalid base64-encoded X-API-KEY. Error {0}'.format(e))
-                abort(401)
-            except TypeError as e:
-                current_app.logger.error('Error: {0}'.format(e))
-                abort(401)
-
-            apikey = ApiKey(key=apikey_val)
-            apikey.plain_text_password = apikey_val
-
-            try:
-                auth_method = 'LOCAL'
-                auth = apikey.is_validate(method=auth_method,
-                                          src_ip=request.remote_addr)
-
-                g.apikey = auth
-            except Exception as e:
-                current_app.logger.error('Error: {0}'.format(e))
-                abort(401)
-        else:
-            current_app.logger.error('Error: API key header missing!')
+        establish_api_identity()
+        if getattr(g, 'apikey', None) is None:
+            if not request.headers.get('X-API-KEY'):
+                current_app.logger.error('Error: API key header missing!')
             abort(401)
-
         return f(*args, **kwargs)
 
     return decorated_function

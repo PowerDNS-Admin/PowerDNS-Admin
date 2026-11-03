@@ -5,6 +5,7 @@ from flask_mail import Mail
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_session import Session
 from .lib import utils
+from .lib.deployment_secrets import assert_deployment_secrets
 
 
 def create_app(config=None):
@@ -60,6 +61,7 @@ def create_app(config=None):
 
     # Load any settings defined with environment variables
     AppSettings.load_environment(app)
+    assert_deployment_secrets(app)
 
     # Single source of truth for Docker and bare-metal deployments.
     app.config['APP_VERSION'] = utils.read_app_version(app.root_path)

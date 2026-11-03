@@ -1,9 +1,7 @@
-import traceback
-
-from flask import current_app
 from datetime import datetime
 
 from .base import db
+from ..lib.client_request import request_host_and_user_agent
 
 
 class History(db.Model):
@@ -17,13 +15,18 @@ class History(db.Model):
     domain_id = db.Column(db.Integer,
                           db.ForeignKey('domain.id', ondelete='SET NULL'),
                           nullable=True)
+    host = db.Column(db.String(255), nullable=True)
+    user_agent = db.Column(db.String(512), nullable=True)
 
-    def __init__(self, id=None, msg=None, detail=None, created_by=None, domain_id=None):
+    def __init__(self, id=None, msg=None, detail=None, created_by=None,
+                 domain_id=None, host=None, user_agent=None):
         self.id = id
         self.msg = msg
         self.detail = detail
         self.created_by = created_by
         self.domain_id = domain_id
+        self.host = host
+        self.user_agent = user_agent
 
     def __repr__(self):
         return '<History {0}>'.format(self.msg)
@@ -37,20 +40,8 @@ class History(db.Model):
         h.detail = self.detail
         h.created_by = self.created_by
         h.domain_id = self.domain_id
+        host, user_agent = request_host_and_user_agent()
+        h.host = self.host or host
+        h.user_agent = self.user_agent or user_agent
         db.session.add(h)
         db.session.commit()
-
-    def remove_all(self):
-        """
-        Remove all history from DB
-        """
-        try:
-            db.session.query(History).delete()
-            db.session.commit()
-            current_app.logger.info("Removed all history")
-            return True
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error("Cannot remove history. DETAIL: {0}".format(e))
-            current_app.logger.debug(traceback.format_exc())
-            return False

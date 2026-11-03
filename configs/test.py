@@ -16,6 +16,11 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
 )
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SESSION_TYPE = 'sqlalchemy'
+# SeaSurf treats Flask's TESTING flag as "skip CSRF". These tests cover
+# login and registration tokens, so keep validation on. TESTING still lets
+# the published SECRET_KEY and SALT start in this config.
+CSRF_DISABLE = False
+TESTING = True
 
 # SAML Authnetication
 SAML_ENABLED = False

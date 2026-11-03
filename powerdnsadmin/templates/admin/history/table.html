@@ -24,6 +24,12 @@
           <td>{{ history.history.created_by }}</td>
           <td width="6%">
             <div id="history-info-div-{{ loop.index0 }}" style="display: none;">
+              {% if history.history.host or history.history.user_agent %}
+                <table class="table table-bordered table-striped">
+                  <tr><td>Host:</td><td class="text-break">{{ history.history.host or '' }}</td></tr>
+                  <tr><td>User agent:</td><td class="text-break">{{ history.history.user_agent or '' }}</td></tr>
+                </table>
+              {% endif %}
               {{ history.detailed_msg | safe }}
               {% if history.change_set %}
                 <div class="content">
@@ -49,7 +55,7 @@
               {% endif %}
             </div>
             <button type="button" class="btn btn-primary history-info-button"
-              {% if history.detailed_msg == "" and history.change_set is none %}
+              {% if history.detailed_msg == "" and history.change_set is none and not history.history.host and not history.history.user_agent %}
                 style="visibility: hidden;"
               {% endif %} value="{{ loop.index0 }}">
               <i class="fa-solid fa-info"></i>

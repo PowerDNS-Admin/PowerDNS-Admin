@@ -16,6 +16,8 @@ from ..models.role import Role
 from ..models.server import Server
 from ..models.setting import Setting
 from ..models.history import History
+from ..models.api_history import ApiHistory
+from ..models.system_history import SystemHistory
 from ..models.domain import Domain
 from ..models.domain_user import DomainUser
 from ..models.record import Record
@@ -487,11 +489,9 @@ def manage_user():
                 user = User(username=data)
                 result = user.update_profile(enable_otp=False)
                 if result:
-                    history = History(
-                        msg='Two factor authentication disabled for user {0}'.
-                        format(data),
-                        created_by=current_user.username)
-                    history.add()
+                    from .auth_session import record_two_factor_change
+                    record_two_factor_change(
+                        data, False, created_by=current_user.username)
                     return make_response(
                         jsonify({
                             'status':
@@ -863,6 +863,19 @@ class DetailedHistory():
                                                        authenticator=detail_dict['authenticator'],
                                                        ip_address=detail_dict['ip_address'])
 
+        elif history.msg.startswith('Two factor authentication enabled') \
+                or history.msg.startswith('Two factor authentication disabled'):
+            self.detailed_msg = render_template_string("""
+                <table class="table table-bordered table-striped">
+                    <tr><td>User:</td><td>{{ username }}</td></tr>
+                    <tr><td>IP Address:</td><td>{{ ip_address }}</td></tr>
+                </table>
+                """,
+                                                       username=DetailedHistory.get_key_val(
+                                                           detail_dict, 'username'),
+                                                       ip_address=DetailedHistory.get_key_val(
+                                                           detail_dict, 'ip_address'))
+
         elif 'add_rrsets' in detail_dict:  # this is a zone record change
             self.detailed_msg = ""
 
@@ -988,43 +1001,10 @@ def convert_histories(histories):
     return detailedHistories
 
 
-@admin_bp.route('/history', methods=['GET', 'POST'])
+@admin_bp.route('/history', methods=['GET'])
 @login_required
 @history_access_required
 def history():
-    if request.method == 'POST':
-        if current_user.role.name != 'Administrator':
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'You do not have permission to remove history.'
-                }), 401)
-
-        if Setting().get('preserve_history'):
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'History removal is not allowed (toggle preserve_history in settings).'
-                }), 401)
-
-        h = History()
-        result = h.remove_all()
-        if result:
-            history = History(msg='Remove all histories',
-                              created_by=current_user.username)
-            history.add()
-            return make_response(
-                jsonify({
-                    'status': 'ok',
-                    'msg': 'Changed user role successfully.'
-                }), 200)
-        else:
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'Can not remove histories.'
-                }), 500)
-
     if request.method == 'GET':
         doms = accounts = users = ""
         if current_user.role.name in ['Administrator', 'Operator']:
@@ -1098,37 +1078,10 @@ def from_utc_to_local(local_offset, timeframe):
     return date_converted
 
 
-@admin_bp.route('/history_table', methods=['GET', 'POST'])
+@admin_bp.route('/history_table', methods=['GET'])
 @login_required
 @history_access_required
 def history_table():  # ajax call data
-
-    if request.method == 'POST':
-        if current_user.role.name != 'Administrator':
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'You do not have permission to remove history.'
-                }), 401)
-
-        h = History()
-        result = h.remove_all()
-        if result:
-            history = History(msg='Remove all histories',
-                              created_by=current_user.username)
-            history.add()
-            return make_response(
-                jsonify({
-                    'status': 'ok',
-                    'msg': 'Changed user role successfully.'
-                }), 200)
-        else:
-            return make_response(
-                jsonify({
-                    'status': 'error',
-                    'msg': 'Can not remove histories.'
-                }), 500)
-
     detailedHistories = []
     lim = int(Setting().get('max_history_records'))  # max num of records
 
@@ -1343,6 +1296,136 @@ def history_table():  # ajax call data
                                len_histories=len(detailedHistories), lim=lim)
 
 
+def _api_history_like(column, value):
+    escaped = (
+        value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_'))
+    return column.like('%{0}%'.format(escaped), escape='\\')
+
+
+def _api_history_body(raw):
+    if not raw:
+        return ''
+    try:
+        return json.dumps(json.loads(raw), indent=2)
+    except (TypeError, ValueError):
+        return raw
+
+
+@admin_bp.route('/api-history', methods=['GET'])
+@login_required
+@operator_role_required
+def api_history():
+    try:
+        limit = int(Setting().get('max_history_records'))
+    except (TypeError, ValueError):
+        limit = 1000
+    if limit < 1:
+        limit = 1000
+
+    path = (request.args.get('path') or '').strip()[:512]
+    actor = (request.args.get('actor') or '').strip()[:128]
+    method = (request.args.get('method') or '').strip().upper()
+    status = (request.args.get('status') or '').strip()
+    auth_type = (request.args.get('auth_type') or '').strip()
+    outcome = (request.args.get('outcome') or '').strip()
+
+    allowed_methods = ('GET', 'POST', 'PUT', 'PATCH', 'DELETE')
+    allowed_auth_types = ('basic', 'api_key', 'none')
+    allowed_outcomes = ('authenticated', 'unauthenticated')
+    if method not in allowed_methods:
+        method = ''
+    if auth_type not in allowed_auth_types:
+        auth_type = ''
+    if outcome not in allowed_outcomes:
+        outcome = ''
+    if not status.isdigit():
+        status = ''
+
+    query = ApiHistory.query
+    if path:
+        query = query.filter(_api_history_like(ApiHistory.path, path))
+    if actor:
+        query = query.filter(db.or_(
+            _api_history_like(ApiHistory.username, actor),
+            _api_history_like(ApiHistory.apikey_description, actor),
+        ))
+    if method:
+        query = query.filter(ApiHistory.method == method)
+    if status:
+        query = query.filter(ApiHistory.status_code == int(status))
+    if auth_type:
+        query = query.filter(ApiHistory.auth_type == auth_type)
+    if outcome == 'authenticated':
+        query = query.filter(ApiHistory.authenticated.is_(True))
+    elif outcome == 'unauthenticated':
+        query = query.filter(ApiHistory.authenticated.is_(False))
+
+    rows = (
+        query.order_by(ApiHistory.created_on.desc(), ApiHistory.id.desc())
+        .limit(limit)
+        .all()
+    )
+    for row in rows:
+        row.display_body = _api_history_body(row.request_body)
+        row.display_response = _api_history_body(row.response_body)
+
+    return render_template(
+        'admin/api_history.html',
+        rows=rows,
+        limit=limit,
+        truncated=len(rows) >= limit,
+        filters={
+            'path': path,
+            'actor': actor,
+            'method': method,
+            'status': status,
+            'auth_type': auth_type,
+            'outcome': outcome,
+        },
+    )
+
+
+@admin_bp.route('/system-activity', methods=['GET'])
+@login_required
+@operator_role_required
+def system_activity():
+    """Application setting and configuration changes."""
+    setting_name = (request.args.get('setting') or '').strip()[:64]
+    actor = (request.args.get('actor') or '').strip()[:128]
+    limit = Setting().get('max_history_records') or 1000
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        limit = 1000
+    if limit < 1:
+        limit = 1
+
+    query = SystemHistory.query
+    if setting_name:
+        query = query.filter(
+            _api_history_like(SystemHistory.setting_name, setting_name))
+    if actor:
+        query = query.filter(
+            _api_history_like(SystemHistory.username, actor))
+
+    rows = (
+        query.order_by(SystemHistory.created_on.desc(), SystemHistory.id.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return render_template(
+        'admin/system_activity.html',
+        rows=rows,
+        limit=limit,
+        truncated=len(rows) >= limit,
+        filters={
+            'setting': setting_name,
+            'actor': actor,
+        },
+    )
+
+
 @admin_bp.route('/setting/basic', methods=['GET'])
 @login_required
 @operator_role_required
@@ -1371,7 +1454,6 @@ def setting_basic():
         'otp_field_enabled',
         'otp_force',
         'pdns_api_timeout',
-        'preserve_history',
         'pretty_ipv6_ptr',
         'record_helper',
         'record_quick_edit',
@@ -1441,12 +1523,15 @@ def setting_pdns():
         pdns_api_url = request.form.get('pdns_api_url')
         pdns_api_key = request.form.get('pdns_api_key')
 
-        Setting().set('pdns_api_url', pdns_api_url)
-        Setting().set('pdns_api_key', pdns_api_key)
+        url_saved = Setting().set('pdns_api_url', pdns_api_url)
+        key_saved = Setting().set('pdns_api_key', pdns_api_key)
+        if not url_saved or not key_saved:
+            flash('Unable to save the PowerDNS API settings.', 'error')
 
-        return render_template('admin/setting/pdns.html',
-                               pdns_api_url=pdns_api_url,
-                               pdns_api_key=pdns_api_key)
+        return render_template(
+            'admin/setting/pdns.html',
+            pdns_api_url=Setting().get('pdns_api_url'),
+            pdns_api_key=Setting().get('pdns_api_key'))
 
 
 @admin_bp.route('/setting/dns-records', methods=['GET', 'POST'])

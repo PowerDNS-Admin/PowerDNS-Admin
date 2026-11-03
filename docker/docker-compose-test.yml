@@ -17,6 +17,9 @@ services:
       COVERAGE_FAIL_UNDER: ${COVERAGE_FAIL_UNDER:-}
       COVERAGE_OUTPUT_DIR: /test-results/coverage
       FLASK_CONF: /app/configs/test.py
+      # The test config ships the published SECRET_KEY and SALT. This skip
+      # is for the test stack only.
+      PDA_ALLOW_INSECURE_SECRETS: "1"
       SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
       SESSION_TYPE: sqlalchemy
       PDNS_API_KEY: ${PDNS_API_KEY:-changeme}

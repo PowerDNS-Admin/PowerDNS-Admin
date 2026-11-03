@@ -4,6 +4,7 @@ from ast import literal_eval
 from flask import current_app
 from .base import db
 from powerdnsadmin.lib.settings import AppSettings
+from powerdnsadmin.lib.setting_audit import queue_setting_change
 
 
 class Setting(db.Model):
@@ -13,6 +14,22 @@ class Setting(db.Model):
 
     ZONE_TYPE_FORWARD = 'forward'
     ZONE_TYPE_REVERSE = 'reverse'
+    # These stay on the process configuration. An administrator saving any
+    # other setting makes that saved value the one the application uses,
+    # including when the environment supplied an older value at startup.
+    CONFIG_LOCKED = frozenset({
+        'bind_address',
+        'csrf_cookie_secure',
+        'log_level',
+        'pdns_admin_log_level',
+        'port',
+        'salt',
+        'secret_key',
+        'session_cookie_secure',
+        'session_type',
+        'sqlalchemy_engine_options',
+        'sqlalchemy_track_modifications',
+    })
 
     def __init__(self, id=None, name=None, value=None):
         self.id = id
@@ -38,8 +55,11 @@ class Setting(db.Model):
 
         try:
             if maintenance.value != mode:
+                old_value = maintenance.value
                 maintenance.value = mode
+                queue_setting_change('maintenance', old_value, mode)
                 db.session.commit()
+                self._publish('maintenance', mode)
             return True
         except Exception as e:
             current_app.logger.error('Cannot set maintenance to {0}. DETAIL: {1}'.format(
@@ -57,11 +77,14 @@ class Setting(db.Model):
             db.session.add(current_setting)
 
         try:
+            old_value = current_setting.value
             if current_setting.value == "True":
                 current_setting.value = "False"
             else:
                 current_setting.value = "True"
+            queue_setting_change(setting, old_value, current_setting.value)
             db.session.commit()
+            self._publish(setting, current_setting.value)
             return True
         except Exception as e:
             current_app.logger.error('Cannot toggle setting {0}. DETAIL: {1}'.format(
@@ -84,8 +107,11 @@ class Setting(db.Model):
             value = json.dumps(value)
 
         try:
+            old_value = current_setting.value
             current_setting.value = value
+            queue_setting_change(setting, old_value, value)
             db.session.commit()
+            self._publish(setting, value)
             return True
         except Exception as e:
             current_app.logger.error('Cannot edit setting {0}. DETAIL: {1}'.format(setting, e))
@@ -93,13 +119,31 @@ class Setting(db.Model):
             db.session.rollback()
             return False
 
+    def _publish(self, setting, value):
+        """Keep this process aligned with a value just saved to the database."""
+        if setting in self.CONFIG_LOCKED:
+            return
+        current_app.config[str(setting).upper()] = value
+
+    def _saved_row(self, setting):
+        """Return the stored row, or None when this app has no database.
+
+        A Flask app that only carries configuration, such as a unit test,
+        has no SQLAlchemy registration. Saved values still win once the
+        application database is attached.
+        """
+        if 'sqlalchemy' not in current_app.extensions:
+            return None
+        return self.query.filter(Setting.name == setting).first()
+
     def get(self, setting):
         if setting in AppSettings.defaults:
+            result = None
+            if setting not in self.CONFIG_LOCKED:
+                result = self._saved_row(setting)
 
-            if setting.upper() in current_app.config:
+            if result is None and setting.upper() in current_app.config:
                 result = current_app.config[setting.upper()]
-            else:
-                result = self.query.filter(Setting.name == setting).first()
 
             if result is not None:
                 if hasattr(result, 'value'):

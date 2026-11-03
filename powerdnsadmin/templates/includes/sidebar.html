@@ -60,6 +60,20 @@
                     {% endif %}
                     {% if is_admin_ops %}
                         <li class="nav-item">
+                            <a href="{{ url_for('admin.api_history') }}"
+                               class="nav-link{% if active_page == 'admin_api_history' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-clipboard-list"></i>
+                                <p>API History</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.system_activity') }}"
+                               class="nav-link{% if active_page == 'admin_system_activity' %} active{% endif %}">
+                                <i class="nav-icon fa-solid fa-sliders"></i>
+                                <p>System Activity</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ url_for('admin.server_statistics') }}"
                                class="nav-link{% if active_page == 'server_statistics' %} active{% endif %}">
                                 <i class="nav-icon fa-solid fa-chart-simple"></i>

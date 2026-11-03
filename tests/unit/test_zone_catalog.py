@@ -45,6 +45,7 @@ def test_zone_creation_without_catalog_is_backward_compatible(initial_data,
     with client.session_transaction() as session:
         session['_user_id'] = str(admin_id)
         session['_fresh'] = True
+        session['session_version'] = 0
 
     form_response = client.get('/domain/add')
     csrf_token = re.search(

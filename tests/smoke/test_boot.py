@@ -1,4 +1,7 @@
 import json
+from base64 import b64encode
+
+from powerdnsadmin.models.api_key import ApiKey
 
 from .conftest import REPO_ROOT
 
@@ -17,8 +20,16 @@ def test_ping_returns_ok(initial_data, client):
     assert response.get_data(as_text=True) == 'ok'
 
 
-def test_api_list_returns_v1_entrypoint(initial_data, client):
-    response = client.get('/api')
+def test_api_list_returns_v1_entrypoint(initial_data, client, app):
+    with app.app_context():
+        api_key = ApiKey(desc='version list', role_name='User', domains=[])
+        plain_key = api_key.plain_key
+        api_key.create()
+    headers = {
+        'X-API-KEY': b64encode(plain_key.encode('utf-8')).decode('utf-8'),
+    }
+
+    response = client.get('/api', headers=headers)
     payload = json.loads(response.get_data(as_text=True))
 
     assert response.status_code == 200

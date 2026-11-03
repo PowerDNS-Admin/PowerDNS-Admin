@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% set active_page = "admin_system_activity" %}
+{% set page_title = 'System Activity' %}
+{% set page_subtitle = 'Changes to application settings and configuration. Passwords and keys are stored as [redacted].' %}
+{% block title %}<title>System Activity - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header with-border">
+                    <h3 class="card-title">System Activity</h3>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('admin.system_activity') }}" class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label" for="system-activity-setting">Setting</label>
+                            <input type="text" class="form-control" id="system-activity-setting" name="setting"
+                                   value="{{ filters.setting }}" maxlength="64">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="system-activity-actor">Changed by</label>
+                            <input type="text" class="form-control" id="system-activity-actor" name="actor"
+                                   value="{{ filters.actor }}" maxlength="128">
+                        </div>
+                        <div class="col-md-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-search"></i>&nbsp;Search
+                            </button>
+                            <a class="btn btn-outline-secondary" href="{{ url_for('admin.system_activity') }}">Clear</a>
+                        </div>
+                    </form>
+                </div>
+                {% if truncated %}
+                    <div class="card-body pt-0">
+                        <p class="text-danger mb-0">
+                            <b>Showing the latest {{ limit }} setting changes.</b>
+                        </p>
+                    </div>
+                {% endif %}
+                <div class="card-body table-responsive pt-0">
+                    <table id="tbl_system_activity" class="table table-bordered table-striped table-hover table-sm">
+                        <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Setting</th>
+                            <th>Previous</th>
+                            <th>New</th>
+                            <th>Changed by</th>
+                            <th>Client</th>
+                            <th>Detail</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td>{{ row.created_on }}</td>
+                                <td class="text-break">{{ row.setting_name }}</td>
+                                <td class="text-break">{{ row.old_value if row.old_value is not none else '' }}</td>
+                                <td class="text-break">{{ row.new_value if row.new_value is not none else '' }}</td>
+                                <td>
+                                    {% if row.username %}
+                                        {{ row.username }}
+                                        {% if row.user_id %}
+                                            <span class="text-body-secondary">#{{ row.user_id }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>{{ row.remote_addr or '' }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary system-activity-detail"
+                                            data-title="{{ row.setting_name }}">
+                                        <i class="fa-solid fa-info"></i>
+                                    </button>
+                                    <pre class="d-none system-activity-old">{{ row.old_value if row.old_value is not none else '' }}</pre>
+                                    <pre class="d-none system-activity-new">{{ row.new_value if row.new_value is not none else '' }}</pre>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extrascripts %}
+    <script>
+        initDataTable('#tbl_system_activity', {
+            "order": [[0, "desc"]],
+            "pageLength": 25,
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, row) {
+                    return formatUtcDateTimeLocal(data);
+                }
+            }, {
+                "targets": 6,
+                "orderable": false,
+                "searchable": true
+            }]
+        });
+
+        $(document).on('click', '.system-activity-detail', function () {
+            var button = $(this);
+            var cell = button.closest('td');
+            $('#system-activity-detail-title').text(button.data('title'));
+            $('#system-activity-detail-old').text(cell.find('.system-activity-old').text() || 'None');
+            $('#system-activity-detail-new').text(cell.find('.system-activity-new').text() || 'None');
+            showModal($('#system-activity-detail'));
+        });
+    </script>
+{% endblock %}
+
+{% block modals %}
+    <div class="modal fade" id="system-activity-detail" tabindex="-1"
+         aria-labelledby="system-activity-detail-title" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="system-activity-detail-title">Setting</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Previous</h5>
+                    <pre id="system-activity-detail-old" class="mb-3"></pre>
+                    <h5>New</h5>
+                    <pre id="system-activity-detail-new" class="mb-0"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

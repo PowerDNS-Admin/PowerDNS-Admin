@@ -35,13 +35,45 @@ _AUTH_SESSION_KEYS = (
 )
 
 
-def signin_history(username, authenticator, success):
-    # Get user ip address
-    if request.headers.getlist("X-Forwarded-For"):
-        request_ip = request.headers.getlist("X-Forwarded-For")[0]
-        request_ip = request_ip.split(',')[0]
+def client_ip():
+    """Client address for an audit row.
+
+    The first address in X-Forwarded-For is the one recorded for sign-in
+    history. Later proxies append their own addresses.
+    """
+    forwarded = request.headers.getlist('X-Forwarded-For')
+    if forwarded:
+        request_ip = forwarded[0].split(',')[0].strip()
     else:
         request_ip = request.remote_addr
+    if not request_ip:
+        return ''
+    return str(request_ip).replace('\x00', '')[:255]
+
+
+def record_two_factor_change(username, enabled, created_by=None):
+    """Record a two-factor enrollment or removal, including the client address."""
+    source_ip = client_ip()
+    if not created_by:
+        if getattr(current_user, 'is_authenticated', False):
+            created_by = current_user.username
+        else:
+            created_by = username
+    History(
+        msg='Two factor authentication {0} for user {1} from {2}'.format(
+            'enabled' if enabled else 'disabled',
+            username,
+            source_ip or 'unknown'),
+        detail=json.dumps({
+            'username': username,
+            'ip_address': source_ip,
+        }),
+        created_by=created_by,
+    ).add()
+
+
+def signin_history(username, authenticator, success):
+    request_ip = client_ip()
 
     # Write log
     if success:
@@ -76,19 +108,25 @@ def prepare_welcome_user(user_id):
 # if Setting for OTP on first login is enabled, and OTP field is also enabled,
 # but user isn't using it yet, enable OTP, get QR code and display it, logging the user out.
 def authenticate_user(user, authenticator, remember=False):
-    login_user(user, remember=remember)
+    # ``remember`` is ignored. Remember-me cookies authenticate with no
+    # password once SECRET_KEY is known, and this deployment's session
+    # timeout is what limits a browser login.
+    del remember
+    login_user(user, remember=False)
     # Do not keep using the anonymous/pre-authentication server-side session
     # after the user's identity has changed. Besides preventing session
     # fixation, this gives the authenticated session its own fresh expiry
     # instead of inheriting the lifetime of a login page that may have been
     # open for a long time.
     current_app.session_interface.regenerate(session)
+    session['session_version'] = user.session_version or 0
     session.permanent = True
     session.modified = True
     signin_history(user.username, authenticator, True)
     if Setting().get('otp_force') and Setting().get('otp_field_enabled') and not user.otp_secret \
             and session['authentication_type'] not in ['OAuth']:
         user.update_profile(enable_otp=True)
+        record_two_factor_change(user.username, True)
         user_id = current_user.id
         prepare_welcome_user(user_id)
         return redirect(url_for('index.welcome'))

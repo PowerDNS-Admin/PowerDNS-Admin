@@ -199,17 +199,43 @@
 
         // handle checkbox toggling
         $('.otp_toggle').on('change', function () {
-            var enable_otp = $(this).prop('checked');
+            var checkbox = $(this);
+            var enable_otp = checkbox.prop('checked');
+            var was_enabled = !enable_otp;
+            var otp_token = '';
+            if (was_enabled) {
+                otp_token = window.prompt('Enter the current authentication code to turn off two-factor authentication.');
+                if (!otp_token) {
+                    checkbox.prop('checked', true);
+                    return;
+                }
+            }
             var postdata = {
                 'action': 'enable_otp',
                 'data': {
-                    'enable_otp': enable_otp
+                    'enable_otp': enable_otp,
+                    'otp_token': otp_token
                 },
                 '_csrf_token': '{{ csrf_token() }}'
             };
-            applyChanges(postdata, $SCRIPT_ROOT + '/user/profile', false, true, function () {
-                sessionStorage.setItem('powerdnsAdminProfileTab', '#tabs-authentication');
-                window.location.reload();
+            $.ajax({
+                type: 'POST',
+                url: $SCRIPT_ROOT + '/user/profile',
+                data: JSON.stringify(postdata),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function () {
+                    sessionStorage.setItem('powerdnsAdminProfileTab', '#tabs-authentication');
+                    window.location.reload();
+                },
+                error: function (jqXHR) {
+                    checkbox.prop('checked', was_enabled);
+                    var message = 'Could not change two-factor authentication.';
+                    try {
+                        message = JSON.parse(jqXHR.responseText).msg || message;
+                    } catch (ignore) {}
+                    showErrorModal(message);
+                }
             });
         });
     </script>

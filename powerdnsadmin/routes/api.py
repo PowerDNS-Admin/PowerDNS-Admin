@@ -15,6 +15,7 @@ from ..decorators import (
     apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
     api_role_can, apikey_or_basic_auth,
     api_authenticated_user, callback_if_request_body_contains_key,
+    establish_api_identity,
     allowed_record_types, allowed_record_ttl
 )
 from ..lib import utils, helper
@@ -183,20 +184,45 @@ def handle_request_is_not_json(err):
     return jsonify(err.to_dict()), err.status_code
 
 
+def _api_actor_role_name():
+    """Role of the credential this request already authenticated, if any."""
+    basic_user = getattr(g, 'basic_auth_user', None)
+    if basic_user is not None and getattr(basic_user, 'role', None) is not None:
+        return basic_user.role.name
+    api_key = getattr(g, 'apikey', None)
+    if api_key is not None and getattr(api_key, 'role', None) is not None:
+        return api_key.role.name
+    return None
+
+
 @api_bp.before_request
 @is_json
 def before_request():
-    # Check site is in maintenance mode
+    # Authentication has to happen before the maintenance check. The view
+    # decorators run later, so checking current_user here used to see an
+    # anonymous user and skip the restriction.
+    establish_api_identity()
     maintenance = Setting().get('maintenance')
-    if (maintenance and current_user.is_authenticated and current_user.role.name not in ['Administrator', 'Operator']):
+    role_name = _api_actor_role_name()
+    if (maintenance and role_name is not None
+            and role_name not in ['Administrator', 'Operator']):
         return make_response(
             jsonify({
                 "status": False,
                 "msg": "Site is in maintenance mode"
-            }))
+            }), 503)
+
+
+@apilist_bp.errorhandler(401)
+def handle_apilist_401(err):
+    # The application 401 handler redirects browsers to the login page.
+    # This route is an API call, so a missing or rejected key stays a 401.
+    return jsonify({"msg": "Unauthorized"}), 401
 
 
 @apilist_bp.route('/api', methods=['GET'])
+@apikey_auth
+@csrf.exempt
 def index():
     return '[{"url": "/api/v1", "version": 1}]', 200
 
@@ -721,6 +747,11 @@ def api_create_user():
         current_app.logger.debug('Invalid confirmed {}'.format(confirmed))
         abort(400)
 
+    if otp_secret and (
+            getattr(current_user, 'role', None) is None
+            or current_user.role.name != 'Administrator'):
+        raise NotEnoughPrivileges(
+            message='Only an Administrator can set a two-factor secret')
     if not plain_text_password and not password:
         plain_text_password = ''.join(
             secrets.choice(string.ascii_letters + string.digits)
@@ -826,6 +857,8 @@ def api_update_user(user_id):
             abort(400)
     if password is not None:
         user.password = password
+        if not plain_text_password:
+            user.rotate_session_version()
     user.plain_text_password = plain_text_password or ''
     if firstname is not None:
         user.firstname = firstname
@@ -833,7 +866,15 @@ def api_update_user(user_id):
         user.lastname = lastname
     if email is not None:
         user.email = email
-    if otp_secret is not None:
+    if otp_secret is not None and otp_secret != (user.otp_secret or ''):
+        caller_is_admin = (
+            getattr(current_user, 'role', None) is not None
+            and current_user.role.name == 'Administrator'
+            and current_user.id != user.id)
+        if not caller_is_admin:
+            raise NotEnoughPrivileges(
+                message='Two-factor authentication can only be changed '
+                        'after presenting the current code on the profile page')
         user.otp_secret = otp_secret
         user.otp_last_used = None
     if confirmed is not None:

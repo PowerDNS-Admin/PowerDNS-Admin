@@ -51,6 +51,7 @@ def isolated_app_factory(monkeypatch):
             'PDNS_ADMIN_LOG_LEVEL', 'POWERDNSADMIN_ASSETS_PREBUILT',
             'SESSION_TYPE'):
         monkeypatch.delenv(variable, raising=False)
+    monkeypatch.setenv('PDA_ALLOW_INSECURE_SECRETS', '1')
 
     return calls
 
@@ -200,3 +201,10 @@ def test_create_app_ignores_non_python_string_config(isolated_app_factory):
     app = powerdnsadmin.create_app('production')
 
     assert 'production' not in app.config
+
+
+def test_create_app_rejects_published_secret(monkeypatch, isolated_app_factory):
+    monkeypatch.delenv('PDA_ALLOW_INSECURE_SECRETS', raising=False)
+
+    with pytest.raises(RuntimeError, match='SECRET_KEY'):
+        powerdnsadmin.create_app({'SESSION_TYPE': None})

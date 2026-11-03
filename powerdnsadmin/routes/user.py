@@ -59,8 +59,28 @@ def profile():
             if jdata['action'] == 'enable_otp':
                 if session['authentication_type'] in ['LOCAL', 'LDAP']:
                     enable_otp = data['enable_otp']
+                    # A password or a stolen session cannot turn off or
+                    # replace a secret that is already enrolled.
+                    if current_user.otp_secret:
+                        token = str(data.get('otp_token') or '')
+                        if not current_user.verify_totp(token):
+                            return make_response(
+                                jsonify({
+                                    'status': 'error',
+                                    'msg':
+                                    'Enter the current authentication code to change two-factor authentication.',
+                                }), 400)
                     user = User(username=current_user.username)
-                    user.update_profile(enable_otp=enable_otp)
+                    if not user.update_profile(enable_otp=enable_otp):
+                        return make_response(
+                            jsonify({
+                                'status': 'error',
+                                'msg': 'Could not change two-factor authentication.',
+                            }), 500)
+                    if enable_otp:
+                        from .auth_session import record_two_factor_change
+                        record_two_factor_change(
+                            current_user.username, True)
                     return make_response(
                         jsonify({
                             'status':

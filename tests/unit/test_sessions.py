@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from flask import session
+from flask_login import encode_cookie
 from flask_session.sqlalchemy import SqlAlchemySessionInterface
 
 from powerdnsadmin.routes.auth_session import clear_session
@@ -18,6 +21,34 @@ def test_login_page_persists_csrf_token_in_configured_session(
 
     with client.session_transaction() as session:
         assert session.get('_csrf_token')
+
+
+def test_remember_cookie_does_not_restore_a_user(initial_data, client):
+    with client.application.app_context():
+        forged = encode_cookie('1')
+    client.set_cookie('remember_token', forged)
+
+    response = client.get('/dashboard/')
+
+    assert response.status_code == 302
+    assert '/login' in response.headers['Location']
+    with client.session_transaction() as sess:
+        assert '_user_id' not in sess
+    assert 'remember_token=' in ' '.join(response.headers.getlist('Set-Cookie'))
+
+
+def test_api_remember_cookie_does_not_become_a_session(initial_data, client):
+    with client.application.app_context():
+        forged = encode_cookie('1')
+    client.set_cookie('remember_token', forged)
+
+    response = client.get('/api/v1/pdnsadmin/users')
+
+    with client.session_transaction() as sess:
+        assert sess.get('_user_id') is None
+        assert sess.get('authentication_type') is None
+    assert client.application.permanent_session_lifetime < timedelta(days=31)
+    assert 'remember_token=' in ' '.join(response.headers.getlist('Set-Cookie'))
 
 
 def test_clear_session_removes_all_authentication_state(app):

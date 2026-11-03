@@ -58,6 +58,8 @@ class AppSettings(object):
         'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
+        # Kept so older databases still load. The application does not delete
+        # history; that is a direct database change.
         'preserve_history': False,
         'site_name': 'PowerDNS-Admin',
         'site_url': 'http://localhost:9191',

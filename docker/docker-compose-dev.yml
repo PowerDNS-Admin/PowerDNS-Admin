@@ -18,6 +18,9 @@ services:
       - dev/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
+      # Local dev keeps the published SECRET_KEY and SALT. Do not copy this
+      # into the production compose file.
+      PDA_ALLOW_INSECURE_SECRETS: "1"
       # Use postgres, postgres, and 5432 when selecting the gpgsql backend below.
       DATABASE_DRIVER: ${DATABASE_DRIVER:-mysql}
       DATABASE_USER: ${DATABASE_USER:-powerdns_admin}
