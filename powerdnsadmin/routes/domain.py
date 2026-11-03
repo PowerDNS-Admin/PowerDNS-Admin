@@ -746,10 +746,14 @@ def record_update(domain_name):
     This route is used for zone work as Slave Zone only
     Pulling the records update from its Master
     """
-    try:
-        jdata = request.json
+    # Authorization above applies to the URL zone, never a body-supplied zone.
+    jdata = request.get_json()
+    if not isinstance(jdata, dict):
+        abort(400)
+    if 'domain' in jdata and jdata['domain'] != domain_name:
+        abort(403)
 
-        domain_name = jdata['domain']
+    try:
         d = Domain()
         result = d.update_from_master(domain_name)
         if result['status'] == 'ok':

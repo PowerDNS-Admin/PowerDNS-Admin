@@ -463,9 +463,8 @@
         $(document.body).on("click", ".button_update_from_primary", function (e) {
             var domain = $(this).prop('id');
             applyChanges({
-                'domain': domain,
                 '_csrf_token': '{{ csrf_token() }}'
-            }, $SCRIPT_ROOT + '/domain/' + domain + '/update', true);
+            }, $SCRIPT_ROOT + '/domain/' + encodeURIComponent(domain) + '/update', true);
         });
 
         var unsavedChanges = false;
