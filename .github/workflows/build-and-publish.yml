@@ -38,8 +38,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=tag
-            type=match,pattern=^v(\d{4}\.(?:0[1-9]|1[0-2])\.[1-9]\d*)$,group=1
-            type=match,pattern=^v(\d{4}\.(?:0[1-9]|1[0-2]))\.[1-9]\d*$,group=1
+            type=match,pattern=^v(\d{4}\.(?:0[1-9]|1[0-2])\.(?:0|[1-9]\d*))$,group=1
+            type=match,pattern=^v(\d{4}\.(?:0[1-9]|1[0-2]))\.(?:0|[1-9]\d*)$,group=1
             type=raw,value=${{ github.ref_name }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
       - name: QEMU Setup

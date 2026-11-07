@@ -7,9 +7,9 @@ release so notes stay consistent without needing to be reinvented each time.
 ## Versioning
 
 PowerDNS-Admin uses Calendar Versioning in the form `YYYY.0M.RELEASE`, such as
-`2026.08.1`. The four-digit year and zero-padded month identify the release
-month, and `RELEASE` starts at `1` each month and increments for every
-published stable release. The zero-padded month keeps version strings in
+`2026.08.1` or `2026.11.0`. The four-digit year and zero-padded month identify
+the release month, and `RELEASE` starts at `0` each month and increments for
+every published stable release. The zero-padded month keeps version strings in
 calendar order when sorted lexically.
 
 CalVer communicates recency, not the size or compatibility impact of a
@@ -51,7 +51,7 @@ permission" over "Fixed a permission bug."
 
 1. Rename `## [Unreleased]` to
    `## [YYYY.0M.RELEASE] - YYYY-MM-DD`, incrementing `RELEASE` from the latest
-   release in that month or starting at `1` for a new month. Set
+   release in that month or starting at `0` for a new month. Set
    `powerdnsadmin/VERSION` to the same value without the `v` prefix.
 2. Add a **Highlights** subsection directly under the version header,
    before **Breaking Changes**/**Added**/etc. (see below).

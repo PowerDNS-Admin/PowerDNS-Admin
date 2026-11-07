@@ -8,7 +8,7 @@ from pathlib import Path
 
 CALVER_TAG = re.compile(
     r"^v(?P<year>[0-9]{4})\.(?P<month>0[1-9]|1[0-2])\."
-    r"(?P<release>[1-9][0-9]*)$"
+    r"(?P<release>0|[1-9][0-9]*)$"
 )
 
 
@@ -17,8 +17,8 @@ def validate(tag, version):
     if match is None:
         raise ValueError(
             "release tag must use vYYYY.MM.Release with a zero-padded "
-            "month and a release counter starting at 1 "
-            "(for example, v2026.08.1)"
+            "month and a release counter of 0 or greater "
+            "(for example, v2026.11.0)"
         )
 
     expected_version = tag.removeprefix("v")
