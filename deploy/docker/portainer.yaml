@@ -5,7 +5,11 @@ services:
     image: powerdnsadmin/pda-legacy:latest
     restart: unless-stopped
     environment:
-      - SECRET_KEY=INSECURE-CHANGE-ME-9I0DAtfkfj5JmBkPSaHah3ECAa8Df5KK
+      # Replace SECRET_KEY before starting. Startup refuses a missing, short, or published key.
+      # SECRET_KEY: python3 -c "import secrets; print(secrets.token_hex(32))"
+      # A salt published in this repository logs a warning. replace-me is not a bcrypt salt.
+      - SECRET_KEY=replace-me
+      - SALT=replace-me
     ports:
       - "12000:9191"
     volumes:

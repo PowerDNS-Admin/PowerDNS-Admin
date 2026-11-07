@@ -58,6 +58,8 @@ class AppSettings(object):
         'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
+        # Kept so older databases still load. The application does not delete
+        # history; that is a direct database change.
         'preserve_history': False,
         'site_name': 'PowerDNS-Admin',
         'site_url': 'http://localhost:9191',
@@ -765,12 +767,33 @@ class AppSettings(object):
     @staticmethod
     def load_environment(app):
         """ Load app settings from environment variables when defined. """
+        # Capture deployment ownership before database saves publish values
+        # into app.config. Even an explicitly empty value is deployment-owned.
+        connection_settings = {
+            name: {'value': app.config[name.upper()], 'source': 'configuration file'}
+            for name in ('pdns_api_url', 'pdns_api_key')
+            if name.upper() in app.config
+        }
         for var_name, default_value in AppSettings.defaults.items():
             env_name = var_name.upper()
-            current_value = AppSettings.read_environment_value(env_name)
+            # Docker secret files written with echo end in a newline. Leave
+            # that newline off SECRET_KEY and SALT, as the database URI does,
+            # so a published key is not hidden from the startup check.
+            current_value = AppSettings.read_environment_value(
+                env_name,
+                strip_file_newline=env_name in ('SECRET_KEY', 'SALT'),
+            )
 
             if current_value is not None:
                 app.config[env_name] = AppSettings.convert_type(var_name, current_value)
+                if var_name in ('pdns_api_url', 'pdns_api_key'):
+                    connection_settings[var_name] = {
+                        'value': app.config[env_name],
+                        'source': ('secret file' if os.environ.get(env_name + '_FILE')
+                                   else 'environment'),
+                    }
+
+        app.config['_PDNS_CONNECTION_SETTINGS'] = connection_settings
 
         explicit_uri = AppSettings.read_environment_value(
             'SQLALCHEMY_DATABASE_URI', strip_file_newline=True)

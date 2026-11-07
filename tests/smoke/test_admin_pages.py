@@ -3,6 +3,7 @@ import pytest
 
 ADMIN_PAGES = (
     '/admin/history',
+    '/admin/api-history',
     '/admin/manage-user',
     '/admin/manage-account',
     '/admin/manage-keys',

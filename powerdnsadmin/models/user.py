@@ -7,7 +7,7 @@ import pyotp
 import ldap
 import ldap.filter
 from collections import OrderedDict
-from flask import current_app
+from flask import current_app, has_request_context, session
 from flask_login import AnonymousUserMixin
 from sqlalchemy import func, orm
 from sqlalchemy.exc import IntegrityError
@@ -20,6 +20,62 @@ from .role import Role
 from .setting import Setting
 from .domain_user import DomainUser
 from .account_user import AccountUser
+
+
+def _ldap_timeout_seconds():
+    """Full directory timeout used when no authentication deadline is active."""
+    from ..lib.auth_throttle import inflight_lease_seconds
+
+    configured = current_app.config.get('AUTH_LDAP_TIMEOUT')
+    if configured is None:
+        return inflight_lease_seconds()
+    try:
+        return max(1, int(configured))
+    except (TypeError, ValueError):
+        return inflight_lease_seconds()
+
+
+def _ldap_remaining_seconds():
+    """Seconds this directory call may use.
+
+    Inside a password check every bind, search, and result wait shares one
+    deadline. The next call receives only what that deadline has left.
+    """
+    from ..lib.auth_throttle import remaining_authentication_seconds
+
+    remaining = remaining_authentication_seconds()
+    if remaining is None:
+        return float(_ldap_timeout_seconds())
+    if remaining <= 0:
+        raise ldap.TIMEOUT({'desc': 'Timed out'})
+    return remaining
+
+
+def _ldap_apply_timeout(conn):
+    """Bound the next LDAP call by the time still left.
+
+    A connection stub with no options and no authentication deadline has
+    nothing to arm. That keeps directory-free unit tests off the clock.
+    """
+    from ..lib.auth_throttle import remaining_authentication_seconds
+
+    set_option = getattr(conn, 'set_option', None)
+    if set_option is None and remaining_authentication_seconds() is None:
+        return None
+    remaining = _ldap_remaining_seconds()
+    if set_option is not None:
+        set_option(ldap.OPT_NETWORK_TIMEOUT, float(remaining))
+        set_option(ldap.OPT_TIMEOUT, remaining)
+    return remaining
+
+
+def _reraise_auth_limit(exc):
+    """Let a closed budget or a missing limiter reach the HTTP layer."""
+    from ..lib.auth_throttle import (
+        AuthenticationThrottled, ThrottleStoreUnavailable)
+
+    if isinstance(exc, (AuthenticationThrottled, ThrottleStoreUnavailable)):
+        raise exc
 
 
 class Anonymous(AnonymousUserMixin):
@@ -36,6 +92,13 @@ class User(db.Model):
     email = db.Column(db.String(128))
     otp_secret = db.Column(db.String(16))
     otp_last_used = db.Column(db.BigInteger)
+    otp_failed_attempts = db.Column(
+        db.Integer, nullable=False, default=0, server_default='0')
+    otp_locked_until = db.Column(db.DateTime, nullable=True)
+    otp_lockouts = db.Column(
+        db.Integer, nullable=False, default=0, server_default='0')
+    session_version = db.Column(
+        db.Integer, nullable=False, default=0, server_default='0')
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', back_populates="users", lazy=True)
@@ -80,6 +143,7 @@ class User(db.Model):
                 self.otp_secret = user_info.otp_secret
                 self.otp_last_used = user_info.otp_last_used
                 self.confirmed = user_info.confirmed
+                self.session_version = user_info.session_version
 
     def is_authenticated(self):
         return True
@@ -92,6 +156,21 @@ class User(db.Model):
 
     def get_id(self):
         return str(self.id)
+
+    def rotate_session_version(self):
+        """Invalidate every other login for this account.
+
+        The request that changed the password keeps its own session by
+        storing the new version. Sessions that still carry the old version
+        fail in ``load_user``.
+        """
+        self.session_version = (self.session_version or 0) + 1
+        if not has_request_context():
+            return
+        if str(session.get('_user_id') or '') != str(self.id):
+            return
+        session['session_version'] = self.session_version
+        session.modified = True
 
     def __repr__(self):
         return '<User {0}>'.format(self.username)
@@ -126,6 +205,14 @@ class User(db.Model):
         db.session.commit()
         return claimed == 1
 
+    def otp_secret_pending_confirmation(self):
+        """A secret exists and no authentication code has been accepted yet.
+
+        The secret and its QR code are shown only during this enrollment
+        window. Replacing an enrolled secret still requires a current code.
+        """
+        return bool(self.otp_secret) and self.otp_last_used is None
+
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
         #   (Using bcrypt, the salt is saved into the hash itself)
@@ -137,10 +224,11 @@ class User(db.Model):
 
     def check_password(self, hashed_password):
         # Check hashed password. Using bcrypt, the salt is saved into the hash itself
-        if hasattr(self, "plain_text_password"):
-            if self.plain_text_password != None:
-                return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
-                                     hashed_password.encode('utf-8'))
+        # Never authenticate an empty password, including against a legacy
+        # blank-password hash. GUI and Basic-authenticated routes share this.
+        if getattr(self, 'plain_text_password', None):
+            return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
+                                  hashed_password.encode('utf-8'))
         return False
 
     def get_user_info_by_id(self):
@@ -159,7 +247,15 @@ class User(db.Model):
         conn.set_option(ldap.OPT_X_TLS_DEMAND, True)
         conn.set_option(ldap.OPT_DEBUG_LEVEL, 255)
         conn.protocol_version = ldap.VERSION3
+        _ldap_apply_timeout(conn)
         return conn
+
+    def _ldap_simple_bind(self, conn, username, password):
+        """Bind, then wait only for the time still left on this check."""
+        _ldap_apply_timeout(conn)
+        msgid = conn.simple_bind(username, password)
+        timeout = _ldap_apply_timeout(conn)
+        return conn.result(msgid, all=1, timeout=timeout)
 
     def escape_filter_chars(self, filter_str):
         """
@@ -177,19 +273,25 @@ class User(db.Model):
         try:
             conn = self.ldap_init_conn()
             if Setting().get('ldap_type') == 'ad':
-                conn.simple_bind_s(
+                self._ldap_simple_bind(
+                    conn,
                     "{0}@{1}".format(self.username,
                                      Setting().get('ldap_domain')),
                     self.password)
             else:
-                conn.simple_bind_s(Setting().get('ldap_admin_username'),
-                                   Setting().get('ldap_admin_password'))
+                self._ldap_simple_bind(
+                    conn,
+                    Setting().get('ldap_admin_username'),
+                    Setting().get('ldap_admin_password'))
+            _ldap_apply_timeout(conn)
             ldap_result_id = conn.search(baseDN, searchScope, searchFilter,
                                          retrieveAttributes)
             result_set = []
 
             while 1:
-                result_type, result_data = conn.result(ldap_result_id, 0)
+                timeout = _ldap_apply_timeout(conn)
+                result_type, result_data = conn.result(
+                    ldap_result_id, 0, timeout=timeout)
                 if (result_data == []):
                     break
                 else:
@@ -202,16 +304,106 @@ class User(db.Model):
             current_app.logger.debug('baseDN: {0}'.format(baseDN))
             current_app.logger.debug(traceback.format_exc())
 
+    def ldap_user_filter(self, username_attribute, basic_filter):
+        """Build a user search filter without letting the username change it.
+
+        Characters such as ``*``, ``(`` and ``)`` are data in the username
+        value. Left unescaped, a login name can close the assertion and match
+        a different directory entry, whose groups are then copied onto the
+        account that signed in.
+        """
+        escaped_username = ldap.filter.escape_filter_chars(self.username or '')
+        return "(&({0}={1}){2})".format(
+            username_attribute, escaped_username, basic_filter)
+
+    def ldap_entry_username(self, entry, username_attribute):
+        """Return the username attribute from one LDAP search entry."""
+        try:
+            attributes = entry[0][1]
+        except (IndexError, TypeError):
+            return None
+        if not attributes or not username_attribute:
+            return None
+
+        values = attributes.get(username_attribute)
+        if values is None:
+            wanted = username_attribute.lower()
+            for name, candidate in attributes.items():
+                if name.lower() == wanted:
+                    values = candidate
+                    break
+        if not values:
+            return None
+
+        value = values[0]
+        if isinstance(value, bytes):
+            value = value.decode('utf-8')
+        return value
+
+    def ldap_entry_matches_username(self, entry, username_attribute):
+        found = self.ldap_entry_username(entry, username_attribute)
+        return (found is not None
+                and found.lower() == (self.username or '').lower())
+
     def ldap_auth(self, ldap_username, password):
+        # An empty password makes many directories accept the bind as
+        # anonymous and report success. That must not count as this user.
+        if password is None or password == '':
+            current_app.logger.error(
+                'Rejecting LDAP authentication with an empty password')
+            return False
         try:
             conn = self.ldap_init_conn()
-            conn.simple_bind_s(ldap_username, password)
+            self._ldap_simple_bind(conn, ldap_username, password)
+            if not self._ldap_bind_identified_user(conn):
+                current_app.logger.error(
+                    'LDAP bind did not authenticate directory user "{0}"'
+                    .format(self.username))
+                return False
             return True
         except ldap.LDAPError as e:
             current_app.logger.error(e)
             return False
 
+    def _ldap_bind_identified_user(self, conn):
+        try:
+            _ldap_apply_timeout(conn)
+            who = conn.whoami_s()
+        except ldap.TIMEOUT:
+            raise
+        except ldap.LDAPError:
+            # The password was present and the bind succeeded. A server
+            # without WhoAmI support has nothing further to check.
+            return True
+        if not who:
+            return False
+        normalized = who.strip().lower()
+        return normalized not in ('dn:', 'u:', 'anonymous')
+
     def is_validate(self, method, src_ip='', trust_user=False):
+        """Validate a password, after the shared attempt limits."""
+        from ..lib.auth_throttle import PasswordAttempt, authentication_source
+
+        source = authentication_source(src_ip)
+        self._auth_source = source
+        with PasswordAttempt(
+                self.username, getattr(self, 'password', None),
+                trust_user, source) as attempt:
+            if attempt.skip:
+                return False
+            return self._validate_credentials(method, src_ip, trust_user)
+
+    def _password_accepted(self):
+        from ..lib.auth_throttle import note_correct_password
+        note_correct_password(
+            self.username, getattr(self, '_auth_source', 'unknown'))
+
+    def _password_rejected(self):
+        from ..lib.auth_throttle import note_wrong_password
+        note_wrong_password(
+            self.username, getattr(self, '_auth_source', 'unknown'))
+
+    def _validate_credentials(self, method, src_ip='', trust_user=False):
         """
         Validate user credential
         """
@@ -227,15 +419,19 @@ class User(db.Model):
                     current_app.logger.info(
                         'User "{0}" logged in successfully. Authentication request from {1}'
                         .format(self.username, src_ip))
+                    if not trust_user:
+                        self._password_accepted()
                     return True
                 current_app.logger.error(
                     'User "{0}" inputted a wrong password. Authentication request from {1}'
                     .format(self.username, src_ip))
+                self._password_rejected()
                 return False
 
             current_app.logger.warning(
                 'User "{0}" does not exist. Authentication request from {1}'.
                 format(self.username, src_ip))
+            self._password_rejected()
             return False
 
         if method == 'LDAP':
@@ -258,11 +454,12 @@ class User(db.Model):
                     current_app.logger.error(
                         'User "{0}" input a wrong LDAP password. Authentication request from {1}'
                         .format(self.username, src_ip))
+                    self._password_rejected()
                     return False
+                self._password_accepted()
 
-            searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME,
-                                                    self.username,
-                                                    LDAP_FILTER_BASIC)
+            searchFilter = self.ldap_user_filter(
+                LDAP_FILTER_USERNAME, LDAP_FILTER_BASIC)
             current_app.logger.debug('Ldap searchFilter {0}'.format(searchFilter))
 
             ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN)
@@ -272,19 +469,35 @@ class User(db.Model):
                 current_app.logger.warning(
                     'LDAP User "{0}" does not exist. Authentication request from {1}'
                     .format(self.username, src_ip))
+                if not trust_user and LDAP_TYPE != 'ad':
+                    self._password_rejected()
+                return False
+            elif not self.ldap_entry_matches_username(
+                    ldap_result[0], LDAP_FILTER_USERNAME):
+                current_app.logger.error(
+                    'LDAP search for "{0}" returned a different account. '
+                    'Authentication request from {1}'
+                    .format(self.username, src_ip))
+                if not trust_user and LDAP_TYPE != 'ad':
+                    self._password_rejected()
                 return False
             else:
                 try:
+                    ldap_user_dn = ldap_result[0][0][0]
                     ldap_username = ldap.filter.escape_filter_chars(
-                        ldap_result[0][0][0])
+                        ldap_user_dn)
 
                     if Setting().get('ldap_type') != 'ad' and not trust_user:
-                        # validate ldap user password
-                        if not self.ldap_auth(ldap_username, self.password):
+                        # Bind as the directory entry just verified to be
+                        # this username. The password check rejects an empty
+                        # password, which would otherwise be an anonymous bind.
+                        if not self.ldap_auth(ldap_user_dn, self.password):
                             current_app.logger.error(
                                 'User "{0}" input a wrong LDAP password. Authentication request from {1}'
                                 .format(self.username, src_ip))
+                            self._password_rejected()
                             return False
+                        self._password_accepted()
 
                     # check if LDAP_GROUP_SECURITY_ENABLED is True
                     # user can be assigned to ADMIN or USER role.
@@ -373,6 +586,7 @@ class User(db.Model):
                                 current_app.logger.error('Invalid LDAP type')
                                 return False
                         except Exception as e:
+                            _reraise_auth_limit(e)
                             current_app.logger.error(
                                 'LDAP group lookup for user "{0}" has failed. Authentication request from {1}'
                                 .format(self.username, src_ip))
@@ -380,6 +594,7 @@ class User(db.Model):
                             return False
 
                 except Exception as e:
+                    _reraise_auth_limit(e)
                     current_app.logger.error('Wrong LDAP configuration. {0}'.format(e))
                     current_app.logger.debug(traceback.format_exc())
                     return False
@@ -416,12 +631,35 @@ class User(db.Model):
                         name=role_name).first().id
 
                 self.create_user()
-                current_app.logger.info('Created user "{0}" in the DB'.format(
-                    self.username))
+                from ..routes.auth_session import record_user_event
+                record_user_event(
+                    'Created user {0}'.format(self.username),
+                    self.username,
+                    'LDAP',
+                    source_ip=src_ip,
+                )
 
             # user already exists in database, set their role based on group membership (if enabled)
             if LDAP_GROUP_SECURITY_ENABLED:
-                self.set_role(role_name)
+                existing = User.query.filter(
+                    User.username == self.username).first()
+                previous_role = None
+                if existing is not None and existing.role is not None:
+                    previous_role = existing.role.name
+                result = self.set_role(role_name)
+                if (result.get('status')
+                        and previous_role is not None
+                        and previous_role != role_name):
+                    from ..routes.auth_session import record_user_event
+                    record_user_event(
+                        'LDAP authentication set role of {0} to {1}'.format(
+                            self.username, role_name),
+                        self.username,
+                        'LDAP',
+                        source_ip=src_ip,
+                        role=role_name,
+                        previous_role=previous_role,
+                    )
 
             return True
         else:
@@ -524,6 +762,7 @@ class User(db.Model):
             if self.plain_text_password:
                 user.password = self.get_hashed_password(
                     self.plain_text_password).decode("utf-8")
+                user.rotate_session_version()
 
         db.session.commit()
         return {'status': True, 'msg': 'User updated successfully'}
@@ -543,6 +782,7 @@ class User(db.Model):
             if self.plain_text_password:
                 user.password = self.get_hashed_password(
                  self.plain_text_password).decode("utf-8")
+                user.rotate_session_version()
 
         if self.email:
             # Can not update to a new email that
@@ -697,13 +937,18 @@ class User(db.Model):
         LDAP_BASE_DN = Setting().get('ldap_base_dn')
         LDAP_FILTER_USERNAME = Setting().get('ldap_filter_username')
         LDAP_FILTER_BASIC = Setting().get('ldap_filter_basic')
-        searchFilter = "(&({0}={1}){2})".format(LDAP_FILTER_USERNAME,
-                                                        self.username,
-                                                        LDAP_FILTER_BASIC)
+        searchFilter = self.ldap_user_filter(
+            LDAP_FILTER_USERNAME, LDAP_FILTER_BASIC)
         current_app.logger.debug('Ldap searchFilter {0}'.format(searchFilter))
         ldap_result = self.ldap_search(searchFilter, LDAP_BASE_DN, [key])
         current_app.logger.debug('Ldap search result: {0}'.format(ldap_result))
         entitlements=[]
+        if ldap_result and not self.ldap_entry_matches_username(
+                ldap_result[0], LDAP_FILTER_USERNAME):
+            current_app.logger.error(
+                'LDAP entitlement search for "{0}" returned a different account'
+                .format(self.username))
+            return entitlements
         if ldap_result:
             dict=ldap_result[0][0][1]
             if len(dict)!=0:

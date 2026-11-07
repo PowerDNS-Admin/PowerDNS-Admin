@@ -1,13 +1,14 @@
 import datetime
 import hashlib
 
-from flask import Blueprint, request, render_template, make_response, jsonify, redirect, url_for, g, session, \
+from flask import Blueprint, request, render_template, make_response, jsonify, redirect, g, session, \
     current_app, after_this_request, abort
 from flask_login import current_user, login_required, login_manager
 
 from ..models.user import User, Anonymous
 from ..models.setting import Setting
 from ..lib.avatar import avatar_initials, initials_avatar_svg
+from ..lib.password_login import otp_confirmation_blocked
 from .index import password_policy_check
 
 
@@ -59,8 +60,28 @@ def profile():
             if jdata['action'] == 'enable_otp':
                 if session['authentication_type'] in ['LOCAL', 'LDAP']:
                     enable_otp = data['enable_otp']
+                    # A password or a stolen session cannot turn off or
+                    # replace a secret that is already enrolled.
+                    if current_user.otp_secret:
+                        rejected = otp_confirmation_blocked(
+                            current_user, data.get('otp_token'))
+                        if rejected:
+                            return make_response(
+                                jsonify({
+                                    'status': 'error',
+                                    'msg': rejected,
+                                }), 400)
                     user = User(username=current_user.username)
-                    user.update_profile(enable_otp=enable_otp)
+                    if not user.update_profile(enable_otp=enable_otp):
+                        return make_response(
+                            jsonify({
+                                'status': 'error',
+                                'msg': 'Could not change two-factor authentication.',
+                            }), 500)
+                    if enable_otp:
+                        from .auth_session import record_two_factor_change
+                        record_two_factor_change(
+                            current_user.username, True)
                     return make_response(
                         jsonify({
                             'status':
@@ -104,8 +125,10 @@ def profile():
 @user_bp.route('/qrcode')
 @login_required
 def qrcode():
-    if not current_user:
-        return redirect(url_for('index'))
+    # An enrolled secret stays on the server. Scanning it again, or reading
+    # it back from a signed-in browser, requires a fresh enrollment.
+    if not current_user.otp_secret_pending_confirmation():
+        abort(404)
 
     return current_user.get_qrcode_value(), 200, {
         'Content-Type': 'image/svg+xml',

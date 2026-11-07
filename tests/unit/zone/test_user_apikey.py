@@ -84,6 +84,7 @@ class TestUnitApiZoneUserApiKey(object):
             self.mock_record_model_setting.return_value.get.side_effect = load_data
             self.mock_server_model_setting.return_value.get.side_effect = load_data
             self.mock_decorators_setting.return_value.get.side_effect = load_data
+            self.mock_setting.return_value.get.side_effect = load_data
 
             data = user_apikey_data()
             domain = Domain(name=data['domains'][0])

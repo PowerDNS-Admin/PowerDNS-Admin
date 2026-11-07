@@ -47,11 +47,17 @@ We offer two options for running PowerDNS-Admin with Docker.
 
 #### Option 1: From Docker Hub
 
-This option is ideal for getting started quickly. To run the latest stable release from Docker Hub, execute the following command:
+This option is ideal for getting started quickly. Generate a `SECRET_KEY` first. Startup refuses a missing, short, or published `SECRET_KEY`. It must be at least 32 characters. Startup validates `SALT` with bcrypt and refuses a missing or unusable salt. Use `bcrypt.gensalt()` to generate a salt for a new deployment, as shown below.
+
+For an existing deployment, keep its current valid `SALT`: it does not need to be private, and the published salt is accepted with a warning. Changing `SALT` invalidates existing API keys and outstanding email-confirmation links. Keep both configuration values stable across container restarts. See the [environment variables documentation](docs/wiki/configuration/Environment-variables.md) for details.
 
 ```
+$ docker pull powerdnsadmin/pda-legacy:latest
+$ export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+$ export SALT="$(docker run --rm --entrypoint python powerdnsadmin/pda-legacy:latest -c 'import bcrypt; print(bcrypt.gensalt().decode())')"
 $ docker run -d \
-    -e SECRET_KEY='a-very-secret-key' \
+    -e SECRET_KEY \
+    -e SALT \
     -e SQLALCHEMY_DATABASE_URI='sqlite:////data/powerdns-admin.db' \
     -v pda-data:/data \
     -p 9191:80 \
@@ -72,7 +78,7 @@ This option is recommended if you need to customize the configuration.
 
     Database settings can be passed as a single `SQLALCHEMY_DATABASE_URI` or as separate `DATABASE_DRIVER`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, and `DATABASE_EXTRA_PARAMS` variables. Split variables are percent-encoded automatically, so a password with `@` or `#` does not need a second encoded copy. `DATABASE_EXTRA_PARAMS` carries driver-specific URI flags such as `ssl=true`. To use Docker-style secrets, append `_FILE` to an environment variable with a path to a file containing the secret (e.g., `DATABASE_PASSWORD_FILE=/run/secrets/db_password`).
 
-    Ensure you set the `SECRET_KEY` environment variable to a long, random string. For more information, please see the [Flask configuration documentation](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY).
+    Export `SECRET_KEY` and `SALT` in the shell before starting, using the commands in Option 1. `docker/docker-compose.yml` reads those variables. A bcrypt salt contains `$`, so pass it through the environment. A literal `$` in the Compose file is treated as interpolation.
 
 2.  **Start the container**
 

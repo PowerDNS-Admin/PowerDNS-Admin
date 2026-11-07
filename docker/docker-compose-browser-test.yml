@@ -15,6 +15,7 @@ services:
       - browser-test/env
     environment:
       FLASK_CONF: /app/configs/docker_config.py
+      PDA_ALLOW_INSECURE_SECRETS: "1"
       SQLALCHEMY_DATABASE_URI: mysql://powerdns_admin:changeme@mysql/powerdns_admin
       SESSION_TYPE: sqlalchemy
       PDNS_HOST: pdns-server

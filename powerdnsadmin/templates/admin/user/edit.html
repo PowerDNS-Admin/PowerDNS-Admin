@@ -143,9 +143,17 @@
             var info = "Are you sure you want to disable two factor authentication for user " + username + "?";
             modal.find('.modal-body p').text(info);
             modal.find('#button_otp_disable_confirm').click(function () {
+                var otp_token = '';
+                if (username === {{ current_user.username|tojson }}) {
+                    otp_token = window.prompt('Enter the current authentication code to turn off two-factor authentication.');
+                    if (!otp_token) {
+                        return;
+                    }
+                }
                 var postdata = {
                     'action': 'user_otp_disable',
                     'data': username,
+                    'otp_token': otp_token,
                     '_csrf_token': '{{ csrf_token() }}'
                 }
                 applyChanges(postdata, $SCRIPT_ROOT + '/admin/manage-user', false, true);

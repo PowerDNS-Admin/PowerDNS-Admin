@@ -212,10 +212,15 @@ def test_oauth_callback_completes_login_after_token_exchange(
         'oidc': 'OIDC Assertion',
     }
     with app.app_context():
-        events = History.query.filter_by(
-            msg='Created user {}'.format(provider_users[provider])).all()
+        events = History.query.filter(
+            History.msg.startswith(
+                'Created user {}'.format(provider_users[provider]))
+        ).all()
         assert len(events) == 1
         assert events[0].created_by == history_actors[provider]
+        assert events[0].msg == 'Created user {}'.format(
+            provider_users[provider])
+        assert json.loads(events[0].detail)['ip_address'] == '127.0.0.1'
 
 
 @pytest.mark.parametrize(

@@ -608,13 +608,8 @@ class Domain(db.Model):
             domain_setting.delete()
         domain.apikeys[:] = []
 
-        # Remove history for zone
-        if not Setting().get('preserve_history'):
-            domain_history = History.query.filter(
-                History.domain_id == domain.id
-            )
-            if domain_history:
-                domain_history.delete()
+        # Activity rows stay. The domain foreign key sets domain_id to null
+        # when the zone row is removed. History is deleted only in the database.
 
         # then remove zone
         Domain.query.filter(Domain.name == domain_name).delete()

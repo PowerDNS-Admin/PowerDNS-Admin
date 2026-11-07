@@ -13,15 +13,6 @@
                     <div class="card card-outline card-secondary">
                         <div class="card-header with-border">
                             <h3 class="card-title">Activity Search</h3>
-                            {% if current_user.role.name == 'Administrator' %}
-                                <div class="card-tools">
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                            data-bs-target="#modal_clear_history" title="Clear Activity">
-                                        <i class="fa-solid fa-trash"></i>
-                                        Clear Activity
-                                    </button>
-                                </div>
-                            {% endif %}
                         </div>
                         <form id="history-search-form" autocomplete="off">
                             <div class="card-body clearfix">
@@ -457,28 +448,6 @@
 {% endblock %}
 
 {% block modals %}
-    <!-- Clear History Confirmation Box -->
-    <div class="modal fade" id="modal_clear_history" tabindex="-1"
-         aria-labelledby="modal_clear_history_label" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="modal_clear_history_label">Confirmation</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to remove all history?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-danger float-end"
-                            onclick="applyChanges({'_csrf_token': '{{ csrf_token() }}'}, $SCRIPT_ROOT + '/admin/history', false, true);">
-                        Clear History
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
     <!-- History Details Box -->
     <div class="modal fade" id="modal_history_info" tabindex="-1"
          aria-labelledby="modal_history_info_label" aria-hidden="true">

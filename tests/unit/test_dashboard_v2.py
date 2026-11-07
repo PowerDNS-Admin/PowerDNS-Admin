@@ -26,6 +26,7 @@ def _authenticate_dashboard_user(app, client, username):
     with client.session_transaction() as session:
         session['_user_id'] = str(user_id)
         session['_fresh'] = True
+        session['session_version'] = 0
 
 
 def _dashboard_v2_count_queries(app, client, search=None):

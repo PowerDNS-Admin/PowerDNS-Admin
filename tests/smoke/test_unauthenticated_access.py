@@ -7,6 +7,7 @@ PROTECTED_PAGES = (
     '/domain/add',
     '/user/profile',
     '/admin/history',
+    '/admin/api-history',
     '/admin/manage-user',
     '/admin/manage-account',
     '/admin/manage-keys',

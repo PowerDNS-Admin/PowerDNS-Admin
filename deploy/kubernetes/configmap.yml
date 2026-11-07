@@ -4,5 +4,9 @@ metadata:
   name: powerdnsadmin-env
 data:
   FLASK_APP: powerdnsadmin/__init__.py
-  SECRET_KEY: changeme_secret
+  # Replace SECRET_KEY before apply. Startup refuses a missing, short, or published key.
+  # SECRET_KEY: python3 -c "import secrets; print(secrets.token_hex(32))"
+  # A salt published in this repository logs a warning. replace-me is not a bcrypt salt.
+  SECRET_KEY: replace-me
+  SALT: replace-me
   SQLALCHEMY_DATABASE_URI: 'mysql://user:password@host/database'

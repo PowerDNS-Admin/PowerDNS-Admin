@@ -1,17 +1,123 @@
 # Changelog
 
-## [Unreleased]
+## [2026.11.0] - 2026-11-06
+
+### Security
+
+-   This release includes security fixes. Please upgrade immediately. The
+    changelog and release notes will be updated with details in the near future.
+
+### Breaking Changes
+
+-   Explicit `PDNS_API_URL` and `PDNS_API_KEY` values from the environment,
+    secret files, or Python configuration now take precedence over saved
+    database values and are read-only in Server Settings. Change the deployment
+    configuration and restart to update them. Omitted settings remain editable
+    in-app; removing a deployment override restores the saved database value.
+-   Startup requires a unique `SECRET_KEY` of at least 32 characters and a
+    valid bcrypt `SALT`. Generate a salt with `bcrypt.gensalt()`. Replacing
+    `SECRET_KEY` signs users out and invalidates email-confirmation links.
+    Replacing `SALT` invalidates existing API keys and email-confirmation links.
+    A valid salt published in this repository logs a warning but remains
+    accepted. Tests and local Docker stacks can use `TESTING` or
+    `PDA_ALLOW_INSECURE_SECRETS=1`; production Compose does not set that flag.
+-   Persistent browser sign-in is no longer available. Existing browser
+    sessions are signed out during this upgrade. Run `flask db upgrade` before
+    starting the updated application. This includes migrations
+    `a5b6c7d8e9f1`, `b6c7d8e9f0a2`, `c7d8e9f0a1b3`, `d8e9f0a1b4c6`,
+    `e9f0a1b2c5d7`, `f0a1b2c3d4e5`, `a1b2c3d4e5f6`, and `b2c3d4e5f6a7`.
+-   Changing a password signs out other browser sessions for that account.
+    The browser making the change stays signed in.
+-   Password sign-in follows the configured local-account and email-confirmation
+    policies across the login form, browser Basic authentication, API Basic
+    authentication, and DynDNS. Accounts enrolled in two-factor authentication
+    must send the current code in the `X-OTP` header when using Basic
+    authentication. Complete required enrollment in the browser first.
+    Changes to existing two-factor enrollment require the current code.
+-   Authentication attempts are subject to shared database limits. Limited
+    requests receive HTTP 429 and `Retry-After`. Behind a reverse proxy,
+    configure `AUTH_TRUSTED_PROXIES` with the trusted proxy addresses or CIDRs
+    so client addresses are attributed correctly. The default trusts no proxies.
+-   Development and production Docker entrypoints run `flask check-auth-throttle`
+    after migrations. Other deployments should run this check before serving
+    requests. `/healthcheck` returns HTTP 503 when the limiter table is missing;
+    production authentication also returns HTTP 503 when that store is missing.
+-   PowerDNS HTTPS endpoints must present a certificate trusted by the
+    application when `verify_ssl_connections` is enabled.
+-   An authenticated API User receives HTTP 503 and
+    `{"status": false, "msg": "Site is in maintenance mode"}` during
+    maintenance. Administrators and Operators retain access.
+-   Activity rows can no longer be removed from the application. The Clear
+    Activity action is gone, and deleting a zone keeps that zone's activity.
+    The zone link on those rows is cleared. The **Preserve history** setting
+    is no longer shown. Removing history is a direct database change.
+-   Saved application settings take precedence over startup values, except
+    deployment-owned `PDNS_API_URL` and `PDNS_API_KEY` and process settings
+    such as `SECRET_KEY`, `SALT`, bind address, port, session type, and log level.
+-   `GET /api`, the PowerDNS version list, requires an API key. A missing or
+    rejected key returns HTTP 401 and `{"msg": "Unauthorized"}`. Basic
+    authentication and browser sessions do not satisfy this route.
+
+### Features
+
+-   Administrators and Operators have an **API History** page for requests
+    under `/api`, including calls proxied to PowerDNS. Each row stores the
+    method, path, query, status, client address, authentication type, user or
+    API key, request host, user agent, and redacted request and response bodies.
+    Credential fields are stored as `[redacted]`. Bodies larger than 32KB are
+    replaced with an omission marker. Recording failures do not change the
+    API response.
+-   Administrators and Operators have a **System Activity** page for application
+    setting changes. Rows store the setting name, previous and new values,
+    actor, and client address. Unchanged values are not recorded. Credential
+    settings are stored as `[redacted]`; the PowerDNS API URL is stored in full.
+-   User creation, role changes, and two-factor enrollment changes record the
+    client address in Activity. Role changes include the previous and new role.
+    Failed sign-in activity includes attempt counts and automatic unlock times
+    where applicable. Every Activity row also stores the request host and user
+    agent, which appear in the Info dialog.
 
 ### Bug Fixes
 
 -   Editing an account can once again assign zones and users. The account
-    editor no longer attempts to read the disabled account-name field from the
-    submitted form, which caused Werkzeug to return HTTP 400 before saving the
-    associations. (`#1913`)
--   The changelog now handles PowerDNS RRset history entries with missing or
-    null comment metadata, legacy delete-only entries, and corrupt history
-    details without returning HTTP 500. RRset history is normalized
-    consistently for new API changes and existing database entries. (`#1915`)
+    editor handles the disabled account-name field, and its submit button is
+    labeled **Save Account**. (`#1913`, `#1937`)
+-   Internationalized domain names display as Unicode across zone views,
+    Global Search, and Dashboard v2. Invalid IDN labels no longer prevent
+    rendering, and DNS-specific labels and trailing dots are preserved. (`#1935`)
+-   The zone changelog handles RRset history with missing or null comments,
+    legacy delete-only entries, and corrupt details without returning HTTP 500.
+    RRset history is normalized for new API changes and existing entries.
+    (`#1915`, `#1917`)
+-   Database migrations keep existing application loggers enabled.
+-   Startup validates bcrypt salts before API-key creation or authentication.
+    Docker secret files for `SECRET_KEY` and `SALT` accept a trailing newline.
+
+### Project Maintenance
+
+-   Updated Python dependencies, including Authlib, SQLAlchemy, cryptography,
+    dnspython, Gunicorn, and database drivers, and updated the Docker Debian
+    base image to 13.7.
+-   Docker image publishing runs after successful Python tests and skips
+    changes that do not affect the image. The full Python suite waits for
+    unit and smoke tests; release tags also trigger the test workflow.
+-   Release automation adds GitHub's New Contributors and Full Changelog
+    sections alongside the maintained changelog and supported-version blocks.
+-   CI lets the xmlsec development package select its OpenSSL runtime package.
+
+### Documentation
+
+-   Deployment guides and templates describe required signing-key configuration,
+    key generation, and the effects of replacing keys and salts.
+-   API and basic-settings documentation clarify self-service zone creation:
+    existing zone/account assignments do not constrain the namespace of new
+    zones when `allow_user_create_domain` is enabled.
+
+### Testing
+
+-   Expanded unit, integration, and smoke coverage for authentication, sessions,
+    authorization, audit history, configuration ownership, account editing,
+    IDN display, and RRset history rendering, including concurrent database use.
 
 ## [2026.08.1] - 2026-08-30
 

@@ -1,6 +1,6 @@
 import base64
 
-from flask import render_template, url_for, redirect, session, request, current_app
+from flask import g, render_template, url_for, redirect, session, request, current_app
 from flask_login import LoginManager, logout_user
 from flask_seasurf import SeaSurf
 from flask_session_captcha import FlaskSessionCaptcha
@@ -19,6 +19,16 @@ def handle_bad_request(e):
 
 
 def handle_unauthorized_access(e):
+    throttled = getattr(g, 'auth_throttled', None)
+    if throttled is not None:
+        response = current_app.response_class(
+            'Too many authentication attempts. Try again later.\n',
+            status=429,
+            mimetype='text/plain',
+        )
+        response.headers['Retry-After'] = str(throttled.retry_after)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
     session['next'] = request.script_root + request.path
     return redirect(url_for('index.login'))
 
@@ -79,6 +89,9 @@ def load_if_valid(user, method, src_ip, trust_user = False):
             # login_user(user, remember=False)
             return User.query.filter(User.id==user.id).first()
     except Exception as e:
+        from ..lib.auth_throttle import ThrottleStoreUnavailable
+        if isinstance(e, ThrottleStoreUnavailable):
+            raise
         current_app.logger.error('Error: {0}'.format(e))
         return None
 
@@ -86,46 +99,28 @@ def load_if_valid(user, method, src_ip, trust_user = False):
 @login_manager.user_loader
 def load_user(id):
     """
-    This will be current_user
+    This will be current_user.
+
+    ``session_version`` is stored at login and bumped when the password
+    changes. A session from before that change, or from before this check
+    existed, does not match and the request stays anonymous.
     """
-    return db.session.get(User, int(id))
+    user = db.session.get(User, int(id))
+    if user is None:
+        return None
+    if session.get('session_version') != user.session_version:
+        return None
+    return user
 
 
 @login_manager.request_loader
 def login_via_authorization_header_or_remote_user(request):
-    # Try to login using Basic Authentication
-    auth_header = request.headers.get('Authorization')
-    if auth_header:
+    # Browser Basic authentication uses the same password, email, and TOTP
+    # rules as the login form. It does not create a server session by itself.
+    if request.headers.get('Authorization'):
+        from ..decorators import accept_basic_credentials
+        return accept_basic_credentials()
 
-        if auth_header[:6] != "Basic ":
-            return None
-
-        auth_method = request.args.get('auth_method', 'LOCAL')
-        auth_method = 'LDAP' if auth_method != 'LOCAL' else 'LOCAL'
-
-        # Remove "Basic " from the header value
-        auth_header = auth_header[6:]
-
-        try:
-            auth_header = str(base64.b64decode(auth_header), 'utf-8')
-        except (UnicodeDecodeError, TypeError) as e:
-            return None
-
-        # NK: We use auth_components here as we don't know if we'll have a :, we split it maximum 1 times to grab the
-        #     username, the rest of the string would be the password.
-        auth_components = auth_header.split(':', maxsplit=1)
-
-        # If we don't have two auth components (username, password), we can return
-        if len(auth_components) != 2:
-            return None
-
-        (username, password) = auth_components
-
-        user = User(username=username,
-                    password=password,
-                    plain_text_password=password)
-        return load_if_valid(user, method=auth_method, src_ip=request.remote_addr)
-    
     # Try login by checking a REMOTE_USER environment variable
     remote_user = request.remote_user
     if remote_user and current_app.config.get('REMOTE_USER_ENABLED'):

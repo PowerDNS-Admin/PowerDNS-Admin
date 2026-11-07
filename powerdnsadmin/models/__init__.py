@@ -7,6 +7,9 @@ from .account import Account
 from .account_user import AccountUser
 from .server import Server
 from .history import History
+from .api_history import ApiHistory
+from .auth_attempt import AuthAttempt
+from .system_history import SystemHistory
 from .api_key import ApiKey
 from .api_key_account import ApiKeyAccount
 from .setting import Setting

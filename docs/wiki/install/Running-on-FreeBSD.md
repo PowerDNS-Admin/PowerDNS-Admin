@@ -52,11 +52,16 @@ Edit your flask python configuration. Insert values for the database server, use
 vim $FLASK_CONF
 ```
 
-Edit the values below to something sensible
+Replace `SECRET_KEY` before starting. Startup refuses a missing, short, or published `SECRET_KEY`. It must be at least 32 characters. A missing or malformed `SALT` is refused. A salt published in this repository logs a warning at startup. Generate a `SECRET_KEY` with:
+
+```bash
+python3 -c 'import secrets; print(secrets.token_hex(32))'
+```
+
 ```python
 ### BASIC APP CONFIG
-SALT = '[something]'
-SECRET_KEY = '[something]'
+SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'  # published salt; startup logs a warning
+SECRET_KEY = ''  # paste the generated value, at least 32 characters
 BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
 OFFLINE_MODE = False

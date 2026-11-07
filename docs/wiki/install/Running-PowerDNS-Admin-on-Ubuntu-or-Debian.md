@@ -56,7 +56,7 @@ pip install -r requirements.txt
 ```
 ## Running PowerDNS-Admin
 
-Create PowerDNS-Admin config file and make the changes necessary for your use case. Make sure to change `SECRET_KEY` to a long random string that you generated yourself ([see Flask docs](https://flask.palletsprojects.com/en/1.1.x/config/#SECRET_KEY)), do not use the pre-defined one. E.g.:
+Create PowerDNS-Admin config file and make the changes necessary for your use case. Replace `SECRET_KEY` before starting. Startup refuses a missing, short, or published `SECRET_KEY`. It must be at least 32 characters (`python3 -c 'import secrets; print(secrets.token_hex(32))'`). A missing or malformed `SALT` is refused. A salt published in this repository logs a warning at startup. E.g.:
 
 ```bash
 cp /opt/web/powerdns-admin/configs/development.py /opt/web/powerdns-admin/configs/production.py

@@ -47,6 +47,12 @@ API authorization always follows the credential sent with the API request.
 An existing browser login session does not raise or otherwise change the
 credential's privileges.
 
+Password authentication rejects an empty password, including for accounts
+with a legacy hash of an empty password. This applies to the GUI login form,
+browser and API Basic authentication, and DynDNS. Administrators can identify
+affected local accounts on the **Security > Blank Passwords** page and set
+new passwords to restore password-based access.
+
 API-key role grants follow these rules:
 
 - Administrators may create or grant Administrator, Operator, and User keys.
@@ -56,6 +62,33 @@ API-key role grants follow these rules:
 API-key list and detail responses contain metadata only. They never contain
 the plaintext key or its stored verifier. The plaintext `plain_key` field is
 returned exactly once by the create operation.
+
+#### Self-service zone creation
+
+The `allow_user_create_domain` setting enables zone creation for ordinary
+Users in both the GUI and API, including automation using User-role API keys.
+It is disabled by default. Administrators and Operators may create zones
+without enabling this setting.
+
+When enabled, a User may create a new zone through Basic authentication at
+`POST /api/v1/pdnsadmin/zones` or a User-role API key at
+`POST /api/v1/servers/{server_id}/zones`. New zone names do not have to be
+subdomains of, or otherwise related to, the user's or key's existing zones
+or accounts. This is expected self-service provisioning behavior: a key
+assigned to one zone can also create an unrelated zone while this global
+setting is enabled. API-key zone and account assignments govern access to
+existing zones; they do not define an allowed namespace for new zones.
+
+New zones remain subject to backend validation and the optional
+`deny_domain_override` check. That check does not restrict creation to a
+user's or key's existing namespace. Enabling creation does not grant access
+to other existing zones or enable zone deletion. Leave
+`allow_user_create_domain` disabled if ordinary Users and User-role keys
+should only manage their assigned zones.
+
+See the [basic settings reference](wiki/configuration/basic_settings.md).
+
+#### Zone deletion
 
 For Basic-authenticated zone deletion, Administrators and Operators may
 remove zones. An ordinary User may remove only an assigned zone and only when
@@ -148,7 +181,7 @@ services:
       - "3306:3306"
 ```
 
-Start the stack and connect using the example Compose credentials. On Debian or Ubuntu, the complete command sequence is:
+Export `SECRET_KEY` and `SALT` first, as described in [Running PowerDNS-Admin on Docker](wiki/install/Running-PowerDNS-Admin-on-Docker.md). Start the stack and connect using the example Compose credentials. On Debian or Ubuntu, the complete command sequence is:
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d --build

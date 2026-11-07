@@ -1,5 +1,8 @@
 import os
 
+# Addresses of reverse proxies allowed to supply the client IP. An empty
+# list keeps X-Forwarded-For from choosing a throttle bucket.
+AUTH_TRUSTED_PROXIES = []
 BIND_ADDRESS = '0.0.0.0'
 CAPTCHA_ENABLE = True
 CAPTCHA_HEIGHT = 60

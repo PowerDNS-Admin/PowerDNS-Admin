@@ -93,6 +93,8 @@ class TestUnitApiZoneAdminUser(object):
             self.mockk.role.name = "Administrator"
 
             self.mock_user.query.filter.return_value.first.return_value = self.mockk
+            # Zone calls below use an account with MFA disabled.
+            self.mock_user.return_value.otp_secret = None
             self.mock_user.return_value.is_validate.return_value = True
             self.mock_base_route_user.query.filter.return_value.first.return_value = self.mockk
             self.mock_base_route_user.return_value.is_validate.return_value = True
@@ -182,3 +184,35 @@ class TestUnitApiZoneAdminUser(object):
             res = client.delete(zone_url, headers=basic_auth_admin_headers)
 
             assert res.status_code == 204
+
+    def _enable_mfa(self, accepted_code='123456'):
+        account = self.mock_user.return_value
+        account.otp_secret = 'JBSWY3DPEHPK3PXP'
+        account.verify_totp.side_effect = lambda token: token == accepted_code
+
+    def test_zone_list_accepts_mfa_only_with_the_current_code(
+            self, client, common_data_mock, basic_auth_admin_headers):
+        self._enable_mfa()
+        with patch('powerdnsadmin.routes.api.Domain') as mock_domain, \
+             patch('powerdnsadmin.lib.helper.requests.get') as mock_get:
+            mock_domain.return_value.domains.return_value = []
+            mock_domain.query.all.return_value = []
+            mock_get.return_value.json.return_value = []
+            mock_get.return_value.status_code = 200
+
+            missing = client.get(
+                "/api/v1/pdnsadmin/zones",
+                headers=basic_auth_admin_headers)
+            assert missing.status_code == 401
+
+            wrong = dict(basic_auth_admin_headers)
+            wrong['X-OTP'] = '000000'
+            rejected = client.get("/api/v1/pdnsadmin/zones", headers=wrong)
+            assert rejected.status_code == 401
+
+            accepted = dict(basic_auth_admin_headers)
+            accepted['X-OTP'] = '123456'
+            res = client.get("/api/v1/pdnsadmin/zones", headers=accepted)
+            data = res.get_json(force=True)
+            assert res.status_code == 200
+            assert data == []

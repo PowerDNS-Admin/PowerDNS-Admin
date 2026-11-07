@@ -33,10 +33,13 @@ def update_client(app, client, update_zones):
     page = client.get('/login')
     token = re.search(rb'name="_csrf_token" value="([^"]+)"', page.data).group(1).decode()
     with app.app_context():
-        user_id = User.query.filter_by(username=app.config['TEST_USER']).one().id
+        account = User.query.filter_by(username=app.config['TEST_USER']).one()
+        user_id = account.id
+        session_version = account.session_version or 0
     with client.session_transaction() as session:
         session['_user_id'] = str(user_id)
         session['_fresh'] = True
+        session['session_version'] = session_version
     return client, token
 
 

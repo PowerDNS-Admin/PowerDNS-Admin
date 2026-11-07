@@ -1,3 +1,5 @@
+**Legacy.** This guide is no longer updated. A new installation document will replace it.
+
 # Installing PowerDNS-Admin on CentOS 7
 
 ```
@@ -54,9 +56,10 @@ pip install -r requirements.txt
 ```
 
 ## Running PowerDNS-Admin:
-NOTE: The default config file is located at `./powerdnsadmin/default_config.py`. If you want to load another one, please set the `FLASK_CONF` environment variable. E.g.
+NOTE: The default config file is located at `./powerdnsadmin/default_config.py`. Copy `configs/development.py` and replace `SECRET_KEY` and `SALT` in the copy before starting. Startup refuses a missing, short, or published value. `SECRET_KEY` must be at least 32 characters (`python3 -c 'import secrets; print(secrets.token_hex(32))'`). `SALT` must be the output of `bcrypt.gensalt()` (`python3 -c 'import bcrypt; print(bcrypt.gensalt().decode())'`). Point `FLASK_CONF` at the copy. E.g.
 ```bash
-export FLASK_CONF=../configs/development.py
+cp configs/development.py configs/production.py
+export FLASK_CONF=../configs/production.py
 ```
 
 ### Create the database schema:

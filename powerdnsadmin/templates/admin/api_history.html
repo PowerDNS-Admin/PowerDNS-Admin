@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% set active_page = "admin_api_history" %}
+{% set page_title = 'API History' %}
+{% set page_subtitle = 'Every request under /api, including calls proxied to PowerDNS.' %}
+{% block title %}<title>API History - {{ SITE_NAME }}</title>{% endblock %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header with-border">
+                    <h3 class="card-title">API History</h3>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('admin.api_history') }}" class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label" for="api-history-path">Path</label>
+                            <input type="text" class="form-control" id="api-history-path" name="path"
+                                   value="{{ filters.path }}" maxlength="512">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="api-history-actor">User or API key</label>
+                            <input type="text" class="form-control" id="api-history-actor" name="actor"
+                                   value="{{ filters.actor }}" maxlength="128">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="api-history-method">Method</label>
+                            <select class="form-select" id="api-history-method" name="method">
+                                <option value="">Any</option>
+                                {% for name in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] %}
+                                    <option value="{{ name }}" {% if filters.method == name %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="api-history-status">Status</label>
+                            <input type="text" class="form-control" id="api-history-status" name="status"
+                                   value="{{ filters.status }}" inputmode="numeric" maxlength="3">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="api-history-auth">Authentication</label>
+                            <select class="form-select" id="api-history-auth" name="auth_type">
+                                <option value="">Any</option>
+                                <option value="basic" {% if filters.auth_type == 'basic' %}selected{% endif %}>Basic</option>
+                                <option value="api_key" {% if filters.auth_type == 'api_key' %}selected{% endif %}>API key</option>
+                                <option value="none" {% if filters.auth_type == 'none' %}selected{% endif %}>Anonymous</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="api-history-outcome">Result</label>
+                            <select class="form-select" id="api-history-outcome" name="outcome">
+                                <option value="">Any</option>
+                                <option value="authenticated" {% if filters.outcome == 'authenticated' %}selected{% endif %}>Authenticated</option>
+                                <option value="unauthenticated" {% if filters.outcome == 'unauthenticated' %}selected{% endif %}>Not authenticated</option>
+                            </select>
+                        </div>
+                        <div class="col-md-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-search"></i>&nbsp;Search
+                            </button>
+                            <a class="btn btn-outline-secondary" href="{{ url_for('admin.api_history') }}">Clear</a>
+                        </div>
+                    </form>
+                </div>
+                {% if truncated %}
+                    <div class="card-body pt-0">
+                        <p class="text-danger mb-0">
+                            <b>Showing the latest {{ limit }} API calls.</b>
+                        </p>
+                    </div>
+                {% endif %}
+                <div class="card-body table-responsive pt-0">
+                    <table id="tbl_api_history" class="table table-bordered table-striped table-hover table-sm">
+                        <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Path</th>
+                            <th>Authentication</th>
+                            <th>Caller</th>
+                            <th>Client</th>
+                            <th>Host</th>
+                            <th>User agent</th>
+                            <th>Detail</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td>{{ row.created_on }}</td>
+                                <td><span class="badge text-bg-secondary">{{ row.method }}</span></td>
+                                <td>
+                                    {% if row.status_code is not none %}
+                                        {% if row.status_code >= 500 %}
+                                            <span class="badge text-bg-danger">{{ row.status_code }}</span>
+                                        {% elif row.status_code >= 400 %}
+                                            <span class="badge text-bg-warning">{{ row.status_code }}</span>
+                                        {% elif row.status_code >= 200 %}
+                                            <span class="badge text-bg-success">{{ row.status_code }}</span>
+                                        {% else %}
+                                            <span class="badge text-bg-secondary">{{ row.status_code }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="text-break">{{ row.path }}</td>
+                                <td>
+                                    {% if row.auth_type == 'basic' %}
+                                        Basic
+                                    {% elif row.auth_type == 'api_key' %}
+                                        API key
+                                    {% else %}
+                                        Anonymous
+                                    {% endif %}
+                                    {% if row.authenticated %}
+                                        <span class="badge text-bg-success">Authenticated</span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary">Not authenticated</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.username %}
+                                        {{ row.username }}
+                                        {% if row.user_id %}
+                                            <span class="text-body-secondary">#{{ row.user_id }}</span>
+                                        {% endif %}
+                                    {% elif row.apikey_id %}
+                                        {{ row.apikey_description or 'API key' }}
+                                        <span class="text-body-secondary">#{{ row.apikey_id }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ row.remote_addr or '' }}</td>
+                                <td class="text-break">{{ row.host or '' }}</td>
+                                <td class="text-break">{{ row.user_agent or '' }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary api-history-detail"
+                                            data-title="{{ row.method }} {{ row.path }}">
+                                        <i class="fa-solid fa-info"></i>
+                                    </button>
+                                    <pre class="d-none api-history-query">{{ row.query_string or '' }}</pre>
+                                    <pre class="d-none api-history-body">{{ row.display_body }}</pre>
+                                    <pre class="d-none api-history-response">{{ row.display_response }}</pre>
+                                    <pre class="d-none api-history-host">{{ row.host or '' }}</pre>
+                                    <pre class="d-none api-history-agent">{{ row.user_agent or '' }}</pre>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extrascripts %}
+    <script>
+        initDataTable('#tbl_api_history', {
+            "order": [[0, "desc"]],
+            "pageLength": 25,
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, row) {
+                    return formatUtcDateTimeLocal(data);
+                }
+            }, {
+                "targets": 9,
+                "orderable": false,
+                "searchable": true
+            }]
+        });
+
+        $(document).on('click', '.api-history-detail', function () {
+            var button = $(this);
+            var cell = button.closest('td');
+            $('#api-history-detail-title').text(button.data('title'));
+            $('#api-history-detail-host').text(cell.find('.api-history-host').text() || 'None');
+            $('#api-history-detail-agent').text(cell.find('.api-history-agent').text() || 'None');
+            $('#api-history-detail-query').text(cell.find('.api-history-query').text() || 'None');
+            $('#api-history-detail-body').text(cell.find('.api-history-body').text() || 'None');
+            $('#api-history-detail-response').text(cell.find('.api-history-response').text() || 'None');
+            showModal($('#api-history-detail'));
+        });
+    </script>
+{% endblock %}
+
+{% block modals %}
+    <div class="modal fade" id="api-history-detail" tabindex="-1"
+         aria-labelledby="api-history-detail-title" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="api-history-detail-title">Request</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Host</h5>
+                    <pre id="api-history-detail-host" class="mb-3"></pre>
+                    <h5>User agent</h5>
+                    <pre id="api-history-detail-agent" class="mb-3"></pre>
+                    <h5>Query string</h5>
+                    <pre id="api-history-detail-query" class="mb-3"></pre>
+                    <h5>Request body</h5>
+                    <pre id="api-history-detail-body" class="mb-3"></pre>
+                    <h5>Response body</h5>
+                    <pre id="api-history-detail-response" class="mb-0"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

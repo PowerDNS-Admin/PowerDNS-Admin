@@ -57,7 +57,8 @@ COPY . /app
 RUN yarnpkg install --immutable --inline-builds \
     && rm -rf /app/powerdnsadmin/static/node_modules \
     && ln -s ../../node_modules /app/powerdnsadmin/static/node_modules \
-    && SESSION_TYPE=filesystem SQLALCHEMY_DATABASE_URI=sqlite:///:memory: flask assets build \
+    && PDA_ALLOW_INSECURE_SECRETS=1 SESSION_TYPE=filesystem \
+        SQLALCHEMY_DATABASE_URI=sqlite:///:memory: flask assets build \
     # The generated Font Awesome CSS references these public font files.
     && rm /app/powerdnsadmin/static/node_modules \
     && mkdir -p /app/powerdnsadmin/static/node_modules/@fortawesome/fontawesome-free \

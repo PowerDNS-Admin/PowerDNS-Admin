@@ -67,9 +67,11 @@ apt install python3-psycopg2
 
 ## Docker (TODO: to move to docker docs)
 TODO: Setup a local Docker postgres database ready to go (should probably move to the top).
+
+Export `SECRET_KEY` and `SALT` first. Generate them with `python3 -c 'import secrets; print(secrets.token_hex(32))'` and `python3 -c 'import bcrypt; print(bcrypt.gensalt().decode())'`.
 ```
 docker run --name pdnsadmin-test -e BIND_ADDRESS=0.0.0.0 
--e SECRET_KEY='a-very-secret-key' 
+-e SECRET_KEY -e SALT 
 -e PORT='9191' 
 -e SQLA_DB_USER='powerdns_admin_user' 
 -e SQLA_DB_PASSWORD='exceptionallysecure' 

@@ -15,6 +15,13 @@ services:
         max-size: 50m
     environment:
       FLASK_CONF: /app/configs/docker_config.py
+      # SECRET_KEY is required. Generate it and export it before starting:
+      #   python3 -c "import secrets; print(secrets.token_hex(32))"
+      # SALT must be a bcrypt salt. A missing or malformed salt is refused.
+      # A salt published in this repository logs a warning. Pass it through
+      # the environment. A literal $ in this file is interpolation.
+      SECRET_KEY: ${SECRET_KEY}
+      SALT: ${SALT}
       DATABASE_DRIVER: mysql
       DATABASE_USER: pda
       DATABASE_PASSWORD: changeme

@@ -93,6 +93,8 @@ class TestUnitApiZoneUser(object):
             self.mockk.role.name = "User"
 
             self.mock_user.query.filter.return_value.first.return_value = self.mockk
+            # Zone calls below use an account with MFA disabled.
+            self.mock_user.return_value.otp_secret = None
             self.mock_user.return_value.is_validate.return_value = True
             self.mock_base_route_user.query.filter.return_value.first.return_value = self.mockk
             self.mock_base_route_user.return_value.is_validate.return_value = True
@@ -170,3 +172,32 @@ class TestUnitApiZoneUser(object):
             res = client.delete(zone_url, headers=basic_auth_user_headers)
 
             assert res.status_code == 204
+
+    def _enable_mfa(self, accepted_code='123456'):
+        account = self.mock_user.return_value
+        account.otp_secret = 'JBSWY3DPEHPK3PXP'
+        account.verify_totp.side_effect = lambda token: token == accepted_code
+
+    def test_zone_list_accepts_mfa_only_with_the_current_code(
+            self, client, common_data_mock, zone_data, basic_auth_user_headers):
+        self._enable_mfa()
+        with patch('powerdnsadmin.routes.api.get_user_domains') as mock_user_domains:
+            test_domain = Domain(1, name=zone_data['name'].rstrip("."))
+            mock_user_domains.return_value = [test_domain]
+
+            missing = client.get(
+                "/api/v1/pdnsadmin/zones",
+                headers=basic_auth_user_headers)
+            assert missing.status_code == 401
+
+            wrong = dict(basic_auth_user_headers)
+            wrong['X-OTP'] = '000000'
+            rejected = client.get("/api/v1/pdnsadmin/zones", headers=wrong)
+            assert rejected.status_code == 401
+
+            accepted = dict(basic_auth_user_headers)
+            accepted['X-OTP'] = '123456'
+            res = client.get("/api/v1/pdnsadmin/zones", headers=accepted)
+            data = res.get_json(force=True)
+            assert res.status_code == 200
+            assert data[0]['name'] == zone_data['name'].rstrip(".")
