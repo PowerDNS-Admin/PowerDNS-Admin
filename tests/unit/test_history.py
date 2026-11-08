@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
@@ -158,9 +159,17 @@ def test_history_record_entry_normalizes_nullable_rrsets():
     ('missing', False, 'unchanged'),
     (True, 'missing', 'edit'),
     ('missing', True, 'edit'),
+    (None, 'missing', 'unchanged'),
+    ('missing', None, 'unchanged'),
+    (None, None, 'unchanged'),
+    (None, False, 'unchanged'),
+    (False, None, 'unchanged'),
+    (True, None, 'edit'),
+    (None, True, 'edit'),
 ])
 def test_history_defaults_missing_disabled_when_comparing_records(
         old_disabled, new_disabled, expected):
+    """Missing and null flags compare as active; explicit booleans retain meaning."""
     old = {'content': '192.0.2.1'}
     new = {'content': '192.0.2.1'}
     if old_disabled != 'missing':
@@ -183,9 +192,14 @@ def test_history_defaults_missing_disabled_when_comparing_records(
 @pytest.mark.parametrize('key,change_type', [
     ('add_rrsets', 'addition'), ('del_rrsets', 'deletion'),
 ])
-def test_history_renders_legacy_record_without_disabled(key, change_type):
+@pytest.mark.parametrize('disabled', ['missing', None])
+def test_history_renders_legacy_record_without_disabled(key, change_type, disabled):
+    """Legacy additions and deletions render absent or null flags as active."""
+    record = {'content': '192.0.2.1'}
+    if disabled != 'missing':
+        record['disabled'] = disabled
     history = SimpleNamespace(detail=json.dumps({
-        key: [rrset([{'content': '192.0.2.1'}])],
+        key: [rrset([record])],
     }))
 
     changes = extract_changelogs_from_history([history])
@@ -196,10 +210,14 @@ def test_history_renders_legacy_record_without_disabled(key, change_type):
 
 
 def test_get_records_defaults_disabled_without_mutating_input():
+    """Normalize copied flags while preserving the original history payload."""
     original = rrset([{'content': '192.0.2.1'},
-                      {'content': '192.0.2.2', 'disabled': True}])
+                      {'content': '192.0.2.2', 'disabled': True},
+                      {'content': '192.0.2.3', 'disabled': None},
+                      {'content': '192.0.2.4', 'disabled': False}])
+    before = deepcopy(original)
 
     records = get_records(original)
 
-    assert [record['disabled'] for record in records] == [False, True]
-    assert 'disabled' not in original['records'][0]
+    assert [record['disabled'] for record in records] == [False, True, False, False]
+    assert original == before

@@ -50,10 +50,12 @@ def test_history_table_skips_corrupt_history_detail(
     assert response.status_code == 200
 
 
+@pytest.mark.parametrize('disabled', ['missing', None])
 @pytest.mark.parametrize('change', ['addition', 'edit', 'deletion'])
 def test_history_pages_render_records_without_disabled(
-        app, logged_in_admin_client, change):
-    zone_name = f'history-{change}.example'
+        app, logged_in_admin_client, change, disabled):
+    """All history views render stored records with absent or null flags."""
+    zone_name = f'history-{change}-{disabled}.example'.lower()
     record_name = f'host.{zone_name}.'
     record_set = {
         'name': record_name,
@@ -61,6 +63,8 @@ def test_history_pages_render_records_without_disabled(
         'ttl': 300,
         'records': [{'content': '192.0.2.1'}],
     }
+    if disabled != 'missing':
+        record_set['records'][0]['disabled'] = disabled
     detail = {
         'domain': zone_name,
         'add_rrsets': [record_set] if change != 'deletion' else [],

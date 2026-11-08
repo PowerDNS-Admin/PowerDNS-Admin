@@ -50,7 +50,8 @@ def get_records(rrset):
             continue
 
         normalized_record = dict(record)
-        normalized_record.setdefault('disabled', False)
+        if normalized_record.get('disabled') is None:
+            normalized_record['disabled'] = False
         normalized_record['comment'] = (
             comments[index].get('content')
             if index < len(comments) and isinstance(comments[index], dict)
