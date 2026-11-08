@@ -9,8 +9,8 @@ from powerdnsadmin.lib.history import (
     normalize_rrset,
 )
 from powerdnsadmin.routes.admin import (
-    extract_changelogs_from_history,
     HistoryRecordEntry,
+    extract_changelogs_from_history,
 )
 
 
