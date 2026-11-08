@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from lxml import html
 
 from powerdnsadmin.models.base import db
 from powerdnsadmin.models.domain import Domain
@@ -51,7 +52,7 @@ def test_history_table_skips_corrupt_history_detail(
 
 
 @pytest.mark.parametrize('disabled', ['missing', None])
-@pytest.mark.parametrize('change', ['addition', 'edit', 'deletion'])
+@pytest.mark.parametrize('change', ['addition', 'edit', 'deletion', 'unchanged'])
 def test_history_pages_render_records_without_disabled(
         app, logged_in_admin_client, change, disabled):
     """All history views render stored records with absent or null flags."""
@@ -65,9 +66,15 @@ def test_history_pages_render_records_without_disabled(
     }
     if disabled != 'missing':
         record_set['records'][0]['disabled'] = disabled
+    new_record_set = record_set
+    if change == 'edit':
+        new_record_set = {
+            **record_set,
+            'records': [{**record_set['records'][0], 'disabled': True}],
+        }
     detail = {
         'domain': zone_name,
-        'add_rrsets': [record_set] if change != 'deletion' else [],
+        'add_rrsets': [new_record_set] if change != 'deletion' else [],
         'del_rrsets': [record_set] if change != 'addition' else [],
     }
     with app.app_context():
@@ -89,4 +96,18 @@ def test_history_pages_render_records_without_disabled(
     ]:
         response = logged_in_admin_client.get(path)
         assert response.status_code == 200, path
-        assert b'192.0.2.1' in response.data
+        document = html.fromstring(response.data)
+        name_cells = document.xpath(
+            '//td[div[normalize-space(.)=$name]]', name=record_name)
+        assert len(name_cells) == 1, path
+        name_cell = name_cells[0]
+        data_cell = name_cell.xpath('following-sibling::td[3]')[0]
+        assert '192.0.2.1' in data_cell.text_content(), path
+        status_cell = name_cell.xpath('following-sibling::td[4]')[0]
+        statuses = status_cell.xpath('./div')
+        expected = ['Activated', 'Disabled'] if change == 'edit' else ['Activated']
+        assert [status.text_content().strip() for status in statuses] == expected, path
+        expected_classes = (['diff-deletion', 'diff-addition'] if change == 'edit'
+                            else [f'diff-{change}'])
+        for status, expected_class in zip(statuses, expected_classes, strict=True):
+            assert expected_class in status.get('class', '').split(), path
