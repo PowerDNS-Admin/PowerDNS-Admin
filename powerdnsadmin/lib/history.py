@@ -37,7 +37,7 @@ def normalize_history_detail(detail):
 
 
 def get_records(rrset):
-    """Return records with comments paired by their RRset index."""
+    """Return display records with default state and comments paired by index."""
     rrset = normalize_rrset(rrset)
     if not rrset:
         return []
@@ -50,6 +50,7 @@ def get_records(rrset):
             continue
 
         normalized_record = dict(record)
+        normalized_record.setdefault('disabled', False)
         normalized_record['comment'] = (
             comments[index].get('content')
             if index < len(comments) and isinstance(comments[index], dict)

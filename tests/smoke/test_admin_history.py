@@ -1,5 +1,9 @@
 import json
 
+import pytest
+
+from powerdnsadmin.models.base import db
+from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.history import History
 
 
@@ -44,3 +48,41 @@ def test_history_table_skips_corrupt_history_detail(
     response = logged_in_admin_client.get('/admin/history_table')
 
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize('change', ['addition', 'edit', 'deletion'])
+def test_history_pages_render_records_without_disabled(
+        app, logged_in_admin_client, change):
+    zone_name = f'history-{change}.example'
+    record_name = f'host.{zone_name}.'
+    record_set = {
+        'name': record_name,
+        'type': 'A',
+        'ttl': 300,
+        'records': [{'content': '192.0.2.1'}],
+    }
+    detail = {
+        'domain': zone_name,
+        'add_rrsets': [record_set] if change != 'deletion' else [],
+        'del_rrsets': [record_set] if change != 'addition' else [],
+    }
+    with app.app_context():
+        zone = Domain(name=zone_name)
+        db.session.add(zone)
+        db.session.flush()
+        db.session.add(History(
+            msg=f'Apply record changes to zone {zone_name}',
+            detail=json.dumps(detail),
+            domain_id=zone.id,
+            created_by=app.config['TEST_ADMIN_USER'],
+        ))
+        db.session.commit()
+
+    for path in [
+        '/admin/history_table?domain_changelog_only_checkbox=on',
+        f'/domain/{zone_name}/changelog',
+        f'/domain/{zone_name}/changelog/{record_name}/A',
+    ]:
+        response = logged_in_admin_client.get(path)
+        assert response.status_code == 200, path
+        assert b'192.0.2.1' in response.data

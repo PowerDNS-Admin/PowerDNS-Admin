@@ -150,3 +150,56 @@ def test_history_record_entry_normalizes_nullable_rrsets():
     entry = HistoryRecordEntry(history, {}, add_rrset, '+')
 
     assert entry.add_rrset['comments'] == []
+
+
+@pytest.mark.parametrize('old_disabled,new_disabled,expected', [
+    ('missing', 'missing', 'unchanged'),
+    (False, 'missing', 'unchanged'),
+    ('missing', False, 'unchanged'),
+    (True, 'missing', 'edit'),
+    ('missing', True, 'edit'),
+])
+def test_history_defaults_missing_disabled_when_comparing_records(
+        old_disabled, new_disabled, expected):
+    old = {'content': '192.0.2.1'}
+    new = {'content': '192.0.2.1'}
+    if old_disabled != 'missing':
+        old['disabled'] = old_disabled
+    if new_disabled != 'missing':
+        new['disabled'] = new_disabled
+    history = SimpleNamespace(detail=json.dumps({
+        'del_rrsets': [rrset([old])],
+        'add_rrsets': [rrset([new])],
+    }))
+
+    changes = extract_changelogs_from_history([history])
+
+    before, after, change_type = changes[0].changeSet[0]
+    assert change_type == expected
+    assert before['disabled'] is (old_disabled is True)
+    assert after['disabled'] is (new_disabled is True)
+
+
+@pytest.mark.parametrize('key,change_type', [
+    ('add_rrsets', 'addition'), ('del_rrsets', 'deletion'),
+])
+def test_history_renders_legacy_record_without_disabled(key, change_type):
+    history = SimpleNamespace(detail=json.dumps({
+        key: [rrset([{'content': '192.0.2.1'}])],
+    }))
+
+    changes = extract_changelogs_from_history([history])
+
+    before, after, actual = changes[0].changeSet[0]
+    assert actual == change_type
+    assert (before or after)['disabled'] is False
+
+
+def test_get_records_defaults_disabled_without_mutating_input():
+    original = rrset([{'content': '192.0.2.1'},
+                      {'content': '192.0.2.2', 'disabled': True}])
+
+    records = get_records(original)
+
+    assert [record['disabled'] for record in records] == [False, True]
+    assert 'disabled' not in original['records'][0]
