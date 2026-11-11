@@ -45,6 +45,10 @@
         if (options.id) {
             button.id = options.id;
         }
+        if (options.domain) {
+            button.dataset.domain = options.domain;
+            button.dataset.displayName = options.displayName || options.domain;
+        }
         if (options.url) {
             button.dataset.url = options.url;
             button.classList.add('dashboard-v2-navigate');
@@ -168,8 +172,8 @@
         if (row.permissions.removeZone) {
             menu.appendChild(element('div', 'dropdown-divider'));
             appendMenuButton(menu, {
-                className: 'btn-secondary text-danger', icon: 'fa-solid fa-trash',
-                label: 'Remove Zone', url: row.urls.remove
+                className: 'btn-secondary text-danger dashboard-remove-zone', icon: 'fa-solid fa-trash',
+                label: 'Remove Zone', domain: row.name, displayName: row.displayName
             });
         }
 
