@@ -14,13 +14,20 @@ Wants=network.target
 After=network.target mysqld.service postgresql.service slapd.service mariadb.service
 
 [Service]
-PIDFile=/run/powerdns-admin/pid
+Type=notify
+NotifyAccess=main
+KillMode=mixed
+TimeoutStopSec=30
+
 User=pdnsa
 Group=pdnsa
 WorkingDirectory=/opt/powerdns-admin
-ExecStart=/usr/bin/gunicorn-3.6 --workers 4 --log-level info --pid /run/powerdns-admin/pid --bind unix:/run/powerdns-admin/socket "powerdnsadmin:create_app(config='config.py')"
+RuntimeDirectory=powerdns-admin
+RuntimeDirectoryPreserve=yes
+
+ExecStart=/usr/bin/gunicorn-3.6 --workers 4 --log-level info --bind unix:/run/powerdns-admin/socket "powerdnsadmin:create_app(config='config.py')"
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
+
 PrivateTmp=true
 Restart=on-failure
 RestartSec=10
@@ -41,12 +48,6 @@ ListenStream=/run/powerdns-admin/socket
 
 [Install]
 WantedBy=sockets.target
-```
-
-`$ sudo vim /etc/tmpfiles.d/powerdns-admin.conf`
-
-```
-d /run/powerdns-admin 0755 pdnsa pdnsa -
 ```
 
 Then `sudo systemctl daemon-reload; sudo systemctl start powerdns-admin.socket; sudo systemctl enable powerdns-admin.socket` to start the Powerdns-Admin service and make it run on boot.
