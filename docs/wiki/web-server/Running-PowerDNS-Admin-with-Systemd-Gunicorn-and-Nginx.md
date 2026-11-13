@@ -24,8 +24,8 @@ NotifyAccess=main
 KillMode=mixed
 TimeoutStopSec=30
 
-User=pdns
-Group=pdns
+User=pdnsa
+Group=pdnsa
 WorkingDirectory=/opt/web/powerdns-admin
 RuntimeDirectory=powerdns-admin
 RuntimeDirectoryPreserve=yes
