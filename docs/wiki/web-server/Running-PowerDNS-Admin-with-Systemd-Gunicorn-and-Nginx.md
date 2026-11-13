@@ -19,6 +19,11 @@ Requires=powerdns-admin.socket
 After=network.target
 
 [Service]
+Type=notify
+NotifyAccess=main
+KillMode=mixed
+TimeoutStopSec=30
+
 PIDFile=/run/powerdns-admin/pid
 User=pdns
 Group=pdns
@@ -28,7 +33,7 @@ RuntimeDirectoryPreserve=yes
 
 ExecStart=/usr/local/bin/gunicorn --pid /run/powerdns-admin/pid --bind unix:/run/powerdns-admin/socket 'powerdnsadmin:create_app()'
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
+
 PrivateTmp=true
 
 [Install]

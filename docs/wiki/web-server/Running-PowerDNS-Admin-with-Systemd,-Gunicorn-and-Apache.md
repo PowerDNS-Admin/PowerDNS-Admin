@@ -14,6 +14,11 @@ Wants=network.target
 After=network.target mysqld.service postgresql.service slapd.service mariadb.service
 
 [Service]
+Type=notify
+NotifyAccess=main
+KillMode=mixed
+TimeoutStopSec=30
+
 PIDFile=/run/powerdns-admin/pid
 User=pdnsa
 Group=pdnsa
@@ -23,7 +28,7 @@ RuntimeDirectoryPreserve=yes
 
 ExecStart=/usr/bin/gunicorn-3.6 --workers 4 --log-level info --pid /run/powerdns-admin/pid --bind unix:/run/powerdns-admin/socket "powerdnsadmin:create_app(config='config.py')"
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
+
 PrivateTmp=true
 Restart=on-failure
 RestartSec=10
