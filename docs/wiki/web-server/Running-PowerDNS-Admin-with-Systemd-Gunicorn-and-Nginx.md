@@ -23,8 +23,9 @@ PIDFile=/run/powerdns-admin/pid
 User=pdns
 Group=pdns
 WorkingDirectory=/opt/web/powerdns-admin
-ExecStartPre=+mkdir -p /run/powerdns-admin/
-ExecStartPre=+chown pdns:pdns -R /run/powerdns-admin/
+RuntimeDirectory=powerdns-admin
+RuntimeDirectoryPreserve=yes
+
 ExecStart=/usr/local/bin/gunicorn --pid /run/powerdns-admin/pid --bind unix:/run/powerdns-admin/socket 'powerdnsadmin:create_app()'
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
@@ -52,12 +53,6 @@ ListenStream=/run/powerdns-admin/socket
 
 [Install]
 WantedBy=sockets.target
-```
-
-`$ sudo vim /etc/tmpfiles.d/powerdns-admin.conf`
-
-```
-d /run/powerdns-admin 0755 pdns pdns -
 ```
 
 Then `sudo systemctl daemon-reload; sudo systemctl start powerdns-admin.socket; sudo systemctl enable powerdns-admin.socket` to start the Powerdns-Admin service and make it run on boot.
