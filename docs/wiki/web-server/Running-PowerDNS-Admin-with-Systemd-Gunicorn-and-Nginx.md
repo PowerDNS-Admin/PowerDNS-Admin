@@ -24,14 +24,13 @@ NotifyAccess=main
 KillMode=mixed
 TimeoutStopSec=30
 
-PIDFile=/run/powerdns-admin/pid
 User=pdns
 Group=pdns
 WorkingDirectory=/opt/web/powerdns-admin
 RuntimeDirectory=powerdns-admin
 RuntimeDirectoryPreserve=yes
 
-ExecStart=/usr/local/bin/gunicorn --pid /run/powerdns-admin/pid --bind unix:/run/powerdns-admin/socket 'powerdnsadmin:create_app()'
+ExecStart=/usr/local/bin/gunicorn --bind unix:/run/powerdns-admin/socket 'powerdnsadmin:create_app()'
 ExecReload=/bin/kill -s HUP $MAINPID
 
 PrivateTmp=true

@@ -19,14 +19,13 @@ NotifyAccess=main
 KillMode=mixed
 TimeoutStopSec=30
 
-PIDFile=/run/powerdns-admin/pid
 User=pdnsa
 Group=pdnsa
 WorkingDirectory=/opt/powerdns-admin
 RuntimeDirectory=powerdns-admin
 RuntimeDirectoryPreserve=yes
 
-ExecStart=/usr/bin/gunicorn-3.6 --workers 4 --log-level info --pid /run/powerdns-admin/pid --bind unix:/run/powerdns-admin/socket "powerdnsadmin:create_app(config='config.py')"
+ExecStart=/usr/bin/gunicorn-3.6 --workers 4 --log-level info --bind unix:/run/powerdns-admin/socket "powerdnsadmin:create_app(config='config.py')"
 ExecReload=/bin/kill -s HUP $MAINPID
 
 PrivateTmp=true
