@@ -16,7 +16,7 @@ bravado-core==6.4.1
 certifi==2026.10.23
 cffi==2.1.0
 cryptography==50.0.2
-dnspython==2.9.1
+dnspython==2.9.2
 flask_session_captcha==1.5.0
 gunicorn==26.2.0
 itsdangerous==2.2.0
@@ -37,5 +37,5 @@ webcolors==25.10.0
 werkzeug==3.1.9
 rcssmin==1.2.2
 zxcvbn==4.5.0
-psycopg2==2.9.13
+psycopg==3.3.9
 setuptools==84.2.1
