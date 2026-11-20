@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026.11.2] - 2026-11-20
+
+### Security
+
+-   Updated dnspython from 2.9.1 to 2.9.2. Versions before 2.9.2 let a
+    malicious WKS record in text form consume excessive memory and CPU
+    (`CVE-2026-128089`).
+
+### Bug Fixes
+
+-   The PostgreSQL driver is psycopg 3 (`psycopg` 3.3.9). SQLAlchemy 2.1
+    imports `psycopg` for `postgresql://` URIs. Releases that installed only
+    psycopg2 exited at startup with
+    `ModuleNotFoundError: No module named 'psycopg'`. Existing
+    `postgresql://` URLs keep working. Change a URL that names the psycopg2
+    driver from `postgresql+psycopg2://` back to `postgresql://`.
+    (`#1962`, `#1963`)
+
+## [2026.11.1] - 2026-11-06
+
+- Same as 2026.11.0, but with fixed release pipeline for GitHub to publish images
+
 ## [2026.11.0] - 2026-11-06
 
 ### Security
