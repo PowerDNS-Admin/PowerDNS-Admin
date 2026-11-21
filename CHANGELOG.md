@@ -17,6 +17,10 @@
     `postgresql://` URLs keep working. Change a URL that names the psycopg2
     driver from `postgresql+psycopg2://` back to `postgresql://`.
     (`#1962`, `#1963`)
+-   Activity and the zone changelog render record history that has no
+    `disabled` flag, or a null one, instead of returning HTTP 500 with
+    `KeyError: 'disabled'`. A missing or null flag is treated as active,
+    including when it is compared with an explicit active record. (`#1956`)
 
 ## [2026.11.1] - 2026-11-06
 
