@@ -18,7 +18,7 @@ cffi==2.1.0
 cryptography==50.0.2
 dnspython==2.9.2
 flask_session_captcha==1.5.0
-gunicorn==26.2.0
+gunicorn==27.0.1
 itsdangerous==2.2.0
 jsonschema==4.26.0
 lima==0.5
