@@ -1,9 +1,8 @@
 """Retrieve BIND-compatible zone files from PowerDNS."""
 
-from io import BytesIO
 from urllib.parse import quote, urljoin
 
-from flask import abort, current_app, send_file
+from flask import Response, abort, current_app
 from requests.exceptions import RequestException
 
 from ..models.setting import Setting
@@ -37,8 +36,7 @@ def export_zone(zone_name, server_id='localhost'):
 
 def zone_download(zone_name, content):
     filename = quote(zone_name.rstrip('.'), safe='.-') + '.zone'
-    response = send_file(
-        BytesIO(content.encode('utf-8')), mimetype='text/plain',
-        as_attachment=True, download_name=filename, max_age=0)
+    response = Response(content.encode("utf-8"), mimetype="text/plain")
+    response.headers.set("Content-Disposition", "attachment", filename=filename)
     response.headers['Cache-Control'] = 'no-store'
     return response
