@@ -74,7 +74,7 @@ js_main = Bundle(
     'node_modules/jquery-validation/dist/jquery.validate.js',
     'node_modules/jtimeout/src/jTimeout.js',
     'node_modules/bootstrap/dist/js/bootstrap.bundle.js',
-    'node_modules/datatables.net/js/jquery.dataTables.js',
+    'node_modules/datatables.net/js/dataTables.js',
     'node_modules/datatables.net-bs5/js/dataTables.bootstrap5.js',
     'node_modules/datatables.net-plugins/sorting/natural.js',
     'node_modules/admin-lte/dist/js/adminlte.js',

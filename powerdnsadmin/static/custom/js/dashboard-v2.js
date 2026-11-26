@@ -281,12 +281,19 @@
             searchDelay: 300,
             pageLength: Number(table.dataset.pageLength),
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-            dom: "<'dashboard-v2-table-toolbar d-flex flex-wrap align-items-center " +
-                "justify-content-between gap-3'<'dashboard-v2-filter'f>" +
-                "<'dashboard-v2-length'l>>" +
-                "<'dashboard-v2-table-scroll'tr>" +
-                "<'dashboard-v2-table-footer d-flex flex-wrap align-items-center " +
-                "justify-content-between gap-3'ip>",
+            layout: {
+                topStart: {
+                    rowClass: 'dashboard-v2-table-toolbar d-flex flex-wrap align-items-center justify-content-between gap-3',
+                    className: 'dashboard-v2-filter',
+                    features: ['search']
+                },
+                topEnd: {className: 'dashboard-v2-length', features: ['pageLength']},
+                bottomStart: {
+                    rowClass: 'dashboard-v2-table-footer d-flex flex-wrap align-items-center justify-content-between gap-3',
+                    features: ['info']
+                },
+                bottomEnd: 'paging'
+            },
             language: {
                 search: '',
                 searchPlaceholder: 'Search zones — use ^ and $ for start and end',
@@ -304,9 +311,10 @@
                 return 'Showing ' + start + '–' + end + ' of ' + total + ' zones';
             },
             initComplete: function () {
-                var wrapper = $(table).closest('.dataTables_wrapper');
-                wrapper.find('.dataTables_filter input').attr('aria-label', 'Search zones');
-                wrapper.find('.dataTables_length select').attr('aria-label', 'Rows per page');
+                var wrapper = $(this.api().table().container());
+                $(table).parent().addClass('dashboard-v2-table-scroll');
+                wrapper.find('.dt-search input').attr('aria-label', 'Search zones');
+                wrapper.find('.dt-length select').attr('aria-label', 'Rows per page');
             },
             columns: [
                 {data: 'name', render: renderName},

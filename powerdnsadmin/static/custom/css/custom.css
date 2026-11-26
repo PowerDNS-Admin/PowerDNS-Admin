@@ -310,9 +310,9 @@ table.zone-template-records .record-name-column { min-width: 10rem; }
 table.zone-template-records .record-type-column { min-width: 8rem; }
 table.zone-template-records .record-status-column { min-width: 8rem; }
 table.zone-template-records .record-ttl-column { min-width: 10rem; }
-div.records > div.dataTables_wrapper > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
-div.records > div.dataTables_wrapper > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
-div.records > div.dataTables_wrapper table.dataTable { margin: 0 !important; }
+div.records > div.dt-container > div.row:first-of-type { margin: 0 0.5em 0 0.5em; }
+div.records > div.dt-container > div.row:last-of-type { margin: 0.4em 0.5em 0.4em 0.5em; }
+div.records > div.dt-container table.dataTable { margin: 0 !important; }
 
 .card-footer > .error { color: red !important; }
 

@@ -579,8 +579,12 @@ function saveRow(oTable, nRow) {
     var button_edit = "<button type=\"button\" class=\"btn btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
     var button_delete = "<button type=\"button\" class=\"btn btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
 
-    oTable.cell(nRow,6).data(button_edit);
-    oTable.cell(nRow,7).data(button_delete);
+    if (oTable.column(7).visible()) {
+        oTable.cell(nRow, 6).data(button_edit);
+        oTable.cell(nRow, 7).data(button_delete);
+    } else {
+        oTable.cell(nRow, 6).data(button_edit + ' ' + button_delete);
+    }
 
     oTable.draw();
 }
@@ -625,8 +629,14 @@ function editRow(oTable, nRow) {
     jqTds[3].innerHTML = '<select class="form-select" id="record_ttl" name="record_ttl" value="' + aData[3]  + '">' + ttl_opts + '</select>';
     jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].replace(/\"/g,"&quot;") + '">';
     jqTds[5].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="record_comment" name="record_comment" class="form-control input-small advance-data" value="' + aData[5].replace(/\"/g, "&quot;") + '">';
-    jqTds[6].innerHTML = '<button type="button" class="btn btn-primary button_save">Save</button>';
-    jqTds[7].innerHTML = '<button type="button" class="btn btn-primary button_cancel">Cancel</button>';
+    var saveButton = '<button type="button" class="btn btn-primary button_save">Save</button>';
+    var cancelButton = '<button type="button" class="btn btn-primary button_cancel">Cancel</button>';
+    if (oTable.column(7).visible()) {
+        jqTds[6].innerHTML = saveButton;
+        jqTds[7].innerHTML = cancelButton;
+    } else {
+        jqTds[6].innerHTML = saveButton + ' ' + cancelButton;
+    }
 
     // set current value of dropdown column
     if (aData[2] == 'Active'){

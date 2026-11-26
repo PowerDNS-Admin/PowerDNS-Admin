@@ -17,7 +17,7 @@ def test_main_bundle_uses_native_monospace_fonts():
 def test_javascript_dependencies_are_bundled_before_their_extensions():
     sources = list(js_main.contents)
 
-    datatables = sources.index('node_modules/datatables.net/js/jquery.dataTables.js')
+    datatables = sources.index('node_modules/datatables.net/js/dataTables.js')
     datatables_bootstrap = sources.index(
         'node_modules/datatables.net-bs5/js/dataTables.bootstrap5.js')
     natural_sort = sources.index(
@@ -237,7 +237,7 @@ def test_dashboard_v2_is_a_parallel_client_rendered_preview():
     assert '>IPv6<' in template.replace('\n', '').replace(' ', '')
     assert 'dashboard-v2-table-toolbar' in template
     assert 'dashboard-v2-table-footer' in template
-    assert 'td.dataTables_empty' in template
+    assert 'td.dt-empty' in template
     assert "shown.bs.tab" in javascript
     assert 'serverSide: true' in javascript
     assert 'deferRender: true' in javascript
