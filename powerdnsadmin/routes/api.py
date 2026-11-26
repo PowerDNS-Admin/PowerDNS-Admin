@@ -4,42 +4,75 @@ import string
 from base64 import b64encode
 from urllib.parse import quote_plus, urljoin
 
-from flask import (Blueprint, g, request, abort, current_app, make_response, jsonify)
+from flask import Blueprint, abort, current_app, g, jsonify, make_response, request
 from werkzeug.local import LocalProxy
 
-from .base import csrf
 from ..decorators import (
-    api_basic_auth, api_can_create_domain, api_can_remove_domain, is_json,
+    allowed_record_ttl,
+    allowed_record_types,
+    api_authenticated_user,
+    api_basic_auth,
+    api_can_create_domain,
+    api_can_remove_domain,
+    api_role_can,
     apikey_auth,
-    apikey_can_create_domain, apikey_can_remove_domain,
-    apikey_is_admin, apikey_can_access_domain, apikey_can_configure_dnssec,
-    api_role_can, apikey_or_basic_auth,
-    api_authenticated_user, callback_if_request_body_contains_key,
+    apikey_can_access_domain,
+    apikey_can_configure_dnssec,
+    apikey_can_create_domain,
+    apikey_can_remove_domain,
+    apikey_is_admin,
+    apikey_or_basic_auth,
+    callback_if_request_body_contains_key,
     establish_api_identity,
-    allowed_record_types, allowed_record_ttl
+    is_json,
 )
-from ..lib import utils, helper
-from ..lib.history import normalize_history_detail
+from ..lib import helper, utils
 from ..lib.errors import (
+    AccountCreateDuplicate,
+    AccountCreateFail,
+    AccountDeleteFail,
+    AccountNotExists,
+    AccountUpdateFail,
+    ApiKeyCreateFail,
+    ApiKeyNotUsable,
+    DomainAccessForbidden,
+    DomainAlreadyExists,
+    DomainNotExists,
+    InvalidAccountNameException,
+    NotEnoughPrivileges,
+    RequestIsNotJSON,
     StructuredException,
-    DomainNotExists, DomainAlreadyExists, DomainAccessForbidden,
-    RequestIsNotJSON, ApiKeyCreateFail, ApiKeyNotUsable, NotEnoughPrivileges,
-    AccountCreateFail, AccountUpdateFail, AccountDeleteFail,
-    AccountCreateDuplicate, AccountNotExists,
-    UserCreateFail, UserCreateDuplicate, UserUpdateFail, UserDeleteFail,
-    UserUpdateFailEmail, InvalidAccountNameException
+    UserCreateDuplicate,
+    UserCreateFail,
+    UserDeleteFail,
+    UserUpdateFail,
+    UserUpdateFailEmail,
 )
+from ..lib.history import normalize_history_detail
 from ..lib.schema import (
-    ApiKeySchema, DomainSchema, ApiPlainKeySchema, UserSchema, AccountSchema,
+    AccountSchema,
+    ApiKeySchema,
+    ApiPlainKeySchema,
+    DomainSchema,
     UserDetailedSchema,
+    UserSchema,
 )
 from ..lib.user_authorization import user_update_authorization_error
-from .auth_session import record_user_event
+from ..lib.zone_export import export_allowed, export_zone, zone_download
 from ..models import (
-    User, Domain, DomainUser, Account, AccountUser, History, Setting, ApiKey,
+    Account,
+    AccountUser,
+    ApiKey,
+    Domain,
+    DomainUser,
+    History,
     Role,
+    Setting,
+    User,
 )
 from ..models.base import db
+from .auth_session import record_user_event
+from .base import csrf
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 apilist_bp = Blueprint('apilist', __name__, url_prefix='/')
@@ -273,8 +306,8 @@ def api_login_create_zone():
                                   headers=headers,
                                   accept='application/json; q=1',
                                   verify=Setting().get('verify_ssl_connections'))
-    except Exception as e:
-        current_app.logger.error("Cannot create zone. Error: {}".format(e))
+    except Exception:
+        current_app.logger.exception("Cannot create zone. Error: ")
         abort(500)
 
     if resp.status_code == 201:
@@ -285,7 +318,7 @@ def api_login_create_zone():
         domain.update()
         domain_id = domain.get_id_by_name(data['name'].rstrip('.'))
 
-        history = History(msg='Add zone {0}'.format(
+        history = History(msg='Add zone {}'.format(
             data['name'].rstrip('.')),
             detail=json.dumps(data),
             created_by=current_user.username,
@@ -357,14 +390,13 @@ def api_login_delete_zone(domain_name):
             domain = Domain()
             domain.update()
 
-            history = History(msg='Delete zone {0}'.format(
-                utils.pretty_domain_name(domain_name)),
+            history = History(msg=f'Delete zone {utils.pretty_domain_name(domain_name)}',
                 detail='',
                 created_by=current_user.username)
             history.add()
 
-    except Exception as e:
-        current_app.logger.error('Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception('Error: ')
         abort(500)
 
     return resp.content, resp.status_code, resp.headers.items()
@@ -397,11 +429,11 @@ def api_generate_apikey():
     else:
         accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
 
-    description = data['description'] if 'description' in data else None
+    description = data.get('description', None)
 
     if isinstance(data['role'], str):
         role_name = data['role']
-    elif isinstance(data['role'], dict) and 'name' in data['role'].keys():
+    elif isinstance(data['role'], dict) and 'name' in data['role']:
         role_name = data['role']['name']
     else:
         abort(400)
@@ -448,12 +480,12 @@ def api_generate_apikey():
         domain_list = [item.name for item in domain_obj_list]
         user_domain_list = [item.name for item in user_domain_obj_list]
 
-        current_app.logger.debug("Input zone list: {0}".format(domain_list))
-        current_app.logger.debug("User zone list: {0}".format(user_domain_list))
+        current_app.logger.debug(f"Input zone list: {domain_list}")
+        current_app.logger.debug(f"User zone list: {user_domain_list}")
 
         inter = set(domain_list).intersection(set(user_domain_list))
 
-        if not (len(inter) == len(domain_list)):
+        if len(inter) != len(domain_list):
             msg = "You don't have access to one of zones"
             current_app.logger.error(msg)
             raise DomainAccessForbidden(message=msg)
@@ -465,8 +497,8 @@ def api_generate_apikey():
 
     try:
         apikey.create()
-    except Exception as e:
-        current_app.logger.error('Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception('Error: ')
         raise ApiKeyCreateFail(message='Api key create failed')
 
     apikey.plain_key = b64encode(apikey.plain_key.encode('utf-8')).decode('utf-8')
@@ -482,8 +514,7 @@ def api_get_apikeys(domain_name):
 
     if current_user.role.name not in ['Administrator', 'Operator']:
         if domain_name:
-            msg = "Check if zone {0} exists and is allowed for user.".format(
-                domain_name)
+            msg = f"Check if zone {domain_name} exists and is allowed for user."
             current_app.logger.debug(msg)
             apikeys = get_user_apikeys(domain_name)
 
@@ -499,16 +530,16 @@ def api_get_apikeys(domain_name):
             try:
                 apikeys = get_user_apikeys()
                 current_app.logger.debug(apikey_schema.dump(apikeys))
-            except Exception as e:
-                current_app.logger.error('Error: {0}'.format(e))
+            except Exception:
+                current_app.logger.exception('Error: ')
                 abort(500)
     else:
         current_app.logger.debug("Getting all zones for administrative user")
         try:
             apikeys = ApiKey.query.all()
             current_app.logger.debug(apikey_schema.dump(apikeys))
-        except Exception as e:
-            current_app.logger.error('Error: {0}'.format(e))
+        except Exception:
+            current_app.logger.exception('Error: ')
             abort(500)
 
     return jsonify(apikey_schema.dump(apikeys)), 200
@@ -519,9 +550,9 @@ def api_get_apikeys(domain_name):
 def api_get_apikey(apikey_id):
     current_app.logger.debug(current_user.role.name)
 
-    if current_user.role.name not in ['Administrator', 'Operator']:
-        if apikey_id not in [a.id for a in get_user_apikeys()]:
-            raise DomainAccessForbidden()
+    if (current_user.role.name not in ['Administrator', 'Operator']
+            and apikey_id not in [a.id for a in get_user_apikeys()]):
+        raise DomainAccessForbidden()
 
     apikey = db.session.get(ApiKey, apikey_id)
 
@@ -552,7 +583,7 @@ def api_delete_apikey(apikey_id):
 
         inter = set(apikey_domains_list).intersection(set(user_domains_list))
 
-        if not (len(inter) == len(apikey_domains_list)):
+        if len(inter) != len(apikey_domains_list):
             msg = "You don't have access to some zones apikey belongs to"
             current_app.logger.error(msg)
             raise DomainAccessForbidden(message=msg)
@@ -562,8 +593,8 @@ def api_delete_apikey(apikey_id):
 
     try:
         apikey.delete()
-    except Exception as e:
-        current_app.logger.error('Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception('Error: ')
         abort(500)
 
     return '', 204
@@ -585,12 +616,12 @@ def api_update_apikey(apikey_id):
         abort(404)
 
     data = request.get_json()
-    description = data['description'] if 'description' in data else None
+    description = data.get('description', None)
 
     if 'role' in data:
         if isinstance(data['role'], str):
             role_name = data['role']
-        elif isinstance(data['role'], dict) and 'name' in data['role'].keys():
+        elif isinstance(data['role'], dict) and 'name' in data['role']:
             role_name = data['role']['name']
         else:
             abort(400)
@@ -619,7 +650,7 @@ def api_update_apikey(apikey_id):
     else:
         accounts = [a['name'] if isinstance(a, dict) else a for a in data['accounts']]
 
-    current_app.logger.debug('Updating apikey with id {0}'.format(apikey_id))
+    current_app.logger.debug(f'Updating apikey with id {apikey_id}')
 
     if target_role == 'User':
         current_domains = [item.name for item in apikey.domains]
@@ -680,13 +711,13 @@ def api_update_apikey(apikey_id):
         domain_list = [item.name for item in domain_obj_list]
         user_domain_list = [item.name for item in user_domain_obj_list]
 
-        current_app.logger.debug("Input zone list: {0}".format(domain_list))
+        current_app.logger.debug(f"Input zone list: {domain_list}")
         current_app.logger.debug(
-            "User zone list: {0}".format(user_domain_list))
+            f"User zone list: {user_domain_list}")
 
         inter = set(domain_list).intersection(set(user_domain_list))
 
-        if not (len(inter) == len(domain_list)):
+        if len(inter) != len(domain_list):
             msg = "You don't have access to one of zones"
             current_app.logger.error(msg)
             raise DomainAccessForbidden(message=msg)
@@ -713,8 +744,8 @@ def api_update_apikey(apikey_id):
                       domains=domains,
                       accounts=accounts,
                       description=description)
-    except Exception as e:
-        current_app.logger.error('Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception('Error: ')
         abort(500)
 
     return '', 204
@@ -744,29 +775,27 @@ def api_create_user():
     Create new user
     """
     data = request.get_json()
-    username = data['username'] if 'username' in data else None
-    password = data['password'] if 'password' in data else None
+    username = data.get('username', None)
+    password = data.get('password', None)
     plain_text_password = (
-        data['plain_text_password']
-        if 'plain_text_password' in data
-        else None
+        data.get('plain_text_password', None)
     )
-    firstname = data['firstname'] if 'firstname' in data else None
-    lastname = data['lastname'] if 'lastname' in data else None
-    email = data['email'] if 'email' in data else None
-    otp_secret = data['otp_secret'] if 'otp_secret' in data else None
-    confirmed = data['confirmed'] if 'confirmed' in data else None
-    role_name = data['role_name'] if 'role_name' in data else None
-    role_id = data['role_id'] if 'role_id' in data else None
+    firstname = data.get('firstname', None)
+    lastname = data.get('lastname', None)
+    email = data.get('email', None)
+    otp_secret = data.get('otp_secret', None)
+    confirmed = data.get('confirmed', None)
+    role_name = data.get('role_name', None)
+    role_id = data.get('role_id', None)
 
     # Create user
     if not username:
-        current_app.logger.debug('Invalid username {}'.format(username))
+        current_app.logger.debug(f'Invalid username {username}')
         abort(400)
     if not confirmed:
         confirmed = False
     elif confirmed is not True:
-        current_app.logger.debug('Invalid confirmed {}'.format(confirmed))
+        current_app.logger.debug(f'Invalid confirmed {confirmed}')
         abort(400)
 
     if otp_secret and (
@@ -783,7 +812,7 @@ def api_create_user():
     role_id = get_role_id(role_name, role_id)
     if not role_id:
         current_app.logger.debug(
-            'Invalid role {}/{}'.format(role_name, role_id))
+            f'Invalid role {role_name}/{role_id}')
         abort(400)
     role = db.session.get(Role, role_id)
     authorization_error = user_update_authorization_error(
@@ -807,9 +836,8 @@ def api_create_user():
     )
     try:
         result = user.create_local_user()
-    except Exception as e:
-        current_app.logger.error('Create user ({}, {}) error: {}'.format(
-            username, email, e))
+    except Exception:
+        current_app.logger.exception('Create user (%s, %s) failed', username, email)
         raise UserCreateFail(message='User create failed')
     if not result['status']:
         current_app.logger.warning('Create user ({}, {}) error: {}'.format(
@@ -817,7 +845,7 @@ def api_create_user():
         raise UserCreateDuplicate(message=result['msg'])
 
     record_user_event(
-        'Created user {0}'.format(user.username),
+        f'Created user {user.username}',
         user.username,
         current_user.username,
     )
@@ -833,24 +861,22 @@ def api_update_user(user_id):
     Update existing user
     """
     data = request.get_json()
-    username = data['username'] if 'username' in data else None
-    password = data['password'] if 'password' in data else None
+    username = data.get('username', None)
+    password = data.get('password', None)
     plain_text_password = (
-        data['plain_text_password']
-        if 'plain_text_password' in data
-        else None
+        data.get('plain_text_password', None)
     )
-    firstname = data['firstname'] if 'firstname' in data else None
-    lastname = data['lastname'] if 'lastname' in data else None
-    email = data['email'] if 'email' in data else None
-    otp_secret = data['otp_secret'] if 'otp_secret' in data else None
-    confirmed = data['confirmed'] if 'confirmed' in data else None
-    role_name = data['role_name'] if 'role_name' in data else None
-    role_id = data['role_id'] if 'role_id' in data else None
+    firstname = data.get('firstname', None)
+    lastname = data.get('lastname', None)
+    email = data.get('email', None)
+    otp_secret = data.get('otp_secret', None)
+    confirmed = data.get('confirmed', None)
+    role_name = data.get('role_name', None)
+    role_id = data.get('role_id', None)
 
     user = db.session.get(User, user_id)
     if not user:
-        current_app.logger.debug("User not found for id {}".format(user_id))
+        current_app.logger.debug(f"User not found for id {user_id}")
         abort(404)
     previous_role_name = user.role.name if user.role else None
     role_change = role_name is not None or role_id is not None
@@ -859,7 +885,7 @@ def api_update_user(user_id):
         requested_role_id = get_role_id(role_name, role_id)
         if not requested_role_id:
             current_app.logger.debug(
-                'Invalid role {}/{}'.format(role_name, role_id))
+                f'Invalid role {role_name}/{role_id}')
             abort(400)
         requested_role = db.session.get(Role, requested_role_id)
 
@@ -874,12 +900,11 @@ def api_update_user(user_id):
     if authorization_error:
         raise NotEnoughPrivileges(message=authorization_error)
 
-    if username:
-        if username != user.username:
-            current_app.logger.error(
-                'Cannot change username for {}'.format(user.username)
-            )
-            abort(400)
+    if username and username != user.username:
+        current_app.logger.error(
+            f'Cannot change username for {user.username}'
+        )
+        abort(400)
     if password is not None:
         user.password = password
         if not plain_text_password:
@@ -907,12 +932,11 @@ def api_update_user(user_id):
     if requested_role is not None:
         user.role_id = requested_role.id
     current_app.logger.debug(
-        "Updating user {} ({})".format(user_id, user.username))
+        f"Updating user {user_id} ({user.username})")
     try:
         result = user.update_local_user()
-    except Exception as e:
-        current_app.logger.error('Create user ({}, {}) error: {}'.format(
-            username, email, e))
+    except Exception:
+        current_app.logger.exception(f'Create user ({username}, {email}) error: ')
         raise UserUpdateFail(message='User update failed')
     if not result['status']:
         current_app.logger.warning('Update user ({}, {}) error: {}'.format(
@@ -922,13 +946,12 @@ def api_update_user(user_id):
         else:
             raise UserCreateFail(message=result['msg'])
 
-    history = History(msg='Updated user {0}'.format(user.username),
+    history = History(msg=f'Updated user {user.username}',
                       created_by=current_user.username)
     history.add()
     if requested_role is not None and requested_role.name != previous_role_name:
         record_user_event(
-            'Change user role of {0} to {1}'.format(
-                user.username, requested_role.name),
+            f'Change user role of {user.username} to {requested_role.name}',
             user.username,
             current_user.username,
             role=requested_role.name,
@@ -944,10 +967,10 @@ def api_update_user(user_id):
 def api_delete_user(user_id):
     user = db.session.get(User, user_id)
     if not user:
-        current_app.logger.debug("User not found for id {}".format(user_id))
+        current_app.logger.debug(f"User not found for id {user_id}")
         abort(404)
     if user.id == current_user.id:
-        current_app.logger.debug("Cannot delete self (id {})".format(user_id))
+        current_app.logger.debug(f"Cannot delete self (id {user_id})")
         msg = "Cannot delete self"
         raise UserDeleteFail(message=msg)
 
@@ -966,10 +989,9 @@ def api_delete_user(user_id):
     # Then delete the user
     result = user.delete()
     if not result:
-        raise UserDeleteFail("Failed to delete user {}".format(
-            user.username))
+        raise UserDeleteFail(f"Failed to delete user {user.username}")
 
-    history = History(msg='Delete user {0}'.format(user.username),
+    history = History(msg=f'Delete user {user.username}',
                       created_by=current_user.username)
     history.add()
     return '', 204
@@ -981,7 +1003,7 @@ def api_delete_user(user_id):
 @api_role_can('list accounts')
 def api_list_accounts(account_name):
     if current_user.role.name not in ['Administrator', 'Operator']:
-        msg = "{} role cannot list accounts".format(current_user.role.name)
+        msg = f"{current_user.role.name} role cannot list accounts"
         raise NotEnoughPrivileges(message=msg)
     else:
         if account_name is None:
@@ -1000,13 +1022,13 @@ def api_list_accounts(account_name):
 @csrf.exempt
 def api_create_account():
     if current_user.role.name not in ['Administrator', 'Operator']:
-        msg = "{} role cannot create accounts".format(current_user.role.name)
+        msg = f"{current_user.role.name} role cannot create accounts"
         raise NotEnoughPrivileges(message=msg)
     data = request.get_json()
-    name = data['name'] if 'name' in data else None
-    description = data['description'] if 'description' in data else None
-    contact = data['contact'] if 'contact' in data else None
-    mail = data['mail'] if 'mail' in data else None
+    name = data.get('name', None)
+    description = data.get('description', None)
+    contact = data.get('contact', None)
+    mail = data.get('mail', None)
     if not name:
         current_app.logger.debug("Account creation failed: name missing")
         raise InvalidAccountNameException(message="Account name missing")
@@ -1015,8 +1037,8 @@ def api_create_account():
     account_exists = Account.query.filter(Account.name == sanitized_name).all()
 
     if len(account_exists) > 0:
-        msg = ("Requested Account {} would be translated to {}"
-               " which already exists").format(name, sanitized_name)
+        msg = (f"Requested Account {name} would be translated to {sanitized_name}"
+               " which already exists")
         current_app.logger.debug(msg)
         raise AccountCreateDuplicate(message=msg)
 
@@ -1027,13 +1049,13 @@ def api_create_account():
 
     try:
         result = account.create_account()
-    except Exception as e:
-        current_app.logger.error('Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception('Error: ')
         raise AccountCreateFail(message='Account create failed')
     if not result['status']:
         raise AccountCreateFail(message=result['msg'])
 
-    history = History(msg='Create account {0}'.format(account.name),
+    history = History(msg=f'Create account {account.name}',
                       created_by=current_user.username)
     history.add()
     return jsonify(account_single_schema.dump(account)), 201
@@ -1045,10 +1067,10 @@ def api_create_account():
 @csrf.exempt
 def api_update_account(account_id):
     data = request.get_json()
-    name = data['name'] if 'name' in data else None
-    description = data['description'] if 'description' in data else None
-    contact = data['contact'] if 'contact' in data else None
-    mail = data['mail'] if 'mail' in data else None
+    name = data.get('name', None)
+    description = data.get('description', None)
+    contact = data.get('contact', None)
+    mail = data.get('mail', None)
 
     account = db.session.get(Account, account_id)
 
@@ -1071,11 +1093,11 @@ def api_update_account(account_id):
         account.mail = mail
 
     current_app.logger.debug(
-        "Updating account {} ({})".format(account_id, account.name))
+        f"Updating account {account_id} ({account.name})")
     result = account.update_account()
     if not result['status']:
         raise AccountUpdateFail(message=result['msg'])
-    history = History(msg='Update account {0}'.format(account.name),
+    history = History(msg=f'Update account {account.name}',
                       created_by=current_user.username)
     history.add()
     return '', 204
@@ -1102,12 +1124,12 @@ def api_delete_account(account_id):
         Domain().update()
 
     current_app.logger.debug(
-        "Deleting account {} ({})".format(account_id, account.name))
+        f"Deleting account {account_id} ({account.name})")
     result = account.delete_account()
     if not result:
         raise AccountDeleteFail(message=result['msg'])
 
-    history = History(msg='Delete account {0}'.format(account.name),
+    history = History(msg=f'Delete account {account.name}',
                       created_by=current_user.username)
     history.add()
     return '', 204
@@ -1143,12 +1165,10 @@ def api_add_account_user(account_id, user_id):
     if not user:
         abort(404)
     if not account.add_user(user):
-        raise AccountUpdateFail("Cannot add user {} to {}".format(
-            user.username, account.name))
+        raise AccountUpdateFail(f"Cannot add user {user.username} to {account.name}")
 
     history = History(
-        msg='Add {} user privileges on {}'.format(
-            user.username, account.name),
+        msg=f'Add {user.username} user privileges on {account.name}',
         created_by=current_user.username)
     history.add()
     return '', 204
@@ -1177,12 +1197,10 @@ def api_remove_account_user(account_id, user_id):
     if not user_list:
         abort(404)
     if not account.remove_user(user):
-        raise AccountUpdateFail("Cannot remove user {} from {}".format(
-            user.username, account.name))
+        raise AccountUpdateFail(f"Cannot remove user {user.username} from {account.name}")
 
     history = History(
-        msg='Revoke {} user privileges on {}'.format(
-            user.username, account.name),
+        msg=f'Revoke {user.username} user privileges on {account.name}',
         created_by=current_user.username)
     history.add()
     return '', 204
@@ -1219,6 +1237,12 @@ def api_zone_cryptokey(server_id, zone_id, cryptokey_id):
 @apikey_can_access_domain
 @csrf.exempt
 def api_zone_subpath_forward(server_id, zone_id, subpath):
+    if subpath.strip('/') == 'export':
+        if request.method != 'GET':
+            abort(405)
+        if not export_allowed(g.apikey.role.name):
+            raise NotEnoughPrivileges()
+        return zone_download(zone_id, export_zone(zone_id, server_id))
     resp = helper.forward_request()
     return resp.content, resp.status_code, resp.headers.items()
 
@@ -1247,7 +1271,7 @@ def api_zone_forward(server_id, zone_id):
             if request.method in ['POST', 'PATCH']:
                 data = request.get_json(force=True)
                 history = History(
-                    msg='Apply record changes to zone {0}'.format(zone_id.rstrip('.')),
+                    msg='Apply record changes to zone {}'.format(zone_id.rstrip('.')),
                     detail = json.dumps(normalize_history_detail({
                         'domain': zone_id.rstrip('.'),
                         'add_rrsets': list(filter(lambda r: r['changetype'] == "REPLACE", data['rrsets'])),
@@ -1257,13 +1281,13 @@ def api_zone_forward(server_id, zone_id):
                     domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
             elif request.method == 'DELETE':
-                history = History(msg='Deleted zone {0}'.format(zone_id.rstrip('.')),
+                history = History(msg='Deleted zone {}'.format(zone_id.rstrip('.')),
                                   detail='',
                                   created_by=created_by_value,
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
                 history.add()
             elif request.method != 'GET':
-                history = History(msg='Updated zone {0}'.format(zone_id.rstrip('.')),
+                history = History(msg='Updated zone {}'.format(zone_id.rstrip('.')),
                                   detail='',
                                   created_by=created_by_value,
                                   domain_id=Domain().get_id_by_name(zone_id.rstrip('.')))
@@ -1301,7 +1325,7 @@ def api_create_zone(server_id):
         domain = Domain()
         domain.update()
 
-        history = History(msg='Add zone {0}'.format(
+        history = History(msg='Add zone {}'.format(
             data['name'].rstrip('.')),
             detail=json.dumps(data),
             created_by=created_by_value,
@@ -1381,9 +1405,19 @@ def health():
 
     try:
         domain.get_domain_info(domain_to_query.name)
-    except Exception as e:
-        current_app.logger.error(
-            "Health Check - Failed to query authoritative server for zone {}".format(domain_to_query.name))
+    except Exception:
+        current_app.logger.exception(
+            f"Health Check - Failed to query authoritative server for zone {domain_to_query.name}")
         return make_response("Down", 503)
 
     return make_response("Up", 200)
+
+
+@api_bp.route('/servers/<string:server_id>/zones/<string:zone_id>/export',
+              methods=['GET'])
+@apikey_auth
+@apikey_can_access_domain
+def api_zone_export(server_id, zone_id):
+    if not export_allowed(g.apikey.role.name):
+        raise NotEnoughPrivileges()
+    return zone_download(zone_id, export_zone(zone_id, server_id))

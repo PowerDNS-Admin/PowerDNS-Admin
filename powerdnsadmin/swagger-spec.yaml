@@ -335,7 +335,10 @@ paths:
     get:
       security:
         - APIKeyHeader: []
-      summary: 'Returns the zone in AXFR format.'
+      summary: 'Download the zone as a BIND-compatible file.'
+      description: 'Requires an Administrator or Operator API key, or a User key with zone access when allow_user_export_domain is enabled.'
+      produces:
+        - text/plain
       operationId: axfrExportZone
       tags:
         - zones

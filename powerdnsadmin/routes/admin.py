@@ -1,38 +1,53 @@
-import json
 import datetime
-import traceback
+import json
 import re
+import traceback
 from base64 import b64encode
-from ast import literal_eval
-from flask import Blueprint, render_template, render_template_string, make_response, url_for, current_app, request, \
-    redirect, jsonify, abort, flash, session
-from flask_login import login_required, current_user
 
-from ..decorators import operator_role_required, admin_role_required, history_access_required
-from ..models.user import User
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    render_template_string,
+    request,
+    session,
+    url_for,
+)
+from flask_login import current_user, login_required
+
+from ..decorators import (
+    admin_role_required,
+    history_access_required,
+    operator_role_required,
+)
+from ..lib.blank_password import stored_password_is_blank
+from ..lib.errors import ApiKeyCreateFail
+from ..lib.history import get_records, normalize_history_detail, normalize_rrset
+from ..lib.password_login import otp_confirmation_blocked
+from ..lib.schema import ApiPlainKeySchema
+from ..lib.user_authorization import user_update_authorization_error
 from ..models.account import Account
 from ..models.account_user import AccountUser
+from ..models.api_history import ApiHistory
+from ..models.api_key import ApiKey
+from ..models.base import db
+from ..models.domain import Domain
+from ..models.domain_template import DomainTemplate
+from ..models.domain_template_record import DomainTemplateRecord
+from ..models.domain_user import DomainUser
+from ..models.history import History
+from ..models.record import Record
 from ..models.role import Role
 from ..models.server import Server
 from ..models.setting import Setting
-from ..models.history import History
-from ..models.api_history import ApiHistory
 from ..models.system_history import SystemHistory
-from ..models.domain import Domain
-from ..models.domain_user import DomainUser
-from ..models.record import Record
-from ..models.domain_template import DomainTemplate
-from ..models.domain_template_record import DomainTemplateRecord
-from ..models.api_key import ApiKey
-from ..models.base import db
-
-from ..lib.errors import ApiKeyCreateFail
-from ..lib.history import get_records, normalize_history_detail, normalize_rrset
-from ..lib.schema import ApiPlainKeySchema
-from ..lib.password_login import otp_confirmation_blocked
+from ..models.user import User
 from .auth_session import record_user_event
-from ..lib.blank_password import stored_password_is_blank
-from ..lib.user_authorization import user_update_authorization_error
 
 apikey_plain_schema = ApiPlainKeySchema(many=True)
 
@@ -143,7 +158,7 @@ def extract_changelogs_from_history(histories, record_name=None, record_type=Non
                 continue
 
         # same record name and type RR are being deleted and created in same entry.
-        del_add_changes = set([(r['name'], r['type']) for r in details['add_rrsets']]).intersection(
+        del_add_changes = {(r['name'], r['type']) for r in details['add_rrsets']}.intersection(
             [(r['name'], r['type']) for r in details['del_rrsets']])
         for del_add_change in del_add_changes:
             changes.append(HistoryRecordEntry(
@@ -208,7 +223,7 @@ class HistoryRecordEntry:
         }
 
     def __eq__(self, obj2):  # used for removal of objects from a list
-        return True if obj2.toDict() == self.toDict() else False
+        return obj2.toDict() == self.toDict()
 
 
 @admin_bp.before_request
@@ -233,9 +248,9 @@ def server_statistics():
     history_number = History.query.count()
 
     if statistics:
-        uptime = list([
+        uptime = next(
             uptime for uptime in statistics if uptime['name'] == 'uptime'
-        ])[0]['value']
+        )['value']
     else:
         uptime = 0
 
@@ -316,7 +331,7 @@ def edit_user(user_username=None):
             result = user.create_local_user()
             if result['status']:
                 record_user_event(
-                    'Created user {0}'.format(user.username),
+                    f'Created user {user.username}',
                     user.username,
                     current_user.username,
                 )
@@ -325,7 +340,7 @@ def edit_user(user_username=None):
         else:
             result = user.update_local_user()
             if result['status']:
-                History(msg='Updated user {0}'.format(user.username),
+                History(msg=f'Updated user {user.username}',
                         created_by=current_user.username).add()
                 return redirect(url_for('admin.manage_user'))
 
@@ -383,13 +398,13 @@ def edit_key(key_id=None):
                             accounts=account_obj_list)
             try:
                 apikey.create()
-            except Exception as e:
-                current_app.logger.error('Error: {0}'.format(e))
+            except Exception:
+                current_app.logger.exception('Error: ')
                 raise ApiKeyCreateFail(message='Api key create failed')
 
             plain_key = apikey_plain_schema.dump([apikey])[0]["plain_key"]
             plain_key = b64encode(plain_key.encode('utf-8')).decode('utf-8')
-            history_message = "Created API key {0}".format(apikey.id)
+            history_message = f"Created API key {apikey.id}"
 
         # Update existing apikey
         else:
@@ -397,9 +412,9 @@ def edit_key(key_id=None):
                 if role != "User":
                     domain_list, account_list = [], []
                 apikey.update(role, description, domain_list, account_list)
-                history_message = "Updated API key {0}".format(apikey.id)
-            except Exception as e:
-                current_app.logger.error('Error: {0}'.format(e))
+                history_message = f"Updated API key {apikey.id}"
+            except Exception:
+                current_app.logger.exception('Error: ')
 
         history = History(msg=history_message,
                           detail=json.dumps({
@@ -428,8 +443,8 @@ def manage_keys():
     if request.method == 'GET':
         try:
             apikeys = ApiKey.query.all()
-        except Exception as e:
-            current_app.logger.error('Error: {0}'.format(e))
+        except Exception:
+            current_app.logger.exception('Error: ')
             abort(500)
 
         return render_template('admin/key/manage.html',
@@ -447,11 +462,11 @@ def manage_keys():
                 history_apikey_domains = [domain.name for domain in apikey.domains]
 
                 apikey.delete()
-            except Exception as e:
-                current_app.logger.error('Error: {0}'.format(e))
+            except Exception:
+                current_app.logger.exception('Error: ')
 
-            current_app.logger.info('Delete API key {0}'.format(apikey.id))
-            history = History(msg='Delete API key {0}'.format(apikey.id),
+            current_app.logger.info(f'Delete API key {apikey.id}')
+            history = History(msg=f'Delete API key {apikey.id}',
                               detail=json.dumps({
                                   'key': history_apikey_id,
                                   'role': history_apikey_role,
@@ -565,7 +580,7 @@ def manage_user():
                 # Then delete the user
                 result = user.delete()
                 if result:
-                    history = History(msg='Delete user {0}'.format(data),
+                    history = History(msg=f'Delete user {data}',
                                       created_by=current_user.username)
                     history.add()
                     return make_response(
@@ -588,7 +603,7 @@ def manage_user():
                 result = user.revoke_privilege()
                 if result:
                     history = History(
-                        msg='Revoke {0} user privileges'.format(data),
+                        msg=f'Revoke {data} user privileges',
                         created_by=current_user.username)
                     history.add()
                     return make_response(
@@ -633,8 +648,7 @@ def manage_user():
                 result = user.set_role(role_name)
                 if result['status']:
                     record_user_event(
-                        'Change user role of {0} to {1}'.format(
-                            username, role_name),
+                        f'Change user role of {username} to {role_name}',
                         username,
                         current_user.username,
                         role=role_name,
@@ -651,7 +665,7 @@ def manage_user():
                             'status':
                                 'error',
                             'msg':
-                                'Cannot change user role. {0}'.format(
+                                'Cannot change user role. {}'.format(
                                     result['msg'])
                         }), 500)
             else:
@@ -660,9 +674,9 @@ def manage_user():
                         'status': 'error',
                         'msg': 'Action not supported.'
                     }), 400)
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot update user. Error: {0}'.format(e))
+        except Exception:
+            current_app.logger.exception(
+                'Cannot update user. Error: ')
             current_app.logger.debug(traceback.format_exc())
             return make_response(
                 jsonify({
@@ -786,7 +800,7 @@ def edit_account(account_name=None):
                 if domain.name not in new_domain_list:
                     Domain(name=domain.name).assoc_account(None)
 
-            history = History(msg='{0} account {1}'.format('Create' if create else 'Update', account.name),
+            history = History(msg='{} account {}'.format('Create' if create else 'Update', account.name),
                               created_by=current_user.username)
 
             account.grant_privileges(new_user_list)
@@ -835,7 +849,7 @@ def manage_account():
                 # Then delete the account
                 result = account.delete_account()
                 if result:
-                    history = History(msg='Delete account {0}'.format(data),
+                    history = History(msg=f'Delete account {data}',
                                       created_by=current_user.username)
                     history.add()
                     return make_response(
@@ -855,9 +869,9 @@ def manage_account():
                         'status': 'error',
                         'msg': 'Action not supported.'
                     }), 400)
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot update account. Error: {0}'.format(e))
+        except Exception:
+            current_app.logger.exception(
+                'Cannot update account. Error: ')
             current_app.logger.debug(traceback.format_exc())
             return make_response(
                 jsonify({
@@ -868,7 +882,7 @@ def manage_account():
                 }), 400)
 
 
-class DetailedHistory():
+class DetailedHistory:
     def __init__(self, history, change_set):
         self.history = history
         self.detailed_msg = ""
@@ -1182,7 +1196,7 @@ def history():
 def from_utc_to_local(local_offset, timeframe):
     offset = str(local_offset * (-1))
     date_split = str(timeframe).split(".")[0]
-    date_converted = datetime.datetime.strptime(date_split, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(
+    date_converted = datetime.datetime.strptime(date_split, '%Y-%m-%d %H:%M:%S').replace(tzinfo=datetime.UTC).replace(tzinfo=None) + datetime.timedelta(
         minutes=int(offset))
     return date_converted
 
@@ -1224,11 +1238,11 @@ def history_table():  # ajax call data
         min_date = request.args.get('min') if request.args.get('min') != None and len(
             request.args.get('min')) != 0 else None
         if min_date != None:  # get 1 day earlier, to check for timezone errors
-            min_date = str(datetime.datetime.strptime(min_date, '%Y-%m-%d') - datetime.timedelta(days=1))
+            min_date = str(datetime.datetime.strptime(min_date, '%Y-%m-%d').replace(tzinfo=datetime.UTC).replace(tzinfo=None) - datetime.timedelta(days=1))
         max_date = request.args.get('max') if request.args.get('max') != None and len(
             request.args.get('max')) != 0 else None
         if max_date != None:  # get 1 day later, to check for timezone errors
-            max_date = str(datetime.datetime.strptime(max_date, '%Y-%m-%d') + datetime.timedelta(days=1))
+            max_date = str(datetime.datetime.strptime(max_date, '%Y-%m-%d').replace(tzinfo=datetime.UTC).replace(tzinfo=None) + datetime.timedelta(days=1))
         tzoffset = request.args.get('tzoffset') if request.args.get('tzoffset') != None and len(
             request.args.get('tzoffset')) != 0 else None
         changed_by = request.args.get('user_name_filter') if request.args.get('user_name_filter') != None \
@@ -1253,7 +1267,7 @@ def history_table():  # ajax call data
             auth_methods.append("SAML")
 
         if request.args.get('domain_changelog_only_checkbox') != None:
-            changelog_only = True if request.args.get('domain_changelog_only_checkbox') == "on" else False
+            changelog_only = request.args.get('domain_changelog_only_checkbox') == "on"
         else:
             changelog_only = False
 
@@ -1355,17 +1369,8 @@ def history_table():  # ajax call data
                         break
             histories = temp
         elif (changed_by != None or max_date != None) and current_user.role.name in ['Administrator',
-                                                                                     'Operator']:  # select changed by and date filters only
-            histories = base_query.filter(
-                db.and_(
-                    History.created_on <= max_date if max_date != None else True,
-                    History.created_on >= min_date if min_date != None else True,
-                    History.created_by == changed_by if changed_by != None else True
-                )
-            ) \
-                .order_by(History.created_on.desc()).limit(lim).all()
-        elif (
-                changed_by != None or max_date != None):  # special filtering for user because one user does not have access to log-ins logs
+                                                                                     'Operator'] or (
+                changed_by != None or max_date != None):  # select changed by and date filters only
             histories = base_query.filter(
                 db.and_(
                     History.created_on <= max_date if max_date != None else True,
@@ -1408,7 +1413,7 @@ def history_table():  # ajax call data
 def _api_history_like(column, value):
     escaped = (
         value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_'))
-    return column.like('%{0}%'.format(escaped), escape='\\')
+    return column.like(f'%{escaped}%', escape='\\')
 
 
 def _api_history_body(raw):
@@ -1506,8 +1511,7 @@ def system_activity():
         limit = int(limit)
     except (TypeError, ValueError):
         limit = 1000
-    if limit < 1:
-        limit = 1
+    limit = max(limit, 1)
 
     query = SystemHistory.query
     if setting_name:
@@ -1541,6 +1545,7 @@ _BASIC_SETTINGS = (
     'account_name_extra_chars',
     'allow_user_create_domain',
     'allow_user_remove_domain',
+    'allow_user_export_domain',
     'allow_user_view_history',
     'auto_ptr',
     'bg_domain_updates',
@@ -1658,8 +1663,8 @@ def setting_pdns():
         pdns_api_key = request.form.get('pdns_api_key')
 
         # Reject forged changes before saving either half of the connection.
-        for name in pdns_sources:
-            if (pdns_sources[name] and name in request.form
+        for name, managed in pdns_sources.items():
+            if (managed and name in request.form
                     and request.form[name] != Setting().get(name)):
                 abort(400, description='Deployment-managed PowerDNS settings are read-only.')
         url_saved = (bool(pdns_sources['pdns_api_url'])
@@ -1692,10 +1697,8 @@ def setting_records():
         rr = {}
         records = AppSettings.defaults['forward_records_allow_edit']
         for r in records:
-            fr[r] = True if request.form.get('fr_{0}'.format(
-                r.lower())) else False
-            rr[r] = True if request.form.get('rr_{0}'.format(
-                r.lower())) else False
+            fr[r] = bool(request.form.get(f'fr_{r.lower()}'))
+            rr[r] = bool(request.form.get(f'rr_{r.lower()}'))
 
         Setting().set('forward_records_allow_edit', json.dumps(fr))
         Setting().set('reverse_records_allow_edit', json.dumps(rr))
@@ -1757,14 +1760,13 @@ def create_template():
             if DomainTemplate.query.filter(
                     DomainTemplate.name == name).first():
                 flash(
-                    "A template with the name {0} already exists!".format(
-                        name), 'error')
+                    f"A template with the name {name} already exists!", 'error')
                 return redirect(url_for('admin.create_template'))
 
             t = DomainTemplate(name=name, description=description)
             result = t.create()
             if result['status'] == 'ok':
-                history = History(msg='Add zone template {0}'.format(name),
+                history = History(msg=f'Add zone template {name}',
                                   detail=json.dumps({
                                       'name': name,
                                       'description': description
@@ -1775,9 +1777,9 @@ def create_template():
             else:
                 flash(result['msg'], 'error')
                 return redirect(url_for('admin.create_template'))
-        except Exception as e:
-            current_app.logger.error(
-                'Cannot create zone template. Error: {0}'.format(e))
+        except Exception:
+            current_app.logger.exception(
+                'Cannot create zone template. Error: ')
             current_app.logger.debug(traceback.format_exc())
             abort(500)
 
@@ -1805,13 +1807,13 @@ def create_template_from_zone():
                     'status':
                         'error',
                     'msg':
-                        'A template with the name {0} already exists!'.format(name)
+                        f'A template with the name {name} already exists!'
                 }), 409)
 
         t = DomainTemplate(name=name, description=description)
         result = t.create()
         if result['status'] == 'ok':
-            history = History(msg='Add zone template {0}'.format(name),
+            history = History(msg=f'Add zone template {name}',
                               detail=json.dumps({
                                   'name': name,
                                   'description': description
@@ -1829,12 +1831,12 @@ def create_template_from_zone():
                 if rrsets:
                     for r in rrsets:
                         name = '@' if r['name'] == domain_name + '.' else r[
-                            'name'].replace('.{}.'.format(domain_name), '')
+                            'name'].replace(f'.{domain_name}.', '')
                         for record in r['records']:
                             t_record = DomainTemplateRecord(
                                 name=name,
                                 type=r['type'],
-                                status=False if record['disabled'] else True,
+                                status=not record['disabled'],
                                 ttl=r['ttl'],
                                 data=record['content'])
                             records.append(t_record)
@@ -1863,9 +1865,9 @@ def create_template_from_zone():
                     'status': 'error',
                     'msg': result['msg']
                 }), 500)
-    except Exception as e:
-        current_app.logger.error(
-            'Cannot create template from zone. Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception(
+            'Cannot create template from zone. Error: ')
         current_app.logger.debug(traceback.format_exc())
         return make_response(
             jsonify({
@@ -1903,9 +1905,9 @@ def edit_template(template):
                                    editable_records=records_allow_to_edit,
                                    quick_edit=quick_edit,
                                    ttl_options=ttl_options)
-    except Exception as e:
-        current_app.logger.error(
-            'Cannot open zone template page. DETAIL: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception(
+            'Cannot open zone template page. DETAIL: ')
         current_app.logger.debug(traceback.format_exc())
         abort(500)
     return redirect(url_for('admin.templates'))
@@ -1944,18 +1946,17 @@ def apply_records(template):
             jdata.pop('_csrf_token',
                       None)  # don't store csrf token in the history.
             history = History(
-                msg='Apply zone template record changes to zone template {0}'
-                .format(template),
+                msg=f'Apply zone template record changes to zone template {template}'
+                ,
                 detail=json.dumps(jdata),
                 created_by=current_user.username)
             history.add()
             return make_response(jsonify(result), 200)
         else:
             return make_response(jsonify(result), 400)
-    except Exception as e:
-        current_app.logger.error(
-            'Cannot apply record changes to the template. Error: {0}'.format(
-                e))
+    except Exception:
+        current_app.logger.exception(
+            'Cannot apply record changes to the template. Error: ')
         current_app.logger.debug(traceback.format_exc())
         return make_response(
             jsonify({
@@ -1975,7 +1976,7 @@ def delete_template(template):
             result = t.delete_template()
             if result['status'] == 'ok':
                 history = History(
-                    msg='Deleted zone template {0}'.format(template),
+                    msg=f'Deleted zone template {template}',
                     detail=json.dumps({'name': template}),
                     created_by=current_user.username)
                 history.add()
@@ -1983,9 +1984,9 @@ def delete_template(template):
             else:
                 flash(result['msg'], 'error')
                 return redirect(url_for('admin.templates'))
-    except Exception as e:
-        current_app.logger.error(
-            'Cannot delete template. Error: {0}'.format(e))
+    except Exception:
+        current_app.logger.exception(
+            'Cannot delete template. Error: ')
         current_app.logger.debug(traceback.format_exc())
         abort(500)
     return redirect(url_for('admin.templates'))
@@ -2068,7 +2069,7 @@ def validateURN(value):
     nid = prefix[1]
     nss = value.replace(urn + ":" + nid + ":", "")
 
-    if not urn.lower() == "urn":
+    if urn.lower() != "urn":
         current_app.logger.warning(urn + ' contains invalid characters ')
         return False
     if not re.match(NID_PATTERN, nid.lower()):

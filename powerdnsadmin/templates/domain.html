@@ -112,6 +112,11 @@
                         <div class="card-header">
                             <h3 class="card-title" id="zone-editor-heading" tabindex="-1">Zone Editor</h3>
                             <div class="card-tools">
+                                {% if current_user.role.name in ['Administrator', 'Operator'] or (current_user.role.name == 'User' and SETTING.get('allow_user_export_domain')) %}
+                                    <a class="btn btn-primary ms-2 mt-2 mb-2" href="{{ url_for('domain.export', domain_name=domain.name) }}">
+                                        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Zone Export
+                                    </a>
+                                {% endif %}
                                 {% if current_user.role.name in ['Administrator', 'Operator'] %}
                                     <button type="button" title="Zone Settings"
                                             class="btn btn-primary btn-danger mt-2 mb-2"
