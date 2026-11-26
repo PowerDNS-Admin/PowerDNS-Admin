@@ -575,12 +575,18 @@ function saveRow(oTable, nRow) {
     oTable.cell(nRow,4).data(jqInputs[1].value);
     oTable.cell(nRow,5).data(jqInputs[2].value);
 
-    var record = jqInputs[0].value;
-    var button_edit = "<button type=\"button\" class=\"btn btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
-    var button_delete = "<button type=\"button\" class=\"btn btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
+    var editButton = $('<button type="button" class="btn btn-sm btn-warning button_edit" title="Edit Record" aria-label="Edit Record"><i class="fa-solid fa-edit" aria-hidden="true"></i></button>');
+    var deleteButton = $('<button type="button" class="btn btn-sm btn-danger button_delete" title="Delete Record" aria-label="Delete Record"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>');
+    deleteButton.attr('id', jqInputs[0].value);
+    var button_edit = editButton.prop('outerHTML');
+    var button_delete = deleteButton.prop('outerHTML');
 
-    oTable.cell(nRow,6).data(button_edit);
-    oTable.cell(nRow,7).data(button_delete);
+    if (oTable.column(7).visible()) {
+        oTable.cell(nRow, 6).data(button_edit);
+        oTable.cell(nRow, 7).data(button_delete);
+    } else {
+        oTable.cell(nRow, 6).data(button_edit + ' ' + button_delete);
+    }
 
     oTable.draw();
 }
@@ -625,8 +631,14 @@ function editRow(oTable, nRow) {
     jqTds[3].innerHTML = '<select class="form-select" id="record_ttl" name="record_ttl" value="' + aData[3]  + '">' + ttl_opts + '</select>';
     jqTds[4].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="current_edit_record_data" name="current_edit_record_data" class="form-control input-small advance-data" value="' + aData[4].replace(/\"/g,"&quot;") + '">';
     jqTds[5].innerHTML = '<input type="text" style="display:table-cell; width:100% !important" id="record_comment" name="record_comment" class="form-control input-small advance-data" value="' + aData[5].replace(/\"/g, "&quot;") + '">';
-    jqTds[6].innerHTML = '<button type="button" class="btn btn-primary button_save">Save</button>';
-    jqTds[7].innerHTML = '<button type="button" class="btn btn-primary button_cancel">Cancel</button>';
+    var saveButton = '<button type="button" class="btn btn-primary button_save">Save</button>';
+    var cancelButton = '<button type="button" class="btn btn-primary button_cancel">Cancel</button>';
+    if (oTable.column(7).visible()) {
+        jqTds[6].innerHTML = saveButton;
+        jqTds[7].innerHTML = cancelButton;
+    } else {
+        jqTds[6].innerHTML = '<span class="d-inline-flex gap-1">' + saveButton + cancelButton + '</span>';
+    }
 
     // set current value of dropdown column
     if (aData[2] == 'Active'){

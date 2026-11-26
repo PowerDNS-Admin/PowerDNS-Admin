@@ -13,7 +13,7 @@ from powerdnsadmin.models.user import User
 def main():
     app = create_app()
     with app.app_context():
-        pdns_url = "{0}://{1}:{2}".format(
+        pdns_url = "{}://{}:{}".format(
             os.environ.get("PDNS_PROTO", "http"),
             os.environ.get("PDNS_HOST", "pdns-server-browser"),
             os.environ.get("PDNS_PORT", "8081"),
@@ -32,17 +32,20 @@ def main():
             "bg_domain_updates": False,
         }
         for name, value in settings.items():
-            if not Setting().set(name, value):
-                raise RuntimeError("Could not seed setting: {0}".format(name))
+            setting = Setting()
+            if setting.deployment_source(name) and setting.get(name) == value:
+                continue
+            if not setting.set(name, value):
+                raise RuntimeError(f"Could not seed setting: {name}")
 
         # A stored URL is not enough: fail startup unless the configured
         # application settings can authenticate to the composed PDNS API.
         configured_url = Setting().get("pdns_api_url")
         configured_key = Setting().get("pdns_api_key")
         if configured_url != pdns_url or configured_key != settings["pdns_api_key"]:
-            raise RuntimeError("Persisted PowerDNS settings do not match the test environment")
+            raise RuntimeError("Effective PowerDNS settings do not match the test environment")
         response = requests.get(
-            "{0}/api/v1/servers/localhost".format(configured_url.rstrip("/")),
+            "{}/api/v1/servers/localhost".format(configured_url.rstrip("/")),
             headers={"X-API-Key": configured_key},
             timeout=5,
         )

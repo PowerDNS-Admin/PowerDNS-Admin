@@ -88,6 +88,14 @@ async function removeExistingRecords(request, records) {
   expect(deleteResponse.status()).toBe(204);
 }
 
+async function expectCompactRecordActions(row) {
+  for (const name of ['Edit Record', 'Delete Record']) {
+    const button = row.getByRole('button', { name, exact: true });
+    await expect(button).toBeVisible();
+    await expect(button).toHaveText('');
+  }
+}
+
 async function addRecord(page, record) {
   await page.getByRole('button', { name: /Add Record/i }).click();
 
@@ -119,6 +127,10 @@ async function addRecord(page, record) {
 
   await row.locator('.button_save').click();
   await expect(page.locator('#unsaved-changes-banner')).toBeVisible();
+  const savedRow = page.locator('#tbl_records tbody tr').filter({
+    has: page.getByRole('cell', { name: record.name, exact: true }),
+  });
+  await expectCompactRecordActions(savedRow);
 }
 
 async function getApiUser(request, username, headers) {
@@ -276,6 +288,15 @@ test('zone template record fields remain readable while editing', async ({ page 
   for (const fieldId of ['record_type', 'record_status', 'record_ttl']) {
     await expect(editRow.locator(`#${fieldId}`)).toHaveClass(/form-select/);
   }
+
+  await editRow.locator('#edit-row-focus').fill('compact-action-check');
+  await editRow.locator('#record_type').selectOption('A');
+  await editRow.locator('#current_edit_record_data').fill('192.0.2.42');
+  await editRow.locator('.button_save').click();
+  const savedRow = page.locator('#tbl_records tbody tr').filter({
+    has: page.getByRole('cell', { name: 'compact-action-check', exact: true }),
+  });
+  await expectCompactRecordActions(savedRow);
 
   const pageOverflow = await page.evaluate(() => (
     document.documentElement.scrollWidth - document.documentElement.clientWidth

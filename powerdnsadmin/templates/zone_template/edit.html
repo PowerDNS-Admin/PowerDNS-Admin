@@ -226,13 +226,14 @@
                 showErrorModal("Previous record not saved. Please save it before adding more record.");
                 return;
             }
-            // clear search first
-            $("#tbl_records").DataTable().search('').columns().search('').draw();
+            var table = $('#tbl_records').DataTable();
+            table.search('').columns().search('');
 
-            // add new row
-            var default_type = records_allow_edit[0]
-            var nRow = jQuery('#tbl_records').dataTable().fnAddData(['', default_type, 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
-            editRow($("#tbl_records").DataTable(), nRow);
+            // The hidden ordering column places a draft at the top.
+            var row = table.row.add(['', records_allow_edit[0], 'Active', window.ttl_options[0][0], '', '', '', '', '0']);
+            table.draw();
+            var nRow = row.node();
+            editRow(table, nRow);
             document.getElementById("edit-row-focus").focus();
             nEditing = nRow;
             nNew = true;

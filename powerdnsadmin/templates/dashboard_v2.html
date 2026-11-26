@@ -253,13 +253,13 @@
             border-top: 1px solid var(--bs-border-color);
         }
         #dashboard-v2 .dashboard-v2-table-scroll { overflow-x: auto; }
-        #dashboard-v2 .dashboard-v2-filter .dataTables_filter,
-        #dashboard-v2 .dashboard-v2-length .dataTables_length { text-align: inherit; }
-        #dashboard-v2 .dashboard-v2-filter label {
+        #dashboard-v2 .dashboard-v2-filter .dt-search,
+        #dashboard-v2 .dashboard-v2-length .dt-length { text-align: inherit; }
+        #dashboard-v2 .dashboard-v2-filter .dt-search {
             position: relative;
             margin: 0;
         }
-        #dashboard-v2 .dashboard-v2-filter label::before {
+        #dashboard-v2 .dashboard-v2-filter .dt-search::before {
             position: absolute;
             top: 50%;
             left: 0.75rem;
@@ -277,10 +277,12 @@
             padding-left: 2.15rem;
             border-radius: 0.45rem;
         }
-        #dashboard-v2 .dashboard-v2-length label {
+        #dashboard-v2 .dashboard-v2-length .dt-length {
             display: flex;
             align-items: center;
             gap: 0.55rem;
+        }
+        #dashboard-v2 .dashboard-v2-length label {
             margin: 0;
             color: var(--bs-secondary-color);
             font-size: 0.8rem;
@@ -318,7 +320,7 @@
             text-align: right;
             white-space: nowrap;
         }
-        #dashboard-v2 table.records td.dataTables_empty {
+        #dashboard-v2 table.records td.dt-empty {
             width: auto;
             padding: 2.5rem 1.25rem;
             text-align: center;
@@ -376,12 +378,12 @@
         }
         #dashboard-v2 .dashboard-v2-menu-toggle { width: 2rem; }
         #dashboard-v2 .dashboard-v2-menu-toggle::after { display: none; }
-        #dashboard-v2 .dashboard-v2-table-footer .dataTables_info {
+        #dashboard-v2 .dashboard-v2-table-footer .dt-info {
             padding: 0;
             color: var(--bs-secondary-color);
             font-size: 0.8rem;
         }
-        #dashboard-v2 .dashboard-v2-table-footer .dataTables_paginate { padding: 0; }
+        #dashboard-v2 .dashboard-v2-table-footer .dt-paging { padding: 0; }
         #dashboard-v2 .dashboard-v2-table-footer .pagination { margin: 0; }
         #dashboard-v2 .dashboard-v2-table-footer .page-link {
             padding: 0.3rem 0.65rem;
@@ -412,7 +414,7 @@
 
 {% block extrascripts %}
     <script src="{{ url_for('static', filename='custom/js/dashboard-zone-delete.js') }}"></script>
-    <script src="{{ url_for('static', filename='custom/js/dashboard-v2.js', v='zone-delete-1') }}"></script>
+    <script src="{{ url_for('static', filename='custom/js/dashboard-v2.js', v='datatables-3') }}"></script>
 {% endblock %}
 
 {% block modals %}
