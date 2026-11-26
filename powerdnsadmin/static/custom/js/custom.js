@@ -575,9 +575,11 @@ function saveRow(oTable, nRow) {
     oTable.cell(nRow,4).data(jqInputs[1].value);
     oTable.cell(nRow,5).data(jqInputs[2].value);
 
-    var record = jqInputs[0].value;
-    var button_edit = "<button type=\"button\" class=\"btn btn-warning button_edit\" id=\"" + record +  "\">Edit&nbsp;<i class=\"fa fa-edit\"></i></button>"
-    var button_delete = "<button type=\"button\" class=\"btn btn-danger button_delete\" id=\"" + record +  "\">Delete&nbsp;<i class=\"fa fa-trash\"></i></button>"
+    var editButton = $('<button type="button" class="btn btn-sm btn-warning button_edit" title="Edit Record" aria-label="Edit Record"><i class="fa-solid fa-edit" aria-hidden="true"></i></button>');
+    var deleteButton = $('<button type="button" class="btn btn-sm btn-danger button_delete" title="Delete Record" aria-label="Delete Record"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>');
+    deleteButton.attr('id', jqInputs[0].value);
+    var button_edit = editButton.prop('outerHTML');
+    var button_delete = deleteButton.prop('outerHTML');
 
     if (oTable.column(7).visible()) {
         oTable.cell(nRow, 6).data(button_edit);
@@ -635,7 +637,7 @@ function editRow(oTable, nRow) {
         jqTds[6].innerHTML = saveButton;
         jqTds[7].innerHTML = cancelButton;
     } else {
-        jqTds[6].innerHTML = saveButton + ' ' + cancelButton;
+        jqTds[6].innerHTML = '<span class="d-inline-flex gap-1">' + saveButton + cancelButton + '</span>';
     }
 
     // set current value of dropdown column
