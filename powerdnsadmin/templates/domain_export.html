@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set page_title = 'Zone Export - ' ~ (domain.name | pretty_domain_name) %}
+{% block title %}<title>{{ page_title }} - {{ SITE_NAME }}</title>{% endblock %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <p>Export of the saved zone in BIND-compatible format. Apply pending changes in the zone editor before exporting.</p>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <a class="btn btn-secondary" href="{{ url_for('domain.domain', domain_name=domain.name) }}">Back to zone</a>
+                    <div class="d-flex gap-2 ms-auto">
+                        <button type="button" class="btn btn-primary" id="copy-zone" title="Copy to clipboard" aria-label="Copy to clipboard">
+                            <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-primary" id="download-zone" data-filename="{{ domain.name }}.zone" title="Download" aria-label="Download">
+                            <i class="fa-solid fa-download" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <textarea aria-label="Zone file" id="zone-content" class="form-control font-monospace" rows="30" readonly spellcheck="false" wrap="off">{{ zone_content }}</textarea>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="copy-toast" class="toast text-bg-success border-0" role="status"
+         aria-live="polite" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">Zone copied to clipboard.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extrascripts %}
+<script src="{{ url_for('static', filename='custom/js/zone-export.js', v='copy-toast-2') }}"></script>
+{% endblock %}

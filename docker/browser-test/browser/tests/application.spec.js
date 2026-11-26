@@ -528,3 +528,43 @@ test('operator cannot promote users or operators to Administrator', async ({
   await operatorContext.close();
   expect(failures, failures.join('\n')).toEqual([]);
 });
+
+test('zone export displays a read-only BIND file with copy and download actions', async ({ page }) => {
+  await page.goto(`/domain/${TEST_ZONE}`);
+  await page.getByRole('link', { name: 'Zone Export', exact: true }).click();
+  const field = page.getByLabel('Zone file', { exact: true });
+  await expect(field).toHaveAttribute('readonly', '');
+  const back = page.getByRole('link', { name: 'Back to zone', exact: true });
+  const copy = page.getByRole('button', { name: 'Copy to clipboard', exact: true });
+  const downloadButton = page.getByRole('button', { name: 'Download', exact: true });
+  await expect(copy.locator('.fa-copy')).toBeVisible();
+  await expect(downloadButton.locator('.fa-download')).toBeVisible();
+  await expect(page.locator('label[for="zone-content"]')).toHaveCount(0);
+  expect((await copy.boundingBox()).x).toBeGreaterThan((await back.boundingBox()).x);
+
+  const content = await field.inputValue();
+  expect(content).toContain(`${TEST_ZONE}.`);
+  expect(content).toMatch(/\bSOA\b/);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async (text) => { window.copiedZone = text; } },
+    });
+    Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
+  });
+  await page.getByRole('button', { name: 'Copy to clipboard', exact: true }).click();
+  const toast = page.locator('#copy-toast');
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText('Zone copied to clipboard.');
+  expect(await page.evaluate(() => window.copiedZone)).toBe(content);
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download', exact: true }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe(`${TEST_ZONE}.zone`);
+  const stream = await download.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  expect(Buffer.concat(chunks).toString('utf8')).toBe(content);
+  await page.getByRole('link', { name: 'Back to zone', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/domain/${TEST_ZONE}$`));
+});

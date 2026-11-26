@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
+from typing import ClassVar
 from urllib.parse import quote
 
 basedir = os.path.abspath(Path(os.path.dirname(__file__)).parent)
 
-class AppSettings(object):
+class AppSettings:
 
-    defaults = {
+    defaults: ClassVar[dict] = {
         # Flask Settings
         'bind_address': '0.0.0.0',
         'csrf_cookie_secure': False,
@@ -53,6 +54,7 @@ class AppSettings(object):
         'dnssec_admins_only': False,
         'allow_user_create_domain': False,
         'allow_user_remove_domain': False,
+        'allow_user_export_domain': False,
         'allow_user_view_history': False,
         'custom_history_header': '',
         'delete_sso_accounts': False,
@@ -291,7 +293,7 @@ class AppSettings(object):
         },
     }
 
-    types = {
+    types: ClassVar[dict] = {
         # Flask Settings
         'bind_address': str,
         'csrf_cookie_secure': bool,
@@ -335,6 +337,7 @@ class AppSettings(object):
         'dnssec_admins_only': bool,
         'allow_user_create_domain': bool,
         'allow_user_remove_domain': bool,
+        'allow_user_export_domain': bool,
         'allow_user_view_history': bool,
         'custom_history_header': str,
         'delete_sso_accounts': bool,
@@ -489,7 +492,7 @@ class AppSettings(object):
         'saml_key': str,
     }
 
-    groups = {
+    groups: ClassVar[dict] = {
         'authentication': [
             # Local Authentication Settings
             'local_db_enabled',
@@ -595,10 +598,7 @@ class AppSettings(object):
 
             # Handle boolean values
             if var_type == bool and isinstance(value, str):
-                if value.lower() in ['True', 'true', '1'] or value is True:
-                    return True
-                else:
-                    return False
+                return bool(value.lower() in ['True', 'true', '1'] or value is True)
 
             # Handle float values
             if var_type == float:
@@ -611,13 +611,13 @@ class AppSettings(object):
             if (var_type == dict or var_type == list) and isinstance(value, str) and len(value) > 0:
                 try:
                     return json.loads(value)
-                except JSONDecodeError as e:
+                except JSONDecodeError:
                     # Provide backwards compatibility for legacy non-JSON format
                     value = value.replace("'", '"').replace('True', 'true').replace('False', 'false')
                     try:
                         return json.loads(value)
-                    except JSONDecodeError as e:
-                        raise ValueError('Cannot parse json {} for variable {}'.format(value, name))
+                    except JSONDecodeError:
+                        raise ValueError(f'Cannot parse json {value} for variable {name}')
 
             if var_type == str:
                 return str(value)
@@ -633,7 +633,7 @@ class AppSettings(object):
         'DATABASE_NAME',
     )
 
-    DATABASE_DRIVER_SCHEMES = {
+    DATABASE_DRIVER_SCHEMES: ClassVar[dict] = {
         'mysql': 'mysql',
         'mariadb': 'mysql',
         'postgres': 'postgresql',
@@ -649,8 +649,7 @@ class AppSettings(object):
         if file_name in os.environ:
             if env_name in os.environ:
                 raise AttributeError(
-                    "Both {} and {} are set but are exclusive.".format(
-                        env_name, file_name))
+                    f"Both {env_name} and {file_name} are set but are exclusive.")
             with open(os.environ[file_name]) as secret_file:
                 current_value = secret_file.read()
             if strip_file_newline:
@@ -669,7 +668,7 @@ class AppSettings(object):
     @staticmethod
     def _format_database_host(host):
         if ':' in host and not host.startswith('['):
-            return '[{}]'.format(host)
+            return f'[{host}]'
         return host
 
     @staticmethod
@@ -728,7 +727,7 @@ class AppSettings(object):
 
         query = AppSettings._format_database_query(extra_params)
         if scheme == 'sqlite':
-            return 'sqlite:///{}{}'.format(database_name, query)
+            return f'sqlite:///{database_name}{query}'
 
         host = components['DATABASE_HOST']
         if not host:
@@ -752,17 +751,16 @@ class AppSettings(object):
             if not 1 <= port_number <= 65535:
                 raise ValueError(
                     'DATABASE_PORT must be between 1 and 65535.')
-            authority = '{}:{}'.format(authority, port_number)
+            authority = f'{authority}:{port_number}'
 
         if user is not None and user != '':
             userinfo = quote(user, safe='')
             if password is not None:
                 userinfo = '{}:{}'.format(
                     userinfo, quote(password, safe=''))
-            authority = '{}@{}'.format(userinfo, authority)
+            authority = f'{userinfo}@{authority}'
 
-        return '{}://{}/{}{}'.format(
-            scheme, authority, database_name, query)
+        return f'{scheme}://{authority}/{database_name}{query}'
 
     @staticmethod
     def load_environment(app):
@@ -774,7 +772,7 @@ class AppSettings(object):
             for name in ('pdns_api_url', 'pdns_api_key')
             if name.upper() in app.config
         }
-        for var_name, default_value in AppSettings.defaults.items():
+        for var_name in AppSettings.defaults:
             env_name = var_name.upper()
             # Docker secret files written with echo end in a newline. Leave
             # that newline off SECRET_KEY and SALT, as the database URI does,
