@@ -30,6 +30,7 @@ def authenticate(app, client, username):
     with client.session_transaction() as session:
         session['_user_id'] = str(user_id)
         session['_fresh'] = True
+        session['session_version'] = 0
 
 
 def deletion_form(client, dashboard='/dashboard/'):

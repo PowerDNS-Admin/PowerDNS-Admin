@@ -7,7 +7,6 @@ import pytest
 from lxml import html
 
 from powerdnsadmin.models.base import db
-
 from powerdnsadmin.models.domain import Domain
 from powerdnsadmin.models.user import User
 
@@ -148,6 +147,7 @@ def test_catalog_members_are_visible_outside_unsaved_changes_banner(
     with client.session_transaction() as session:
         session['_user_id'] = str(admin_id)
         session['_fresh'] = True
+        session['session_version'] = 0
 
     with patch('powerdnsadmin.routes.domain.Record.get_rrsets', return_value=[{
         'name': zone_name + '.', 'type': 'SOA', 'ttl': 3600,
